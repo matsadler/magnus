@@ -1,13 +1,10 @@
-use std::{ffi::CString, mem::transmute, ops::Deref, ptr::NonNull};
+use std::{ops::Deref, ptr::NonNull};
 
 use crate::{
-    debug_assert_value,
-    method::Method,
+    module::Module,
+    object::Object,
     r_basic::RBasic,
-    ruby_sys::{
-        self, rb_define_method, rb_define_private_method, rb_define_protected_method,
-        rb_define_singleton_method, ruby_value_type, VALUE,
-    },
+    ruby_sys::{self, ruby_value_type, VALUE},
     value::Value,
 };
 
@@ -31,69 +28,11 @@ impl RClass {
         // where val is vaild as an RBasic, which rules out NULL
         unsafe { NonNull::new_unchecked(self.0 as *mut _) }
     }
+}
 
-    pub fn define_method<M>(&self, name: &str, func: M)
-    where
-        M: Method,
-    {
-        debug_assert_value!(self);
-        let name = CString::new(name).unwrap();
-        unsafe {
-            rb_define_method(
-                self.into_inner(),
-                name.as_ptr(),
-                transmute(func.as_ptr()),
-                M::arity().into(),
-            );
-        }
-    }
-
-    pub fn define_singleton_method<M>(&self, name: &str, func: M)
-    where
-        M: Method,
-    {
-        debug_assert_value!(self);
-        let name = CString::new(name).unwrap();
-        unsafe {
-            rb_define_singleton_method(
-                self.into_inner(),
-                name.as_ptr(),
-                transmute(func.as_ptr()),
-                M::arity().into(),
-            );
-        }
-    }
-
-    pub fn define_private_method<M>(&self, name: &str, func: M)
-    where
-        M: Method,
-    {
-        debug_assert_value!(self);
-        let name = CString::new(name).unwrap();
-        unsafe {
-            rb_define_private_method(
-                self.into_inner(),
-                name.as_ptr(),
-                transmute(func.as_ptr()),
-                M::arity().into(),
-            );
-        }
-    }
-
-    pub fn define_protected_method<M>(&self, name: &str, func: M)
-    where
-        M: Method,
-    {
-        debug_assert_value!(self);
-        let name = CString::new(name).unwrap();
-        unsafe {
-            rb_define_protected_method(
-                self.into_inner(),
-                name.as_ptr(),
-                transmute(func.as_ptr()),
-                M::arity().into(),
-            );
-        }
+impl Default for RClass {
+    fn default() -> Self {
+        unsafe { RClass(ruby_sys::rb_cObject) }
     }
 }
 
@@ -107,3 +46,6 @@ impl Deref for RClass {
         unsafe { &*value_ptr }
     }
 }
+
+impl Object for RClass {}
+impl Module for RClass {}

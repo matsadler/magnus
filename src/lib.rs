@@ -1,4 +1,6 @@
 mod method;
+mod module;
+mod object;
 mod r_array;
 mod r_basic;
 mod r_bignum;
@@ -25,13 +27,17 @@ use std::{
     sync::atomic::{AtomicBool, Ordering},
 };
 
+use method::Method;
 use ruby_sys::{
-    rb_define_global_function, rb_errinfo, rb_eval_string_protect, rb_jump_tag, rb_protect,
-    rb_set_errinfo, ruby_cleanup, ruby_init, VALUE,
+    rb_define_class, rb_define_global_function, rb_define_module, rb_errinfo,
+    rb_eval_string_protect, rb_jump_tag, rb_protect, rb_set_errinfo, ruby_cleanup, ruby_init,
+    VALUE,
 };
 
 pub use value::{Fixnum, Flonum, Qfalse, Qnil, Qtrue, Symbol, Value};
 pub use {
+    module::Module,
+    object::Object,
     r_array::RArray,
     r_basic::RBasic,
     r_bignum::RBignum,
@@ -50,13 +56,33 @@ pub use {
     r_typed_data::{RTypedData, TypedData},
 };
 
-use method::Method;
+pub mod prelude {
+    pub use crate::{module::Module, object::Object, r_typed_data::TypedData};
+}
 
 #[macro_export]
 macro_rules! fn_ptr {
     ($fn:expr) => {
         $fn as unsafe extern "C" fn(_) -> _
     };
+}
+
+pub fn define_class(name: &str, superclass: RClass) -> Result<RClass, ProtectState> {
+    debug_assert_value!(superclass);
+    let name = CString::new(name).unwrap();
+    let superclass = superclass.into_inner();
+    unsafe {
+        let res = protect(|| Value::new(rb_define_class(name.as_ptr(), superclass)));
+        res.map(|v| RClass::from_value(&v).unwrap())
+    }
+}
+
+pub fn define_module(name: &str) -> Result<RModule, ProtectState> {
+    let name = CString::new(name).unwrap();
+    unsafe {
+        let res = protect(|| Value::new(rb_define_module(name.as_ptr())));
+        res.map(|v| RModule::from_value(&v).unwrap())
+    }
 }
 
 pub fn define_global_function<M>(name: &str, func: M)

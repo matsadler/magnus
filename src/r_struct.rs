@@ -1,6 +1,7 @@
 use std::ops::Deref;
 
 use crate::{
+    object::Object,
     r_basic::RBasic,
     ruby_sys::{ruby_value_type, VALUE},
     value::Value,
@@ -30,3 +31,5 @@ impl Deref for RStruct {
         unsafe { &*value_ptr }
     }
 }
+
+impl Object for RStruct {}

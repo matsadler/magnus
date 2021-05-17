@@ -52,6 +52,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .allowlist_type("ruby_.*")
         .allowlist_type("R[A-Z].*")
         .allowlist_type("rbimpl_typeddata_flags")
+        .allowlist_var("rb_.*")
         .default_enum_style(bindgen::EnumVariation::Rust {
             non_exhaustive: false,
         })

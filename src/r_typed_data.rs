@@ -5,7 +5,9 @@ use std::{
 };
 
 use crate::{
-    debug_assert_value, protect,
+    debug_assert_value,
+    object::Object,
+    protect,
     r_basic::RBasic,
     r_class::RClass,
     ruby_sys::{
@@ -53,6 +55,8 @@ impl Deref for RTypedData {
         unsafe { &*value_ptr }
     }
 }
+
+impl Object for RTypedData {}
 
 pub trait TypedData
 where

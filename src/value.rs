@@ -244,26 +244,27 @@ impl Deref for Symbol {
     }
 }
 
-impl From<Id> for Symbol {
-    fn from(id: Id) -> Self {
+impl Symbol {
+    // TODO does this have a use?
+    #[allow(dead_code)]
+    pub(crate) fn from_id(id: &Id) -> Self {
         // safe ffi to Ruby, arg is value from Ruby, call doesn't raise
         unsafe { Self(rb_id2sym(id.0)) }
     }
-}
 
-#[repr(transparent)]
-pub struct Id(ID);
-
-impl From<Id> for ID {
-    fn from(id: Id) -> Self {
-        id.0
+    pub(crate) fn to_id(&self) -> Id {
+        // safe ffi to Ruby, arg is value from Ruby, call doesn't raise
+        unsafe { Id(rb_sym2id(self.0)) }
     }
 }
 
-impl From<Symbol> for Id {
-    fn from(sym: Symbol) -> Self {
-        // safe ffi to Ruby, arg is value from Ruby, call doesn't raise
-        unsafe { Self(rb_sym2id(sym.0)) }
+#[derive(Clone, Copy, Debug)]
+#[repr(transparent)]
+pub(crate) struct Id(ID);
+
+impl Id {
+    pub(crate) fn into_inner(self) -> ID {
+        self.0
     }
 }
 
