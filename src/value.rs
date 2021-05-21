@@ -1,8 +1,11 @@
 use std::ops::{Deref, DerefMut};
 
-use crate::ruby_sys::{
-    rb_gc_register_address, rb_gc_register_mark_object, rb_gc_unregister_address, rb_id2sym,
-    rb_sym2id, ruby_special_consts, ID, VALUE,
+use crate::{
+    r_bignum::RBignum,
+    ruby_sys::{
+        rb_gc_register_address, rb_gc_register_mark_object, rb_gc_unregister_address, rb_id2sym,
+        rb_ll2inum, rb_num2ll, rb_sym2id, ruby_special_consts, ID, VALUE,
+    },
 };
 
 // This isn't infallible, if the original object was gc'd and that slot
@@ -272,6 +275,17 @@ impl Id {
 pub struct Fixnum(VALUE);
 
 impl Fixnum {
+    pub fn from_i64(n: i64) -> Result<Self, RBignum> {
+        let val = unsafe { Value::new(rb_ll2inum(n)) };
+        Fixnum::from_value(&val).ok_or_else(|| {
+            unsafe { RBignum::from_value(&val) }.expect("i64 should convert to fixnum or bignum")
+        })
+    }
+
+    pub fn to_i64(&self) -> i64 {
+        unsafe { rb_num2ll(self.into_inner()) }
+    }
+
     pub fn from_value(val: &Value) -> Option<Self> {
         (val.into_inner() & ruby_special_consts::RUBY_FIXNUM_FLAG as VALUE != 0)
             .then(|| Self(val.into_inner()))

@@ -14,7 +14,7 @@ use crate::{
         self, rb_check_typeddata, rb_data_type_struct__bindgen_ty_1, rb_data_type_t,
         rb_data_typed_object_wrap, rbimpl_typeddata_flags, ruby_value_type, size_t, VALUE,
     },
-    value::Value,
+    value::{Qnil, Value},
 };
 
 #[repr(transparent)]
@@ -96,12 +96,14 @@ where
     /// val must not have been GC'd
     unsafe fn from_value(val: &Value) -> Option<&Self> {
         debug_assert_value!(val);
-        let result = protect(|| {
-            Value::new(rb_check_typeddata(val.into_inner(), Self::data_type() as *const _) as VALUE)
+        let mut res = None;
+        let _ = protect(|| {
+            res = (rb_check_typeddata(val.into_inner(), Self::data_type() as *const _)
+                as *const Self)
+                .as_ref();
+            *Qnil::new()
         });
-        result
-            .ok()
-            .and_then(|value| (value.into_inner() as *const Self).as_ref())
+        res
     }
 
     fn into_value(self) -> Value {

@@ -1,3 +1,4 @@
+mod integer;
 mod method;
 mod module;
 mod object;
@@ -36,6 +37,7 @@ use ruby_sys::{
 
 pub use value::{Fixnum, Flonum, Qfalse, Qnil, Qtrue, Symbol, Value};
 pub use {
+    integer::Integer,
     module::Module,
     object::Object,
     r_array::RArray,
@@ -114,10 +116,15 @@ impl ProtectState {
         !Value::new(unsafe { rb_errinfo() }).is_nil()
     }
 
-    pub fn into_exception(self) -> Value {
+    pub fn into_exception(self) -> Result<Value, Self> {
         // safe ffi to Ruby, call doesn't raise
-        Value::new(unsafe { rb_errinfo() })
-        // need to clear errinfo, that's done by drop
+        let val = Value::new(unsafe { rb_errinfo() });
+        if val.is_nil() {
+            Err(self)
+        } else {
+            // need to clear errinfo, that's done by drop
+            Ok(val)
+        }
     }
 }
 
