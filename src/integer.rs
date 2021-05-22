@@ -1,13 +1,14 @@
 use std::ops::Deref;
 
 use crate::{
+    error::Error,
     protect,
     r_basic::RBasic,
+    r_bignum::RBignum,
     ruby_sys::{
         rb_ll2inum, rb_num2ll, rb_num2ull, rb_ull2inum, ruby_special_consts, ruby_value_type, VALUE,
     },
-    value::{Qnil, Value},
-    ProtectState,
+    value::{Fixnum, Qnil, Value},
 };
 
 #[repr(transparent)]
@@ -34,25 +35,42 @@ impl Integer {
         Self(unsafe { rb_ull2inum(n) })
     }
 
-    pub fn to_i64(&self) -> Result<i64, ProtectState> {
+    /// # Safety
+    ///
+    /// val must not have been GC'd.
+    pub unsafe fn to_i64(&self) -> Result<i64, Error> {
         let mut res = 0;
-        unsafe {
-            protect(|| {
-                res = rb_num2ll(self.into_inner());
-                *Qnil::new()
-            })?;
-        }
+        protect(|| {
+            res = rb_num2ll(self.into_inner());
+            *Qnil::new()
+        })?;
         Ok(res)
     }
 
-    pub fn to_u64(&self) -> Result<u64, ProtectState> {
-        let mut res = 0;
-        unsafe {
-            protect(|| {
-                res = rb_num2ull(self.into_inner());
-                *Qnil::new()
-            })?;
+    unsafe fn is_negative(&self) -> bool {
+        if let Some(f) = Fixnum::from_value(self) {
+            return f.is_negative();
         }
+        if let Some(b) = RBignum::from_value(self) {
+            return b.is_negative();
+        }
+        unreachable!()
+    }
+
+    /// # Safety
+    ///
+    /// val must not have been GC'd.
+    pub unsafe fn to_u64(&self) -> Result<u64, Error> {
+        if self.is_negative() {
+            return Err(Error::range_error(
+                "can't convert negative integer to unsigned",
+            ));
+        }
+        let mut res = 0;
+        protect(|| {
+            res = rb_num2ull(self.into_inner());
+            *Qnil::new()
+        })?;
         Ok(res)
     }
 }

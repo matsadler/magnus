@@ -1,6 +1,7 @@
 use std::{ops::Deref, ptr::NonNull};
 
 use crate::{
+    r_class::RClass,
     ruby_sys::{self, ruby_special_consts, ruby_value_type, VALUE},
     value::Value,
 };
@@ -32,6 +33,10 @@ impl RBasic {
         // set by Ruby, and Ruby promises that flags masked like this will
         // always be a valid entry in this enum
         std::mem::transmute(ret as u32)
+    }
+
+    pub(crate) unsafe fn class(&self) -> RClass {
+        RClass(self.as_internal().as_ref().klass)
     }
 }
 

@@ -1,11 +1,11 @@
 use std::ops::Deref;
 
 use crate::{
+    error::Error,
     protect,
     r_basic::RBasic,
-    ruby_sys::{rb_ll2inum, rb_num2ll, rb_num2ull, rb_ull2inum, ruby_value_type, VALUE},
+    ruby_sys::{rb_ll2inum, ruby_fl_type, rb_num2ll, rb_num2ull, rb_ull2inum, ruby_value_type, VALUE},
     value::{Fixnum, Qnil, Value},
-    ProtectState,
 };
 
 #[repr(transparent)]
@@ -22,38 +22,54 @@ impl RBignum {
     }
 
     pub fn from_i64(n: i64) -> Result<Self, Fixnum> {
-        let val = unsafe { Value::new(rb_ll2inum(n)) };
-        unsafe { RBignum::from_value(&val) }.ok_or_else(|| {
-            Fixnum::from_value(&val).expect("i64 should convert to fixnum or bignum")
-        })
+        unsafe {
+            let val = Value::new(rb_ll2inum(n));
+            RBignum::from_value(&val).ok_or_else(|| {
+                Fixnum::from_value(&val).expect("i64 should convert to fixnum or bignum")
+            })
+        }
     }
 
     pub fn from_u64(n: u64) -> Result<Self, Fixnum> {
-        let val = unsafe { Value::new(rb_ull2inum(n)) };
-        unsafe { RBignum::from_value(&val) }.ok_or_else(|| {
-            Fixnum::from_value(&val).expect("u64 should convert to fixnum or bignum")
-        })
+        unsafe {
+            let val = Value::new(rb_ull2inum(n));
+            RBignum::from_value(&val).ok_or_else(|| {
+                Fixnum::from_value(&val).expect("u64 should convert to fixnum or bignum")
+            })
+        }
     }
 
-    pub fn to_i64(&self) -> Result<i64, ProtectState> {
+    /// # Safety
+    ///
+    /// val must not have been GC'd.
+    pub unsafe fn to_i64(&self) -> Result<i64, Error> {
         let mut res = 0;
-        unsafe {
-            protect(|| {
-                res = rb_num2ll(self.into_inner());
-                *Qnil::new()
-            })?;
-        }
+        protect(|| {
+            res = rb_num2ll(self.into_inner());
+            *Qnil::new()
+        })?;
         Ok(res)
     }
 
-    pub fn to_u64(&self) -> Result<u64, ProtectState> {
-        let mut res = 0;
-        unsafe {
-            protect(|| {
-                res = rb_num2ull(self.into_inner());
-                *Qnil::new()
-            })?;
+    pub(crate) unsafe fn is_negative(&self) -> bool {
+        let r_basic = RBasic::from_value(self).expect("bignum missing RBasic");
+        r_basic.as_internal().as_ref().flags & (ruby_fl_type::RUBY_FL_USER1 as VALUE) == 0
+    }
+
+    /// # Safety
+    ///
+    /// val must not have been GC'd.
+    pub unsafe fn to_u64(&self) -> Result<u64, Error> {
+        if self.is_negative() {
+            return Err(Error::range_error(
+                "can't convert negative integer to unsigned",
+            ));
         }
+        let mut res = 0;
+        protect(|| {
+            res = rb_num2ull(self.into_inner());
+            *Qnil::new()
+        })?;
         Ok(res)
     }
 }

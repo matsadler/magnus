@@ -1,3 +1,5 @@
+pub mod error;
+mod exception;
 mod integer;
 mod method;
 mod module;
@@ -37,6 +39,8 @@ use ruby_sys::{
 
 pub use value::{Fixnum, Flonum, Qfalse, Qnil, Qtrue, Symbol, Value};
 pub use {
+    error::Error,
+    exception::{Exception, ExceptionClass},
     integer::Integer,
     module::Module,
     object::Object,
@@ -69,7 +73,7 @@ macro_rules! fn_ptr {
     };
 }
 
-pub fn define_class(name: &str, superclass: RClass) -> Result<RClass, ProtectState> {
+pub fn define_class(name: &str, superclass: RClass) -> Result<RClass, Error> {
     debug_assert_value!(superclass);
     let name = CString::new(name).unwrap();
     let superclass = superclass.into_inner();
@@ -79,7 +83,7 @@ pub fn define_class(name: &str, superclass: RClass) -> Result<RClass, ProtectSta
     }
 }
 
-pub fn define_module(name: &str) -> Result<RModule, ProtectState> {
+pub fn define_module(name: &str) -> Result<RModule, Error> {
     let name = CString::new(name).unwrap();
     unsafe {
         let res = protect(|| Value::new(rb_define_module(name.as_ptr())));
@@ -99,13 +103,13 @@ where
 
 #[derive(Debug)]
 #[repr(transparent)]
-pub struct ProtectState(c_int);
+pub struct State(c_int);
 
-impl ProtectState {
+impl State {
     /// # Safety
     ///
     /// This function is currently marked unsafe as it is presumed that the
-    /// ProtectState can get stale and thus no longer safe to resume.
+    /// State can get stale and thus no longer safe to resume.
     pub unsafe fn resume(self) -> ! {
         rb_jump_tag(self.0);
         unreachable!()
@@ -128,14 +132,14 @@ impl ProtectState {
     }
 }
 
-impl Drop for ProtectState {
+impl Drop for State {
     fn drop(&mut self) {
         // safe ffi to Ruby, call doesn't raise
         unsafe { rb_set_errinfo(Qnil::new().into_inner()) };
     }
 }
 
-pub fn protect<F>(mut func: F) -> Result<Value, ProtectState>
+pub fn protect<F>(mut func: F) -> Result<Value, Error>
 where
     F: FnMut() -> Value,
 {
@@ -170,11 +174,11 @@ where
     if state == 0 {
         Ok(Value::new(result))
     } else {
-        Err(ProtectState(state))
+        Err(Error::Jump(State(state)))
     }
 }
 
-pub fn eval_static(s: &'static str) -> Result<Value, ProtectState> {
+pub fn eval_static(s: &'static str) -> Result<Value, Error> {
     let mut state = 0;
     // safe ffi to Ruby, captures raised errors (+ brake, throw, etc) as state
     let result = unsafe {
@@ -185,7 +189,7 @@ pub fn eval_static(s: &'static str) -> Result<Value, ProtectState> {
     if state == 0 {
         Ok(Value::new(result))
     } else {
-        Err(ProtectState(state))
+        Err(Error::Jump(State(state)))
     }
 }
 

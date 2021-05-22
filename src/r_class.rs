@@ -4,12 +4,12 @@ use crate::{
     module::Module,
     object::Object,
     r_basic::RBasic,
-    ruby_sys::{self, ruby_value_type, VALUE},
+    ruby_sys::{self, rb_class_inherited_p, ruby_value_type, VALUE},
     value::Value,
 };
 
 #[repr(transparent)]
-pub struct RClass(VALUE);
+pub struct RClass(pub(crate) VALUE);
 
 impl RClass {
     /// # Safety
@@ -27,6 +27,10 @@ impl RClass {
         // safe as to get self we need to have gone through ::from_value()
         // where val is vaild as an RBasic, which rules out NULL
         unsafe { NonNull::new_unchecked(self.0 as *mut _) }
+    }
+
+    pub fn is_inherited(&self, other: RClass) -> bool {
+        unsafe { Value::new(rb_class_inherited_p(self.into_inner(), other.into_inner())).to_bool() }
     }
 }
 
