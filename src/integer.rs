@@ -2,14 +2,18 @@ use std::ops::Deref;
 
 use crate::{
     error::Error,
-    protect,
     r_basic::RBasic,
     r_bignum::RBignum,
     ruby_sys::{
-        rb_ll2inum, rb_num2ll, rb_num2ull, rb_ull2inum, ruby_special_consts, ruby_value_type, VALUE,
+        rb_ll2inum, rb_ull2inum, ruby_special_consts, ruby_value_type, VALUE,
     },
-    value::{Fixnum, Qnil, Value},
+    value::{Fixnum, Value},
 };
+
+enum IntegerType {
+    Fixnum(Fixnum),
+    Bignum(RBignum),
+}
 
 #[repr(transparent)]
 pub struct Integer(VALUE);
@@ -27,6 +31,14 @@ impl Integer {
         (r_basic.builtin_type() == ruby_value_type::RUBY_T_BIGNUM).then(|| Self(val.into_inner()))
     }
 
+    fn integer_type(&self) -> IntegerType {
+        if self.into_inner() & ruby_special_consts::RUBY_FIXNUM_FLAG as VALUE != 0 {
+            IntegerType::Fixnum(Fixnum(self.into_inner()))
+        } else {
+            IntegerType::Bignum(RBignum(self.into_inner()))
+        }
+    }
+
     pub fn from_i64(n: i64) -> Self {
         Self(unsafe { rb_ll2inum(n) })
     }
@@ -39,39 +51,88 @@ impl Integer {
     ///
     /// val must not have been GC'd.
     pub unsafe fn to_i64(&self) -> Result<i64, Error> {
-        let mut res = 0;
-        protect(|| {
-            res = rb_num2ll(self.into_inner());
-            *Qnil::new()
-        })?;
-        Ok(res)
-    }
-
-    unsafe fn is_negative(&self) -> bool {
-        if let Some(f) = Fixnum::from_value(self) {
-            return f.is_negative();
+        match self.integer_type() {
+            IntegerType::Fixnum(fix) => Ok(fix.to_i64()),
+            IntegerType::Bignum(big) => big.to_i64(),
         }
-        if let Some(b) = RBignum::from_value(self) {
-            return b.is_negative();
-        }
-        unreachable!()
     }
 
     /// # Safety
     ///
     /// val must not have been GC'd.
     pub unsafe fn to_u64(&self) -> Result<u64, Error> {
-        if self.is_negative() {
-            return Err(Error::range_error(
-                "can't convert negative integer to unsigned",
-            ));
+        match self.integer_type() {
+            IntegerType::Fixnum(fix) => fix.to_u64(),
+            IntegerType::Bignum(big) => big.to_u64(),
         }
-        let mut res = 0;
-        protect(|| {
-            res = rb_num2ull(self.into_inner());
-            *Qnil::new()
-        })?;
-        Ok(res)
+    }
+
+    /// # Safety
+    ///
+    /// val must not have been GC'd.
+    pub unsafe fn to_isize(&self) -> Result<isize, Error> {
+        match self.integer_type() {
+            IntegerType::Fixnum(fix) => fix.to_isize(),
+            IntegerType::Bignum(big) => big.to_isize(),
+        }
+    }
+
+    /// # Safety
+    ///
+    /// val must not have been GC'd.
+    pub unsafe fn to_usize(&self) -> Result<usize, Error> {
+        match self.integer_type() {
+            IntegerType::Fixnum(fix) => fix.to_usize(),
+            IntegerType::Bignum(big) => big.to_usize(),
+        }
+    }
+
+    /// # Safety
+    ///
+    /// val must not have been GC'd.
+    pub unsafe fn to_i32(&self) -> Result<i32, Error> {
+        match self.integer_type() {
+            IntegerType::Fixnum(fix) => fix.to_i32(),
+            IntegerType::Bignum(big) => big.to_i32(),
+        }
+    }
+
+    /// # Safety
+    ///
+    /// val must not have been GC'd.
+    pub unsafe fn to_u32(&self) -> Result<u32, Error> {
+        match self.integer_type() {
+            IntegerType::Fixnum(fix) => fix.to_u32(),
+            IntegerType::Bignum(big) => big.to_u32(),
+        }
+    }
+
+    pub fn to_i16(&self) -> Result<i16, Error> {
+        match self.integer_type() {
+            IntegerType::Fixnum(fix) => fix.to_i16(),
+            IntegerType::Bignum(_) => Err(Error::range_error("bignum too big to convert into `i16`")),
+        }
+    }
+
+    pub fn to_u16(&self) -> Result<u16, Error> {
+        match self.integer_type() {
+            IntegerType::Fixnum(fix) => fix.to_u16(),
+            IntegerType::Bignum(_) => Err(Error::range_error("bignum too big to convert into `u16`")),
+        }
+    }
+
+    pub fn to_i8(&self) -> Result<i8, Error> {
+        match self.integer_type() {
+            IntegerType::Fixnum(fix) => fix.to_i8(),
+            IntegerType::Bignum(_) => Err(Error::range_error("bignum too big to convert into `i8`")),
+        }
+    }
+
+    pub fn to_u8(&self) -> Result<u8, Error> {
+        match self.integer_type() {
+            IntegerType::Fixnum(fix) => fix.to_u8(),
+            IntegerType::Bignum(_) => Err(Error::range_error("bignum too big to convert into `u8`")),
+        }
     }
 }
 

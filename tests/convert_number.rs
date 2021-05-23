@@ -13,10 +13,14 @@ fn it_converts_numbers() {
     assert!(i.to_u64().is_err());
 
     let val = magnus::eval_static("-4611686018427387905").ok().unwrap();
-    let i = unsafe { RBignum::from_value(&val).unwrap() };
-    assert_eq!(i.to_i64().ok().unwrap(), -4611686018427387905);
+    unsafe {
+        let i = RBignum::from_value(&val).unwrap();
+        assert_eq!(i.to_i64().ok().unwrap(), -4611686018427387905);
+    }
 
     let val = magnus::eval_static("-4611686018427387905").ok().unwrap();
-    let i = unsafe { RBignum::from_value(&val).unwrap() };
-    assert!(i.to_u64().is_err());
+    unsafe {
+        let i = RBignum::from_value(&val).unwrap();
+        assert!(i.to_u64().is_err());
+    }
 }
