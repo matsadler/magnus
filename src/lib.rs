@@ -1,6 +1,6 @@
 pub mod error;
 mod exception;
-mod implicit_convert;
+mod try_convert;
 mod integer;
 mod method;
 mod module;
@@ -42,7 +42,7 @@ pub use value::{Fixnum, Flonum, Qfalse, Qnil, Qtrue, Symbol, Value};
 pub use {
     error::Error,
     exception::{Exception, ExceptionClass},
-    implicit_convert::ImplicitConvertFrom,
+    try_convert::TryConvert,
     integer::Integer,
     module::Module,
     object::Object,
@@ -66,7 +66,7 @@ pub use {
 
 pub mod prelude {
     pub use crate::{
-        implicit_convert::ImplicitConvertFrom, module::Module, object::Object,
+        try_convert::TryConvert, module::Module, object::Object,
         r_typed_data::TypedData,
     };
 }

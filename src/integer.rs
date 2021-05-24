@@ -2,7 +2,7 @@ use std::ops::Deref;
 
 use crate::{
     error::Error,
-    implicit_convert::ImplicitConvertFrom,
+    try_convert::TryConvert,
     protect,
     r_basic::RBasic,
     r_bignum::RBignum,
@@ -155,8 +155,8 @@ impl Deref for Integer {
     }
 }
 
-impl ImplicitConvertFrom for Integer {
-    unsafe fn implicit_convert_from(val: Value) -> Result<Self, Error> {
+impl TryConvert for Integer {
+    unsafe fn try_convert(val: Value) -> Result<Self, Error> {
         match Self::from_value(&val) {
             Some(i) => Ok(i),
             None => protect(|| Value::new(rb_to_int(val.into_inner())))
