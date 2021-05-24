@@ -1,11 +1,15 @@
-use std::{ops::Deref, os::raw::{c_long, c_ulong}};
+use std::{
+    ops::Deref,
+    os::raw::{c_long, c_ulong},
+};
 
 use crate::{
     error::Error,
     protect,
     r_basic::RBasic,
     ruby_sys::{
-        rb_ll2inum, rb_num2ll, rb_num2long, rb_num2ulong, rb_num2ull, rb_ull2inum, ruby_fl_type, ruby_value_type, VALUE,
+        rb_ll2inum, rb_num2ll, rb_num2long, rb_num2ull, rb_num2ulong, rb_ull2inum, ruby_fl_type,
+        ruby_value_type, VALUE,
     },
     value::{Fixnum, Qnil, Value},
 };
@@ -46,6 +50,24 @@ impl RBignum {
         r_basic.as_internal().as_ref().flags & (ruby_fl_type::RUBY_FL_USER1 as VALUE) == 0
     }
 
+    /// Will only succeed on a 32 bit system. On a 64 bit system bignum will
+    /// always be out of range.
+    ///
+    /// # Safety
+    ///
+    /// val must not have been GC'd.
+    pub unsafe fn to_i32(&self) -> Result<i32, Error> {
+        let mut res = 0;
+        protect(|| {
+            res = rb_num2long(self.into_inner());
+            *Qnil::new()
+        })?;
+        if res > i32::MAX as c_long {
+            return Err(Error::range_error("bignum too big to convert into `i32`"));
+        }
+        Ok(res as i32)
+    }
+
     /// # Safety
     ///
     /// val must not have been GC'd.
@@ -56,6 +78,44 @@ impl RBignum {
             *Qnil::new()
         })?;
         Ok(res)
+    }
+
+    /// # Safety
+    ///
+    /// val must not have been GC'd.
+    pub unsafe fn to_isize(&self) -> Result<isize, Error> {
+        let mut res = 0;
+        protect(|| {
+            res = rb_num2long(self.into_inner());
+            *Qnil::new()
+        })?;
+        if res > isize::MAX as c_long {
+            return Err(Error::range_error("bignum too big to convert into `isize`"));
+        }
+        Ok(res as isize)
+    }
+
+    /// Will only succeed on a 32 bit system. On a 64 bit system bignum will
+    /// always be out of range.
+    ///
+    /// # Safety
+    ///
+    /// val must not have been GC'd.
+    pub unsafe fn to_u32(&self) -> Result<u32, Error> {
+        if self.is_negative() {
+            return Err(Error::range_error(
+                "can't convert negative integer to unsigned",
+            ));
+        }
+        let mut res = 0;
+        protect(|| {
+            res = rb_num2ulong(self.into_inner());
+            *Qnil::new()
+        })?;
+        if res > u32::MAX as c_ulong {
+            return Err(Error::range_error("bignum too big to convert into `u32`"));
+        }
+        Ok(res as u32)
     }
 
     /// # Safety
@@ -78,22 +138,12 @@ impl RBignum {
     /// # Safety
     ///
     /// val must not have been GC'd.
-    pub unsafe fn to_isize(&self) -> Result<isize, Error> {
-        let mut res = 0;
-        protect(|| {
-            res = rb_num2long(self.into_inner());
-            *Qnil::new()
-        })?;
-        if res > isize::MAX as c_long {
-            return Err(Error::range_error("bignum too big to convert into `isize`"));
-        }
-        Ok(res as isize)
-    }
-
-    /// # Safety
-    ///
-    /// val must not have been GC'd.
     pub unsafe fn to_usize(&self) -> Result<usize, Error> {
+        if self.is_negative() {
+            return Err(Error::range_error(
+                "can't convert negative integer to unsigned",
+            ));
+        }
         let mut res = 0;
         protect(|| {
             res = rb_num2ulong(self.into_inner());
@@ -103,42 +153,6 @@ impl RBignum {
             return Err(Error::range_error("bignum too big to convert into `usize`"));
         }
         Ok(res as usize)
-    }
-
-    /// Will only succeed on a 32 bit system. On a 64 bit system bignum will
-    /// always be out of range.
-    ///
-    /// # Safety
-    ///
-    /// val must not have been GC'd.
-    pub unsafe fn to_i32(&self) -> Result<i32, Error> {
-        let mut res = 0;
-        protect(|| {
-            res = rb_num2long(self.into_inner());
-            *Qnil::new()
-        })?;
-        if res > i32::MAX as c_long {
-            return Err(Error::range_error("bignum too big to convert into `i32`"));
-        }
-        Ok(res as i32)
-    }
-
-    /// Will only succeed on a 32 bit system. On a 64 bit system bignum will
-    /// always be out of range.
-    ///
-    /// # Safety
-    ///
-    /// val must not have been GC'd.
-    pub unsafe fn to_u32(&self) -> Result<u32, Error> {
-        let mut res = 0;
-        protect(|| {
-            res = rb_num2ulong(self.into_inner());
-            *Qnil::new()
-        })?;
-        if res > u32::MAX as c_ulong {
-            return Err(Error::range_error("bignum too big to convert into `u32`"));
-        }
-        Ok(res as u32)
     }
 }
 

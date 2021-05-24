@@ -10,8 +10,8 @@ use crate::{
     r_bignum::RBignum,
     ruby_sys::{
         rb_gc_register_address, rb_gc_register_mark_object, rb_gc_unregister_address, rb_id2sym,
-        rb_ll2inum, rb_num2ll, rb_num2long, rb_num2short, rb_num2ull, rb_num2ulong,
-        rb_num2ushort, rb_sym2id, rb_ull2inum, ruby_special_consts, ID, VALUE,
+        rb_ll2inum, rb_num2ll, rb_num2long, rb_num2short, rb_num2ull, rb_num2ulong, rb_num2ushort,
+        rb_sym2id, rb_ull2inum, ruby_special_consts, ID, VALUE,
     },
 };
 
@@ -305,8 +305,101 @@ impl Fixnum {
         unsafe { transmute::<_, c_long>(self.0) < 0 }
     }
 
+    pub fn to_i8(&self) -> Result<i8, Error> {
+        let mut res = 0;
+        protect(|| {
+            res = unsafe { rb_num2long(self.into_inner()) };
+            *Qnil::new()
+        })?;
+        if res > i8::MAX as c_long {
+            return Err(Error::range_error("fixnum too big to convert into `i8`"));
+        }
+        Ok(res as i8)
+    }
+
+    pub fn to_i16(&self) -> Result<i16, Error> {
+        let mut res = 0;
+        protect(|| {
+            res = unsafe { rb_num2short(self.into_inner()) };
+            *Qnil::new()
+        })?;
+        Ok(res)
+    }
+
+    pub fn to_i32(&self) -> Result<i32, Error> {
+        let mut res = 0;
+        protect(|| {
+            res = unsafe { rb_num2long(self.into_inner()) };
+            *Qnil::new()
+        })?;
+        if res > i32::MAX as c_long {
+            return Err(Error::range_error("fixnum too big to convert into `i32`"));
+        }
+        Ok(res as i32)
+    }
+
     pub fn to_i64(&self) -> i64 {
         unsafe { rb_num2ll(self.into_inner()) }
+    }
+
+    pub fn to_isize(&self) -> Result<isize, Error> {
+        let mut res = 0;
+        protect(|| {
+            res = unsafe { rb_num2long(self.into_inner()) };
+            *Qnil::new()
+        })?;
+        if res > isize::MAX as c_long {
+            return Err(Error::range_error("fixnum too big to convert into `isize`"));
+        }
+        Ok(res as isize)
+    }
+
+    pub fn to_u8(&self) -> Result<u8, Error> {
+        if self.is_negative() {
+            return Err(Error::range_error(
+                "can't convert negative integer to unsigned",
+            ));
+        }
+        let mut res = 0;
+        protect(|| {
+            res = unsafe { rb_num2ulong(self.into_inner()) };
+            *Qnil::new()
+        })?;
+        if res > u8::MAX as c_ulong {
+            return Err(Error::range_error("fixnum too big to convert into `u8`"));
+        }
+        Ok(res as u8)
+    }
+
+    pub fn to_u16(&self) -> Result<u16, Error> {
+        if self.is_negative() {
+            return Err(Error::range_error(
+                "can't convert negative integer to unsigned",
+            ));
+        }
+        let mut res = 0;
+        protect(|| {
+            res = unsafe { rb_num2ushort(self.into_inner()) };
+            *Qnil::new()
+        })?;
+        Ok(res)
+    }
+
+    pub fn to_u32(&self) -> Result<u32, Error> {
+        if self.is_negative() {
+            return Err(Error::range_error(
+                "can't convert negative integer to unsigned",
+            ));
+        }
+        let mut res = 0;
+        protect(|| {
+            res = unsafe { rb_num2ulong(self.into_inner()) };
+            *Qnil::new()
+        })?;
+        if res > u32::MAX as c_ulong {
+            return Err(Error::range_error("fixnum too big to convert into `u32`"));
+        }
+        Ok(res as u32)
     }
 
     pub fn to_u64(&self) -> Result<u64, Error> {
@@ -325,19 +418,12 @@ impl Fixnum {
         Ok(res)
     }
 
-    pub fn to_isize(&self) -> Result<isize, Error> {
-        let mut res = 0;
-        protect(|| {
-            res = unsafe { rb_num2long(self.into_inner()) };
-            *Qnil::new()
-        })?;
-        if res > isize::MAX as c_long {
-            return Err(Error::range_error("fixnum too big to convert into `isize`"));
-        }
-        Ok(res as isize)
-    }
-
     pub fn to_usize(&self) -> Result<usize, Error> {
+        if self.is_negative() {
+            return Err(Error::range_error(
+                "can't convert negative integer to unsigned",
+            ));
+        }
         let mut res = 0;
         protect(|| {
             res = unsafe { rb_num2ulong(self.into_inner()) };
@@ -347,72 +433,6 @@ impl Fixnum {
             return Err(Error::range_error("fixnum too big to convert into `usize`"));
         }
         Ok(res as usize)
-    }
-
-    pub fn to_i32(&self) -> Result<i32, Error> {
-        let mut res = 0;
-        protect(|| {
-            res = unsafe { rb_num2long(self.into_inner()) };
-            *Qnil::new()
-        })?;
-        if res > i32::MAX as c_long {
-            return Err(Error::range_error("fixnum too big to convert into `i32`"));
-        }
-        Ok(res as i32)
-    }
-
-    pub fn to_u32(&self) -> Result<u32, Error> {
-        let mut res = 0;
-        protect(|| {
-            res = unsafe { rb_num2ulong(self.into_inner()) };
-            *Qnil::new()
-        })?;
-        if res > u32::MAX as c_ulong {
-            return Err(Error::range_error("fixnum too big to convert into `u32`"));
-        }
-        Ok(res as u32)
-    }
-
-    pub fn to_i16(&self) -> Result<i16, Error> {
-        let mut res = 0;
-        protect(|| {
-            res = unsafe { rb_num2short(self.into_inner()) };
-            *Qnil::new()
-        })?;
-        Ok(res)
-    }
-
-    pub fn to_u16(&self) -> Result<u16, Error> {
-        let mut res = 0;
-        protect(|| {
-            res = unsafe { rb_num2ushort(self.into_inner()) };
-            *Qnil::new()
-        })?;
-        Ok(res)
-    }
-
-    pub fn to_i8(&self) -> Result<i8, Error> {
-        let mut res = 0;
-        protect(|| {
-            res = unsafe { rb_num2long(self.into_inner()) };
-            *Qnil::new()
-        })?;
-        if res > i8::MAX as c_long {
-            return Err(Error::range_error("fixnum too big to convert into `i8`"));
-        }
-        Ok(res as i8)
-    }
-
-    pub fn to_u8(&self) -> Result<u8, Error> {
-        let mut res = 0;
-        protect(|| {
-            res = unsafe { rb_num2ulong(self.into_inner()) };
-            *Qnil::new()
-        })?;
-        if res > u8::MAX as c_ulong {
-            return Err(Error::range_error("fixnum too big to convert into `u8`"));
-        }
-        Ok(res as u8)
     }
 }
 
