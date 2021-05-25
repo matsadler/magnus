@@ -1,31 +1,36 @@
 use std::ops::Deref;
 
 use crate::{
+    error::Error,
+    protect,
     r_basic::RBasic,
-    ruby_sys::{rb_float_new, rb_float_value, ruby_value_type, VALUE},
-    value::{Flonum, Value},
+    ruby_sys::{
+        rb_float_new, rb_float_value, rb_to_float, ruby_special_consts, ruby_value_type, VALUE,
+    },
+    try_convert::TryConvert,
+    value::Value,
 };
 
 #[repr(transparent)]
-pub struct RFloat(pub(crate) VALUE);
+pub struct Float(VALUE);
 
-impl RFloat {
+impl Float {
     /// # Safety
     ///
     /// val must not have been GC'd, return value must be kept on stack or
     /// otherwise protected from the GC.
     pub unsafe fn from_value(val: &Value) -> Option<Self> {
+        if val.into_inner() & ruby_special_consts::RUBY_FLONUM_MASK as VALUE
+            == ruby_special_consts::RUBY_FLONUM_FLAG as VALUE
+        {
+            return Some(Self(val.into_inner()));
+        }
         let r_basic = RBasic::from_value(val)?;
         (r_basic.builtin_type() == ruby_value_type::RUBY_T_FLOAT).then(|| Self(val.into_inner()))
     }
 
-    pub fn from_f64(n: f64) -> Result<Self, Flonum> {
-        unsafe {
-            let val = Value::new(rb_float_new(n));
-            Self::from_value(&val).ok_or_else(|| {
-                Flonum::from_value(&val).expect("f64 should convert to flonum or float")
-            })
-        }
+    pub fn from_f64(n: f64) -> Self {
+        unsafe { Float(rb_float_new(n)) }
     }
 
     /// # Safety
@@ -36,7 +41,7 @@ impl RFloat {
     }
 }
 
-impl Deref for RFloat {
+impl Deref for Float {
     type Target = Value;
 
     fn deref(&self) -> &Self::Target {
@@ -44,5 +49,15 @@ impl Deref for RFloat {
         let value_ptr = self_ptr as *const Self::Target;
         // we just got this pointer from &self, so we know it's valid to deref
         unsafe { &*value_ptr }
+    }
+}
+
+impl TryConvert for Float {
+    unsafe fn try_convert(val: Value) -> Result<Self, Error> {
+        match Self::from_value(&val) {
+            Some(i) => Ok(i),
+            None => protect(|| Value::new(rb_to_float(val.into_inner())))
+                .map(|res| Self(res.into_inner())),
+        }
     }
 }

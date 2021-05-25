@@ -1,6 +1,6 @@
 pub mod error;
 mod exception;
-mod try_convert;
+mod float;
 mod integer;
 mod method;
 mod module;
@@ -22,6 +22,7 @@ mod r_string;
 mod r_struct;
 mod r_typed_data;
 pub mod ruby_sys;
+mod try_convert;
 pub mod value;
 
 use std::{
@@ -42,7 +43,7 @@ pub use value::{Fixnum, Flonum, Qfalse, Qnil, Qtrue, Symbol, Value};
 pub use {
     error::Error,
     exception::{Exception, ExceptionClass},
-    try_convert::TryConvert,
+    float::Float,
     integer::Integer,
     module::Module,
     object::Object,
@@ -62,12 +63,12 @@ pub use {
     r_string::RString,
     r_struct::RStruct,
     r_typed_data::{RTypedData, TypedData},
+    try_convert::TryConvert,
 };
 
 pub mod prelude {
     pub use crate::{
-        try_convert::TryConvert, module::Module, object::Object,
-        r_typed_data::TypedData,
+        module::Module, object::Object, r_typed_data::TypedData, try_convert::TryConvert,
     };
 }
 

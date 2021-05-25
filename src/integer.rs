@@ -2,11 +2,11 @@ use std::ops::Deref;
 
 use crate::{
     error::Error,
-    try_convert::TryConvert,
     protect,
     r_basic::RBasic,
     r_bignum::RBignum,
     ruby_sys::{rb_ll2inum, rb_to_int, rb_ull2inum, ruby_special_consts, ruby_value_type, VALUE},
+    try_convert::TryConvert,
     value::{Fixnum, Value},
 };
 

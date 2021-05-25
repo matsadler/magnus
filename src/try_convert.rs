@@ -1,4 +1,10 @@
-use crate::{error::Error, integer::Integer, value::Value};
+use crate::{
+    error::Error,
+    integer::Integer,
+    protect,
+    ruby_sys::rb_num2dbl,
+    value::{Qnil, Value},
+};
 
 pub trait TryConvert: Sized {
     /// # Safety
@@ -30,9 +36,7 @@ where
     T: TryConvert,
 {
     unsafe fn try_convert(val: Value) -> Result<Self, Error> {
-        val.is_nil()
-            .then(|| T::try_convert(val))
-            .transpose()
+        val.is_nil().then(|| T::try_convert(val)).transpose()
     }
 }
 
@@ -123,3 +127,22 @@ impl TryConvert for usize {
     }
 }
 impl TryConvertToRust for usize {}
+
+impl TryConvert for f32 {
+    unsafe fn try_convert(val: Value) -> Result<Self, Error> {
+        f64::try_convert(val).map(|f| f as f32)
+    }
+}
+impl TryConvertToRust for f32 {}
+
+impl TryConvert for f64 {
+    unsafe fn try_convert(val: Value) -> Result<Self, Error> {
+        let mut res = 0.0;
+        protect(|| {
+            res = rb_num2dbl(val.into_inner());
+            *Qnil::new()
+        })?;
+        Ok(res)
+    }
+}
+impl TryConvertToRust for f64 {}

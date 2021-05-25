@@ -8,10 +8,12 @@ use crate::{
     error::Error,
     protect,
     r_bignum::RBignum,
+    r_float::RFloat,
     ruby_sys::{
-        rb_gc_register_address, rb_gc_register_mark_object, rb_gc_unregister_address, rb_id2sym,
-        rb_ll2inum, rb_num2ll, rb_num2long, rb_num2short, rb_num2ull, rb_num2ulong, rb_num2ushort,
-        rb_sym2id, rb_ull2inum, ruby_special_consts, ID, VALUE,
+        rb_float_new, rb_float_value, rb_gc_register_address, rb_gc_register_mark_object,
+        rb_gc_unregister_address, rb_id2sym, rb_ll2inum, rb_num2ll, rb_num2long, rb_num2short,
+        rb_num2ull, rb_num2ulong, rb_num2ushort, rb_sym2id, rb_ull2inum, ruby_special_consts, ID,
+        VALUE,
     },
 };
 
@@ -448,13 +450,24 @@ impl Deref for Fixnum {
 }
 
 #[repr(transparent)]
-pub struct Flonum(VALUE);
+pub struct Flonum(pub(crate) VALUE);
 
 impl Flonum {
     pub fn from_value(val: &Value) -> Option<Self> {
         (val.into_inner() & ruby_special_consts::RUBY_FLONUM_MASK as VALUE
             == ruby_special_consts::RUBY_FLONUM_FLAG as VALUE)
             .then(|| Self(val.into_inner()))
+    }
+
+    pub fn from_f64(n: f64) -> Result<Self, RFloat> {
+        let val = unsafe { Value::new(rb_float_new(n)) };
+        Self::from_value(&val).ok_or_else(|| {
+            unsafe { RFloat::from_value(&val) }.expect("f64 should convert to flonum or float")
+        })
+    }
+
+    pub fn to_f64(&self) -> f64 {
+        unsafe { rb_float_value(self.into_inner()) }
     }
 }
 
