@@ -289,14 +289,14 @@ impl Fixnum {
 
     pub fn from_i64(n: i64) -> Result<Self, RBignum> {
         let val = unsafe { Value::new(rb_ll2inum(n)) };
-        Fixnum::from_value(&val).ok_or_else(|| {
+        Self::from_value(&val).ok_or_else(|| {
             unsafe { RBignum::from_value(&val) }.expect("i64 should convert to fixnum or bignum")
         })
     }
 
     pub fn from_u64(n: u64) -> Result<Self, RBignum> {
         let val = unsafe { Value::new(rb_ull2inum(n)) };
-        Fixnum::from_value(&val).ok_or_else(|| {
+        Self::from_value(&val).ok_or_else(|| {
             unsafe { RBignum::from_value(&val) }.expect("u64 should convert to fixnum or bignum")
         })
     }
