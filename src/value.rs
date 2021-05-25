@@ -75,7 +75,7 @@ impl Value {
 
 impl Default for Value {
     fn default() -> Self {
-        Value(ruby_special_consts::RUBY_Qundef as VALUE)
+        Value(ruby_special_consts::RUBY_Qnil as VALUE)
     }
 }
 
