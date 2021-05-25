@@ -55,7 +55,7 @@ impl RBignum {
     ///
     /// # Safety
     ///
-    /// val must not have been GC'd.
+    /// self must not have been GC'd.
     pub unsafe fn to_i32(&self) -> Result<i32, Error> {
         let mut res = 0;
         protect(|| {
@@ -70,7 +70,7 @@ impl RBignum {
 
     /// # Safety
     ///
-    /// val must not have been GC'd.
+    /// self must not have been GC'd.
     pub unsafe fn to_i64(&self) -> Result<i64, Error> {
         let mut res = 0;
         protect(|| {
@@ -82,7 +82,7 @@ impl RBignum {
 
     /// # Safety
     ///
-    /// val must not have been GC'd.
+    /// self must not have been GC'd.
     pub unsafe fn to_isize(&self) -> Result<isize, Error> {
         let mut res = 0;
         protect(|| {
@@ -100,7 +100,7 @@ impl RBignum {
     ///
     /// # Safety
     ///
-    /// val must not have been GC'd.
+    /// self must not have been GC'd.
     pub unsafe fn to_u32(&self) -> Result<u32, Error> {
         if self.is_negative() {
             return Err(Error::range_error(
@@ -120,7 +120,7 @@ impl RBignum {
 
     /// # Safety
     ///
-    /// val must not have been GC'd.
+    /// self must not have been GC'd.
     pub unsafe fn to_u64(&self) -> Result<u64, Error> {
         if self.is_negative() {
             return Err(Error::range_error(
@@ -137,7 +137,7 @@ impl RBignum {
 
     /// # Safety
     ///
-    /// val must not have been GC'd.
+    /// self must not have been GC'd.
     pub unsafe fn to_usize(&self) -> Result<usize, Error> {
         if self.is_negative() {
             return Err(Error::range_error(
