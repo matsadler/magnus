@@ -32,4 +32,10 @@ impl Deref for RMatch {
     }
 }
 
+impl From<RMatch> for Value {
+    fn from(val: RMatch) -> Self {
+        *val
+    }
+}
+
 impl Object for RMatch {}

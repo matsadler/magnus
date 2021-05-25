@@ -6,6 +6,8 @@ use std::{
 
 use crate::{
     error::Error,
+    float::Float,
+    integer::Integer,
     protect,
     r_bignum::RBignum,
     r_float::RFloat,
@@ -81,12 +83,75 @@ impl Default for Value {
     }
 }
 
-impl<T> From<T> for Value
-where
-    T: Deref<Target = Value>,
-{
-    fn from(val: T) -> Self {
-        *val
+impl From<i8> for Value {
+    fn from(value: i8) -> Self {
+        Integer::from_i64(value as i64).into()
+    }
+}
+
+impl From<i16> for Value {
+    fn from(value: i16) -> Self {
+        Integer::from_i64(value as i64).into()
+    }
+}
+
+impl From<i32> for Value {
+    fn from(value: i32) -> Self {
+        Integer::from_i64(value as i64).into()
+    }
+}
+
+impl From<i64> for Value {
+    fn from(value: i64) -> Self {
+        Integer::from_i64(value).into()
+    }
+}
+
+impl From<isize> for Value {
+    fn from(value: isize) -> Self {
+        Integer::from_i64(value as i64).into()
+    }
+}
+
+impl From<u8> for Value {
+    fn from(value: u8) -> Self {
+        Integer::from_u64(value as u64).into()
+    }
+}
+
+impl From<u16> for Value {
+    fn from(value: u16) -> Self {
+        Integer::from_u64(value as u64).into()
+    }
+}
+
+impl From<u32> for Value {
+    fn from(value: u32) -> Self {
+        Integer::from_u64(value as u64).into()
+    }
+}
+
+impl From<u64> for Value {
+    fn from(value: u64) -> Self {
+        Integer::from_u64(value).into()
+    }
+}
+
+impl From<usize> for Value {
+    fn from(value: usize) -> Self {
+        Integer::from_u64(value as u64).into()
+    }
+}
+
+impl From<f32> for Value {
+    fn from(value: f32) -> Self {
+        Float::from_f64(value as f64).into()
+    }
+}
+
+impl From<f64> for Value {
+    fn from(value: f64) -> Self {
+        Float::from_f64(value).into()
     }
 }
 
@@ -145,6 +210,12 @@ impl DerefMut for BoxValue {
     }
 }
 
+impl From<BoxValue> for Value {
+    fn from(val: BoxValue) -> Self {
+        *val
+    }
+}
+
 #[repr(transparent)]
 pub struct Qfalse(VALUE);
 
@@ -166,6 +237,12 @@ impl Deref for Qfalse {
         let value_ptr = self_ptr as *const Self::Target;
         // we just got this pointer from &self, so we know it's valid to deref
         unsafe { &*value_ptr }
+    }
+}
+
+impl From<Qfalse> for Value {
+    fn from(val: Qfalse) -> Self {
+        *val
     }
 }
 
@@ -193,6 +270,12 @@ impl Deref for Qtrue {
     }
 }
 
+impl From<Qtrue> for Value {
+    fn from(val: Qtrue) -> Self {
+        *val
+    }
+}
+
 #[repr(transparent)]
 pub struct Qnil(VALUE);
 
@@ -214,6 +297,12 @@ impl Deref for Qnil {
         let value_ptr = self_ptr as *const Self::Target;
         // we just got this pointer from &self, so we know it's valid to deref
         unsafe { &*value_ptr }
+    }
+}
+
+impl From<Qnil> for Value {
+    fn from(val: Qnil) -> Self {
+        *val
     }
 }
 
@@ -243,6 +332,18 @@ impl Symbol {
         ((val.into_inner() as usize & MASK) == ruby_special_consts::RUBY_SYMBOL_FLAG as usize)
             .then(|| Self(val.into_inner()))
     }
+
+    // TODO does this have a use?
+    #[allow(dead_code)]
+    pub(crate) fn from_id(id: &Id) -> Self {
+        // safe ffi to Ruby, arg is value from Ruby, call doesn't raise
+        unsafe { Self(rb_id2sym(id.0)) }
+    }
+
+    pub(crate) fn to_id(&self) -> Id {
+        // safe ffi to Ruby, arg is value from Ruby, call doesn't raise
+        unsafe { Id(rb_sym2id(self.0)) }
+    }
 }
 
 impl Deref for Symbol {
@@ -256,17 +357,9 @@ impl Deref for Symbol {
     }
 }
 
-impl Symbol {
-    // TODO does this have a use?
-    #[allow(dead_code)]
-    pub(crate) fn from_id(id: &Id) -> Self {
-        // safe ffi to Ruby, arg is value from Ruby, call doesn't raise
-        unsafe { Self(rb_id2sym(id.0)) }
-    }
-
-    pub(crate) fn to_id(&self) -> Id {
-        // safe ffi to Ruby, arg is value from Ruby, call doesn't raise
-        unsafe { Id(rb_sym2id(self.0)) }
+impl From<Symbol> for Value {
+    fn from(val: Symbol) -> Self {
+        *val
     }
 }
 
@@ -449,6 +542,12 @@ impl Deref for Fixnum {
     }
 }
 
+impl From<Fixnum> for Value {
+    fn from(val: Fixnum) -> Self {
+        *val
+    }
+}
+
 #[repr(transparent)]
 pub struct Flonum(pub(crate) VALUE);
 
@@ -479,5 +578,11 @@ impl Deref for Flonum {
         let value_ptr = self_ptr as *const Self::Target;
         // we just got this pointer from &self, so we know it's valid to deref
         unsafe { &*value_ptr }
+    }
+}
+
+impl From<Flonum> for Value {
+    fn from(val: Flonum) -> Self {
+        *val
     }
 }

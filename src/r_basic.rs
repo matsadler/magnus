@@ -50,3 +50,9 @@ impl Deref for RBasic {
         unsafe { &*value_ptr }
     }
 }
+
+impl From<RBasic> for Value {
+    fn from(val: RBasic) -> Self {
+        *val
+    }
+}

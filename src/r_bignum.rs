@@ -166,3 +166,9 @@ impl Deref for RBignum {
         unsafe { &*value_ptr }
     }
 }
+
+impl From<RBignum> for Value {
+    fn from(val: RBignum) -> Self {
+        *val
+    }
+}

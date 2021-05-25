@@ -40,4 +40,10 @@ impl Deref for RString {
     }
 }
 
+impl From<RString> for Value {
+    fn from(val: RString) -> Self {
+        *val
+    }
+}
+
 impl Object for RString {}

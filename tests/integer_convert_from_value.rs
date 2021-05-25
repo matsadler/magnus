@@ -1,7 +1,7 @@
 use magnus::prelude::*;
 
 #[test]
-fn it_converts_integers() {
+fn it_converts_integers_from_value() {
     let _cleanup = unsafe { magnus::init() };
 
     // in range

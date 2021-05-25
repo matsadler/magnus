@@ -32,4 +32,10 @@ impl Deref for RHash {
     }
 }
 
+impl From<RHash> for Value {
+    fn from(val: RHash) -> Self {
+        *val
+    }
+}
+
 impl Object for RHash {}

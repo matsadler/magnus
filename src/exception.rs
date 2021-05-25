@@ -34,6 +34,12 @@ impl Deref for Exception {
     }
 }
 
+impl From<Exception> for Value {
+    fn from(val: Exception) -> Self {
+        *val
+    }
+}
+
 #[repr(transparent)]
 pub struct ExceptionClass(pub(crate) VALUE);
 
@@ -65,5 +71,11 @@ impl Deref for ExceptionClass {
 impl Default for ExceptionClass {
     fn default() -> Self {
         unsafe { Self(rb_eRuntimeError) }
+    }
+}
+
+impl From<ExceptionClass> for Value {
+    fn from(val: ExceptionClass) -> Self {
+        *val
     }
 }

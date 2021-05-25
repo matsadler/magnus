@@ -34,7 +34,7 @@ use std::{
 
 use method::Method;
 use ruby_sys::{
-    rb_define_class, rb_define_global_function, rb_define_module, rb_errinfo,
+    rb_define_class, rb_define_global_function, rb_define_module, rb_define_variable, rb_errinfo,
     rb_eval_string_protect, rb_jump_tag, rb_protect, rb_set_errinfo, ruby_cleanup, ruby_init,
     VALUE,
 };
@@ -95,6 +95,15 @@ pub fn define_module(name: &str) -> Result<RModule, Error> {
         let res = protect(|| Value::new(rb_define_module(name.as_ptr())));
         res.map(|v| RModule::from_value(&v).unwrap())
     }
+}
+
+pub fn define_global_variable(name: &str, initial: Value) -> Result<*mut Value, Error> {
+    let name = CString::new(name).unwrap();
+    let ptr = Box::into_raw(Box::new(initial));
+    unsafe {
+        rb_define_variable(name.as_ptr(), ptr as *mut VALUE);
+    }
+    Ok(ptr)
 }
 
 pub fn define_global_function<M>(name: &str, func: M)

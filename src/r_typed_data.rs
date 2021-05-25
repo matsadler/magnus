@@ -56,6 +56,12 @@ impl Deref for RTypedData {
     }
 }
 
+impl From<RTypedData> for Value {
+    fn from(val: RTypedData) -> Self {
+        *val
+    }
+}
+
 impl Object for RTypedData {}
 
 pub trait TypedData

@@ -32,4 +32,10 @@ impl Deref for RStruct {
     }
 }
 
+impl From<RStruct> for Value {
+    fn from(val: RStruct) -> Self {
+        *val
+    }
+}
+
 impl Object for RStruct {}

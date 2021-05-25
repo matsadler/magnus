@@ -30,3 +30,9 @@ impl Deref for RComplex {
         unsafe { &*value_ptr }
     }
 }
+
+impl From<RComplex> for Value {
+    fn from(val: RComplex) -> Self {
+        *val
+    }
+}

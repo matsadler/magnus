@@ -51,5 +51,11 @@ impl Deref for RClass {
     }
 }
 
+impl From<RClass> for Value {
+    fn from(val: RClass) -> Self {
+        *val
+    }
+}
+
 impl Object for RClass {}
 impl Module for RClass {}

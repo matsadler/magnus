@@ -40,4 +40,10 @@ impl Deref for RFile {
     }
 }
 
+impl From<RFile> for Value {
+    fn from(val: RFile) -> Self {
+        *val
+    }
+}
+
 impl Object for RFile {}

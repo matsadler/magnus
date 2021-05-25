@@ -30,3 +30,9 @@ impl Deref for RRational {
         unsafe { &*value_ptr }
     }
 }
+
+impl From<RRational> for Value {
+    fn from(val: RRational) -> Self {
+        *val
+    }
+}

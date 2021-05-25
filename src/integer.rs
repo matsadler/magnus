@@ -155,6 +155,12 @@ impl Deref for Integer {
     }
 }
 
+impl From<Integer> for Value {
+    fn from(val: Integer) -> Self {
+        *val
+    }
+}
+
 impl TryConvert for Integer {
     unsafe fn try_convert(val: Value) -> Result<Self, Error> {
         match Self::from_value(&val) {

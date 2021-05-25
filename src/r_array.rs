@@ -40,4 +40,10 @@ impl Deref for RArray {
     }
 }
 
+impl From<RArray> for Value {
+    fn from(val: RArray) -> Self {
+        *val
+    }
+}
+
 impl Object for RArray {}

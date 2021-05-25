@@ -46,3 +46,9 @@ impl Deref for RFloat {
         unsafe { &*value_ptr }
     }
 }
+
+impl From<RFloat> for Value {
+    fn from(val: RFloat) -> Self {
+        *val
+    }
+}

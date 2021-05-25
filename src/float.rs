@@ -52,6 +52,12 @@ impl Deref for Float {
     }
 }
 
+impl From<Float> for Value {
+    fn from(val: Float) -> Self {
+        *val
+    }
+}
+
 impl TryConvert for Float {
     unsafe fn try_convert(val: Value) -> Result<Self, Error> {
         match Self::from_value(&val) {

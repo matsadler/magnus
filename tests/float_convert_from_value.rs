@@ -1,7 +1,7 @@
 use magnus::prelude::*;
 
 #[test]
-fn it_converts_floats() {
+fn it_converts_floats_from_value() {
     let _cleanup = unsafe { magnus::init() };
 
     let val = magnus::eval_static("1.0").ok().unwrap();

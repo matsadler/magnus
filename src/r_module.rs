@@ -51,5 +51,11 @@ impl Deref for RModule {
     }
 }
 
+impl From<RModule> for Value {
+    fn from(val: RModule) -> Self {
+        *val
+    }
+}
+
 impl Object for RModule {}
 impl Module for RModule {}

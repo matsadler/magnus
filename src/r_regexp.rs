@@ -38,3 +38,9 @@ impl Deref for RRegexp {
         unsafe { &*value_ptr }
     }
 }
+
+impl From<RRegexp> for Value {
+    fn from(val: RRegexp) -> Self {
+        *val
+    }
+}

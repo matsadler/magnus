@@ -40,4 +40,10 @@ impl Deref for RObject {
     }
 }
 
+impl From<RObject> for Value {
+    fn from(val: RObject) -> Self {
+        *val
+    }
+}
+
 impl Object for RObject {}
