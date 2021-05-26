@@ -13,6 +13,15 @@ pub trait TryConvert: Sized {
     unsafe fn try_convert(val: Value) -> Result<Self, Error>;
 }
 
+impl Value {
+    pub unsafe fn try_convert<T>(self) -> Result<T, Error>
+    where
+        T: TryConvert,
+    {
+        T::try_convert(self)
+    }
+}
+
 /// Only implemented on Rust types. TryConvert may convert from a
 /// Value to another Ruby type. Use this when you need a Rust value that's
 /// divorced from the Ruby runtime, safe to put on the heap, etc.

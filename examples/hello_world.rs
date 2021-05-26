@@ -1,14 +1,14 @@
-use magnus::{fn_ptr, Qnil, Value};
+use magnus::{method, Value, Error};
 
-extern "C" fn hello(_rb_self: Value) -> Value {
+fn hello(_rb_self: Value) -> Result<(), Error> {
     println!("hello, world");
-    Qnil::new().into()
+    Ok(())
 }
 
 fn main() {
     let _cleanup = unsafe { magnus::init() };
 
-    magnus::define_global_function("hello", fn_ptr!(hello));
+    magnus::define_global_function("hello", method!(hello, 0));
 
-    let _ = magnus::eval_static("p hello");
+    let _ = magnus::eval_static("hello");
 }

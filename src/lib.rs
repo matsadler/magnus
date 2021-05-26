@@ -2,7 +2,7 @@ pub mod error;
 mod exception;
 mod float;
 mod integer;
-mod method;
+pub mod method;
 mod module;
 mod object;
 mod r_array;
@@ -69,13 +69,6 @@ pub use {
 pub mod prelude {
     pub use crate::{
         module::Module, object::Object, r_typed_data::TypedData, try_convert::TryConvert,
-    };
-}
-
-#[macro_export]
-macro_rules! fn_ptr {
-    ($fn:expr) => {
-        $fn as unsafe extern "C" fn(_) -> _
     };
 }
 

@@ -306,6 +306,12 @@ impl From<Qnil> for Value {
     }
 }
 
+impl From<()> for Value {
+    fn from(_: ()) -> Self {
+        Qnil::new().into()
+    }
+}
+
 #[repr(transparent)]
 pub struct Qundef(VALUE);
 
