@@ -69,7 +69,7 @@ pub use {
 
 pub mod prelude {
     pub use crate::{
-        module::Module, object::Object, r_typed_data::TypedData, try_convert::TryConvert,
+        module::Module, object::Object,
     };
 }
 

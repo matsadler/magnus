@@ -6,6 +6,7 @@ use std::{
 
 use crate::{
     debug_assert_value,
+    error::Error,
     object::Object,
     protect,
     r_basic::RBasic,
@@ -14,6 +15,7 @@ use crate::{
         self, rb_check_typeddata, rb_data_type_struct__bindgen_ty_1, rb_data_type_t,
         rb_data_typed_object_wrap, rbimpl_typeddata_flags, ruby_value_type, size_t, VALUE,
     },
+    try_convert::{TryConvert, TryConvertToRust},
     value::{Qnil, Value},
 };
 
@@ -181,5 +183,25 @@ where
         let mut boxed = Box::<Self>::from_raw(ptr as *mut _);
         Self::compact(boxed.as_mut());
         Box::leak(boxed);
+    }
+}
+
+impl<'a, T> TryConvert<'a> for &'a T
+where
+    T: TypedData,
+{
+    unsafe fn try_convert(val: &'a Value) -> Result<Self, Error> {
+        // TODO add classes to error message
+        T::from_value(val).ok_or_else(|| Error::type_error("no implicit conversion of {} into {}"))
+    }
+}
+impl<'a, T> TryConvertToRust<'a> for &'a T where T: TypedData {}
+
+impl<T> From<T> for Value
+where
+    T: TypedData,
+{
+    fn from(val: T) -> Self {
+        val.into_value()
     }
 }

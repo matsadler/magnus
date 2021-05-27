@@ -163,8 +163,8 @@ impl From<Integer> for Value {
     }
 }
 
-impl TryConvert for Integer {
-    unsafe fn try_convert(val: Value) -> Result<Self, Error> {
+impl TryConvert<'_> for Integer {
+    unsafe fn try_convert(val: &Value) -> Result<Self, Error> {
         match Self::from_value(&val) {
             Some(i) => Ok(i),
             None => protect(|| {

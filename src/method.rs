@@ -349,8 +349,8 @@ pub struct MethodRbAry<Func, RbSelf, Args, Res> {
 impl<Func, RbSelf, Args, Res> MethodRbAry<Func, RbSelf, Args, Res>
 where
     Func: Fn(RbSelf, Args) -> Result<Res, Error> + UnwindSafe,
-    RbSelf: TryConvert + UnwindSafe,
-    Args: TryConvert + UnwindSafe,
+    for<'a> RbSelf: TryConvert<'a> + UnwindSafe,
+    for<'a> Args: TryConvert<'a> + UnwindSafe,
     Res: Into<Value> + UnwindSafe,
 {
     pub fn new(func: Func) -> Self {
@@ -387,7 +387,7 @@ pub struct MethodCAry<Func, RbSelf, Res> {
 impl<Func, RbSelf, Res> MethodCAry<Func, RbSelf, Res>
 where
     Func: Fn(RbSelf, &[Value]) -> Result<Res, Error> + UnwindSafe,
-    RbSelf: TryConvert + UnwindSafe,
+    for<'a> RbSelf: TryConvert<'a> + UnwindSafe,
     Res: Into<Value> + UnwindSafe,
 {
     pub fn new(func: Func) -> Self {
@@ -435,7 +435,7 @@ pub struct Method0<Func, RbSelf, Res> {
 impl<Func, RbSelf, Res> Method0<Func, RbSelf, Res>
 where
     Func: Fn(RbSelf) -> Result<Res, Error> + UnwindSafe,
-    RbSelf: TryConvert + UnwindSafe,
+    for<'a> RbSelf: TryConvert<'a> + UnwindSafe,
 
     Res: Into<Value> + UnwindSafe,
 {
@@ -474,8 +474,8 @@ pub struct Method1<Func, RbSelf, A, Res> {
 impl<Func, RbSelf, A, Res> Method1<Func, RbSelf, A, Res>
 where
     Func: Fn(RbSelf, A) -> Result<Res, Error> + UnwindSafe,
-    RbSelf: TryConvert + UnwindSafe,
-    A: TryConvert + UnwindSafe,
+    for<'a> RbSelf: TryConvert<'a> + UnwindSafe,
+    for<'a> A: TryConvert<'a> + UnwindSafe,
     Res: Into<Value> + UnwindSafe,
 {
     pub fn new(func: Func) -> Self {
@@ -514,9 +514,9 @@ pub struct Method2<Func, RbSelf, A, B, Res> {
 impl<Func, RbSelf, A, B, Res> Method2<Func, RbSelf, A, B, Res>
 where
     Func: Fn(RbSelf, A, B) -> Result<Res, Error> + UnwindSafe,
-    RbSelf: TryConvert + UnwindSafe,
-    A: TryConvert + UnwindSafe,
-    B: TryConvert + UnwindSafe,
+    for<'a> RbSelf: TryConvert<'a> + UnwindSafe,
+    for<'a> A: TryConvert<'a> + UnwindSafe,
+    for<'a> B: TryConvert<'a> + UnwindSafe,
     Res: Into<Value> + UnwindSafe,
 {
     pub fn new(func: Func) -> Self {
@@ -562,10 +562,10 @@ pub struct Method3<Func, RbSelf, A, B, C, Res> {
 impl<Func, RbSelf, A, B, C, Res> Method3<Func, RbSelf, A, B, C, Res>
 where
     Func: Fn(RbSelf, A, B, C) -> Result<Res, Error> + UnwindSafe,
-    RbSelf: TryConvert + UnwindSafe,
-    A: TryConvert + UnwindSafe,
-    B: TryConvert + UnwindSafe,
-    C: TryConvert + UnwindSafe,
+    for<'a> RbSelf: TryConvert<'a> + UnwindSafe,
+    for<'a> A: TryConvert<'a> + UnwindSafe,
+    for<'a> B: TryConvert<'a> + UnwindSafe,
+    for<'a> C: TryConvert<'a> + UnwindSafe,
     Res: Into<Value> + UnwindSafe,
 {
     pub fn new(func: Func) -> Self {
@@ -620,11 +620,11 @@ pub struct Method4<Func, RbSelf, A, B, C, D, Res> {
 impl<Func, RbSelf, A, B, C, D, Res> Method4<Func, RbSelf, A, B, C, D, Res>
 where
     Func: Fn(RbSelf, A, B, C, D) -> Result<Res, Error> + UnwindSafe,
-    RbSelf: TryConvert + UnwindSafe,
-    A: TryConvert + UnwindSafe,
-    B: TryConvert + UnwindSafe,
-    C: TryConvert + UnwindSafe,
-    D: TryConvert + UnwindSafe,
+    for<'a> RbSelf: TryConvert<'a> + UnwindSafe,
+    for<'a> A: TryConvert<'a> + UnwindSafe,
+    for<'a> B: TryConvert<'a> + UnwindSafe,
+    for<'a> C: TryConvert<'a> + UnwindSafe,
+    for<'a> D: TryConvert<'a> + UnwindSafe,
     Res: Into<Value> + UnwindSafe,
 {
     pub fn new(func: Func) -> Self {
@@ -690,12 +690,12 @@ pub struct Method5<Func, RbSelf, A, B, C, D, E, Res> {
 impl<Func, RbSelf, A, B, C, D, E, Res> Method5<Func, RbSelf, A, B, C, D, E, Res>
 where
     Func: Fn(RbSelf, A, B, C, D, E) -> Result<Res, Error> + UnwindSafe,
-    RbSelf: TryConvert + UnwindSafe,
-    A: TryConvert + UnwindSafe,
-    B: TryConvert + UnwindSafe,
-    C: TryConvert + UnwindSafe,
-    D: TryConvert + UnwindSafe,
-    E: TryConvert + UnwindSafe,
+    for<'a> RbSelf: TryConvert<'a> + UnwindSafe,
+    for<'a> A: TryConvert<'a> + UnwindSafe,
+    for<'a> B: TryConvert<'a> + UnwindSafe,
+    for<'a> C: TryConvert<'a> + UnwindSafe,
+    for<'a> D: TryConvert<'a> + UnwindSafe,
+    for<'a> E: TryConvert<'a> + UnwindSafe,
     Res: Into<Value> + UnwindSafe,
 {
     pub fn new(func: Func) -> Self {
@@ -767,13 +767,13 @@ pub struct Method6<Func, RbSelf, A, B, C, D, E, F, Res> {
 impl<Func, RbSelf, A, B, C, D, E, F, Res> Method6<Func, RbSelf, A, B, C, D, E, F, Res>
 where
     Func: Fn(RbSelf, A, B, C, D, E, F) -> Result<Res, Error> + UnwindSafe,
-    RbSelf: TryConvert + UnwindSafe,
-    A: TryConvert + UnwindSafe,
-    B: TryConvert + UnwindSafe,
-    C: TryConvert + UnwindSafe,
-    D: TryConvert + UnwindSafe,
-    E: TryConvert + UnwindSafe,
-    F: TryConvert + UnwindSafe,
+    for<'a> RbSelf: TryConvert<'a> + UnwindSafe,
+    for<'a> A: TryConvert<'a> + UnwindSafe,
+    for<'a> B: TryConvert<'a> + UnwindSafe,
+    for<'a> C: TryConvert<'a> + UnwindSafe,
+    for<'a> D: TryConvert<'a> + UnwindSafe,
+    for<'a> E: TryConvert<'a> + UnwindSafe,
+    for<'a> F: TryConvert<'a> + UnwindSafe,
     Res: Into<Value> + UnwindSafe,
 {
     pub fn new(func: Func) -> Self {
@@ -850,14 +850,14 @@ pub struct Method7<Func, RbSelf, A, B, C, D, E, F, G, Res> {
 impl<Func, RbSelf, A, B, C, D, E, F, G, Res> Method7<Func, RbSelf, A, B, C, D, E, F, G, Res>
 where
     Func: Fn(RbSelf, A, B, C, D, E, F, G) -> Result<Res, Error> + UnwindSafe,
-    RbSelf: TryConvert + UnwindSafe,
-    A: TryConvert + UnwindSafe,
-    B: TryConvert + UnwindSafe,
-    C: TryConvert + UnwindSafe,
-    D: TryConvert + UnwindSafe,
-    E: TryConvert + UnwindSafe,
-    F: TryConvert + UnwindSafe,
-    G: TryConvert + UnwindSafe,
+    for<'a> RbSelf: TryConvert<'a> + UnwindSafe,
+    for<'a> A: TryConvert<'a> + UnwindSafe,
+    for<'a> B: TryConvert<'a> + UnwindSafe,
+    for<'a> C: TryConvert<'a> + UnwindSafe,
+    for<'a> D: TryConvert<'a> + UnwindSafe,
+    for<'a> E: TryConvert<'a> + UnwindSafe,
+    for<'a> F: TryConvert<'a> + UnwindSafe,
+    for<'a> G: TryConvert<'a> + UnwindSafe,
     Res: Into<Value> + UnwindSafe,
 {
     pub fn new(func: Func) -> Self {
@@ -940,15 +940,15 @@ pub struct Method8<Func, RbSelf, A, B, C, D, E, F, G, H, Res> {
 impl<Func, RbSelf, A, B, C, D, E, F, G, H, Res> Method8<Func, RbSelf, A, B, C, D, E, F, G, H, Res>
 where
     Func: Fn(RbSelf, A, B, C, D, E, F, G, H) -> Result<Res, Error> + UnwindSafe,
-    RbSelf: TryConvert + UnwindSafe,
-    A: TryConvert + UnwindSafe,
-    B: TryConvert + UnwindSafe,
-    C: TryConvert + UnwindSafe,
-    D: TryConvert + UnwindSafe,
-    E: TryConvert + UnwindSafe,
-    F: TryConvert + UnwindSafe,
-    G: TryConvert + UnwindSafe,
-    H: TryConvert + UnwindSafe,
+    for<'a> RbSelf: TryConvert<'a> + UnwindSafe,
+    for<'a> A: TryConvert<'a> + UnwindSafe,
+    for<'a> B: TryConvert<'a> + UnwindSafe,
+    for<'a> C: TryConvert<'a> + UnwindSafe,
+    for<'a> D: TryConvert<'a> + UnwindSafe,
+    for<'a> E: TryConvert<'a> + UnwindSafe,
+    for<'a> F: TryConvert<'a> + UnwindSafe,
+    for<'a> G: TryConvert<'a> + UnwindSafe,
+    for<'a> H: TryConvert<'a> + UnwindSafe,
     Res: Into<Value> + UnwindSafe,
 {
     pub fn new(func: Func) -> Self {
@@ -1037,16 +1037,16 @@ impl<Func, RbSelf, A, B, C, D, E, F, G, H, I, Res>
     Method9<Func, RbSelf, A, B, C, D, E, F, G, H, I, Res>
 where
     Func: Fn(RbSelf, A, B, C, D, E, F, G, H, I) -> Result<Res, Error> + UnwindSafe,
-    RbSelf: TryConvert + UnwindSafe,
-    A: TryConvert + UnwindSafe,
-    B: TryConvert + UnwindSafe,
-    C: TryConvert + UnwindSafe,
-    D: TryConvert + UnwindSafe,
-    E: TryConvert + UnwindSafe,
-    F: TryConvert + UnwindSafe,
-    G: TryConvert + UnwindSafe,
-    H: TryConvert + UnwindSafe,
-    I: TryConvert + UnwindSafe,
+    for<'a> RbSelf: TryConvert<'a> + UnwindSafe,
+    for<'a> A: TryConvert<'a> + UnwindSafe,
+    for<'a> B: TryConvert<'a> + UnwindSafe,
+    for<'a> C: TryConvert<'a> + UnwindSafe,
+    for<'a> D: TryConvert<'a> + UnwindSafe,
+    for<'a> E: TryConvert<'a> + UnwindSafe,
+    for<'a> F: TryConvert<'a> + UnwindSafe,
+    for<'a> G: TryConvert<'a> + UnwindSafe,
+    for<'a> H: TryConvert<'a> + UnwindSafe,
+    for<'a> I: TryConvert<'a> + UnwindSafe,
     Res: Into<Value> + UnwindSafe,
 {
     pub fn new(func: Func) -> Self {
@@ -1140,17 +1140,17 @@ impl<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, Res>
     Method10<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, Res>
 where
     Func: Fn(RbSelf, A, B, C, D, E, F, G, H, I, J) -> Result<Res, Error> + UnwindSafe,
-    RbSelf: TryConvert + UnwindSafe,
-    A: TryConvert + UnwindSafe,
-    B: TryConvert + UnwindSafe,
-    C: TryConvert + UnwindSafe,
-    D: TryConvert + UnwindSafe,
-    E: TryConvert + UnwindSafe,
-    F: TryConvert + UnwindSafe,
-    G: TryConvert + UnwindSafe,
-    H: TryConvert + UnwindSafe,
-    I: TryConvert + UnwindSafe,
-    J: TryConvert + UnwindSafe,
+    for<'a> RbSelf: TryConvert<'a> + UnwindSafe,
+    for<'a> A: TryConvert<'a> + UnwindSafe,
+    for<'a> B: TryConvert<'a> + UnwindSafe,
+    for<'a> C: TryConvert<'a> + UnwindSafe,
+    for<'a> D: TryConvert<'a> + UnwindSafe,
+    for<'a> E: TryConvert<'a> + UnwindSafe,
+    for<'a> F: TryConvert<'a> + UnwindSafe,
+    for<'a> G: TryConvert<'a> + UnwindSafe,
+    for<'a> H: TryConvert<'a> + UnwindSafe,
+    for<'a> I: TryConvert<'a> + UnwindSafe,
+    for<'a> J: TryConvert<'a> + UnwindSafe,
     Res: Into<Value> + UnwindSafe,
 {
     pub fn new(func: Func) -> Self {
@@ -1249,18 +1249,18 @@ impl<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, Res>
     Method11<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, Res>
 where
     Func: Fn(RbSelf, A, B, C, D, E, F, G, H, I, J, K) -> Result<Res, Error> + UnwindSafe,
-    RbSelf: TryConvert + UnwindSafe,
-    A: TryConvert + UnwindSafe,
-    B: TryConvert + UnwindSafe,
-    C: TryConvert + UnwindSafe,
-    D: TryConvert + UnwindSafe,
-    E: TryConvert + UnwindSafe,
-    F: TryConvert + UnwindSafe,
-    G: TryConvert + UnwindSafe,
-    H: TryConvert + UnwindSafe,
-    I: TryConvert + UnwindSafe,
-    J: TryConvert + UnwindSafe,
-    K: TryConvert + UnwindSafe,
+    for<'a> RbSelf: TryConvert<'a> + UnwindSafe,
+    for<'a> A: TryConvert<'a> + UnwindSafe,
+    for<'a> B: TryConvert<'a> + UnwindSafe,
+    for<'a> C: TryConvert<'a> + UnwindSafe,
+    for<'a> D: TryConvert<'a> + UnwindSafe,
+    for<'a> E: TryConvert<'a> + UnwindSafe,
+    for<'a> F: TryConvert<'a> + UnwindSafe,
+    for<'a> G: TryConvert<'a> + UnwindSafe,
+    for<'a> H: TryConvert<'a> + UnwindSafe,
+    for<'a> I: TryConvert<'a> + UnwindSafe,
+    for<'a> J: TryConvert<'a> + UnwindSafe,
+    for<'a> K: TryConvert<'a> + UnwindSafe,
     Res: Into<Value> + UnwindSafe,
 {
     pub fn new(func: Func) -> Self {
@@ -1364,19 +1364,19 @@ impl<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, Res>
     Method12<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, Res>
 where
     Func: Fn(RbSelf, A, B, C, D, E, F, G, H, I, J, K, L) -> Result<Res, Error> + UnwindSafe,
-    RbSelf: TryConvert + UnwindSafe,
-    A: TryConvert + UnwindSafe,
-    B: TryConvert + UnwindSafe,
-    C: TryConvert + UnwindSafe,
-    D: TryConvert + UnwindSafe,
-    E: TryConvert + UnwindSafe,
-    F: TryConvert + UnwindSafe,
-    G: TryConvert + UnwindSafe,
-    H: TryConvert + UnwindSafe,
-    I: TryConvert + UnwindSafe,
-    J: TryConvert + UnwindSafe,
-    K: TryConvert + UnwindSafe,
-    L: TryConvert + UnwindSafe,
+    for<'a> RbSelf: TryConvert<'a> + UnwindSafe,
+    for<'a> A: TryConvert<'a> + UnwindSafe,
+    for<'a> B: TryConvert<'a> + UnwindSafe,
+    for<'a> C: TryConvert<'a> + UnwindSafe,
+    for<'a> D: TryConvert<'a> + UnwindSafe,
+    for<'a> E: TryConvert<'a> + UnwindSafe,
+    for<'a> F: TryConvert<'a> + UnwindSafe,
+    for<'a> G: TryConvert<'a> + UnwindSafe,
+    for<'a> H: TryConvert<'a> + UnwindSafe,
+    for<'a> I: TryConvert<'a> + UnwindSafe,
+    for<'a> J: TryConvert<'a> + UnwindSafe,
+    for<'a> K: TryConvert<'a> + UnwindSafe,
+    for<'a> L: TryConvert<'a> + UnwindSafe,
     Res: Into<Value> + UnwindSafe,
 {
     pub fn new(func: Func) -> Self {
@@ -1485,20 +1485,20 @@ impl<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, M, Res>
     Method13<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, M, Res>
 where
     Func: Fn(RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, M) -> Result<Res, Error> + UnwindSafe,
-    RbSelf: TryConvert + UnwindSafe,
-    A: TryConvert + UnwindSafe,
-    B: TryConvert + UnwindSafe,
-    C: TryConvert + UnwindSafe,
-    D: TryConvert + UnwindSafe,
-    E: TryConvert + UnwindSafe,
-    F: TryConvert + UnwindSafe,
-    G: TryConvert + UnwindSafe,
-    H: TryConvert + UnwindSafe,
-    I: TryConvert + UnwindSafe,
-    J: TryConvert + UnwindSafe,
-    K: TryConvert + UnwindSafe,
-    L: TryConvert + UnwindSafe,
-    M: TryConvert + UnwindSafe,
+    for<'a> RbSelf: TryConvert<'a> + UnwindSafe,
+    for<'a> A: TryConvert<'a> + UnwindSafe,
+    for<'a> B: TryConvert<'a> + UnwindSafe,
+    for<'a> C: TryConvert<'a> + UnwindSafe,
+    for<'a> D: TryConvert<'a> + UnwindSafe,
+    for<'a> E: TryConvert<'a> + UnwindSafe,
+    for<'a> F: TryConvert<'a> + UnwindSafe,
+    for<'a> G: TryConvert<'a> + UnwindSafe,
+    for<'a> H: TryConvert<'a> + UnwindSafe,
+    for<'a> I: TryConvert<'a> + UnwindSafe,
+    for<'a> J: TryConvert<'a> + UnwindSafe,
+    for<'a> K: TryConvert<'a> + UnwindSafe,
+    for<'a> L: TryConvert<'a> + UnwindSafe,
+    for<'a> M: TryConvert<'a> + UnwindSafe,
     Res: Into<Value> + UnwindSafe,
 {
     pub fn new(func: Func) -> Self {
@@ -1612,21 +1612,21 @@ impl<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, M, N, Res>
     Method14<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, M, N, Res>
 where
     Func: Fn(RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, M, N) -> Result<Res, Error> + UnwindSafe,
-    RbSelf: TryConvert + UnwindSafe,
-    A: TryConvert + UnwindSafe,
-    B: TryConvert + UnwindSafe,
-    C: TryConvert + UnwindSafe,
-    D: TryConvert + UnwindSafe,
-    E: TryConvert + UnwindSafe,
-    F: TryConvert + UnwindSafe,
-    G: TryConvert + UnwindSafe,
-    H: TryConvert + UnwindSafe,
-    I: TryConvert + UnwindSafe,
-    J: TryConvert + UnwindSafe,
-    K: TryConvert + UnwindSafe,
-    L: TryConvert + UnwindSafe,
-    M: TryConvert + UnwindSafe,
-    N: TryConvert + UnwindSafe,
+    for<'a> RbSelf: TryConvert<'a> + UnwindSafe,
+    for<'a> A: TryConvert<'a> + UnwindSafe,
+    for<'a> B: TryConvert<'a> + UnwindSafe,
+    for<'a> C: TryConvert<'a> + UnwindSafe,
+    for<'a> D: TryConvert<'a> + UnwindSafe,
+    for<'a> E: TryConvert<'a> + UnwindSafe,
+    for<'a> F: TryConvert<'a> + UnwindSafe,
+    for<'a> G: TryConvert<'a> + UnwindSafe,
+    for<'a> H: TryConvert<'a> + UnwindSafe,
+    for<'a> I: TryConvert<'a> + UnwindSafe,
+    for<'a> J: TryConvert<'a> + UnwindSafe,
+    for<'a> K: TryConvert<'a> + UnwindSafe,
+    for<'a> L: TryConvert<'a> + UnwindSafe,
+    for<'a> M: TryConvert<'a> + UnwindSafe,
+    for<'a> N: TryConvert<'a> + UnwindSafe,
     Res: Into<Value> + UnwindSafe,
 {
     pub fn new(func: Func) -> Self {
@@ -1746,22 +1746,22 @@ impl<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, Res>
 where
     Func:
         Fn(RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O) -> Result<Res, Error> + UnwindSafe,
-    RbSelf: TryConvert + UnwindSafe,
-    A: TryConvert + UnwindSafe,
-    B: TryConvert + UnwindSafe,
-    C: TryConvert + UnwindSafe,
-    D: TryConvert + UnwindSafe,
-    E: TryConvert + UnwindSafe,
-    F: TryConvert + UnwindSafe,
-    G: TryConvert + UnwindSafe,
-    H: TryConvert + UnwindSafe,
-    I: TryConvert + UnwindSafe,
-    J: TryConvert + UnwindSafe,
-    K: TryConvert + UnwindSafe,
-    L: TryConvert + UnwindSafe,
-    M: TryConvert + UnwindSafe,
-    N: TryConvert + UnwindSafe,
-    O: TryConvert + UnwindSafe,
+    for<'a> RbSelf: TryConvert<'a> + UnwindSafe,
+    for<'a> A: TryConvert<'a> + UnwindSafe,
+    for<'a> B: TryConvert<'a> + UnwindSafe,
+    for<'a> C: TryConvert<'a> + UnwindSafe,
+    for<'a> D: TryConvert<'a> + UnwindSafe,
+    for<'a> E: TryConvert<'a> + UnwindSafe,
+    for<'a> F: TryConvert<'a> + UnwindSafe,
+    for<'a> G: TryConvert<'a> + UnwindSafe,
+    for<'a> H: TryConvert<'a> + UnwindSafe,
+    for<'a> I: TryConvert<'a> + UnwindSafe,
+    for<'a> J: TryConvert<'a> + UnwindSafe,
+    for<'a> K: TryConvert<'a> + UnwindSafe,
+    for<'a> L: TryConvert<'a> + UnwindSafe,
+    for<'a> M: TryConvert<'a> + UnwindSafe,
+    for<'a> N: TryConvert<'a> + UnwindSafe,
+    for<'a> O: TryConvert<'a> + UnwindSafe,
     Res: Into<Value> + UnwindSafe,
 {
     pub fn new(func: Func) -> Self {
@@ -1886,23 +1886,23 @@ impl<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Res>
 where
     Func: Fn(RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P) -> Result<Res, Error>
         + UnwindSafe,
-    RbSelf: TryConvert + UnwindSafe,
-    A: TryConvert + UnwindSafe,
-    B: TryConvert + UnwindSafe,
-    C: TryConvert + UnwindSafe,
-    D: TryConvert + UnwindSafe,
-    E: TryConvert + UnwindSafe,
-    F: TryConvert + UnwindSafe,
-    G: TryConvert + UnwindSafe,
-    H: TryConvert + UnwindSafe,
-    I: TryConvert + UnwindSafe,
-    J: TryConvert + UnwindSafe,
-    K: TryConvert + UnwindSafe,
-    L: TryConvert + UnwindSafe,
-    M: TryConvert + UnwindSafe,
-    N: TryConvert + UnwindSafe,
-    O: TryConvert + UnwindSafe,
-    P: TryConvert + UnwindSafe,
+    for<'a> RbSelf: TryConvert<'a> + UnwindSafe,
+    for<'a> A: TryConvert<'a> + UnwindSafe,
+    for<'a> B: TryConvert<'a> + UnwindSafe,
+    for<'a> C: TryConvert<'a> + UnwindSafe,
+    for<'a> D: TryConvert<'a> + UnwindSafe,
+    for<'a> E: TryConvert<'a> + UnwindSafe,
+    for<'a> F: TryConvert<'a> + UnwindSafe,
+    for<'a> G: TryConvert<'a> + UnwindSafe,
+    for<'a> H: TryConvert<'a> + UnwindSafe,
+    for<'a> I: TryConvert<'a> + UnwindSafe,
+    for<'a> J: TryConvert<'a> + UnwindSafe,
+    for<'a> K: TryConvert<'a> + UnwindSafe,
+    for<'a> L: TryConvert<'a> + UnwindSafe,
+    for<'a> M: TryConvert<'a> + UnwindSafe,
+    for<'a> N: TryConvert<'a> + UnwindSafe,
+    for<'a> O: TryConvert<'a> + UnwindSafe,
+    for<'a> P: TryConvert<'a> + UnwindSafe,
     Res: Into<Value> + UnwindSafe,
 {
     pub fn new(func: Func) -> Self {

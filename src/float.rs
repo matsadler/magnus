@@ -60,8 +60,8 @@ impl From<Float> for Value {
     }
 }
 
-impl TryConvert for Float {
-    unsafe fn try_convert(val: Value) -> Result<Self, Error> {
+impl TryConvert<'_> for Float {
+    unsafe fn try_convert(val: &Value) -> Result<Self, Error> {
         match Self::from_value(&val) {
             Some(i) => Ok(i),
             None => protect(|| {

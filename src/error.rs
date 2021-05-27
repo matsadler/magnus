@@ -3,7 +3,7 @@ use std::{any::Any, borrow::Cow, ffi::CString};
 use crate::{
     debug_assert_value,
     exception::{Exception, ExceptionClass},
-    ruby_sys::{rb_eRangeError, rb_eScriptError, rb_exc_raise, rb_raise},
+    ruby_sys::{rb_eRangeError, rb_eScriptError, rb_eTypeError, rb_exc_raise, rb_raise},
     State,
 };
 
@@ -33,6 +33,13 @@ impl Error {
         T: Into<Cow<'static, str>>,
     {
         Self::Error(ExceptionClass(unsafe { rb_eRangeError }), msg.into())
+    }
+
+    pub fn type_error<T>(msg: T) -> Self
+    where
+        T: Into<Cow<'static, str>>,
+    {
+        Self::Error(ExceptionClass(unsafe { rb_eTypeError }), msg.into())
     }
 
     pub(crate) fn from_panic(e: Box<dyn Any + Send + 'static>) -> Self {
