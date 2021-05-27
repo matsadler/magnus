@@ -1,7 +1,7 @@
 use std::{
     mem::transmute,
     ops::{Deref, DerefMut},
-    os::raw::{c_long, c_ulong},
+    os::raw::{c_char, c_long, c_ulong},
 };
 
 use crate::{
@@ -13,9 +13,9 @@ use crate::{
     r_float::RFloat,
     ruby_sys::{
         rb_float_new, rb_float_value, rb_gc_register_address, rb_gc_register_mark_object,
-        rb_gc_unregister_address, rb_id2sym, rb_ll2inum, rb_num2ll, rb_num2long, rb_num2short,
-        rb_num2ull, rb_num2ulong, rb_num2ushort, rb_sym2id, rb_ull2inum, ruby_special_consts, ID,
-        VALUE,
+        rb_gc_unregister_address, rb_id2sym, rb_intern2, rb_ll2inum, rb_num2ll, rb_num2long,
+        rb_num2short, rb_num2ull, rb_num2ulong, rb_num2ushort, rb_sym2id, rb_ull2inum,
+        ruby_special_consts, ID, VALUE,
     },
 };
 
@@ -339,16 +339,8 @@ impl Symbol {
             .then(|| Self(val.into_inner()))
     }
 
-    // TODO does this have a use?
-    #[allow(dead_code)]
-    pub(crate) fn from_id(id: &Id) -> Self {
-        // safe ffi to Ruby, arg is value from Ruby, call doesn't raise
-        unsafe { Self(rb_id2sym(id.0)) }
-    }
-
-    pub(crate) fn to_id(&self) -> Id {
-        // safe ffi to Ruby, arg is value from Ruby, call doesn't raise
-        unsafe { Id(rb_sym2id(self.0)) }
+    pub fn new<T: Into<Id>>(name: T) -> Self {
+        name.into().into()
     }
 }
 
@@ -363,6 +355,24 @@ impl Deref for Symbol {
     }
 }
 
+impl From<Id> for Symbol {
+    fn from(id: Id) -> Self {
+        Self(unsafe { rb_id2sym(id.0) })
+    }
+}
+
+impl From<&str> for Symbol {
+    fn from(s: &str) -> Self {
+        Id::from(s).into()
+    }
+}
+
+impl From<String> for Symbol {
+    fn from(s: String) -> Self {
+        Id::from(s).into()
+    }
+}
+
 impl From<Symbol> for Value {
     fn from(val: Symbol) -> Self {
         *val
@@ -371,11 +381,29 @@ impl From<Symbol> for Value {
 
 #[derive(Clone, Copy, Debug)]
 #[repr(transparent)]
-pub(crate) struct Id(ID);
+pub struct Id(ID);
 
 impl Id {
     pub(crate) fn into_inner(self) -> ID {
         self.0
+    }
+}
+
+impl From<&str> for Id {
+    fn from(s: &str) -> Self {
+        Self(unsafe { rb_intern2(s.as_ptr() as *const c_char, s.len() as c_long) })
+    }
+}
+
+impl From<String> for Id {
+    fn from(s: String) -> Self {
+        s.as_str().into()
+    }
+}
+
+impl From<Symbol> for Id {
+    fn from(sym: Symbol) -> Self {
+        Self(unsafe { rb_sym2id(sym.0) })
     }
 }
 

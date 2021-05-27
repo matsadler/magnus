@@ -34,10 +34,11 @@ use std::{
 
 use method::Method;
 use ruby_sys::{
-    rb_define_class, rb_define_global_function, rb_define_module, rb_define_variable, rb_errinfo,
-    rb_eval_string_protect, rb_jump_tag, rb_protect, rb_set_errinfo, ruby_cleanup, ruby_init,
-    VALUE,
+    rb_define_class_id, rb_define_global_function, rb_define_module_id, rb_define_variable,
+    rb_errinfo, rb_eval_string_protect, rb_jump_tag, rb_protect, rb_set_errinfo, ruby_cleanup,
+    ruby_init, VALUE,
 };
+use value::Id;
 
 pub use value::{Fixnum, Flonum, Qfalse, Qnil, Qtrue, Symbol, Value};
 pub use {
@@ -72,20 +73,20 @@ pub mod prelude {
     };
 }
 
-pub fn define_class(name: &str, superclass: RClass) -> Result<RClass, Error> {
+pub fn define_class<T: Into<Id>>(name: T, superclass: RClass) -> Result<RClass, Error> {
     debug_assert_value!(superclass);
-    let name = CString::new(name).unwrap();
+    let id = name.into();
     let superclass = superclass.into_inner();
     unsafe {
-        let res = protect(|| Value::new(rb_define_class(name.as_ptr(), superclass)));
+        let res = protect(|| Value::new(rb_define_class_id(id.into_inner(), superclass)));
         res.map(|v| RClass::from_value(&v).unwrap())
     }
 }
 
-pub fn define_module(name: &str) -> Result<RModule, Error> {
-    let name = CString::new(name).unwrap();
+pub fn define_module<T: Into<Id>>(name: T) -> Result<RModule, Error> {
+    let id = name.into();
     unsafe {
-        let res = protect(|| Value::new(rb_define_module(name.as_ptr())));
+        let res = protect(|| Value::new(rb_define_module_id(id.into_inner())));
         res.map(|v| RModule::from_value(&v).unwrap())
     }
 }
