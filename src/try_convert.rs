@@ -1,4 +1,5 @@
 use crate::{
+    debug_assert_value,
     error::Error,
     integer::Integer,
     protect,
@@ -146,6 +147,7 @@ impl TryConvertToRust for f32 {}
 
 impl TryConvert for f64 {
     unsafe fn try_convert(val: Value) -> Result<Self, Error> {
+        debug_assert_value!(val);
         let mut res = 0.0;
         protect(|| {
             res = rb_num2dbl(val.into_inner());

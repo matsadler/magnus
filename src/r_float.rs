@@ -1,6 +1,7 @@
 use std::ops::Deref;
 
 use crate::{
+    debug_assert_value,
     r_basic::RBasic,
     ruby_sys::{rb_float_new, rb_float_value, ruby_value_type, VALUE},
     value::{Flonum, Value},
@@ -32,6 +33,7 @@ impl RFloat {
     ///
     /// self must not have been GC'd.
     pub unsafe fn to_f64(&self) -> f64 {
+        debug_assert_value!(self);
         rb_float_value(self.into_inner())
     }
 }

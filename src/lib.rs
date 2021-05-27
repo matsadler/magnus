@@ -92,6 +92,7 @@ pub fn define_module<T: Into<Id>>(name: T) -> Result<RModule, Error> {
 }
 
 pub fn define_global_variable(name: &str, initial: Value) -> Result<*mut Value, Error> {
+    debug_assert_value!(initial);
     let name = CString::new(name).unwrap();
     let ptr = Box::into_raw(Box::new(initial));
     unsafe {

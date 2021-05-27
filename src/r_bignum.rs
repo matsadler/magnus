@@ -4,6 +4,7 @@ use std::{
 };
 
 use crate::{
+    debug_assert_value,
     error::Error,
     protect,
     r_basic::RBasic,
@@ -46,6 +47,7 @@ impl RBignum {
     }
 
     unsafe fn is_negative(&self) -> bool {
+        debug_assert_value!(self);
         let r_basic = RBasic::from_value(self).expect("bignum missing RBasic");
         r_basic.as_internal().as_ref().flags & (ruby_fl_type::RUBY_FL_USER1 as VALUE) == 0
     }
@@ -57,6 +59,7 @@ impl RBignum {
     ///
     /// self must not have been GC'd.
     pub unsafe fn to_i32(&self) -> Result<i32, Error> {
+        debug_assert_value!(self);
         let mut res = 0;
         protect(|| {
             res = rb_num2long(self.into_inner());
@@ -72,6 +75,7 @@ impl RBignum {
     ///
     /// self must not have been GC'd.
     pub unsafe fn to_i64(&self) -> Result<i64, Error> {
+        debug_assert_value!(self);
         let mut res = 0;
         protect(|| {
             res = rb_num2ll(self.into_inner());
@@ -84,6 +88,7 @@ impl RBignum {
     ///
     /// self must not have been GC'd.
     pub unsafe fn to_isize(&self) -> Result<isize, Error> {
+        debug_assert_value!(self);
         let mut res = 0;
         protect(|| {
             res = rb_num2long(self.into_inner());
@@ -102,6 +107,7 @@ impl RBignum {
     ///
     /// self must not have been GC'd.
     pub unsafe fn to_u32(&self) -> Result<u32, Error> {
+        debug_assert_value!(self);
         if self.is_negative() {
             return Err(Error::range_error(
                 "can't convert negative integer to unsigned",
@@ -122,6 +128,7 @@ impl RBignum {
     ///
     /// self must not have been GC'd.
     pub unsafe fn to_u64(&self) -> Result<u64, Error> {
+        debug_assert_value!(self);
         if self.is_negative() {
             return Err(Error::range_error(
                 "can't convert negative integer to unsigned",
@@ -139,6 +146,7 @@ impl RBignum {
     ///
     /// self must not have been GC'd.
     pub unsafe fn to_usize(&self) -> Result<usize, Error> {
+        debug_assert_value!(self);
         if self.is_negative() {
             return Err(Error::range_error(
                 "can't convert negative integer to unsigned",

@@ -1,6 +1,7 @@
 use std::ops::Deref;
 
 use crate::{
+    debug_assert_value,
     r_basic::RBasic,
     r_class::RClass,
     ruby_sys::{rb_eException, rb_eRuntimeError, ruby_value_type, VALUE},
@@ -16,6 +17,7 @@ impl Exception {
     /// val must not have been GC'd, return value must be kept on stack or
     /// otherwise protected from the GC.
     pub unsafe fn from_value(val: &Value) -> Option<Self> {
+        debug_assert_value!(val);
         let r_basic = RBasic::from_value(val)?;
         (r_basic.builtin_type() == ruby_value_type::RUBY_T_OBJECT
             && r_basic.class().is_inherited(RClass(rb_eException)))
@@ -49,6 +51,7 @@ impl ExceptionClass {
     /// val must not have been GC'd, return value must be kept on stack or
     /// otherwise protected from the GC.
     pub unsafe fn from_value(val: &Value) -> Option<Self> {
+        debug_assert_value!(val);
         RClass::from_value(val).and_then(|class| {
             class
                 .is_inherited(RClass(rb_eException))

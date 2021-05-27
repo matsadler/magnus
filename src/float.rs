@@ -1,6 +1,7 @@
 use std::ops::Deref;
 
 use crate::{
+    debug_assert_value,
     error::Error,
     protect,
     r_basic::RBasic,
@@ -25,6 +26,7 @@ impl Float {
         {
             return Some(Self(val.into_inner()));
         }
+        debug_assert_value!(val);
         let r_basic = RBasic::from_value(val)?;
         (r_basic.builtin_type() == ruby_value_type::RUBY_T_FLOAT).then(|| Self(val.into_inner()))
     }
@@ -62,8 +64,11 @@ impl TryConvert for Float {
     unsafe fn try_convert(val: Value) -> Result<Self, Error> {
         match Self::from_value(&val) {
             Some(i) => Ok(i),
-            None => protect(|| Value::new(rb_to_float(val.into_inner())))
-                .map(|res| Self(res.into_inner())),
+            None => protect(|| {
+                debug_assert_value!(val);
+                Value::new(rb_to_float(val.into_inner()))
+            })
+            .map(|res| Self(res.into_inner())),
         }
     }
 }

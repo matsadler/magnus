@@ -1,6 +1,7 @@
 use std::ops::Deref;
 
 use crate::{
+    debug_assert_value,
     error::Error,
     protect,
     r_basic::RBasic,
@@ -27,6 +28,7 @@ impl Integer {
         if val.into_inner() & ruby_special_consts::RUBY_FIXNUM_FLAG as VALUE != 0 {
             return Some(Self(val.into_inner()));
         }
+        debug_assert_value!(val);
         let r_basic = RBasic::from_value(val)?;
         (r_basic.builtin_type() == ruby_value_type::RUBY_T_BIGNUM).then(|| Self(val.into_inner()))
     }
@@ -165,8 +167,11 @@ impl TryConvert for Integer {
     unsafe fn try_convert(val: Value) -> Result<Self, Error> {
         match Self::from_value(&val) {
             Some(i) => Ok(i),
-            None => protect(|| Value::new(rb_to_int(val.into_inner())))
-                .map(|res| Self(res.into_inner())),
+            None => protect(|| {
+                debug_assert_value!(val);
+                Value::new(rb_to_int(val.into_inner()))
+            })
+            .map(|res| Self(res.into_inner())),
         }
     }
 }

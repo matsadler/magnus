@@ -1,6 +1,7 @@
 use std::{any::Any, borrow::Cow, ffi::CString};
 
 use crate::{
+    debug_assert_value,
     exception::{Exception, ExceptionClass},
     ruby_sys::{rb_eRangeError, rb_eScriptError, rb_exc_raise, rb_raise},
     State,
@@ -62,11 +63,13 @@ pub(crate) fn raise(e: Error) -> ! {
     match e {
         Error::Jump(state) => unsafe { state.resume() },
         Error::Error(class, msg) => {
+            debug_assert_value!(class);
             let msg = CString::new(msg.into_owned()).unwrap();
             unsafe { rb_raise(class.into_inner(), msg.as_ptr()) }
             unreachable!()
         }
         Error::Exception(e) => {
+            debug_assert_value!(e);
             unsafe { rb_exc_raise(e.into_inner()) }
             unreachable!()
         }
