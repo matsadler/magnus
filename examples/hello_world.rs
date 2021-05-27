@@ -1,4 +1,4 @@
-use magnus::{method, Value, Error};
+use magnus::{method, Error, Value};
 
 fn hello(_rb_self: Value) -> Result<(), Error> {
     println!("hello, world");
