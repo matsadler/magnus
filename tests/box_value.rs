@@ -1,7 +1,7 @@
 use std::ffi::CString;
 
 use magnus::ruby_sys::{rb_define_global_const, rb_gc_start};
-use magnus::{eval_static, init, value::BoxValue};
+use magnus::{embed::init, eval_static, value::BoxValue};
 
 #[inline(never)]
 fn box_value() -> BoxValue {

@@ -1,3 +1,4 @@
+pub mod embed;
 pub mod error;
 mod exception;
 mod float;
@@ -25,20 +26,13 @@ pub mod ruby_sys;
 mod try_convert;
 pub mod value;
 
-use std::{
-    ffi::CString,
-    mem::transmute,
-    os::raw::c_int,
-    sync::atomic::{AtomicBool, Ordering},
-};
+use std::{ffi::CString, mem::transmute, os::raw::c_int};
 
 use method::Method;
 use ruby_sys::{
-    rb_define_class_id, rb_define_global_function, rb_define_module_id, rb_define_variable,
-    rb_errinfo, rb_eval_string_protect, rb_jump_tag, rb_protect, rb_set_errinfo, ruby_cleanup,
-    ruby_init, VALUE,
+    rb_define_class, rb_define_global_function, rb_define_module, rb_define_variable, rb_errinfo,
+    rb_eval_string_protect, rb_jump_tag, rb_protect, rb_set_errinfo, VALUE,
 };
-use value::Id;
 
 pub use value::{Fixnum, Flonum, Qfalse, Qnil, Qtrue, Symbol, Value};
 pub use {
@@ -63,30 +57,42 @@ pub use {
     r_regexp::RRegexp,
     r_string::RString,
     r_struct::RStruct,
-    r_typed_data::{RTypedData, TypedData},
+    r_typed_data::{DataType, RTypedData, TypedData},
     try_convert::TryConvert,
 };
 
 pub mod prelude {
-    pub use crate::{
-        module::Module, object::Object,
-    };
+    pub use crate::{module::Module, object::Object};
 }
 
-pub fn define_class<T: Into<Id>>(name: T, superclass: RClass) -> Result<RClass, Error> {
+#[macro_export]
+macro_rules! memoize {
+    ($type:ty: $val:expr) => {{
+        static INIT: std::sync::Once = std::sync::Once::new();
+        static mut VALUE: Option<$type> = None;
+        unsafe {
+            INIT.call_once(|| {
+                VALUE = Some($val);
+            });
+            VALUE.as_ref().unwrap()
+        }
+    }};
+}
+
+pub fn define_class(name: &str, superclass: RClass) -> Result<RClass, Error> {
     debug_assert_value!(superclass);
-    let id = name.into();
+    let name = CString::new(name).unwrap();
     let superclass = superclass.into_inner();
     unsafe {
-        let res = protect(|| Value::new(rb_define_class_id(id.into_inner(), superclass)));
+        let res = protect(|| Value::new(rb_define_class(name.as_ptr(), superclass)));
         res.map(|v| RClass::from_value(&v).unwrap())
     }
 }
 
-pub fn define_module<T: Into<Id>>(name: T) -> Result<RModule, Error> {
-    let id = name.into();
+pub fn define_module(name: &str) -> Result<RModule, Error> {
+    let name = CString::new(name).unwrap();
     unsafe {
-        let res = protect(|| Value::new(rb_define_module_id(id.into_inner())));
+        let res = protect(|| Value::new(rb_define_module(name.as_ptr())));
         res.map(|v| RModule::from_value(&v).unwrap())
     }
 }
@@ -201,42 +207,4 @@ pub fn eval_static(s: &'static str) -> Result<Value, Error> {
     } else {
         Err(Error::Jump(State(state)))
     }
-}
-
-pub struct Cleanup();
-
-impl Drop for Cleanup {
-    fn drop(&mut self) {
-        unsafe {
-            ruby_cleanup(0);
-        }
-    }
-}
-
-/// # Safety
-///
-/// Must be called in `main()`, or at least a function higher up the stack than
-/// any code calling Ruby. Must not drop Cleanup until the very end of the
-/// process, after all Ruby execution has finished.
-///
-/// # Panics
-///
-/// Panics if called more than once.
-///
-/// # Examples
-///
-/// ```no_run
-/// let _cleanup = unsafe { magnus::init() };
-/// ```
-#[inline(always)]
-pub unsafe fn init() -> Cleanup {
-    static INIT: AtomicBool = AtomicBool::new(false);
-    match INIT.compare_exchange(false, true, Ordering::SeqCst, Ordering::SeqCst) {
-        Ok(false) => {
-            ruby_init();
-        }
-        Err(true) => panic!("Ruby already initialized"),
-        r => panic!("unexpected INIT state {:?}", r),
-    }
-    Cleanup()
 }

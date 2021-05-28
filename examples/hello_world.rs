@@ -6,7 +6,7 @@ fn hello(_rb_self: Value) -> Result<(), Error> {
 }
 
 fn main() {
-    let _cleanup = unsafe { magnus::init() };
+    let _cleanup = unsafe { magnus::embed::init() };
 
     magnus::define_global_function("hello", method!(hello, 0));
 

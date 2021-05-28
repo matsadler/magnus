@@ -9,7 +9,7 @@ fn fib(rb_self: Value, n: usize) -> Result<usize, Error> {
 }
 
 fn main() {
-    let _cleanup = unsafe { magnus::init() };
+    let _cleanup = unsafe { magnus::embed::init() };
 
     magnus::define_global_function("fib", method!(fib, 1));
 

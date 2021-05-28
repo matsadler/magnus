@@ -8,6 +8,7 @@ use crate::{
     value::Value,
 };
 
+#[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct RClass(pub(crate) VALUE);
 

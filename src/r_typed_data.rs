@@ -66,6 +66,8 @@ impl From<RTypedData> for Value {
 
 impl Object for RTypedData {}
 
+pub type DataType = rb_data_type_t;
+
 pub trait TypedData
 where
     Self: Sized,
@@ -83,7 +85,7 @@ where
 
     fn class() -> RClass;
 
-    fn data_type() -> &'static rb_data_type_t;
+    fn data_type() -> &'static DataType;
 
     #[allow(clippy::boxed_local, unused_variables)]
     fn free(data: Box<Self>) {}
@@ -127,7 +129,7 @@ where
     }
 
     #[doc(hidden)]
-    fn build_data_type() -> rb_data_type_t {
+    fn build_data_type() -> DataType {
         #[allow(clippy::unnecessary_cast)]
         let mut flags = 0 as VALUE;
         if Self::FREE_IMMEDIATLY {
@@ -143,7 +145,7 @@ where
         let dfree = Some(Self::extern_free as _);
         let dsize = Self::SIZE.then(|| Self::extern_size as _);
         let dcompact = Self::COMPACT.then(|| Self::extern_compact as _);
-        rb_data_type_t {
+        DataType {
             wrap_struct_name: CString::new(Self::NAME).unwrap().into_raw() as _,
             function: rb_data_type_struct__bindgen_ty_1 {
                 dmark,

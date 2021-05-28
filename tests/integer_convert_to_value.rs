@@ -8,7 +8,7 @@ macro_rules! rb_assert {
 
 #[test]
 fn it_converts_integers_to_value() {
-    let _cleanup = unsafe { magnus::init() };
+    let _cleanup = unsafe { magnus::embed::init() };
     let val = define_global_variable("$val", Qnil::new().into())
         .ok()
         .unwrap();
