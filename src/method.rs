@@ -1,3 +1,7 @@
+#![allow(clippy::too_many_arguments)]
+#![allow(clippy::many_single_char_names)]
+#![allow(clippy::missing_safety_doc)]
+
 use std::{ffi::c_void, marker::PhantomData, os::raw::c_int, panic::UnwindSafe, slice};
 
 use crate::{
@@ -355,14 +359,14 @@ where
 {
     pub fn new(func: Func) -> Self {
         Self {
-            func: func,
+            func,
             rb_self: Default::default(),
             args: Default::default(),
             res: Default::default(),
         }
     }
 
-    pub unsafe fn call_convert_value(self, rb_self: Value, args: RArray) -> Result<Value, Error> {
+    unsafe fn call_convert_value(self, rb_self: Value, args: RArray) -> Result<Value, Error> {
         (self.func)(rb_self.try_convert()?, args.try_convert()?).map(Into::into)
     }
 
@@ -392,13 +396,13 @@ where
 {
     pub fn new(func: Func) -> Self {
         Self {
-            func: func,
+            func,
             rb_self: Default::default(),
             res: Default::default(),
         }
     }
 
-    pub unsafe fn call_convert_value(
+    unsafe fn call_convert_value(
         self,
         argc: c_int,
         argv: *const Value,
@@ -441,14 +445,14 @@ where
 {
     pub fn new(func: Func) -> Self {
         Self {
-            func: func,
+            func,
             rb_self: Default::default(),
 
             res: Default::default(),
         }
     }
 
-    pub unsafe fn call_convert_value(self, rb_self: Value) -> Result<Value, Error> {
+    unsafe fn call_convert_value(self, rb_self: Value) -> Result<Value, Error> {
         (self.func)(rb_self.try_convert()?).map(Into::into)
     }
 
@@ -480,14 +484,14 @@ where
 {
     pub fn new(func: Func) -> Self {
         Self {
-            func: func,
+            func,
             rb_self: Default::default(),
             a: Default::default(),
             res: Default::default(),
         }
     }
 
-    pub unsafe fn call_convert_value(self, rb_self: Value, a: Value) -> Result<Value, Error> {
+    unsafe fn call_convert_value(self, rb_self: Value, a: Value) -> Result<Value, Error> {
         (self.func)(rb_self.try_convert()?, a.try_convert()?).map(Into::into)
     }
 
@@ -521,7 +525,7 @@ where
 {
     pub fn new(func: Func) -> Self {
         Self {
-            func: func,
+            func,
             rb_self: Default::default(),
             a: Default::default(),
             b: Default::default(),
@@ -529,7 +533,7 @@ where
         }
     }
 
-    pub unsafe fn call_convert_value(
+    unsafe fn call_convert_value(
         self,
         rb_self: Value,
         a: Value,
@@ -570,7 +574,7 @@ where
 {
     pub fn new(func: Func) -> Self {
         Self {
-            func: func,
+            func,
             rb_self: Default::default(),
             a: Default::default(),
             b: Default::default(),
@@ -579,7 +583,7 @@ where
         }
     }
 
-    pub unsafe fn call_convert_value(
+    unsafe fn call_convert_value(
         self,
         rb_self: Value,
         a: Value,
@@ -629,7 +633,7 @@ where
 {
     pub fn new(func: Func) -> Self {
         Self {
-            func: func,
+            func,
             rb_self: Default::default(),
             a: Default::default(),
             b: Default::default(),
@@ -639,7 +643,7 @@ where
         }
     }
 
-    pub unsafe fn call_convert_value(
+    unsafe fn call_convert_value(
         self,
         rb_self: Value,
         a: Value,
@@ -700,7 +704,7 @@ where
 {
     pub fn new(func: Func) -> Self {
         Self {
-            func: func,
+            func,
             rb_self: Default::default(),
             a: Default::default(),
             b: Default::default(),
@@ -711,7 +715,7 @@ where
         }
     }
 
-    pub unsafe fn call_convert_value(
+    unsafe fn call_convert_value(
         self,
         rb_self: Value,
         a: Value,
@@ -778,7 +782,7 @@ where
 {
     pub fn new(func: Func) -> Self {
         Self {
-            func: func,
+            func,
             rb_self: Default::default(),
             a: Default::default(),
             b: Default::default(),
@@ -790,7 +794,7 @@ where
         }
     }
 
-    pub unsafe fn call_convert_value(
+    unsafe fn call_convert_value(
         self,
         rb_self: Value,
         a: Value,
@@ -862,7 +866,7 @@ where
 {
     pub fn new(func: Func) -> Self {
         Self {
-            func: func,
+            func,
             rb_self: Default::default(),
             a: Default::default(),
             b: Default::default(),
@@ -875,7 +879,7 @@ where
         }
     }
 
-    pub unsafe fn call_convert_value(
+    unsafe fn call_convert_value(
         self,
         rb_self: Value,
         a: Value,
@@ -953,7 +957,7 @@ where
 {
     pub fn new(func: Func) -> Self {
         Self {
-            func: func,
+            func,
             rb_self: Default::default(),
             a: Default::default(),
             b: Default::default(),
@@ -967,7 +971,7 @@ where
         }
     }
 
-    pub unsafe fn call_convert_value(
+    unsafe fn call_convert_value(
         self,
         rb_self: Value,
         a: Value,
@@ -1051,7 +1055,7 @@ where
 {
     pub fn new(func: Func) -> Self {
         Self {
-            func: func,
+            func,
             rb_self: Default::default(),
             a: Default::default(),
             b: Default::default(),
@@ -1066,7 +1070,7 @@ where
         }
     }
 
-    pub unsafe fn call_convert_value(
+    unsafe fn call_convert_value(
         self,
         rb_self: Value,
         a: Value,
@@ -1155,7 +1159,7 @@ where
 {
     pub fn new(func: Func) -> Self {
         Self {
-            func: func,
+            func,
             rb_self: Default::default(),
             a: Default::default(),
             b: Default::default(),
@@ -1171,7 +1175,7 @@ where
         }
     }
 
-    pub unsafe fn call_convert_value(
+    unsafe fn call_convert_value(
         self,
         rb_self: Value,
         a: Value,
@@ -1265,7 +1269,7 @@ where
 {
     pub fn new(func: Func) -> Self {
         Self {
-            func: func,
+            func,
             rb_self: Default::default(),
             a: Default::default(),
             b: Default::default(),
@@ -1282,7 +1286,7 @@ where
         }
     }
 
-    pub unsafe fn call_convert_value(
+    unsafe fn call_convert_value(
         self,
         rb_self: Value,
         a: Value,
@@ -1381,7 +1385,7 @@ where
 {
     pub fn new(func: Func) -> Self {
         Self {
-            func: func,
+            func,
             rb_self: Default::default(),
             a: Default::default(),
             b: Default::default(),
@@ -1399,7 +1403,7 @@ where
         }
     }
 
-    pub unsafe fn call_convert_value(
+    unsafe fn call_convert_value(
         self,
         rb_self: Value,
         a: Value,
@@ -1503,7 +1507,7 @@ where
 {
     pub fn new(func: Func) -> Self {
         Self {
-            func: func,
+            func,
             rb_self: Default::default(),
             a: Default::default(),
             b: Default::default(),
@@ -1522,7 +1526,7 @@ where
         }
     }
 
-    pub unsafe fn call_convert_value(
+    unsafe fn call_convert_value(
         self,
         rb_self: Value,
         a: Value,
@@ -1631,7 +1635,7 @@ where
 {
     pub fn new(func: Func) -> Self {
         Self {
-            func: func,
+            func,
             rb_self: Default::default(),
             a: Default::default(),
             b: Default::default(),
@@ -1651,7 +1655,7 @@ where
         }
     }
 
-    pub unsafe fn call_convert_value(
+    unsafe fn call_convert_value(
         self,
         rb_self: Value,
         a: Value,
@@ -1766,7 +1770,7 @@ where
 {
     pub fn new(func: Func) -> Self {
         Self {
-            func: func,
+            func,
             rb_self: Default::default(),
             a: Default::default(),
             b: Default::default(),
@@ -1787,7 +1791,7 @@ where
         }
     }
 
-    pub unsafe fn call_convert_value(
+    unsafe fn call_convert_value(
         self,
         rb_self: Value,
         a: Value,
@@ -1907,7 +1911,7 @@ where
 {
     pub fn new(func: Func) -> Self {
         Self {
-            func: func,
+            func,
             rb_self: Default::default(),
             a: Default::default(),
             b: Default::default(),
@@ -1929,7 +1933,7 @@ where
         }
     }
 
-    pub unsafe fn call_convert_value(
+    unsafe fn call_convert_value(
         self,
         rb_self: Value,
         a: Value,

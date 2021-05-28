@@ -15,6 +15,9 @@ pub trait TryConvert<'a>: Sized {
 }
 
 impl Value {
+    /// # Safety
+    ///
+    /// self must not have been GC'd.
     pub unsafe fn try_convert<'a, T>(&'a self) -> Result<T, Error>
     where
         T: TryConvert<'a>,
