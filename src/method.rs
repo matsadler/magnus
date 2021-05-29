@@ -533,12 +533,7 @@ where
         }
     }
 
-    unsafe fn call_convert_value(
-        self,
-        rb_self: Value,
-        a: Value,
-        b: Value,
-    ) -> Result<Value, Error> {
+    unsafe fn call_convert_value(self, rb_self: Value, a: Value, b: Value) -> Result<Value, Error> {
         (self.func)(rb_self.try_convert()?, a.try_convert()?, b.try_convert()?).map(Into::into)
     }
 

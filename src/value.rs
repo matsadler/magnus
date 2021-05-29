@@ -276,6 +276,16 @@ impl From<Qtrue> for Value {
     }
 }
 
+impl From<bool> for Value {
+    fn from(val: bool) -> Self {
+        if val {
+            Qtrue::new().into()
+        } else {
+            Qfalse::new().into()
+        }
+    }
+}
+
 #[repr(transparent)]
 pub struct Qnil(VALUE);
 

@@ -1,3 +1,4 @@
+pub mod block;
 pub mod embed;
 pub mod error;
 mod exception;
@@ -58,7 +59,7 @@ pub use {
     r_string::RString,
     r_struct::RStruct,
     r_typed_data::{DataType, RTypedData, TypedData},
-    try_convert::TryConvert,
+    try_convert::{TryConvert, ValueArray},
 };
 
 pub mod prelude {
@@ -97,7 +98,8 @@ pub fn define_module(name: &str) -> Result<RModule, Error> {
     }
 }
 
-pub fn define_global_variable(name: &str, initial: Value) -> Result<*mut Value, Error> {
+pub fn define_global_variable<T: Into<Value>>(name: &str, initial: T) -> Result<*mut Value, Error> {
+    let initial = initial.into();
     debug_assert_value!(initial);
     let name = CString::new(name).unwrap();
     let ptr = Box::into_raw(Box::new(initial));

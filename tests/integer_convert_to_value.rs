@@ -9,9 +9,7 @@ macro_rules! rb_assert {
 #[test]
 fn it_converts_integers_to_value() {
     let _cleanup = unsafe { magnus::embed::init() };
-    let val = define_global_variable("$val", Qnil::new().into())
-        .ok()
-        .unwrap();
+    let val = define_global_variable("$val", Qnil::new()).ok().unwrap();
     rb_assert!("$val == nil");
 
     unsafe { val.replace((0u8).into()) };

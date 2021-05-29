@@ -160,3 +160,291 @@ impl TryConvert<'_> for f64 {
     }
 }
 impl TryConvertToRust<'_> for f64 {}
+
+pub trait ValueArray {
+    type Output: AsRef<[Value]>;
+
+    fn into(self) -> Self::Output;
+}
+
+impl<A> ValueArray for (A,)
+where
+    A: Into<Value>,
+{
+    type Output = [Value; 1];
+
+    fn into(self) -> Self::Output {
+        [self.0.into()]
+    }
+}
+
+impl<A, B> ValueArray for (A, B)
+where
+    A: Into<Value>,
+    B: Into<Value>,
+{
+    type Output = [Value; 2];
+
+    fn into(self) -> Self::Output {
+        [self.0.into(), self.1.into()]
+    }
+}
+
+impl<A, B, C> ValueArray for (A, B, C)
+where
+    A: Into<Value>,
+    B: Into<Value>,
+    C: Into<Value>,
+{
+    type Output = [Value; 3];
+
+    fn into(self) -> Self::Output {
+        [self.0.into(), self.1.into(), self.2.into()]
+    }
+}
+
+impl<A, B, C, D> ValueArray for (A, B, C, D)
+where
+    A: Into<Value>,
+    B: Into<Value>,
+    C: Into<Value>,
+    D: Into<Value>,
+{
+    type Output = [Value; 4];
+
+    fn into(self) -> Self::Output {
+        [self.0.into(), self.1.into(), self.2.into(), self.3.into()]
+    }
+}
+
+impl<A, B, C, D, E> ValueArray for (A, B, C, D, E)
+where
+    A: Into<Value>,
+    B: Into<Value>,
+    C: Into<Value>,
+    D: Into<Value>,
+    E: Into<Value>,
+{
+    type Output = [Value; 5];
+
+    fn into(self) -> Self::Output {
+        [
+            self.0.into(),
+            self.1.into(),
+            self.2.into(),
+            self.3.into(),
+            self.4.into(),
+        ]
+    }
+}
+
+impl<A, B, C, D, E, F> ValueArray for (A, B, C, D, E, F)
+where
+    A: Into<Value>,
+    B: Into<Value>,
+    C: Into<Value>,
+    D: Into<Value>,
+    E: Into<Value>,
+    F: Into<Value>,
+{
+    type Output = [Value; 6];
+
+    fn into(self) -> Self::Output {
+        [
+            self.0.into(),
+            self.1.into(),
+            self.2.into(),
+            self.3.into(),
+            self.4.into(),
+            self.5.into(),
+        ]
+    }
+}
+
+impl<A, B, C, D, E, F, G> ValueArray for (A, B, C, D, E, F, G)
+where
+    A: Into<Value>,
+    B: Into<Value>,
+    C: Into<Value>,
+    D: Into<Value>,
+    E: Into<Value>,
+    F: Into<Value>,
+    G: Into<Value>,
+{
+    type Output = [Value; 7];
+
+    fn into(self) -> Self::Output {
+        [
+            self.0.into(),
+            self.1.into(),
+            self.2.into(),
+            self.3.into(),
+            self.4.into(),
+            self.5.into(),
+            self.6.into(),
+        ]
+    }
+}
+
+impl<A, B, C, D, E, F, G, H> ValueArray for (A, B, C, D, E, F, G, H)
+where
+    A: Into<Value>,
+    B: Into<Value>,
+    C: Into<Value>,
+    D: Into<Value>,
+    E: Into<Value>,
+    F: Into<Value>,
+    G: Into<Value>,
+    H: Into<Value>,
+{
+    type Output = [Value; 8];
+
+    fn into(self) -> Self::Output {
+        [
+            self.0.into(),
+            self.1.into(),
+            self.2.into(),
+            self.3.into(),
+            self.4.into(),
+            self.5.into(),
+            self.6.into(),
+            self.7.into(),
+        ]
+    }
+}
+
+impl<A, B, C, D, E, F, G, H, I> ValueArray for (A, B, C, D, E, F, G, H, I)
+where
+    A: Into<Value>,
+    B: Into<Value>,
+    C: Into<Value>,
+    D: Into<Value>,
+    E: Into<Value>,
+    F: Into<Value>,
+    G: Into<Value>,
+    H: Into<Value>,
+    I: Into<Value>,
+{
+    type Output = [Value; 9];
+
+    fn into(self) -> Self::Output {
+        [
+            self.0.into(),
+            self.1.into(),
+            self.2.into(),
+            self.3.into(),
+            self.4.into(),
+            self.5.into(),
+            self.6.into(),
+            self.7.into(),
+            self.8.into(),
+        ]
+    }
+}
+
+impl<A, B, C, D, E, F, G, H, I, J> ValueArray for (A, B, C, D, E, F, G, H, I, J)
+where
+    A: Into<Value>,
+    B: Into<Value>,
+    C: Into<Value>,
+    D: Into<Value>,
+    E: Into<Value>,
+    F: Into<Value>,
+    G: Into<Value>,
+    H: Into<Value>,
+    I: Into<Value>,
+    J: Into<Value>,
+{
+    type Output = [Value; 10];
+
+    fn into(self) -> Self::Output {
+        [
+            self.0.into(),
+            self.1.into(),
+            self.2.into(),
+            self.3.into(),
+            self.4.into(),
+            self.5.into(),
+            self.6.into(),
+            self.7.into(),
+            self.8.into(),
+            self.9.into(),
+        ]
+    }
+}
+
+impl<A, B, C, D, E, F, G, H, I, J, K> ValueArray for (A, B, C, D, E, F, G, H, I, J, K)
+where
+    A: Into<Value>,
+    B: Into<Value>,
+    C: Into<Value>,
+    D: Into<Value>,
+    E: Into<Value>,
+    F: Into<Value>,
+    G: Into<Value>,
+    H: Into<Value>,
+    I: Into<Value>,
+    J: Into<Value>,
+    K: Into<Value>,
+{
+    type Output = [Value; 11];
+
+    fn into(self) -> Self::Output {
+        [
+            self.0.into(),
+            self.1.into(),
+            self.2.into(),
+            self.3.into(),
+            self.4.into(),
+            self.5.into(),
+            self.6.into(),
+            self.7.into(),
+            self.8.into(),
+            self.9.into(),
+            self.10.into(),
+        ]
+    }
+}
+
+impl<A, B, C, D, E, F, G, H, I, J, K, L> ValueArray for (A, B, C, D, E, F, G, H, I, J, K, L)
+where
+    A: Into<Value>,
+    B: Into<Value>,
+    C: Into<Value>,
+    D: Into<Value>,
+    E: Into<Value>,
+    F: Into<Value>,
+    G: Into<Value>,
+    H: Into<Value>,
+    I: Into<Value>,
+    J: Into<Value>,
+    K: Into<Value>,
+    L: Into<Value>,
+{
+    type Output = [Value; 12];
+
+    fn into(self) -> Self::Output {
+        [
+            self.0.into(),
+            self.1.into(),
+            self.2.into(),
+            self.3.into(),
+            self.4.into(),
+            self.5.into(),
+            self.6.into(),
+            self.7.into(),
+            self.8.into(),
+            self.9.into(),
+            self.10.into(),
+            self.11.into(),
+        ]
+    }
+}
+
+impl<const N: usize> ValueArray for [Value; N] {
+    type Output = [Value; N];
+
+    fn into(self) -> Self::Output {
+        self
+    }
+}

@@ -36,9 +36,7 @@ fn make_rb_example(value: &str) -> Value {
 #[test]
 fn it_wraps_rust_struct() {
     let _cleanup = unsafe { init() };
-    let val = define_global_variable("$val", Qnil::new().into())
-        .ok()
-        .unwrap();
+    let val = define_global_variable("$val", Qnil::new()).ok().unwrap();
     rb_assert!("$val == nil");
 
     unsafe { val.replace(make_rb_example("foo")) };
