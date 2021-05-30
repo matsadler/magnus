@@ -167,6 +167,14 @@ pub trait ValueArray {
     fn into(self) -> Self::Output;
 }
 
+impl ValueArray for () {
+    type Output = [Value; 0];
+
+    fn into(self) -> Self::Output {
+        []
+    }
+}
+
 impl<A> ValueArray for (A,)
 where
     A: Into<Value>,

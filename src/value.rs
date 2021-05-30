@@ -1,7 +1,7 @@
 use std::{
     mem::transmute,
     ops::{Deref, DerefMut},
-    os::raw::{c_char, c_long, c_ulong},
+    os::raw::{c_char, c_int, c_long, c_ulong},
 };
 
 use crate::{
@@ -12,11 +12,12 @@ use crate::{
     r_bignum::RBignum,
     r_float::RFloat,
     ruby_sys::{
-        rb_float_new, rb_float_value, rb_gc_register_address, rb_gc_register_mark_object,
-        rb_gc_unregister_address, rb_id2sym, rb_intern2, rb_ll2inum, rb_num2ll, rb_num2long,
-        rb_num2short, rb_num2ull, rb_num2ulong, rb_num2ushort, rb_sym2id, rb_ull2inum,
-        ruby_special_consts, ID, VALUE,
+        rb_enumeratorize_with_size, rb_float_new, rb_float_value, rb_gc_register_address,
+        rb_gc_register_mark_object, rb_gc_unregister_address, rb_id2sym, rb_intern2, rb_ll2inum,
+        rb_num2ll, rb_num2long, rb_num2short, rb_num2ull, rb_num2ulong, rb_num2ushort, rb_sym2id,
+        rb_ull2inum, ruby_special_consts, ID, VALUE,
     },
+    try_convert::ValueArray,
 };
 
 // This isn't infallible, if the original object was gc'd and that slot
@@ -74,6 +75,24 @@ impl Value {
     #[inline]
     pub fn is_nil(&self) -> bool {
         self.0 == ruby_special_consts::RUBY_Qnil as VALUE
+    }
+
+    pub fn enumeratorize<M, A>(&self, method: M, args: A) -> Self
+    where
+        M: Into<Symbol>,
+        A: ValueArray,
+    {
+        let args = args.into();
+        let slice = args.as_ref();
+        unsafe {
+            Value::new(rb_enumeratorize_with_size(
+                self.into_inner(),
+                method.into().into_inner(),
+                slice.len() as c_int,
+                slice.as_ptr() as *const VALUE,
+                None,
+            ))
+        }
     }
 }
 

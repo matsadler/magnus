@@ -4,7 +4,7 @@ use crate::{
     error::Error,
     protect,
     r_array::RArray,
-    ruby_sys::{rb_block_given_p, rb_yield, rb_yield_splat, rb_yield_values2},
+    ruby_sys::{rb_block_given_p, rb_yield, rb_yield_splat, rb_yield_values2, VALUE},
     try_convert::{TryConvert, ValueArray},
     value::Value,
 };
@@ -33,7 +33,7 @@ where
         protect(|| {
             Value::new(rb_yield_values2(
                 slice.len() as c_int,
-                slice.as_ptr() as *const u64,
+                slice.as_ptr() as *const VALUE,
             ))
         })
         .and_then(|v| v.try_convert())
