@@ -1,19 +1,29 @@
-use std::{ffi::CStr, ops::Deref, ptr::NonNull, slice, str};
+use std::{
+    borrow::Cow,
+    ffi::CStr,
+    mem::transmute,
+    ops::Deref,
+    ptr::{self, NonNull},
+    slice, str,
+};
 
 use crate::{
     debug_assert_value,
     error::Error,
     object::Object,
+    protect,
     r_basic::RBasic,
     ruby_sys::{
-        self, rb_enc_get, rb_enc_get_index, rb_utf8_encindex, ruby_rstring_consts,
-        ruby_rstring_flags, ruby_value_type, VALUE,
+        self, rb_enc_get, rb_enc_get_index, rb_str_conv_enc, rb_str_to_str, rb_utf8_encindex,
+        rb_utf8_encoding, ruby_rstring_consts, ruby_rstring_flags, ruby_value_type, VALUE,
     },
+    try_convert::TryConvert,
     value::Value,
 };
 
+#[derive(Clone, Copy)]
 #[repr(transparent)]
-pub struct RString(VALUE);
+pub struct RString(pub(crate) VALUE);
 
 impl RString {
     /// # Safety
@@ -25,6 +35,11 @@ impl RString {
         (r_basic.builtin_type() == ruby_value_type::RUBY_T_STRING).then(|| Self(val.into_inner()))
     }
 
+    pub(crate) unsafe fn ref_from_value(val: &Value) -> Option<&Self> {
+        let r_basic = RBasic::from_value(val)?;
+        (r_basic.builtin_type() == ruby_value_type::RUBY_T_STRING).then(|| transmute(val))
+    }
+
     // TODO: use or remove
     #[allow(dead_code)]
     pub(crate) fn as_internal(&self) -> NonNull<ruby_sys::RString> {
@@ -33,19 +48,11 @@ impl RString {
         unsafe { NonNull::new_unchecked(self.0 as *mut _) }
     }
 
-    pub unsafe fn as_str(&self) -> Result<&str, Error> {
-        if rb_enc_get_index(self.into_inner()) != rb_utf8_encindex() {
-            let enc = rb_enc_get(self.into_inner());
-            let name = CStr::from_ptr((*enc).name).to_string_lossy();
-            return Err(Error::encoding_error(format!(
-                "expected utf-8, got {}",
-                name
-            )));
-        }
+    pub unsafe fn as_slice(&self) -> &[u8] {
         debug_assert_value!(self);
         let r_basic = RBasic::from_value(self).unwrap();
         let mut f = r_basic.flags();
-        let slice = if (f & ruby_rstring_flags::RSTRING_NOEMBED as VALUE) != 0 {
+        if (f & ruby_rstring_flags::RSTRING_NOEMBED as VALUE) != 0 {
             let h = self.as_internal().as_ref().as_.heap;
             slice::from_raw_parts(h.ptr as *const u8, h.len as usize)
         } else {
@@ -55,8 +62,49 @@ impl RString {
                 &self.as_internal().as_ref().as_.ary as *const _ as *const u8,
                 f as usize,
             )
+        }
+    }
+
+    pub unsafe fn is_utf8_encoding(&self) -> bool {
+        rb_enc_get_index(self.into_inner()) == rb_utf8_encindex()
+    }
+
+    pub unsafe fn encode_utf8(&self) -> Result<Self, Error> {
+        protect(|| {
+            Value::new(rb_str_conv_enc(
+                self.into_inner(),
+                ptr::null_mut(),
+                rb_utf8_encoding(),
+            ))
+        })
+        .map(|v| Self(v.into_inner()))
+    }
+
+    pub unsafe fn as_str(&self) -> Result<&str, Error> {
+        if !self.is_utf8_encoding() {
+            let enc = rb_enc_get(self.into_inner());
+            let name = CStr::from_ptr((*enc).name).to_string_lossy();
+            return Err(Error::encoding_error(format!(
+                "expected utf-8, got {}",
+                name
+            )));
+        }
+        str::from_utf8(self.as_slice()).map_err(|e| Error::encoding_error(format!("{}", e)))
+    }
+
+    pub unsafe fn to_string_lossy(&self) -> Cow<'_, str> {
+        String::from_utf8_lossy(self.as_slice())
+    }
+
+    pub unsafe fn to_string(&self) -> Result<String, Error> {
+        let utf8 = if self.is_utf8_encoding() {
+            *self
+        } else {
+            self.encode_utf8()?
         };
-        str::from_utf8(slice).map_err(|e| Error::encoding_error(format!("{}", e)))
+        str::from_utf8(utf8.as_slice())
+            .map(ToOwned::to_owned)
+            .map_err(|e| Error::encoding_error(format!("{}", e)))
     }
 }
 
@@ -78,3 +126,16 @@ impl From<RString> for Value {
 }
 
 impl Object for RString {}
+
+impl TryConvert<'_> for RString {
+    unsafe fn try_convert(val: &Value) -> Result<Self, Error> {
+        match Self::from_value(&val) {
+            Some(i) => Ok(i),
+            None => protect(|| {
+                debug_assert_value!(val);
+                Value::new(rb_str_to_str(val.into_inner()))
+            })
+            .map(|res| Self(res.into_inner())),
+        }
+    }
+}

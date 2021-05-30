@@ -3,6 +3,7 @@ use crate::{
     error::Error,
     integer::Integer,
     protect,
+    r_string::RString,
     ruby_sys::rb_num2dbl,
     value::{Qnil, Value},
 };
@@ -160,6 +161,24 @@ impl TryConvert<'_> for f64 {
     }
 }
 impl TryConvertToRust<'_> for f64 {}
+
+impl TryConvert<'_> for String {
+    unsafe fn try_convert(val: &Value) -> Result<Self, Error> {
+        debug_assert_value!(val);
+        RString::try_convert(val)?.to_string()
+    }
+}
+impl TryConvertToRust<'_> for String {}
+
+impl<'a> TryConvert<'a> for &'a str {
+    unsafe fn try_convert(val: &'a Value) -> Result<Self, Error> {
+        debug_assert_value!(val);
+        // TODO include class in error message
+        RString::ref_from_value(val)
+            .ok_or_else(|| Error::type_error("expected String, got {}"))?
+            .as_str()
+    }
+}
 
 pub trait ValueArray {
     type Output: AsRef<[Value]>;

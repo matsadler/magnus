@@ -1,4 +1,5 @@
 use std::{
+    borrow::Cow,
     mem::transmute,
     ops::{Deref, DerefMut},
     os::raw::{c_char, c_int, c_long, c_ulong},
@@ -11,11 +12,13 @@ use crate::{
     protect,
     r_bignum::RBignum,
     r_float::RFloat,
+    r_string::RString,
     ruby_sys::{
-        rb_enumeratorize_with_size, rb_float_new, rb_float_value, rb_gc_register_address,
-        rb_gc_register_mark_object, rb_gc_unregister_address, rb_id2sym, rb_intern2, rb_ll2inum,
-        rb_num2ll, rb_num2long, rb_num2short, rb_num2ull, rb_num2ulong, rb_num2ushort, rb_sym2id,
-        rb_ull2inum, ruby_special_consts, ID, VALUE,
+        rb_any_to_s, rb_enumeratorize_with_size, rb_float_new, rb_float_value,
+        rb_gc_register_address, rb_gc_register_mark_object, rb_gc_unregister_address, rb_id2sym,
+        rb_inspect, rb_intern2, rb_ll2inum, rb_num2ll, rb_num2long, rb_num2short, rb_num2ull,
+        rb_num2ulong, rb_num2ushort, rb_obj_as_string, rb_sym2id, rb_ull2inum, ruby_special_consts,
+        ID, VALUE,
     },
     try_convert::ValueArray,
 };
@@ -75,6 +78,44 @@ impl Value {
     #[inline]
     pub fn is_nil(&self) -> bool {
         self.0 == ruby_special_consts::RUBY_Qnil as VALUE
+    }
+
+    pub unsafe fn to_r_string(&self) -> Result<RString, Error> {
+        match RString::from_value(self) {
+            Some(v) => Ok(v),
+            None => protect(|| Value::new(rb_obj_as_string(self.into_inner())))
+                .map(|v| RString(v.into_inner())),
+        }
+    }
+
+    pub unsafe fn to_s(&self) -> Result<Cow<str>, Error> {
+        if let Some(s) = RString::ref_from_value(self) {
+            if s.is_utf8_encoding() {
+                return s.as_str().map(Cow::Borrowed);
+            } else {
+                return s.to_string().map(Cow::Owned);
+            }
+        }
+        self.to_r_string()
+            .and_then(|s| s.to_string().map(Cow::Owned))
+    }
+
+    pub(crate) unsafe fn to_s_infallible(&self) -> Cow<str> {
+        match self.to_s() {
+            Ok(v) => v,
+            Err(_) => Cow::Owned(
+                RString(rb_any_to_s(self.into_inner()))
+                    .to_string_lossy()
+                    .into_owned(),
+            ),
+        }
+    }
+
+    pub unsafe fn inspect(&self) -> String {
+        let s = protect(|| Value::new(rb_inspect(self.into_inner())))
+            .map(|v| RString(v.into_inner()))
+            .unwrap_or_else(|_| RString(rb_any_to_s(self.into_inner())));
+        s.encode_utf8().unwrap_or(s).to_string_lossy().into_owned()
     }
 
     pub fn enumeratorize<M, A>(&self, method: M, args: A) -> Self
