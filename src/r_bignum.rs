@@ -49,7 +49,7 @@ impl RBignum {
     unsafe fn is_negative(&self) -> bool {
         debug_assert_value!(self);
         let r_basic = RBasic::from_value(self).expect("bignum missing RBasic");
-        r_basic.as_internal().as_ref().flags & (ruby_fl_type::RUBY_FL_USER1 as VALUE) == 0
+        r_basic.flags() & (ruby_fl_type::RUBY_FL_USER1 as VALUE) == 0
     }
 
     /// Will only succeed on a 32 bit system. On a 64 bit system bignum will

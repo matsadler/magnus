@@ -25,10 +25,14 @@ impl RBasic {
         unsafe { NonNull::new_unchecked(self.0 as *mut _) }
     }
 
+    pub(crate) unsafe fn flags(&self) -> VALUE {
+        self.as_internal().as_ref().flags
+    }
+
     // derefs a raw pointer that under GC compaction may be outside the
     // process's memory space if the Value has been allowed to get GC'd
     pub(crate) unsafe fn builtin_type(&self) -> ruby_value_type {
-        let ret = self.as_internal().as_ref().flags & (ruby_value_type::RUBY_T_MASK as VALUE);
+        let ret = self.flags() & (ruby_value_type::RUBY_T_MASK as VALUE);
         // this bit is safe, ruby_value_type is #[repr(u32)], the flags value
         // set by Ruby, and Ruby promises that flags masked like this will
         // always be a valid entry in this enum
