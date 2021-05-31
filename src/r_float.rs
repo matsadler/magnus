@@ -1,4 +1,4 @@
-use std::ops::Deref;
+use std::{fmt, ops::Deref};
 
 use crate::{
     debug_assert_value,
@@ -46,6 +46,18 @@ impl Deref for RFloat {
         let value_ptr = self_ptr as *const Self::Target;
         // we just got this pointer from &self, so we know it's valid to deref
         unsafe { &*value_ptr }
+    }
+}
+
+impl fmt::Display for RFloat {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", unsafe { self.to_s_infallible() })
+    }
+}
+
+impl fmt::Debug for RFloat {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", unsafe { self.inspect() })
     }
 }
 

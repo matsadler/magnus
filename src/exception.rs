@@ -1,4 +1,4 @@
-use std::ops::Deref;
+use std::{fmt, ops::Deref};
 
 use crate::{
     debug_assert_value,
@@ -9,7 +9,7 @@ use crate::{
 };
 
 #[repr(transparent)]
-pub struct Exception(VALUE);
+pub struct Exception(pub(crate) VALUE);
 
 impl Exception {
     /// # Safety
@@ -33,6 +33,23 @@ impl Deref for Exception {
         let value_ptr = self_ptr as *const Self::Target;
         // we just got this pointer from &self, so we know it's valid to deref
         unsafe { &*value_ptr }
+    }
+}
+
+impl fmt::Display for Exception {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", unsafe { self.to_s_infallible() })
+    }
+}
+
+impl fmt::Debug for Exception {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        if f.alternate() {
+            // TODO format with backtrace
+            write!(f, "{}", unsafe { self.inspect() })
+        } else {
+            write!(f, "{}", unsafe { self.inspect() })
+        }
     }
 }
 
@@ -74,6 +91,18 @@ impl Deref for ExceptionClass {
 impl Default for ExceptionClass {
     fn default() -> Self {
         unsafe { Self(rb_eRuntimeError) }
+    }
+}
+
+impl fmt::Display for ExceptionClass {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", unsafe { self.to_s_infallible() })
+    }
+}
+
+impl fmt::Debug for ExceptionClass {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", unsafe { self.inspect() })
     }
 }
 

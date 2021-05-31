@@ -1,12 +1,12 @@
 use std::{
+    fmt,
     ops::Deref,
     os::raw::{c_long, c_ulong},
 };
 
 use crate::{
     debug_assert_value,
-    error::Error,
-    protect,
+    error::{protect, Error},
     r_basic::RBasic,
     ruby_sys::{
         rb_ll2inum, rb_num2ll, rb_num2long, rb_num2ull, rb_num2ulong, rb_ull2inum, ruby_fl_type,
@@ -172,6 +172,18 @@ impl Deref for RBignum {
         let value_ptr = self_ptr as *const Self::Target;
         // we just got this pointer from &self, so we know it's valid to deref
         unsafe { &*value_ptr }
+    }
+}
+
+impl fmt::Display for RBignum {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", unsafe { self.to_s_infallible() })
+    }
+}
+
+impl fmt::Debug for RBignum {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", unsafe { self.inspect() })
     }
 }
 

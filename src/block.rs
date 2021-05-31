@@ -1,8 +1,7 @@
 use std::os::raw::c_int;
 
 use crate::{
-    error::Error,
-    protect,
+    error::{protect, Error},
     r_array::RArray,
     ruby_sys::{rb_block_given_p, rb_yield, rb_yield_splat, rb_yield_values2, VALUE},
     try_convert::{TryConvert, ValueArray},

@@ -1,14 +1,14 @@
 use std::{
     ffi::{c_void, CString},
+    fmt,
     ops::Deref,
     ptr::{self, NonNull},
 };
 
 use crate::{
     debug_assert_value,
-    error::Error,
+    error::{protect, Error},
     object::Object,
-    protect,
     r_basic::RBasic,
     r_class::RClass,
     ruby_sys::{
@@ -55,6 +55,18 @@ impl Deref for RTypedData {
         let value_ptr = self_ptr as *const Self::Target;
         // we just got this pointer from &self, so we know it's valid to deref
         unsafe { &*value_ptr }
+    }
+}
+
+impl fmt::Display for RTypedData {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", unsafe { self.to_s_infallible() })
+    }
+}
+
+impl fmt::Debug for RTypedData {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", unsafe { self.inspect() })
     }
 }
 

@@ -27,12 +27,13 @@ pub mod ruby_sys;
 mod try_convert;
 pub mod value;
 
-use std::{ffi::CString, mem::transmute, os::raw::c_int};
+use std::{ffi::CString, mem::transmute};
 
+use error::{protect, State};
 use method::Method;
 use ruby_sys::{
-    rb_define_class, rb_define_global_function, rb_define_module, rb_define_variable, rb_errinfo,
-    rb_eval_string_protect, rb_jump_tag, rb_protect, rb_set_errinfo, VALUE,
+    rb_define_class, rb_define_global_function, rb_define_module, rb_define_variable,
+    rb_eval_string_protect, VALUE,
 };
 
 pub use value::{Fixnum, Flonum, Qfalse, Qnil, Qtrue, Symbol, Value};
@@ -116,83 +117,6 @@ where
     let name = CString::new(name).unwrap();
     unsafe {
         rb_define_global_function(name.as_ptr(), transmute(func.as_ptr()), M::arity().into());
-    }
-}
-
-#[derive(Debug)]
-#[repr(transparent)]
-pub struct State(c_int);
-
-impl State {
-    /// # Safety
-    ///
-    /// This function is currently marked unsafe as it is presumed that the
-    /// State can get stale and thus no longer safe to resume.
-    pub unsafe fn resume(self) -> ! {
-        rb_jump_tag(self.0);
-        unreachable!()
-    }
-
-    pub fn is_exception(&self) -> bool {
-        // safe ffi to Ruby, call doesn't raise
-        !Value::new(unsafe { rb_errinfo() }).is_nil()
-    }
-
-    pub fn into_exception(self) -> Result<Value, Self> {
-        // safe ffi to Ruby, call doesn't raise
-        let val = Value::new(unsafe { rb_errinfo() });
-        if val.is_nil() {
-            Err(self)
-        } else {
-            // need to clear errinfo, that's done by drop
-            Ok(val)
-        }
-    }
-}
-
-impl Drop for State {
-    fn drop(&mut self) {
-        // safe ffi to Ruby, call doesn't raise
-        unsafe { rb_set_errinfo(Qnil::new().into_inner()) };
-    }
-}
-
-pub fn protect<F>(mut func: F) -> Result<Value, Error>
-where
-    F: FnMut() -> Value,
-{
-    // nested function as this is totally unsafe to call out of this context
-    // arg should not be a VALUE, but a mutable pointer to F, cast to VALUE
-    unsafe extern "C" fn call<F>(arg: VALUE) -> VALUE
-    where
-        F: FnMut() -> Value,
-    {
-        let closure = arg as *mut F;
-        (*closure)().into_inner()
-    }
-
-    let mut state = 0;
-    // rb_protect takes:
-    // arg1: function pointer that returns a VALUE
-    // arg2: a VALUE
-    // arg3: a pointer to an int.
-    // rb_protect then calls arg1 with arg2 and returns the VALUE that arg1
-    // returns. If a Ruby exception is raised (or other interrupt) the VALUE
-    // returned is instead Qnil, and arg3 is set to non-zero.
-    // As arg2 is only ever passed to arg1 and otherwise not touched we can
-    // pack in whatever data we want that will fit into a VALUE. This is part
-    // of the api and safe to do.
-    // In this case we use arg2 to pass a pointer the Rust closure we actually
-    // want to call, and arg1 is just a simple adapter to call arg2.
-    let result = unsafe {
-        let closure = &mut func as *mut F as VALUE;
-        rb_protect(Some(call::<F>), closure, &mut state as *mut _)
-    };
-
-    if state == 0 {
-        Ok(Value::new(result))
-    } else {
-        Err(Error::Jump(State(state)))
     }
 }
 

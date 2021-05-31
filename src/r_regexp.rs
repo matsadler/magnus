@@ -1,4 +1,4 @@
-use std::{ops::Deref, ptr::NonNull};
+use std::{fmt, ops::Deref, ptr::NonNull};
 
 use crate::{
     r_basic::RBasic,
@@ -36,6 +36,18 @@ impl Deref for RRegexp {
         let value_ptr = self_ptr as *const Self::Target;
         // we just got this pointer from &self, so we know it's valid to deref
         unsafe { &*value_ptr }
+    }
+}
+
+impl fmt::Display for RRegexp {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", unsafe { self.to_s_infallible() })
+    }
+}
+
+impl fmt::Debug for RRegexp {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", unsafe { self.inspect() })
     }
 }
 

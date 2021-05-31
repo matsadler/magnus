@@ -2,14 +2,14 @@ use magnus::{define_global_variable, Qnil};
 
 macro_rules! rb_assert {
     ($eval:literal) => {
-        assert!(magnus::eval_static($eval).ok().unwrap().to_bool())
+        assert!(magnus::eval_static($eval).unwrap().to_bool())
     };
 }
 
 #[test]
 fn it_converts_integers_to_value() {
     let _cleanup = unsafe { magnus::embed::init() };
-    let val = define_global_variable("$val", Qnil::new()).ok().unwrap();
+    let val = define_global_variable("$val", Qnil::new()).unwrap();
     rb_assert!("$val == nil");
 
     unsafe { val.replace((0u8).into()) };

@@ -1,4 +1,4 @@
-use std::{ffi::CString, mem::transmute, ops::Deref};
+use std::{ffi::CString, fmt, mem::transmute, ops::Deref};
 
 use crate::{
     debug_assert_value,
@@ -48,6 +48,18 @@ impl Deref for RModule {
         let value_ptr = self_ptr as *const Self::Target;
         // we just got this pointer from &self, so we know it's valid to deref
         unsafe { &*value_ptr }
+    }
+}
+
+impl fmt::Display for RModule {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", unsafe { self.to_s_infallible() })
+    }
+}
+
+impl fmt::Debug for RModule {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", unsafe { self.inspect() })
     }
 }
 

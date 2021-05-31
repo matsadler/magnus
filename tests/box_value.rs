@@ -5,7 +5,7 @@ use magnus::{embed::init, eval_static, value::BoxValue};
 
 #[inline(never)]
 fn box_value() -> BoxValue {
-    unsafe { BoxValue::new(eval_static(r#""foo""#).ok().unwrap()) }
+    unsafe { BoxValue::new(eval_static(r#""foo""#).unwrap()) }
 }
 
 #[test]
@@ -27,13 +27,13 @@ fn it_keeps_value_alive() {
 
     // send value back to Ruby
     // TODO use nice api for this rather than ruby_sys
-    let s = CString::new("FOO").ok().unwrap();
+    let s = CString::new("FOO").unwrap();
     unsafe {
         rb_define_global_const(s.as_c_str().as_ptr(), std::mem::transmute(*val));
     }
 
     // try and use value
-    eval_static(r#"FOO + "bar""#).ok().unwrap();
+    eval_static(r#"FOO + "bar""#).unwrap();
 
     // didn't segfault? we passed!
 }

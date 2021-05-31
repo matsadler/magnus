@@ -1,9 +1,8 @@
-use std::ops::Deref;
+use std::{fmt, ops::Deref};
 
 use crate::{
     debug_assert_value,
-    error::Error,
-    protect,
+    error::{protect, Error},
     r_basic::RBasic,
     ruby_sys::{
         rb_float_new, rb_float_value, rb_to_float, ruby_special_consts, ruby_value_type, VALUE,
@@ -51,6 +50,18 @@ impl Deref for Float {
         let value_ptr = self_ptr as *const Self::Target;
         // we just got this pointer from &self, so we know it's valid to deref
         unsafe { &*value_ptr }
+    }
+}
+
+impl fmt::Display for Float {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", unsafe { self.to_s_infallible() })
+    }
+}
+
+impl fmt::Debug for Float {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", unsafe { self.inspect() })
     }
 }
 

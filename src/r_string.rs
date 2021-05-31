@@ -1,6 +1,7 @@
 use std::{
     borrow::Cow,
     ffi::CStr,
+    fmt,
     mem::transmute,
     ops::Deref,
     ptr::{self, NonNull},
@@ -9,9 +10,8 @@ use std::{
 
 use crate::{
     debug_assert_value,
-    error::Error,
+    error::{protect, Error},
     object::Object,
-    protect,
     r_basic::RBasic,
     ruby_sys::{
         self, rb_enc_get, rb_enc_get_index, rb_str_conv_enc, rb_str_to_str, rb_utf8_encindex,
@@ -116,6 +116,18 @@ impl Deref for RString {
         let value_ptr = self_ptr as *const Self::Target;
         // we just got this pointer from &self, so we know it's valid to deref
         unsafe { &*value_ptr }
+    }
+}
+
+impl fmt::Display for RString {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", unsafe { self.to_s_infallible() })
+    }
+}
+
+impl fmt::Debug for RString {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", unsafe { self.inspect() })
     }
 }
 

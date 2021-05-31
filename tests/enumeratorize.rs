@@ -2,7 +2,7 @@ use magnus::{define_global_variable, eval_static};
 
 macro_rules! rb_assert {
     ($eval:literal) => {
-        assert!(magnus::eval_static($eval).ok().unwrap().to_bool())
+        assert!(magnus::eval_static($eval).unwrap().to_bool())
     };
 }
 

@@ -1,15 +1,15 @@
 use std::{
     borrow::Cow,
+    fmt,
     mem::transmute,
     ops::{Deref, DerefMut},
     os::raw::{c_char, c_int, c_long, c_ulong},
 };
 
 use crate::{
-    error::Error,
+    error::{protect, Error},
     float::Float,
     integer::Integer,
-    protect,
     r_bignum::RBignum,
     r_float::RFloat,
     r_string::RString,
@@ -49,7 +49,7 @@ macro_rules! debug_assert_value {
     };
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct Value(VALUE);
 
@@ -140,6 +140,18 @@ impl Value {
 impl Default for Value {
     fn default() -> Self {
         Value(ruby_special_consts::RUBY_Qnil as VALUE)
+    }
+}
+
+impl fmt::Display for Value {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", unsafe { self.to_s_infallible() })
+    }
+}
+
+impl fmt::Debug for Value {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", unsafe { self.inspect() })
     }
 }
 
@@ -270,6 +282,18 @@ impl DerefMut for BoxValue {
     }
 }
 
+impl fmt::Display for BoxValue {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", unsafe { self.to_s_infallible() })
+    }
+}
+
+impl fmt::Debug for BoxValue {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", unsafe { self.inspect() })
+    }
+}
+
 impl From<BoxValue> for Value {
     fn from(val: BoxValue) -> Self {
         *val
@@ -300,6 +324,18 @@ impl Deref for Qfalse {
     }
 }
 
+impl fmt::Display for Qfalse {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", unsafe { self.to_s_infallible() })
+    }
+}
+
+impl fmt::Debug for Qfalse {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", unsafe { self.inspect() })
+    }
+}
+
 impl From<Qfalse> for Value {
     fn from(val: Qfalse) -> Self {
         *val
@@ -327,6 +363,18 @@ impl Deref for Qtrue {
         let value_ptr = self_ptr as *const Self::Target;
         // we just got this pointer from &self, so we know it's valid to deref
         unsafe { &*value_ptr }
+    }
+}
+
+impl fmt::Display for Qtrue {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", unsafe { self.to_s_infallible() })
+    }
+}
+
+impl fmt::Debug for Qtrue {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", unsafe { self.inspect() })
     }
 }
 
@@ -367,6 +415,18 @@ impl Deref for Qnil {
         let value_ptr = self_ptr as *const Self::Target;
         // we just got this pointer from &self, so we know it's valid to deref
         unsafe { &*value_ptr }
+    }
+}
+
+impl fmt::Display for Qnil {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", unsafe { self.to_s_infallible() })
+    }
+}
+
+impl fmt::Debug for Qnil {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", unsafe { self.inspect() })
     }
 }
 
@@ -422,6 +482,18 @@ impl Deref for Symbol {
         let value_ptr = self_ptr as *const Self::Target;
         // we just got this pointer from &self, so we know it's valid to deref
         unsafe { &*value_ptr }
+    }
+}
+
+impl fmt::Display for Symbol {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", unsafe { self.to_s_infallible() })
+    }
+}
+
+impl fmt::Debug for Symbol {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", unsafe { self.inspect() })
     }
 }
 
@@ -646,6 +718,18 @@ impl Deref for Fixnum {
     }
 }
 
+impl fmt::Display for Fixnum {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", unsafe { self.to_s_infallible() })
+    }
+}
+
+impl fmt::Debug for Fixnum {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", unsafe { self.inspect() })
+    }
+}
+
 impl From<Fixnum> for Value {
     fn from(val: Fixnum) -> Self {
         *val
@@ -682,6 +766,18 @@ impl Deref for Flonum {
         let value_ptr = self_ptr as *const Self::Target;
         // we just got this pointer from &self, so we know it's valid to deref
         unsafe { &*value_ptr }
+    }
+}
+
+impl fmt::Display for Flonum {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", unsafe { self.to_s_infallible() })
+    }
+}
+
+impl fmt::Debug for Flonum {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", unsafe { self.inspect() })
     }
 }
 

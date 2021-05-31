@@ -2,10 +2,9 @@ use std::{ffi::CString, mem::transmute, ops::Deref};
 
 use crate::{
     debug_assert_value,
-    error::Error,
+    error::{protect, Error},
     method::Method,
     object::Object,
-    protect,
     r_class::RClass,
     r_module::RModule,
     ruby_sys::{

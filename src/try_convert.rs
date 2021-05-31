@@ -1,8 +1,7 @@
 use crate::{
     debug_assert_value,
-    error::Error,
+    error::{protect, Error},
     integer::Integer,
-    protect,
     r_string::RString,
     ruby_sys::rb_num2dbl,
     value::{Qnil, Value},
