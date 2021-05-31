@@ -205,8 +205,7 @@ where
     T: TypedData,
 {
     unsafe fn try_convert(val: &'a Value) -> Result<Self, Error> {
-        // TODO add classes to error message
-        T::from_value(val).ok_or_else(|| Error::type_error("no implicit conversion of {} into {}"))
+        T::from_value(val).ok_or_else(|| Error::type_error(format!("no implicit conversion of {} into {}", val.classname(), T::class())))
     }
 }
 impl<'a, T> TryConvertToRust<'a> for &'a T where T: TypedData {}

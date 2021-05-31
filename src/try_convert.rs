@@ -172,9 +172,8 @@ impl TryConvertToRust<'_> for String {}
 impl<'a> TryConvert<'a> for &'a str {
     unsafe fn try_convert(val: &'a Value) -> Result<Self, Error> {
         debug_assert_value!(val);
-        // TODO include class in error message
         RString::ref_from_value(val)
-            .ok_or_else(|| Error::type_error("expected String, got {}"))?
+            .ok_or_else(|| Error::type_error(format!("expected String, got {}", val.classname())))?
             .as_str()
     }
 }

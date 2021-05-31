@@ -1,5 +1,6 @@
 use std::{
     borrow::Cow,
+    ffi::CStr,
     fmt,
     mem::transmute,
     ops::{Deref, DerefMut},
@@ -17,8 +18,8 @@ use crate::{
         rb_any_to_s, rb_enumeratorize_with_size, rb_float_new, rb_float_value,
         rb_gc_register_address, rb_gc_register_mark_object, rb_gc_unregister_address, rb_id2sym,
         rb_inspect, rb_intern2, rb_ll2inum, rb_num2ll, rb_num2long, rb_num2short, rb_num2ull,
-        rb_num2ulong, rb_num2ushort, rb_obj_as_string, rb_sym2id, rb_ull2inum, ruby_special_consts,
-        ID, VALUE,
+        rb_num2ulong, rb_num2ushort, rb_obj_as_string, rb_obj_classname, rb_sym2id, rb_ull2inum,
+        ruby_special_consts, ID, VALUE,
     },
     try_convert::ValueArray,
 };
@@ -116,6 +117,12 @@ impl Value {
             .map(|v| RString(v.into_inner()))
             .unwrap_or_else(|_| RString(rb_any_to_s(self.into_inner())));
         s.encode_utf8().unwrap_or(s).to_string_lossy().into_owned()
+    }
+
+    pub unsafe fn classname(&self) -> Cow<str> {
+        let ptr = rb_obj_classname(self.into_inner());
+        let cstr = CStr::from_ptr(ptr);
+        cstr.to_string_lossy()
     }
 
     pub fn enumeratorize<M, A>(&self, method: M, args: A) -> Self
