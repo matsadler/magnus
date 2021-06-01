@@ -2,6 +2,10 @@ use std::{fmt, ops::Deref};
 
 use crate::{
     debug_assert_value,
+    error::Error,
+    module::Module,
+    object::Object,
+    r_array::RArray,
     r_basic::RBasic,
     r_class::RClass,
     ruby_sys::{rb_eException, rb_eRuntimeError, ruby_value_type, VALUE},
@@ -22,6 +26,10 @@ impl Exception {
         (r_basic.builtin_type() == ruby_value_type::RUBY_T_OBJECT
             && r_basic.class().is_inherited(RClass(rb_eException)))
         .then(|| Self(val.into_inner()))
+    }
+
+    pub unsafe fn backtrace(&self) -> Result<Option<RArray>, Error> {
+        self.funcall("backtrace", ())
     }
 }
 
@@ -45,8 +53,19 @@ impl fmt::Display for Exception {
 impl fmt::Debug for Exception {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         if f.alternate() {
-            // TODO format with backtrace
-            write!(f, "{}", unsafe { self.inspect() })
+            unsafe {
+                writeln!(f, "{}: {}", self.classname(), self)?;
+                if let Ok(Some(backtrace)) = self.backtrace() {
+                    for line in backtrace.each() {
+                        if let Ok(line) = line {
+                            writeln!(f, "{}", line)?;
+                        } else {
+                            break;
+                        }
+                    }
+                }
+            }
+            Ok(())
         } else {
             write!(f, "{}", unsafe { self.inspect() })
         }
@@ -111,3 +130,6 @@ impl From<ExceptionClass> for Value {
         *val
     }
 }
+
+impl Object for ExceptionClass {}
+impl Module for ExceptionClass {}

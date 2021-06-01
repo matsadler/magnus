@@ -1,8 +1,9 @@
-use std::{any::Any, borrow::Cow, ffi::CString, fmt, os::raw::c_int};
+use std::{any::Any, borrow::Cow, ffi::CString, fmt, ops::Deref, os::raw::c_int};
 
 use crate::{
     debug_assert_value,
     exception::{Exception, ExceptionClass},
+    module::Module,
     ruby_sys::{
         rb_eEncodingError, rb_eRangeError, rb_eScriptError, rb_eTypeError, rb_errinfo,
         rb_exc_raise, rb_jump_tag, rb_protect, rb_raise, rb_set_errinfo, VALUE,
@@ -51,6 +52,17 @@ impl Error {
         T: Into<Cow<'static, str>>,
     {
         Self::Error(ExceptionClass(unsafe { rb_eEncodingError }), msg.into())
+    }
+
+    pub unsafe fn is_kind_of<T>(&self, class: T) -> bool
+    where
+        T: Deref<Target = Value> + Module,
+    {
+        match self {
+            Error::Jump(s) => s.exception().map(|e| e.is_kind_of(class)).unwrap_or(false),
+            Error::Error(c, _) => c.is_inherited(class),
+            Error::Exception(e) => e.is_kind_of(class),
+        }
     }
 
     pub(crate) fn from_panic(e: Box<dyn Any + Send + 'static>) -> Self {

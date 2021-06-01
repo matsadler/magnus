@@ -49,7 +49,7 @@ where
     T: TryConvert<'a> + 'a,
 {
     unsafe fn try_convert(val: &'a Value) -> Result<Self, Error> {
-        val.is_nil().then(|| T::try_convert(val)).transpose()
+        (!val.is_nil()).then(|| T::try_convert(val)).transpose()
     }
 }
 
@@ -58,7 +58,7 @@ where
     T: TryConvertToRust<'a> + 'a,
 {
     unsafe fn try_convert_to_rust(val: &'a Value) -> Result<Self, Error> {
-        val.is_nil()
+        (!val.is_nil())
             .then(|| T::try_convert_to_rust(val))
             .transpose()
     }

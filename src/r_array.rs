@@ -1,9 +1,13 @@
 use std::{fmt, ops::Deref, ptr::NonNull};
 
 use crate::{
+    debug_assert_value,
+    enumerator::Enumerator,
+    error::{protect, Error},
     object::Object,
     r_basic::RBasic,
-    ruby_sys::{self, ruby_value_type, VALUE},
+    ruby_sys::{self, rb_ary_to_ary, ruby_value_type, VALUE},
+    try_convert::TryConvert,
     value::Value,
 };
 
@@ -26,6 +30,11 @@ impl RArray {
         // safe as to get self we need to have gone through ::from_value()
         // where val is vaild as an RBasic, which rules out NULL
         unsafe { NonNull::new_unchecked(self.0 as *mut _) }
+    }
+
+    pub unsafe fn each(&self) -> Enumerator {
+        // TODO why doesn't rb_ary_each work?
+        self.enumeratorize("each", ())
     }
 }
 
@@ -59,3 +68,16 @@ impl From<RArray> for Value {
 }
 
 impl Object for RArray {}
+
+impl TryConvert<'_> for RArray {
+    unsafe fn try_convert(val: &Value) -> Result<Self, Error> {
+        match Self::from_value(&val) {
+            Some(i) => Ok(i),
+            None => protect(|| {
+                debug_assert_value!(val);
+                Value::new(rb_ary_to_ary(val.into_inner()))
+            })
+            .map(|res| Self(res.into_inner())),
+        }
+    }
+}

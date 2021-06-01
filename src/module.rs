@@ -8,8 +8,8 @@ use crate::{
     r_class::RClass,
     r_module::RModule,
     ruby_sys::{
-        rb_const_get, rb_define_class_id_under, rb_define_method_id, rb_define_module_id_under,
-        rb_define_private_method, rb_define_protected_method,
+        rb_class_inherited_p, rb_const_get, rb_define_class_id_under, rb_define_method_id,
+        rb_define_module_id_under, rb_define_private_method, rb_define_protected_method,
     },
     value::{Id, Value},
 };
@@ -49,6 +49,13 @@ pub trait Module: Object + Deref<Target = Value> {
         debug_assert_value!(self);
         let id = name.into();
         unsafe { protect(|| Value::new(rb_const_get(self.into_inner(), id.into_inner()))) }
+    }
+
+    fn is_inherited<T>(&self, other: T) -> bool
+    where
+        T: Deref<Target = Value> + Module,
+    {
+        unsafe { Value::new(rb_class_inherited_p(self.into_inner(), other.into_inner())).to_bool() }
     }
 
     fn define_method<T, M>(&self, name: T, func: M)

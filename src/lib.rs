@@ -1,5 +1,6 @@
 pub mod block;
 pub mod embed;
+mod enumerator;
 pub mod error;
 mod exception;
 mod float;
@@ -38,6 +39,7 @@ use ruby_sys::{
 
 pub use value::{Fixnum, Flonum, Qfalse, Qnil, Qtrue, Symbol, Value};
 pub use {
+    enumerator::Enumerator,
     error::Error,
     exception::{Exception, ExceptionClass},
     float::Float,

@@ -40,9 +40,7 @@ impl RString {
         (r_basic.builtin_type() == ruby_value_type::RUBY_T_STRING).then(|| transmute(val))
     }
 
-    // TODO: use or remove
-    #[allow(dead_code)]
-    pub(crate) fn as_internal(&self) -> NonNull<ruby_sys::RString> {
+    fn as_internal(&self) -> NonNull<ruby_sys::RString> {
         // safe as to get self we need to have gone through ::from_value()
         // where val is vaild as an RBasic, which rules out NULL
         unsafe { NonNull::new_unchecked(self.0 as *mut _) }

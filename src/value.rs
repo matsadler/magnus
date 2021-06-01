@@ -8,20 +8,22 @@ use std::{
 };
 
 use crate::{
+    enumerator::Enumerator,
     error::{protect, Error},
     float::Float,
     integer::Integer,
+    module::Module,
     r_bignum::RBignum,
     r_float::RFloat,
     r_string::RString,
     ruby_sys::{
-        rb_any_to_s, rb_enumeratorize_with_size, rb_float_new, rb_float_value,
+        rb_any_to_s, rb_enumeratorize_with_size, rb_float_new, rb_float_value, rb_funcallv,
         rb_gc_register_address, rb_gc_register_mark_object, rb_gc_unregister_address, rb_id2sym,
         rb_inspect, rb_intern2, rb_ll2inum, rb_num2ll, rb_num2long, rb_num2short, rb_num2ull,
-        rb_num2ulong, rb_num2ushort, rb_obj_as_string, rb_obj_classname, rb_sym2id, rb_ull2inum,
-        ruby_special_consts, ID, VALUE,
+        rb_num2ulong, rb_num2ushort, rb_obj_as_string, rb_obj_classname, rb_obj_is_kind_of,
+        rb_sym2id, rb_ull2inum, ruby_special_consts, ID, VALUE,
     },
-    try_convert::ValueArray,
+    try_convert::{TryConvert, ValueArray},
 };
 
 // This isn't infallible, if the original object was gc'd and that slot
@@ -81,6 +83,26 @@ impl Value {
         self.0 == ruby_special_consts::RUBY_Qnil as VALUE
     }
 
+    pub unsafe fn funcall<M, A, T>(&self, method: M, args: A) -> Result<T, Error>
+    where
+        M: Into<Id>,
+        A: ValueArray,
+        for<'a> T: TryConvert<'a>,
+    {
+        let id = method.into();
+        let args = args.into();
+        let slice = args.as_ref();
+        protect(|| {
+            Value::new(rb_funcallv(
+                self.into_inner(),
+                id.into_inner(),
+                slice.len() as c_int,
+                slice.as_ptr() as *const VALUE,
+            ))
+        })
+        .and_then(|v| v.try_convert())
+    }
+
     pub unsafe fn to_r_string(&self) -> Result<RString, Error> {
         match RString::from_value(self) {
             Some(v) => Ok(v),
@@ -125,7 +147,14 @@ impl Value {
         cstr.to_string_lossy()
     }
 
-    pub fn enumeratorize<M, A>(&self, method: M, args: A) -> Self
+    pub unsafe fn is_kind_of<T>(&self, class: T) -> bool
+    where
+        T: Deref<Target = Value> + Module,
+    {
+        Value::new(rb_obj_is_kind_of(self.into_inner(), class.into_inner())).to_bool()
+    }
+
+    pub fn enumeratorize<M, A>(&self, method: M, args: A) -> Enumerator
     where
         M: Into<Symbol>,
         A: ValueArray,
@@ -133,7 +162,7 @@ impl Value {
         let args = args.into();
         let slice = args.as_ref();
         unsafe {
-            Value::new(rb_enumeratorize_with_size(
+            Enumerator(rb_enumeratorize_with_size(
                 self.into_inner(),
                 method.into().into_inner(),
                 slice.len() as c_int,
