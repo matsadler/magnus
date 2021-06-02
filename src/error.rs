@@ -13,7 +13,7 @@ use crate::{
 
 #[derive(Debug)]
 pub enum Error {
-    Jump(State),
+    Jump(Tag),
     Error(ExceptionClass, Cow<'static, str>),
     Exception(Exception),
 }
@@ -59,7 +59,7 @@ impl Error {
         T: Deref<Target = Value> + Module,
     {
         match self {
-            Error::Jump(s) => s.exception().map(|e| e.is_kind_of(class)).unwrap_or(false),
+            Error::Jump(_) => false,
             Error::Error(c, _) => c.is_inherited(class),
             Error::Exception(e) => e.is_kind_of(class),
         }
@@ -87,8 +87,8 @@ impl fmt::Display for Error {
     }
 }
 
-impl From<State> for Error {
-    fn from(val: State) -> Self {
+impl From<Tag> for Error {
+    fn from(val: Tag) -> Self {
         Self::Jump(val)
     }
 }
@@ -99,57 +99,39 @@ impl From<Exception> for Error {
     }
 }
 
-#[repr(transparent)]
-pub struct State(pub(crate) c_int);
+#[derive(Debug)]
+#[repr(i32)]
+pub enum Tag {
+    None = 0,
+    Return = 1,
+    Break = 2,
+    Next = 3,
+    Retry = 4,
+    Redo = 5,
+    Raise = 6,
+    Throw = 7,
+    Fatal = 8,
+}
 
-impl State {
-    /// # Safety
-    ///
-    /// This function is currently marked unsafe as it is presumed that the
-    /// State can get stale and thus no longer safe to resume.
-    pub unsafe fn resume(self) -> ! {
-        rb_jump_tag(self.0);
+impl Tag {
+    fn resume(self) -> ! {
+        unsafe { rb_jump_tag(self as c_int) };
         unreachable!()
     }
-
-    pub fn is_exception(&self) -> bool {
-        // safe ffi to Ruby, call doesn't raise
-        !Value::new(unsafe { rb_errinfo() }).is_nil()
-    }
-
-    fn exception(&self) -> Option<Exception> {
-        // safe ffi to Ruby, call doesn't raise
-        let val = Value::new(unsafe { rb_errinfo() });
-        (val.is_nil()).then(|| Exception(val.into_inner()))
-    }
-
-    pub fn into_exception(self) -> Result<Exception, Self> {
-        // need to clear errinfo, that's done by drop
-        self.exception().ok_or(self)
-    }
 }
 
-impl Drop for State {
-    fn drop(&mut self) {
-        // safe ffi to Ruby, call doesn't raise
-        unsafe { rb_set_errinfo(Qnil::new().into_inner()) };
-    }
-}
-
-impl fmt::Display for State {
+impl fmt::Display for Tag {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self.exception() {
-            Some(e) => write!(f, "{}", e),
-            None => write!(f, "protect state {}", self.0),
-        }
-    }
-}
-
-impl fmt::Debug for State {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self.exception() {
-            Some(e) => write!(f, "{:?}", e),
-            None => f.debug_tuple("State").field(&self.0).finish(),
+        match self {
+            Self::None => write!(f, "None"),
+            Self::Return => write!(f, "Return"),
+            Self::Break => write!(f, "Break"),
+            Self::Next => write!(f, "Next"),
+            Self::Retry => write!(f, "Retry"),
+            Self::Redo => write!(f, "Redo"),
+            Self::Raise => write!(f, "Raise"),
+            Self::Throw => write!(f, "Throw"),
+            Self::Fatal => write!(f, "Fatal"),
         }
     }
 }
@@ -168,7 +150,7 @@ where
         (*closure)().into_inner()
     }
 
-    let mut state = 0;
+    let mut state = Tag::None;
     // rb_protect takes:
     // arg1: function pointer that returns a VALUE
     // arg2: a VALUE
@@ -183,19 +165,27 @@ where
     // want to call, and arg1 is just a simple adapter to call arg2.
     let result = unsafe {
         let closure = &mut func as *mut F as VALUE;
-        rb_protect(Some(call::<F>), closure, &mut state as *mut _)
+        rb_protect(
+            Some(call::<F>),
+            closure,
+            &mut state as *mut Tag as *mut c_int,
+        )
     };
 
-    if state == 0 {
-        Ok(Value::new(result))
-    } else {
-        Err(Error::Jump(State(state)))
+    match state {
+        Tag::None => Ok(Value::new(result)),
+        Tag::Raise => unsafe {
+            let ex = Exception(rb_errinfo());
+            rb_set_errinfo(Qnil::new().into_inner());
+            Err(Error::Exception(ex))
+        },
+        other => Err(Error::Jump(other)),
     }
 }
 
 pub(crate) fn raise(e: Error) -> ! {
     match e {
-        Error::Jump(state) => unsafe { state.resume() },
+        Error::Jump(tag) => tag.resume(),
         Error::Error(class, msg) => {
             debug_assert_value!(class);
             let msg = CString::new(msg.into_owned()).unwrap();

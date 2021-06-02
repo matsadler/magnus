@@ -26,6 +26,13 @@ use crate::{
     try_convert::{TryConvert, ValueArray},
 };
 
+// this isn't part of Ruby public api, i.e. it's not in any header, but we'd
+// like to use it in debug builds
+#[cfg(debug_assertions)]
+extern "C" {
+    pub(crate) fn rb_objspace_garbage_object_p(obj: VALUE) -> c_int;
+}
+
 // This isn't infallible, if the original object was gc'd and that slot
 // reused already this won't panic like it should, but we're trying our
 // best here.
@@ -46,7 +53,13 @@ macro_rules! debug_assert_value {
                 | crate::ruby_sys::ruby_value_type::RUBY_T_MOVED => {
                     panic!("Attempting to access garbage collected Object")
                 }
-                _ => (),
+                _ => {
+                    if unsafe {
+                        crate::value::rb_objspace_garbage_object_p($value.into_inner()) != 0
+                    } {
+                        panic!("Attempting to access garbage collected Object")
+                    }
+                }
             }
         };
     };

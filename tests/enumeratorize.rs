@@ -22,7 +22,6 @@ fn it_makes_an_enumerator() {
     Test.new
     ",
     )
-    .ok()
     .unwrap();
 
     let enumerator = val.enumeratorize("each", ());

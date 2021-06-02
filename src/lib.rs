@@ -30,7 +30,7 @@ pub mod value;
 
 use std::{ffi::CString, mem::transmute};
 
-use error::{protect, State};
+use error::protect;
 use method::Method;
 use ruby_sys::{
     rb_define_class, rb_define_global_function, rb_define_module, rb_define_variable,
@@ -133,6 +133,6 @@ pub fn eval_static(s: &'static str) -> Result<Value, Error> {
     if state == 0 {
         Ok(Value::new(result))
     } else {
-        Err(Error::Jump(State(state)))
+        Err(Error::Jump(unsafe { transmute(state) }))
     }
 }

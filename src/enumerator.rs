@@ -29,7 +29,6 @@ impl Iterator for Enumerator {
         unsafe {
             match self.funcall("next", ()) {
                 Ok(v) => Some(Ok(v)),
-                // TODO check this matching actually works
                 Err(e) if e.is_kind_of(RClass(rb_eStopIteration)) => None,
                 Err(e) => Some(Err(e)),
             }

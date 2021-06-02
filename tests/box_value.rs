@@ -17,9 +17,7 @@ fn it_keeps_value_alive() {
     let val = box_value();
 
     // make some garbage
-    eval_static(r#"1024.times.map {|i| "test#{i}"}"#)
-        .ok()
-        .unwrap();
+    eval_static(r#"1024.times.map {|i| "test#{i}"}"#).unwrap();
     // run garbage collector
     unsafe {
         rb_gc_start();

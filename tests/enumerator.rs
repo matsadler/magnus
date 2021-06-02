@@ -27,5 +27,6 @@ fn enumerator_impls_iterator() {
                 .unwrap(),
             3
         );
+        assert!(e.next().is_none());
     }
 }
