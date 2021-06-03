@@ -6,7 +6,7 @@ fn it_includes_backtrace_in_debug() {
 
     let err = unsafe {
         Exception::from_value(
-            &eval_static(
+            eval_static(
                 r#"
             def foo
               raise "bang"

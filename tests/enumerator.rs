@@ -4,7 +4,7 @@ use magnus::{eval_static, RArray};
 fn enumerator_impls_iterator() {
     let _cleanup = unsafe { magnus::embed::init() };
     unsafe {
-        let a = RArray::from_value(&eval_static("[1,2,3]").unwrap()).unwrap();
+        let a = RArray::from_value(eval_static("[1,2,3]").unwrap()).unwrap();
         let mut e = a.each();
         assert_eq!(
             e.next()

@@ -9,41 +9,33 @@ use crate::{
     debug_assert_value,
     error::{protect, Error},
     object::Object,
-    r_basic::RBasic,
     r_class::RClass,
     ruby_sys::{
         self, rb_check_typeddata, rb_data_type_struct__bindgen_ty_1, rb_data_type_t,
         rb_data_typed_object_wrap, rbimpl_typeddata_flags, ruby_value_type, size_t, VALUE,
     },
     try_convert::{TryConvert, TryConvertToRust},
-    value::{Qnil, Value},
+    value::{NonZeroValue, Qnil, Value},
 };
 
+#[derive(Clone, Copy)]
 #[repr(transparent)]
-pub struct RTypedData(VALUE);
+pub struct RTypedData(NonZeroValue);
 
 impl RTypedData {
     /// # Safety
     ///
     /// val must not have been GC'd, return value must be kept on stack or
     /// otherwise protected from the GC.
-    pub unsafe fn from_value(val: &Value) -> Option<Self> {
-        let r_basic = RBasic::from_value(val)?;
-        (r_basic.builtin_type() == ruby_value_type::RUBY_T_DATA)
+    pub unsafe fn from_value(val: Value) -> Option<Self> {
+        (val.rb_type() == ruby_value_type::RUBY_T_DATA)
             .then(|| unsafe {
-                NonNull::new_unchecked(val.into_inner() as *mut ruby_sys::RTypedData)
+                NonNull::new_unchecked(val.as_rb_value() as *mut ruby_sys::RTypedData)
             })
             .and_then(|typed_data| {
-                (typed_data.as_ref().typed_flag == 1).then(|| Self(val.into_inner()))
+                (typed_data.as_ref().typed_flag == 1)
+                    .then(|| Self(NonZeroValue::new_unchecked(val)))
             })
-    }
-
-    // TODO: use or remove
-    #[allow(dead_code)]
-    pub(crate) fn as_internal(&self) -> NonNull<ruby_sys::RTypedData> {
-        // safe as to get self we need to have gone through ::from_value()
-        // where val is vaild as an RBasic, which rules out NULL
-        unsafe { NonNull::new_unchecked(self.0 as *mut _) }
     }
 }
 
@@ -51,10 +43,7 @@ impl Deref for RTypedData {
     type Target = Value;
 
     fn deref(&self) -> &Self::Target {
-        let self_ptr = self as *const Self;
-        let value_ptr = self_ptr as *const Self::Target;
-        // we just got this pointer from &self, so we know it's valid to deref
-        unsafe { &*value_ptr }
+        self.0.get_ref()
     }
 }
 
@@ -116,11 +105,11 @@ where
     /// # Safety
     ///
     /// val must not have been GC'd
-    unsafe fn from_value(val: &Value) -> Option<&Self> {
+    unsafe fn ref_from_value(val: &Value) -> Option<&Self> {
         debug_assert_value!(val);
         let mut res = None;
         let _ = protect(|| {
-            res = (rb_check_typeddata(val.into_inner(), Self::data_type() as *const _)
+            res = (rb_check_typeddata(val.as_rb_value(), Self::data_type() as *const _)
                 as *const Self)
                 .as_ref();
             *Qnil::new()
@@ -132,7 +121,7 @@ where
         let boxed = Box::new(self);
         let value_ptr = unsafe {
             rb_data_typed_object_wrap(
-                Self::class().into_inner(),
+                Self::class().as_rb_value(),
                 Box::into_raw(boxed) as *mut _,
                 Self::data_type() as *const _,
             )
@@ -205,7 +194,7 @@ where
     T: TypedData,
 {
     unsafe fn try_convert(val: &'a Value) -> Result<Self, Error> {
-        T::from_value(val).ok_or_else(|| {
+        T::ref_from_value(&val).ok_or_else(|| {
             Error::type_error(format!(
                 "no implicit conversion of {} into {}",
                 val.classname(),

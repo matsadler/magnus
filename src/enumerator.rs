@@ -5,20 +5,26 @@ use crate::{
     object::Object,
     r_class::RClass,
     ruby_sys::{rb_cEnumerator, rb_eStopIteration, VALUE},
-    value::Value,
+    value::{NonZeroValue, Value},
 };
 
+#[derive(Clone, Copy)]
 #[repr(transparent)]
-pub struct Enumerator(pub(crate) VALUE);
+pub struct Enumerator(NonZeroValue);
 
 impl Enumerator {
     /// # Safety
     ///
     /// val must not have been GC'd, return value must be kept on stack or
     /// otherwise protected from the GC.
-    pub unsafe fn from_value(val: &Value) -> Option<Self> {
-        val.is_kind_of(RClass(rb_cEnumerator))
-            .then(|| Self(val.into_inner()))
+    pub unsafe fn from_value(val: Value) -> Option<Self> {
+        val.is_kind_of(RClass::from_rb_value_unchecked(rb_cEnumerator))
+            .then(|| Self(NonZeroValue::new_unchecked(val)))
+    }
+
+    #[inline]
+    pub(crate) unsafe fn from_rb_value_unchecked(val: VALUE) -> Self {
+        Self(NonZeroValue::new_unchecked(Value::new(val)))
     }
 }
 
@@ -29,7 +35,7 @@ impl Iterator for Enumerator {
         unsafe {
             match self.funcall("next", ()) {
                 Ok(v) => Some(Ok(v)),
-                Err(e) if e.is_kind_of(RClass(rb_eStopIteration)) => None,
+                Err(e) if e.is_kind_of(RClass::from_rb_value_unchecked(rb_eStopIteration)) => None,
                 Err(e) => Some(Err(e)),
             }
         }
@@ -40,10 +46,7 @@ impl Deref for Enumerator {
     type Target = Value;
 
     fn deref(&self) -> &Self::Target {
-        let self_ptr = self as *const Self;
-        let value_ptr = self_ptr as *const Self::Target;
-        // we just got this pointer from &self, so we know it's valid to deref
-        unsafe { &*value_ptr }
+        self.0.get_ref()
     }
 }
 

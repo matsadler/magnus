@@ -37,21 +37,30 @@ impl Error {
     where
         T: Into<Cow<'static, str>>,
     {
-        Self::Error(ExceptionClass(unsafe { rb_eRangeError }), msg.into())
+        Self::Error(
+            unsafe { ExceptionClass::from_rb_value_unchecked(rb_eRangeError) },
+            msg.into(),
+        )
     }
 
     pub fn type_error<T>(msg: T) -> Self
     where
         T: Into<Cow<'static, str>>,
     {
-        Self::Error(ExceptionClass(unsafe { rb_eTypeError }), msg.into())
+        Self::Error(
+            unsafe { ExceptionClass::from_rb_value_unchecked(rb_eTypeError) },
+            msg.into(),
+        )
     }
 
     pub fn encoding_error<T>(msg: T) -> Self
     where
         T: Into<Cow<'static, str>>,
     {
-        Self::Error(ExceptionClass(unsafe { rb_eEncodingError }), msg.into())
+        Self::Error(
+            unsafe { ExceptionClass::from_rb_value_unchecked(rb_eEncodingError) },
+            msg.into(),
+        )
     }
 
     pub unsafe fn is_kind_of<T>(&self, class: T) -> bool
@@ -73,7 +82,10 @@ impl Error {
         } else {
             "panic".into()
         };
-        Self::Error(ExceptionClass(unsafe { rb_eScriptError }), msg)
+        Self::Error(
+            unsafe { ExceptionClass::from_rb_value_unchecked(rb_eScriptError) },
+            msg,
+        )
     }
 }
 
@@ -147,7 +159,7 @@ where
         F: FnMut() -> Value,
     {
         let closure = arg as *mut F;
-        (*closure)().into_inner()
+        (*closure)().as_rb_value()
     }
 
     let mut state = Tag::None;
@@ -175,8 +187,8 @@ where
     match state {
         Tag::None => Ok(Value::new(result)),
         Tag::Raise => unsafe {
-            let ex = Exception(rb_errinfo());
-            rb_set_errinfo(Qnil::new().into_inner());
+            let ex = Exception::from_rb_value_unchecked(rb_errinfo());
+            rb_set_errinfo(Qnil::new().as_rb_value());
             Err(Error::Exception(ex))
         },
         other => Err(Error::Jump(other)),
@@ -189,12 +201,12 @@ pub(crate) fn raise(e: Error) -> ! {
         Error::Error(class, msg) => {
             debug_assert_value!(class);
             let msg = CString::new(msg.into_owned()).unwrap();
-            unsafe { rb_raise(class.into_inner(), msg.as_ptr()) }
+            unsafe { rb_raise(class.as_rb_value(), msg.as_ptr()) }
             unreachable!()
         }
         Error::Exception(e) => {
             debug_assert_value!(e);
-            unsafe { rb_exc_raise(e.into_inner()) }
+            unsafe { rb_exc_raise(e.as_rb_value()) }
             unreachable!()
         }
     }

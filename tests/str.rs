@@ -7,7 +7,7 @@ fn it_converts_to_ref_str() {
     unsafe {
         // TODO why isn't this utf-8 on the Ruby side by default?
         let val = eval_static("'hello'.encode('utf-8')").unwrap();
-        let s = RString::from_value(&val).unwrap();
+        let s = RString::from_value(val).unwrap();
 
         assert_eq!("hello", s.as_str().unwrap());
     }

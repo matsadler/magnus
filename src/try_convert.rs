@@ -14,18 +14,6 @@ pub trait TryConvert<'a>: Sized {
     unsafe fn try_convert(val: &'a Value) -> Result<Self, Error>;
 }
 
-impl Value {
-    /// # Safety
-    ///
-    /// self must not have been GC'd.
-    pub unsafe fn try_convert<'a, T>(&'a self) -> Result<T, Error>
-    where
-        T: TryConvert<'a>,
-    {
-        T::try_convert(self)
-    }
-}
-
 /// Only implemented on Rust types. TryConvert may convert from a
 /// Value to another Ruby type. Use this when you need a Rust value that's
 /// divorced from the Ruby runtime, safe to put on the heap, etc.
@@ -153,7 +141,7 @@ impl TryConvert<'_> for f64 {
         debug_assert_value!(val);
         let mut res = 0.0;
         protect(|| {
-            res = rb_num2dbl(val.into_inner());
+            res = rb_num2dbl(val.as_rb_value());
             *Qnil::new()
         })?;
         Ok(res)

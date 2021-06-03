@@ -18,7 +18,7 @@ where
     for<'a> U: TryConvert<'a>,
 {
     let val = val.into();
-    unsafe { protect(|| Value::new(rb_yield(val.into_inner()))).and_then(|v| v.try_convert()) }
+    unsafe { protect(|| Value::new(rb_yield(val.as_rb_value()))).and_then(|v| v.try_convert()) }
 }
 
 pub fn yield_values<T, U>(vals: T) -> Result<U, Error>
@@ -44,6 +44,6 @@ where
     for<'a> T: TryConvert<'a>,
 {
     unsafe {
-        protect(|| Value::new(rb_yield_splat(vals.into_inner()))).and_then(|v| v.try_convert())
+        protect(|| Value::new(rb_yield_splat(vals.as_rb_value()))).and_then(|v| v.try_convert())
     }
 }

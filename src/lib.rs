@@ -9,7 +9,6 @@ pub mod method;
 mod module;
 mod object;
 mod r_array;
-mod r_basic;
 mod r_bignum;
 mod r_class;
 mod r_complex;
@@ -47,7 +46,6 @@ pub use {
     module::Module,
     object::Object,
     r_array::RArray,
-    r_basic::RBasic,
     r_bignum::RBignum,
     r_class::RClass,
     r_complex::RComplex,
@@ -86,10 +84,10 @@ macro_rules! memoize {
 pub fn define_class(name: &str, superclass: RClass) -> Result<RClass, Error> {
     debug_assert_value!(superclass);
     let name = CString::new(name).unwrap();
-    let superclass = superclass.into_inner();
+    let superclass = superclass.as_rb_value();
     unsafe {
         let res = protect(|| Value::new(rb_define_class(name.as_ptr(), superclass)));
-        res.map(|v| RClass::from_value(&v).unwrap())
+        res.map(|v| RClass::from_value(v).unwrap())
     }
 }
 
@@ -97,7 +95,7 @@ pub fn define_module(name: &str) -> Result<RModule, Error> {
     let name = CString::new(name).unwrap();
     unsafe {
         let res = protect(|| Value::new(rb_define_module(name.as_ptr())));
-        res.map(|v| RModule::from_value(&v).unwrap())
+        res.map(|v| RModule::from_value(v).unwrap())
     }
 }
 
