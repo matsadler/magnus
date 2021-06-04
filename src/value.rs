@@ -200,7 +200,7 @@ impl Value {
     where
         M: Into<Id>,
         A: ValueArray,
-        for<'a> T: TryConvert<'a>,
+        T: TryConvert,
     {
         let id = method.into();
         let args = args.into();
@@ -288,9 +288,9 @@ impl Value {
     /// # Safety
     ///
     /// self must not have been GC'd.
-    pub unsafe fn try_convert<'a, T>(&'a self) -> Result<T, Error>
+    pub unsafe fn try_convert<T>(&self) -> Result<T, Error>
     where
-        T: TryConvert<'a>,
+        T: TryConvert,
     {
         T::try_convert(self)
     }
@@ -571,6 +571,18 @@ impl From<Qnil> for Value {
 impl From<()> for Value {
     fn from(_: ()) -> Self {
         Qnil::new().into()
+    }
+}
+
+impl<T> From<Option<T>> for Value
+where
+    T: Into<Value>,
+{
+    fn from(val: Option<T>) -> Self {
+        match val {
+            Some(t) => t.into(),
+            None => Qnil::new().into(),
+        }
     }
 }
 

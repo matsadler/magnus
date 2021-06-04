@@ -105,7 +105,7 @@ where
     /// # Safety
     ///
     /// val must not have been GC'd
-    unsafe fn ref_from_value(val: &Value) -> Option<&Self> {
+    unsafe fn from_value<'a>(val: Value) -> Option<&'a Self> {
         debug_assert_value!(val);
         let mut res = None;
         let _ = protect(|| {
@@ -189,12 +189,12 @@ where
     }
 }
 
-impl<'a, T> TryConvert<'a> for &'a T
+impl<T> TryConvert for &T
 where
     T: TypedData,
 {
-    unsafe fn try_convert(val: &'a Value) -> Result<Self, Error> {
-        T::ref_from_value(&val).ok_or_else(|| {
+    unsafe fn try_convert(val: &Value) -> Result<Self, Error> {
+        T::from_value(*val).ok_or_else(|| {
             Error::type_error(format!(
                 "no implicit conversion of {} into {}",
                 val.classname(),
@@ -203,7 +203,7 @@ where
         })
     }
 }
-impl<'a, T> TryConvertToRust<'a> for &'a T where T: TypedData {}
+impl<T> TryConvertToRust for &T where T: TypedData {}
 
 impl<T> From<T> for Value
 where

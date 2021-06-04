@@ -15,7 +15,7 @@ pub fn block_given() -> bool {
 pub fn yield_value<T, U>(val: T) -> Result<U, Error>
 where
     T: Into<Value>,
-    for<'a> U: TryConvert<'a>,
+    U: TryConvert,
 {
     let val = val.into();
     unsafe { protect(|| Value::new(rb_yield(val.as_rb_value()))).and_then(|v| v.try_convert()) }
@@ -24,7 +24,7 @@ where
 pub fn yield_values<T, U>(vals: T) -> Result<U, Error>
 where
     T: ValueArray,
-    for<'a> U: TryConvert<'a>,
+    U: TryConvert,
 {
     let vals = vals.into();
     let slice = vals.as_ref();
@@ -41,7 +41,7 @@ where
 
 pub fn yield_splat<T>(vals: RArray) -> Result<T, Error>
 where
-    for<'a> T: TryConvert<'a>,
+    T: TryConvert,
 {
     unsafe {
         protect(|| Value::new(rb_yield_splat(vals.as_rb_value()))).and_then(|v| v.try_convert())

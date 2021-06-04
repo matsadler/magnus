@@ -5,8 +5,8 @@ use crate::{
     exception::{Exception, ExceptionClass},
     module::Module,
     ruby_sys::{
-        rb_eEncodingError, rb_eRangeError, rb_eScriptError, rb_eTypeError, rb_errinfo,
-        rb_exc_raise, rb_jump_tag, rb_protect, rb_raise, rb_set_errinfo, VALUE,
+        rb_eEncodingError, rb_eFatal, rb_eRangeError, rb_eTypeError, rb_errinfo, rb_exc_raise,
+        rb_jump_tag, rb_protect, rb_raise, rb_set_errinfo, VALUE,
     },
     value::{Qnil, Value},
 };
@@ -83,7 +83,7 @@ impl Error {
             "panic".into()
         };
         Self::Error(
-            unsafe { ExceptionClass::from_rb_value_unchecked(rb_eScriptError) },
+            unsafe { ExceptionClass::from_rb_value_unchecked(rb_eFatal) },
             msg,
         )
     }

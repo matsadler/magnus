@@ -2,7 +2,7 @@
 #![allow(clippy::many_single_char_names)]
 #![allow(clippy::missing_safety_doc)]
 
-use std::{ffi::c_void, marker::PhantomData, os::raw::c_int, panic::UnwindSafe, slice};
+use std::{ffi::c_void, marker::PhantomData, os::raw::c_int, panic::AssertUnwindSafe, slice};
 
 use crate::{
     error::{raise, Error},
@@ -352,10 +352,10 @@ pub struct MethodRbAry<Func, RbSelf, Args, Res> {
 
 impl<Func, RbSelf, Args, Res> MethodRbAry<Func, RbSelf, Args, Res>
 where
-    Func: Fn(RbSelf, Args) -> Result<Res, Error> + UnwindSafe,
-    for<'a> RbSelf: TryConvert<'a> + UnwindSafe,
-    for<'a> Args: TryConvert<'a> + UnwindSafe,
-    Res: Into<Value> + UnwindSafe,
+    Func: Fn(RbSelf, Args) -> Result<Res, Error>,
+    RbSelf: TryConvert,
+    Args: TryConvert,
+    Res: Into<Value>,
 {
     pub fn new(func: Func) -> Self {
         Self {
@@ -371,7 +371,9 @@ where
     }
 
     pub unsafe fn call_handle_error(self, rb_self: Value, args: RArray) -> Value {
-        let res = match std::panic::catch_unwind(|| self.call_convert_value(rb_self, args)) {
+        let res = match std::panic::catch_unwind(AssertUnwindSafe(|| {
+            self.call_convert_value(rb_self, args)
+        })) {
             Ok(v) => v,
             Err(e) => Err(Error::from_panic(e)),
         };
@@ -390,9 +392,9 @@ pub struct MethodCAry<Func, RbSelf, Res> {
 
 impl<Func, RbSelf, Res> MethodCAry<Func, RbSelf, Res>
 where
-    Func: Fn(RbSelf, &[Value]) -> Result<Res, Error> + UnwindSafe,
-    for<'a> RbSelf: TryConvert<'a> + UnwindSafe,
-    Res: Into<Value> + UnwindSafe,
+    Func: Fn(RbSelf, &[Value]) -> Result<Res, Error>,
+    RbSelf: TryConvert,
+    Res: Into<Value>,
 {
     pub fn new(func: Func) -> Self {
         Self {
@@ -418,7 +420,9 @@ where
         argv: *const Value,
         rb_self: Value,
     ) -> Value {
-        let res = match std::panic::catch_unwind(|| self.call_convert_value(argc, argv, rb_self)) {
+        let res = match std::panic::catch_unwind(AssertUnwindSafe(|| {
+            self.call_convert_value(argc, argv, rb_self)
+        })) {
             Ok(v) => v,
             Err(e) => Err(Error::from_panic(e)),
         };
@@ -438,10 +442,10 @@ pub struct Method0<Func, RbSelf, Res> {
 
 impl<Func, RbSelf, Res> Method0<Func, RbSelf, Res>
 where
-    Func: Fn(RbSelf) -> Result<Res, Error> + UnwindSafe,
-    for<'a> RbSelf: TryConvert<'a> + UnwindSafe,
+    Func: Fn(RbSelf) -> Result<Res, Error>,
+    RbSelf: TryConvert,
 
-    Res: Into<Value> + UnwindSafe,
+    Res: Into<Value>,
 {
     pub fn new(func: Func) -> Self {
         Self {
@@ -457,10 +461,11 @@ where
     }
 
     pub unsafe fn call_handle_error(self, rb_self: Value) -> Value {
-        let res = match std::panic::catch_unwind(|| self.call_convert_value(rb_self)) {
-            Ok(v) => v,
-            Err(e) => Err(Error::from_panic(e)),
-        };
+        let res =
+            match std::panic::catch_unwind(AssertUnwindSafe(|| self.call_convert_value(rb_self))) {
+                Ok(v) => v,
+                Err(e) => Err(Error::from_panic(e)),
+            };
         match res {
             Ok(v) => v,
             Err(e) => raise(e),
@@ -477,10 +482,10 @@ pub struct Method1<Func, RbSelf, A, Res> {
 
 impl<Func, RbSelf, A, Res> Method1<Func, RbSelf, A, Res>
 where
-    Func: Fn(RbSelf, A) -> Result<Res, Error> + UnwindSafe,
-    for<'a> RbSelf: TryConvert<'a> + UnwindSafe,
-    for<'a> A: TryConvert<'a> + UnwindSafe,
-    Res: Into<Value> + UnwindSafe,
+    Func: Fn(RbSelf, A) -> Result<Res, Error>,
+    RbSelf: TryConvert,
+    A: TryConvert,
+    Res: Into<Value>,
 {
     pub fn new(func: Func) -> Self {
         Self {
@@ -496,7 +501,9 @@ where
     }
 
     pub unsafe fn call_handle_error(self, rb_self: Value, a: Value) -> Value {
-        let res = match std::panic::catch_unwind(|| self.call_convert_value(rb_self, a)) {
+        let res = match std::panic::catch_unwind(AssertUnwindSafe(|| {
+            self.call_convert_value(rb_self, a)
+        })) {
             Ok(v) => v,
             Err(e) => Err(Error::from_panic(e)),
         };
@@ -517,11 +524,11 @@ pub struct Method2<Func, RbSelf, A, B, Res> {
 
 impl<Func, RbSelf, A, B, Res> Method2<Func, RbSelf, A, B, Res>
 where
-    Func: Fn(RbSelf, A, B) -> Result<Res, Error> + UnwindSafe,
-    for<'a> RbSelf: TryConvert<'a> + UnwindSafe,
-    for<'a> A: TryConvert<'a> + UnwindSafe,
-    for<'a> B: TryConvert<'a> + UnwindSafe,
-    Res: Into<Value> + UnwindSafe,
+    Func: Fn(RbSelf, A, B) -> Result<Res, Error>,
+    RbSelf: TryConvert,
+    A: TryConvert,
+    B: TryConvert,
+    Res: Into<Value>,
 {
     pub fn new(func: Func) -> Self {
         Self {
@@ -538,7 +545,9 @@ where
     }
 
     pub unsafe fn call_handle_error(self, rb_self: Value, a: Value, b: Value) -> Value {
-        let res = match std::panic::catch_unwind(|| self.call_convert_value(rb_self, a, b)) {
+        let res = match std::panic::catch_unwind(AssertUnwindSafe(|| {
+            self.call_convert_value(rb_self, a, b)
+        })) {
             Ok(v) => v,
             Err(e) => Err(Error::from_panic(e)),
         };
@@ -560,12 +569,12 @@ pub struct Method3<Func, RbSelf, A, B, C, Res> {
 
 impl<Func, RbSelf, A, B, C, Res> Method3<Func, RbSelf, A, B, C, Res>
 where
-    Func: Fn(RbSelf, A, B, C) -> Result<Res, Error> + UnwindSafe,
-    for<'a> RbSelf: TryConvert<'a> + UnwindSafe,
-    for<'a> A: TryConvert<'a> + UnwindSafe,
-    for<'a> B: TryConvert<'a> + UnwindSafe,
-    for<'a> C: TryConvert<'a> + UnwindSafe,
-    Res: Into<Value> + UnwindSafe,
+    Func: Fn(RbSelf, A, B, C) -> Result<Res, Error>,
+    RbSelf: TryConvert,
+    A: TryConvert,
+    B: TryConvert,
+    C: TryConvert,
+    Res: Into<Value>,
 {
     pub fn new(func: Func) -> Self {
         Self {
@@ -595,7 +604,9 @@ where
     }
 
     pub unsafe fn call_handle_error(self, rb_self: Value, a: Value, b: Value, c: Value) -> Value {
-        let res = match std::panic::catch_unwind(|| self.call_convert_value(rb_self, a, b, c)) {
+        let res = match std::panic::catch_unwind(AssertUnwindSafe(|| {
+            self.call_convert_value(rb_self, a, b, c)
+        })) {
             Ok(v) => v,
             Err(e) => Err(Error::from_panic(e)),
         };
@@ -618,13 +629,13 @@ pub struct Method4<Func, RbSelf, A, B, C, D, Res> {
 
 impl<Func, RbSelf, A, B, C, D, Res> Method4<Func, RbSelf, A, B, C, D, Res>
 where
-    Func: Fn(RbSelf, A, B, C, D) -> Result<Res, Error> + UnwindSafe,
-    for<'a> RbSelf: TryConvert<'a> + UnwindSafe,
-    for<'a> A: TryConvert<'a> + UnwindSafe,
-    for<'a> B: TryConvert<'a> + UnwindSafe,
-    for<'a> C: TryConvert<'a> + UnwindSafe,
-    for<'a> D: TryConvert<'a> + UnwindSafe,
-    Res: Into<Value> + UnwindSafe,
+    Func: Fn(RbSelf, A, B, C, D) -> Result<Res, Error>,
+    RbSelf: TryConvert,
+    A: TryConvert,
+    B: TryConvert,
+    C: TryConvert,
+    D: TryConvert,
+    Res: Into<Value>,
 {
     pub fn new(func: Func) -> Self {
         Self {
@@ -664,7 +675,9 @@ where
         c: Value,
         d: Value,
     ) -> Value {
-        let res = match std::panic::catch_unwind(|| self.call_convert_value(rb_self, a, b, c, d)) {
+        let res = match std::panic::catch_unwind(AssertUnwindSafe(|| {
+            self.call_convert_value(rb_self, a, b, c, d)
+        })) {
             Ok(v) => v,
             Err(e) => Err(Error::from_panic(e)),
         };
@@ -688,14 +701,14 @@ pub struct Method5<Func, RbSelf, A, B, C, D, E, Res> {
 
 impl<Func, RbSelf, A, B, C, D, E, Res> Method5<Func, RbSelf, A, B, C, D, E, Res>
 where
-    Func: Fn(RbSelf, A, B, C, D, E) -> Result<Res, Error> + UnwindSafe,
-    for<'a> RbSelf: TryConvert<'a> + UnwindSafe,
-    for<'a> A: TryConvert<'a> + UnwindSafe,
-    for<'a> B: TryConvert<'a> + UnwindSafe,
-    for<'a> C: TryConvert<'a> + UnwindSafe,
-    for<'a> D: TryConvert<'a> + UnwindSafe,
-    for<'a> E: TryConvert<'a> + UnwindSafe,
-    Res: Into<Value> + UnwindSafe,
+    Func: Fn(RbSelf, A, B, C, D, E) -> Result<Res, Error>,
+    RbSelf: TryConvert,
+    A: TryConvert,
+    B: TryConvert,
+    C: TryConvert,
+    D: TryConvert,
+    E: TryConvert,
+    Res: Into<Value>,
 {
     pub fn new(func: Func) -> Self {
         Self {
@@ -739,8 +752,9 @@ where
         d: Value,
         e: Value,
     ) -> Value {
-        let res = match std::panic::catch_unwind(|| self.call_convert_value(rb_self, a, b, c, d, e))
-        {
+        let res = match std::panic::catch_unwind(AssertUnwindSafe(|| {
+            self.call_convert_value(rb_self, a, b, c, d, e)
+        })) {
             Ok(v) => v,
             Err(e) => Err(Error::from_panic(e)),
         };
@@ -765,15 +779,15 @@ pub struct Method6<Func, RbSelf, A, B, C, D, E, F, Res> {
 
 impl<Func, RbSelf, A, B, C, D, E, F, Res> Method6<Func, RbSelf, A, B, C, D, E, F, Res>
 where
-    Func: Fn(RbSelf, A, B, C, D, E, F) -> Result<Res, Error> + UnwindSafe,
-    for<'a> RbSelf: TryConvert<'a> + UnwindSafe,
-    for<'a> A: TryConvert<'a> + UnwindSafe,
-    for<'a> B: TryConvert<'a> + UnwindSafe,
-    for<'a> C: TryConvert<'a> + UnwindSafe,
-    for<'a> D: TryConvert<'a> + UnwindSafe,
-    for<'a> E: TryConvert<'a> + UnwindSafe,
-    for<'a> F: TryConvert<'a> + UnwindSafe,
-    Res: Into<Value> + UnwindSafe,
+    Func: Fn(RbSelf, A, B, C, D, E, F) -> Result<Res, Error>,
+    RbSelf: TryConvert,
+    A: TryConvert,
+    B: TryConvert,
+    C: TryConvert,
+    D: TryConvert,
+    E: TryConvert,
+    F: TryConvert,
+    Res: Into<Value>,
 {
     pub fn new(func: Func) -> Self {
         Self {
@@ -821,11 +835,12 @@ where
         e: Value,
         f: Value,
     ) -> Value {
-        let res =
-            match std::panic::catch_unwind(|| self.call_convert_value(rb_self, a, b, c, d, e, f)) {
-                Ok(v) => v,
-                Err(e) => Err(Error::from_panic(e)),
-            };
+        let res = match std::panic::catch_unwind(AssertUnwindSafe(|| {
+            self.call_convert_value(rb_self, a, b, c, d, e, f)
+        })) {
+            Ok(v) => v,
+            Err(e) => Err(Error::from_panic(e)),
+        };
         match res {
             Ok(v) => v,
             Err(e) => raise(e),
@@ -848,16 +863,16 @@ pub struct Method7<Func, RbSelf, A, B, C, D, E, F, G, Res> {
 
 impl<Func, RbSelf, A, B, C, D, E, F, G, Res> Method7<Func, RbSelf, A, B, C, D, E, F, G, Res>
 where
-    Func: Fn(RbSelf, A, B, C, D, E, F, G) -> Result<Res, Error> + UnwindSafe,
-    for<'a> RbSelf: TryConvert<'a> + UnwindSafe,
-    for<'a> A: TryConvert<'a> + UnwindSafe,
-    for<'a> B: TryConvert<'a> + UnwindSafe,
-    for<'a> C: TryConvert<'a> + UnwindSafe,
-    for<'a> D: TryConvert<'a> + UnwindSafe,
-    for<'a> E: TryConvert<'a> + UnwindSafe,
-    for<'a> F: TryConvert<'a> + UnwindSafe,
-    for<'a> G: TryConvert<'a> + UnwindSafe,
-    Res: Into<Value> + UnwindSafe,
+    Func: Fn(RbSelf, A, B, C, D, E, F, G) -> Result<Res, Error>,
+    RbSelf: TryConvert,
+    A: TryConvert,
+    B: TryConvert,
+    C: TryConvert,
+    D: TryConvert,
+    E: TryConvert,
+    F: TryConvert,
+    G: TryConvert,
+    Res: Into<Value>,
 {
     pub fn new(func: Func) -> Self {
         Self {
@@ -909,9 +924,9 @@ where
         f: Value,
         g: Value,
     ) -> Value {
-        let res = match std::panic::catch_unwind(|| {
+        let res = match std::panic::catch_unwind(AssertUnwindSafe(|| {
             self.call_convert_value(rb_self, a, b, c, d, e, f, g)
-        }) {
+        })) {
             Ok(v) => v,
             Err(e) => Err(Error::from_panic(e)),
         };
@@ -938,17 +953,17 @@ pub struct Method8<Func, RbSelf, A, B, C, D, E, F, G, H, Res> {
 
 impl<Func, RbSelf, A, B, C, D, E, F, G, H, Res> Method8<Func, RbSelf, A, B, C, D, E, F, G, H, Res>
 where
-    Func: Fn(RbSelf, A, B, C, D, E, F, G, H) -> Result<Res, Error> + UnwindSafe,
-    for<'a> RbSelf: TryConvert<'a> + UnwindSafe,
-    for<'a> A: TryConvert<'a> + UnwindSafe,
-    for<'a> B: TryConvert<'a> + UnwindSafe,
-    for<'a> C: TryConvert<'a> + UnwindSafe,
-    for<'a> D: TryConvert<'a> + UnwindSafe,
-    for<'a> E: TryConvert<'a> + UnwindSafe,
-    for<'a> F: TryConvert<'a> + UnwindSafe,
-    for<'a> G: TryConvert<'a> + UnwindSafe,
-    for<'a> H: TryConvert<'a> + UnwindSafe,
-    Res: Into<Value> + UnwindSafe,
+    Func: Fn(RbSelf, A, B, C, D, E, F, G, H) -> Result<Res, Error>,
+    RbSelf: TryConvert,
+    A: TryConvert,
+    B: TryConvert,
+    C: TryConvert,
+    D: TryConvert,
+    E: TryConvert,
+    F: TryConvert,
+    G: TryConvert,
+    H: TryConvert,
+    Res: Into<Value>,
 {
     pub fn new(func: Func) -> Self {
         Self {
@@ -1004,9 +1019,9 @@ where
         g: Value,
         h: Value,
     ) -> Value {
-        let res = match std::panic::catch_unwind(|| {
+        let res = match std::panic::catch_unwind(AssertUnwindSafe(|| {
             self.call_convert_value(rb_self, a, b, c, d, e, f, g, h)
-        }) {
+        })) {
             Ok(v) => v,
             Err(e) => Err(Error::from_panic(e)),
         };
@@ -1035,18 +1050,18 @@ pub struct Method9<Func, RbSelf, A, B, C, D, E, F, G, H, I, Res> {
 impl<Func, RbSelf, A, B, C, D, E, F, G, H, I, Res>
     Method9<Func, RbSelf, A, B, C, D, E, F, G, H, I, Res>
 where
-    Func: Fn(RbSelf, A, B, C, D, E, F, G, H, I) -> Result<Res, Error> + UnwindSafe,
-    for<'a> RbSelf: TryConvert<'a> + UnwindSafe,
-    for<'a> A: TryConvert<'a> + UnwindSafe,
-    for<'a> B: TryConvert<'a> + UnwindSafe,
-    for<'a> C: TryConvert<'a> + UnwindSafe,
-    for<'a> D: TryConvert<'a> + UnwindSafe,
-    for<'a> E: TryConvert<'a> + UnwindSafe,
-    for<'a> F: TryConvert<'a> + UnwindSafe,
-    for<'a> G: TryConvert<'a> + UnwindSafe,
-    for<'a> H: TryConvert<'a> + UnwindSafe,
-    for<'a> I: TryConvert<'a> + UnwindSafe,
-    Res: Into<Value> + UnwindSafe,
+    Func: Fn(RbSelf, A, B, C, D, E, F, G, H, I) -> Result<Res, Error>,
+    RbSelf: TryConvert,
+    A: TryConvert,
+    B: TryConvert,
+    C: TryConvert,
+    D: TryConvert,
+    E: TryConvert,
+    F: TryConvert,
+    G: TryConvert,
+    H: TryConvert,
+    I: TryConvert,
+    Res: Into<Value>,
 {
     pub fn new(func: Func) -> Self {
         Self {
@@ -1106,9 +1121,9 @@ where
         h: Value,
         i: Value,
     ) -> Value {
-        let res = match std::panic::catch_unwind(|| {
+        let res = match std::panic::catch_unwind(AssertUnwindSafe(|| {
             self.call_convert_value(rb_self, a, b, c, d, e, f, g, h, i)
-        }) {
+        })) {
             Ok(v) => v,
             Err(e) => Err(Error::from_panic(e)),
         };
@@ -1138,19 +1153,19 @@ pub struct Method10<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, Res> {
 impl<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, Res>
     Method10<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, Res>
 where
-    Func: Fn(RbSelf, A, B, C, D, E, F, G, H, I, J) -> Result<Res, Error> + UnwindSafe,
-    for<'a> RbSelf: TryConvert<'a> + UnwindSafe,
-    for<'a> A: TryConvert<'a> + UnwindSafe,
-    for<'a> B: TryConvert<'a> + UnwindSafe,
-    for<'a> C: TryConvert<'a> + UnwindSafe,
-    for<'a> D: TryConvert<'a> + UnwindSafe,
-    for<'a> E: TryConvert<'a> + UnwindSafe,
-    for<'a> F: TryConvert<'a> + UnwindSafe,
-    for<'a> G: TryConvert<'a> + UnwindSafe,
-    for<'a> H: TryConvert<'a> + UnwindSafe,
-    for<'a> I: TryConvert<'a> + UnwindSafe,
-    for<'a> J: TryConvert<'a> + UnwindSafe,
-    Res: Into<Value> + UnwindSafe,
+    Func: Fn(RbSelf, A, B, C, D, E, F, G, H, I, J) -> Result<Res, Error>,
+    RbSelf: TryConvert,
+    A: TryConvert,
+    B: TryConvert,
+    C: TryConvert,
+    D: TryConvert,
+    E: TryConvert,
+    F: TryConvert,
+    G: TryConvert,
+    H: TryConvert,
+    I: TryConvert,
+    J: TryConvert,
+    Res: Into<Value>,
 {
     pub fn new(func: Func) -> Self {
         Self {
@@ -1214,9 +1229,9 @@ where
         i: Value,
         j: Value,
     ) -> Value {
-        let res = match std::panic::catch_unwind(|| {
+        let res = match std::panic::catch_unwind(AssertUnwindSafe(|| {
             self.call_convert_value(rb_self, a, b, c, d, e, f, g, h, i, j)
-        }) {
+        })) {
             Ok(v) => v,
             Err(e) => Err(Error::from_panic(e)),
         };
@@ -1247,20 +1262,20 @@ pub struct Method11<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, Res> {
 impl<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, Res>
     Method11<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, Res>
 where
-    Func: Fn(RbSelf, A, B, C, D, E, F, G, H, I, J, K) -> Result<Res, Error> + UnwindSafe,
-    for<'a> RbSelf: TryConvert<'a> + UnwindSafe,
-    for<'a> A: TryConvert<'a> + UnwindSafe,
-    for<'a> B: TryConvert<'a> + UnwindSafe,
-    for<'a> C: TryConvert<'a> + UnwindSafe,
-    for<'a> D: TryConvert<'a> + UnwindSafe,
-    for<'a> E: TryConvert<'a> + UnwindSafe,
-    for<'a> F: TryConvert<'a> + UnwindSafe,
-    for<'a> G: TryConvert<'a> + UnwindSafe,
-    for<'a> H: TryConvert<'a> + UnwindSafe,
-    for<'a> I: TryConvert<'a> + UnwindSafe,
-    for<'a> J: TryConvert<'a> + UnwindSafe,
-    for<'a> K: TryConvert<'a> + UnwindSafe,
-    Res: Into<Value> + UnwindSafe,
+    Func: Fn(RbSelf, A, B, C, D, E, F, G, H, I, J, K) -> Result<Res, Error>,
+    RbSelf: TryConvert,
+    A: TryConvert,
+    B: TryConvert,
+    C: TryConvert,
+    D: TryConvert,
+    E: TryConvert,
+    F: TryConvert,
+    G: TryConvert,
+    H: TryConvert,
+    I: TryConvert,
+    J: TryConvert,
+    K: TryConvert,
+    Res: Into<Value>,
 {
     pub fn new(func: Func) -> Self {
         Self {
@@ -1328,9 +1343,9 @@ where
         j: Value,
         k: Value,
     ) -> Value {
-        let res = match std::panic::catch_unwind(|| {
+        let res = match std::panic::catch_unwind(AssertUnwindSafe(|| {
             self.call_convert_value(rb_self, a, b, c, d, e, f, g, h, i, j, k)
-        }) {
+        })) {
             Ok(v) => v,
             Err(e) => Err(Error::from_panic(e)),
         };
@@ -1362,21 +1377,21 @@ pub struct Method12<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, Res> {
 impl<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, Res>
     Method12<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, Res>
 where
-    Func: Fn(RbSelf, A, B, C, D, E, F, G, H, I, J, K, L) -> Result<Res, Error> + UnwindSafe,
-    for<'a> RbSelf: TryConvert<'a> + UnwindSafe,
-    for<'a> A: TryConvert<'a> + UnwindSafe,
-    for<'a> B: TryConvert<'a> + UnwindSafe,
-    for<'a> C: TryConvert<'a> + UnwindSafe,
-    for<'a> D: TryConvert<'a> + UnwindSafe,
-    for<'a> E: TryConvert<'a> + UnwindSafe,
-    for<'a> F: TryConvert<'a> + UnwindSafe,
-    for<'a> G: TryConvert<'a> + UnwindSafe,
-    for<'a> H: TryConvert<'a> + UnwindSafe,
-    for<'a> I: TryConvert<'a> + UnwindSafe,
-    for<'a> J: TryConvert<'a> + UnwindSafe,
-    for<'a> K: TryConvert<'a> + UnwindSafe,
-    for<'a> L: TryConvert<'a> + UnwindSafe,
-    Res: Into<Value> + UnwindSafe,
+    Func: Fn(RbSelf, A, B, C, D, E, F, G, H, I, J, K, L) -> Result<Res, Error>,
+    RbSelf: TryConvert,
+    A: TryConvert,
+    B: TryConvert,
+    C: TryConvert,
+    D: TryConvert,
+    E: TryConvert,
+    F: TryConvert,
+    G: TryConvert,
+    H: TryConvert,
+    I: TryConvert,
+    J: TryConvert,
+    K: TryConvert,
+    L: TryConvert,
+    Res: Into<Value>,
 {
     pub fn new(func: Func) -> Self {
         Self {
@@ -1448,9 +1463,9 @@ where
         k: Value,
         l: Value,
     ) -> Value {
-        let res = match std::panic::catch_unwind(|| {
+        let res = match std::panic::catch_unwind(AssertUnwindSafe(|| {
             self.call_convert_value(rb_self, a, b, c, d, e, f, g, h, i, j, k, l)
-        }) {
+        })) {
             Ok(v) => v,
             Err(e) => Err(Error::from_panic(e)),
         };
@@ -1483,22 +1498,22 @@ pub struct Method13<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, M, Res> {
 impl<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, M, Res>
     Method13<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, M, Res>
 where
-    Func: Fn(RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, M) -> Result<Res, Error> + UnwindSafe,
-    for<'a> RbSelf: TryConvert<'a> + UnwindSafe,
-    for<'a> A: TryConvert<'a> + UnwindSafe,
-    for<'a> B: TryConvert<'a> + UnwindSafe,
-    for<'a> C: TryConvert<'a> + UnwindSafe,
-    for<'a> D: TryConvert<'a> + UnwindSafe,
-    for<'a> E: TryConvert<'a> + UnwindSafe,
-    for<'a> F: TryConvert<'a> + UnwindSafe,
-    for<'a> G: TryConvert<'a> + UnwindSafe,
-    for<'a> H: TryConvert<'a> + UnwindSafe,
-    for<'a> I: TryConvert<'a> + UnwindSafe,
-    for<'a> J: TryConvert<'a> + UnwindSafe,
-    for<'a> K: TryConvert<'a> + UnwindSafe,
-    for<'a> L: TryConvert<'a> + UnwindSafe,
-    for<'a> M: TryConvert<'a> + UnwindSafe,
-    Res: Into<Value> + UnwindSafe,
+    Func: Fn(RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, M) -> Result<Res, Error>,
+    RbSelf: TryConvert,
+    A: TryConvert,
+    B: TryConvert,
+    C: TryConvert,
+    D: TryConvert,
+    E: TryConvert,
+    F: TryConvert,
+    G: TryConvert,
+    H: TryConvert,
+    I: TryConvert,
+    J: TryConvert,
+    K: TryConvert,
+    L: TryConvert,
+    M: TryConvert,
+    Res: Into<Value>,
 {
     pub fn new(func: Func) -> Self {
         Self {
@@ -1574,9 +1589,9 @@ where
         l: Value,
         m: Value,
     ) -> Value {
-        let res = match std::panic::catch_unwind(|| {
+        let res = match std::panic::catch_unwind(AssertUnwindSafe(|| {
             self.call_convert_value(rb_self, a, b, c, d, e, f, g, h, i, j, k, l, m)
-        }) {
+        })) {
             Ok(v) => v,
             Err(e) => Err(Error::from_panic(e)),
         };
@@ -1610,23 +1625,23 @@ pub struct Method14<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, M, N, Res>
 impl<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, M, N, Res>
     Method14<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, M, N, Res>
 where
-    Func: Fn(RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, M, N) -> Result<Res, Error> + UnwindSafe,
-    for<'a> RbSelf: TryConvert<'a> + UnwindSafe,
-    for<'a> A: TryConvert<'a> + UnwindSafe,
-    for<'a> B: TryConvert<'a> + UnwindSafe,
-    for<'a> C: TryConvert<'a> + UnwindSafe,
-    for<'a> D: TryConvert<'a> + UnwindSafe,
-    for<'a> E: TryConvert<'a> + UnwindSafe,
-    for<'a> F: TryConvert<'a> + UnwindSafe,
-    for<'a> G: TryConvert<'a> + UnwindSafe,
-    for<'a> H: TryConvert<'a> + UnwindSafe,
-    for<'a> I: TryConvert<'a> + UnwindSafe,
-    for<'a> J: TryConvert<'a> + UnwindSafe,
-    for<'a> K: TryConvert<'a> + UnwindSafe,
-    for<'a> L: TryConvert<'a> + UnwindSafe,
-    for<'a> M: TryConvert<'a> + UnwindSafe,
-    for<'a> N: TryConvert<'a> + UnwindSafe,
-    Res: Into<Value> + UnwindSafe,
+    Func: Fn(RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, M, N) -> Result<Res, Error>,
+    RbSelf: TryConvert,
+    A: TryConvert,
+    B: TryConvert,
+    C: TryConvert,
+    D: TryConvert,
+    E: TryConvert,
+    F: TryConvert,
+    G: TryConvert,
+    H: TryConvert,
+    I: TryConvert,
+    J: TryConvert,
+    K: TryConvert,
+    L: TryConvert,
+    M: TryConvert,
+    N: TryConvert,
+    Res: Into<Value>,
 {
     pub fn new(func: Func) -> Self {
         Self {
@@ -1706,9 +1721,9 @@ where
         m: Value,
         n: Value,
     ) -> Value {
-        let res = match std::panic::catch_unwind(|| {
+        let res = match std::panic::catch_unwind(AssertUnwindSafe(|| {
             self.call_convert_value(rb_self, a, b, c, d, e, f, g, h, i, j, k, l, m, n)
-        }) {
+        })) {
             Ok(v) => v,
             Err(e) => Err(Error::from_panic(e)),
         };
@@ -1743,25 +1758,24 @@ pub struct Method15<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, R
 impl<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, Res>
     Method15<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, Res>
 where
-    Func:
-        Fn(RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O) -> Result<Res, Error> + UnwindSafe,
-    for<'a> RbSelf: TryConvert<'a> + UnwindSafe,
-    for<'a> A: TryConvert<'a> + UnwindSafe,
-    for<'a> B: TryConvert<'a> + UnwindSafe,
-    for<'a> C: TryConvert<'a> + UnwindSafe,
-    for<'a> D: TryConvert<'a> + UnwindSafe,
-    for<'a> E: TryConvert<'a> + UnwindSafe,
-    for<'a> F: TryConvert<'a> + UnwindSafe,
-    for<'a> G: TryConvert<'a> + UnwindSafe,
-    for<'a> H: TryConvert<'a> + UnwindSafe,
-    for<'a> I: TryConvert<'a> + UnwindSafe,
-    for<'a> J: TryConvert<'a> + UnwindSafe,
-    for<'a> K: TryConvert<'a> + UnwindSafe,
-    for<'a> L: TryConvert<'a> + UnwindSafe,
-    for<'a> M: TryConvert<'a> + UnwindSafe,
-    for<'a> N: TryConvert<'a> + UnwindSafe,
-    for<'a> O: TryConvert<'a> + UnwindSafe,
-    Res: Into<Value> + UnwindSafe,
+    Func: Fn(RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O) -> Result<Res, Error>,
+    RbSelf: TryConvert,
+    A: TryConvert,
+    B: TryConvert,
+    C: TryConvert,
+    D: TryConvert,
+    E: TryConvert,
+    F: TryConvert,
+    G: TryConvert,
+    H: TryConvert,
+    I: TryConvert,
+    J: TryConvert,
+    K: TryConvert,
+    L: TryConvert,
+    M: TryConvert,
+    N: TryConvert,
+    O: TryConvert,
+    Res: Into<Value>,
 {
     pub fn new(func: Func) -> Self {
         Self {
@@ -1845,9 +1859,9 @@ where
         n: Value,
         o: Value,
     ) -> Value {
-        let res = match std::panic::catch_unwind(|| {
+        let res = match std::panic::catch_unwind(AssertUnwindSafe(|| {
             self.call_convert_value(rb_self, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o)
-        }) {
+        })) {
             Ok(v) => v,
             Err(e) => Err(Error::from_panic(e)),
         };
@@ -1883,26 +1897,25 @@ pub struct Method16<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P
 impl<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Res>
     Method16<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Res>
 where
-    Func: Fn(RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P) -> Result<Res, Error>
-        + UnwindSafe,
-    for<'a> RbSelf: TryConvert<'a> + UnwindSafe,
-    for<'a> A: TryConvert<'a> + UnwindSafe,
-    for<'a> B: TryConvert<'a> + UnwindSafe,
-    for<'a> C: TryConvert<'a> + UnwindSafe,
-    for<'a> D: TryConvert<'a> + UnwindSafe,
-    for<'a> E: TryConvert<'a> + UnwindSafe,
-    for<'a> F: TryConvert<'a> + UnwindSafe,
-    for<'a> G: TryConvert<'a> + UnwindSafe,
-    for<'a> H: TryConvert<'a> + UnwindSafe,
-    for<'a> I: TryConvert<'a> + UnwindSafe,
-    for<'a> J: TryConvert<'a> + UnwindSafe,
-    for<'a> K: TryConvert<'a> + UnwindSafe,
-    for<'a> L: TryConvert<'a> + UnwindSafe,
-    for<'a> M: TryConvert<'a> + UnwindSafe,
-    for<'a> N: TryConvert<'a> + UnwindSafe,
-    for<'a> O: TryConvert<'a> + UnwindSafe,
-    for<'a> P: TryConvert<'a> + UnwindSafe,
-    Res: Into<Value> + UnwindSafe,
+    Func: Fn(RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P) -> Result<Res, Error>,
+    RbSelf: TryConvert,
+    A: TryConvert,
+    B: TryConvert,
+    C: TryConvert,
+    D: TryConvert,
+    E: TryConvert,
+    F: TryConvert,
+    G: TryConvert,
+    H: TryConvert,
+    I: TryConvert,
+    J: TryConvert,
+    K: TryConvert,
+    L: TryConvert,
+    M: TryConvert,
+    N: TryConvert,
+    O: TryConvert,
+    P: TryConvert,
+    Res: Into<Value>,
 {
     pub fn new(func: Func) -> Self {
         Self {
@@ -1990,9 +2003,9 @@ where
         o: Value,
         p: Value,
     ) -> Value {
-        let res = match std::panic::catch_unwind(|| {
+        let res = match std::panic::catch_unwind(AssertUnwindSafe(|| {
             self.call_convert_value(rb_self, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p)
-        }) {
+        })) {
             Ok(v) => v,
             Err(e) => Err(Error::from_panic(e)),
         };

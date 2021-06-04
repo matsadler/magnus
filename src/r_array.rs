@@ -63,7 +63,7 @@ impl From<RArray> for Value {
 
 impl Object for RArray {}
 
-impl TryConvert<'_> for RArray {
+impl TryConvert for RArray {
     unsafe fn try_convert(val: &Value) -> Result<Self, Error> {
         match Self::from_value(*val) {
             Some(i) => Ok(i),

@@ -34,7 +34,8 @@ impl RString {
     }
 
     pub(crate) unsafe fn ref_from_value(val: &Value) -> Option<&Self> {
-        (val.rb_type() == ruby_value_type::RUBY_T_STRING).then(|| &*(val as *const _ as *const RString))
+        (val.rb_type() == ruby_value_type::RUBY_T_STRING)
+            .then(|| &*(val as *const _ as *const RString))
     }
 
     #[inline]
@@ -48,6 +49,10 @@ impl RString {
     }
 
     pub unsafe fn as_slice(&self) -> &[u8] {
+        self.as_slice_unconstrained()
+    }
+
+    unsafe fn as_slice_unconstrained<'a>(self) -> &'a [u8] {
         debug_assert_value!(self);
         let r_basic = self.r_basic_unchecked();
         let mut f = r_basic.as_ref().flags;
@@ -80,6 +85,10 @@ impl RString {
     }
 
     pub unsafe fn as_str(&self) -> Result<&str, Error> {
+        self.as_str_unconstrained()
+    }
+
+    pub(crate) unsafe fn as_str_unconstrained<'a>(self) -> Result<&'a str, Error> {
         if !self.is_utf8_encoding() {
             let enc = rb_enc_get(self.as_rb_value());
             let name = CStr::from_ptr((*enc).name).to_string_lossy();
@@ -88,7 +97,8 @@ impl RString {
                 name
             )));
         }
-        str::from_utf8(self.as_slice()).map_err(|e| Error::encoding_error(format!("{}", e)))
+        str::from_utf8(self.as_slice_unconstrained())
+            .map_err(|e| Error::encoding_error(format!("{}", e)))
     }
 
     pub unsafe fn to_string_lossy(&self) -> Cow<'_, str> {
@@ -135,7 +145,7 @@ impl From<RString> for Value {
 
 impl Object for RString {}
 
-impl TryConvert<'_> for RString {
+impl TryConvert for RString {
     unsafe fn try_convert(val: &Value) -> Result<Self, Error> {
         match Self::from_value(*val) {
             Some(i) => Ok(i),

@@ -178,7 +178,7 @@ impl From<Integer> for Value {
     }
 }
 
-impl TryConvert<'_> for Integer {
+impl TryConvert for Integer {
     unsafe fn try_convert(val: &Value) -> Result<Self, Error> {
         match Self::from_value(*val) {
             Some(i) => Ok(i),
