@@ -5,8 +5,8 @@ use crate::{
     exception::{Exception, ExceptionClass},
     module::Module,
     ruby_sys::{
-        rb_eEncodingError, rb_eFatal, rb_eRangeError, rb_eTypeError, rb_errinfo, rb_exc_raise,
-        rb_jump_tag, rb_protect, rb_raise, rb_set_errinfo, VALUE,
+        rb_eEncodingError, rb_eFatal, rb_eRangeError, rb_eStopIteration, rb_eTypeError, rb_errinfo,
+        rb_exc_raise, rb_jump_tag, rb_protect, rb_raise, rb_set_errinfo, VALUE,
     },
     value::{Qnil, Value},
 };
@@ -59,6 +59,16 @@ impl Error {
     {
         Self::Error(
             unsafe { ExceptionClass::from_rb_value_unchecked(rb_eEncodingError) },
+            msg.into(),
+        )
+    }
+
+    pub fn stop_iteration<T>(msg: T) -> Self
+    where
+        T: Into<Cow<'static, str>>,
+    {
+        Self::Error(
+            unsafe { ExceptionClass::from_rb_value_unchecked(rb_eStopIteration) },
             msg.into(),
         )
     }
