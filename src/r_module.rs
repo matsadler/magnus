@@ -18,6 +18,7 @@ impl RModule {
     ///
     /// val must not have been GC'd, return value must be kept on stack or
     /// otherwise protected from the GC.
+    #[inline]
     pub unsafe fn from_value(val: Value) -> Option<Self> {
         (val.rb_type() == ruby_value_type::RUBY_T_MODULE)
             .then(|| Self(NonZeroValue::new_unchecked(val)))

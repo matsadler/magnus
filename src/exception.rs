@@ -20,6 +20,7 @@ impl Exception {
     ///
     /// val must not have been GC'd, return value must be kept on stack or
     /// otherwise protected from the GC.
+    #[inline]
     pub unsafe fn from_value(val: Value) -> Option<Self> {
         debug_assert_value!(val);
         val.class()
@@ -88,6 +89,7 @@ impl ExceptionClass {
     ///
     /// val must not have been GC'd, return value must be kept on stack or
     /// otherwise protected from the GC.
+    #[inline]
     pub unsafe fn from_value(val: Value) -> Option<Self> {
         debug_assert_value!(val);
         RClass::from_value(val).and_then(|class| {

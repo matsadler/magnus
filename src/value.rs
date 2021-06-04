@@ -81,6 +81,7 @@ impl Value {
         immediate_p || !test // special_const_p
     }
 
+    #[inline]
     pub(crate) unsafe fn r_basic(self) -> Option<ptr::NonNull<RBasic>> {
         (!self.is_immediate()).then(|| self.r_basic_unchecked())
     }
@@ -288,6 +289,7 @@ impl Value {
     /// # Safety
     ///
     /// self must not have been GC'd.
+    #[inline]
     pub unsafe fn try_convert<T>(&self) -> Result<T, Error>
     where
         T: TryConvert,

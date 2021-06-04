@@ -23,6 +23,7 @@ impl Integer {
     ///
     /// val must not have been GC'd, return value must be kept on stack or
     /// otherwise protected from the GC.
+    #[inline]
     pub unsafe fn from_value(val: Value) -> Option<Self> {
         if val.as_rb_value() & ruby_special_consts::RUBY_FIXNUM_FLAG as VALUE != 0 {
             return Some(Self(NonZeroValue::new_unchecked(val)));
@@ -179,6 +180,7 @@ impl From<Integer> for Value {
 }
 
 impl TryConvert for Integer {
+    #[inline]
     unsafe fn try_convert(val: &Value) -> Result<Self, Error> {
         match Self::from_value(*val) {
             Some(i) => Ok(i),

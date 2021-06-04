@@ -164,6 +164,7 @@ where
 {
     // nested function as this is totally unsafe to call out of this context
     // arg should not be a VALUE, but a mutable pointer to F, cast to VALUE
+    #[inline]
     unsafe extern "C" fn call<F>(arg: VALUE) -> VALUE
     where
         F: FnMut() -> Value,

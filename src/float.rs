@@ -19,6 +19,7 @@ impl Float {
     ///
     /// val must not have been GC'd, return value must be kept on stack or
     /// otherwise protected from the GC.
+    #[inline]
     pub unsafe fn from_value(val: Value) -> Option<Self> {
         if val.as_rb_value() & ruby_special_consts::RUBY_FLONUM_MASK as VALUE
             == ruby_special_consts::RUBY_FLONUM_FLAG as VALUE
@@ -74,6 +75,7 @@ impl From<Float> for Value {
 }
 
 impl TryConvert for Float {
+    #[inline]
     unsafe fn try_convert(val: &Value) -> Result<Self, Error> {
         match Self::from_value(*val) {
             Some(i) => Ok(i),

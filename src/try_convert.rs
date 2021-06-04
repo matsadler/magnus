@@ -21,12 +21,14 @@ pub trait TryConvertToRust: TryConvert {
     /// # Safety
     ///
     /// unsafe as typically val must be dereferenced to perform the conversion
+    #[inline]
     unsafe fn try_convert_to_rust(val: &Value) -> Result<Self, Error> {
         Self::try_convert(val)
     }
 }
 
 impl TryConvert for Value {
+    #[inline]
     unsafe fn try_convert(val: &Value) -> Result<Self, Error> {
         Ok(*val)
     }
@@ -36,6 +38,7 @@ impl<T> TryConvert for Option<T>
 where
     T: TryConvert,
 {
+    #[inline]
     unsafe fn try_convert(val: &Value) -> Result<Self, Error> {
         (!val.is_nil()).then(|| T::try_convert(val)).transpose()
     }
@@ -45,6 +48,7 @@ impl<T> TryConvertToRust for Option<T>
 where
     T: TryConvertToRust,
 {
+    #[inline]
     unsafe fn try_convert_to_rust(val: &Value) -> Result<Self, Error> {
         (!val.is_nil())
             .then(|| T::try_convert_to_rust(val))
@@ -53,6 +57,7 @@ where
 }
 
 impl TryConvert for bool {
+    #[inline]
     unsafe fn try_convert(val: &Value) -> Result<Self, Error> {
         Ok(val.to_bool())
     }
@@ -60,6 +65,7 @@ impl TryConvert for bool {
 impl TryConvertToRust for bool {}
 
 impl TryConvert for i8 {
+    #[inline]
     unsafe fn try_convert(val: &Value) -> Result<Self, Error> {
         Integer::try_convert(val)?.to_i8()
     }
@@ -67,6 +73,7 @@ impl TryConvert for i8 {
 impl TryConvertToRust for i8 {}
 
 impl TryConvert for i16 {
+    #[inline]
     unsafe fn try_convert(val: &Value) -> Result<Self, Error> {
         Integer::try_convert(val)?.to_i16()
     }
@@ -74,6 +81,7 @@ impl TryConvert for i16 {
 impl TryConvertToRust for i16 {}
 
 impl TryConvert for i32 {
+    #[inline]
     unsafe fn try_convert(val: &Value) -> Result<Self, Error> {
         Integer::try_convert(val)?.to_i32()
     }
@@ -81,6 +89,7 @@ impl TryConvert for i32 {
 impl TryConvertToRust for i32 {}
 
 impl TryConvert for i64 {
+    #[inline]
     unsafe fn try_convert(val: &Value) -> Result<Self, Error> {
         Integer::try_convert(val)?.to_i64()
     }
@@ -88,6 +97,7 @@ impl TryConvert for i64 {
 impl TryConvertToRust for i64 {}
 
 impl TryConvert for isize {
+    #[inline]
     unsafe fn try_convert(val: &Value) -> Result<Self, Error> {
         Integer::try_convert(val)?.to_isize()
     }
@@ -95,6 +105,7 @@ impl TryConvert for isize {
 impl TryConvertToRust for isize {}
 
 impl TryConvert for u8 {
+    #[inline]
     unsafe fn try_convert(val: &Value) -> Result<Self, Error> {
         Integer::try_convert(val)?.to_u8()
     }
@@ -102,6 +113,7 @@ impl TryConvert for u8 {
 impl TryConvertToRust for u8 {}
 
 impl TryConvert for u16 {
+    #[inline]
     unsafe fn try_convert(val: &Value) -> Result<Self, Error> {
         Integer::try_convert(val)?.to_u16()
     }
@@ -109,6 +121,7 @@ impl TryConvert for u16 {
 impl TryConvertToRust for u16 {}
 
 impl TryConvert for u32 {
+    #[inline]
     unsafe fn try_convert(val: &Value) -> Result<Self, Error> {
         Integer::try_convert(val)?.to_u32()
     }
@@ -116,6 +129,7 @@ impl TryConvert for u32 {
 impl TryConvertToRust for u32 {}
 
 impl TryConvert for u64 {
+    #[inline]
     unsafe fn try_convert(val: &Value) -> Result<Self, Error> {
         Integer::try_convert(val)?.to_u64()
     }
@@ -123,6 +137,7 @@ impl TryConvert for u64 {
 impl TryConvertToRust for u64 {}
 
 impl TryConvert for usize {
+    #[inline]
     unsafe fn try_convert(val: &Value) -> Result<Self, Error> {
         Integer::try_convert(val)?.to_usize()
     }
@@ -130,6 +145,7 @@ impl TryConvert for usize {
 impl TryConvertToRust for usize {}
 
 impl TryConvert for f32 {
+    #[inline]
     unsafe fn try_convert(val: &Value) -> Result<Self, Error> {
         f64::try_convert(val).map(|f| f as f32)
     }
@@ -137,6 +153,7 @@ impl TryConvert for f32 {
 impl TryConvertToRust for f32 {}
 
 impl TryConvert for f64 {
+    #[inline]
     unsafe fn try_convert(val: &Value) -> Result<Self, Error> {
         debug_assert_value!(val);
         let mut res = 0.0;
@@ -150,6 +167,7 @@ impl TryConvert for f64 {
 impl TryConvertToRust for f64 {}
 
 impl TryConvert for String {
+    #[inline]
     unsafe fn try_convert(val: &Value) -> Result<Self, Error> {
         debug_assert_value!(val);
         RString::try_convert(val)?.to_string()
@@ -158,6 +176,7 @@ impl TryConvert for String {
 impl TryConvertToRust for String {}
 
 impl TryConvert for &str {
+    #[inline]
     unsafe fn try_convert(val: &Value) -> Result<Self, Error> {
         debug_assert_value!(val);
         RString::from_value(*val)

@@ -357,6 +357,7 @@ where
     Args: TryConvert,
     Res: Into<Value>,
 {
+    #[inline]
     pub fn new(func: Func) -> Self {
         Self {
             func,
@@ -366,10 +367,12 @@ where
         }
     }
 
+    #[inline]
     unsafe fn call_convert_value(self, rb_self: Value, args: RArray) -> Result<Value, Error> {
         (self.func)(rb_self.try_convert()?, args.try_convert()?).map(Into::into)
     }
 
+    #[inline]
     pub unsafe fn call_handle_error(self, rb_self: Value, args: RArray) -> Value {
         let res = match std::panic::catch_unwind(AssertUnwindSafe(|| {
             self.call_convert_value(rb_self, args)
@@ -396,6 +399,7 @@ where
     RbSelf: TryConvert,
     Res: Into<Value>,
 {
+    #[inline]
     pub fn new(func: Func) -> Self {
         Self {
             func,
@@ -404,6 +408,7 @@ where
         }
     }
 
+    #[inline]
     unsafe fn call_convert_value(
         self,
         argc: c_int,
@@ -414,6 +419,7 @@ where
         (self.func)(rb_self.try_convert()?, args).map(Into::into)
     }
 
+    #[inline]
     pub unsafe fn call_handle_error(
         self,
         argc: c_int,
@@ -447,6 +453,7 @@ where
 
     Res: Into<Value>,
 {
+    #[inline]
     pub fn new(func: Func) -> Self {
         Self {
             func,
@@ -456,10 +463,12 @@ where
         }
     }
 
+    #[inline]
     unsafe fn call_convert_value(self, rb_self: Value) -> Result<Value, Error> {
         (self.func)(rb_self.try_convert()?).map(Into::into)
     }
 
+    #[inline]
     pub unsafe fn call_handle_error(self, rb_self: Value) -> Value {
         let res =
             match std::panic::catch_unwind(AssertUnwindSafe(|| self.call_convert_value(rb_self))) {
@@ -487,6 +496,7 @@ where
     A: TryConvert,
     Res: Into<Value>,
 {
+    #[inline]
     pub fn new(func: Func) -> Self {
         Self {
             func,
@@ -496,10 +506,12 @@ where
         }
     }
 
+    #[inline]
     unsafe fn call_convert_value(self, rb_self: Value, a: Value) -> Result<Value, Error> {
         (self.func)(rb_self.try_convert()?, a.try_convert()?).map(Into::into)
     }
 
+    #[inline]
     pub unsafe fn call_handle_error(self, rb_self: Value, a: Value) -> Value {
         let res = match std::panic::catch_unwind(AssertUnwindSafe(|| {
             self.call_convert_value(rb_self, a)
@@ -530,6 +542,7 @@ where
     B: TryConvert,
     Res: Into<Value>,
 {
+    #[inline]
     pub fn new(func: Func) -> Self {
         Self {
             func,
@@ -540,10 +553,12 @@ where
         }
     }
 
+    #[inline]
     unsafe fn call_convert_value(self, rb_self: Value, a: Value, b: Value) -> Result<Value, Error> {
         (self.func)(rb_self.try_convert()?, a.try_convert()?, b.try_convert()?).map(Into::into)
     }
 
+    #[inline]
     pub unsafe fn call_handle_error(self, rb_self: Value, a: Value, b: Value) -> Value {
         let res = match std::panic::catch_unwind(AssertUnwindSafe(|| {
             self.call_convert_value(rb_self, a, b)
@@ -576,6 +591,7 @@ where
     C: TryConvert,
     Res: Into<Value>,
 {
+    #[inline]
     pub fn new(func: Func) -> Self {
         Self {
             func,
@@ -587,6 +603,7 @@ where
         }
     }
 
+    #[inline]
     unsafe fn call_convert_value(
         self,
         rb_self: Value,
@@ -603,6 +620,7 @@ where
         .map(Into::into)
     }
 
+    #[inline]
     pub unsafe fn call_handle_error(self, rb_self: Value, a: Value, b: Value, c: Value) -> Value {
         let res = match std::panic::catch_unwind(AssertUnwindSafe(|| {
             self.call_convert_value(rb_self, a, b, c)
@@ -637,6 +655,7 @@ where
     D: TryConvert,
     Res: Into<Value>,
 {
+    #[inline]
     pub fn new(func: Func) -> Self {
         Self {
             func,
@@ -649,6 +668,7 @@ where
         }
     }
 
+    #[inline]
     unsafe fn call_convert_value(
         self,
         rb_self: Value,
@@ -667,6 +687,7 @@ where
         .map(Into::into)
     }
 
+    #[inline]
     pub unsafe fn call_handle_error(
         self,
         rb_self: Value,
@@ -710,6 +731,7 @@ where
     E: TryConvert,
     Res: Into<Value>,
 {
+    #[inline]
     pub fn new(func: Func) -> Self {
         Self {
             func,
@@ -723,6 +745,7 @@ where
         }
     }
 
+    #[inline]
     unsafe fn call_convert_value(
         self,
         rb_self: Value,
@@ -743,6 +766,7 @@ where
         .map(Into::into)
     }
 
+    #[inline]
     pub unsafe fn call_handle_error(
         self,
         rb_self: Value,
@@ -789,6 +813,7 @@ where
     F: TryConvert,
     Res: Into<Value>,
 {
+    #[inline]
     pub fn new(func: Func) -> Self {
         Self {
             func,
@@ -803,6 +828,7 @@ where
         }
     }
 
+    #[inline]
     unsafe fn call_convert_value(
         self,
         rb_self: Value,
@@ -825,6 +851,7 @@ where
         .map(Into::into)
     }
 
+    #[inline]
     pub unsafe fn call_handle_error(
         self,
         rb_self: Value,
@@ -874,6 +901,7 @@ where
     G: TryConvert,
     Res: Into<Value>,
 {
+    #[inline]
     pub fn new(func: Func) -> Self {
         Self {
             func,
@@ -889,6 +917,7 @@ where
         }
     }
 
+    #[inline]
     unsafe fn call_convert_value(
         self,
         rb_self: Value,
@@ -913,6 +942,7 @@ where
         .map(Into::into)
     }
 
+    #[inline]
     pub unsafe fn call_handle_error(
         self,
         rb_self: Value,
@@ -965,6 +995,7 @@ where
     H: TryConvert,
     Res: Into<Value>,
 {
+    #[inline]
     pub fn new(func: Func) -> Self {
         Self {
             func,
@@ -981,6 +1012,7 @@ where
         }
     }
 
+    #[inline]
     unsafe fn call_convert_value(
         self,
         rb_self: Value,
@@ -1007,6 +1039,7 @@ where
         .map(Into::into)
     }
 
+    #[inline]
     pub unsafe fn call_handle_error(
         self,
         rb_self: Value,
@@ -1063,6 +1096,7 @@ where
     I: TryConvert,
     Res: Into<Value>,
 {
+    #[inline]
     pub fn new(func: Func) -> Self {
         Self {
             func,
@@ -1080,6 +1114,7 @@ where
         }
     }
 
+    #[inline]
     unsafe fn call_convert_value(
         self,
         rb_self: Value,
@@ -1108,6 +1143,7 @@ where
         .map(Into::into)
     }
 
+    #[inline]
     pub unsafe fn call_handle_error(
         self,
         rb_self: Value,
@@ -1167,6 +1203,7 @@ where
     J: TryConvert,
     Res: Into<Value>,
 {
+    #[inline]
     pub fn new(func: Func) -> Self {
         Self {
             func,
@@ -1185,6 +1222,7 @@ where
         }
     }
 
+    #[inline]
     unsafe fn call_convert_value(
         self,
         rb_self: Value,
@@ -1215,6 +1253,7 @@ where
         .map(Into::into)
     }
 
+    #[inline]
     pub unsafe fn call_handle_error(
         self,
         rb_self: Value,
@@ -1277,6 +1316,7 @@ where
     K: TryConvert,
     Res: Into<Value>,
 {
+    #[inline]
     pub fn new(func: Func) -> Self {
         Self {
             func,
@@ -1296,6 +1336,7 @@ where
         }
     }
 
+    #[inline]
     unsafe fn call_convert_value(
         self,
         rb_self: Value,
@@ -1328,6 +1369,7 @@ where
         .map(Into::into)
     }
 
+    #[inline]
     pub unsafe fn call_handle_error(
         self,
         rb_self: Value,
@@ -1393,6 +1435,7 @@ where
     L: TryConvert,
     Res: Into<Value>,
 {
+    #[inline]
     pub fn new(func: Func) -> Self {
         Self {
             func,
@@ -1413,6 +1456,7 @@ where
         }
     }
 
+    #[inline]
     unsafe fn call_convert_value(
         self,
         rb_self: Value,
@@ -1447,6 +1491,7 @@ where
         .map(Into::into)
     }
 
+    #[inline]
     pub unsafe fn call_handle_error(
         self,
         rb_self: Value,
@@ -1515,6 +1560,7 @@ where
     M: TryConvert,
     Res: Into<Value>,
 {
+    #[inline]
     pub fn new(func: Func) -> Self {
         Self {
             func,
@@ -1536,6 +1582,7 @@ where
         }
     }
 
+    #[inline]
     unsafe fn call_convert_value(
         self,
         rb_self: Value,
@@ -1572,6 +1619,7 @@ where
         .map(Into::into)
     }
 
+    #[inline]
     pub unsafe fn call_handle_error(
         self,
         rb_self: Value,
@@ -1643,6 +1691,7 @@ where
     N: TryConvert,
     Res: Into<Value>,
 {
+    #[inline]
     pub fn new(func: Func) -> Self {
         Self {
             func,
@@ -1665,6 +1714,7 @@ where
         }
     }
 
+    #[inline]
     unsafe fn call_convert_value(
         self,
         rb_self: Value,
@@ -1703,6 +1753,7 @@ where
         .map(Into::into)
     }
 
+    #[inline]
     pub unsafe fn call_handle_error(
         self,
         rb_self: Value,
@@ -1777,6 +1828,7 @@ where
     O: TryConvert,
     Res: Into<Value>,
 {
+    #[inline]
     pub fn new(func: Func) -> Self {
         Self {
             func,
@@ -1800,6 +1852,7 @@ where
         }
     }
 
+    #[inline]
     unsafe fn call_convert_value(
         self,
         rb_self: Value,
@@ -1840,6 +1893,7 @@ where
         .map(Into::into)
     }
 
+    #[inline]
     pub unsafe fn call_handle_error(
         self,
         rb_self: Value,
@@ -1917,6 +1971,7 @@ where
     P: TryConvert,
     Res: Into<Value>,
 {
+    #[inline]
     pub fn new(func: Func) -> Self {
         Self {
             func,
@@ -1941,6 +1996,7 @@ where
         }
     }
 
+    #[inline]
     unsafe fn call_convert_value(
         self,
         rb_self: Value,
@@ -1983,6 +2039,7 @@ where
         .map(Into::into)
     }
 
+    #[inline]
     pub unsafe fn call_handle_error(
         self,
         rb_self: Value,

@@ -27,6 +27,7 @@ impl RTypedData {
     ///
     /// val must not have been GC'd, return value must be kept on stack or
     /// otherwise protected from the GC.
+    #[inline]
     pub unsafe fn from_value(val: Value) -> Option<Self> {
         (val.rb_type() == ruby_value_type::RUBY_T_DATA)
             .then(|| unsafe {
@@ -193,6 +194,7 @@ impl<T> TryConvert for &T
 where
     T: TypedData,
 {
+    #[inline]
     unsafe fn try_convert(val: &Value) -> Result<Self, Error> {
         T::from_value(*val).ok_or_else(|| {
             Error::type_error(format!(
