@@ -5,6 +5,7 @@
 use std::{ffi::c_void, marker::PhantomData, os::raw::c_int, panic::AssertUnwindSafe, slice};
 
 use crate::{
+    block::{do_yield_iter, Yield},
     error::{raise, Error},
     r_array::RArray,
     try_convert::TryConvert,
@@ -350,12 +351,68 @@ pub struct MethodRbAry<Func, RbSelf, Args, Res> {
     res: PhantomData<Res>,
 }
 
+mod private {
+    use super::*;
+
+    pub trait ReturnValue {
+        fn into_return_value(self) -> Result<Value, Error>;
+    }
+
+    impl<T> ReturnValue for Result<T, Error>
+    where
+        T: Into<Value>,
+    {
+        fn into_return_value(self) -> Result<Value, Error> {
+            self.map(Into::into)
+        }
+    }
+
+    impl<T> ReturnValue for T
+    where
+        T: Into<Value>,
+    {
+        fn into_return_value(self) -> Result<Value, Error> {
+            Ok(self).into_return_value()
+        }
+    }
+
+    impl<I, T> ReturnValue for Yield<I>
+    where
+        I: Iterator<Item = T>,
+        T: Into<Value>,
+    {
+        fn into_return_value(self) -> Result<Value, Error> {
+            match self {
+                Yield::Iter(iter) => {
+                    do_yield_iter(iter);
+                    Ok(Value::default())
+                }
+                Yield::Enumerator(e) => Ok(e.into()),
+            }
+        }
+    }
+
+    impl<I, T> ReturnValue for Result<Yield<I>, Error>
+    where
+        I: Iterator<Item = T>,
+        T: Into<Value>,
+    {
+        fn into_return_value(self) -> Result<Value, Error> {
+            self?.into_return_value()
+        }
+    }
+}
+
+pub trait ReturnValue: private::ReturnValue {}
+
+impl<T> ReturnValue for T where T: private::ReturnValue {}
+
 impl<Func, RbSelf, Args, Res> MethodRbAry<Func, RbSelf, Args, Res>
 where
-    Func: Fn(RbSelf, Args) -> Result<Res, Error>,
+    Func: Fn(RbSelf, Args) -> Res,
     RbSelf: TryConvert,
     Args: TryConvert,
-    Res: Into<Value>,
+    Res: ReturnValue,
 {
     #[inline]
     pub fn new(func: Func) -> Self {
@@ -369,7 +426,7 @@ where
 
     #[inline]
     unsafe fn call_convert_value(self, rb_self: Value, args: RArray) -> Result<Value, Error> {
-        (self.func)(rb_self.try_convert()?, args.try_convert()?).map(Into::into)
+        (self.func)(rb_self.try_convert()?, args.try_convert()?).into_return_value()
     }
 
     #[inline]
@@ -395,9 +452,9 @@ pub struct MethodCAry<Func, RbSelf, Res> {
 
 impl<Func, RbSelf, Res> MethodCAry<Func, RbSelf, Res>
 where
-    Func: Fn(RbSelf, &[Value]) -> Result<Res, Error>,
+    Func: Fn(RbSelf, &[Value]) -> Res,
     RbSelf: TryConvert,
-    Res: Into<Value>,
+    Res: ReturnValue,
 {
     #[inline]
     pub fn new(func: Func) -> Self {
@@ -416,7 +473,7 @@ where
         rb_self: Value,
     ) -> Result<Value, Error> {
         let args = slice::from_raw_parts(argv, argc as usize);
-        (self.func)(rb_self.try_convert()?, args).map(Into::into)
+        (self.func)(rb_self.try_convert()?, args).into_return_value()
     }
 
     #[inline]
@@ -448,10 +505,10 @@ pub struct Method0<Func, RbSelf, Res> {
 
 impl<Func, RbSelf, Res> Method0<Func, RbSelf, Res>
 where
-    Func: Fn(RbSelf) -> Result<Res, Error>,
+    Func: Fn(RbSelf) -> Res,
     RbSelf: TryConvert,
 
-    Res: Into<Value>,
+    Res: ReturnValue,
 {
     #[inline]
     pub fn new(func: Func) -> Self {
@@ -465,7 +522,7 @@ where
 
     #[inline]
     unsafe fn call_convert_value(self, rb_self: Value) -> Result<Value, Error> {
-        (self.func)(rb_self.try_convert()?).map(Into::into)
+        (self.func)(rb_self.try_convert()?).into_return_value()
     }
 
     #[inline]
@@ -491,10 +548,10 @@ pub struct Method1<Func, RbSelf, A, Res> {
 
 impl<Func, RbSelf, A, Res> Method1<Func, RbSelf, A, Res>
 where
-    Func: Fn(RbSelf, A) -> Result<Res, Error>,
+    Func: Fn(RbSelf, A) -> Res,
     RbSelf: TryConvert,
     A: TryConvert,
-    Res: Into<Value>,
+    Res: ReturnValue,
 {
     #[inline]
     pub fn new(func: Func) -> Self {
@@ -508,7 +565,7 @@ where
 
     #[inline]
     unsafe fn call_convert_value(self, rb_self: Value, a: Value) -> Result<Value, Error> {
-        (self.func)(rb_self.try_convert()?, a.try_convert()?).map(Into::into)
+        (self.func)(rb_self.try_convert()?, a.try_convert()?).into_return_value()
     }
 
     #[inline]
@@ -536,11 +593,11 @@ pub struct Method2<Func, RbSelf, A, B, Res> {
 
 impl<Func, RbSelf, A, B, Res> Method2<Func, RbSelf, A, B, Res>
 where
-    Func: Fn(RbSelf, A, B) -> Result<Res, Error>,
+    Func: Fn(RbSelf, A, B) -> Res,
     RbSelf: TryConvert,
     A: TryConvert,
     B: TryConvert,
-    Res: Into<Value>,
+    Res: ReturnValue,
 {
     #[inline]
     pub fn new(func: Func) -> Self {
@@ -555,7 +612,7 @@ where
 
     #[inline]
     unsafe fn call_convert_value(self, rb_self: Value, a: Value, b: Value) -> Result<Value, Error> {
-        (self.func)(rb_self.try_convert()?, a.try_convert()?, b.try_convert()?).map(Into::into)
+        (self.func)(rb_self.try_convert()?, a.try_convert()?, b.try_convert()?).into_return_value()
     }
 
     #[inline]
@@ -584,12 +641,12 @@ pub struct Method3<Func, RbSelf, A, B, C, Res> {
 
 impl<Func, RbSelf, A, B, C, Res> Method3<Func, RbSelf, A, B, C, Res>
 where
-    Func: Fn(RbSelf, A, B, C) -> Result<Res, Error>,
+    Func: Fn(RbSelf, A, B, C) -> Res,
     RbSelf: TryConvert,
     A: TryConvert,
     B: TryConvert,
     C: TryConvert,
-    Res: Into<Value>,
+    Res: ReturnValue,
 {
     #[inline]
     pub fn new(func: Func) -> Self {
@@ -617,7 +674,7 @@ where
             b.try_convert()?,
             c.try_convert()?,
         )
-        .map(Into::into)
+        .into_return_value()
     }
 
     #[inline]
@@ -647,13 +704,13 @@ pub struct Method4<Func, RbSelf, A, B, C, D, Res> {
 
 impl<Func, RbSelf, A, B, C, D, Res> Method4<Func, RbSelf, A, B, C, D, Res>
 where
-    Func: Fn(RbSelf, A, B, C, D) -> Result<Res, Error>,
+    Func: Fn(RbSelf, A, B, C, D) -> Res,
     RbSelf: TryConvert,
     A: TryConvert,
     B: TryConvert,
     C: TryConvert,
     D: TryConvert,
-    Res: Into<Value>,
+    Res: ReturnValue,
 {
     #[inline]
     pub fn new(func: Func) -> Self {
@@ -684,7 +741,7 @@ where
             c.try_convert()?,
             d.try_convert()?,
         )
-        .map(Into::into)
+        .into_return_value()
     }
 
     #[inline]
@@ -722,14 +779,14 @@ pub struct Method5<Func, RbSelf, A, B, C, D, E, Res> {
 
 impl<Func, RbSelf, A, B, C, D, E, Res> Method5<Func, RbSelf, A, B, C, D, E, Res>
 where
-    Func: Fn(RbSelf, A, B, C, D, E) -> Result<Res, Error>,
+    Func: Fn(RbSelf, A, B, C, D, E) -> Res,
     RbSelf: TryConvert,
     A: TryConvert,
     B: TryConvert,
     C: TryConvert,
     D: TryConvert,
     E: TryConvert,
-    Res: Into<Value>,
+    Res: ReturnValue,
 {
     #[inline]
     pub fn new(func: Func) -> Self {
@@ -763,7 +820,7 @@ where
             d.try_convert()?,
             e.try_convert()?,
         )
-        .map(Into::into)
+        .into_return_value()
     }
 
     #[inline]
@@ -803,7 +860,7 @@ pub struct Method6<Func, RbSelf, A, B, C, D, E, F, Res> {
 
 impl<Func, RbSelf, A, B, C, D, E, F, Res> Method6<Func, RbSelf, A, B, C, D, E, F, Res>
 where
-    Func: Fn(RbSelf, A, B, C, D, E, F) -> Result<Res, Error>,
+    Func: Fn(RbSelf, A, B, C, D, E, F) -> Res,
     RbSelf: TryConvert,
     A: TryConvert,
     B: TryConvert,
@@ -811,7 +868,7 @@ where
     D: TryConvert,
     E: TryConvert,
     F: TryConvert,
-    Res: Into<Value>,
+    Res: ReturnValue,
 {
     #[inline]
     pub fn new(func: Func) -> Self {
@@ -848,7 +905,7 @@ where
             e.try_convert()?,
             f.try_convert()?,
         )
-        .map(Into::into)
+        .into_return_value()
     }
 
     #[inline]
@@ -890,7 +947,7 @@ pub struct Method7<Func, RbSelf, A, B, C, D, E, F, G, Res> {
 
 impl<Func, RbSelf, A, B, C, D, E, F, G, Res> Method7<Func, RbSelf, A, B, C, D, E, F, G, Res>
 where
-    Func: Fn(RbSelf, A, B, C, D, E, F, G) -> Result<Res, Error>,
+    Func: Fn(RbSelf, A, B, C, D, E, F, G) -> Res,
     RbSelf: TryConvert,
     A: TryConvert,
     B: TryConvert,
@@ -899,7 +956,7 @@ where
     E: TryConvert,
     F: TryConvert,
     G: TryConvert,
-    Res: Into<Value>,
+    Res: ReturnValue,
 {
     #[inline]
     pub fn new(func: Func) -> Self {
@@ -939,7 +996,7 @@ where
             f.try_convert()?,
             g.try_convert()?,
         )
-        .map(Into::into)
+        .into_return_value()
     }
 
     #[inline]
@@ -983,7 +1040,7 @@ pub struct Method8<Func, RbSelf, A, B, C, D, E, F, G, H, Res> {
 
 impl<Func, RbSelf, A, B, C, D, E, F, G, H, Res> Method8<Func, RbSelf, A, B, C, D, E, F, G, H, Res>
 where
-    Func: Fn(RbSelf, A, B, C, D, E, F, G, H) -> Result<Res, Error>,
+    Func: Fn(RbSelf, A, B, C, D, E, F, G, H) -> Res,
     RbSelf: TryConvert,
     A: TryConvert,
     B: TryConvert,
@@ -993,7 +1050,7 @@ where
     F: TryConvert,
     G: TryConvert,
     H: TryConvert,
-    Res: Into<Value>,
+    Res: ReturnValue,
 {
     #[inline]
     pub fn new(func: Func) -> Self {
@@ -1036,7 +1093,7 @@ where
             g.try_convert()?,
             h.try_convert()?,
         )
-        .map(Into::into)
+        .into_return_value()
     }
 
     #[inline]
@@ -1083,7 +1140,7 @@ pub struct Method9<Func, RbSelf, A, B, C, D, E, F, G, H, I, Res> {
 impl<Func, RbSelf, A, B, C, D, E, F, G, H, I, Res>
     Method9<Func, RbSelf, A, B, C, D, E, F, G, H, I, Res>
 where
-    Func: Fn(RbSelf, A, B, C, D, E, F, G, H, I) -> Result<Res, Error>,
+    Func: Fn(RbSelf, A, B, C, D, E, F, G, H, I) -> Res,
     RbSelf: TryConvert,
     A: TryConvert,
     B: TryConvert,
@@ -1094,7 +1151,7 @@ where
     G: TryConvert,
     H: TryConvert,
     I: TryConvert,
-    Res: Into<Value>,
+    Res: ReturnValue,
 {
     #[inline]
     pub fn new(func: Func) -> Self {
@@ -1140,7 +1197,7 @@ where
             h.try_convert()?,
             i.try_convert()?,
         )
-        .map(Into::into)
+        .into_return_value()
     }
 
     #[inline]
@@ -1189,7 +1246,7 @@ pub struct Method10<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, Res> {
 impl<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, Res>
     Method10<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, Res>
 where
-    Func: Fn(RbSelf, A, B, C, D, E, F, G, H, I, J) -> Result<Res, Error>,
+    Func: Fn(RbSelf, A, B, C, D, E, F, G, H, I, J) -> Res,
     RbSelf: TryConvert,
     A: TryConvert,
     B: TryConvert,
@@ -1201,7 +1258,7 @@ where
     H: TryConvert,
     I: TryConvert,
     J: TryConvert,
-    Res: Into<Value>,
+    Res: ReturnValue,
 {
     #[inline]
     pub fn new(func: Func) -> Self {
@@ -1250,7 +1307,7 @@ where
             i.try_convert()?,
             j.try_convert()?,
         )
-        .map(Into::into)
+        .into_return_value()
     }
 
     #[inline]
@@ -1301,7 +1358,7 @@ pub struct Method11<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, Res> {
 impl<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, Res>
     Method11<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, Res>
 where
-    Func: Fn(RbSelf, A, B, C, D, E, F, G, H, I, J, K) -> Result<Res, Error>,
+    Func: Fn(RbSelf, A, B, C, D, E, F, G, H, I, J, K) -> Res,
     RbSelf: TryConvert,
     A: TryConvert,
     B: TryConvert,
@@ -1314,7 +1371,7 @@ where
     I: TryConvert,
     J: TryConvert,
     K: TryConvert,
-    Res: Into<Value>,
+    Res: ReturnValue,
 {
     #[inline]
     pub fn new(func: Func) -> Self {
@@ -1366,7 +1423,7 @@ where
             j.try_convert()?,
             k.try_convert()?,
         )
-        .map(Into::into)
+        .into_return_value()
     }
 
     #[inline]
@@ -1419,7 +1476,7 @@ pub struct Method12<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, Res> {
 impl<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, Res>
     Method12<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, Res>
 where
-    Func: Fn(RbSelf, A, B, C, D, E, F, G, H, I, J, K, L) -> Result<Res, Error>,
+    Func: Fn(RbSelf, A, B, C, D, E, F, G, H, I, J, K, L) -> Res,
     RbSelf: TryConvert,
     A: TryConvert,
     B: TryConvert,
@@ -1433,7 +1490,7 @@ where
     J: TryConvert,
     K: TryConvert,
     L: TryConvert,
-    Res: Into<Value>,
+    Res: ReturnValue,
 {
     #[inline]
     pub fn new(func: Func) -> Self {
@@ -1488,7 +1545,7 @@ where
             k.try_convert()?,
             l.try_convert()?,
         )
-        .map(Into::into)
+        .into_return_value()
     }
 
     #[inline]
@@ -1543,7 +1600,7 @@ pub struct Method13<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, M, Res> {
 impl<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, M, Res>
     Method13<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, M, Res>
 where
-    Func: Fn(RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, M) -> Result<Res, Error>,
+    Func: Fn(RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, M) -> Res,
     RbSelf: TryConvert,
     A: TryConvert,
     B: TryConvert,
@@ -1558,7 +1615,7 @@ where
     K: TryConvert,
     L: TryConvert,
     M: TryConvert,
-    Res: Into<Value>,
+    Res: ReturnValue,
 {
     #[inline]
     pub fn new(func: Func) -> Self {
@@ -1616,7 +1673,7 @@ where
             l.try_convert()?,
             m.try_convert()?,
         )
-        .map(Into::into)
+        .into_return_value()
     }
 
     #[inline]
@@ -1673,7 +1730,7 @@ pub struct Method14<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, M, N, Res>
 impl<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, M, N, Res>
     Method14<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, M, N, Res>
 where
-    Func: Fn(RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, M, N) -> Result<Res, Error>,
+    Func: Fn(RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, M, N) -> Res,
     RbSelf: TryConvert,
     A: TryConvert,
     B: TryConvert,
@@ -1689,7 +1746,7 @@ where
     L: TryConvert,
     M: TryConvert,
     N: TryConvert,
-    Res: Into<Value>,
+    Res: ReturnValue,
 {
     #[inline]
     pub fn new(func: Func) -> Self {
@@ -1750,7 +1807,7 @@ where
             m.try_convert()?,
             n.try_convert()?,
         )
-        .map(Into::into)
+        .into_return_value()
     }
 
     #[inline]
@@ -1809,7 +1866,7 @@ pub struct Method15<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, R
 impl<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, Res>
     Method15<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, Res>
 where
-    Func: Fn(RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O) -> Result<Res, Error>,
+    Func: Fn(RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O) -> Res,
     RbSelf: TryConvert,
     A: TryConvert,
     B: TryConvert,
@@ -1826,7 +1883,7 @@ where
     M: TryConvert,
     N: TryConvert,
     O: TryConvert,
-    Res: Into<Value>,
+    Res: ReturnValue,
 {
     #[inline]
     pub fn new(func: Func) -> Self {
@@ -1890,7 +1947,7 @@ where
             n.try_convert()?,
             o.try_convert()?,
         )
-        .map(Into::into)
+        .into_return_value()
     }
 
     #[inline]
@@ -1951,7 +2008,7 @@ pub struct Method16<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P
 impl<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Res>
     Method16<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Res>
 where
-    Func: Fn(RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P) -> Result<Res, Error>,
+    Func: Fn(RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P) -> Res,
     RbSelf: TryConvert,
     A: TryConvert,
     B: TryConvert,
@@ -1969,7 +2026,7 @@ where
     N: TryConvert,
     O: TryConvert,
     P: TryConvert,
-    Res: Into<Value>,
+    Res: ReturnValue,
 {
     #[inline]
     pub fn new(func: Func) -> Self {
@@ -2036,7 +2093,7 @@ where
             o.try_convert()?,
             p.try_convert()?,
         )
-        .map(Into::into)
+        .into_return_value()
     }
 
     #[inline]
@@ -2076,411 +2133,460 @@ where
 #[macro_export]
 macro_rules! method {
     ($name:ident, -2) => {{
-        unsafe extern "C" fn anon(rb_self: Value, args: RArray) -> Value {
-            MethodRbAry::new($name).call_handle_error(rb_self, args)
+        unsafe extern "C" fn anon(rb_self: $crate::Value, args: $crate::RArray) -> $crate::Value {
+            $crate::method::MethodRbAry::new($name).call_handle_error(rb_self, args)
         }
-        anon as unsafe extern "C" fn(Value, RArray) -> Value
+        anon as unsafe extern "C" fn($crate::Value, $crate::RArray) -> $crate::Value
     }};
     ($name:ident, -1) => {{
-        unsafe extern "C" fn anon(argc: c_int, argv: *const Value, rb_self: Value) -> Value {
-            MethodCAry::new($name).call_handle_error(argc, argv, rb_self)
+        unsafe extern "C" fn anon(
+            argc: std::os::raw::c_int,
+            argv: *const $crate::Value,
+            rb_self: $crate::Value,
+        ) -> $crate::Value {
+            $crate::method::MethodCAry::new($name).call_handle_error(argc, argv, rb_self)
         }
-        anon as unsafe extern "C" fn(c_int, *const Value, Value) -> Value
+        anon as unsafe extern "C" fn(
+            std::os::raw::c_int,
+            *const $crate::Value,
+            $crate::Value,
+        ) -> $crate::Value
     }};
     ($name:ident, 0) => {{
-        unsafe extern "C" fn anon(rb_self: Value) -> Value {
-            magnus::method::Method0::new($name).call_handle_error(rb_self)
+        unsafe extern "C" fn anon(rb_self: $crate::Value) -> $crate::Value {
+            $crate::method::Method0::new($name).call_handle_error(rb_self)
         }
-        anon as unsafe extern "C" fn(Value) -> Value
+        anon as unsafe extern "C" fn($crate::Value) -> $crate::Value
     }};
     ($name:ident, 1) => {{
-        unsafe extern "C" fn anon(rb_self: Value, a: Value) -> Value {
-            magnus::method::Method1::new($name).call_handle_error(rb_self, a)
+        unsafe extern "C" fn anon(rb_self: $crate::Value, a: $crate::Value) -> $crate::Value {
+            $crate::method::Method1::new($name).call_handle_error(rb_self, a)
         }
-        anon as unsafe extern "C" fn(Value, Value) -> Value
+        anon as unsafe extern "C" fn($crate::Value, $crate::Value) -> $crate::Value
     }};
     ($name:ident, 2) => {{
-        unsafe extern "C" fn anon(rb_self: Value, a: Value, b: Value) -> Value {
-            magnus::method::Method2::new($name).call_handle_error(rb_self, a, b)
+        unsafe extern "C" fn anon(
+            rb_self: $crate::Value,
+            a: $crate::Value,
+            b: $crate::Value,
+        ) -> $crate::Value {
+            $crate::method::Method2::new($name).call_handle_error(rb_self, a, b)
         }
-        anon as unsafe extern "C" fn(Value, Value, Value) -> Value
+        anon as unsafe extern "C" fn($crate::Value, $crate::Value, $crate::Value) -> $crate::Value
     }};
     ($name:ident, 3) => {{
-        unsafe extern "C" fn anon(rb_self: Value, a: Value, b: Value, c: Value) -> Value {
-            magnus::method::Method3::new($name).call_handle_error(rb_self, a, b, c)
+        unsafe extern "C" fn anon(
+            rb_self: $crate::Value,
+            a: $crate::Value,
+            b: $crate::Value,
+            c: $crate::Value,
+        ) -> $crate::Value {
+            $crate::method::Method3::new($name).call_handle_error(rb_self, a, b, c)
         }
-        anon as unsafe extern "C" fn(Value, Value, Value, Value) -> Value
+        anon as unsafe extern "C" fn(
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+        ) -> $crate::Value
     }};
     ($name:ident, 4) => {{
-        unsafe extern "C" fn anon(rb_self: Value, a: Value, b: Value, c: Value, d: Value) -> Value {
-            magnus::method::Method4::new($name).call_handle_error(rb_self, a, b, c, d)
+        unsafe extern "C" fn anon(
+            rb_self: $crate::Value,
+            a: $crate::Value,
+            b: $crate::Value,
+            c: $crate::Value,
+            d: $crate::Value,
+        ) -> $crate::Value {
+            $crate::method::Method4::new($name).call_handle_error(rb_self, a, b, c, d)
         }
-        anon as unsafe extern "C" fn(Value, Value, Value, Value, Value) -> Value
+        anon as unsafe extern "C" fn(
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+        ) -> $crate::Value
     }};
     ($name:ident, 5) => {{
         unsafe extern "C" fn anon(
-            rb_self: Value,
-            a: Value,
-            b: Value,
-            c: Value,
-            d: Value,
-            e: Value,
-        ) -> Value {
-            magnus::method::Method5::new($name).call_handle_error(rb_self, a, b, c, d, e, f)
+            rb_self: $crate::Value,
+            a: $crate::Value,
+            b: $crate::Value,
+            c: $crate::Value,
+            d: $crate::Value,
+            e: $crate::Value,
+        ) -> $crate::Value {
+            $crate::method::Method5::new($name).call_handle_error(rb_self, a, b, c, d, e, f)
         }
-        anon as unsafe extern "C" fn(Value, Value, Value, Value, Value, Value) -> Value
+        anon as unsafe extern "C" fn(
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+        ) -> $crate::Value
     }};
     ($name:ident, 6) => {{
         unsafe extern "C" fn anon(
-            rb_self: Value,
-            a: Value,
-            b: Value,
-            c: Value,
-            d: Value,
-            e: Value,
-            f: Value,
-        ) -> Value {
-            magnus::method::Method6::new($name).call_handle_error(rb_self, a, b, c, d, e, f)
+            rb_self: $crate::Value,
+            a: $crate::Value,
+            b: $crate::Value,
+            c: $crate::Value,
+            d: $crate::Value,
+            e: $crate::Value,
+            f: $crate::Value,
+        ) -> $crate::Value {
+            $crate::method::Method6::new($name).call_handle_error(rb_self, a, b, c, d, e, f)
         }
-        anon as unsafe extern "C" fn(Value, Value, Value, Value, Value, Value, Value) -> Value
+        anon as unsafe extern "C" fn(
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+        ) -> $crate::Value
     }};
     ($name:ident, 7) => {{
         unsafe extern "C" fn anon(
-            rb_self: Value,
-            a: Value,
-            b: Value,
-            c: Value,
-            d: Value,
-            e: Value,
-            f: Value,
-            g: Value,
-        ) -> Value {
-            magnus::method::Method7::new($name).call_handle_error(rb_self, a, b, c, d, e, f, g)
+            rb_self: $crate::Value,
+            a: $crate::Value,
+            b: $crate::Value,
+            c: $crate::Value,
+            d: $crate::Value,
+            e: $crate::Value,
+            f: $crate::Value,
+            g: $crate::Value,
+        ) -> $crate::Value {
+            $crate::method::Method7::new($name).call_handle_error(rb_self, a, b, c, d, e, f, g)
         }
         anon as unsafe extern "C" fn(
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-        ) -> Value
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+        ) -> $crate::Value
     }};
     ($name:ident, 8) => {{
         unsafe extern "C" fn anon(
-            rb_self: Value,
-            a: Value,
-            b: Value,
-            c: Value,
-            d: Value,
-            e: Value,
-            f: Value,
-            g: Value,
-            h: Value,
-        ) -> Value {
-            magnus::method::Method8::new($name).call_handle_error(rb_self, a, b, c, d, e, f, g, h)
+            rb_self: $crate::Value,
+            a: $crate::Value,
+            b: $crate::Value,
+            c: $crate::Value,
+            d: $crate::Value,
+            e: $crate::Value,
+            f: $crate::Value,
+            g: $crate::Value,
+            h: $crate::Value,
+        ) -> $crate::Value {
+            $crate::method::Method8::new($name).call_handle_error(rb_self, a, b, c, d, e, f, g, h)
         }
         anon as unsafe extern "C" fn(
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-        ) -> Value
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+        ) -> $crate::Value
     }};
     ($name:ident, 9) => {{
         unsafe extern "C" fn anon(
-            rb_self: Value,
-            a: Value,
-            b: Value,
-            c: Value,
-            d: Value,
-            e: Value,
-            f: Value,
-            g: Value,
-            h: Value,
-            i: Value,
-        ) -> Value {
-            magnus::method::Method9::new($name)
+            rb_self: $crate::Value,
+            a: $crate::Value,
+            b: $crate::Value,
+            c: $crate::Value,
+            d: $crate::Value,
+            e: $crate::Value,
+            f: $crate::Value,
+            g: $crate::Value,
+            h: $crate::Value,
+            i: $crate::Value,
+        ) -> $crate::Value {
+            $crate::method::Method9::new($name)
                 .call_handle_error(rb_self, a, b, c, d, e, f, g, h, i)
         }
         anon as unsafe extern "C" fn(
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-        ) -> Value
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+        ) -> $crate::Value
     }};
     ($name:ident, 10) => {{
         unsafe extern "C" fn anon(
-            rb_self: Value,
-            a: Value,
-            b: Value,
-            c: Value,
-            d: Value,
-            e: Value,
-            f: Value,
-            g: Value,
-            h: Value,
-            i: Value,
-            j: Value,
-        ) -> Value {
-            magnus::method::Method10::new($name)
+            rb_self: $crate::Value,
+            a: $crate::Value,
+            b: $crate::Value,
+            c: $crate::Value,
+            d: $crate::Value,
+            e: $crate::Value,
+            f: $crate::Value,
+            g: $crate::Value,
+            h: $crate::Value,
+            i: $crate::Value,
+            j: $crate::Value,
+        ) -> $crate::Value {
+            $crate::method::Method10::new($name)
                 .call_handle_error(rb_self, a, b, c, d, e, f, g, h, i, j)
         }
         anon as unsafe extern "C" fn(
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-        ) -> Value
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+        ) -> $crate::Value
     }};
     ($name:ident, 11) => {{
         unsafe extern "C" fn anon(
-            rb_self: Value,
-            a: Value,
-            b: Value,
-            c: Value,
-            d: Value,
-            e: Value,
-            f: Value,
-            g: Value,
-            h: Value,
-            i: Value,
-            j: Value,
-            k: Value,
-        ) -> Value {
-            magnus::method::Method11::new($name)
+            rb_self: $crate::Value,
+            a: $crate::Value,
+            b: $crate::Value,
+            c: $crate::Value,
+            d: $crate::Value,
+            e: $crate::Value,
+            f: $crate::Value,
+            g: $crate::Value,
+            h: $crate::Value,
+            i: $crate::Value,
+            j: $crate::Value,
+            k: $crate::Value,
+        ) -> $crate::Value {
+            $crate::method::Method11::new($name)
                 .call_handle_error(rb_self, a, b, c, d, e, f, g, h, i, j, k)
         }
         anon as unsafe extern "C" fn(
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-        ) -> Value
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+        ) -> $crate::Value
     }};
     ($name:ident, 12) => {{
         unsafe extern "C" fn anon(
-            rb_self: Value,
-            a: Value,
-            b: Value,
-            c: Value,
-            d: Value,
-            e: Value,
-            f: Value,
-            g: Value,
-            h: Value,
-            i: Value,
-            j: Value,
-            k: Value,
-            l: Value,
-        ) -> Value {
-            magnus::method::Method12::new($name)
+            rb_self: $crate::Value,
+            a: $crate::Value,
+            b: $crate::Value,
+            c: $crate::Value,
+            d: $crate::Value,
+            e: $crate::Value,
+            f: $crate::Value,
+            g: $crate::Value,
+            h: $crate::Value,
+            i: $crate::Value,
+            j: $crate::Value,
+            k: $crate::Value,
+            l: $crate::Value,
+        ) -> $crate::Value {
+            $crate::method::Method12::new($name)
                 .call_handle_error(rb_self, a, b, c, d, e, f, g, h, i, j, k, l)
         }
         anon as unsafe extern "C" fn(
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-        ) -> Value
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+        ) -> $crate::Value
     }};
     ($name:ident, 13) => {{
         unsafe extern "C" fn anon(
-            rb_self: Value,
-            a: Value,
-            b: Value,
-            c: Value,
-            d: Value,
-            e: Value,
-            f: Value,
-            g: Value,
-            h: Value,
-            i: Value,
-            j: Value,
-            k: Value,
-            l: Value,
-            m: Value,
-        ) -> Value {
-            magnus::method::Method13::new($name)
+            rb_self: $crate::Value,
+            a: $crate::Value,
+            b: $crate::Value,
+            c: $crate::Value,
+            d: $crate::Value,
+            e: $crate::Value,
+            f: $crate::Value,
+            g: $crate::Value,
+            h: $crate::Value,
+            i: $crate::Value,
+            j: $crate::Value,
+            k: $crate::Value,
+            l: $crate::Value,
+            m: $crate::Value,
+        ) -> $crate::Value {
+            $crate::method::Method13::new($name)
                 .call_handle_error(rb_self, a, b, c, d, e, f, g, h, i, j, k, l, m)
         }
         anon as unsafe extern "C" fn(
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-        ) -> Value
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+        ) -> $crate::Value
     }};
     ($name:ident, 14) => {{
         unsafe extern "C" fn anon(
-            rb_self: Value,
-            a: Value,
-            b: Value,
-            c: Value,
-            d: Value,
-            e: Value,
-            f: Value,
-            g: Value,
-            h: Value,
-            i: Value,
-            j: Value,
-            k: Value,
-            l: Value,
-            m: Value,
-            n: Value,
-        ) -> Value {
-            magnus::method::Method14::new($name)
+            rb_self: $crate::Value,
+            a: $crate::Value,
+            b: $crate::Value,
+            c: $crate::Value,
+            d: $crate::Value,
+            e: $crate::Value,
+            f: $crate::Value,
+            g: $crate::Value,
+            h: $crate::Value,
+            i: $crate::Value,
+            j: $crate::Value,
+            k: $crate::Value,
+            l: $crate::Value,
+            m: $crate::Value,
+            n: $crate::Value,
+        ) -> $crate::Value {
+            $crate::method::Method14::new($name)
                 .call_handle_error(rb_self, a, b, c, d, e, f, g, h, i, j, k, l, m, n)
         }
         anon as unsafe extern "C" fn(
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-        ) -> Value
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+        ) -> $crate::Value
     }};
     ($name:ident, 15) => {{
         unsafe extern "C" fn anon(
-            rb_self: Value,
-            a: Value,
-            b: Value,
-            c: Value,
-            d: Value,
-            e: Value,
-            f: Value,
-            g: Value,
-            h: Value,
-            i: Value,
-            j: Value,
-            k: Value,
-            l: Value,
-            m: Value,
-            n: Value,
-            o: Value,
-        ) -> Value {
-            magnus::method::Method15::new($name)
+            rb_self: $crate::Value,
+            a: $crate::Value,
+            b: $crate::Value,
+            c: $crate::Value,
+            d: $crate::Value,
+            e: $crate::Value,
+            f: $crate::Value,
+            g: $crate::Value,
+            h: $crate::Value,
+            i: $crate::Value,
+            j: $crate::Value,
+            k: $crate::Value,
+            l: $crate::Value,
+            m: $crate::Value,
+            n: $crate::Value,
+            o: $crate::Value,
+        ) -> $crate::Value {
+            $crate::method::Method15::new($name)
                 .call_handle_error(rb_self, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o)
         }
         anon as unsafe extern "C" fn(
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-        ) -> Value
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+        ) -> $crate::Value
     }};
     ($name:ident, 16) => {{
         unsafe extern "C" fn anon(
-            rb_self: Value,
-            a: Value,
-            b: Value,
-            c: Value,
-            d: Value,
-            e: Value,
-            f: Value,
-            g: Value,
-            h: Value,
-            i: Value,
-            j: Value,
-            k: Value,
-            l: Value,
-            m: Value,
-            n: Value,
-            o: Value,
-            p: Value,
-        ) -> Value {
-            magnus::method::Method16::new($name)
+            rb_self: $crate::Value,
+            a: $crate::Value,
+            b: $crate::Value,
+            c: $crate::Value,
+            d: $crate::Value,
+            e: $crate::Value,
+            f: $crate::Value,
+            g: $crate::Value,
+            h: $crate::Value,
+            i: $crate::Value,
+            j: $crate::Value,
+            k: $crate::Value,
+            l: $crate::Value,
+            m: $crate::Value,
+            n: $crate::Value,
+            o: $crate::Value,
+            p: $crate::Value,
+        ) -> $crate::Value {
+            $crate::method::Method16::new($name)
                 .call_handle_error(rb_self, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p)
         }
         anon as unsafe extern "C" fn(
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-            Value,
-        ) -> Value
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+            $crate::Value,
+        ) -> $crate::Value
     }};
     ($name:ident, $arity:expr) => {
         compile_error!("arity must be an integer literal between -2..=16")

@@ -27,7 +27,7 @@ use crate::{
         rb_num2ulong, rb_num2ushort, rb_obj_as_string, rb_obj_classname, rb_obj_is_kind_of,
         rb_sym2id, rb_ull2inum, ruby_special_consts, ruby_value_type, RBasic, ID, VALUE,
     },
-    try_convert::{TryConvert, ValueArray},
+    try_convert::{ArgList, TryConvert},
 };
 
 // This isn't infallible, if the original object was gc'd and that slot
@@ -200,11 +200,11 @@ impl Value {
     pub unsafe fn funcall<M, A, T>(self, method: M, args: A) -> Result<T, Error>
     where
         M: Into<Id>,
-        A: ValueArray,
+        A: ArgList,
         T: TryConvert,
     {
         let id = method.into();
-        let args = args.into();
+        let args = args.into_arg_list();
         let slice = args.as_ref();
         protect(|| {
             Value::new(rb_funcallv(
@@ -271,9 +271,9 @@ impl Value {
     pub fn enumeratorize<M, A>(self, method: M, args: A) -> Enumerator
     where
         M: Into<Symbol>,
-        A: ValueArray,
+        A: ArgList,
     {
-        let args = args.into();
+        let args = args.into_arg_list();
         let slice = args.as_ref();
         unsafe {
             Enumerator::from_rb_value_unchecked(rb_enumeratorize_with_size(

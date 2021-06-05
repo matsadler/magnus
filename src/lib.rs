@@ -60,7 +60,7 @@ pub use {
     r_string::RString,
     r_struct::RStruct,
     r_typed_data::{DataType, RTypedData, TypedData},
-    try_convert::{TryConvert, ValueArray},
+    try_convert::{ArgList, TryConvert},
 };
 
 pub mod prelude {

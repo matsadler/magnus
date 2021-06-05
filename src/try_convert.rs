@@ -185,44 +185,52 @@ impl TryConvert for &str {
     }
 }
 
-pub trait ValueArray {
+pub trait ArgList {
     type Output: AsRef<[Value]>;
 
-    fn into(self) -> Self::Output;
+    fn into_arg_list(self) -> Self::Output;
 }
 
-impl ValueArray for () {
+impl<'a> ArgList for &'a [Value] {
+    type Output = &'a [Value];
+
+    fn into_arg_list(self) -> Self::Output {
+        self
+    }
+}
+
+impl ArgList for () {
     type Output = [Value; 0];
 
-    fn into(self) -> Self::Output {
+    fn into_arg_list(self) -> Self::Output {
         []
     }
 }
 
-impl<A> ValueArray for (A,)
+impl<A> ArgList for (A,)
 where
     A: Into<Value>,
 {
     type Output = [Value; 1];
 
-    fn into(self) -> Self::Output {
+    fn into_arg_list(self) -> Self::Output {
         [self.0.into()]
     }
 }
 
-impl<A, B> ValueArray for (A, B)
+impl<A, B> ArgList for (A, B)
 where
     A: Into<Value>,
     B: Into<Value>,
 {
     type Output = [Value; 2];
 
-    fn into(self) -> Self::Output {
+    fn into_arg_list(self) -> Self::Output {
         [self.0.into(), self.1.into()]
     }
 }
 
-impl<A, B, C> ValueArray for (A, B, C)
+impl<A, B, C> ArgList for (A, B, C)
 where
     A: Into<Value>,
     B: Into<Value>,
@@ -230,12 +238,12 @@ where
 {
     type Output = [Value; 3];
 
-    fn into(self) -> Self::Output {
+    fn into_arg_list(self) -> Self::Output {
         [self.0.into(), self.1.into(), self.2.into()]
     }
 }
 
-impl<A, B, C, D> ValueArray for (A, B, C, D)
+impl<A, B, C, D> ArgList for (A, B, C, D)
 where
     A: Into<Value>,
     B: Into<Value>,
@@ -244,12 +252,12 @@ where
 {
     type Output = [Value; 4];
 
-    fn into(self) -> Self::Output {
+    fn into_arg_list(self) -> Self::Output {
         [self.0.into(), self.1.into(), self.2.into(), self.3.into()]
     }
 }
 
-impl<A, B, C, D, E> ValueArray for (A, B, C, D, E)
+impl<A, B, C, D, E> ArgList for (A, B, C, D, E)
 where
     A: Into<Value>,
     B: Into<Value>,
@@ -259,7 +267,7 @@ where
 {
     type Output = [Value; 5];
 
-    fn into(self) -> Self::Output {
+    fn into_arg_list(self) -> Self::Output {
         [
             self.0.into(),
             self.1.into(),
@@ -270,7 +278,7 @@ where
     }
 }
 
-impl<A, B, C, D, E, F> ValueArray for (A, B, C, D, E, F)
+impl<A, B, C, D, E, F> ArgList for (A, B, C, D, E, F)
 where
     A: Into<Value>,
     B: Into<Value>,
@@ -281,7 +289,7 @@ where
 {
     type Output = [Value; 6];
 
-    fn into(self) -> Self::Output {
+    fn into_arg_list(self) -> Self::Output {
         [
             self.0.into(),
             self.1.into(),
@@ -293,7 +301,7 @@ where
     }
 }
 
-impl<A, B, C, D, E, F, G> ValueArray for (A, B, C, D, E, F, G)
+impl<A, B, C, D, E, F, G> ArgList for (A, B, C, D, E, F, G)
 where
     A: Into<Value>,
     B: Into<Value>,
@@ -305,7 +313,7 @@ where
 {
     type Output = [Value; 7];
 
-    fn into(self) -> Self::Output {
+    fn into_arg_list(self) -> Self::Output {
         [
             self.0.into(),
             self.1.into(),
@@ -318,7 +326,7 @@ where
     }
 }
 
-impl<A, B, C, D, E, F, G, H> ValueArray for (A, B, C, D, E, F, G, H)
+impl<A, B, C, D, E, F, G, H> ArgList for (A, B, C, D, E, F, G, H)
 where
     A: Into<Value>,
     B: Into<Value>,
@@ -331,7 +339,7 @@ where
 {
     type Output = [Value; 8];
 
-    fn into(self) -> Self::Output {
+    fn into_arg_list(self) -> Self::Output {
         [
             self.0.into(),
             self.1.into(),
@@ -345,7 +353,7 @@ where
     }
 }
 
-impl<A, B, C, D, E, F, G, H, I> ValueArray for (A, B, C, D, E, F, G, H, I)
+impl<A, B, C, D, E, F, G, H, I> ArgList for (A, B, C, D, E, F, G, H, I)
 where
     A: Into<Value>,
     B: Into<Value>,
@@ -359,7 +367,7 @@ where
 {
     type Output = [Value; 9];
 
-    fn into(self) -> Self::Output {
+    fn into_arg_list(self) -> Self::Output {
         [
             self.0.into(),
             self.1.into(),
@@ -374,7 +382,7 @@ where
     }
 }
 
-impl<A, B, C, D, E, F, G, H, I, J> ValueArray for (A, B, C, D, E, F, G, H, I, J)
+impl<A, B, C, D, E, F, G, H, I, J> ArgList for (A, B, C, D, E, F, G, H, I, J)
 where
     A: Into<Value>,
     B: Into<Value>,
@@ -389,7 +397,7 @@ where
 {
     type Output = [Value; 10];
 
-    fn into(self) -> Self::Output {
+    fn into_arg_list(self) -> Self::Output {
         [
             self.0.into(),
             self.1.into(),
@@ -405,7 +413,7 @@ where
     }
 }
 
-impl<A, B, C, D, E, F, G, H, I, J, K> ValueArray for (A, B, C, D, E, F, G, H, I, J, K)
+impl<A, B, C, D, E, F, G, H, I, J, K> ArgList for (A, B, C, D, E, F, G, H, I, J, K)
 where
     A: Into<Value>,
     B: Into<Value>,
@@ -421,7 +429,7 @@ where
 {
     type Output = [Value; 11];
 
-    fn into(self) -> Self::Output {
+    fn into_arg_list(self) -> Self::Output {
         [
             self.0.into(),
             self.1.into(),
@@ -438,7 +446,7 @@ where
     }
 }
 
-impl<A, B, C, D, E, F, G, H, I, J, K, L> ValueArray for (A, B, C, D, E, F, G, H, I, J, K, L)
+impl<A, B, C, D, E, F, G, H, I, J, K, L> ArgList for (A, B, C, D, E, F, G, H, I, J, K, L)
 where
     A: Into<Value>,
     B: Into<Value>,
@@ -455,7 +463,7 @@ where
 {
     type Output = [Value; 12];
 
-    fn into(self) -> Self::Output {
+    fn into_arg_list(self) -> Self::Output {
         [
             self.0.into(),
             self.1.into(),
@@ -473,10 +481,10 @@ where
     }
 }
 
-impl<const N: usize> ValueArray for [Value; N] {
+impl<const N: usize> ArgList for [Value; N] {
     type Output = [Value; N];
 
-    fn into(self) -> Self::Output {
+    fn into_arg_list(self) -> Self::Output {
         self
     }
 }

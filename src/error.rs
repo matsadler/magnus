@@ -5,8 +5,9 @@ use crate::{
     exception::{Exception, ExceptionClass},
     module::Module,
     ruby_sys::{
-        rb_eEncodingError, rb_eFatal, rb_eRangeError, rb_eStopIteration, rb_eTypeError, rb_errinfo,
-        rb_exc_raise, rb_jump_tag, rb_protect, rb_raise, rb_set_errinfo, VALUE,
+        rb_eArgError, rb_eEncodingError, rb_eFatal, rb_eRangeError, rb_eStopIteration,
+        rb_eTypeError, rb_ensure, rb_errinfo, rb_exc_raise, rb_jump_tag, rb_protect, rb_raise,
+        rb_set_errinfo, ruby_special_consts, VALUE,
     },
     value::{Qnil, Value},
 };
@@ -31,6 +32,16 @@ impl Error {
         T: Into<Cow<'static, str>>,
     {
         Self::Error(Default::default(), msg.into())
+    }
+
+    pub fn argument_error<T>(msg: T) -> Self
+    where
+        T: Into<Cow<'static, str>>,
+    {
+        Self::Error(
+            unsafe { ExceptionClass::from_rb_value_unchecked(rb_eArgError) },
+            msg.into(),
+        )
     }
 
     pub fn range_error<T>(msg: T) -> Self
@@ -158,19 +169,18 @@ impl fmt::Display for Tag {
     }
 }
 
-pub fn protect<F>(mut func: F) -> Result<Value, Error>
+pub fn protect<F>(func: F) -> Result<Value, Error>
 where
-    F: FnMut() -> Value,
+    F: FnOnce() -> Value,
 {
     // nested function as this is totally unsafe to call out of this context
     // arg should not be a VALUE, but a mutable pointer to F, cast to VALUE
-    #[inline]
     unsafe extern "C" fn call<F>(arg: VALUE) -> VALUE
     where
-        F: FnMut() -> Value,
+        F: FnOnce() -> Value,
     {
-        let closure = arg as *mut F;
-        (*closure)().as_rb_value()
+        let closure = (&mut *(arg as *mut Option<F>)).take().unwrap();
+        (closure)().as_rb_value()
     }
 
     let mut state = Tag::None;
@@ -187,7 +197,8 @@ where
     // In this case we use arg2 to pass a pointer the Rust closure we actually
     // want to call, and arg1 is just a simple adapter to call arg2.
     let result = unsafe {
-        let closure = &mut func as *mut F as VALUE;
+        let mut some_func = Some(func);
+        let closure = &mut some_func as *mut Option<F> as VALUE;
         rb_protect(
             Some(call::<F>),
             closure,
@@ -204,6 +215,44 @@ where
         },
         other => Err(Error::Jump(other)),
     }
+}
+
+pub(crate) fn ensure<F1, F2>(func: F1, ensure: F2) -> Value
+where
+    F1: FnOnce() -> Value,
+    F2: FnOnce(),
+{
+    unsafe extern "C" fn call_func<F1>(arg: VALUE) -> VALUE
+    where
+        F1: FnOnce() -> Value,
+    {
+        let closure = (&mut *(arg as *mut Option<F1>)).take().unwrap();
+        (closure)().as_rb_value()
+    }
+
+    unsafe extern "C" fn call_ensure<F2>(arg: VALUE) -> VALUE
+    where
+        F2: FnOnce(),
+    {
+        let closure = (&mut *(arg as *mut Option<F2>)).take().unwrap();
+        (closure)();
+        ruby_special_consts::RUBY_Qnil as VALUE
+    }
+
+    let result = unsafe {
+        let mut some_func = Some(func);
+        let func_closure = &mut some_func as *mut Option<F1> as VALUE;
+        let mut some_ensure = Some(ensure);
+        let ensure_closure = &mut some_ensure as *mut Option<F2> as VALUE;
+        rb_ensure(
+            Some(call_func::<F1>),
+            func_closure,
+            Some(call_ensure::<F2>),
+            ensure_closure,
+        )
+    };
+
+    Value::new(result)
 }
 
 pub(crate) fn raise(e: Error) -> ! {
