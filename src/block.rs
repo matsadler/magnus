@@ -85,7 +85,64 @@ where
     }
 }
 
+// see do_yield_iter
+pub(crate) fn do_yield_values_iter<I, T>(mut iter: I)
+where
+    I: Iterator<Item = T>,
+    T: ArgList,
+{
+    let ptr = &mut iter as *mut I;
+    forget(iter);
+    unsafe {
+        ensure(
+            || {
+                for val in &mut *ptr {
+                    let vals = val.into_arg_list();
+                    let slice = vals.as_ref();
+                    rb_yield_values2(slice.len() as c_int, slice.as_ptr() as *const VALUE);
+                }
+                Value::default()
+            },
+            || {
+                ptr.drop_in_place();
+            },
+        );
+    }
+}
+
+// see do_yield_iter
+pub(crate) fn do_yield_splat_iter<I>(mut iter: I)
+where
+    I: Iterator<Item = RArray>,
+{
+    let ptr = &mut iter as *mut I;
+    forget(iter);
+    unsafe {
+        ensure(
+            || {
+                for val in &mut *ptr {
+                    rb_yield_splat(val.as_rb_value());
+                }
+                Value::default()
+            },
+            || {
+                ptr.drop_in_place();
+            },
+        );
+    }
+}
+
 pub enum Yield<I> {
+    Iter(I),
+    Enumerator(Enumerator),
+}
+
+pub enum YieldValues<I> {
+    Iter(I),
+    Enumerator(Enumerator),
+}
+
+pub enum YieldSplat<I> {
     Iter(I),
     Enumerator(Enumerator),
 }

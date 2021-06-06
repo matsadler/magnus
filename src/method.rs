@@ -5,10 +5,12 @@
 use std::{ffi::c_void, marker::PhantomData, os::raw::c_int, panic::AssertUnwindSafe, slice};
 
 use crate::{
-    block::{do_yield_iter, Yield},
+    block::{
+        do_yield_iter, do_yield_splat_iter, do_yield_values_iter, Yield, YieldSplat, YieldValues,
+    },
     error::{raise, Error},
     r_array::RArray,
-    try_convert::TryConvert,
+    try_convert::{ArgList, TryConvert},
     value::Value,
 };
 
@@ -396,6 +398,56 @@ mod private {
     where
         I: Iterator<Item = T>,
         T: Into<Value>,
+    {
+        fn into_return_value(self) -> Result<Value, Error> {
+            self?.into_return_value()
+        }
+    }
+
+    impl<I, T> ReturnValue for YieldValues<I>
+    where
+        I: Iterator<Item = T>,
+        T: ArgList,
+    {
+        fn into_return_value(self) -> Result<Value, Error> {
+            match self {
+                YieldValues::Iter(iter) => {
+                    do_yield_values_iter(iter);
+                    Ok(Value::default())
+                }
+                YieldValues::Enumerator(e) => Ok(e.into()),
+            }
+        }
+    }
+
+    impl<I, T> ReturnValue for Result<YieldValues<I>, Error>
+    where
+        I: Iterator<Item = T>,
+        T: ArgList,
+    {
+        fn into_return_value(self) -> Result<Value, Error> {
+            self?.into_return_value()
+        }
+    }
+
+    impl<I> ReturnValue for YieldSplat<I>
+    where
+        I: Iterator<Item = RArray>,
+    {
+        fn into_return_value(self) -> Result<Value, Error> {
+            match self {
+                YieldSplat::Iter(iter) => {
+                    do_yield_splat_iter(iter);
+                    Ok(Value::default())
+                }
+                YieldSplat::Enumerator(e) => Ok(e.into()),
+            }
+        }
+    }
+
+    impl<I> ReturnValue for Result<YieldSplat<I>, Error>
+    where
+        I: Iterator<Item = RArray>,
     {
         fn into_return_value(self) -> Result<Value, Error> {
             self?.into_return_value()
