@@ -14,7 +14,7 @@ use crate::{
         self, rb_check_typeddata, rb_data_type_struct__bindgen_ty_1, rb_data_type_t,
         rb_data_typed_object_wrap, rbimpl_typeddata_flags, ruby_value_type, size_t, VALUE,
     },
-    try_convert::{TryConvert, TryConvertToRust},
+    try_convert::TryConvert,
     value::{NonZeroValue, Qnil, Value},
 };
 
@@ -205,7 +205,6 @@ where
         })
     }
 }
-impl<T> TryConvertToRust for &T where T: TypedData {}
 
 impl<T> From<T> for Value
 where
