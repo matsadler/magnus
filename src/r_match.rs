@@ -11,14 +11,12 @@ use crate::{
 pub struct RMatch(NonZeroValue);
 
 impl RMatch {
-    /// # Safety
-    ///
-    /// val must not have been GC'd, return value must be kept on stack or
-    /// otherwise protected from the GC.
     #[inline]
-    pub unsafe fn from_value(val: Value) -> Option<Self> {
-        (val.rb_type() == ruby_value_type::RUBY_T_MATCH)
-            .then(|| Self(NonZeroValue::new_unchecked(val)))
+    pub fn from_value(val: Value) -> Option<Self> {
+        unsafe {
+            (val.rb_type() == ruby_value_type::RUBY_T_MATCH)
+                .then(|| Self(NonZeroValue::new_unchecked(val)))
+        }
     }
 }
 
@@ -38,7 +36,7 @@ impl fmt::Display for RMatch {
 
 impl fmt::Debug for RMatch {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", unsafe { self.inspect() })
+        write!(f, "{}", self.inspect())
     }
 }
 

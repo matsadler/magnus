@@ -16,16 +16,14 @@ use crate::{
 pub struct Exception(NonZeroValue);
 
 impl Exception {
-    /// # Safety
-    ///
-    /// val must not have been GC'd, return value must be kept on stack or
-    /// otherwise protected from the GC.
     #[inline]
-    pub unsafe fn from_value(val: Value) -> Option<Self> {
+    pub fn from_value(val: Value) -> Option<Self> {
         debug_assert_value!(val);
-        val.class()
-            .is_inherited(RClass::from_rb_value_unchecked(rb_eException))
-            .then(|| Self(NonZeroValue::new_unchecked(val)))
+        unsafe {
+            val.class()
+                .is_inherited(RClass::from_rb_value_unchecked(rb_eException))
+                .then(|| Self(NonZeroValue::new_unchecked(val)))
+        }
     }
 
     #[inline]
@@ -33,7 +31,7 @@ impl Exception {
         Self(NonZeroValue::new_unchecked(Value::new(val)))
     }
 
-    pub unsafe fn backtrace(&self) -> Result<Option<RArray>, Error> {
+    pub fn backtrace(&self) -> Result<Option<RArray>, Error> {
         self.funcall("backtrace", ())
     }
 }
@@ -69,7 +67,7 @@ impl fmt::Debug for Exception {
             }
             Ok(())
         } else {
-            write!(f, "{}", unsafe { self.inspect() })
+            write!(f, "{}", self.inspect())
         }
     }
 }
@@ -85,18 +83,16 @@ impl From<Exception> for Value {
 pub struct ExceptionClass(NonZeroValue);
 
 impl ExceptionClass {
-    /// # Safety
-    ///
-    /// val must not have been GC'd, return value must be kept on stack or
-    /// otherwise protected from the GC.
     #[inline]
-    pub unsafe fn from_value(val: Value) -> Option<Self> {
+    pub fn from_value(val: Value) -> Option<Self> {
         debug_assert_value!(val);
-        RClass::from_value(val).and_then(|class| {
-            class
-                .is_inherited(RClass::from_rb_value_unchecked(rb_eException))
-                .then(|| Self(NonZeroValue::new_unchecked(val)))
-        })
+        unsafe {
+            RClass::from_value(val).and_then(|class| {
+                class
+                    .is_inherited(RClass::from_rb_value_unchecked(rb_eException))
+                    .then(|| Self(NonZeroValue::new_unchecked(val)))
+            })
+        }
     }
 
     #[inline]
@@ -127,7 +123,7 @@ impl fmt::Display for ExceptionClass {
 
 impl fmt::Debug for ExceptionClass {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", unsafe { self.inspect() })
+        write!(f, "{}", self.inspect())
     }
 }
 

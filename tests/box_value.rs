@@ -5,7 +5,7 @@ use magnus::{embed::init, eval_static, value::BoxValue};
 
 #[inline(never)]
 fn box_value() -> BoxValue {
-    unsafe { BoxValue::new(eval_static(r#""foo""#).unwrap()) }
+    BoxValue::new(eval_static(r#""foo""#).unwrap())
 }
 
 #[test]

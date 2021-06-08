@@ -21,14 +21,12 @@ use crate::{
 pub struct RArray(NonZeroValue);
 
 impl RArray {
-    /// # Safety
-    ///
-    /// val must not have been GC'd, return value must be kept on stack or
-    /// otherwise protected from the GC.
     #[inline]
-    pub unsafe fn from_value(val: Value) -> Option<Self> {
-        (val.rb_type() == ruby_value_type::RUBY_T_ARRAY)
-            .then(|| Self(NonZeroValue::new_unchecked(val)))
+    pub fn from_value(val: Value) -> Option<Self> {
+        unsafe {
+            (val.rb_type() == ruby_value_type::RUBY_T_ARRAY)
+                .then(|| Self(NonZeroValue::new_unchecked(val)))
+        }
     }
 
     #[inline]
@@ -99,8 +97,13 @@ impl RArray {
         ary
     }
 
-    pub fn as_slice(&self) -> &[Value] {
-        unsafe { self.as_slice_unconstrained() }
+
+    /// # Safety
+    ///
+    /// Ruby may modify or free the memory backing the returned slice, the
+    /// caller must ensure this does not happen.
+    pub unsafe fn as_slice(&self) -> &[Value] {
+        self.as_slice_unconstrained()
     }
 
     pub(crate) unsafe fn as_slice_unconstrained<'a>(self) -> &'a [Value] {
@@ -137,11 +140,11 @@ impl RArray {
     where
         T: TryConvert,
     {
-        let slice = self.as_slice();
-        if slice.len() != N {
-            return Err(Error::type_error(format!("expected Array of length {}", N)));
-        }
         unsafe {
+            let slice = self.as_slice();
+            if slice.len() != N {
+                return Err(Error::type_error(format!("expected Array of length {}", N)));
+            }
             // one day might be able to collect direct into an array, but for
             // now need to go via Vec
             slice
@@ -172,7 +175,7 @@ impl RArray {
         }
     }
 
-    pub unsafe fn each(self) -> Enumerator {
+    pub fn each(self) -> Enumerator {
         // TODO why doesn't rb_ary_each work?
         self.enumeratorize("each", ())
     }
@@ -194,7 +197,7 @@ impl fmt::Display for RArray {
 
 impl fmt::Debug for RArray {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", unsafe { self.inspect() })
+        write!(f, "{}", self.inspect())
     }
 }
 
@@ -504,14 +507,16 @@ impl Object for RArray {}
 
 impl TryConvert for RArray {
     #[inline]
-    unsafe fn try_convert(val: &Value) -> Result<Self, Error> {
-        match Self::from_value(*val) {
-            Some(i) => Ok(i),
-            None => protect(|| {
-                debug_assert_value!(val);
-                Value::new(rb_ary_to_ary(val.as_rb_value()))
-            })
-            .map(|res| Self::from_rb_value_unchecked(res.as_rb_value())),
+    fn try_convert(val: &Value) -> Result<Self, Error> {
+        unsafe {
+            match Self::from_value(*val) {
+                Some(i) => Ok(i),
+                None => protect(|| {
+                    debug_assert_value!(val);
+                    Value::new(rb_ary_to_ary(val.as_rb_value()))
+                })
+                .map(|res| Self::from_rb_value_unchecked(res.as_rb_value())),
+            }
         }
     }
 }

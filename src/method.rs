@@ -386,7 +386,7 @@ mod private {
         fn into_return_value(self) -> Result<Value, Error> {
             match self {
                 Yield::Iter(iter) => {
-                    do_yield_iter(iter);
+                    unsafe { do_yield_iter(iter) };
                     Ok(Value::default())
                 }
                 Yield::Enumerator(e) => Ok(e.into()),
@@ -412,7 +412,7 @@ mod private {
         fn into_return_value(self) -> Result<Value, Error> {
             match self {
                 YieldValues::Iter(iter) => {
-                    do_yield_values_iter(iter);
+                    unsafe { do_yield_values_iter(iter) };
                     Ok(Value::default())
                 }
                 YieldValues::Enumerator(e) => Ok(e.into()),
@@ -437,7 +437,7 @@ mod private {
         fn into_return_value(self) -> Result<Value, Error> {
             match self {
                 YieldSplat::Iter(iter) => {
-                    do_yield_splat_iter(iter);
+                    unsafe { do_yield_splat_iter(iter) };
                     Ok(Value::default())
                 }
                 YieldSplat::Enumerator(e) => Ok(e.into()),

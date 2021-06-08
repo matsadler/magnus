@@ -82,8 +82,8 @@ impl Value {
     }
 
     #[inline]
-    pub(crate) unsafe fn r_basic(self) -> Option<ptr::NonNull<RBasic>> {
-        (!self.is_immediate()).then(|| self.r_basic_unchecked())
+    pub(crate) fn r_basic(self) -> Option<ptr::NonNull<RBasic>> {
+        unsafe { (!self.is_immediate()).then(|| self.r_basic_unchecked()) }
     }
 
     #[inline]
@@ -125,14 +125,16 @@ impl Value {
 
     // derefs a raw pointer that under GC compaction may be outside the
     // process's memory space if the Value has been allowed to get GC'd
-    pub(crate) unsafe fn rb_type(self) -> ruby_value_type {
+    pub(crate) fn rb_type(self) -> ruby_value_type {
         match self.r_basic() {
             Some(r_basic) => {
-                let ret = r_basic.as_ref().flags & (ruby_value_type::RUBY_T_MASK as VALUE);
-                // this bit is safe, ruby_value_type is #[repr(u32)], the flags
-                // value set by Ruby, and Ruby promises that flags masked like
-                // this will always be a valid entry in this enum
-                std::mem::transmute(ret as u32)
+                unsafe {
+                    let ret = r_basic.as_ref().flags & (ruby_value_type::RUBY_T_MASK as VALUE);
+                    // this bit is safe, ruby_value_type is #[repr(u32)], the flags
+                    // value set by Ruby, and Ruby promises that flags masked like
+                    // this will always be a valid entry in this enum
+                    std::mem::transmute(ret as u32)
+                }
             }
             None => {
                 if self.is_false() {
@@ -156,26 +158,28 @@ impl Value {
         }
     }
 
-    pub unsafe fn class(self) -> RClass {
-        match self.r_basic() {
-            Some(r_basic) => RClass::from_rb_value_unchecked(r_basic.as_ref().klass),
-            None => {
-                if self.is_false() {
-                    RClass::from_rb_value_unchecked(rb_cFalseClass)
-                } else if self.is_nil() {
-                    RClass::from_rb_value_unchecked(rb_cNilClass)
-                } else if self.is_true() {
-                    RClass::from_rb_value_unchecked(rb_cTrueClass)
-                } else if self.is_undef() {
-                    panic!("undef does not have a class")
-                } else if self.is_fixnum() {
-                    RClass::from_rb_value_unchecked(rb_cInteger)
-                } else if self.is_symbol() {
-                    RClass::from_rb_value_unchecked(rb_cSymbol)
-                } else if self.is_flonum() {
-                    RClass::from_rb_value_unchecked(rb_cFloat)
-                } else {
-                    unreachable!()
+    pub fn class(self) -> RClass {
+        unsafe {
+            match self.r_basic() {
+                Some(r_basic) => RClass::from_rb_value_unchecked(r_basic.as_ref().klass),
+                None => {
+                    if self.is_false() {
+                        RClass::from_rb_value_unchecked(rb_cFalseClass)
+                    } else if self.is_nil() {
+                        RClass::from_rb_value_unchecked(rb_cNilClass)
+                    } else if self.is_true() {
+                        RClass::from_rb_value_unchecked(rb_cTrueClass)
+                    } else if self.is_undef() {
+                        panic!("undef does not have a class")
+                    } else if self.is_fixnum() {
+                        RClass::from_rb_value_unchecked(rb_cInteger)
+                    } else if self.is_symbol() {
+                        RClass::from_rb_value_unchecked(rb_cSymbol)
+                    } else if self.is_flonum() {
+                        RClass::from_rb_value_unchecked(rb_cFloat)
+                    } else {
+                        unreachable!()
+                    }
                 }
             }
         }
@@ -197,34 +201,42 @@ impl Value {
         self.as_rb_value() & !(ruby_special_consts::RUBY_Qnil as VALUE) != 0
     }
 
-    pub unsafe fn funcall<M, A, T>(self, method: M, args: A) -> Result<T, Error>
+    pub fn funcall<M, A, T>(self, method: M, args: A) -> Result<T, Error>
     where
         M: Into<Id>,
         A: ArgList,
         T: TryConvert,
     {
-        let id = method.into();
-        let args = args.into_arg_list();
-        let slice = args.as_ref();
-        protect(|| {
-            Value::new(rb_funcallv(
-                self.as_rb_value(),
-                id.as_rb_id(),
-                slice.len() as c_int,
-                slice.as_ptr() as *const VALUE,
-            ))
-        })
-        .and_then(|v| v.try_convert())
-    }
-
-    pub unsafe fn to_r_string(self) -> Result<RString, Error> {
-        match RString::from_value(self) {
-            Some(v) => Ok(v),
-            None => protect(|| Value::new(rb_obj_as_string(self.as_rb_value())))
-                .map(|v| RString::from_rb_value_unchecked(v.as_rb_value())),
+        unsafe {
+            let id = method.into();
+            let args = args.into_arg_list();
+            let slice = args.as_ref();
+            protect(|| {
+                Value::new(rb_funcallv(
+                    self.as_rb_value(),
+                    id.as_rb_id(),
+                    slice.len() as c_int,
+                    slice.as_ptr() as *const VALUE,
+                ))
+            })
+            .and_then(|v| v.try_convert())
         }
     }
 
+    pub fn to_r_string(self) -> Result<RString, Error> {
+        match RString::from_value(self) {
+            Some(v) => Ok(v),
+            None => unsafe {
+                protect(|| Value::new(rb_obj_as_string(self.as_rb_value())))
+                    .map(|v| RString::from_rb_value_unchecked(v.as_rb_value()))
+            },
+        }
+    }
+
+    /// # Safety
+    ///
+    /// Ruby may modify or free the memory backing the returned str, the caller
+    /// must ensure this does not happen.
     pub unsafe fn to_s(&self) -> Result<Cow<str>, Error> {
         if let Some(s) = RString::ref_from_value(self) {
             if s.is_utf8_encoding() {
@@ -237,6 +249,10 @@ impl Value {
             .and_then(|s| s.to_string().map(Cow::Owned))
     }
 
+    /// # Safety
+    ///
+    /// Ruby may modify or free the memory backing the returned str, the caller
+    /// must ensure this does not happen.
     pub(crate) unsafe fn to_s_infallible(&self) -> Cow<str> {
         match self.to_s() {
             Ok(v) => v,
@@ -248,24 +264,32 @@ impl Value {
         }
     }
 
-    pub unsafe fn inspect(self) -> String {
-        let s = protect(|| Value::new(rb_inspect(self.as_rb_value())))
-            .map(|v| RString::from_rb_value_unchecked(v.as_rb_value()))
-            .unwrap_or_else(|_| RString::from_rb_value_unchecked(rb_any_to_s(self.as_rb_value())));
-        s.encode_utf8().unwrap_or(s).to_string_lossy().into_owned()
+    pub fn inspect(self) -> String {
+        unsafe {
+            let s = protect(|| Value::new(rb_inspect(self.as_rb_value())))
+                .map(|v| RString::from_rb_value_unchecked(v.as_rb_value()))
+                .unwrap_or_else(|_| {
+                    RString::from_rb_value_unchecked(rb_any_to_s(self.as_rb_value()))
+                });
+            s.encode_utf8().unwrap_or(s).to_string_lossy().into_owned()
+        }
     }
 
+    /// # Safety
+    ///
+    /// Ruby may modify or free the memory backing the returned str, the caller
+    /// must ensure this does not happen.
     pub unsafe fn classname(&self) -> Cow<str> {
         let ptr = rb_obj_classname(self.as_rb_value());
         let cstr = CStr::from_ptr(ptr);
         cstr.to_string_lossy()
     }
 
-    pub unsafe fn is_kind_of<T>(self, class: T) -> bool
+    pub fn is_kind_of<T>(self, class: T) -> bool
     where
         T: Deref<Target = Value> + Module,
     {
-        Value::new(rb_obj_is_kind_of(self.as_rb_value(), class.as_rb_value())).to_bool()
+        unsafe { Value::new(rb_obj_is_kind_of(self.as_rb_value(), class.as_rb_value())).to_bool() }
     }
 
     pub fn enumeratorize<M, A>(self, method: M, args: A) -> Enumerator
@@ -286,11 +310,8 @@ impl Value {
         }
     }
 
-    /// # Safety
-    ///
-    /// self must not have been GC'd.
     #[inline]
-    pub unsafe fn try_convert<T>(&self) -> Result<T, Error>
+    pub fn try_convert<T>(&self) -> Result<T, Error>
     where
         T: TryConvert,
     {
@@ -312,7 +333,7 @@ impl fmt::Display for Value {
 
 impl fmt::Debug for Value {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", unsafe { self.inspect() })
+        write!(f, "{}", self.inspect())
     }
 }
 
@@ -417,16 +438,10 @@ impl NonZeroValue {
 pub struct BoxValue(Box<Value>);
 
 impl BoxValue {
-    /// # Safety
-    ///
-    /// Value must not have been garbage collected. The easiest way to verify
-    /// this from Rust is to have only ever kept the Value on the stack (Ruby's
-    /// GC scans the stack and treats it as a GC root), never on the heap (e.g.
-    /// in a Box or collection like a Vec).
-    pub unsafe fn new(val: Value) -> Self {
+    pub fn new(val: Value) -> Self {
         debug_assert_value!(val);
         let mut boxed = Box::new(val);
-        rb_gc_register_address(boxed.as_mut() as *mut _ as *mut VALUE);
+        unsafe { rb_gc_register_address(boxed.as_mut() as *mut _ as *mut VALUE) };
         Self(boxed)
     }
 }
@@ -473,7 +488,7 @@ impl fmt::Display for BoxValue {
 
 impl fmt::Debug for BoxValue {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", unsafe { self.inspect() })
+        write!(f, "{}", self.inspect())
     }
 }
 
@@ -488,10 +503,12 @@ impl From<BoxValue> for Value {
 pub struct Qfalse(VALUE);
 
 impl Qfalse {
+    #[inline]
     pub const fn new() -> Self {
         Qfalse(ruby_special_consts::RUBY_Qfalse as VALUE)
     }
 
+    #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
         val.is_false().then(Self::new)
     }
@@ -516,7 +533,7 @@ impl fmt::Display for Qfalse {
 
 impl fmt::Debug for Qfalse {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", unsafe { self.inspect() })
+        write!(f, "{}", self.inspect())
     }
 }
 
@@ -531,6 +548,7 @@ impl From<Qfalse> for Value {
 pub struct Qnil(NonZeroValue);
 
 impl Qnil {
+    #[inline]
     pub const fn new() -> Self {
         unsafe {
             Self(NonZeroValue::new_unchecked(Value::new(
@@ -539,6 +557,7 @@ impl Qnil {
         }
     }
 
+    #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
         val.is_nil().then(Self::new)
     }
@@ -560,7 +579,7 @@ impl fmt::Display for Qnil {
 
 impl fmt::Debug for Qnil {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", unsafe { self.inspect() })
+        write!(f, "{}", self.inspect())
     }
 }
 
@@ -593,6 +612,7 @@ where
 pub struct Qtrue(NonZeroValue);
 
 impl Qtrue {
+    #[inline]
     pub const fn new() -> Self {
         unsafe {
             Self(NonZeroValue::new_unchecked(Value::new(
@@ -601,6 +621,7 @@ impl Qtrue {
         }
     }
 
+    #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
         val.is_true().then(Self::new)
     }
@@ -622,7 +643,7 @@ impl fmt::Display for Qtrue {
 
 impl fmt::Debug for Qtrue {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", unsafe { self.inspect() })
+        write!(f, "{}", self.inspect())
     }
 }
 
@@ -647,6 +668,7 @@ impl From<bool> for Value {
 pub struct Qundef(NonZeroValue);
 
 impl Qundef {
+    #[inline]
     pub const fn new() -> Self {
         unsafe {
             Self(NonZeroValue::new_unchecked(Value::new(
@@ -655,10 +677,12 @@ impl Qundef {
         }
     }
 
+    #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
         val.is_undef().then(Self::new)
     }
 
+    #[inline]
     pub fn to_value(self) -> Value {
         self.0.get()
     }
@@ -669,6 +693,7 @@ impl Qundef {
 pub struct Fixnum(NonZeroValue);
 
 impl Fixnum {
+    #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
         unsafe {
             val.is_fixnum()
@@ -683,16 +708,14 @@ impl Fixnum {
 
     pub fn from_i64(n: i64) -> Result<Self, RBignum> {
         let val = unsafe { Value::new(rb_ll2inum(n)) };
-        Self::from_value(val).ok_or_else(|| {
-            unsafe { RBignum::from_value(val) }.expect("i64 should convert to fixnum or bignum")
-        })
+        Self::from_value(val)
+            .ok_or_else(|| unsafe { RBignum::from_rb_value_unchecked(val.as_rb_value()) })
     }
 
     pub fn from_u64(n: u64) -> Result<Self, RBignum> {
         let val = unsafe { Value::new(rb_ull2inum(n)) };
-        Self::from_value(val).ok_or_else(|| {
-            unsafe { RBignum::from_value(val) }.expect("u64 should convert to fixnum or bignum")
-        })
+        Self::from_value(val)
+            .ok_or_else(|| unsafe { RBignum::from_rb_value_unchecked(val.as_rb_value()) })
     }
 
     fn is_negative(self) -> bool {
@@ -846,7 +869,7 @@ impl fmt::Display for Fixnum {
 
 impl fmt::Debug for Fixnum {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", unsafe { self.inspect() })
+        write!(f, "{}", self.inspect())
     }
 }
 
@@ -861,6 +884,7 @@ impl From<Fixnum> for Value {
 pub struct Symbol(NonZeroValue);
 
 impl Symbol {
+    #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
         unsafe {
             val.is_symbol()
@@ -873,6 +897,7 @@ impl Symbol {
         Self(NonZeroValue::new_unchecked(Value::new(val)))
     }
 
+    #[inline]
     pub fn new<T: Into<Id>>(name: T) -> Self {
         name.into().into()
     }
@@ -894,7 +919,7 @@ impl fmt::Display for Symbol {
 
 impl fmt::Debug for Symbol {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", unsafe { self.inspect() })
+        write!(f, "{}", self.inspect())
     }
 }
 
@@ -958,6 +983,7 @@ impl From<Symbol> for Id {
 pub struct Flonum(NonZeroValue);
 
 impl Flonum {
+    #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
         unsafe {
             val.is_flonum()
@@ -965,11 +991,15 @@ impl Flonum {
         }
     }
 
+    #[inline]
+    pub(crate) unsafe fn from_rb_value_unchecked(val: VALUE) -> Self {
+        Self(NonZeroValue::new_unchecked(Value::new(val)))
+    }
+
     pub fn from_f64(n: f64) -> Result<Self, RFloat> {
         let val = unsafe { Value::new(rb_float_new(n)) };
-        Self::from_value(val).ok_or_else(|| {
-            unsafe { RFloat::from_value(val) }.expect("f64 should convert to flonum or float")
-        })
+        Self::from_value(val)
+            .ok_or_else(|| unsafe { RFloat::from_rb_value_unchecked(val.as_rb_value()) })
     }
 
     pub fn to_f64(self) -> f64 {
@@ -993,7 +1023,7 @@ impl fmt::Display for Flonum {
 
 impl fmt::Debug for Flonum {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", unsafe { self.inspect() })
+        write!(f, "{}", self.inspect())
     }
 }
 

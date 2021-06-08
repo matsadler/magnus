@@ -23,20 +23,16 @@ use crate::{
 pub struct RTypedData(NonZeroValue);
 
 impl RTypedData {
-    /// # Safety
-    ///
-    /// val must not have been GC'd, return value must be kept on stack or
-    /// otherwise protected from the GC.
     #[inline]
-    pub unsafe fn from_value(val: Value) -> Option<Self> {
-        (val.rb_type() == ruby_value_type::RUBY_T_DATA)
-            .then(|| unsafe {
-                NonNull::new_unchecked(val.as_rb_value() as *mut ruby_sys::RTypedData)
-            })
-            .and_then(|typed_data| {
-                (typed_data.as_ref().typed_flag == 1)
-                    .then(|| Self(NonZeroValue::new_unchecked(val)))
-            })
+    pub fn from_value(val: Value) -> Option<Self> {
+        unsafe {
+            (val.rb_type() == ruby_value_type::RUBY_T_DATA)
+                .then(|| NonNull::new_unchecked(val.as_rb_value() as *mut ruby_sys::RTypedData))
+                .and_then(|typed_data| {
+                    (typed_data.as_ref().typed_flag == 1)
+                        .then(|| Self(NonZeroValue::new_unchecked(val)))
+                })
+        }
     }
 }
 
@@ -56,7 +52,7 @@ impl fmt::Display for RTypedData {
 
 impl fmt::Debug for RTypedData {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", unsafe { self.inspect() })
+        write!(f, "{}", self.inspect())
     }
 }
 
@@ -103,19 +99,18 @@ where
     #[allow(unused_variables)]
     fn compact(data: &mut Self) {}
 
-    /// # Safety
-    ///
-    /// val must not have been GC'd
-    unsafe fn from_value<'a>(val: Value) -> Option<&'a Self> {
+    fn from_value<'a>(val: Value) -> Option<&'a Self> {
         debug_assert_value!(val);
-        let mut res = None;
-        let _ = protect(|| {
-            res = (rb_check_typeddata(val.as_rb_value(), Self::data_type() as *const _)
-                as *const Self)
-                .as_ref();
-            *Qnil::new()
-        });
-        res
+        unsafe {
+            let mut res = None;
+            let _ = protect(|| {
+                res = (rb_check_typeddata(val.as_rb_value(), Self::data_type() as *const _)
+                    as *const Self)
+                    .as_ref();
+                *Qnil::new()
+            });
+            res
+        }
     }
 
     fn into_value(self) -> Value {
@@ -195,11 +190,11 @@ where
     T: TypedData,
 {
     #[inline]
-    unsafe fn try_convert(val: &Value) -> Result<Self, Error> {
+    fn try_convert(val: &Value) -> Result<Self, Error> {
         T::from_value(*val).ok_or_else(|| {
             Error::type_error(format!(
                 "no implicit conversion of {} into {}",
-                val.classname(),
+                unsafe { val.classname() },
                 T::class()
             ))
         })

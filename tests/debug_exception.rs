@@ -4,10 +4,9 @@ use magnus::{eval_static, Exception};
 fn it_includes_backtrace_in_debug() {
     let _cleanup = unsafe { magnus::embed::init() };
 
-    let err = unsafe {
-        Exception::from_value(
-            eval_static(
-                r#"
+    let err = Exception::from_value(
+        eval_static(
+            r#"
             def foo
               raise "bang"
             end
@@ -30,11 +29,10 @@ fn it_includes_backtrace_in_debug() {
             end
             e
         "#,
-            )
-            .unwrap(),
         )
-        .unwrap()
-    };
+        .unwrap(),
+    )
+    .unwrap();
 
     assert_eq!(
         r#"RuntimeError: bang

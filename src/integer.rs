@@ -19,18 +19,16 @@ enum IntegerType {
 pub struct Integer(NonZeroValue);
 
 impl Integer {
-    /// # Safety
-    ///
-    /// val must not have been GC'd, return value must be kept on stack or
-    /// otherwise protected from the GC.
     #[inline]
-    pub unsafe fn from_value(val: Value) -> Option<Self> {
-        if val.as_rb_value() & ruby_special_consts::RUBY_FIXNUM_FLAG as VALUE != 0 {
-            return Some(Self(NonZeroValue::new_unchecked(val)));
+    pub fn from_value(val: Value) -> Option<Self> {
+        unsafe {
+            if val.as_rb_value() & ruby_special_consts::RUBY_FIXNUM_FLAG as VALUE != 0 {
+                return Some(Self(NonZeroValue::new_unchecked(val)));
+            }
+            debug_assert_value!(val);
+            (val.rb_type() == ruby_value_type::RUBY_T_BIGNUM)
+                .then(|| Self(NonZeroValue::new_unchecked(val)))
         }
-        debug_assert_value!(val);
-        (val.rb_type() == ruby_value_type::RUBY_T_BIGNUM)
-            .then(|| Self(NonZeroValue::new_unchecked(val)))
     }
 
     #[inline]
@@ -74,30 +72,21 @@ impl Integer {
         }
     }
 
-    /// # Safety
-    ///
-    /// val must not have been GC'd.
-    pub unsafe fn to_i32(self) -> Result<i32, Error> {
+    pub fn to_i32(self) -> Result<i32, Error> {
         match self.integer_type() {
             IntegerType::Fixnum(fix) => fix.to_i32(),
             IntegerType::Bignum(big) => big.to_i32(),
         }
     }
 
-    /// # Safety
-    ///
-    /// val must not have been GC'd.
-    pub unsafe fn to_i64(self) -> Result<i64, Error> {
+    pub fn to_i64(self) -> Result<i64, Error> {
         match self.integer_type() {
             IntegerType::Fixnum(fix) => Ok(fix.to_i64()),
             IntegerType::Bignum(big) => big.to_i64(),
         }
     }
 
-    /// # Safety
-    ///
-    /// val must not have been GC'd.
-    pub unsafe fn to_isize(self) -> Result<isize, Error> {
+    pub fn to_isize(self) -> Result<isize, Error> {
         match self.integer_type() {
             IntegerType::Fixnum(fix) => fix.to_isize(),
             IntegerType::Bignum(big) => big.to_isize(),
@@ -122,30 +111,21 @@ impl Integer {
         }
     }
 
-    /// # Safety
-    ///
-    /// val must not have been GC'd.
-    pub unsafe fn to_u32(self) -> Result<u32, Error> {
+    pub fn to_u32(self) -> Result<u32, Error> {
         match self.integer_type() {
             IntegerType::Fixnum(fix) => fix.to_u32(),
             IntegerType::Bignum(big) => big.to_u32(),
         }
     }
 
-    /// # Safety
-    ///
-    /// val must not have been GC'd.
-    pub unsafe fn to_u64(self) -> Result<u64, Error> {
+    pub fn to_u64(self) -> Result<u64, Error> {
         match self.integer_type() {
             IntegerType::Fixnum(fix) => fix.to_u64(),
             IntegerType::Bignum(big) => big.to_u64(),
         }
     }
 
-    /// # Safety
-    ///
-    /// val must not have been GC'd.
-    pub unsafe fn to_usize(self) -> Result<usize, Error> {
+    pub fn to_usize(self) -> Result<usize, Error> {
         match self.integer_type() {
             IntegerType::Fixnum(fix) => fix.to_usize(),
             IntegerType::Bignum(big) => big.to_usize(),
@@ -169,7 +149,7 @@ impl fmt::Display for Integer {
 
 impl fmt::Debug for Integer {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", unsafe { self.inspect() })
+        write!(f, "{}", self.inspect())
     }
 }
 
@@ -181,14 +161,16 @@ impl From<Integer> for Value {
 
 impl TryConvert for Integer {
     #[inline]
-    unsafe fn try_convert(val: &Value) -> Result<Self, Error> {
-        match Self::from_value(*val) {
-            Some(i) => Ok(i),
-            None => protect(|| {
-                debug_assert_value!(val);
-                Value::new(rb_to_int(val.as_rb_value()))
-            })
-            .map(|res| Self::from_rb_value_unchecked(res.as_rb_value())),
+    fn try_convert(val: &Value) -> Result<Self, Error> {
+        unsafe {
+            match Self::from_value(*val) {
+                Some(i) => Ok(i),
+                None => protect(|| {
+                    debug_assert_value!(val);
+                    Value::new(rb_to_int(val.as_rb_value()))
+                })
+                .map(|res| Self::from_rb_value_unchecked(res.as_rb_value())),
+            }
         }
     }
 }

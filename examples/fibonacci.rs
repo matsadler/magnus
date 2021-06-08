@@ -1,10 +1,10 @@
-use magnus::{method, Error, Value};
+use magnus::{method, Value};
 
-fn fib(rb_self: Value, n: usize) -> Result<usize, Error> {
+fn fib(rb_self: Value, n: usize) -> usize {
     match n {
-        0 => Ok(0),
-        1 | 2 => Ok(1),
-        _ => Ok(fib(rb_self, n - 1)? + fib(rb_self, n - 2)?),
+        0 => 0,
+        1 | 2 => 1,
+        _ => fib(rb_self, n - 1) + fib(rb_self, n - 2),
     }
 }
 

@@ -13,14 +13,12 @@ use crate::{
 pub struct Enumerator(NonZeroValue);
 
 impl Enumerator {
-    /// # Safety
-    ///
-    /// val must not have been GC'd, return value must be kept on stack or
-    /// otherwise protected from the GC.
     #[inline]
-    pub unsafe fn from_value(val: Value) -> Option<Self> {
-        val.is_kind_of(RClass::from_rb_value_unchecked(rb_cEnumerator))
-            .then(|| Self(NonZeroValue::new_unchecked(val)))
+    pub fn from_value(val: Value) -> Option<Self> {
+        unsafe {
+            val.is_kind_of(RClass::from_rb_value_unchecked(rb_cEnumerator))
+                .then(|| Self(NonZeroValue::new_unchecked(val)))
+        }
     }
 
     #[inline]
@@ -59,7 +57,7 @@ impl fmt::Display for Enumerator {
 
 impl fmt::Debug for Enumerator {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", unsafe { self.deref().inspect() })
+        write!(f, "{}", self.deref().inspect())
     }
 }
 

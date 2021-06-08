@@ -2,7 +2,7 @@ use std::{fmt, ops::Deref};
 
 use crate::{
     debug_assert_value,
-    ruby_sys::{rb_float_new, rb_float_value, ruby_value_type},
+    ruby_sys::{rb_float_new, rb_float_value, ruby_value_type, VALUE},
     value::{Flonum, NonZeroValue, Value},
 };
 
@@ -11,31 +11,29 @@ use crate::{
 pub struct RFloat(NonZeroValue);
 
 impl RFloat {
-    /// # Safety
-    ///
-    /// val must not have been GC'd, return value must be kept on stack or
-    /// otherwise protected from the GC.
     #[inline]
-    pub unsafe fn from_value(val: Value) -> Option<Self> {
-        (val.rb_type() == ruby_value_type::RUBY_T_FLOAT)
-            .then(|| Self(NonZeroValue::new_unchecked(val)))
+    pub fn from_value(val: Value) -> Option<Self> {
+        unsafe {
+            (val.rb_type() == ruby_value_type::RUBY_T_FLOAT)
+                .then(|| Self(NonZeroValue::new_unchecked(val)))
+        }
+    }
+
+    #[inline]
+    pub(crate) unsafe fn from_rb_value_unchecked(val: VALUE) -> Self {
+        Self(NonZeroValue::new_unchecked(Value::new(val)))
     }
 
     pub fn from_f64(n: f64) -> Result<Self, Flonum> {
         unsafe {
             let val = Value::new(rb_float_new(n));
-            Self::from_value(val).ok_or_else(|| {
-                Flonum::from_value(val).expect("f64 should convert to flonum or float")
-            })
+            Self::from_value(val).ok_or_else(|| Flonum::from_rb_value_unchecked(val.as_rb_value()))
         }
     }
 
-    /// # Safety
-    ///
-    /// self must not have been GC'd.
-    pub unsafe fn to_f64(self) -> f64 {
+    pub fn to_f64(self) -> f64 {
         debug_assert_value!(self);
-        rb_float_value(self.as_rb_value())
+        unsafe { rb_float_value(self.as_rb_value()) }
     }
 }
 
@@ -55,7 +53,7 @@ impl fmt::Display for RFloat {
 
 impl fmt::Debug for RFloat {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", unsafe { self.inspect() })
+        write!(f, "{}", self.inspect())
     }
 }
 

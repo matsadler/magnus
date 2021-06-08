@@ -24,19 +24,19 @@ use crate::{
 pub struct RString(NonZeroValue);
 
 impl RString {
-    /// # Safety
-    ///
-    /// val must not have been GC'd, return value must be kept on stack or
-    /// otherwise protected from the GC.
     #[inline]
-    pub unsafe fn from_value(val: Value) -> Option<Self> {
-        (val.rb_type() == ruby_value_type::RUBY_T_STRING)
-            .then(|| Self(NonZeroValue::new_unchecked(val)))
+    pub fn from_value(val: Value) -> Option<Self> {
+        unsafe {
+            (val.rb_type() == ruby_value_type::RUBY_T_STRING)
+                .then(|| Self(NonZeroValue::new_unchecked(val)))
+        }
     }
 
-    pub(crate) unsafe fn ref_from_value(val: &Value) -> Option<&Self> {
-        (val.rb_type() == ruby_value_type::RUBY_T_STRING)
-            .then(|| &*(val as *const _ as *const RString))
+    pub(crate) fn ref_from_value(val: &Value) -> Option<&Self> {
+        unsafe {
+            (val.rb_type() == ruby_value_type::RUBY_T_STRING)
+                .then(|| &*(val as *const _ as *const RString))
+        }
     }
 
     #[inline]
@@ -49,6 +49,10 @@ impl RString {
         unsafe { NonNull::new_unchecked(self.0.get().as_rb_value() as *mut _) }
     }
 
+    /// # Safety
+    ///
+    /// Ruby may modify or free the memory backing the returned slice, the
+    /// caller must ensure this does not happen.
     pub unsafe fn as_slice(&self) -> &[u8] {
         self.as_slice_unconstrained()
     }
@@ -70,21 +74,27 @@ impl RString {
         }
     }
 
-    pub unsafe fn is_utf8_encoding(self) -> bool {
-        rb_enc_get_index(self.as_rb_value()) == rb_utf8_encindex()
+    pub fn is_utf8_encoding(self) -> bool {
+        unsafe { rb_enc_get_index(self.as_rb_value()) == rb_utf8_encindex() }
     }
 
-    pub unsafe fn encode_utf8(self) -> Result<Self, Error> {
-        protect(|| {
-            Value::new(rb_str_conv_enc(
-                self.as_rb_value(),
-                ptr::null_mut(),
-                rb_utf8_encoding(),
-            ))
-        })
-        .map(|v| Self::from_rb_value_unchecked(v.as_rb_value()))
+    pub fn encode_utf8(self) -> Result<Self, Error> {
+        unsafe {
+            protect(|| {
+                Value::new(rb_str_conv_enc(
+                    self.as_rb_value(),
+                    ptr::null_mut(),
+                    rb_utf8_encoding(),
+                ))
+            })
+            .map(|v| Self::from_rb_value_unchecked(v.as_rb_value()))
+        }
     }
 
+    /// # Safety
+    ///
+    /// Ruby may modify or free the memory backing the returned str, the caller
+    /// must ensure this does not happen.
     pub unsafe fn as_str(&self) -> Result<&str, Error> {
         self.as_str_unconstrained()
     }
@@ -102,17 +112,21 @@ impl RString {
             .map_err(|e| Error::encoding_error(format!("{}", e)))
     }
 
+    /// # Safety
+    ///
+    /// Ruby may modify or free the memory backing the returned str, the caller
+    /// must ensure this does not happen.
     pub unsafe fn to_string_lossy(&self) -> Cow<'_, str> {
         String::from_utf8_lossy(self.as_slice())
     }
 
-    pub unsafe fn to_string(self) -> Result<String, Error> {
+    pub fn to_string(self) -> Result<String, Error> {
         let utf8 = if self.is_utf8_encoding() {
             self
         } else {
             self.encode_utf8()?
         };
-        str::from_utf8(utf8.as_slice())
+        str::from_utf8(unsafe { utf8.as_slice() })
             .map(ToOwned::to_owned)
             .map_err(|e| Error::encoding_error(format!("{}", e)))
     }
@@ -134,7 +148,7 @@ impl fmt::Display for RString {
 
 impl fmt::Debug for RString {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", unsafe { self.inspect() })
+        write!(f, "{}", self.inspect())
     }
 }
 
@@ -148,14 +162,16 @@ impl Object for RString {}
 
 impl TryConvert for RString {
     #[inline]
-    unsafe fn try_convert(val: &Value) -> Result<Self, Error> {
-        match Self::from_value(*val) {
-            Some(i) => Ok(i),
-            None => protect(|| {
-                debug_assert_value!(val);
-                Value::new(rb_str_to_str(val.as_rb_value()))
-            })
-            .map(|res| Self::from_rb_value_unchecked(res.as_rb_value())),
+    fn try_convert(val: &Value) -> Result<Self, Error> {
+        unsafe {
+            match Self::from_value(*val) {
+                Some(i) => Ok(i),
+                None => protect(|| {
+                    debug_assert_value!(val);
+                    Value::new(rb_str_to_str(val.as_rb_value()))
+                })
+                .map(|res| Self::from_rb_value_unchecked(res.as_rb_value())),
+            }
         }
     }
 }

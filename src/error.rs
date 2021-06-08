@@ -84,7 +84,7 @@ impl Error {
         )
     }
 
-    pub unsafe fn is_kind_of<T>(&self, class: T) -> bool
+    pub fn is_kind_of<T>(&self, class: T) -> bool
     where
         T: Deref<Target = Value> + Module,
     {

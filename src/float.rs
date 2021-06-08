@@ -15,20 +15,18 @@ use crate::{
 pub struct Float(NonZeroValue);
 
 impl Float {
-    /// # Safety
-    ///
-    /// val must not have been GC'd, return value must be kept on stack or
-    /// otherwise protected from the GC.
     #[inline]
-    pub unsafe fn from_value(val: Value) -> Option<Self> {
-        if val.as_rb_value() & ruby_special_consts::RUBY_FLONUM_MASK as VALUE
-            == ruby_special_consts::RUBY_FLONUM_FLAG as VALUE
-        {
-            return Some(Self(NonZeroValue::new_unchecked(val)));
+    pub fn from_value(val: Value) -> Option<Self> {
+        unsafe {
+            if val.as_rb_value() & ruby_special_consts::RUBY_FLONUM_MASK as VALUE
+                == ruby_special_consts::RUBY_FLONUM_FLAG as VALUE
+            {
+                return Some(Self(NonZeroValue::new_unchecked(val)));
+            }
+            debug_assert_value!(val);
+            (val.rb_type() == ruby_value_type::RUBY_T_FLOAT)
+                .then(|| Self(NonZeroValue::new_unchecked(val)))
         }
-        debug_assert_value!(val);
-        (val.rb_type() == ruby_value_type::RUBY_T_FLOAT)
-            .then(|| Self(NonZeroValue::new_unchecked(val)))
     }
 
     #[inline]
@@ -40,11 +38,8 @@ impl Float {
         unsafe { Float::from_rb_value_unchecked(rb_float_new(n)) }
     }
 
-    /// # Safety
-    ///
-    /// self must not have been GC'd.
-    pub unsafe fn to_f64(self) -> f64 {
-        rb_float_value(self.as_rb_value())
+    pub fn to_f64(self) -> f64 {
+        unsafe { rb_float_value(self.as_rb_value()) }
     }
 }
 
@@ -64,7 +59,7 @@ impl fmt::Display for Float {
 
 impl fmt::Debug for Float {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", unsafe { self.inspect() })
+        write!(f, "{}", self.inspect())
     }
 }
 
@@ -76,14 +71,16 @@ impl From<Float> for Value {
 
 impl TryConvert for Float {
     #[inline]
-    unsafe fn try_convert(val: &Value) -> Result<Self, Error> {
-        match Self::from_value(*val) {
-            Some(i) => Ok(i),
-            None => protect(|| {
-                debug_assert_value!(val);
-                Value::new(rb_to_float(val.as_rb_value()))
-            })
-            .map(|res| Self::from_rb_value_unchecked(res.as_rb_value())),
+    fn try_convert(val: &Value) -> Result<Self, Error> {
+        unsafe {
+            match Self::from_value(*val) {
+                Some(i) => Ok(i),
+                None => protect(|| {
+                    debug_assert_value!(val);
+                    Value::new(rb_to_float(val.as_rb_value()))
+                })
+                .map(|res| Self::from_rb_value_unchecked(res.as_rb_value())),
+            }
         }
     }
 }

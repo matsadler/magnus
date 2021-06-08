@@ -59,77 +59,71 @@ where
 // can still be `brake`/`return`ed though it can't be public as it's only safe
 // to call as the last thing in one of our method wrappers (where the raise
 // would normally go). Returning an iterator from a method will trigger this.
-pub(crate) fn do_yield_iter<I, T>(mut iter: I)
+pub(crate) unsafe fn do_yield_iter<I, T>(mut iter: I)
 where
     I: Iterator<Item = T>,
     T: Into<Value>,
 {
     let ptr = &mut iter as *mut I;
     forget(iter); // we're going to drop this ourself;
-    unsafe {
-        // ensure runs the first closure, but yield may raise, so the first
-        // closure might never reach the end, so wouldn't drop. The second
-        // closure is always run, and always after the first, so we do the
-        // drop there
-        ensure(
-            || {
-                for val in &mut *ptr {
-                    rb_yield(val.into().as_rb_value());
-                }
-                Value::default()
-            },
-            || {
-                ptr.drop_in_place();
-            },
-        );
-    }
+                  // ensure runs the first closure, but yield may raise, so the first
+                  // closure might never reach the end, so wouldn't drop. The second
+                  // closure is always run, and always after the first, so we do the
+                  // drop there
+    ensure(
+        || {
+            for val in &mut *ptr {
+                rb_yield(val.into().as_rb_value());
+            }
+            Value::default()
+        },
+        || {
+            ptr.drop_in_place();
+        },
+    );
 }
 
 // see do_yield_iter
-pub(crate) fn do_yield_values_iter<I, T>(mut iter: I)
+pub(crate) unsafe fn do_yield_values_iter<I, T>(mut iter: I)
 where
     I: Iterator<Item = T>,
     T: ArgList,
 {
     let ptr = &mut iter as *mut I;
     forget(iter);
-    unsafe {
-        ensure(
-            || {
-                for val in &mut *ptr {
-                    let vals = val.into_arg_list();
-                    let slice = vals.as_ref();
-                    rb_yield_values2(slice.len() as c_int, slice.as_ptr() as *const VALUE);
-                }
-                Value::default()
-            },
-            || {
-                ptr.drop_in_place();
-            },
-        );
-    }
+    ensure(
+        || {
+            for val in &mut *ptr {
+                let vals = val.into_arg_list();
+                let slice = vals.as_ref();
+                rb_yield_values2(slice.len() as c_int, slice.as_ptr() as *const VALUE);
+            }
+            Value::default()
+        },
+        || {
+            ptr.drop_in_place();
+        },
+    );
 }
 
 // see do_yield_iter
-pub(crate) fn do_yield_splat_iter<I>(mut iter: I)
+pub(crate) unsafe fn do_yield_splat_iter<I>(mut iter: I)
 where
     I: Iterator<Item = RArray>,
 {
     let ptr = &mut iter as *mut I;
     forget(iter);
-    unsafe {
-        ensure(
-            || {
-                for val in &mut *ptr {
-                    rb_yield_splat(val.as_rb_value());
-                }
-                Value::default()
-            },
-            || {
-                ptr.drop_in_place();
-            },
-        );
-    }
+    ensure(
+        || {
+            for val in &mut *ptr {
+                rb_yield_splat(val.as_rb_value());
+            }
+            Value::default()
+        },
+        || {
+            ptr.drop_in_place();
+        },
+    );
 }
 
 pub enum Yield<I> {

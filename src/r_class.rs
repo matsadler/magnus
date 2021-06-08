@@ -12,14 +12,12 @@ use crate::{
 pub struct RClass(NonZeroValue);
 
 impl RClass {
-    /// # Safety
-    ///
-    /// val must not have been GC'd, return value must be kept on stack or
-    /// otherwise protected from the GC.
     #[inline]
-    pub unsafe fn from_value(val: Value) -> Option<Self> {
-        (val.rb_type() == ruby_value_type::RUBY_T_CLASS)
-            .then(|| Self(NonZeroValue::new_unchecked(val)))
+    pub fn from_value(val: Value) -> Option<Self> {
+        unsafe {
+            (val.rb_type() == ruby_value_type::RUBY_T_CLASS)
+                .then(|| Self(NonZeroValue::new_unchecked(val)))
+        }
     }
 
     #[inline]
@@ -50,7 +48,7 @@ impl fmt::Display for RClass {
 
 impl fmt::Debug for RClass {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", unsafe { self.inspect() })
+        write!(f, "{}", self.inspect())
     }
 }
 

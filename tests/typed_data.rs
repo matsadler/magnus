@@ -43,6 +43,6 @@ fn it_wraps_rust_struct() {
     rb_assert!("$val.class == Example");
 
     let value = eval_static("$val").unwrap();
-    let ex = unsafe { value.try_convert::<&Example>() }.unwrap();
+    let ex = value.try_convert::<&Example>().unwrap();
     assert_eq!("foo", ex.value)
 }
