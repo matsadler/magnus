@@ -1,0 +1,113 @@
+# frozen_string_literal: true
+
+class RakeCargoHelper
+  attr_reader :gemname
+
+  def initialize(gemname=File.basename(__dir__))
+    @gemname = gemname
+  end
+
+  def self.command?(name)
+    exts = ENV["PATHEXT"] ? ENV["PATHEXT"].split(";") : [""]
+    ENV["PATH"].split(File::PATH_SEPARATOR).any? do |path|
+      exts.any? do |ext|
+        exe = File.join(path, "#{name}#{ext}")
+        File.executable?(exe) && !File.directory?(exe)
+      end
+    end
+  end
+
+  def self.rust_toolchain
+    str = `rustc --version --verbose`
+    info = str.lines.map {|l| l.chomp.split(/:\s+/, 2)}.drop(1).to_h
+    info["host"]
+  end
+
+  def self.cargo_target_dir
+    return @cargo_target_dir if defined? @cargo_target_dir
+
+    str = `cargo metadata --format-version 1 --offline --no-deps --quiet`
+    begin
+      require "json"
+      dir = JSON.parse(str)["target_directory"]
+    rescue LoadError # json is usually part of the stdlib, but just in case
+      /"target_directory"\s*:\s*"(?<dir>[^"]*)"/ =~ str
+    end
+    @cargo_target_dir = dir || "target"
+  end
+
+  def install_dir
+    File.expand_path(File.join("..", "..", "lib", gemname), __dir__)
+  end
+
+  def rust_name
+    prefix = "lib" unless Gem.win_platform?
+    suffix = if RbConfig::CONFIG["target_os"] =~ /darwin/i
+      ".dylib"
+    elsif Gem.win_platform?
+      ".dll"
+    else
+      ".so"
+    end
+    "#{prefix}#{gemname}#{suffix}"
+  end
+
+  def ruby_name
+    "#{gemname}.#{RbConfig::CONFIG["DLEXT"]}"
+  end
+
+end
+
+task default: [:install, :clean]
+
+desc "set dev mode for subsequent task, run like `rake dev install`"
+task :dev do
+  @dev = true
+end
+
+desc "build gem native extension and copy to lib"
+task install: [:cd, :build] do
+  helper = RakeCargoHelper.new
+  profile_dir = @dev ? "debug" : "release"
+  source = File.join(RakeCargoHelper.cargo_target_dir, profile_dir, helper.rust_name)
+  dest = File.join(helper.install_dir, helper.ruby_name)
+  mkdir_p(helper.install_dir)
+  rm(dest) if File.exist?(dest)
+  cp(source, dest)
+end
+
+desc "build gem native extension"
+task build: [:cargo, :cd] do
+  sh "cargo", "build", *("--release" unless @dev)
+end
+
+desc "clean up release build artifacts"
+task clean: [:cargo, :cd] do
+  sh "cargo clean --release"
+end
+
+desc "clean up build artifacts"
+task clobber: [:cargo, :cd] do
+  sh "cargo clean"
+end
+
+desc "check for cargo"
+task :cargo do
+  raise <<-MSG unless RakeCargoHelper.command?("cargo")
+
+    This gem requires a Rust compiler and the `cargo' build tool to build the
+    gem's native extension. See https://www.rust-lang.org/tools/install for
+    how to install Rust. `cargo' is usually part of the Rust installation.
+  MSG
+
+  raise <<-MSG if Gem.win_platform? && RakeCargoHelper.rust_toolchain !~ /gnu/
+
+    Found Rust toolchain `#{RakeCargoHelper.rust_toolchain}' but the gem native
+    extension requires the gnu toolchain on Windows.
+  MSG
+end
+
+# ensure task is running in the right dir
+task :cd do
+  cd(__dir__) unless __dir__ == pwd
+end

@@ -239,7 +239,7 @@ impl Value {
     /// must ensure this does not happen.
     pub unsafe fn to_s(&self) -> Result<Cow<str>, Error> {
         if let Some(s) = RString::ref_from_value(self) {
-            if s.is_utf8_encoding() {
+            if s.is_utf8_compatible_encoding() {
                 return s.as_str().map(Cow::Borrowed);
             } else {
                 return (*s).to_string().map(Cow::Owned);

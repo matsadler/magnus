@@ -12,7 +12,7 @@ use crate::{
     error::{protect, Error},
     object::Object,
     ruby_sys::{
-        self, rb_enc_get, rb_enc_get_index, rb_str_conv_enc, rb_str_to_str, rb_utf8_encindex,
+        self, rb_enc_get, rb_enc_get_index, rb_str_conv_enc, rb_str_to_str, rb_utf8_encindex, rb_usascii_encindex,
         rb_utf8_encoding, ruby_rstring_consts, ruby_rstring_flags, ruby_value_type, VALUE,
     },
     try_convert::TryConvert,
@@ -74,8 +74,17 @@ impl RString {
         }
     }
 
-    pub fn is_utf8_encoding(self) -> bool {
-        unsafe { rb_enc_get_index(self.as_rb_value()) == rb_utf8_encindex() }
+    /// Returns true if the encoding for this string is UTF-8 or US-ASCII,
+    /// false otehrwise.
+    ///
+    /// The enoding on a Ruby String is just a label, it provides no guarantee
+    /// that the String really is valid UTF-8.
+    pub fn is_utf8_compatible_encoding(self) -> bool {
+        unsafe {
+            let encindex = rb_enc_get_index(self.as_rb_value());
+            // us-ascii is a 100% compatible subset of utf8
+            encindex == rb_utf8_encindex() || encindex == rb_usascii_encindex()
+        }
     }
 
     pub fn encode_utf8(self) -> Result<Self, Error> {
@@ -100,7 +109,7 @@ impl RString {
     }
 
     pub(crate) unsafe fn as_str_unconstrained<'a>(self) -> Result<&'a str, Error> {
-        if !self.is_utf8_encoding() {
+        if !self.is_utf8_compatible_encoding() {
             let enc = rb_enc_get(self.as_rb_value());
             let name = CStr::from_ptr((*enc).name).to_string_lossy();
             return Err(Error::encoding_error(format!(
@@ -121,7 +130,7 @@ impl RString {
     }
 
     pub fn to_string(self) -> Result<String, Error> {
-        let utf8 = if self.is_utf8_encoding() {
+        let utf8 = if self.is_utf8_compatible_encoding() {
             self
         } else {
             self.encode_utf8()?
