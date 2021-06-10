@@ -97,7 +97,6 @@ impl RArray {
         ary
     }
 
-
     /// # Safety
     ///
     /// Ruby may modify or free the memory backing the returned slice, the

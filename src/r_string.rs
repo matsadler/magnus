@@ -12,8 +12,9 @@ use crate::{
     error::{protect, Error},
     object::Object,
     ruby_sys::{
-        self, rb_enc_get, rb_enc_get_index, rb_str_conv_enc, rb_str_to_str, rb_utf8_encindex, rb_usascii_encindex,
-        rb_utf8_encoding, ruby_rstring_consts, ruby_rstring_flags, ruby_value_type, VALUE,
+        self, rb_enc_get, rb_enc_get_index, rb_str_conv_enc, rb_str_to_str, rb_usascii_encindex,
+        rb_utf8_encindex, rb_utf8_encoding, ruby_rstring_consts, ruby_rstring_flags,
+        ruby_value_type, VALUE,
     },
     try_convert::TryConvert,
     value::{NonZeroValue, Value},
