@@ -4,7 +4,11 @@ version = "0.1.0"
 authors = ["Mat Sadler <mat@sourcetagsandcodes.com>"]
 edition = "2018"
 
+[workspace]
+members = ["magnus-macros"]
+
 [dependencies]
+magnus-macros = { path = "magnus-macros" }
 
 [build-dependencies]
 bindgen = "0.58"

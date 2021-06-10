@@ -29,6 +29,8 @@ pub mod value;
 
 use std::{ffi::CString, mem::transmute};
 
+pub use magnus_macros::init;
+
 use error::protect;
 use method::Method;
 use ruby_sys::{

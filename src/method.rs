@@ -453,11 +453,31 @@ mod private {
             self?.into_return_value()
         }
     }
+
+    pub trait InitReturn {
+        fn into_init_return(self) -> Result<(), Error>;
+    }
+
+    impl InitReturn for () {
+        fn into_init_return(self) -> Result<(), Error> {
+            Ok(self)
+        }
+    }
+
+    impl InitReturn for Result<(), Error> {
+        fn into_init_return(self) -> Result<(), Error> {
+            self
+        }
+    }
 }
 
 pub trait ReturnValue: private::ReturnValue {}
 
 impl<T> ReturnValue for T where T: private::ReturnValue {}
+
+pub trait InitReturn: private::InitReturn {}
+
+impl<T> InitReturn for T where T: private::InitReturn {}
 
 impl<Func, RbSelf, Args, Res> MethodRbAry<Func, RbSelf, Args, Res>
 where
@@ -489,6 +509,38 @@ where
             Ok(v) => v,
             Err(e) => Err(Error::from_panic(e)),
         };
+        match res {
+            Ok(v) => v,
+            Err(e) => raise(e),
+        }
+    }
+}
+
+pub struct Init<Func, Res> {
+    func: Func,
+    res: PhantomData<Res>,
+}
+
+impl<Func, Res> Init<Func, Res>
+where
+    Func: Fn() -> Res,
+    Res: InitReturn,
+{
+    #[inline]
+    pub fn new(func: Func) -> Self {
+        Self {
+            func,
+            res: Default::default(),
+        }
+    }
+
+    #[inline]
+    pub unsafe fn call_handle_error(self) {
+        let res =
+            match std::panic::catch_unwind(AssertUnwindSafe(|| (self.func)().into_init_return())) {
+                Ok(v) => v,
+                Err(e) => Err(Error::from_panic(e)),
+            };
         match res {
             Ok(v) => v,
             Err(e) => raise(e),
@@ -551,7 +603,6 @@ where
 pub struct Method0<Func, RbSelf, Res> {
     func: Func,
     rb_self: PhantomData<RbSelf>,
-
     res: PhantomData<Res>,
 }
 
@@ -559,7 +610,6 @@ impl<Func, RbSelf, Res> Method0<Func, RbSelf, Res>
 where
     Func: Fn(RbSelf) -> Res,
     RbSelf: TryConvert,
-
     Res: ReturnValue,
 {
     #[inline]
