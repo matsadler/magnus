@@ -56,6 +56,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .default_enum_style(bindgen::EnumVariation::Rust {
             non_exhaustive: false,
         })
+        .no_copy("rb_data_type_struct")
         .layout_tests(false)
         .generate_comments(false)
         .generate()

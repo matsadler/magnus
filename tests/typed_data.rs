@@ -14,15 +14,16 @@ struct Example {
 }
 
 impl TypedData for Example {
-    const NAME: &'static str = "Example";
-    const FREE_IMMEDIATLY: bool = true;
-
     fn class() -> RClass {
         *memoize!(RClass: define_class("Example", Default::default()).unwrap())
     }
 
     fn data_type() -> &'static DataType {
-        memoize!(DataType: Self::build_data_type())
+        memoize!(DataType: {
+            let mut builder = DataType::builder::<()>("Example");
+            builder.free_immediatly();
+            builder.build()
+        })
     }
 }
 

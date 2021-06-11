@@ -2234,13 +2234,13 @@ where
 
 #[macro_export]
 macro_rules! method {
-    ($name:ident, -2) => {{
+    ($name:expr, -2) => {{
         unsafe extern "C" fn anon(rb_self: $crate::Value, args: $crate::RArray) -> $crate::Value {
             $crate::method::MethodRbAry::new($name).call_handle_error(rb_self, args)
         }
         anon as unsafe extern "C" fn($crate::Value, $crate::RArray) -> $crate::Value
     }};
-    ($name:ident, -1) => {{
+    ($name:expr, -1) => {{
         unsafe extern "C" fn anon(
             argc: std::os::raw::c_int,
             argv: *const $crate::Value,
@@ -2254,19 +2254,19 @@ macro_rules! method {
             $crate::Value,
         ) -> $crate::Value
     }};
-    ($name:ident, 0) => {{
+    ($name:expr, 0) => {{
         unsafe extern "C" fn anon(rb_self: $crate::Value) -> $crate::Value {
             $crate::method::Method0::new($name).call_handle_error(rb_self)
         }
         anon as unsafe extern "C" fn($crate::Value) -> $crate::Value
     }};
-    ($name:ident, 1) => {{
+    ($name:expr, 1) => {{
         unsafe extern "C" fn anon(rb_self: $crate::Value, a: $crate::Value) -> $crate::Value {
             $crate::method::Method1::new($name).call_handle_error(rb_self, a)
         }
         anon as unsafe extern "C" fn($crate::Value, $crate::Value) -> $crate::Value
     }};
-    ($name:ident, 2) => {{
+    ($name:expr, 2) => {{
         unsafe extern "C" fn anon(
             rb_self: $crate::Value,
             a: $crate::Value,
@@ -2276,7 +2276,7 @@ macro_rules! method {
         }
         anon as unsafe extern "C" fn($crate::Value, $crate::Value, $crate::Value) -> $crate::Value
     }};
-    ($name:ident, 3) => {{
+    ($name:expr, 3) => {{
         unsafe extern "C" fn anon(
             rb_self: $crate::Value,
             a: $crate::Value,
@@ -2292,7 +2292,7 @@ macro_rules! method {
             $crate::Value,
         ) -> $crate::Value
     }};
-    ($name:ident, 4) => {{
+    ($name:expr, 4) => {{
         unsafe extern "C" fn anon(
             rb_self: $crate::Value,
             a: $crate::Value,
@@ -2310,7 +2310,7 @@ macro_rules! method {
             $crate::Value,
         ) -> $crate::Value
     }};
-    ($name:ident, 5) => {{
+    ($name:expr, 5) => {{
         unsafe extern "C" fn anon(
             rb_self: $crate::Value,
             a: $crate::Value,
@@ -2330,7 +2330,7 @@ macro_rules! method {
             $crate::Value,
         ) -> $crate::Value
     }};
-    ($name:ident, 6) => {{
+    ($name:expr, 6) => {{
         unsafe extern "C" fn anon(
             rb_self: $crate::Value,
             a: $crate::Value,
@@ -2352,7 +2352,7 @@ macro_rules! method {
             $crate::Value,
         ) -> $crate::Value
     }};
-    ($name:ident, 7) => {{
+    ($name:expr, 7) => {{
         unsafe extern "C" fn anon(
             rb_self: $crate::Value,
             a: $crate::Value,
@@ -2376,7 +2376,7 @@ macro_rules! method {
             $crate::Value,
         ) -> $crate::Value
     }};
-    ($name:ident, 8) => {{
+    ($name:expr, 8) => {{
         unsafe extern "C" fn anon(
             rb_self: $crate::Value,
             a: $crate::Value,
@@ -2402,7 +2402,7 @@ macro_rules! method {
             $crate::Value,
         ) -> $crate::Value
     }};
-    ($name:ident, 9) => {{
+    ($name:expr, 9) => {{
         unsafe extern "C" fn anon(
             rb_self: $crate::Value,
             a: $crate::Value,
@@ -2431,7 +2431,7 @@ macro_rules! method {
             $crate::Value,
         ) -> $crate::Value
     }};
-    ($name:ident, 10) => {{
+    ($name:expr, 10) => {{
         unsafe extern "C" fn anon(
             rb_self: $crate::Value,
             a: $crate::Value,
@@ -2462,7 +2462,7 @@ macro_rules! method {
             $crate::Value,
         ) -> $crate::Value
     }};
-    ($name:ident, 11) => {{
+    ($name:expr, 11) => {{
         unsafe extern "C" fn anon(
             rb_self: $crate::Value,
             a: $crate::Value,
@@ -2495,7 +2495,7 @@ macro_rules! method {
             $crate::Value,
         ) -> $crate::Value
     }};
-    ($name:ident, 12) => {{
+    ($name:expr, 12) => {{
         unsafe extern "C" fn anon(
             rb_self: $crate::Value,
             a: $crate::Value,
@@ -2530,7 +2530,7 @@ macro_rules! method {
             $crate::Value,
         ) -> $crate::Value
     }};
-    ($name:ident, 13) => {{
+    ($name:expr, 13) => {{
         unsafe extern "C" fn anon(
             rb_self: $crate::Value,
             a: $crate::Value,
@@ -2567,7 +2567,7 @@ macro_rules! method {
             $crate::Value,
         ) -> $crate::Value
     }};
-    ($name:ident, 14) => {{
+    ($name:expr, 14) => {{
         unsafe extern "C" fn anon(
             rb_self: $crate::Value,
             a: $crate::Value,
@@ -2606,7 +2606,7 @@ macro_rules! method {
             $crate::Value,
         ) -> $crate::Value
     }};
-    ($name:ident, 15) => {{
+    ($name:expr, 15) => {{
         unsafe extern "C" fn anon(
             rb_self: $crate::Value,
             a: $crate::Value,
@@ -2647,7 +2647,7 @@ macro_rules! method {
             $crate::Value,
         ) -> $crate::Value
     }};
-    ($name:ident, 16) => {{
+    ($name:expr, 16) => {{
         unsafe extern "C" fn anon(
             rb_self: $crate::Value,
             a: $crate::Value,
@@ -2690,7 +2690,7 @@ macro_rules! method {
             $crate::Value,
         ) -> $crate::Value
     }};
-    ($name:ident, $arity:expr) => {
+    ($name:expr, $arity:expr) => {
         compile_error!("arity must be an integer literal between -2..=16")
     };
 }

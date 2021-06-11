@@ -1,6 +1,7 @@
 use std::{
     ffi::{c_void, CString},
     fmt,
+    marker::PhantomData,
     ops::Deref,
     ptr::{self, NonNull},
 };
@@ -66,84 +67,138 @@ impl Object for RTypedData {}
 
 pub type DataType = rb_data_type_t;
 
-pub trait TypedData
+impl DataType {
+    pub fn builder<T>(name: &'static str) -> DataTypeBuilder<T>
+    where
+        T: DataTypeFunctions,
+    {
+        DataTypeBuilder::new(name)
+    }
+}
+
+impl Drop for DataType {
+    fn drop(&mut self) {
+        unsafe {
+            CString::from_raw(self.wrap_struct_name as *mut _);
+        }
+    }
+}
+
+pub trait DataTypeFunctions
 where
     Self: Sized,
 {
-    const NAME: &'static str;
-    /// set true if a mark function is provided (default false).
-    const MARK: bool = false;
-    /// set true if a size function is provided (default false).
-    const SIZE: bool = false;
-    /// set true if a compact function is provided (default false).
-    const COMPACT: bool = false;
-    const FREE_IMMEDIATLY: bool = false;
-    const WB_PROTECTED: bool = false;
-    const FROZEN_SHAREABLE: bool = false;
+    fn free(self: Box<Self>) {}
 
-    fn class() -> RClass;
+    fn mark(&mut self) {}
 
-    fn data_type() -> &'static DataType;
-
-    #[allow(clippy::boxed_local, unused_variables)]
-    fn free(data: Box<Self>) {}
-
-    #[allow(unused_variables)]
-    fn mark(data: &mut Self) {}
-
-    #[allow(unused_variables)]
-    fn size(data: &mut Self) -> usize {
+    fn size(&self) -> usize {
         0
     }
 
-    #[allow(unused_variables)]
-    fn compact(data: &mut Self) {}
+    fn compact(&mut self) {}
 
-    fn from_value<'a>(val: Value) -> Option<&'a Self> {
-        debug_assert_value!(val);
-        unsafe {
-            let mut res = None;
-            let _ = protect(|| {
-                res = (rb_check_typeddata(val.as_rb_value(), Self::data_type() as *const _)
-                    as *const Self)
-                    .as_ref();
-                *Qnil::new()
-            });
-            res
+    /// # Safety
+    ///
+    /// `ptr` must be a vaild pointer to a `Box<Self>`, and must not be aliased
+    /// This function will free the memory pointed to by `ptr`.
+    unsafe extern "C" fn extern_free(ptr: *mut c_void) {
+        Self::free(Box::from_raw(ptr as *mut _))
+    }
+
+    /// # Safety
+    ///
+    /// `ptr` must be a vaild pointer to a `Self`, and must not be aliased.
+    unsafe extern "C" fn extern_mark(ptr: *mut c_void) {
+        Self::mark(&mut *(ptr as *mut Self));
+    }
+
+    /// # Safety
+    ///
+    /// `ptr` must be a vaild pointer to a `Self`.
+    unsafe extern "C" fn extern_size(ptr: *const c_void) -> size_t {
+        Self::size(&*(ptr as *const Self)) as size_t
+    }
+
+    /// # Safety
+    ///
+    /// `ptr` must be a vaild pointer to a `Self`, and must not be aliased.
+    unsafe extern "C" fn extern_compact(ptr: *mut c_void) {
+        Self::compact(&mut *(ptr as *mut Self));
+    }
+}
+
+impl DataTypeFunctions for () {}
+
+pub struct DataTypeBuilder<T = ()> {
+    name: &'static str,
+    mark: bool,
+    size: bool,
+    compact: bool,
+    free_immediatly: bool,
+    wb_protected: bool,
+    frozen_shareable: bool,
+    phantom: PhantomData<T>,
+}
+
+impl<T> DataTypeBuilder<T>
+where
+    T: DataTypeFunctions,
+{
+    pub fn new(name: &'static str) -> Self {
+        Self {
+            name,
+            mark: false,
+            size: false,
+            compact: false,
+            free_immediatly: false,
+            wb_protected: false,
+            frozen_shareable: false,
+            phantom: Default::default(),
         }
     }
 
-    fn into_value(self) -> Value {
-        let boxed = Box::new(self);
-        let value_ptr = unsafe {
-            rb_data_typed_object_wrap(
-                Self::class().as_rb_value(),
-                Box::into_raw(boxed) as *mut _,
-                Self::data_type() as *const _,
-            )
-        };
-        Value::new(value_ptr)
+    pub fn mark(&mut self) {
+        self.mark = true;
     }
 
-    #[doc(hidden)]
-    fn build_data_type() -> DataType {
-        #[allow(clippy::unnecessary_cast)]
-        let mut flags = 0 as VALUE;
-        if Self::FREE_IMMEDIATLY {
+    pub fn size(&mut self) {
+        self.size = true;
+    }
+
+    pub fn compact(&mut self) {
+        self.compact = true;
+    }
+
+    pub fn free_immediatly(&mut self) {
+        self.free_immediatly = true;
+    }
+
+    pub fn wb_protected(&mut self) {
+        self.wb_protected = true;
+    }
+
+    pub fn frozen_shareable(&mut self) {
+        self.frozen_shareable = true;
+    }
+
+    pub fn build(self) -> DataType {
+        let mut flags = 0_usize as VALUE;
+        if self.free_immediatly {
             flags |= rbimpl_typeddata_flags::RUBY_TYPED_FREE_IMMEDIATELY as VALUE;
         }
-        if Self::WB_PROTECTED {
+        if self.wb_protected {
             flags |= rbimpl_typeddata_flags::RUBY_TYPED_FROZEN_SHAREABLE as VALUE;
         }
-        if Self::FROZEN_SHAREABLE {
+        if self.frozen_shareable {
             flags |= rbimpl_typeddata_flags::RUBY_TYPED_WB_PROTECTED as VALUE;
         }
-        let dmark = Self::MARK.then(|| Self::extern_mark as _);
-        let dfree = Some(Self::extern_free as _);
-        let dsize = Self::SIZE.then(|| Self::extern_size as _);
-        let dcompact = Self::COMPACT.then(|| Self::extern_compact as _);
+        let dmark = self.mark.then(|| T::extern_mark as _);
+        let dfree = Some(T::extern_free as _);
+        let dsize = self.size.then(|| T::extern_size as _);
+        let dcompact = self.compact.then(|| T::extern_compact as _);
         DataType {
-            wrap_struct_name: CString::new(Self::NAME).unwrap().into_raw() as _,
+            wrap_struct_name: CString::new(self.name).unwrap().into_raw() as _,
             function: rb_data_type_struct__bindgen_ty_1 {
                 dmark,
                 dfree,
@@ -156,33 +211,15 @@ where
             flags,
         }
     }
+}
 
-    #[doc(hidden)]
-    unsafe extern "C" fn extern_free(ptr: *mut c_void) {
-        Self::free(Box::from_raw(ptr as *mut _))
-    }
+pub trait TypedData
+where
+    Self: Sized,
+{
+    fn class() -> RClass;
 
-    #[doc(hidden)]
-    unsafe extern "C" fn extern_mark(ptr: *mut c_void) {
-        let mut boxed = Box::<Self>::from_raw(ptr as *mut _);
-        Self::mark(boxed.as_mut());
-        Box::leak(boxed);
-    }
-
-    #[doc(hidden)]
-    unsafe extern "C" fn extern_size(ptr: *const c_void) -> size_t {
-        let mut boxed = Box::<Self>::from_raw(ptr as *mut _);
-        let res = Self::size(boxed.as_mut());
-        Box::leak(boxed);
-        res as size_t
-    }
-
-    #[doc(hidden)]
-    unsafe extern "C" fn extern_compact(ptr: *mut c_void) {
-        let mut boxed = Box::<Self>::from_raw(ptr as *mut _);
-        Self::compact(boxed.as_mut());
-        Box::leak(boxed);
-    }
+    fn data_type() -> &'static DataType;
 }
 
 impl<T> TryConvert for &T
@@ -191,13 +228,23 @@ where
 {
     #[inline]
     fn try_convert(val: &Value) -> Result<Self, Error> {
-        T::from_value(*val).ok_or_else(|| {
-            Error::type_error(format!(
-                "no implicit conversion of {} into {}",
-                unsafe { val.classname() },
-                T::class()
-            ))
-        })
+        debug_assert_value!(val);
+        unsafe {
+            let mut res = None;
+            let _ = protect(|| {
+                res = (rb_check_typeddata(val.as_rb_value(), T::data_type() as *const _)
+                    as *const T)
+                    .as_ref();
+                *Qnil::new()
+            });
+            res.ok_or_else(|| {
+                Error::type_error(format!(
+                    "no implicit conversion of {} into {}",
+                    val.classname(),
+                    T::class()
+                ))
+            })
+        }
     }
 }
 
@@ -205,7 +252,15 @@ impl<T> From<T> for Value
 where
     T: TypedData,
 {
-    fn from(val: T) -> Self {
-        val.into_value()
+    fn from(data: T) -> Self {
+        let boxed = Box::new(data);
+        let value_ptr = unsafe {
+            rb_data_typed_object_wrap(
+                T::class().as_rb_value(),
+                Box::into_raw(boxed) as *mut _,
+                T::data_type() as *const _,
+            )
+        };
+        Value::new(value_ptr)
     }
 }

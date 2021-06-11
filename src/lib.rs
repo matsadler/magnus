@@ -22,7 +22,7 @@ mod r_rational;
 mod r_regexp;
 mod r_string;
 mod r_struct;
-mod r_typed_data;
+pub mod r_typed_data;
 pub mod ruby_sys;
 mod try_convert;
 pub mod value;
