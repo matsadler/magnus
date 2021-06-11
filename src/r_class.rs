@@ -1,9 +1,11 @@
 use std::{fmt, ops::Deref};
 
 use crate::{
+    error::Error,
     module::Module,
     object::Object,
     ruby_sys::{self, ruby_value_type, VALUE},
+    try_convert::TryConvert,
     value::{NonZeroValue, Value},
 };
 
@@ -60,3 +62,16 @@ impl From<RClass> for Value {
 
 impl Object for RClass {}
 impl Module for RClass {}
+
+impl TryConvert for RClass {
+    #[inline]
+    fn try_convert(val: &Value) -> Result<Self, Error> {
+        match Self::from_value(*val) {
+            Some(v) => Ok(v),
+            None => Err(Error::type_error(format!(
+                "no implicit conversion of {} into Class",
+                unsafe { val.classname() },
+            ))),
+        }
+    }
+}

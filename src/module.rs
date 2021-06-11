@@ -11,6 +11,7 @@ use crate::{
         rb_class_inherited_p, rb_const_get, rb_define_class_id_under, rb_define_method_id,
         rb_define_module_id_under, rb_define_private_method, rb_define_protected_method,
     },
+    try_convert::TryConvert,
     value::{Id, Value},
 };
 
@@ -42,10 +43,16 @@ pub trait Module: Object + Deref<Target = Value> + Copy {
         }
     }
 
-    fn const_get<T: Into<Id>>(self, name: T) -> Result<Value, Error> {
+    fn const_get<T, U>(self, name: T) -> Result<U, Error>
+    where
+        T: Into<Id>,
+        U: TryConvert,
+    {
         debug_assert_value!(self);
         let id = name.into();
-        unsafe { protect(|| Value::new(rb_const_get(self.as_rb_value(), id.as_rb_id()))) }
+        let res =
+            unsafe { protect(|| Value::new(rb_const_get(self.as_rb_value(), id.as_rb_id()))) };
+        res.and_then(|v| v.try_convert())
     }
 
     fn is_inherited<T>(self, other: T) -> bool

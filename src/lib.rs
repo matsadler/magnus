@@ -29,7 +29,7 @@ pub mod value;
 
 use std::{ffi::CString, mem::transmute};
 
-pub use magnus_macros::init;
+pub use magnus_macros::{init, DataTypeFunctions, TypedData};
 
 use error::protect;
 use method::Method;
@@ -61,7 +61,7 @@ pub use {
     r_regexp::RRegexp,
     r_string::RString,
     r_struct::RStruct,
-    r_typed_data::{DataType, RTypedData, TypedData},
+    r_typed_data::{DataType, DataTypeFunctions, RTypedData, TypedData},
     try_convert::{ArgList, TryConvert},
 };
 

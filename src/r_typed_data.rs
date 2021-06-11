@@ -2,6 +2,7 @@ use std::{
     ffi::{c_void, CString},
     fmt,
     marker::PhantomData,
+    mem::size_of_val,
     ops::Deref,
     ptr::{self, NonNull},
 };
@@ -93,7 +94,7 @@ where
     fn mark(&mut self) {}
 
     fn size(&self) -> usize {
-        0
+        size_of_val(self)
     }
 
     fn compact(&mut self) {}
@@ -128,9 +129,7 @@ where
     }
 }
 
-impl DataTypeFunctions for () {}
-
-pub struct DataTypeBuilder<T = ()> {
+pub struct DataTypeBuilder<T> {
     name: &'static str,
     mark: bool,
     size: bool,
@@ -213,7 +212,7 @@ where
     }
 }
 
-pub trait TypedData
+pub unsafe trait TypedData
 where
     Self: Sized,
 {

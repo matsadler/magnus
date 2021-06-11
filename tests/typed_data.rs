@@ -1,6 +1,6 @@
 use magnus::{
-    define_class, define_global_variable, embed::init, eval_static, memoize, DataType, Qnil,
-    RClass, TypedData, Value,
+    define_class, define_global_variable, embed::init, eval_static, DataTypeFunctions, Qnil,
+    TypedData, Value,
 };
 
 macro_rules! rb_assert {
@@ -9,22 +9,10 @@ macro_rules! rb_assert {
     };
 }
 
+#[derive(DataTypeFunctions, TypedData)]
+#[magnus(class = "Example", free_immediatly)]
 struct Example {
     value: String,
-}
-
-impl TypedData for Example {
-    fn class() -> RClass {
-        *memoize!(RClass: define_class("Example", Default::default()).unwrap())
-    }
-
-    fn data_type() -> &'static DataType {
-        memoize!(DataType: {
-            let mut builder = DataType::builder::<()>("Example");
-            builder.free_immediatly();
-            builder.build()
-        })
-    }
 }
 
 fn make_rb_example(value: &str) -> Value {
@@ -37,6 +25,9 @@ fn make_rb_example(value: &str) -> Value {
 #[test]
 fn it_wraps_rust_struct() {
     let _cleanup = unsafe { init() };
+
+    define_class("Example", Default::default()).unwrap();
+
     let val = define_global_variable("$val", Qnil::new()).unwrap();
     rb_assert!("$val == nil");
 
