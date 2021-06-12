@@ -1,8 +1,7 @@
 use std::{
     borrow::Cow,
-    io,
     ffi::CStr,
-    fmt,
+    fmt, io,
     ops::Deref,
     os::raw::{c_char, c_long},
     ptr::{self, NonNull},
