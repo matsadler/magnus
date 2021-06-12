@@ -1,14 +1,11 @@
-use magnus::{method, Error, Value};
-
-fn hello(_rb_self: Value) -> Result<(), Error> {
-    println!("hello, world");
-    Ok(())
+fn hello(subject: String) -> String {
+    format!("hello, {}", subject)
 }
 
 fn main() {
     let _cleanup = unsafe { magnus::embed::init() };
 
-    magnus::define_global_function("hello", method!(hello, 0));
+    magnus::define_global_function("hello", magnus::function!(hello, 1));
 
-    let _ = magnus::eval_static("hello");
+    let _ = magnus::eval_static(r#"puts hello("world")"#);
 }

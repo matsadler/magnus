@@ -1,8 +1,10 @@
 use std::{
     borrow::Cow,
+    io,
     ffi::CStr,
     fmt,
     ops::Deref,
+    os::raw::{c_char, c_long},
     ptr::{self, NonNull},
     slice, str,
 };
@@ -12,9 +14,9 @@ use crate::{
     error::{protect, Error},
     object::Object,
     ruby_sys::{
-        self, rb_enc_get, rb_enc_get_index, rb_str_conv_enc, rb_str_to_str, rb_usascii_encindex,
-        rb_utf8_encindex, rb_utf8_encoding, ruby_rstring_consts, ruby_rstring_flags,
-        ruby_value_type, VALUE,
+        self, rb_enc_get, rb_enc_get_index, rb_str_cat, rb_str_conv_enc, rb_str_new, rb_str_to_str,
+        rb_usascii_encindex, rb_utf8_encindex, rb_utf8_encoding, rb_utf8_str_new,
+        ruby_rstring_consts, ruby_rstring_flags, ruby_value_type, VALUE,
     },
     try_convert::TryConvert,
     value::{NonZeroValue, Value},
@@ -48,6 +50,20 @@ impl RString {
     fn as_internal(self) -> NonNull<ruby_sys::RString> {
         // safe as inner value is NonZero
         unsafe { NonNull::new_unchecked(self.0.get().as_rb_value() as *mut _) }
+    }
+
+    pub fn new(s: &str) -> Self {
+        let len = s.len();
+        let ptr = s.as_ptr();
+        unsafe {
+            Self::from_rb_value_unchecked(rb_utf8_str_new(ptr as *const c_char, len as c_long))
+        }
+    }
+
+    pub fn from_slice(s: &[u8]) -> Self {
+        let len = s.len();
+        let ptr = s.as_ptr();
+        unsafe { Self::from_rb_value_unchecked(rb_str_new(ptr as *const c_char, len as c_long)) }
     }
 
     /// # Safety
@@ -162,9 +178,40 @@ impl fmt::Debug for RString {
     }
 }
 
+impl io::Write for RString {
+    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+        let len = buf.len();
+        let ptr = buf.as_ptr();
+        unsafe {
+            Self::from_rb_value_unchecked(rb_str_cat(
+                self.as_rb_value(),
+                ptr as *const c_char,
+                len as c_long,
+            ));
+        }
+        Ok(len)
+    }
+
+    fn flush(&mut self) -> io::Result<()> {
+        Ok(())
+    }
+}
+
 impl From<RString> for Value {
     fn from(val: RString) -> Self {
         *val
+    }
+}
+
+impl From<&str> for Value {
+    fn from(val: &str) -> Self {
+        RString::new(val).into()
+    }
+}
+
+impl From<String> for Value {
+    fn from(val: String) -> Self {
+        val.as_str().into()
     }
 }
 
