@@ -1,8 +1,11 @@
 use std::{fmt, ops::Deref};
 
 use crate::{
+    debug_assert_value,
+    error::{protect, Error},
     object::Object,
-    ruby_sys::ruby_value_type,
+    ruby_sys::{rb_check_hash_type, ruby_value_type},
+    try_convert::TryConvert,
     value::{NonZeroValue, Value},
 };
 
@@ -47,3 +50,23 @@ impl From<RHash> for Value {
 }
 
 impl Object for RHash {}
+
+impl TryConvert for RHash {
+    #[inline]
+    fn try_convert(val: &Value) -> Result<Self, Error> {
+        debug_assert_value!(val);
+        if let Some(v) = Self::from_value(*val) {
+            return Ok(v);
+        }
+        unsafe {
+            protect(|| Value::new(rb_check_hash_type(val.as_rb_value()))).and_then(|res| {
+                Self::from_value(res).ok_or_else(|| {
+                    Error::type_error(format!(
+                        "no implicit conversion of {} into Hash",
+                        val.class()
+                    ))
+                })
+            })
+        }
+    }
+}
