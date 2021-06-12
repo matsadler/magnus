@@ -2,14 +2,36 @@ use darling::{util::Flag, FromMeta};
 use proc_macro::TokenStream;
 use proc_macro2::{Ident, Span};
 use quote::{quote, ToTokens};
-use syn::{parse_macro_input, spanned::Spanned, DeriveInput, Error, ItemFn};
+use syn::{parse_macro_input, spanned::Spanned, AttributeArgs, DeriveInput, Error, ItemFn};
+
+#[derive(FromMeta)]
+struct InitAttributes {
+    #[darling(default)]
+    name: Option<String>,
+}
 
 #[proc_macro_attribute]
-pub fn init(_: TokenStream, item: TokenStream) -> TokenStream {
+pub fn init(attrs: TokenStream, item: TokenStream) -> TokenStream {
     let init = parse_macro_input!(item as ItemFn);
     let init_name = init.sig.ident.clone();
 
-    let crate_name = std::env::var("CARGO_PKG_NAME").unwrap();
+    let attrs2 = attrs.clone();
+    let attr_args = parse_macro_input!(attrs2 as AttributeArgs);
+    let crate_name = match InitAttributes::from_list(&attr_args) {
+        Ok(v) => v.name,
+        Err(e) => return TokenStream::from(e.write_errors()),
+    };
+    let crate_name = match crate_name.or_else(|| std::env::var("CARGO_PKG_NAME").ok()) {
+        Some(v) => v,
+        None => {
+            return Error::new(
+                proc_macro2::TokenStream::from(attrs).span(),
+                "missing #[magnus] attribute",
+            )
+            .into_compile_error()
+            .into()
+        }
+    };
     let extern_init_name = Ident::new(&format!("Init_{}", crate_name), Span::call_site());
 
     let tokens = quote! {
