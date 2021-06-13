@@ -1,16 +1,23 @@
-use std::{collections::HashMap, fmt, hash::Hash, iter::FromIterator, ops::Deref};
+use std::{collections::HashMap, fmt, hash::Hash, iter::FromIterator, ops::Deref, os::raw::c_int};
 
 use crate::{
     debug_assert_value,
     error::{protect, Error},
     object::Object,
     ruby_sys::{
-        rb_check_hash_type, rb_hash_aref, rb_hash_aset, rb_hash_fetch, rb_hash_lookup,
-        rb_hash_lookup2, rb_hash_new, ruby_value_type, VALUE,
+        rb_check_hash_type, rb_hash_aref, rb_hash_aset, rb_hash_fetch, rb_hash_foreach,
+        rb_hash_lookup, rb_hash_lookup2, rb_hash_new, rb_hash_size, ruby_value_type, VALUE,
     },
     try_convert::{TryConvert, TryConvertOwned},
-    value::{NonZeroValue, Qundef, Value},
+    value::{Fixnum, NonZeroValue, Qnil, Qundef, Value},
 };
+
+#[repr(u32)]
+pub enum ForEach {
+    Continue,
+    Stop,
+    Delete,
+}
 
 #[derive(Clone, Copy)]
 #[repr(transparent)]
@@ -117,17 +124,79 @@ impl RHash {
         }
     }
 
+    fn base_foreach<F>(self, mut func: F) -> Result<(), Error>
+    where
+        F: FnMut(Value, Value) -> ForEach,
+    {
+        unsafe extern "C" fn iter<F>(key: VALUE, value: VALUE, arg: VALUE) -> c_int
+        where
+            F: FnMut(Value, Value) -> ForEach,
+        {
+            let closure = &mut *(arg as *mut F);
+            (closure)(Value::new(key), Value::new(value)) as c_int
+        }
+
+        unsafe {
+            let arg = &mut func as *mut F as VALUE;
+            protect(|| {
+                rb_hash_foreach(self.as_rb_value(), Some(iter::<F>), arg);
+                Qnil::new().into()
+            })?;
+        }
+        Ok(())
+    }
+
+    pub fn foreach<F>(self, mut func: F) -> Result<(), Error>
+    where
+        F: FnMut(Value, Value) -> Result<ForEach, Error>,
+    {
+        let mut res = Ok(());
+        self.base_foreach(|key, value| match func(key, value) {
+            Ok(v) => v,
+            Err(e) => {
+                res = Err(e);
+                ForEach::Stop
+            }
+        })?;
+        res
+    }
+
     pub fn to_hash_map<K, V>(self) -> Result<HashMap<K, V>, Error>
     where
         K: TryConvertOwned + Eq + Hash,
         V: TryConvertOwned,
     {
         let mut map = HashMap::new();
-        for res in self.enumeratorize("each", ()) {
-            let (k, v) = res?.try_convert()?;
-            map.insert(k, v);
-        }
+        self.foreach(|key, value| {
+            map.insert(key.try_convert()?, value.try_convert()?);
+            Ok(ForEach::Continue)
+        })?;
         Ok(map)
+    }
+
+    pub fn to_vec<K, V>(self) -> Result<Vec<(K, V)>, Error>
+    where
+        K: TryConvertOwned,
+        V: TryConvertOwned,
+    {
+        let mut vec = Vec::with_capacity(self.len());
+        self.foreach(|key, value| {
+            vec.push((key.try_convert()?, value.try_convert()?));
+            Ok(ForEach::Continue)
+        })?;
+        Ok(vec)
+    }
+
+    pub fn size(self) -> Fixnum {
+        unsafe { Fixnum::from_rb_value_unchecked(rb_hash_size(self.as_rb_value())) }
+    }
+
+    pub fn len(self) -> usize {
+        self.size().to_usize().unwrap()
+    }
+
+    pub fn is_empty(self) -> bool {
+        self.len() == 0
     }
 }
 
