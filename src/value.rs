@@ -102,7 +102,7 @@ impl Value {
     }
 
     #[inline]
-    fn is_undef(self) -> bool {
+    pub(crate) fn is_undef(self) -> bool {
         self.as_rb_value() == ruby_special_consts::RUBY_Qundef as VALUE
     }
 

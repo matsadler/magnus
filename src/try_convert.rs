@@ -3,6 +3,7 @@ use crate::{
     error::{protect, Error},
     integer::Integer,
     r_array::RArray,
+    r_hash::RHash,
     r_string::RString,
     ruby_sys::rb_num2dbl,
     value::{Qnil, Value},
@@ -661,6 +662,24 @@ where
     T9: TryConvert,
     T10: TryConvert,
     T11: TryConvert,
+{
+}
+
+impl<K, V> TryConvert for std::collections::HashMap<K, V>
+where
+    K: TryConvertOwned + Eq + std::hash::Hash,
+    V: TryConvertOwned,
+{
+    #[inline]
+    fn try_convert(val: &Value) -> Result<Self, Error> {
+        debug_assert_value!(val);
+        RHash::try_convert(val)?.to_hash_map()
+    }
+}
+impl<K, V> TryConvertOwned for std::collections::HashMap<K, V>
+where
+    K: TryConvertOwned + Eq + std::hash::Hash,
+    V: TryConvertOwned,
 {
 }
 
