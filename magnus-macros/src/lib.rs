@@ -147,7 +147,7 @@ pub fn derive_typed_data(input: TokenStream) -> TokenStream {
         unsafe impl magnus::TypedData for #ident {
             fn class() -> magnus::RClass {
                 use magnus::Module;
-                *magnus::memoize!(magnus::RClass: magnus::RClass::default().const_get(#class).unwrap())
+                *magnus::memoize!(magnus::RClass: magnus::RClass::default().funcall("const_get", (#class,)).unwrap())
             }
 
             fn data_type() -> &'static magnus::DataType {
