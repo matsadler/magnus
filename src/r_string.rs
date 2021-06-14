@@ -13,9 +13,10 @@ use crate::{
     error::{protect, Error},
     object::Object,
     ruby_sys::{
-        self, rb_enc_get, rb_enc_get_index, rb_str_cat, rb_str_conv_enc, rb_str_new, rb_str_to_str,
-        rb_usascii_encindex, rb_utf8_encindex, rb_utf8_encoding, rb_utf8_str_new,
-        ruby_rstring_consts, ruby_rstring_flags, ruby_value_type, VALUE,
+        self, rb_enc_associate_index, rb_enc_get, rb_enc_get_index, rb_str_buf_new, rb_str_cat,
+        rb_str_conv_enc, rb_str_new, rb_str_to_str, rb_usascii_encindex, rb_utf8_encindex,
+        rb_utf8_encoding, rb_utf8_str_new, ruby_rstring_consts, ruby_rstring_flags,
+        ruby_value_type, VALUE,
     },
     try_convert::TryConvert,
     value::{NonZeroValue, Value},
@@ -57,6 +58,18 @@ impl RString {
         unsafe {
             Self::from_rb_value_unchecked(rb_utf8_str_new(ptr as *const c_char, len as c_long))
         }
+    }
+
+    /// encoding set to ASCII-8BIT (aka BINARY). See also `with_capacity`.
+    pub fn buf_new(n: usize) -> Self {
+        unsafe { Self::from_rb_value_unchecked(rb_str_buf_new(n as c_long)) }
+    }
+
+    /// encoding set to UTF-8. See also `buf_new`.
+    pub fn with_capacity(n: usize) -> Self {
+        let s = Self::buf_new(n);
+        unsafe { rb_enc_associate_index(s.as_rb_value(), rb_utf8_encindex()) };
+        s
     }
 
     pub fn from_slice(s: &[u8]) -> Self {
