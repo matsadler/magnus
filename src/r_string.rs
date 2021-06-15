@@ -13,10 +13,10 @@ use crate::{
     error::{protect, Error},
     object::Object,
     ruby_sys::{
-        self, rb_enc_associate_index, rb_enc_get, rb_enc_get_index, rb_str_buf_new, rb_str_cat,
-        rb_str_conv_enc, rb_str_new, rb_str_to_str, rb_usascii_encindex, rb_utf8_encindex,
-        rb_utf8_encoding, rb_utf8_str_new, ruby_rstring_consts, ruby_rstring_flags,
-        ruby_value_type, VALUE,
+        self, rb_enc_associate_index, rb_enc_get, rb_enc_get_index, rb_str_buf_append,
+        rb_str_buf_new, rb_str_cat, rb_str_conv_enc, rb_str_new, rb_str_to_str,
+        rb_usascii_encindex, rb_utf8_encindex, rb_utf8_encoding, rb_utf8_str_new,
+        ruby_rstring_consts, ruby_rstring_flags, ruby_value_type, VALUE,
     },
     try_convert::TryConvert,
     value::{NonZeroValue, Value},
@@ -168,6 +168,22 @@ impl RString {
             .map(ToOwned::to_owned)
             .map_err(|e| Error::encoding_error(format!("{}", e)))
     }
+
+    pub fn append(self, other: Self) -> Result<(), Error> {
+        unsafe {
+            protect(|| Value::new(rb_str_buf_append(self.as_rb_value(), other.as_rb_value())))?;
+        }
+        Ok(())
+    }
+
+    pub fn cat<T: AsRef<[u8]>>(self, buf: T) {
+        let buf = buf.as_ref();
+        let len = buf.len();
+        let ptr = buf.as_ptr();
+        unsafe {
+            rb_str_cat(self.as_rb_value(), ptr as *const c_char, len as c_long);
+        }
+    }
 }
 
 impl Deref for RString {
@@ -193,14 +209,7 @@ impl fmt::Debug for RString {
 impl io::Write for RString {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
         let len = buf.len();
-        let ptr = buf.as_ptr();
-        unsafe {
-            Self::from_rb_value_unchecked(rb_str_cat(
-                self.as_rb_value(),
-                ptr as *const c_char,
-                len as c_long,
-            ));
-        }
+        self.cat(buf);
         Ok(len)
     }
 
