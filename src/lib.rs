@@ -21,7 +21,7 @@ mod r_object;
 mod r_rational;
 mod r_regexp;
 mod r_string;
-mod r_struct;
+pub mod r_struct;
 pub mod r_typed_data;
 pub mod ruby_sys;
 mod try_convert;
