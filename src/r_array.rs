@@ -135,6 +135,14 @@ impl RArray {
         }
     }
 
+    pub fn to_value_array<T, const N: usize>(self) -> Result<[Value; N], Error> {
+        unsafe {
+            self.as_slice()
+                .try_into()
+                .map_err(|_| Error::type_error(format!("expected Array of length {}", N)))
+        }
+    }
+
     pub fn to_array<T, const N: usize>(self) -> Result<[T; N], Error>
     where
         T: TryConvert,
