@@ -1,12 +1,52 @@
-use std::{ffi::CString, fmt, ops::Deref, os::raw::c_char, ptr::null};
+use std::{
+    ffi::CString,
+    fmt,
+    ops::Deref,
+    os::raw::c_char,
+    ptr::{null, NonNull},
+    slice,
+};
 
 use crate::{
+    debug_assert_value,
     error::{protect, Error},
     object::Object,
     r_class::RClass,
-    ruby_sys::{rb_struct_define, ruby_value_type},
+    ruby_sys::{rb_struct_define, ruby_value_type, VALUE},
     value::{NonZeroValue, Value},
 };
+
+// Ruby provides some inline functions to get a pointer to the struct's
+// contents, but we have to reimplement those for Rust. The for that we need
+// the definition of RStruct, but that isn't public, so we have to duplicate it
+// here.
+mod sys {
+    use crate::ruby_sys::{ruby_fl_type, ruby_fl_ushift, ruby_rvalue_flags, RBasic, VALUE};
+
+    pub const EMBED_LEN_MAX: u32 = ruby_rvalue_flags::RVALUE_EMBED_LEN_MAX as u32;
+    pub const EMBED_LEN_MASK: u32 =
+        ruby_fl_type::RUBY_FL_USER2 as u32 | ruby_fl_type::RUBY_FL_USER1 as u32;
+    pub const EMBED_LEN_SHIFT: u32 = ruby_fl_ushift::RUBY_FL_USHIFT as u32 + 1;
+
+    #[repr(C)]
+    #[derive(Copy, Clone)]
+    pub struct RStruct {
+        pub basic: RBasic,
+        pub as_: As,
+    }
+    #[repr(C)]
+    #[derive(Copy, Clone)]
+    pub union As {
+        pub heap: Heap,
+        pub ary: [VALUE; EMBED_LEN_MAX as usize],
+    }
+    #[repr(C)]
+    #[derive(Debug, Copy, Clone)]
+    pub struct Heap {
+        pub len: std::os::raw::c_long,
+        pub ptr: *const VALUE,
+    }
+}
 
 #[derive(Clone, Copy)]
 #[repr(transparent)]
@@ -18,6 +58,35 @@ impl RStruct {
         unsafe {
             (val.rb_type() == ruby_value_type::RUBY_T_STRUCT)
                 .then(|| Self(NonZeroValue::new_unchecked(val)))
+        }
+    }
+
+    fn as_internal(self) -> NonNull<sys::RStruct> {
+        // safe as inner value is NonZero
+        unsafe { NonNull::new_unchecked(self.0.get().as_rb_value() as *mut _) }
+    }
+
+    /// # Safety
+    ///
+    /// Ruby may modify or free the memory backing the returned slice, the
+    /// caller must ensure this does not happen.
+    pub unsafe fn as_slice(&self) -> &[Value] {
+        self.as_slice_unconstrained()
+    }
+
+    pub(crate) unsafe fn as_slice_unconstrained<'a>(self) -> &'a [Value] {
+        debug_assert_value!(self);
+        let r_basic = self.r_basic_unchecked();
+        let flags = r_basic.as_ref().flags;
+        if (flags & sys::EMBED_LEN_MASK as VALUE) != 0 {
+            let len = (flags & sys::EMBED_LEN_MASK as VALUE) >> sys::EMBED_LEN_SHIFT as VALUE;
+            slice::from_raw_parts(
+                &self.as_internal().as_ref().as_.ary as *const VALUE as *const Value,
+                len as usize,
+            )
+        } else {
+            let h = self.as_internal().as_ref().as_.heap;
+            slice::from_raw_parts(h.ptr as *const Value, h.len as usize)
         }
     }
 }
@@ -50,7 +119,7 @@ impl From<RStruct> for Value {
 
 impl Object for RStruct {}
 
-pub fn define_struct<T>(name: &str, members: T) -> Result<RClass, Error>
+pub fn define_struct<T>(name: Option<&str>, members: T) -> Result<RClass, Error>
 where
     T: StructMembers,
 {
@@ -61,19 +130,19 @@ mod private {
     use super::*;
 
     pub trait StructMembers {
-        fn define(self, name: &str) -> Result<RClass, Error>;
+        fn define(self, name: Option<&str>) -> Result<RClass, Error>;
     }
 }
 use private::StructMembers;
 
 impl StructMembers for (&str,) {
-    fn define(self, name: &str) -> Result<RClass, Error> {
-        let name = CString::new(name).unwrap();
+    fn define(self, name: Option<&str>) -> Result<RClass, Error> {
+        let name = name.map(|n| CString::new(n).unwrap());
         let arg0 = CString::new(self.0).unwrap();
         unsafe {
             protect(|| {
                 Value::new(rb_struct_define(
-                    name.as_ptr(),
+                    name.as_ref().map(|n| n.as_ptr()).unwrap_or_else(null),
                     arg0.as_ptr(),
                     null::<c_char>(),
                 ))
@@ -84,14 +153,14 @@ impl StructMembers for (&str,) {
 }
 
 impl StructMembers for (&str, &str) {
-    fn define(self, name: &str) -> Result<RClass, Error> {
-        let name = CString::new(name).unwrap();
+    fn define(self, name: Option<&str>) -> Result<RClass, Error> {
+        let name = name.map(|n| CString::new(n).unwrap());
         let arg0 = CString::new(self.0).unwrap();
         let arg1 = CString::new(self.1).unwrap();
         unsafe {
             protect(|| {
                 Value::new(rb_struct_define(
-                    name.as_ptr(),
+                    name.as_ref().map(|n| n.as_ptr()).unwrap_or_else(null),
                     arg0.as_ptr(),
                     arg1.as_ptr(),
                     null::<c_char>(),
@@ -103,15 +172,15 @@ impl StructMembers for (&str, &str) {
 }
 
 impl StructMembers for (&str, &str, &str) {
-    fn define(self, name: &str) -> Result<RClass, Error> {
-        let name = CString::new(name).unwrap();
+    fn define(self, name: Option<&str>) -> Result<RClass, Error> {
+        let name = name.map(|n| CString::new(n).unwrap());
         let arg0 = CString::new(self.0).unwrap();
         let arg1 = CString::new(self.1).unwrap();
         let arg2 = CString::new(self.2).unwrap();
         unsafe {
             protect(|| {
                 Value::new(rb_struct_define(
-                    name.as_ptr(),
+                    name.as_ref().map(|n| n.as_ptr()).unwrap_or_else(null),
                     arg0.as_ptr(),
                     arg1.as_ptr(),
                     arg2.as_ptr(),
@@ -124,8 +193,8 @@ impl StructMembers for (&str, &str, &str) {
 }
 
 impl StructMembers for (&str, &str, &str, &str) {
-    fn define(self, name: &str) -> Result<RClass, Error> {
-        let name = CString::new(name).unwrap();
+    fn define(self, name: Option<&str>) -> Result<RClass, Error> {
+        let name = name.map(|n| CString::new(n).unwrap());
         let arg0 = CString::new(self.0).unwrap();
         let arg1 = CString::new(self.1).unwrap();
         let arg2 = CString::new(self.2).unwrap();
@@ -133,7 +202,7 @@ impl StructMembers for (&str, &str, &str, &str) {
         unsafe {
             protect(|| {
                 Value::new(rb_struct_define(
-                    name.as_ptr(),
+                    name.as_ref().map(|n| n.as_ptr()).unwrap_or_else(null),
                     arg0.as_ptr(),
                     arg1.as_ptr(),
                     arg2.as_ptr(),
@@ -147,8 +216,8 @@ impl StructMembers for (&str, &str, &str, &str) {
 }
 
 impl StructMembers for (&str, &str, &str, &str, &str) {
-    fn define(self, name: &str) -> Result<RClass, Error> {
-        let name = CString::new(name).unwrap();
+    fn define(self, name: Option<&str>) -> Result<RClass, Error> {
+        let name = name.map(|n| CString::new(n).unwrap());
         let arg0 = CString::new(self.0).unwrap();
         let arg1 = CString::new(self.1).unwrap();
         let arg2 = CString::new(self.2).unwrap();
@@ -157,7 +226,7 @@ impl StructMembers for (&str, &str, &str, &str, &str) {
         unsafe {
             protect(|| {
                 Value::new(rb_struct_define(
-                    name.as_ptr(),
+                    name.as_ref().map(|n| n.as_ptr()).unwrap_or_else(null),
                     arg0.as_ptr(),
                     arg1.as_ptr(),
                     arg2.as_ptr(),
@@ -172,8 +241,8 @@ impl StructMembers for (&str, &str, &str, &str, &str) {
 }
 
 impl StructMembers for (&str, &str, &str, &str, &str, &str) {
-    fn define(self, name: &str) -> Result<RClass, Error> {
-        let name = CString::new(name).unwrap();
+    fn define(self, name: Option<&str>) -> Result<RClass, Error> {
+        let name = name.map(|n| CString::new(n).unwrap());
         let arg0 = CString::new(self.0).unwrap();
         let arg1 = CString::new(self.1).unwrap();
         let arg2 = CString::new(self.2).unwrap();
@@ -183,7 +252,7 @@ impl StructMembers for (&str, &str, &str, &str, &str, &str) {
         unsafe {
             protect(|| {
                 Value::new(rb_struct_define(
-                    name.as_ptr(),
+                    name.as_ref().map(|n| n.as_ptr()).unwrap_or_else(null),
                     arg0.as_ptr(),
                     arg1.as_ptr(),
                     arg2.as_ptr(),
@@ -199,8 +268,8 @@ impl StructMembers for (&str, &str, &str, &str, &str, &str) {
 }
 
 impl StructMembers for (&str, &str, &str, &str, &str, &str, &str) {
-    fn define(self, name: &str) -> Result<RClass, Error> {
-        let name = CString::new(name).unwrap();
+    fn define(self, name: Option<&str>) -> Result<RClass, Error> {
+        let name = name.map(|n| CString::new(n).unwrap());
         let arg0 = CString::new(self.0).unwrap();
         let arg1 = CString::new(self.1).unwrap();
         let arg2 = CString::new(self.2).unwrap();
@@ -211,7 +280,7 @@ impl StructMembers for (&str, &str, &str, &str, &str, &str, &str) {
         unsafe {
             protect(|| {
                 Value::new(rb_struct_define(
-                    name.as_ptr(),
+                    name.as_ref().map(|n| n.as_ptr()).unwrap_or_else(null),
                     arg0.as_ptr(),
                     arg1.as_ptr(),
                     arg2.as_ptr(),
@@ -228,8 +297,8 @@ impl StructMembers for (&str, &str, &str, &str, &str, &str, &str) {
 }
 
 impl StructMembers for (&str, &str, &str, &str, &str, &str, &str, &str) {
-    fn define(self, name: &str) -> Result<RClass, Error> {
-        let name = CString::new(name).unwrap();
+    fn define(self, name: Option<&str>) -> Result<RClass, Error> {
+        let name = name.map(|n| CString::new(n).unwrap());
         let arg0 = CString::new(self.0).unwrap();
         let arg1 = CString::new(self.1).unwrap();
         let arg2 = CString::new(self.2).unwrap();
@@ -241,7 +310,7 @@ impl StructMembers for (&str, &str, &str, &str, &str, &str, &str, &str) {
         unsafe {
             protect(|| {
                 Value::new(rb_struct_define(
-                    name.as_ptr(),
+                    name.as_ref().map(|n| n.as_ptr()).unwrap_or_else(null),
                     arg0.as_ptr(),
                     arg1.as_ptr(),
                     arg2.as_ptr(),
@@ -259,8 +328,8 @@ impl StructMembers for (&str, &str, &str, &str, &str, &str, &str, &str) {
 }
 
 impl StructMembers for (&str, &str, &str, &str, &str, &str, &str, &str, &str) {
-    fn define(self, name: &str) -> Result<RClass, Error> {
-        let name = CString::new(name).unwrap();
+    fn define(self, name: Option<&str>) -> Result<RClass, Error> {
+        let name = name.map(|n| CString::new(n).unwrap());
         let arg0 = CString::new(self.0).unwrap();
         let arg1 = CString::new(self.1).unwrap();
         let arg2 = CString::new(self.2).unwrap();
@@ -273,7 +342,7 @@ impl StructMembers for (&str, &str, &str, &str, &str, &str, &str, &str, &str) {
         unsafe {
             protect(|| {
                 Value::new(rb_struct_define(
-                    name.as_ptr(),
+                    name.as_ref().map(|n| n.as_ptr()).unwrap_or_else(null),
                     arg0.as_ptr(),
                     arg1.as_ptr(),
                     arg2.as_ptr(),
@@ -292,8 +361,8 @@ impl StructMembers for (&str, &str, &str, &str, &str, &str, &str, &str, &str) {
 }
 
 impl StructMembers for (&str, &str, &str, &str, &str, &str, &str, &str, &str, &str) {
-    fn define(self, name: &str) -> Result<RClass, Error> {
-        let name = CString::new(name).unwrap();
+    fn define(self, name: Option<&str>) -> Result<RClass, Error> {
+        let name = name.map(|n| CString::new(n).unwrap());
         let arg0 = CString::new(self.0).unwrap();
         let arg1 = CString::new(self.1).unwrap();
         let arg2 = CString::new(self.2).unwrap();
@@ -307,7 +376,7 @@ impl StructMembers for (&str, &str, &str, &str, &str, &str, &str, &str, &str, &s
         unsafe {
             protect(|| {
                 Value::new(rb_struct_define(
-                    name.as_ptr(),
+                    name.as_ref().map(|n| n.as_ptr()).unwrap_or_else(null),
                     arg0.as_ptr(),
                     arg1.as_ptr(),
                     arg2.as_ptr(),
@@ -341,8 +410,8 @@ impl StructMembers
         &str,
     )
 {
-    fn define(self, name: &str) -> Result<RClass, Error> {
-        let name = CString::new(name).unwrap();
+    fn define(self, name: Option<&str>) -> Result<RClass, Error> {
+        let name = name.map(|n| CString::new(n).unwrap());
         let arg0 = CString::new(self.0).unwrap();
         let arg1 = CString::new(self.1).unwrap();
         let arg2 = CString::new(self.2).unwrap();
@@ -357,7 +426,7 @@ impl StructMembers
         unsafe {
             protect(|| {
                 Value::new(rb_struct_define(
-                    name.as_ptr(),
+                    name.as_ref().map(|n| n.as_ptr()).unwrap_or_else(null),
                     arg0.as_ptr(),
                     arg1.as_ptr(),
                     arg2.as_ptr(),
@@ -393,8 +462,8 @@ impl StructMembers
         &str,
     )
 {
-    fn define(self, name: &str) -> Result<RClass, Error> {
-        let name = CString::new(name).unwrap();
+    fn define(self, name: Option<&str>) -> Result<RClass, Error> {
+        let name = name.map(|n| CString::new(n).unwrap());
         let arg0 = CString::new(self.0).unwrap();
         let arg1 = CString::new(self.1).unwrap();
         let arg2 = CString::new(self.2).unwrap();
@@ -410,7 +479,7 @@ impl StructMembers
         unsafe {
             protect(|| {
                 Value::new(rb_struct_define(
-                    name.as_ptr(),
+                    name.as_ref().map(|n| n.as_ptr()).unwrap_or_else(null),
                     arg0.as_ptr(),
                     arg1.as_ptr(),
                     arg2.as_ptr(),

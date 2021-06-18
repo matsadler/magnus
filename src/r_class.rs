@@ -1,11 +1,11 @@
-use std::{fmt, ops::Deref};
+use std::{fmt, ops::Deref, os::raw::c_int};
 
 use crate::{
-    error::Error,
+    error::{protect, Error},
     module::Module,
     object::Object,
-    ruby_sys::{self, ruby_value_type, VALUE},
-    try_convert::TryConvert,
+    ruby_sys::{self, rb_class_new_instance, ruby_value_type, VALUE},
+    try_convert::{ArgList, TryConvert},
     value::{NonZeroValue, Value},
 };
 
@@ -25,6 +25,23 @@ impl RClass {
     #[inline]
     pub(crate) unsafe fn from_rb_value_unchecked(val: VALUE) -> Self {
         Self(NonZeroValue::new_unchecked(Value::new(val)))
+    }
+
+    pub fn new_instance<T>(self, args: T) -> Result<Value, Error>
+    where
+        T: ArgList,
+    {
+        let args = args.into_arg_list();
+        let slice = args.as_ref();
+        unsafe {
+            protect(|| {
+                Value::new(rb_class_new_instance(
+                    slice.len() as c_int,
+                    slice.as_ptr() as *const VALUE,
+                    self.as_rb_value(),
+                ))
+            })
+        }
     }
 }
 
