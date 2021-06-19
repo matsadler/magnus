@@ -11,9 +11,14 @@ use crate::{
     debug_assert_value,
     error::{protect, Error},
     object::Object,
+    r_array::RArray,
     r_class::RClass,
-    ruby_sys::{rb_struct_define, ruby_value_type, VALUE},
-    value::{NonZeroValue, Value},
+    ruby_sys::{
+        rb_struct_aref, rb_struct_aset, rb_struct_define, rb_struct_getmember, rb_struct_members,
+        rb_struct_size, ruby_value_type, VALUE,
+    },
+    try_convert::TryConvert,
+    value::{Id, NonZeroValue, Symbol, Value},
 };
 
 // Ruby provides some inline functions to get a pointer to the struct's
@@ -87,6 +92,92 @@ impl RStruct {
         } else {
             let h = self.as_internal().as_ref().as_.heap;
             slice::from_raw_parts(h.ptr as *const Value, h.len as usize)
+        }
+    }
+
+    pub fn get<T>(self, index: usize) -> Result<T, Error>
+    where
+        T: TryConvert,
+    {
+        unsafe {
+            let slice = self.as_slice();
+            slice
+                .get(index)
+                .ok_or_else(|| {
+                    Error::index_error(format!(
+                        "offset {} too large for struct(size:{})",
+                        index,
+                        slice.len()
+                    ))
+                })
+                .and_then(|v| v.try_convert())
+        }
+    }
+
+    pub fn aref<T, U>(self, index: T) -> Result<U, Error>
+    where
+        T: Into<Value>,
+        U: TryConvert,
+    {
+        let index = index.into();
+        unsafe {
+            protect(|| Value::new(rb_struct_aref(self.as_rb_value(), index.as_rb_value())))
+                .and_then(|v| v.try_convert())
+        }
+    }
+
+    pub fn aset<T, U>(self, index: T, val: U) -> Result<(), Error>
+    where
+        T: Into<Value>,
+        U: Into<Value>,
+    {
+        let index = index.into();
+        let val = val.into();
+        unsafe {
+            protect(|| {
+                Value::new(rb_struct_aset(
+                    self.as_rb_value(),
+                    index.as_rb_value(),
+                    val.as_rb_value(),
+                ))
+            })?;
+        }
+        Ok(())
+    }
+
+    pub fn size(self) -> usize {
+        unsafe {
+            Value::new(rb_struct_size(self.as_rb_value()))
+                .try_convert()
+                .unwrap()
+        }
+    }
+
+    pub fn members(self) -> Result<Vec<String>, Error> {
+        unsafe {
+            let array = RArray::from_rb_value_unchecked(rb_struct_members(self.as_rb_value()));
+            array
+                .as_slice()
+                .iter()
+                .map(|v| {
+                    Symbol::from_value(*v)
+                        .unwrap()
+                        .name()
+                        .map(ToOwned::to_owned)
+                })
+                .collect()
+        }
+    }
+
+    pub fn getmember<T, U>(self, id: T) -> Result<U, Error>
+    where
+        T: Into<Id>,
+        U: TryConvert,
+    {
+        let id = id.into();
+        unsafe {
+            protect(|| Value::new(rb_struct_getmember(self.as_rb_value(), id.as_rb_id())))
+                .and_then(|v| v.try_convert())
         }
     }
 }

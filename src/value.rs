@@ -22,10 +22,11 @@ use crate::{
     ruby_sys::{
         rb_any_to_s, rb_cFalseClass, rb_cFloat, rb_cInteger, rb_cNilClass, rb_cSymbol,
         rb_cTrueClass, rb_enumeratorize_with_size, rb_float_new, rb_float_value, rb_funcallv,
-        rb_gc_register_address, rb_gc_register_mark_object, rb_gc_unregister_address, rb_id2sym,
-        rb_inspect, rb_intern2, rb_ll2inum, rb_num2ll, rb_num2long, rb_num2short, rb_num2ull,
-        rb_num2ulong, rb_num2ushort, rb_obj_as_string, rb_obj_classname, rb_obj_is_kind_of,
-        rb_sym2id, rb_ull2inum, ruby_special_consts, ruby_value_type, RBasic, ID, VALUE,
+        rb_gc_register_address, rb_gc_register_mark_object, rb_gc_unregister_address, rb_id2name,
+        rb_id2sym, rb_inspect, rb_intern2, rb_ll2inum, rb_num2ll, rb_num2long, rb_num2short,
+        rb_num2ull, rb_num2ulong, rb_num2ushort, rb_obj_as_string, rb_obj_classname,
+        rb_obj_is_kind_of, rb_sym2id, rb_ull2inum, ruby_special_consts, ruby_value_type, RBasic,
+        ID, VALUE,
     },
     try_convert::{ArgList, TryConvert},
 };
@@ -901,6 +902,10 @@ impl Symbol {
     pub fn new<T: Into<Id>>(name: T) -> Self {
         name.into().into()
     }
+
+    pub fn name(self) -> Result<&'static str, Error> {
+        Id::from(self).name()
+    }
 }
 
 impl Deref for Symbol {
@@ -925,10 +930,7 @@ impl fmt::Debug for Symbol {
 
 impl From<Id> for Symbol {
     fn from(id: Id) -> Self {
-        unsafe {
-            // TODO checl does id2sym really always return a symbol
-            Self::from_rb_value_unchecked(rb_id2sym(id.0))
-        }
+        unsafe { Self::from_rb_value_unchecked(rb_id2sym(id.0)) }
     }
 }
 
@@ -957,6 +959,15 @@ pub struct Id(ID);
 impl Id {
     pub(crate) fn as_rb_id(self) -> ID {
         self.0
+    }
+
+    pub fn name(self) -> Result<&'static str, Error> {
+        unsafe {
+            let ptr = rb_id2name(self.as_rb_id());
+            let cstr = CStr::from_ptr(ptr);
+            cstr.to_str()
+                .map_err(|e| Error::encoding_error(e.to_string()))
+        }
     }
 }
 
