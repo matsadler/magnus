@@ -23,13 +23,6 @@ pub trait TryConvertOwned: TryConvert {
     }
 }
 
-impl TryConvert for Value {
-    #[inline]
-    fn try_convert(val: &Value) -> Result<Self, Error> {
-        Ok(*val)
-    }
-}
-
 impl<T> TryConvert for Option<T>
 where
     T: TryConvert,

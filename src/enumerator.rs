@@ -5,6 +5,7 @@ use crate::{
     object::Object,
     r_class::RClass,
     ruby_sys::{rb_cEnumerator, rb_eStopIteration, VALUE},
+    try_convert::TryConvert,
     value::{NonZeroValue, Value},
 };
 
@@ -68,3 +69,15 @@ impl From<Enumerator> for Value {
 }
 
 impl Object for Enumerator {}
+
+impl TryConvert for Enumerator {
+    #[inline]
+    fn try_convert(val: &Value) -> Result<Self, Error> {
+        Self::from_value(*val).ok_or_else(|| {
+            Error::type_error(format!(
+                "no implicit conversion of {} into Enumerator",
+                unsafe { val.classname() },
+            ))
+        })
+    }
+}

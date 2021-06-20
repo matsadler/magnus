@@ -1,7 +1,9 @@
 use std::{fmt, ops::Deref};
 
 use crate::{
+    error::Error,
     ruby_sys::ruby_value_type,
+    try_convert::TryConvert,
     value::{NonZeroValue, Value},
 };
 
@@ -42,5 +44,17 @@ impl fmt::Debug for RRational {
 impl From<RRational> for Value {
     fn from(val: RRational) -> Self {
         *val
+    }
+}
+
+impl TryConvert for RRational {
+    #[inline]
+    fn try_convert(val: &Value) -> Result<Self, Error> {
+        Self::from_value(*val).ok_or_else(|| {
+            Error::type_error(format!(
+                "no implicit conversion of {} into Rational",
+                unsafe { val.classname() },
+            ))
+        })
     }
 }

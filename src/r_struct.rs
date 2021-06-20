@@ -207,6 +207,18 @@ impl From<RStruct> for Value {
 
 impl Object for RStruct {}
 
+impl TryConvert for RStruct {
+    #[inline]
+    fn try_convert(val: &Value) -> Result<Self, Error> {
+        Self::from_value(*val).ok_or_else(|| {
+            Error::type_error(format!(
+                "no implicit conversion of {} into Struct",
+                unsafe { val.classname() },
+            ))
+        })
+    }
+}
+
 pub fn define_struct<T>(name: Option<&str>, members: T) -> Result<RClass, Error>
 where
     T: StructMembers,

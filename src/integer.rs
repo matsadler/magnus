@@ -9,7 +9,7 @@ use crate::{
     value::{Fixnum, NonZeroValue, Value},
 };
 
-enum IntegerType {
+pub(crate) enum IntegerType {
     Fixnum(Fixnum),
     Bignum(RBignum),
 }
@@ -36,7 +36,7 @@ impl Integer {
         Self(NonZeroValue::new_unchecked(Value::new(val)))
     }
 
-    fn integer_type(self) -> IntegerType {
+    pub(crate) fn integer_type(self) -> IntegerType {
         unsafe {
             if self.as_rb_value() & ruby_special_consts::RUBY_FIXNUM_FLAG as VALUE != 0 {
                 IntegerType::Fixnum(Fixnum::from_rb_value_unchecked(self.as_rb_value()))

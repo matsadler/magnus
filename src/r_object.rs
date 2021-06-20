@@ -1,8 +1,10 @@
 use std::{fmt, ops::Deref};
 
 use crate::{
+    error::Error,
     object::Object,
     ruby_sys::ruby_value_type,
+    try_convert::TryConvert,
     value::{NonZeroValue, Value},
 };
 
@@ -47,3 +49,15 @@ impl From<RObject> for Value {
 }
 
 impl Object for RObject {}
+
+impl TryConvert for RObject {
+    #[inline]
+    fn try_convert(val: &Value) -> Result<Self, Error> {
+        Self::from_value(*val).ok_or_else(|| {
+            Error::type_error(format!(
+                "no implicit conversion of {} into Object",
+                unsafe { val.classname() },
+            ))
+        })
+    }
+}

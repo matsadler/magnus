@@ -13,7 +13,7 @@ use crate::{
     enumerator::Enumerator,
     error::{protect, Error},
     float::Float,
-    integer::Integer,
+    integer::{Integer, IntegerType},
     module::Module,
     r_bignum::RBignum,
     r_class::RClass,
@@ -29,7 +29,7 @@ use crate::{
         ID, VALUE,
     },
     symbol::Symbol,
-    try_convert::{ArgList, TryConvert},
+    try_convert::{ArgList, TryConvert, TryConvertOwned},
 };
 
 // This isn't infallible, if the original object was gc'd and that slot
@@ -413,6 +413,13 @@ impl From<f64> for Value {
     }
 }
 
+impl TryConvert for Value {
+    #[inline]
+    fn try_convert(val: &Value) -> Result<Self, Error> {
+        Ok(*val)
+    }
+}
+
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub(crate) struct NonZeroValue(NonZeroUsize);
@@ -547,6 +554,19 @@ impl From<Qfalse> for Value {
     }
 }
 
+impl TryConvert for Qfalse {
+    #[inline]
+    fn try_convert(val: &Value) -> Result<Self, Error> {
+        Self::from_value(*val).ok_or_else(|| {
+            Error::type_error(format!(
+                "no implicit conversion of {} into FalseClass",
+                unsafe { val.classname() },
+            ))
+        })
+    }
+}
+impl TryConvertOwned for Qfalse {}
+
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct Qnil(NonZeroValue);
@@ -611,6 +631,19 @@ where
     }
 }
 
+impl TryConvert for Qnil {
+    #[inline]
+    fn try_convert(val: &Value) -> Result<Self, Error> {
+        Self::from_value(*val).ok_or_else(|| {
+            Error::type_error(format!(
+                "no implicit conversion of {} into NilClass",
+                unsafe { val.classname() },
+            ))
+        })
+    }
+}
+impl TryConvertOwned for Qnil {}
+
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct Qtrue(NonZeroValue);
@@ -666,6 +699,19 @@ impl From<bool> for Value {
         }
     }
 }
+
+impl TryConvert for Qtrue {
+    #[inline]
+    fn try_convert(val: &Value) -> Result<Self, Error> {
+        Self::from_value(*val).ok_or_else(|| {
+            Error::type_error(format!(
+                "no implicit conversion of {} into TrueClass",
+                unsafe { val.classname() },
+            ))
+        })
+    }
+}
+impl TryConvertOwned for Qtrue {}
 
 #[derive(Clone, Copy)]
 #[repr(transparent)]
@@ -883,6 +929,17 @@ impl From<Fixnum> for Value {
     }
 }
 
+impl TryConvert for Fixnum {
+    #[inline]
+    fn try_convert(val: &Value) -> Result<Self, Error> {
+        match val.try_convert::<Integer>()?.integer_type() {
+            IntegerType::Fixnum(fix) => Ok(fix),
+            IntegerType::Bignum(_) => Err(Error::range_error("integer to big for fixnum")),
+        }
+    }
+}
+impl TryConvertOwned for Fixnum {}
+
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct StaticSymbol(NonZeroValue);
@@ -954,6 +1011,14 @@ impl From<StaticSymbol> for Value {
         *val
     }
 }
+
+impl TryConvert for StaticSymbol {
+    #[inline]
+    fn try_convert(val: &Value) -> Result<Self, Error> {
+        val.try_convert::<Symbol>().map(|s| s.to_static())
+    }
+}
+impl TryConvertOwned for StaticSymbol {}
 
 #[derive(Clone, Copy, Debug)]
 #[repr(transparent)]
@@ -1052,3 +1117,16 @@ impl From<Flonum> for Value {
         *val
     }
 }
+
+impl TryConvert for Flonum {
+    #[inline]
+    fn try_convert(val: &Value) -> Result<Self, Error> {
+        let float = val.try_convert::<Float>()?;
+        if let Some(flonum) = Flonum::from_value(*float) {
+            Ok(flonum)
+        } else {
+            Err(Error::range_error("float out of range for flonum"))
+        }
+    }
+}
+impl TryConvertOwned for Flonum {}

@@ -2,10 +2,12 @@ use std::{ffi::CString, fmt, mem::transmute, ops::Deref};
 
 use crate::{
     debug_assert_value,
+    error::Error,
     method::Method,
     module::Module,
     object::Object,
     ruby_sys::{rb_define_module_function, ruby_value_type},
+    try_convert::TryConvert,
     value::{NonZeroValue, Value},
 };
 
@@ -67,3 +69,15 @@ impl From<RModule> for Value {
 
 impl Object for RModule {}
 impl Module for RModule {}
+
+impl TryConvert for RModule {
+    #[inline]
+    fn try_convert(val: &Value) -> Result<Self, Error> {
+        Self::from_value(*val).ok_or_else(|| {
+            Error::type_error(format!(
+                "no implicit conversion of {} into Module",
+                unsafe { val.classname() },
+            ))
+        })
+    }
+}

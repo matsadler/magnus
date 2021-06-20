@@ -10,6 +10,7 @@ use crate::{
     error::{protect, Error},
     r_string::RString,
     ruby_sys::{rb_id2sym, rb_intern2, rb_sym2str, rb_to_symbol, ruby_value_type, VALUE},
+    try_convert::TryConvert,
     value::{Id, NonZeroValue, StaticSymbol, Value},
 };
 
@@ -113,5 +114,17 @@ impl From<String> for Symbol {
 impl From<Symbol> for Value {
     fn from(val: Symbol) -> Self {
         *val
+    }
+}
+
+impl TryConvert for Symbol {
+    #[inline]
+    fn try_convert(val: &Value) -> Result<Self, Error> {
+        Self::from_value(*val).ok_or_else(|| {
+            Error::type_error(format!(
+                "no implicit conversion of {} into Symbol",
+                unsafe { val.classname() },
+            ))
+        })
     }
 }

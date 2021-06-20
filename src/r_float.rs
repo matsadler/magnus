@@ -2,7 +2,10 @@ use std::{fmt, ops::Deref};
 
 use crate::{
     debug_assert_value,
+    error::Error,
+    float::Float,
     ruby_sys::{rb_float_new, rb_float_value, ruby_value_type, VALUE},
+    try_convert::TryConvert,
     value::{Flonum, NonZeroValue, Value},
 };
 
@@ -60,5 +63,17 @@ impl fmt::Debug for RFloat {
 impl From<RFloat> for Value {
     fn from(val: RFloat) -> Self {
         *val
+    }
+}
+
+impl TryConvert for RFloat {
+    #[inline]
+    fn try_convert(val: &Value) -> Result<Self, Error> {
+        let float = val.try_convert::<Float>()?;
+        if let Some(rfloat) = RFloat::from_value(*float) {
+            Ok(rfloat)
+        } else {
+            Err(Error::range_error("float in range for flonum"))
+        }
     }
 }

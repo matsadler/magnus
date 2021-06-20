@@ -7,10 +7,12 @@ use std::{
 use crate::{
     debug_assert_value,
     error::{protect, Error},
+    integer::{Integer, IntegerType},
     ruby_sys::{
         rb_ll2inum, rb_num2ll, rb_num2long, rb_num2ull, rb_num2ulong, rb_ull2inum, ruby_fl_type,
         ruby_value_type, VALUE,
     },
+    try_convert::TryConvert,
     value::{Fixnum, NonZeroValue, Qnil, Value},
 };
 
@@ -175,5 +177,15 @@ impl fmt::Debug for RBignum {
 impl From<RBignum> for Value {
     fn from(val: RBignum) -> Self {
         *val
+    }
+}
+
+impl TryConvert for RBignum {
+    #[inline]
+    fn try_convert(val: &Value) -> Result<Self, Error> {
+        match val.try_convert::<Integer>()?.integer_type() {
+            IntegerType::Fixnum(_) => Err(Error::range_error("integer to small for bignum")),
+            IntegerType::Bignum(big) => Ok(big),
+        }
     }
 }
