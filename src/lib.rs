@@ -24,6 +24,7 @@ mod r_string;
 pub mod r_struct;
 pub mod r_typed_data;
 pub mod ruby_sys;
+mod symbol;
 mod try_convert;
 pub mod value;
 
@@ -38,7 +39,7 @@ use ruby_sys::{
     rb_eval_string_protect, VALUE,
 };
 
-pub use value::{Fixnum, Flonum, Qfalse, Qnil, Qtrue, Symbol, Value};
+pub use value::{Fixnum, Flonum, Qfalse, Qnil, Qtrue, StaticSymbol, Value};
 pub use {
     enumerator::Enumerator,
     error::Error,
@@ -62,6 +63,7 @@ pub use {
     r_string::RString,
     r_struct::RStruct,
     r_typed_data::{DataType, DataTypeFunctions, RTypedData, TypedData},
+    symbol::Symbol,
     try_convert::{ArgList, TryConvert},
 };
 

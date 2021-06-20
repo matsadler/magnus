@@ -154,6 +154,7 @@ impl RString {
     ///
     /// Ruby may modify or free the memory backing the returned str, the caller
     /// must ensure this does not happen.
+    #[allow(clippy::wrong_self_convention)]
     pub unsafe fn to_string_lossy(&self) -> Cow<'_, str> {
         String::from_utf8_lossy(self.as_slice())
     }

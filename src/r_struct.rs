@@ -1,4 +1,5 @@
 use std::{
+    borrow::Cow,
     ffi::CString,
     fmt,
     ops::Deref,
@@ -17,8 +18,9 @@ use crate::{
         rb_struct_aref, rb_struct_aset, rb_struct_define, rb_struct_getmember, rb_struct_members,
         rb_struct_size, ruby_value_type, VALUE,
     },
+    symbol::Symbol,
     try_convert::TryConvert,
-    value::{Id, NonZeroValue, Symbol, Value},
+    value::{Id, NonZeroValue, Value},
 };
 
 // Ruby provides some inline functions to get a pointer to the struct's
@@ -153,18 +155,13 @@ impl RStruct {
         }
     }
 
-    pub fn members(self) -> Result<Vec<String>, Error> {
+    pub fn members(self) -> Result<Vec<Cow<'static, str>>, Error> {
         unsafe {
             let array = RArray::from_rb_value_unchecked(rb_struct_members(self.as_rb_value()));
             array
                 .as_slice()
                 .iter()
-                .map(|v| {
-                    Symbol::from_value(*v)
-                        .unwrap()
-                        .name()
-                        .map(ToOwned::to_owned)
-                })
+                .map(|v| Symbol::from_value(*v).unwrap().name())
                 .collect()
         }
     }

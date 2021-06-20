@@ -28,6 +28,7 @@ use crate::{
         rb_obj_is_kind_of, rb_sym2id, rb_ull2inum, ruby_special_consts, ruby_value_type, RBasic,
         ID, VALUE,
     },
+    symbol::Symbol,
     try_convert::{ArgList, TryConvert},
 };
 
@@ -113,7 +114,7 @@ impl Value {
     }
 
     #[inline]
-    fn is_symbol(self) -> bool {
+    pub(crate) fn is_static_symbol(self) -> bool {
         const MASK: usize = !(usize::MAX << ruby_special_consts::RUBY_SPECIAL_SHIFT as usize);
         self.as_rb_value() as usize & MASK == ruby_special_consts::RUBY_SYMBOL_FLAG as usize
     }
@@ -148,7 +149,7 @@ impl Value {
                     ruby_value_type::RUBY_T_UNDEF
                 } else if self.is_fixnum() {
                     ruby_value_type::RUBY_T_FIXNUM
-                } else if self.is_symbol() {
+                } else if self.is_static_symbol() {
                     ruby_value_type::RUBY_T_SYMBOL
                 } else if self.is_flonum() {
                     ruby_value_type::RUBY_T_FLOAT
@@ -174,7 +175,7 @@ impl Value {
                         panic!("undef does not have a class")
                     } else if self.is_fixnum() {
                         RClass::from_rb_value_unchecked(rb_cInteger)
-                    } else if self.is_symbol() {
+                    } else if self.is_static_symbol() {
                         RClass::from_rb_value_unchecked(rb_cSymbol)
                     } else if self.is_flonum() {
                         RClass::from_rb_value_unchecked(rb_cFloat)
@@ -238,6 +239,7 @@ impl Value {
     ///
     /// Ruby may modify or free the memory backing the returned str, the caller
     /// must ensure this does not happen.
+    #[allow(clippy::wrong_self_convention)]
     pub unsafe fn to_s(&self) -> Result<Cow<str>, Error> {
         if let Some(s) = RString::ref_from_value(self) {
             if s.is_utf8_compatible_encoding() {
@@ -254,6 +256,7 @@ impl Value {
     ///
     /// Ruby may modify or free the memory backing the returned str, the caller
     /// must ensure this does not happen.
+    #[allow(clippy::wrong_self_convention)]
     pub(crate) unsafe fn to_s_infallible(&self) -> Cow<str> {
         match self.to_s() {
             Ok(v) => v,
@@ -882,13 +885,13 @@ impl From<Fixnum> for Value {
 
 #[derive(Clone, Copy)]
 #[repr(transparent)]
-pub struct Symbol(NonZeroValue);
+pub struct StaticSymbol(NonZeroValue);
 
-impl Symbol {
+impl StaticSymbol {
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
         unsafe {
-            val.is_symbol()
+            val.is_static_symbol()
                 .then(|| Self(NonZeroValue::new_unchecked(val)))
         }
     }
@@ -908,7 +911,7 @@ impl Symbol {
     }
 }
 
-impl Deref for Symbol {
+impl Deref for StaticSymbol {
     type Target = Value;
 
     fn deref(&self) -> &Self::Target {
@@ -916,38 +919,38 @@ impl Deref for Symbol {
     }
 }
 
-impl fmt::Display for Symbol {
+impl fmt::Display for StaticSymbol {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", unsafe { self.to_s_infallible() })
     }
 }
 
-impl fmt::Debug for Symbol {
+impl fmt::Debug for StaticSymbol {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.inspect())
     }
 }
 
-impl From<Id> for Symbol {
+impl From<Id> for StaticSymbol {
     fn from(id: Id) -> Self {
-        unsafe { Self::from_rb_value_unchecked(rb_id2sym(id.0)) }
+        unsafe { Self::from_rb_value_unchecked(rb_id2sym(id.as_rb_id())) }
     }
 }
 
-impl From<&str> for Symbol {
+impl From<&str> for StaticSymbol {
     fn from(s: &str) -> Self {
         Id::from(s).into()
     }
 }
 
-impl From<String> for Symbol {
+impl From<String> for StaticSymbol {
     fn from(s: String) -> Self {
         Id::from(s).into()
     }
 }
 
-impl From<Symbol> for Value {
-    fn from(val: Symbol) -> Self {
+impl From<StaticSymbol> for Value {
+    fn from(val: StaticSymbol) -> Self {
         *val
     }
 }
@@ -980,6 +983,12 @@ impl From<&str> for Id {
 impl From<String> for Id {
     fn from(s: String) -> Self {
         s.as_str().into()
+    }
+}
+
+impl From<StaticSymbol> for Id {
+    fn from(sym: StaticSymbol) -> Self {
+        Self(unsafe { rb_sym2id(sym.as_rb_value()) })
     }
 }
 
