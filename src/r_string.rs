@@ -14,8 +14,8 @@ use crate::{
     object::Object,
     ruby_sys::{
         self, rb_enc_associate_index, rb_enc_get, rb_enc_get_index, rb_str_buf_append,
-        rb_str_buf_new, rb_str_cat, rb_str_conv_enc, rb_str_new, rb_str_to_str,
-        rb_usascii_encindex, rb_utf8_encindex, rb_utf8_encoding, rb_utf8_str_new,
+        rb_str_buf_new, rb_str_cat, rb_str_conv_enc, rb_str_new, rb_str_to_interned_str,
+        rb_str_to_str, rb_usascii_encindex, rb_utf8_encindex, rb_utf8_encoding, rb_utf8_str_new,
         ruby_rstring_consts, ruby_rstring_flags, ruby_value_type, VALUE,
     },
     try_convert::TryConvert,
@@ -170,6 +170,27 @@ impl RString {
             .map_err(|e| Error::encoding_error(format!("{}", e)))
     }
 
+    pub fn is_interned(self) -> bool {
+        unsafe {
+            self.r_basic_unchecked().as_ref().flags & ruby_rstring_flags::RSTRING_FSTR as VALUE != 0
+        }
+    }
+
+    /// Returns `Some(FString)` if self is interned, `None` otherwise.
+    pub fn as_interned_str(self) -> Option<FString> {
+        self.is_interned().then(|| FString(self))
+    }
+
+    /// Interns self and returns a FString wrapper. Be aware that once interned
+    /// a string will never be garbage collected.
+    pub fn to_interned_str(self) -> FString {
+        unsafe {
+            FString(RString::from_rb_value_unchecked(rb_str_to_interned_str(
+                self.as_rb_value(),
+            )))
+        }
+    }
+
     pub fn append(self, other: Self) -> Result<(), Error> {
         unsafe {
             protect(|| Value::new(rb_str_buf_append(self.as_rb_value(), other.as_rb_value())))?;
@@ -252,5 +273,45 @@ impl TryConvert for RString {
                 .map(|res| Self::from_rb_value_unchecked(res.as_rb_value())),
             }
         }
+    }
+}
+
+#[derive(Clone, Copy)]
+#[repr(transparent)]
+pub struct FString(RString);
+
+impl FString {
+    pub fn as_r_string(self) -> RString {
+        self.0
+    }
+
+    pub fn as_slice(self) -> &'static [u8] {
+        unsafe { self.as_r_string().as_slice_unconstrained() }
+    }
+
+    pub fn as_str(self) -> Result<&'static str, Error> {
+        unsafe { self.as_r_string().as_str_unconstrained() }
+    }
+
+    pub fn to_string_lossy(self) -> Cow<'static, str> {
+        String::from_utf8_lossy(self.as_slice())
+    }
+}
+
+impl fmt::Display for FString {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", unsafe { self.as_r_string().to_s_infallible() })
+    }
+}
+
+impl fmt::Debug for FString {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.as_r_string().inspect())
+    }
+}
+
+impl From<FString> for Value {
+    fn from(val: FString) -> Self {
+        *val.as_r_string()
     }
 }
