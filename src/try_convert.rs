@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use crate::{
     debug_assert_value,
     error::{protect, Error},
@@ -5,7 +7,7 @@ use crate::{
     r_array::RArray,
     r_hash::RHash,
     r_string::RString,
-    ruby_sys::rb_num2dbl,
+    ruby_sys::{rb_get_path, rb_num2dbl},
     value::{Qnil, Value},
 };
 
@@ -675,6 +677,19 @@ where
     V: TryConvertOwned,
 {
 }
+
+impl TryConvert for PathBuf {
+    #[inline]
+    fn try_convert(val: &Value) -> Result<Self, Error> {
+        unsafe {
+            let val = protect(|| Value::new(rb_get_path(val.as_rb_value())))?;
+            RString::from_rb_value_unchecked(val.as_rb_value())
+                .to_string()
+                .map(Into::into)
+        }
+    }
+}
+impl TryConvertOwned for PathBuf {}
 
 pub trait ArgList {
     type Output: AsRef<[Value]>;
