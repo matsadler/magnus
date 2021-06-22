@@ -24,9 +24,9 @@ use crate::{
         rb_cTrueClass, rb_enumeratorize_with_size, rb_float_new, rb_float_value, rb_funcallv,
         rb_gc_register_address, rb_gc_register_mark_object, rb_gc_unregister_address, rb_id2name,
         rb_id2sym, rb_inspect, rb_intern2, rb_ll2inum, rb_num2ll, rb_num2long, rb_num2short,
-        rb_num2ull, rb_num2ulong, rb_num2ushort, rb_obj_as_string, rb_obj_classname,
-        rb_obj_is_kind_of, rb_sym2id, rb_ull2inum, ruby_special_consts, ruby_value_type, RBasic,
-        ID, VALUE,
+        rb_num2ull, rb_num2ulong, rb_num2ushort, rb_obj_as_string, rb_obj_classname, rb_obj_freeze,
+        rb_obj_is_kind_of, rb_sym2id, rb_ull2inum, ruby_fl_type, ruby_special_consts,
+        ruby_value_type, RBasic, ID, VALUE,
     },
     symbol::Symbol,
     try_convert::{ArgList, TryConvert, TryConvertOwned},
@@ -196,6 +196,30 @@ impl Value {
         debug_assert_value!(self);
         // safe ffi to Ruby, call doesn't raise
         unsafe { rb_gc_register_mark_object(self.as_rb_value()) }
+    }
+
+    pub fn is_frozen(self) -> bool {
+        match self.r_basic() {
+            None => true,
+            Some(r_basic) => unsafe {
+                r_basic.as_ref().flags & ruby_fl_type::RUBY_FL_FREEZE as VALUE != 0
+            },
+        }
+    }
+
+    pub fn check_frozen(self) -> Result<(), Error> {
+        if self.is_frozen() {
+            Err(Error::frozen_error(format!(
+                "can't modify frozen {}",
+                unsafe { self.classname() }
+            )))
+        } else {
+            Ok(())
+        }
+    }
+
+    pub fn freeze(self) {
+        unsafe { rb_obj_freeze(self.as_rb_value()) };
     }
 
     #[inline]
