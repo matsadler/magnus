@@ -284,6 +284,15 @@ impl From<char> for Value {
     }
 }
 
+#[cfg(unix)]
+impl From<&Path> for Value {
+    fn from(val: &Path) -> Self {
+        use std::os::unix::ffi::OsStrExt;
+        RString::from_slice(val.as_os_str().as_bytes()).into()
+    }
+}
+
+#[cfg(not(unix))]
 impl From<&Path> for Value {
     fn from(val: &Path) -> Self {
         RString::new(val.to_string_lossy().as_ref()).into()

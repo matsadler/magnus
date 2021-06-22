@@ -687,6 +687,22 @@ where
 {
 }
 
+#[cfg(unix)]
+impl TryConvert for PathBuf {
+    #[inline]
+    fn try_convert(val: &Value) -> Result<Self, Error> {
+        use std::os::unix::ffi::OsStringExt;
+
+        let bytes = unsafe {
+            let val = protect(|| Value::new(rb_get_path(val.as_rb_value())))?;
+            let r_string = RString::from_rb_value_unchecked(val.as_rb_value());
+            r_string.as_slice().to_owned()
+        };
+        Ok(std::ffi::OsString::from_vec(bytes).into())
+    }
+}
+
+#[cfg(not(unix))]
 impl TryConvert for PathBuf {
     #[inline]
     fn try_convert(val: &Value) -> Result<Self, Error> {
@@ -698,6 +714,7 @@ impl TryConvert for PathBuf {
         }
     }
 }
+
 impl TryConvertOwned for PathBuf {}
 
 pub trait ArgList {
