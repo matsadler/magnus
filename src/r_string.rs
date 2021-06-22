@@ -79,6 +79,11 @@ impl RString {
         unsafe { Self::from_rb_value_unchecked(rb_str_new(ptr as *const c_char, len as c_long)) }
     }
 
+    pub fn from_char(c: char) -> Self {
+        let mut buf = [0; 4];
+        Self::new(c.encode_utf8(&mut buf[..]))
+    }
+
     /// # Safety
     ///
     /// Ruby may modify or free the memory backing the returned slice, the
@@ -171,6 +176,20 @@ impl RString {
             .map_err(|e| Error::encoding_error(format!("{}", e)))
     }
 
+    pub fn to_char(self) -> Result<char, Error> {
+        let utf8 = if self.is_utf8_compatible_encoding() {
+            self
+        } else {
+            self.encode_utf8()?
+        };
+        unsafe {
+            str::from_utf8(utf8.as_slice())
+                .map_err(|e| Error::encoding_error(format!("{}", e)))?
+                .parse()
+                .map_err(|e| Error::type_error(format!("could not convert string to char, {}", e)))
+        }
+    }
+
     pub fn is_interned(self) -> bool {
         unsafe {
             self.r_basic_unchecked().as_ref().flags & ruby_rstring_flags::RSTRING_FSTR as VALUE != 0
@@ -256,6 +275,12 @@ impl From<&str> for Value {
 impl From<String> for Value {
     fn from(val: String) -> Self {
         val.as_str().into()
+    }
+}
+
+impl From<char> for Value {
+    fn from(val: char) -> Self {
+        RString::from_char(val).into()
     }
 }
 

@@ -166,6 +166,15 @@ impl TryConvert for String {
 }
 impl TryConvertOwned for String {}
 
+impl TryConvert for char {
+    #[inline]
+    fn try_convert(val: &Value) -> Result<Self, Error> {
+        debug_assert_value!(val);
+        RString::try_convert(val)?.to_char()
+    }
+}
+impl TryConvertOwned for char {}
+
 impl<T> TryConvert for Vec<T>
 where
     T: TryConvertOwned,
