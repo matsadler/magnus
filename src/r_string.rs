@@ -4,6 +4,7 @@ use std::{
     fmt, io,
     ops::Deref,
     os::raw::{c_char, c_long},
+    path::{Path, PathBuf},
     ptr::{self, NonNull},
     slice, str,
 };
@@ -255,6 +256,18 @@ impl From<&str> for Value {
 impl From<String> for Value {
     fn from(val: String) -> Self {
         val.as_str().into()
+    }
+}
+
+impl From<&Path> for Value {
+    fn from(val: &Path) -> Self {
+        RString::new(val.to_string_lossy().as_ref()).into()
+    }
+}
+
+impl From<PathBuf> for Value {
+    fn from(val: PathBuf) -> Self {
+        val.as_path().into()
     }
 }
 
