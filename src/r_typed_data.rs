@@ -14,11 +14,22 @@ use crate::{
     r_class::RClass,
     ruby_sys::{
         self, rb_check_typeddata, rb_data_type_struct__bindgen_ty_1, rb_data_type_t,
-        rb_data_typed_object_wrap, rbimpl_typeddata_flags, ruby_value_type, size_t, VALUE,
+        rb_data_typed_object_wrap, ruby_value_type, size_t, VALUE,
     },
     try_convert::TryConvert,
     value::{NonZeroValue, Qnil, Value},
 };
+
+#[cfg(ruby_gte_3_0)]
+use crate::ruby_sys::rbimpl_typeddata_flags::{
+    self, RUBY_TYPED_FREE_IMMEDIATELY, RUBY_TYPED_WB_PROTECTED,
+};
+
+#[cfg(ruby_lt_3_0)]
+const RUBY_TYPED_FREE_IMMEDIATELY: u32 = 1;
+
+#[cfg(ruby_lt_3_0)]
+const RUBY_TYPED_WB_PROTECTED: u32 = crate::ruby_sys::ruby_fl_type::RUBY_FL_WB_PROTECTED as u32;
 
 #[derive(Clone, Copy)]
 #[repr(transparent)]
@@ -184,13 +195,14 @@ where
     pub fn build(self) -> DataType {
         let mut flags = 0_usize as VALUE;
         if self.free_immediatly {
-            flags |= rbimpl_typeddata_flags::RUBY_TYPED_FREE_IMMEDIATELY as VALUE;
+            flags |= RUBY_TYPED_FREE_IMMEDIATELY as VALUE;
         }
         if self.wb_protected {
-            flags |= rbimpl_typeddata_flags::RUBY_TYPED_FROZEN_SHAREABLE as VALUE;
+            flags |= RUBY_TYPED_WB_PROTECTED as VALUE;
         }
+        #[cfg(ruby_gte_3_0)]
         if self.frozen_shareable {
-            flags |= rbimpl_typeddata_flags::RUBY_TYPED_WB_PROTECTED as VALUE;
+            flags |= rbimpl_typeddata_flags::RUBY_TYPED_FROZEN_SHAREABLE as VALUE;
         }
         let dmark = self.mark.then(|| T::extern_mark as _);
         let dfree = Some(T::extern_free as _);

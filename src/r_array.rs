@@ -9,12 +9,18 @@ use crate::{
     object::Object,
     ruby_sys::{
         self, rb_ary_cat, rb_ary_entry, rb_ary_new, rb_ary_new_capa, rb_ary_pop, rb_ary_push,
-        rb_ary_shift, rb_ary_store, rb_ary_to_ary, rb_ary_unshift, ruby_rarray_consts,
-        ruby_rarray_flags, ruby_value_type, VALUE,
+        rb_ary_shift, rb_ary_store, rb_ary_to_ary, rb_ary_unshift, ruby_rarray_flags,
+        ruby_value_type, VALUE,
     },
     try_convert::{TryConvert, TryConvertOwned},
     value::{NonZeroValue, Value},
 };
+
+#[cfg(ruby_gte_3_0)]
+use crate::ruby_sys::ruby_rarray_consts::RARRAY_EMBED_LEN_SHIFT;
+
+#[cfg(ruby_lt_3_0)]
+use crate::ruby_sys::ruby_rarray_flags::RARRAY_EMBED_LEN_SHIFT;
 
 #[derive(Clone, Copy)]
 #[repr(transparent)]
@@ -110,9 +116,9 @@ impl RArray {
         let r_basic = self.r_basic_unchecked();
         let flags = r_basic.as_ref().flags;
         if (flags & ruby_rarray_flags::RARRAY_EMBED_FLAG as VALUE) != 0 {
-            let len = (flags >> ruby_rarray_consts::RARRAY_EMBED_LEN_SHIFT as VALUE)
+            let len = (flags >> RARRAY_EMBED_LEN_SHIFT as VALUE)
                 & (ruby_rarray_flags::RARRAY_EMBED_LEN_MASK as VALUE
-                    >> ruby_rarray_consts::RARRAY_EMBED_LEN_SHIFT as VALUE);
+                    >> RARRAY_EMBED_LEN_SHIFT as VALUE);
             slice::from_raw_parts(
                 &self.as_internal().as_ref().as_.ary as *const VALUE as *const Value,
                 len as usize,

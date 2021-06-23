@@ -8,8 +8,34 @@ use std::{
     process::Command,
 };
 
+const RUBY_VERSIONS: [(u8, u8); 2] = [(2, 7), (3, 0)];
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let rbconfig = RbConfig::new()?;
+
+    let version_parts = rbconfig
+        .get("RUBY_API_VERSION")?
+        .split('.')
+        .map(|s| s.parse::<u8>())
+        .collect::<Result<Vec<u8>, _>>()?;
+    let version = (version_parts[0], version_parts[1]);
+    for v in RUBY_VERSIONS {
+        if version < v {
+            println!(r#"cargo:rustc-cfg=ruby_lt_{}_{}"#, v.0, v.1);
+        }
+        if version <= v {
+            println!(r#"cargo:rustc-cfg=ruby_lte_{}_{}"#, v.0, v.1);
+        }
+        if version == v {
+            println!(r#"cargo:rustc-cfg=ruby_{}_{}"#, v.0, v.1);
+        }
+        if version >= v {
+            println!(r#"cargo:rustc-cfg=ruby_gte_{}_{}"#, v.0, v.1);
+        }
+        if version > v {
+            println!(r#"cargo:rustc-cfg=ruby_gt_{}_{}"#, v.0, v.1);
+        }
+    }
 
     match (rbconfig.get("RUBY_SO_NAME"), rbconfig.get("LIBRUBY_A")) {
         (Ok(_), Ok(_)) if env::var_os("RUBY_STATIC").is_some() => use_static(&rbconfig)?,

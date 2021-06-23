@@ -15,13 +15,19 @@ use crate::{
     object::Object,
     ruby_sys::{
         self, rb_enc_associate_index, rb_enc_get, rb_enc_get_index, rb_str_buf_append,
-        rb_str_buf_new, rb_str_cat, rb_str_conv_enc, rb_str_new, rb_str_to_interned_str,
-        rb_str_to_str, rb_usascii_encindex, rb_utf8_encindex, rb_utf8_encoding, rb_utf8_str_new,
-        ruby_rstring_consts, ruby_rstring_flags, ruby_value_type, VALUE,
+        rb_str_buf_new, rb_str_cat, rb_str_conv_enc, rb_str_new, rb_str_to_str,
+        rb_usascii_encindex, rb_utf8_encindex, rb_utf8_encoding, rb_utf8_str_new,
+        ruby_rstring_flags, ruby_value_type, VALUE,
     },
     try_convert::TryConvert,
     value::{NonZeroValue, Value},
 };
+
+#[cfg(ruby_gte_3_0)]
+use crate::ruby_sys::{rb_str_to_interned_str, ruby_rstring_consts::RSTRING_EMBED_LEN_SHIFT};
+
+#[cfg(ruby_lt_3_0)]
+use crate::ruby_sys::ruby_rstring_flags::RSTRING_EMBED_LEN_SHIFT;
 
 #[derive(Clone, Copy)]
 #[repr(transparent)]
@@ -101,7 +107,7 @@ impl RString {
             slice::from_raw_parts(h.ptr as *const u8, h.len as usize)
         } else {
             f &= ruby_rstring_flags::RSTRING_EMBED_LEN_MASK as VALUE;
-            f >>= ruby_rstring_consts::RSTRING_EMBED_LEN_SHIFT as VALUE;
+            f >>= RSTRING_EMBED_LEN_SHIFT as VALUE;
             slice::from_raw_parts(
                 &self.as_internal().as_ref().as_.ary as *const _ as *const u8,
                 f as usize,
@@ -203,6 +209,7 @@ impl RString {
 
     /// Interns self and returns a FString wrapper. Be aware that once interned
     /// a string will never be garbage collected.
+    #[cfg(ruby_gte_3_0)]
     pub fn to_interned_str(self) -> FString {
         unsafe {
             FString(RString::from_rb_value_unchecked(rb_str_to_interned_str(
