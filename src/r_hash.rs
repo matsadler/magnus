@@ -139,7 +139,10 @@ impl RHash {
         unsafe {
             let arg = &mut func as *mut F as VALUE;
             protect(|| {
-                rb_hash_foreach(self.as_rb_value(), Some(iter::<F>), arg);
+                let fptr = iter::<F> as unsafe extern "C" fn(VALUE, VALUE, VALUE) -> c_int;
+                #[cfg(ruby_lt_2_7)]
+                let fptr: unsafe extern "C" fn() -> c_int = std::mem::transmute(fptr);
+                rb_hash_foreach(self.as_rb_value(), Some(fptr), arg);
                 Qnil::new().into()
             })?;
         }

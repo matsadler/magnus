@@ -207,6 +207,7 @@ where
         let dmark = self.mark.then(|| T::extern_mark as _);
         let dfree = Some(T::extern_free as _);
         let dsize = self.size.then(|| T::extern_size as _);
+        #[cfg(ruby_gte_2_7)]
         let dcompact = self.compact.then(|| T::extern_compact as _);
         DataType {
             wrap_struct_name: CString::new(self.name).unwrap().into_raw() as _,
@@ -214,8 +215,12 @@ where
                 dmark,
                 dfree,
                 dsize,
+                #[cfg(ruby_gte_2_7)]
                 dcompact,
+                #[cfg(ruby_gte_2_7)]
                 reserved: [ptr::null_mut(); 1],
+                #[cfg(ruby_lt_2_7)]
+                reserved: [ptr::null_mut(); 2],
             },
             parent: ptr::null(),
             data: ptr::null_mut(),

@@ -47,8 +47,11 @@ macro_rules! debug_assert_value {
         #[cfg(debug_assertions)]
         match unsafe { $value.rb_type() } {
             crate::ruby_sys::ruby_value_type::RUBY_T_NONE
-            | crate::ruby_sys::ruby_value_type::RUBY_T_ZOMBIE
-            | crate::ruby_sys::ruby_value_type::RUBY_T_MOVED => {
+            | crate::ruby_sys::ruby_value_type::RUBY_T_ZOMBIE => {
+                panic!("Attempting to access garbage collected Object")
+            }
+            #[cfg(ruby_gte_2_7)]
+            crate::ruby_sys::ruby_value_type::RUBY_T_MOVED => {
                 panic!("Attempting to access garbage collected Object")
             }
             _ => (),

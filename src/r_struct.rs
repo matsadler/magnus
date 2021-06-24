@@ -28,7 +28,7 @@ use crate::{
 // the definition of RStruct, but that isn't public, so we have to duplicate it
 // here.
 mod sys {
-    use crate::ruby_sys::{ruby_fl_type, ruby_rvalue_flags, RBasic, VALUE};
+    use crate::ruby_sys::{ruby_fl_type, RBasic, VALUE};
 
     #[cfg(ruby_gte_3_0)]
     use crate::ruby_sys::ruby_fl_ushift::RUBY_FL_USHIFT;
@@ -36,7 +36,12 @@ mod sys {
     #[cfg(ruby_lt_3_0)]
     use crate::ruby_sys::ruby_fl_type::RUBY_FL_USHIFT;
 
-    pub const EMBED_LEN_MAX: u32 = ruby_rvalue_flags::RVALUE_EMBED_LEN_MAX as u32;
+    #[cfg(ruby_gte_2_7)]
+    pub const EMBED_LEN_MAX: u32 = crate::ruby_sys::ruby_rvalue_flags::RVALUE_EMBED_LEN_MAX as u32;
+
+    #[cfg(ruby_lt_2_7)]
+    pub const EMBED_LEN_MAX: u32 = 3;
+
     pub const EMBED_LEN_MASK: u32 =
         ruby_fl_type::RUBY_FL_USER2 as u32 | ruby_fl_type::RUBY_FL_USER1 as u32;
     pub const EMBED_LEN_SHIFT: u32 = RUBY_FL_USHIFT as u32 + 1;
