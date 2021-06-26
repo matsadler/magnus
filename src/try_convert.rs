@@ -1020,3 +1020,22 @@ impl<const N: usize> ArgList for [Value; N] {
         self
     }
 }
+
+pub trait RArrayArgList {
+    fn into_array_arg_list(self) -> RArray;
+}
+
+impl RArrayArgList for RArray {
+    fn into_array_arg_list(self) -> RArray {
+        self
+    }
+}
+
+impl<T> RArrayArgList for T
+where
+    T: ArgList,
+{
+    fn into_array_arg_list(self) -> RArray {
+        RArray::from_slice(self.into_arg_list().as_ref())
+    }
+}
