@@ -13,7 +13,7 @@ use crate::{
         ruby_value_type, VALUE,
     },
     try_convert::TryConvert,
-    value::{Fixnum, NonZeroValue, Qnil, Value},
+    value::{Fixnum, NonZeroValue, QNIL, Value},
 };
 
 #[derive(Clone, Copy)]
@@ -67,7 +67,7 @@ impl RBignum {
         let mut res = 0;
         protect(|| {
             res = unsafe { rb_num2long(self.as_rb_value()) };
-            *Qnil::new()
+            *QNIL
         })?;
         if res > i32::MAX as c_long {
             return Err(Error::range_error("bignum too big to convert into `i32`"));
@@ -80,7 +80,7 @@ impl RBignum {
         let mut res = 0;
         protect(|| {
             res = unsafe { rb_num2ll(self.as_rb_value()) };
-            *Qnil::new()
+            *QNIL
         })?;
         Ok(res)
     }
@@ -90,7 +90,7 @@ impl RBignum {
         let mut res = 0;
         protect(|| {
             res = unsafe { rb_num2long(self.as_rb_value()) };
-            *Qnil::new()
+            *QNIL
         })?;
         if res > isize::MAX as c_long {
             return Err(Error::range_error("bignum too big to convert into `isize`"));
@@ -112,7 +112,7 @@ impl RBignum {
         let mut res = 0;
         protect(|| {
             res = unsafe { rb_num2ulong(self.as_rb_value()) };
-            *Qnil::new()
+            *QNIL
         })?;
         if res > u32::MAX as c_ulong {
             return Err(Error::range_error("bignum too big to convert into `u32`"));
@@ -130,7 +130,7 @@ impl RBignum {
         let mut res = 0;
         protect(|| {
             res = unsafe { rb_num2ull(self.as_rb_value()) };
-            *Qnil::new()
+            *QNIL
         })?;
         Ok(res)
     }
@@ -145,7 +145,7 @@ impl RBignum {
         let mut res = 0;
         protect(|| {
             res = unsafe { rb_num2ulong(self.as_rb_value()) };
-            *Qnil::new()
+            *QNIL
         })?;
         if res > usize::MAX as c_ulong {
             return Err(Error::range_error("bignum too big to convert into `usize`"));

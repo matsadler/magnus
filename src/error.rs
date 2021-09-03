@@ -9,7 +9,7 @@ use crate::{
         rb_eRangeError, rb_eStopIteration, rb_eTypeError, rb_ensure, rb_errinfo, rb_exc_raise,
         rb_jump_tag, rb_protect, rb_raise, rb_set_errinfo, ruby_special_consts, VALUE,
     },
-    value::{Qnil, Value},
+    value::{QNIL, Value},
 };
 
 #[derive(Debug)]
@@ -230,7 +230,7 @@ where
         Tag::None => Ok(Value::new(result)),
         Tag::Raise => unsafe {
             let ex = Exception::from_rb_value_unchecked(rb_errinfo());
-            rb_set_errinfo(Qnil::new().as_rb_value());
+            rb_set_errinfo(QNIL.as_rb_value());
             Err(Error::Exception(ex))
         },
         other => Err(Error::Jump(other)),

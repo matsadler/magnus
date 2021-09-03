@@ -1,4 +1,4 @@
-use magnus::{define_global_variable, Qnil};
+use magnus::{define_global_variable, QNIL};
 
 macro_rules! rb_assert {
     ($eval:literal) => {
@@ -11,7 +11,7 @@ fn it_converts_floats_to_value() {
     dbg!("A");
     let _cleanup = unsafe { magnus::embed::init() };
     dbg!("B");
-    let val = define_global_variable("$val", Qnil::new()).unwrap();
+    let val = define_global_variable("$val", QNIL).unwrap();
     dbg!("C");
     rb_assert!("$val == nil");
 

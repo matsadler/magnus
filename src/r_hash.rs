@@ -9,7 +9,7 @@ use crate::{
         rb_hash_lookup, rb_hash_lookup2, rb_hash_new, rb_hash_size, ruby_value_type, VALUE,
     },
     try_convert::{TryConvert, TryConvertOwned},
-    value::{Fixnum, NonZeroValue, Qnil, Qundef, Value},
+    value::{Fixnum, NonZeroValue, QNIL, QUNDEF, Value},
 };
 
 #[repr(u32)]
@@ -103,7 +103,7 @@ impl RHash {
                 Value::new(rb_hash_lookup2(
                     self.as_rb_value(),
                     key.as_rb_value(),
-                    Qundef::new().to_value().as_rb_value(),
+                    QUNDEF.to_value().as_rb_value(),
                 ))
             })
             .ok()
@@ -143,7 +143,7 @@ impl RHash {
                 #[cfg(ruby_lt_2_7)]
                 let fptr: unsafe extern "C" fn() -> c_int = std::mem::transmute(fptr);
                 rb_hash_foreach(self.as_rb_value(), Some(fptr), arg);
-                Qnil::new().into()
+                QNIL.into()
             })?;
         }
         Ok(())

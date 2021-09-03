@@ -1,5 +1,5 @@
 use magnus::{
-    define_class, define_global_variable, embed::init, eval_static, DataTypeFunctions, Qnil,
+    define_class, define_global_variable, embed::init, eval_static, DataTypeFunctions, QNIL,
     TypedData, Value,
 };
 
@@ -28,7 +28,7 @@ fn it_wraps_rust_struct() {
 
     define_class("Example", Default::default()).unwrap();
 
-    let val = define_global_variable("$val", Qnil::new()).unwrap();
+    let val = define_global_variable("$val", QNIL).unwrap();
     rb_assert!("$val == nil");
 
     unsafe { val.replace(make_rb_example("foo")) };

@@ -17,7 +17,7 @@ use crate::{
         rb_data_typed_object_wrap, ruby_value_type, size_t, VALUE,
     },
     try_convert::TryConvert,
-    value::{NonZeroValue, Qnil, Value},
+    value::{NonZeroValue, QNIL, Value},
 };
 
 #[cfg(ruby_gte_3_0)]
@@ -251,7 +251,7 @@ where
                 res = (rb_check_typeddata(val.as_rb_value(), T::data_type() as *const _)
                     as *const T)
                     .as_ref();
-                *Qnil::new()
+                *QNIL
             });
             res.ok_or_else(|| {
                 Error::type_error(format!(

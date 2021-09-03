@@ -540,6 +540,8 @@ impl From<BoxValue> for Value {
 #[repr(transparent)]
 pub struct Qfalse(VALUE);
 
+pub const QFALSE: Qfalse = Qfalse::new();
+
 impl Qfalse {
     #[inline]
     pub const fn new() -> Self {
@@ -598,6 +600,8 @@ impl TryConvertOwned for Qfalse {}
 #[repr(transparent)]
 pub struct Qnil(NonZeroValue);
 
+pub const QNIL: Qnil = Qnil::new();
+
 impl Qnil {
     #[inline]
     pub const fn new() -> Self {
@@ -642,7 +646,7 @@ impl From<Qnil> for Value {
 
 impl From<()> for Value {
     fn from(_: ()) -> Self {
-        Qnil::new().into()
+        QNIL.into()
     }
 }
 
@@ -653,7 +657,7 @@ where
     fn from(val: Option<T>) -> Self {
         match val {
             Some(t) => t.into(),
-            None => Qnil::new().into(),
+            None => QNIL.into(),
         }
     }
 }
@@ -674,6 +678,8 @@ impl TryConvertOwned for Qnil {}
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct Qtrue(NonZeroValue);
+
+pub const QTRUE: Qtrue = Qtrue::new();
 
 impl Qtrue {
     #[inline]
@@ -720,9 +726,9 @@ impl From<Qtrue> for Value {
 impl From<bool> for Value {
     fn from(val: bool) -> Self {
         if val {
-            Qtrue::new().into()
+            QTRUE.into()
         } else {
-            Qfalse::new().into()
+            QFALSE.into()
         }
     }
 }
@@ -743,6 +749,8 @@ impl TryConvertOwned for Qtrue {}
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct Qundef(NonZeroValue);
+
+pub const QUNDEF: Qundef = Qundef::new();
 
 impl Qundef {
     #[inline]
@@ -803,7 +811,7 @@ impl Fixnum {
         let mut res = 0;
         protect(|| {
             res = unsafe { rb_num2long(self.as_rb_value()) };
-            *Qnil::new()
+            *QNIL
         })?;
         if res > i8::MAX as c_long {
             return Err(Error::range_error("fixnum too big to convert into `i8`"));
@@ -815,7 +823,7 @@ impl Fixnum {
         let mut res = 0;
         protect(|| {
             res = unsafe { rb_num2short(self.as_rb_value()) };
-            *Qnil::new()
+            *QNIL
         })?;
         Ok(res)
     }
@@ -824,7 +832,7 @@ impl Fixnum {
         let mut res = 0;
         protect(|| {
             res = unsafe { rb_num2long(self.as_rb_value()) };
-            *Qnil::new()
+            *QNIL
         })?;
         if res > i32::MAX as c_long {
             return Err(Error::range_error("fixnum too big to convert into `i32`"));
@@ -840,7 +848,7 @@ impl Fixnum {
         let mut res = 0;
         protect(|| {
             res = unsafe { rb_num2long(self.as_rb_value()) };
-            *Qnil::new()
+            *QNIL
         })?;
         if res > isize::MAX as c_long {
             return Err(Error::range_error("fixnum too big to convert into `isize`"));
@@ -857,7 +865,7 @@ impl Fixnum {
         let mut res = 0;
         protect(|| {
             res = unsafe { rb_num2ulong(self.as_rb_value()) };
-            *Qnil::new()
+            *QNIL
         })?;
         if res > u8::MAX as c_ulong {
             return Err(Error::range_error("fixnum too big to convert into `u8`"));
@@ -874,7 +882,7 @@ impl Fixnum {
         let mut res = 0;
         protect(|| {
             res = unsafe { rb_num2ushort(self.as_rb_value()) };
-            *Qnil::new()
+            *QNIL
         })?;
         Ok(res)
     }
@@ -888,7 +896,7 @@ impl Fixnum {
         let mut res = 0;
         protect(|| {
             res = unsafe { rb_num2ulong(self.as_rb_value()) };
-            *Qnil::new()
+            *QNIL
         })?;
         if res > u32::MAX as c_ulong {
             return Err(Error::range_error("fixnum too big to convert into `u32`"));
@@ -906,7 +914,7 @@ impl Fixnum {
         unsafe {
             protect(|| {
                 res = rb_num2ull(self.as_rb_value());
-                *Qnil::new()
+                *QNIL
             })?;
         }
         Ok(res)
@@ -921,7 +929,7 @@ impl Fixnum {
         let mut res = 0;
         protect(|| {
             res = unsafe { rb_num2ulong(self.as_rb_value()) };
-            *Qnil::new()
+            *QNIL
         })?;
         if res > usize::MAX as c_ulong {
             return Err(Error::range_error("fixnum too big to convert into `usize`"));

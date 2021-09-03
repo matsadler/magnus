@@ -8,7 +8,7 @@ use crate::{
     r_hash::RHash,
     r_string::RString,
     ruby_sys::{rb_get_path, rb_num2dbl},
-    value::{Qnil, Value},
+    value::{QNIL, Value},
 };
 
 pub trait TryConvert: Sized {
@@ -150,7 +150,7 @@ impl TryConvert for f64 {
         let mut res = 0.0;
         protect(|| {
             res = unsafe { rb_num2dbl(val.as_rb_value()) };
-            *Qnil::new()
+            *QNIL
         })?;
         Ok(res)
     }

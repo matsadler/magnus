@@ -1,4 +1,4 @@
-use magnus::{define_global_variable, Qnil, StaticSymbol, Symbol};
+use magnus::{define_global_variable, QNIL, StaticSymbol, Symbol};
 
 macro_rules! rb_assert {
     ($eval:literal) => {
@@ -9,7 +9,7 @@ macro_rules! rb_assert {
 #[test]
 fn it_makes_a_symbol() {
     let _cleanup = unsafe { magnus::embed::init() };
-    let val = define_global_variable("$val", Qnil::new()).unwrap();
+    let val = define_global_variable("$val", QNIL).unwrap();
     rb_assert!("$val == nil");
 
     let sym = Symbol::new("foo");

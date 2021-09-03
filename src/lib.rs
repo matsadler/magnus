@@ -39,7 +39,7 @@ use ruby_sys::{
     rb_eval_string_protect, VALUE,
 };
 
-pub use value::{Fixnum, Flonum, Qfalse, Qnil, Qtrue, StaticSymbol, Value};
+pub use value::{Fixnum, Flonum, QFALSE, QNIL, QTRUE, StaticSymbol, Value};
 pub use {
     enumerator::Enumerator,
     error::Error,

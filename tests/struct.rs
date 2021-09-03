@@ -1,7 +1,7 @@
 use magnus::{
     define_global_variable,
     r_struct::{define_struct, RStruct},
-    Qnil,
+    QNIL,
 };
 
 macro_rules! rb_assert {
@@ -13,7 +13,7 @@ macro_rules! rb_assert {
 #[test]
 fn it_defines_a_struct() {
     let _cleanup = unsafe { magnus::embed::init() };
-    let val = define_global_variable("$val", Qnil::new()).unwrap();
+    let val = define_global_variable("$val", QNIL).unwrap();
     rb_assert!("$val == nil");
 
     let struct_class = define_struct(Some("Foo"), ("bar", "baz")).unwrap();
