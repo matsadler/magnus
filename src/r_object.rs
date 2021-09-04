@@ -8,11 +8,14 @@ use crate::{
     value::{NonZeroValue, Value},
 };
 
+/// A Value pointer to a RObject struct, Ruby's internal representation of
+/// generic objects, not covered by the other R* types.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct RObject(NonZeroValue);
 
 impl RObject {
+    /// Return `Some(RObject)` if `val` is a `RObject`, `None` otherwise.
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
         unsafe {

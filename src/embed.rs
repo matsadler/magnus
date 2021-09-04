@@ -1,3 +1,5 @@
+//! Helpers for use when embedding Ruby in a Rust project.
+
 use std::{
     ffi::CString,
     sync::atomic::{AtomicBool, Ordering},
@@ -7,6 +9,8 @@ use crate::ruby_sys::{
     ruby_cleanup, ruby_exec_node, ruby_executable_node, ruby_options, ruby_setup,
 };
 
+/// A guard value that will run the cleanup function for the Ruby VM when
+/// dropped.
 pub struct Cleanup();
 
 impl Drop for Cleanup {
@@ -17,6 +21,11 @@ impl Drop for Cleanup {
     }
 }
 
+/// Initialises the Ruby VM.
+///
+/// Calling this function is only required when embedding Ruby in Rust. It is
+/// not required when embedding Rust in Ruby, e.g. in a Ruby Gem.
+///
 /// # Safety
 ///
 /// Must be called in `main()`, or at least a function higher up the stack than

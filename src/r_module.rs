@@ -11,11 +11,14 @@ use crate::{
     value::{NonZeroValue, Value},
 };
 
+/// A Value pointer to a RModule struct, Ruby's internal representation of
+/// modules.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct RModule(NonZeroValue);
 
 impl RModule {
+    /// Return `Some(RModule)` if `val` is a `RModule`, `None` otherwise.
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
         unsafe {

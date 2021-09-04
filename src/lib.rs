@@ -39,7 +39,7 @@ use ruby_sys::{
     rb_eval_string_protect, VALUE,
 };
 
-pub use value::{Fixnum, Flonum, QFALSE, QNIL, QTRUE, StaticSymbol, Value};
+pub use value::{Fixnum, Flonum, StaticSymbol, Value, QFALSE, QNIL, QTRUE};
 pub use {
     enumerator::Enumerator,
     error::Error,
@@ -67,10 +67,27 @@ pub use {
     try_convert::{ArgList, TryConvert},
 };
 
+/// Traits that commonly should be in scope.
 pub mod prelude {
     pub use crate::{module::Module, object::Object};
 }
 
+/// Utility to simplify initialising a static with [`std::sync::Once`].
+///
+/// Similar (but less generally useful) to
+/// [`lazy_static!`](https://crates.io/crates/lazy_static) without an external
+/// dependency.
+///
+/// # Examples
+///
+/// ``` no_run
+/// use magnus::{define_class, memoize, RClass};
+///
+/// fn foo_class() -> &'static RClass {
+///     memoize!(RClass: define_class("Foo", Default::default()).unwrap())
+/// }
+/// ```
+///
 #[macro_export]
 macro_rules! memoize {
     ($type:ty: $val:expr) => {{
@@ -85,6 +102,7 @@ macro_rules! memoize {
     }};
 }
 
+/// Define a class in the root scope.
 pub fn define_class(name: &str, superclass: RClass) -> Result<RClass, Error> {
     debug_assert_value!(superclass);
     let name = CString::new(name).unwrap();
@@ -95,6 +113,7 @@ pub fn define_class(name: &str, superclass: RClass) -> Result<RClass, Error> {
     }
 }
 
+/// Define a module in the root scope.
 pub fn define_module(name: &str) -> Result<RModule, Error> {
     let name = CString::new(name).unwrap();
     unsafe {
@@ -103,6 +122,7 @@ pub fn define_module(name: &str) -> Result<RModule, Error> {
     }
 }
 
+/// Define a global variable.
 pub fn define_global_variable<T: Into<Value>>(name: &str, initial: T) -> Result<*mut Value, Error> {
     let initial = initial.into();
     debug_assert_value!(initial);
@@ -114,6 +134,7 @@ pub fn define_global_variable<T: Into<Value>>(name: &str, initial: T) -> Result<
     Ok(ptr)
 }
 
+/// Define a method in the root scope.
 pub fn define_global_function<M>(name: &str, func: M)
 where
     M: Method,
@@ -124,6 +145,7 @@ where
     }
 }
 
+/// Eval a static string of Ruby code.
 pub fn eval_static(s: &'static str) -> Result<Value, Error> {
     let mut state = 0;
     // safe ffi to Ruby, captures raised errors (+ brake, throw, etc) as state

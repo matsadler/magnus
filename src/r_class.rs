@@ -9,11 +9,14 @@ use crate::{
     value::{NonZeroValue, Value},
 };
 
+/// A Value pointer to a RClass struct, Ruby's internal representation of
+/// classes.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct RClass(NonZeroValue);
 
 impl RClass {
+    /// Return `Some(RClass)` if `val` is a `RClass`, `None` otherwise.
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
         unsafe {

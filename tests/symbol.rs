@@ -1,4 +1,4 @@
-use magnus::{define_global_variable, QNIL, StaticSymbol, Symbol};
+use magnus::{define_global_variable, StaticSymbol, Symbol, QNIL};
 
 macro_rules! rb_assert {
     ($eval:literal) => {

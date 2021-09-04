@@ -8,11 +8,14 @@ use crate::{
     value::{NonZeroValue, Value},
 };
 
+/// A Value pointer to a RMatch struct, Ruby's internal representation of the
+/// MatchData returned from a regex match.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct RMatch(NonZeroValue);
 
 impl RMatch {
+    /// Return `Some(RMatch)` if `val` is a `RMatch`, `None` otherwise.
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
         unsafe {

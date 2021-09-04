@@ -13,14 +13,17 @@ use crate::{
         ruby_value_type, VALUE,
     },
     try_convert::TryConvert,
-    value::{Fixnum, NonZeroValue, QNIL, Value},
+    value::{Fixnum, NonZeroValue, Value, QNIL},
 };
 
+/// A Value pointer to a RBignum struct, Ruby's internal representation of
+/// large integers.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct RBignum(NonZeroValue);
 
 impl RBignum {
+    /// Return `Some(RBignum)` if `val` is a `RBignum`, `None` otherwise.
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
         unsafe {

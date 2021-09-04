@@ -9,11 +9,13 @@ use crate::{
     value::{NonZeroValue, Value},
 };
 
+/// Wrapper type for a Value known to be an instance of Ruby's Enumerator class.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct Enumerator(NonZeroValue);
 
 impl Enumerator {
+    /// Return `Some(Enumerator)` if `val` is an `Enumerator`, `None` otherwise.
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
         unsafe {

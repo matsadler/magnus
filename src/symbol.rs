@@ -14,11 +14,13 @@ use crate::{
     value::{Id, NonZeroValue, StaticSymbol, Value},
 };
 
+/// A type wrapping either an immediate symbol value or a Value pointer to a RSymbol struct.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct Symbol(NonZeroValue);
 
 impl Symbol {
+    /// Return `Some(RSymbol)` if `val` is a `RSymbol`, `None` otherwise.
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
         unsafe {

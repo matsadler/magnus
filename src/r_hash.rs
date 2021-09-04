@@ -9,7 +9,7 @@ use crate::{
         rb_hash_lookup, rb_hash_lookup2, rb_hash_new, rb_hash_size, ruby_value_type, VALUE,
     },
     try_convert::{TryConvert, TryConvertOwned},
-    value::{Fixnum, NonZeroValue, QNIL, QUNDEF, Value},
+    value::{Fixnum, NonZeroValue, Value, QNIL, QUNDEF},
 };
 
 #[repr(u32)]
@@ -19,11 +19,14 @@ pub enum ForEach {
     Delete,
 }
 
+/// A Value pointer to a RHash struct, Ruby's internal representation of Hash
+/// objects.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct RHash(NonZeroValue);
 
 impl RHash {
+    /// Return `Some(RHash)` if `val` is a `RHash`, `None` otherwise.
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
         unsafe {

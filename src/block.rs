@@ -1,3 +1,5 @@
+//! Types and functions for working with Ruby blocks and Procs.
+
 use std::{fmt, mem::forget, ops::Deref, os::raw::c_int};
 
 use crate::{
@@ -12,11 +14,13 @@ use crate::{
     value::{NonZeroValue, Value},
 };
 
+/// Wrapper type for a Value known to be an instance of Ruby’s Proc class.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct Proc(NonZeroValue);
 
 impl Proc {
+    /// Return `Some(Proc)` if `val` is a `Proc`, `None` otherwise.
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
         unsafe {
@@ -26,6 +30,11 @@ impl Proc {
         }
     }
 
+    /// Call the proc with `args`.
+    ///
+    /// Returns `Ok(T)` if the proc runs without error and the return value
+    /// converts into a `T`, or returns `Err` if the proc raises or the
+    /// conversion fails.
     pub fn call<A, T>(self, args: A) -> Result<T, Error>
     where
         A: RArrayArgList,
@@ -90,15 +99,22 @@ impl TryConvert for Proc {
     }
 }
 
+/// Returns whether a Ruby block has been supplied to the current method.
 pub fn block_given() -> bool {
     unsafe { rb_block_given_p() != 0 }
 }
 
+/// Returns the block given to the current method as a [`Proc`] instance.
 pub fn block_proc() -> Result<Proc, Error> {
     let val = unsafe { protect(|| Value::new(rb_block_proc()))? };
     Ok(Proc::from_value(val).unwrap())
 }
 
+/// Yields a value to the block given to the current method.
+///
+/// **Note:** A method using `yield_value` converted to an Enumerator with
+/// `to_enum`/[`Value::enumeratorize`] will result in a non-functional
+/// Enumerator. See [`Yield`] for an alternative.
 pub fn yield_value<T, U>(val: T) -> Result<U, Error>
 where
     T: Into<Value>,
@@ -108,6 +124,11 @@ where
     unsafe { protect(|| Value::new(rb_yield(val.as_rb_value()))).and_then(|v| v.try_convert()) }
 }
 
+/// Yields multiple values to the block given to the current method.
+///
+/// **Note:** A method using `yield_values` converted to an Enumerator with
+/// `to_enum`/[`Value::enumeratorize`] will result in a non-functional
+/// Enumerator. See [`YieldValues`] for an alternative.
 pub fn yield_values<T, U>(vals: T) -> Result<U, Error>
 where
     T: ArgList,
@@ -126,6 +147,11 @@ where
     }
 }
 
+/// Yields a Ruby Array to the block given to the current method.
+///
+/// **Note:** A method using `yield_splat` converted to an Enumerator with
+/// `to_enum`/[`Value::enumeratorize`] will result in a non-functional
+/// Enumerator. See [`YieldValues`] for an alternative.
 pub fn yield_splat<T>(vals: RArray) -> Result<T, Error>
 where
     T: TryConvert,
@@ -212,16 +238,28 @@ where
     );
 }
 
+/// Helper type for functions that either yield a single value to a block or
+/// return an Enumerator.
+///
+/// `I` must implement `Iterator<Item = T>`, where `T` implements `Into<Value>`.
 pub enum Yield<I> {
     Iter(I),
     Enumerator(Enumerator),
 }
 
+/// Helper type for functions that either yield multiple values to a block or
+/// return an Enumerator.
+///
+/// `I` must implement `Iterator<Item = T>`, where `T` implements [`ArgList`].
 pub enum YieldValues<I> {
     Iter(I),
     Enumerator(Enumerator),
 }
 
+/// Helper type for functions that either yield an array to a block or
+/// return an Enumerator.
+///
+/// `I` must implement `Iterator<Item = RArray>`.
 pub enum YieldSplat<I> {
     Iter(I),
     Enumerator(Enumerator),

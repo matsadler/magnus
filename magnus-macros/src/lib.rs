@@ -10,6 +10,8 @@ struct InitAttributes {
     name: Option<String>,
 }
 
+/// Mark a function as the 'init' function to be run for a library when it is
+/// `require`d by Ruby code.
 #[proc_macro_attribute]
 pub fn init(attrs: TokenStream, item: TokenStream) -> TokenStream {
     let init = parse_macro_input!(item as ItemFn);
@@ -46,6 +48,7 @@ pub fn init(attrs: TokenStream, item: TokenStream) -> TokenStream {
     tokens.into()
 }
 
+/// Derives `DataTypeFunctions`, allowing the type to implement `TypedData`.
 #[proc_macro_derive(DataTypeFunctions)]
 pub fn derive_data_type_functions(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
@@ -76,6 +79,8 @@ struct TypedDataAttributes {
     frozen_shareable: Flag,
 }
 
+/// Derives `TypedData`, allowing the type to be passed to Ruby automatically
+/// wrapped as a Ruby object.
 #[proc_macro_derive(TypedData, attributes(magnus))]
 pub fn derive_typed_data(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);

@@ -1,3 +1,5 @@
+//! Types and Traits for exposing Rust functions as Ruby methods.
+
 #![allow(clippy::too_many_arguments)]
 #![allow(clippy::many_single_char_names)]
 #![allow(clippy::missing_safety_doc)]
@@ -14,6 +16,8 @@ use crate::{
     value::Value,
 };
 
+/// Trait implemented for function pointers that can be registed as Ruby
+/// methods.
 pub trait Method {
     fn arity() -> i8;
     #[allow(clippy::wrong_self_convention)]
@@ -464,14 +468,21 @@ mod private {
     }
 }
 
+/// Trait marking types that can be returned to Ruby.
 pub trait ReturnValue: private::ReturnValue {}
 
 impl<T> ReturnValue for T where T: private::ReturnValue {}
 
+/// Trait marking types that can be returned to Ruby from a library [`init`](magnus_macros::init)
+/// function.
 pub trait InitReturn: private::InitReturn {}
 
 impl<T> InitReturn for T where T: private::InitReturn {}
 
+/// Helper type for wrapping a function with type conversions and error
+/// handling, as an 'init' function.
+///
+/// See the [`init`](magnus_macros::init) macro.
 pub struct Init<Func, Res> {
     func: Func,
     res: PhantomData<Res>,
@@ -504,6 +515,10 @@ where
     }
 }
 
+/// Helper type for wrapping a function as a Ruby method taking self and a Ruby
+/// array of arguments, with type conversions and error handling.
+///
+/// See the [`method`] macro.
 pub struct MethodRbAry<Func, RbSelf, Args, Res> {
     func: Func,
     rb_self: PhantomData<RbSelf>,
@@ -548,6 +563,10 @@ where
     }
 }
 
+/// Helper type for wrapping a function as a Ruby method taking self and a
+/// slice of arguments, with type conversions and error handling.
+///
+/// See the [`method`] macro.
 pub struct MethodCAry<Func, RbSelf, Res> {
     func: Func,
     rb_self: PhantomData<RbSelf>,
@@ -600,6 +619,10 @@ where
     }
 }
 
+/// Helper type for wrapping a function as a Ruby method taking self and no
+/// arguments, with type conversions and error handling.
+///
+/// See the [`method`] macro.
 pub struct Method0<Func, RbSelf, Res> {
     func: Func,
     rb_self: PhantomData<RbSelf>,
@@ -641,6 +664,10 @@ where
     }
 }
 
+/// Helper type for wrapping a function as a Ruby method taking self and 1
+/// argument, with type conversions and error handling.
+///
+/// See the [`method`] macro.
 pub struct Method1<Func, RbSelf, A, Res> {
     func: Func,
     rb_self: PhantomData<RbSelf>,
@@ -685,6 +712,10 @@ where
     }
 }
 
+/// Helper type for wrapping a function as a Ruby method taking self and 2
+/// arguments, with type conversions and error handling.
+///
+/// See the [`method`] macro.
 pub struct Method2<Func, RbSelf, A, B, Res> {
     func: Func,
     rb_self: PhantomData<RbSelf>,
@@ -732,6 +763,10 @@ where
     }
 }
 
+/// Helper type for wrapping a function as a Ruby method taking self and 3
+/// arguments, with type conversions and error handling.
+///
+/// See the [`method`] macro.
 pub struct Method3<Func, RbSelf, A, B, C, Res> {
     func: Func,
     rb_self: PhantomData<RbSelf>,
@@ -794,6 +829,10 @@ where
     }
 }
 
+/// Helper type for wrapping a function as a Ruby method taking self and 4
+/// arguments, with type conversions and error handling.
+///
+/// See the [`method`] macro.
 pub struct Method4<Func, RbSelf, A, B, C, D, Res> {
     func: Func,
     rb_self: PhantomData<RbSelf>,
@@ -868,6 +907,10 @@ where
     }
 }
 
+/// Helper type for wrapping a function as a Ruby method taking self and 5
+/// arguments, with type conversions and error handling.
+///
+/// See the [`method`] macro.
 pub struct Method5<Func, RbSelf, A, B, C, D, E, Res> {
     func: Func,
     rb_self: PhantomData<RbSelf>,
@@ -948,6 +991,10 @@ where
     }
 }
 
+/// Helper type for wrapping a function as a Ruby method taking self and 6
+/// arguments, with type conversions and error handling.
+///
+/// See the [`method`] macro.
 pub struct Method6<Func, RbSelf, A, B, C, D, E, F, Res> {
     func: Func,
     rb_self: PhantomData<RbSelf>,
@@ -1034,6 +1081,10 @@ where
     }
 }
 
+/// Helper type for wrapping a function as a Ruby method taking self and 7
+/// arguments, with type conversions and error handling.
+///
+/// See the [`method`] macro.
 pub struct Method7<Func, RbSelf, A, B, C, D, E, F, G, Res> {
     func: Func,
     rb_self: PhantomData<RbSelf>,
@@ -1126,6 +1177,10 @@ where
     }
 }
 
+/// Helper type for wrapping a function as a Ruby method taking self and 8
+/// arguments, with type conversions and error handling.
+///
+/// See the [`method`] macro.
 pub struct Method8<Func, RbSelf, A, B, C, D, E, F, G, H, Res> {
     func: Func,
     rb_self: PhantomData<RbSelf>,
@@ -1224,6 +1279,10 @@ where
     }
 }
 
+/// Helper type for wrapping a function as a Ruby method taking self and 9
+/// arguments, with type conversions and error handling.
+///
+/// See the [`method`] macro.
 pub struct Method9<Func, RbSelf, A, B, C, D, E, F, G, H, I, Res> {
     func: Func,
     rb_self: PhantomData<RbSelf>,
@@ -1329,6 +1388,10 @@ where
     }
 }
 
+/// Helper type for wrapping a function as a Ruby method taking self and 10
+/// arguments, with type conversions and error handling.
+///
+/// See the [`method`] macro.
 pub struct Method10<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, Res> {
     func: Func,
     rb_self: PhantomData<RbSelf>,
@@ -1440,6 +1503,10 @@ where
     }
 }
 
+/// Helper type for wrapping a function as a Ruby method taking self and 11
+/// arguments, with type conversions and error handling.
+///
+/// See the [`method`] macro.
 pub struct Method11<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, Res> {
     func: Func,
     rb_self: PhantomData<RbSelf>,
@@ -1557,6 +1624,10 @@ where
     }
 }
 
+/// Helper type for wrapping a function as a Ruby method taking self and 12
+/// arguments, with type conversions and error handling.
+///
+/// See the [`method`] macro.
 pub struct Method12<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, Res> {
     func: Func,
     rb_self: PhantomData<RbSelf>,
@@ -1680,6 +1751,10 @@ where
     }
 }
 
+/// Helper type for wrapping a function as a Ruby method taking self and 13
+/// arguments, with type conversions and error handling.
+///
+/// See the [`method`] macro.
 pub struct Method13<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, M, Res> {
     func: Func,
     rb_self: PhantomData<RbSelf>,
@@ -1809,6 +1884,10 @@ where
     }
 }
 
+/// Helper type for wrapping a function as a Ruby method taking self and 14
+/// arguments, with type conversions and error handling.
+///
+/// See the [`method`] macro.
 pub struct Method14<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, M, N, Res> {
     func: Func,
     rb_self: PhantomData<RbSelf>,
@@ -1944,6 +2023,10 @@ where
     }
 }
 
+/// Helper type for wrapping a function as a Ruby method taking self and 15
+/// arguments, with type conversions and error handling.
+///
+/// See the [`method`] macro.
 pub struct Method15<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, Res> {
     func: Func,
     rb_self: PhantomData<RbSelf>,
@@ -2085,6 +2168,10 @@ where
     }
 }
 
+/// Helper type for wrapping a function as a Ruby method taking self and 16
+/// arguments, with type conversions and error handling.
+///
+/// See the [`method`] macro.
 pub struct Method16<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Res> {
     func: Func,
     rb_self: PhantomData<RbSelf>,
@@ -2232,6 +2319,8 @@ where
     }
 }
 
+/// Converts a Rust function item to a function pointer that can be bound as a
+/// Ruby method taking self.
 #[macro_export]
 macro_rules! method {
     ($name:expr, -2) => {{
@@ -2695,6 +2784,10 @@ macro_rules! method {
     };
 }
 
+/// Helper type for wrapping a function as a Ruby method ignoring self and
+/// taking a Ruby array of arguments, with type conversions and error handling.
+///
+/// See the [`function`] macro.
 pub struct FunctionRbAry<Func, Args, Res> {
     func: Func,
     args: PhantomData<Args>,
@@ -2735,6 +2828,10 @@ where
     }
 }
 
+/// Helper type for wrapping a function as a Ruby method ignoring self and
+/// taking a slice of arguments, with type conversions and error handling.
+///
+/// See the [`function`] macro.
 pub struct FunctionCAry<Func, Res> {
     func: Func,
     res: PhantomData<Res>,
@@ -2774,6 +2871,10 @@ where
     }
 }
 
+/// Helper type for wrapping a function as a Ruby method ignoring self and
+/// taking no arguments, with type conversions and error handling.
+///
+/// See the [`function`] macro.
 pub struct Function0<Func, Res> {
     func: Func,
     res: PhantomData<Res>,
@@ -2811,6 +2912,10 @@ where
     }
 }
 
+/// Helper type for wrapping a function as a Ruby method ignoring self and
+/// taking 1 argument, with type conversions and error handling.
+///
+/// See the [`function`] macro.
 pub struct Function1<Func, A, Res> {
     func: Func,
     a: PhantomData<A>,
@@ -2850,6 +2955,10 @@ where
     }
 }
 
+/// Helper type for wrapping a function as a Ruby method ignoring self and
+/// taking 2 arguments, with type conversions and error handling.
+///
+/// See the [`function`] macro.
 pub struct Function2<Func, A, B, Res> {
     func: Func,
     a: PhantomData<A>,
@@ -2893,6 +3002,10 @@ where
     }
 }
 
+/// Helper type for wrapping a function as a Ruby method ignoring self and
+/// taking 3 arguments, with type conversions and error handling.
+///
+/// See the [`function`] macro.
 pub struct Function3<Func, A, B, C, Res> {
     func: Func,
     a: PhantomData<A>,
@@ -2939,6 +3052,10 @@ where
     }
 }
 
+/// Helper type for wrapping a function as a Ruby method ignoring self and
+/// taking 4 arguments, with type conversions and error handling.
+///
+/// See the [`function`] macro.
 pub struct Function4<Func, A, B, C, D, Res> {
     func: Func,
     a: PhantomData<A>,
@@ -3001,6 +3118,10 @@ where
     }
 }
 
+/// Helper type for wrapping a function as a Ruby method ignoring self and
+/// taking 5 arguments, with type conversions and error handling.
+///
+/// See the [`function`] macro.
 pub struct Function5<Func, A, B, C, D, E, Res> {
     func: Func,
     a: PhantomData<A>,
@@ -3075,6 +3196,10 @@ where
     }
 }
 
+/// Helper type for wrapping a function as a Ruby method ignoring self and
+/// taking 6 arguments, with type conversions and error handling.
+///
+/// See the [`function`] macro.
 pub struct Function6<Func, A, B, C, D, E, F, Res> {
     func: Func,
     a: PhantomData<A>,
@@ -3155,6 +3280,10 @@ where
     }
 }
 
+/// Helper type for wrapping a function as a Ruby method ignoring self and
+/// taking 7 arguments, with type conversions and error handling.
+///
+/// See the [`function`] macro.
 pub struct Function7<Func, A, B, C, D, E, F, G, Res> {
     func: Func,
     a: PhantomData<A>,
@@ -3241,6 +3370,10 @@ where
     }
 }
 
+/// Helper type for wrapping a function as a Ruby method ignoring self and
+/// taking 8 arguments, with type conversions and error handling.
+///
+/// See the [`function`] macro.
 pub struct Function8<Func, A, B, C, D, E, F, G, H, Res> {
     func: Func,
     a: PhantomData<A>,
@@ -3333,6 +3466,10 @@ where
     }
 }
 
+/// Helper type for wrapping a function as a Ruby method ignoring self and
+/// taking 9 arguments, with type conversions and error handling.
+///
+/// See the [`function`] macro.
 pub struct Function9<Func, A, B, C, D, E, F, G, H, I, Res> {
     func: Func,
     a: PhantomData<A>,
@@ -3431,6 +3568,10 @@ where
     }
 }
 
+/// Helper type for wrapping a function as a Ruby method ignoring self and
+/// taking 10 arguments, with type conversions and error handling.
+///
+/// See the [`function`] macro.
 pub struct Function10<Func, A, B, C, D, E, F, G, H, I, J, Res> {
     func: Func,
     a: PhantomData<A>,
@@ -3535,6 +3676,10 @@ where
     }
 }
 
+/// Helper type for wrapping a function as a Ruby method ignoring self and
+/// taking 11 arguments, with type conversions and error handling.
+///
+/// See the [`function`] macro.
 pub struct Function11<Func, A, B, C, D, E, F, G, H, I, J, K, Res> {
     func: Func,
     a: PhantomData<A>,
@@ -3646,6 +3791,10 @@ where
     }
 }
 
+/// Helper type for wrapping a function as a Ruby method ignoring self and
+/// taking 12 arguments, with type conversions and error handling.
+///
+/// See the [`function`] macro.
 pub struct Function12<Func, A, B, C, D, E, F, G, H, I, J, K, L, Res> {
     func: Func,
     a: PhantomData<A>,
@@ -3763,6 +3912,10 @@ where
     }
 }
 
+/// Helper type for wrapping a function as a Ruby method ignoring self and
+/// taking 13 arguments, with type conversions and error handling.
+///
+/// See the [`function`] macro.
 pub struct Function13<Func, A, B, C, D, E, F, G, H, I, J, K, L, M, Res> {
     func: Func,
     a: PhantomData<A>,
@@ -3886,6 +4039,10 @@ where
     }
 }
 
+/// Helper type for wrapping a function as a Ruby method ignoring self and
+/// taking 14 arguments, with type conversions and error handling.
+///
+/// See the [`function`] macro.
 pub struct Function14<Func, A, B, C, D, E, F, G, H, I, J, K, L, M, N, Res> {
     func: Func,
     a: PhantomData<A>,
@@ -4015,6 +4172,10 @@ where
     }
 }
 
+/// Helper type for wrapping a function as a Ruby method ignoring self and
+/// taking 15 arguments, with type conversions and error handling.
+///
+/// See the [`function`] macro.
 pub struct Function15<Func, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, Res> {
     func: Func,
     a: PhantomData<A>,
@@ -4150,6 +4311,10 @@ where
     }
 }
 
+/// Helper type for wrapping a function as a Ruby method ignoring self and
+/// taking 16 arguments, with type conversions and error handling.
+///
+/// See the [`function`] macro.
 pub struct Function16<Func, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Res> {
     func: Func,
     a: PhantomData<A>,
@@ -4291,6 +4456,8 @@ where
     }
 }
 
+/// Converts a Rust function item to a function pointer that can be bound as a
+/// Ruby method ignoring self.
 #[macro_export]
 macro_rules! function {
     ($name:expr, -2) => {{

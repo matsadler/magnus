@@ -1,4 +1,6 @@
-use std::{any::Any, borrow::Cow, ffi::CString, fmt, ops::Deref, os::raw::c_int};
+//! Rust types for working with Ruby Exceptions and other interrupts.
+
+use std::{any::Any, borrow::Cow, ffi::CString, fmt, mem::transmute, ops::Deref, os::raw::c_int};
 
 use crate::{
     debug_assert_value,
@@ -9,17 +11,23 @@ use crate::{
         rb_eRangeError, rb_eStopIteration, rb_eTypeError, rb_ensure, rb_errinfo, rb_exc_raise,
         rb_jump_tag, rb_protect, rb_raise, rb_set_errinfo, ruby_special_consts, VALUE,
     },
-    value::{QNIL, Value},
+    value::{Value, QNIL},
 };
 
+/// A Rust representation of a Ruby `Exception` or other interrupt.
 #[derive(Debug)]
 pub enum Error {
+    /// An interrupt, such as `break` or `throw`.
     Jump(Tag),
+    /// An error generated in Rust code that will raise an exception when
+    /// returned to Ruby.
     Error(ExceptionClass, Cow<'static, str>),
+    /// A Ruby `Exception` captured from Ruby as an Error.
     Exception(Exception),
 }
 
 impl Error {
+    /// Create a new `Error` that can be raised as a Ruby `Exception` with `msg`.
     pub fn new<T>(class: ExceptionClass, msg: T) -> Self
     where
         T: Into<Cow<'static, str>>,
@@ -27,6 +35,7 @@ impl Error {
         Self::Error(class, msg.into())
     }
 
+    /// Create a new `RuntimeError` with `msg`.
     pub fn runtime_error<T>(msg: T) -> Self
     where
         T: Into<Cow<'static, str>>,
@@ -34,6 +43,7 @@ impl Error {
         Self::Error(Default::default(), msg.into())
     }
 
+    /// Create a new `ArgumentError` with `msg`.
     pub fn argument_error<T>(msg: T) -> Self
     where
         T: Into<Cow<'static, str>>,
@@ -44,6 +54,7 @@ impl Error {
         )
     }
 
+    /// Create a new `RangeError` with `msg`.
     pub fn range_error<T>(msg: T) -> Self
     where
         T: Into<Cow<'static, str>>,
@@ -54,6 +65,7 @@ impl Error {
         )
     }
 
+    /// Create a new `TypeError` with `msg`.
     pub fn type_error<T>(msg: T) -> Self
     where
         T: Into<Cow<'static, str>>,
@@ -64,6 +76,7 @@ impl Error {
         )
     }
 
+    /// Create a new `EncodingError` with `msg`.
     pub fn encoding_error<T>(msg: T) -> Self
     where
         T: Into<Cow<'static, str>>,
@@ -74,6 +87,7 @@ impl Error {
         )
     }
 
+    /// Create a new `IndexError` with `msg`.
     pub fn index_error<T>(msg: T) -> Self
     where
         T: Into<Cow<'static, str>>,
@@ -84,6 +98,7 @@ impl Error {
         )
     }
 
+    /// Create a new `FrozenError` with `msg`.
     pub fn frozen_error<T>(msg: T) -> Self
     where
         T: Into<Cow<'static, str>>,
@@ -94,6 +109,7 @@ impl Error {
         )
     }
 
+    /// Create a new `StopIteration` with `msg`.
     pub fn stop_iteration<T>(msg: T) -> Self
     where
         T: Into<Cow<'static, str>>,
@@ -104,6 +120,8 @@ impl Error {
         )
     }
 
+    /// Matches the internal `Exception` against `class` with same semantics as
+    /// Ruby's `rescue`.
     pub fn is_kind_of<T>(&self, class: T) -> bool
     where
         T: Deref<Target = Value> + Module,
@@ -115,6 +133,10 @@ impl Error {
         }
     }
 
+    /// Create an `Error` from the error value of [`std::panic::catch_unwind`].
+    ///
+    /// The Ruby Exception will be `fatal`, terminating the Ruby process, but
+    /// allowing cleanup code to run.
     pub(crate) fn from_panic(e: Box<dyn Any + Send + 'static>) -> Self {
         let msg = if let Some(&m) = e.downcast_ref::<&'static str>() {
             m.into()
@@ -152,10 +174,12 @@ impl From<Exception> for Error {
     }
 }
 
+/// The state of a call to Ruby exiting early, interrupting the normal flow
+/// of code.
 #[derive(Debug)]
 #[repr(i32)]
 pub enum Tag {
-    None = 0,
+    // None = 0,
     Return = 1,
     Break = 2,
     Next = 3,
@@ -176,7 +200,7 @@ impl Tag {
 impl fmt::Display for Tag {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::None => write!(f, "None"),
+            // Self::None => write!(f, "None"),
             Self::Return => write!(f, "Return"),
             Self::Break => write!(f, "Break"),
             Self::Next => write!(f, "Next"),
@@ -189,6 +213,12 @@ impl fmt::Display for Tag {
     }
 }
 
+/// Calls the given closure, rescuing Ruby Exceptions and returning them as
+/// an [`Error`].
+///
+/// All functions exposed by magnus that call Ruby in a way that may raise
+/// already use this internally, but this is provided for anyone calling
+/// the Ruby C API directly.
 pub fn protect<F>(func: F) -> Result<Value, Error>
 where
     F: FnOnce() -> Value,
@@ -203,7 +233,8 @@ where
         (closure)().as_rb_value()
     }
 
-    let mut state = Tag::None;
+    // Tag::None
+    let mut state = 0;
     // rb_protect takes:
     // arg1: function pointer that returns a VALUE
     // arg2: a VALUE
@@ -219,21 +250,19 @@ where
     let result = unsafe {
         let mut some_func = Some(func);
         let closure = &mut some_func as *mut Option<F> as VALUE;
-        rb_protect(
-            Some(call::<F>),
-            closure,
-            &mut state as *mut Tag as *mut c_int,
-        )
+        rb_protect(Some(call::<F>), closure, &mut state as *mut c_int)
     };
 
     match state {
-        Tag::None => Ok(Value::new(result)),
-        Tag::Raise => unsafe {
+        // Tag::None
+        0 => Ok(Value::new(result)),
+        // Tag::Raise
+        6 => unsafe {
             let ex = Exception::from_rb_value_unchecked(rb_errinfo());
             rb_set_errinfo(QNIL.as_rb_value());
             Err(Error::Exception(ex))
         },
-        other => Err(Error::Jump(other)),
+        other => Err(Error::Jump(unsafe { transmute(other) })),
     }
 }
 

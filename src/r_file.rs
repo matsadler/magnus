@@ -8,11 +8,13 @@ use crate::{
     value::{NonZeroValue, Value},
 };
 
+/// A Value pointer to a RFile struct, Ruby's internal representation of files.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct RFile(NonZeroValue);
 
 impl RFile {
+    /// Return `Some(RFile)` if `val` is a `RFile`, `None` otherwise.
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
         unsafe {

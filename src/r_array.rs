@@ -22,11 +22,14 @@ use crate::ruby_sys::ruby_rarray_consts::RARRAY_EMBED_LEN_SHIFT;
 #[cfg(ruby_lt_3_0)]
 use crate::ruby_sys::ruby_rarray_flags::RARRAY_EMBED_LEN_SHIFT;
 
+/// A Value pointer to a RArray struct, Ruby's internal representation of an
+/// Array.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct RArray(NonZeroValue);
 
 impl RArray {
+    /// Return `Some(RArray)` if `val` is a `RArray`, `None` otherwise.
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
         unsafe {

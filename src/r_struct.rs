@@ -1,3 +1,5 @@
+//! Types and functions for working with Ruby's Struct class.
+
 use std::{
     borrow::Cow,
     ffi::CString,
@@ -66,11 +68,14 @@ mod sys {
     }
 }
 
+/// A Value pointer to a RStruct struct, Ruby’s internal representation of
+/// 'Structs'.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct RStruct(NonZeroValue);
 
 impl RStruct {
+    /// Return `Some(RStruct)` if `val` is a `RStruct`, `None` otherwise.
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
         unsafe {
@@ -84,6 +89,10 @@ impl RStruct {
         unsafe { NonNull::new_unchecked(self.0.get().as_rb_value() as *mut _) }
     }
 
+    /// Return the members of the struct as a slice of [`Value`]s. The order
+    /// will be the order the of the member names when the struct class was
+    /// defined.
+    ///
     /// # Safety
     ///
     /// Ruby may modify or free the memory backing the returned slice, the
@@ -108,6 +117,8 @@ impl RStruct {
         }
     }
 
+    /// Return the value for the member at `index`, where members are ordered
+    /// as per the member names when the struct class was defined.
     pub fn get<T>(self, index: usize) -> Result<T, Error>
     where
         T: TryConvert,
@@ -127,6 +138,9 @@ impl RStruct {
         }
     }
 
+    /// Return the value for the member at `index`.
+    ///
+    /// `index` may be an integer, string, or [`Symbol`].
     pub fn aref<T, U>(self, index: T) -> Result<U, Error>
     where
         T: Into<Value>,
@@ -139,6 +153,9 @@ impl RStruct {
         }
     }
 
+    /// Return the value for the member at `index`.
+    ///
+    /// `index` may be an integer, string, or [`Symbol`].
     pub fn aset<T, U>(self, index: T, val: U) -> Result<(), Error>
     where
         T: Into<Value>,
@@ -158,6 +175,7 @@ impl RStruct {
         Ok(())
     }
 
+    /// Returns the count of members this struct has.
     pub fn size(self) -> usize {
         unsafe {
             Value::new(rb_struct_size(self.as_rb_value()))
@@ -166,6 +184,7 @@ impl RStruct {
         }
     }
 
+    /// Returns the member names for this struct as [`Symbol`]s.
     pub fn members(self) -> Result<Vec<Cow<'static, str>>, Error> {
         unsafe {
             let array = RArray::from_rb_value_unchecked(rb_struct_members(self.as_rb_value()));
@@ -177,6 +196,7 @@ impl RStruct {
         }
     }
 
+    /// Return the value for the member named `id`.
     pub fn getmember<T, U>(self, id: T) -> Result<U, Error>
     where
         T: Into<Id>,
@@ -230,6 +250,7 @@ impl TryConvert for RStruct {
     }
 }
 
+/// Define a Ruby Struct class.
 pub fn define_struct<T>(name: Option<&str>, members: T) -> Result<RClass, Error>
 where
     T: StructMembers,

@@ -14,11 +14,13 @@ pub(crate) enum IntegerType {
     Bignum(RBignum),
 }
 
+/// A type wrapping either a fixnum value or a Value pointer to a RBignum.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct Integer(NonZeroValue);
 
 impl Integer {
+    /// Return `Some(Integer)` if `val` is an `Integer`, `None` otherwise.
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
         unsafe {

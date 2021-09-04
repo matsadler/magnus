@@ -9,11 +9,14 @@ use crate::{
     value::{Flonum, NonZeroValue, Value},
 };
 
+/// A Value pointer to a RFloat struct, Ruby's internal representation of
+/// high precision floating point numbers.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct RFloat(NonZeroValue);
 
 impl RFloat {
+    /// Return `Some(RFloat)` if `val` is a `RFloat`, `None` otherwise.
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
         unsafe {

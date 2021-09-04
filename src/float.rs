@@ -10,11 +10,14 @@ use crate::{
     value::{NonZeroValue, Value},
 };
 
+/// A type wrapping either a flonum value or a Value known to be an instance of
+/// Float.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct Float(NonZeroValue);
 
 impl Float {
+    /// Return `Some(Float)` if `val` is a `Float`, `None` otherwise.
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
         unsafe {

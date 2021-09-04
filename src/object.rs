@@ -9,7 +9,12 @@ use crate::{
     value::{Id, Value},
 };
 
+/// Functions available all non-immediate values.
 pub trait Object: Deref<Target = Value> + Copy {
+    /// Define a singleton method in `self`'s scope.
+    ///
+    /// Singleton methods defined on a class are Ruby's method for implementing
+    /// 'class' methods.
     fn define_singleton_method<M>(self, name: &str, func: M)
     where
         M: Method,
@@ -26,6 +31,9 @@ pub trait Object: Deref<Target = Value> + Copy {
         }
     }
 
+    /// Get the value for the instance variable `name` within `self`'s scope.
+    ///
+    /// Note, the `@` is part of the name.
     fn ivar_get<T, U>(self, name: T) -> Result<U, Error>
     where
         T: Into<Id>,
@@ -37,6 +45,9 @@ pub trait Object: Deref<Target = Value> + Copy {
         res.and_then(|v| v.try_convert())
     }
 
+    /// Set the value for the instance variable `name` within `self`'s scope.
+    ///
+    /// Note, the `@` is part of the name.
     fn ivar_set<T, U>(self, name: T, value: U) -> Result<(), Error>
     where
         T: Into<Id>,

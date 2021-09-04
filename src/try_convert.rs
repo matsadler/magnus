@@ -8,9 +8,10 @@ use crate::{
     r_hash::RHash,
     r_string::RString,
     ruby_sys::{rb_get_path, rb_num2dbl},
-    value::{QNIL, Value},
+    value::{Value, QNIL},
 };
 
+/// Conversions from [`Value`] to Rust types.
 pub trait TryConvert: Sized {
     fn try_convert(val: &Value) -> Result<Self, Error>;
 }
@@ -717,6 +718,8 @@ impl TryConvert for PathBuf {
 
 impl TryConvertOwned for PathBuf {}
 
+/// Trait for types that can be used as an arguments list when calling Ruby
+/// methods.
 pub trait ArgList {
     type Output: AsRef<[Value]>;
 

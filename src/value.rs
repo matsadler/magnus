@@ -1,3 +1,5 @@
+//! Types for working with Ruby's VALUE type, representing all objects, and 'immediate' values such as Fixnum.
+
 use std::{
     borrow::Cow,
     ffi::CStr,
@@ -32,6 +34,8 @@ use crate::{
     try_convert::{ArgList, TryConvert, TryConvertOwned},
 };
 
+/// Debug assertation that the Value hasn't been garbage collected.
+///
 // This isn't infallible, if the original object was gc'd and that slot
 // reused already this won't panic like it should, but we're trying our
 // best here.
@@ -59,6 +63,7 @@ macro_rules! debug_assert_value {
     };
 }
 
+/// Ruby's `VALUE` type, which can represent any Ruby object.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct Value(VALUE);
@@ -78,6 +83,13 @@ impl Value {
         ptr::NonNull::new_unchecked(self.0 as *mut RBasic)
     }
 
+    /// Returns whether `self` is an 'immediate' value.
+    ///
+    /// 'immediate' values are encoded directly into the `Value` and require
+    /// no additional lookup. They will never be garbage collected.
+    ///
+    /// non-immediate values are pointers to other memory holding the data for
+    /// the object.
     #[inline]
     fn is_immediate(self) -> bool {
         let value_p = self.as_rb_value();
@@ -96,6 +108,7 @@ impl Value {
         self.as_rb_value() == ruby_special_consts::RUBY_Qfalse as VALUE
     }
 
+    /// Returns whether `self` is Ruby's `nil` value.
     #[inline]
     pub fn is_nil(self) -> bool {
         self.as_rb_value() == ruby_special_consts::RUBY_Qnil as VALUE
@@ -163,6 +176,11 @@ impl Value {
         }
     }
 
+    /// Returns the class that `self` is an instance of.
+    ///
+    /// # Panics
+    ///
+    /// panics if self is `Qundef`.
     pub fn class(self) -> RClass {
         unsafe {
             match self.r_basic() {
@@ -195,12 +213,16 @@ impl Value {
         self.0
     }
 
+    /// Registers `self` as to never be garbage collected.
     pub fn leak(self) {
         debug_assert_value!(self);
         // safe ffi to Ruby, call doesn't raise
         unsafe { rb_gc_register_mark_object(self.as_rb_value()) }
     }
 
+    /// Returns whether `self` is 'frozen'.
+    ///
+    /// Ruby prevents modifying frozen objects.
     pub fn is_frozen(self) -> bool {
         match self.r_basic() {
             None => true,
@@ -210,6 +232,23 @@ impl Value {
         }
     }
 
+    /// Returns an error if `self` is 'frozen'.
+    ///
+    /// Useful for checking if an object is frozen in a function that would
+    /// modify it.
+    ///
+    /// # Examples
+    /// ``` no_run
+    /// use magnus::{Error, Value};
+    ///
+    /// fn mutate(val: Value) -> Result<(), Error> {
+    ///     val.check_frozen()?;
+    ///
+    ///     /// ...
+    ///
+    ///     Ok(())
+    /// }
+    /// ```
     pub fn check_frozen(self) -> Result<(), Error> {
         if self.is_frozen() {
             Err(Error::frozen_error(format!(
@@ -221,15 +260,23 @@ impl Value {
         }
     }
 
+    /// Mark `self` as frozen.
     pub fn freeze(self) {
         unsafe { rb_obj_freeze(self.as_rb_value()) };
     }
 
+    /// Convert `self` to a `bool`, following Ruby's rules of `false` and `nil`
+    /// as boolean `false` and everything else boolean `true`.
     #[inline]
     pub fn to_bool(self) -> bool {
         self.as_rb_value() & !(ruby_special_consts::RUBY_Qnil as VALUE) != 0
     }
 
+    /// Call the method named `method` on `self` with `args`.
+    ///
+    /// Returns `Ok(T)` if the method returns without error and the return
+    /// value converts to a `T`, or returns `Err` if the method raises or the
+    /// conversion fails.
     pub fn funcall<M, A, T>(self, method: M, args: A) -> Result<T, Error>
     where
         M: Into<Id>,
@@ -252,6 +299,10 @@ impl Value {
         }
     }
 
+    /// Convert `self` to a Ruby `String`.
+    ///
+    /// If `self` is alreay a `String` is it wrapped as a `RString`, otherwise
+    /// the Ruby `to_s` method is called.
     pub fn to_r_string(self) -> Result<RString, Error> {
         match RString::from_value(self) {
             Some(v) => Ok(v),
@@ -262,10 +313,23 @@ impl Value {
         }
     }
 
+    /// Convert `self` to a Rust string.
+    ///
     /// # Safety
     ///
     /// Ruby may modify or free the memory backing the returned str, the caller
     /// must ensure this does not happen.
+    ///
+    /// This can be used safely by immediately calling
+    /// [`into_owned`](Cow::into_owned) on the return value.
+    ///
+    /// # Examples
+    ///
+    /// ``` no_run
+    /// # let value = magnus::QNIL;
+    /// // safe as we neve give Ruby a chance to free the string.
+    /// unsafe { value.to_s() }.unwrap().into_owned();
+    /// ```
     #[allow(clippy::wrong_self_convention)]
     pub unsafe fn to_s(&self) -> Result<Cow<str>, Error> {
         if let Some(s) = RString::ref_from_value(self) {
@@ -279,6 +343,9 @@ impl Value {
             .and_then(|s| s.to_string().map(Cow::Owned))
     }
 
+    /// Convert `self` to a string. If an error is encountered returns a
+    /// generic string (usually the objects class name).
+    ///
     /// # Safety
     ///
     /// Ruby may modify or free the memory backing the returned str, the caller
@@ -295,6 +362,7 @@ impl Value {
         }
     }
 
+    /// Convert `self` to its Ruby debug representation.
     pub fn inspect(self) -> String {
         unsafe {
             let s = protect(|| Value::new(rb_inspect(self.as_rb_value())))
@@ -306,16 +374,30 @@ impl Value {
         }
     }
 
+    /// Return name of `self`'s class.
+    ///
     /// # Safety
     ///
     /// Ruby may modify or free the memory backing the returned str, the caller
     /// must ensure this does not happen.
+    ///
+    /// This can be used safely by immediately calling
+    /// [`into_owned`](Cow::into_owned) on the return value.
+    ///
+    /// # Examples
+    ///
+    /// ``` no_run
+    /// # let value = magnus::QNIL;
+    /// // safe as we neve give Ruby a chance to free the string.
+    /// unsafe { value.classname() }.into_owned();
+    /// ```
     pub unsafe fn classname(&self) -> Cow<str> {
         let ptr = rb_obj_classname(self.as_rb_value());
         let cstr = CStr::from_ptr(ptr);
         cstr.to_string_lossy()
     }
 
+    /// Returns whether or not `self` is an instance of `class`.
     pub fn is_kind_of<T>(self, class: T) -> bool
     where
         T: Deref<Target = Value> + Module,
@@ -323,6 +405,8 @@ impl Value {
         unsafe { Value::new(rb_obj_is_kind_of(self.as_rb_value(), class.as_rb_value())).to_bool() }
     }
 
+    /// Generate an [`Enumerator`] from `method` on `self`, passing `args` to
+    /// `method`.
     pub fn enumeratorize<M, A>(self, method: M, args: A) -> Enumerator
     where
         M: Into<Symbol>,
@@ -341,6 +425,7 @@ impl Value {
         }
     }
 
+    /// Convert `self` to the Rust type `T`.
     #[inline]
     pub fn try_convert<T>(&self) -> Result<T, Error>
     where
@@ -536,10 +621,12 @@ impl From<BoxValue> for Value {
     }
 }
 
+/// Ruby's `false` value.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct Qfalse(VALUE);
 
+/// Ruby's `false` value.
 pub const QFALSE: Qfalse = Qfalse::new();
 
 impl Qfalse {
@@ -548,6 +635,7 @@ impl Qfalse {
         Qfalse(ruby_special_consts::RUBY_Qfalse as VALUE)
     }
 
+    /// Return `Some(Qfalse)` if `val` is a `Qfalse`, `None` otherwise.
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
         val.is_false().then(Self::new)
@@ -596,10 +684,12 @@ impl TryConvert for Qfalse {
 }
 impl TryConvertOwned for Qfalse {}
 
+/// Ruby's `nil` value.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct Qnil(NonZeroValue);
 
+/// Ruby's `nil` value.
 pub const QNIL: Qnil = Qnil::new();
 
 impl Qnil {
@@ -612,6 +702,7 @@ impl Qnil {
         }
     }
 
+    /// Return `Some(Qnil)` if `val` is a `Qnil`, `None` otherwise.
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
         val.is_nil().then(Self::new)
@@ -675,10 +766,12 @@ impl TryConvert for Qnil {
 }
 impl TryConvertOwned for Qnil {}
 
+/// Ruby's `true` value.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct Qtrue(NonZeroValue);
 
+/// Ruby's `true` value.
 pub const QTRUE: Qtrue = Qtrue::new();
 
 impl Qtrue {
@@ -691,6 +784,7 @@ impl Qtrue {
         }
     }
 
+    /// Return `Some(Qtrue)` if `val` is a `Qtrue`, `None` otherwise.
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
         val.is_true().then(Self::new)
@@ -746,10 +840,14 @@ impl TryConvert for Qtrue {
 }
 impl TryConvertOwned for Qtrue {}
 
+/// A placeholder value that represents an undefined value. Not exposed to
+/// Ruby level code.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct Qundef(NonZeroValue);
 
+/// A placeholder value that represents an undefined value. Not exposed to
+/// Ruby level code.
 pub const QUNDEF: Qundef = Qundef::new();
 
 impl Qundef {
@@ -762,6 +860,7 @@ impl Qundef {
         }
     }
 
+    /// Return `Some(Qundef)` if `val` is a `Qundef`, `None` otherwise.
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
         val.is_undef().then(Self::new)
@@ -773,11 +872,14 @@ impl Qundef {
     }
 }
 
+/// A Value known to be a fixnum, Ruby's internal representation of small
+/// integers.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct Fixnum(NonZeroValue);
 
 impl Fixnum {
+    /// Return `Some(Fixnum)` if `val` is a `Fixnum`, `None` otherwise.
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
         unsafe {
@@ -975,11 +1077,15 @@ impl TryConvert for Fixnum {
 }
 impl TryConvertOwned for Fixnum {}
 
+/// A static Ruby symbol that will live for the life of the program and never
+/// be garbage collected.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct StaticSymbol(NonZeroValue);
 
 impl StaticSymbol {
+    /// Return `Some(StaticSymbol)` if `val` is a `StaticSymbol`, `None`
+    /// otherwise.
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
         unsafe {
@@ -1055,6 +1161,7 @@ impl TryConvert for StaticSymbol {
 }
 impl TryConvertOwned for StaticSymbol {}
 
+/// The internal value of a Ruby symbol.
 #[derive(Clone, Copy, Debug)]
 #[repr(transparent)]
 pub struct Id(ID);
@@ -1098,11 +1205,14 @@ impl From<Symbol> for Id {
     }
 }
 
+/// A Value known to be a flonum, Ruby's internal representation of low
+/// precision floating point numbers.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct Flonum(NonZeroValue);
 
 impl Flonum {
+    /// Return `Some(Flonum)` if `val` is a `Flonum`, `None` otherwise.
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
         unsafe {

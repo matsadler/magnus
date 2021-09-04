@@ -1,3 +1,8 @@
+//! Types and Traits for wrapping Rust types as Ruby objects.
+//!
+//! This provides a Rust API to the `rb_data_typed_object_wrap` function from
+//! Ruby's C API.
+
 use std::{
     ffi::{c_void, CString},
     fmt,
@@ -17,7 +22,7 @@ use crate::{
         rb_data_typed_object_wrap, ruby_value_type, size_t, VALUE,
     },
     try_convert::TryConvert,
-    value::{NonZeroValue, QNIL, Value},
+    value::{NonZeroValue, Value, QNIL},
 };
 
 #[cfg(ruby_gte_3_0)]
@@ -31,11 +36,14 @@ const RUBY_TYPED_FREE_IMMEDIATELY: u32 = 1;
 #[cfg(ruby_lt_3_0)]
 const RUBY_TYPED_WB_PROTECTED: u32 = crate::ruby_sys::ruby_fl_type::RUBY_FL_WB_PROTECTED as u32;
 
+/// A Value pointer to a RTypedData struct, Ruby’s internal representation of
+/// objects that wrap foreign types.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct RTypedData(NonZeroValue);
 
 impl RTypedData {
+    /// Return `Some(RTypedData)` if `val` is a `RTypedData`, `None` otherwise.
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
         unsafe {
@@ -77,6 +85,8 @@ impl From<RTypedData> for Value {
 
 impl Object for RTypedData {}
 
+/// A C struct containing metadata on a Rust type, for use with the
+/// `rb_data_typed_object_wrap` API.
 pub type DataType = rb_data_type_t;
 
 impl DataType {
@@ -96,50 +106,87 @@ impl Drop for DataType {
     }
 }
 
+/// A helper trait used to define functions associated with a [`DataType`].
 pub trait DataTypeFunctions
 where
     Self: Sized,
 {
+    /// Called when the Ruby wrapper object is garbage collected.
+    ///
+    /// This can be implemented to perform Ruby-specific clean up when your
+    /// type is no longer referenced from Ruby, but it is likely easier to do
+    /// this in a Drop implementation for your type.
+    ///
+    /// The default implementation simply drops `self`.
     fn free(self: Box<Self>) {}
 
+    /// Called when Ruby marks this object as part of garbage collection.
+    ///
+    /// If your type contains any Ruby values you must mark each of those
+    /// values in this function to avoid them being garbage collected.
+    ///
+    /// The default implementation does nothing.
     fn mark(&mut self) {}
 
+    /// Called by Ruby to establish the memory size of this data, to optimise
+    /// when garbage collection happens.
+    ///
+    /// The default implementation delegates to [`std::mem::size_of_val`].
     fn size(&self) -> usize {
         size_of_val(self)
     }
 
+    /// Called during garbage collection.
+    ///
+    /// If your type contains any Ruby values that have been marked as moveable
+    /// you must update them in this function.
+    ///
+    /// The default implementation does nothing.
     fn compact(&mut self) {}
 
+    /// Extern wrapper for `free`. Don't define or call.
+    ///
     /// # Safety
     ///
     /// `ptr` must be a vaild pointer to a `Box<Self>`, and must not be aliased
     /// This function will free the memory pointed to by `ptr`.
+    #[doc(hidden)]
     unsafe extern "C" fn extern_free(ptr: *mut c_void) {
         Self::free(Box::from_raw(ptr as *mut _))
     }
 
+    /// Extern wrapper for `mark`. Don't define or call.
+    ///
     /// # Safety
     ///
     /// `ptr` must be a vaild pointer to a `Self`, and must not be aliased.
+    #[doc(hidden)]
     unsafe extern "C" fn extern_mark(ptr: *mut c_void) {
         Self::mark(&mut *(ptr as *mut Self));
     }
 
+    /// Extern wrapper for `size`. Don't define or call.
+    ///
     /// # Safety
     ///
     /// `ptr` must be a vaild pointer to a `Self`.
+    #[doc(hidden)]
     unsafe extern "C" fn extern_size(ptr: *const c_void) -> size_t {
         Self::size(&*(ptr as *const Self)) as size_t
     }
 
+    /// Extern wrapper for `compact`. Don't define or call.
+    ///
     /// # Safety
     ///
     /// `ptr` must be a vaild pointer to a `Self`, and must not be aliased.
+    #[doc(hidden)]
     unsafe extern "C" fn extern_compact(ptr: *mut c_void) {
         Self::compact(&mut *(ptr as *mut Self));
     }
 }
 
+/// A builder for [`DataType`].
 pub struct DataTypeBuilder<T> {
     name: &'static str,
     mark: bool,
@@ -155,6 +202,7 @@ impl<T> DataTypeBuilder<T>
 where
     T: DataTypeFunctions,
 {
+    /// Create a new `DataTypeBuilder`.
     pub fn new(name: &'static str) -> Self {
         Self {
             name,
@@ -168,30 +216,48 @@ where
         }
     }
 
+    /// Enable using the the `mark` function from `<T as DataTypeFunctions>`.
     pub fn mark(&mut self) {
         self.mark = true;
     }
 
+    /// Enable using the the `size` function from `<T as DataTypeFunctions>`.
     pub fn size(&mut self) {
         self.size = true;
     }
 
+    /// Enable using the the `compact` function from `<T as DataTypeFunctions>`.
     pub fn compact(&mut self) {
         self.compact = true;
     }
 
+    /// Enable the 'free_immediatly' flag.
+    ///
+    /// This is safe to do as long as the `<T as DataTypeFunctions>::free`
+    /// function or `T`'s drop function don't call Ruby in any way.
+    ///
+    /// If safe this should be enabled as this performs better and is more
+    /// memory efficient.
     pub fn free_immediatly(&mut self) {
         self.free_immediatly = true;
     }
 
+    /// Enable the 'write barrier protected' flag.
+    ///
+    /// You almost certainly don't want to enable this.
     pub fn wb_protected(&mut self) {
         self.wb_protected = true;
     }
 
+    /// Enable the 'frozen_shareable' flag.
+    ///
+    /// Set this if your type is thread safe when the Ruby wrapper object is
+    /// frozen.
     pub fn frozen_shareable(&mut self) {
         self.frozen_shareable = true;
     }
 
+    /// Consume the builder and create a DataType.
     pub fn build(self) -> DataType {
         let mut flags = 0_usize as VALUE;
         if self.free_immediatly {
@@ -229,12 +295,40 @@ where
     }
 }
 
+/// A trait for Rust types that can be used with the `rb_data_typed_object_wrap`
+/// API.
 pub unsafe trait TypedData
 where
     Self: Sized,
 {
+    /// Should return the class for the Ruby object wrapping the Rust type.
+    ///
+    /// # Examples
+    ///
+    /// ``` no_run
+    /// use magnus::{define_class, memoize, RClass};
+    ///
+    /// fn class() -> RClass {
+    ///     *memoize!(RClass: define_class("Foo", Default::default()).unwrap())
+    /// }
+    /// ```
     fn class() -> RClass;
 
+    /// Should return a static reference to a [`DataType`] with metadata about
+    /// the wrapped type.
+    ///
+    /// # Examples
+    ///
+    /// ``` no_run
+    /// use magnus::{memoize, r_typed_data::DataTypeBuilder, DataType, DataTypeFunctions};
+    ///
+    /// #[derive(DataTypeFunctions)]
+    /// struct Foo();
+    ///
+    /// fn data_type() -> &'static DataType {
+    ///     memoize!(DataType: DataTypeBuilder::<Foo>::new("foo").build())
+    /// }
+    /// ```
     fn data_type() -> &'static DataType;
 }
 

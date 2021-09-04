@@ -1,6 +1,6 @@
 use magnus::{
-    define_class, define_global_variable, embed::init, eval_static, DataTypeFunctions, QNIL,
-    TypedData, Value,
+    define_class, define_global_variable, embed::init, eval_static, DataTypeFunctions, TypedData,
+    Value, QNIL,
 };
 
 macro_rules! rb_assert {

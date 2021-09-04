@@ -7,11 +7,14 @@ use crate::{
     value::{NonZeroValue, Value},
 };
 
+/// A Value pointer to a RRational struct, Ruby's internal representation of
+/// rational numbers.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct RRational(NonZeroValue);
 
 impl RRational {
+    /// Return `Some(RRational)` if `val` is a `RRational`, `None` otherwise.
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
         unsafe {

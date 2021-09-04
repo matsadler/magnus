@@ -11,11 +11,13 @@ use crate::{
     value::{NonZeroValue, Value},
 };
 
+/// Wrapper type for a Value known to be an instance of Ruby's Exception class.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct Exception(NonZeroValue);
 
 impl Exception {
+    /// Return `Some(Exception)` if `val` is an `Exception`, `None` otherwise.
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
         debug_assert_value!(val);
@@ -78,11 +80,14 @@ impl From<Exception> for Value {
     }
 }
 
+/// A Value known to be an instance of Class and subclass of Exception.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct ExceptionClass(NonZeroValue);
 
 impl ExceptionClass {
+    /// Return `Some(ExceptionClass)` if `val` is an `ExceptionClass`, `None`
+    /// otherwise.
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
         debug_assert_value!(val);

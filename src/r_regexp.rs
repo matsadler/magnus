@@ -7,11 +7,14 @@ use crate::{
     value::{NonZeroValue, Value},
 };
 
+/// A Value pointer to a RRegexp struct, Ruby's internal representation of
+/// regular expressions.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct RRegexp(NonZeroValue);
 
 impl RRegexp {
+    /// Return `Some(RRegexp)` if `val` is a `RRegexp`, `None` otherwise.
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
         unsafe {

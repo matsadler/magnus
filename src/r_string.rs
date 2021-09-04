@@ -29,11 +29,14 @@ use crate::ruby_sys::{rb_str_to_interned_str, ruby_rstring_consts::RSTRING_EMBED
 #[cfg(ruby_lt_3_0)]
 use crate::ruby_sys::ruby_rstring_flags::RSTRING_EMBED_LEN_SHIFT;
 
+/// A Value pointer to a RString struct, Ruby's internal representation of
+/// strings.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct RString(NonZeroValue);
 
 impl RString {
+    /// Return `Some(RString)` if `val` is a `RString`, `None` otherwise.
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
         unsafe {

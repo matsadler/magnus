@@ -7,11 +7,14 @@ use crate::{
     value::{NonZeroValue, Value},
 };
 
+/// A Value pointer to a RComplex struct, Ruby's internal representation of
+/// complex numbers.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct RComplex(NonZeroValue);
 
 impl RComplex {
+    /// Return `Some(RComplex)` if `val` is a `RComplex`, `None` otherwise.
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
         unsafe {

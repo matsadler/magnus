@@ -15,7 +15,9 @@ use crate::{
     value::{Id, Value},
 };
 
+/// Functions available on both classes and modules.
 pub trait Module: Object + Deref<Target = Value> + Copy {
+    /// Define a class in `self`'s scope.
     fn define_class<T: Into<Id>>(self, name: T, superclass: RClass) -> Result<RClass, Error> {
         debug_assert_value!(self);
         debug_assert_value!(superclass);
@@ -33,6 +35,7 @@ pub trait Module: Object + Deref<Target = Value> + Copy {
         }
     }
 
+    /// Define a module in `self`'s scope.
     fn define_module<T: Into<Id>>(self, name: T) -> Result<RModule, Error> {
         let id = name.into();
         unsafe {
@@ -43,6 +46,7 @@ pub trait Module: Object + Deref<Target = Value> + Copy {
         }
     }
 
+    /// Get the value for the constant `name` within `self`'s scope.
     fn const_get<T, U>(self, name: T) -> Result<U, Error>
     where
         T: Into<Id>,
@@ -55,6 +59,9 @@ pub trait Module: Object + Deref<Target = Value> + Copy {
         res.and_then(|v| v.try_convert())
     }
 
+    /// Returns whether or not `other` inherits from `self`.
+    ///
+    /// Classes including a module are considered to inherit from that module.
     fn is_inherited<T>(self, other: T) -> bool
     where
         T: Deref<Target = Value> + Module,
@@ -68,6 +75,7 @@ pub trait Module: Object + Deref<Target = Value> + Copy {
         }
     }
 
+    /// Define a method in `self`'s scope.
     fn define_method<T, M>(self, name: T, func: M)
     where
         T: Into<Id>,
@@ -85,6 +93,7 @@ pub trait Module: Object + Deref<Target = Value> + Copy {
         }
     }
 
+    /// Define a private method in `self`'s scope.
     fn define_private_method<M>(self, name: &str, func: M)
     where
         M: Method,
@@ -101,6 +110,7 @@ pub trait Module: Object + Deref<Target = Value> + Copy {
         }
     }
 
+    /// Define a protected method in `self`'s scope.
     fn define_protected_method<M>(self, name: &str, func: M)
     where
         M: Method,
