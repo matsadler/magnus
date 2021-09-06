@@ -13,5 +13,5 @@ fn main() {
 
     magnus::define_global_function("fib", method!(fib, 1));
 
-    let _ = magnus::eval_static("p (0..12).map {|n| fib(n)}");
+    let _ = magnus::eval::<Value>("p (0..12).map {|n| fib(n)}");
 }

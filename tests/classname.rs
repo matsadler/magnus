@@ -1,11 +1,11 @@
-use magnus::eval_static;
+use magnus::{eval, Value};
 
 #[test]
 fn it_returns_the_class_name() {
     let _cleanup = unsafe { magnus::embed::init() };
 
     unsafe {
-        let val = eval_static("42").unwrap();
+        let val: Value = eval("42").unwrap();
 
         assert_eq!("Integer", val.classname());
     }

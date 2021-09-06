@@ -1,11 +1,11 @@
 use magnus::{
-    define_class, define_global_variable, embed::init, eval_static, DataTypeFunctions, TypedData,
-    Value, QNIL,
+    define_class, define_global_variable, embed::init, eval, DataTypeFunctions, TypedData, Value,
+    QNIL,
 };
 
 macro_rules! rb_assert {
     ($eval:literal) => {
-        assert!(magnus::eval_static($eval).unwrap().to_bool())
+        assert!(magnus::eval::<bool>($eval).unwrap())
     };
 }
 
@@ -34,7 +34,6 @@ fn it_wraps_rust_struct() {
     unsafe { val.replace(make_rb_example("foo")) };
     rb_assert!("$val.class == Example");
 
-    let value = eval_static("$val").unwrap();
-    let ex = value.try_convert::<&Example>().unwrap();
+    let ex: &Example = eval("$val").unwrap();
     assert_eq!("foo", ex.value)
 }

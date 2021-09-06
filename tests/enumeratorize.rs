@@ -1,8 +1,8 @@
-use magnus::{define_global_variable, eval_static};
+use magnus::{define_global_variable, eval, Value};
 
 macro_rules! rb_assert {
     ($eval:literal) => {
-        assert!(magnus::eval_static($eval).unwrap().to_bool())
+        assert!(magnus::eval::<bool>($eval).unwrap())
     };
 }
 
@@ -10,7 +10,7 @@ macro_rules! rb_assert {
 fn it_makes_an_enumerator() {
     let _cleanup = unsafe { magnus::embed::init() };
 
-    let val = eval_static(
+    let val: Value = eval(
         "
     class Test
       def each

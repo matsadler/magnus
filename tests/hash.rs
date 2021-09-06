@@ -1,9 +1,9 @@
-use magnus::{define_global_variable, eval_static};
+use magnus::{define_global_variable, eval};
 use std::collections::HashMap;
 
 macro_rules! rb_assert {
     ($eval:literal) => {
-        assert!(magnus::eval_static($eval).unwrap().to_bool())
+        assert!(magnus::eval::<bool>($eval).unwrap())
     };
 }
 
@@ -11,8 +11,7 @@ macro_rules! rb_assert {
 fn it_converts_hash_map() {
     let _cleanup = unsafe { magnus::embed::init() };
 
-    let val = eval_static(r#"{"foo" => 1, "bar" => 2, "baz" => 3}"#).unwrap();
-    let map = val.try_convert::<HashMap<String, u8>>().unwrap();
+    let map: HashMap<String, u8> = eval(r#"{"foo" => 1, "bar" => 2, "baz" => 3}"#).unwrap();
 
     let mut expected = HashMap::new();
     expected.insert("foo".to_owned(), 1);

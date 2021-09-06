@@ -1,12 +1,11 @@
-use magnus::{eval_static, Exception};
+use magnus::{eval, Error};
 
 #[test]
 fn it_includes_backtrace_in_debug() {
     let _cleanup = unsafe { magnus::embed::init() };
 
-    let err = Exception::from_value(
-        eval_static(
-            r#"
+    let err = eval::<magnus::Value>(
+        r#"
             def foo
               raise "bang"
             end
@@ -23,16 +22,15 @@ fn it_includes_backtrace_in_debug() {
               baz
             end
 
-            begin
-              qux
-            rescue => e
-            end
-            e
+            qux
         "#,
-        )
-        .unwrap(),
     )
-    .unwrap();
+    .unwrap_err();
+
+    let ex = match err {
+        Error::Exception(e) => e,
+        _ => panic!(),
+    };
 
     assert_eq!(
         r#"RuntimeError: bang
@@ -40,8 +38,8 @@ eval:3:in `foo'
 eval:7:in `bar'
 eval:11:in `baz'
 eval:15:in `qux'
-eval:19:in `<main>'
+eval:18:in `<main>'
 "#,
-        format!("{:#?}", err)
+        format!("{:#?}", ex)
     );
 }

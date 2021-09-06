@@ -35,8 +35,8 @@ pub use magnus_macros::{init, DataTypeFunctions, TypedData};
 use error::protect;
 use method::Method;
 use ruby_sys::{
-    rb_define_class, rb_define_global_function, rb_define_module, rb_define_variable,
-    rb_eval_string_protect, VALUE,
+    rb_define_class, rb_define_global_function, rb_define_module, rb_define_variable, rb_errinfo,
+    rb_eval_string_protect, rb_set_errinfo, VALUE,
 };
 
 pub use value::{Fixnum, Flonum, StaticSymbol, Value, QFALSE, QNIL, QTRUE};
@@ -145,18 +145,30 @@ where
     }
 }
 
-/// Eval a static string of Ruby code.
-pub fn eval_static(s: &'static str) -> Result<Value, Error> {
+/// Evaluate a string of Ruby code, converting the result to a `T`.
+///
+/// Errors if `s` contains a null byte, the conversion fails, or on an uncaught
+/// Ruby exception.
+pub fn eval<T>(s: &str) -> Result<T, Error>
+where
+    T: TryConvert,
+{
     let mut state = 0;
     // safe ffi to Ruby, captures raised errors (+ brake, throw, etc) as state
     let result = unsafe {
-        let s = CString::new(s).expect("NULL byte in eval string");
+        let s = CString::new(s).map_err(|e| Error::script_error(e.to_string()))?;
         rb_eval_string_protect(s.as_c_str().as_ptr(), &mut state as *mut _)
     };
 
-    if state == 0 {
-        Ok(Value::new(result))
-    } else {
-        Err(Error::Jump(unsafe { transmute(state) }))
+    match state {
+        // Tag::None
+        0 => Value::new(result).try_convert(),
+        // Tag::Raise
+        6 => unsafe {
+            let ex = Exception::from_rb_value_unchecked(rb_errinfo());
+            rb_set_errinfo(QNIL.as_rb_value());
+            Err(Error::Exception(ex))
+        },
+        other => Err(Error::Jump(unsafe { transmute(other) })),
     }
 }

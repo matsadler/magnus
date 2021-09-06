@@ -1,8 +1,8 @@
-use magnus::{eval_static, Object, RObject};
+use magnus::{eval, Object, RObject, Value};
 
 macro_rules! rb_assert {
     ($eval:literal) => {
-        assert!(magnus::eval_static($eval).unwrap().to_bool())
+        assert!(magnus::eval::<bool>($eval).unwrap())
     };
 }
 
@@ -10,13 +10,13 @@ macro_rules! rb_assert {
 fn it_modifies_ivars() {
     let _cleanup = unsafe { magnus::embed::init() };
 
-    let val = RObject::from_value(eval_static("$val = Object.new").unwrap()).unwrap();
+    let val = eval::<RObject>("$val = Object.new").unwrap();
 
     val.ivar_set("@test", 42).unwrap();
 
     rb_assert!("$val.instance_variable_get(:@test) == 42");
 
-    eval_static(r#"$val.instance_variable_set(:@example, "test")"#).unwrap();
+    eval::<Value>(r#"$val.instance_variable_set(:@example, "test")"#).unwrap();
 
     assert_eq!("test", val.ivar_get::<_, String>("@example").unwrap())
 }

@@ -1,11 +1,11 @@
 use std::ffi::CString;
 
 use magnus::ruby_sys::{rb_define_global_const, rb_gc_start};
-use magnus::{embed::init, eval_static, value::BoxValue};
+use magnus::{embed::init, eval, value::BoxValue, RString, Value};
 
 #[inline(never)]
 fn box_value() -> BoxValue {
-    BoxValue::new(eval_static(r#""foo""#).unwrap())
+    BoxValue::new(eval(r#""foo""#).unwrap())
 }
 
 #[test]
@@ -17,7 +17,7 @@ fn it_keeps_value_alive() {
     let val = box_value();
 
     // make some garbage
-    eval_static(r#"1024.times.map {|i| "test#{i}"}"#).unwrap();
+    eval::<Value>(r#"1024.times.map {|i| "test#{i}"}"#).unwrap();
     // run garbage collector
     unsafe {
         rb_gc_start();
@@ -31,7 +31,7 @@ fn it_keeps_value_alive() {
     }
 
     // try and use value
-    eval_static(r#"FOO + "bar""#).unwrap();
+    eval::<RString>(r#"FOO + "bar""#).unwrap();
 
     // didn't segfault? we passed!
 }

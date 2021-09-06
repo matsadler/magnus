@@ -1,9 +1,9 @@
-use magnus::{eval_static, RArray};
+use magnus::{eval, RArray};
 
 #[test]
 fn enumerator_impls_iterator() {
     let _cleanup = unsafe { magnus::embed::init() };
-    let a = RArray::from_value(eval_static("[1,2,3]").unwrap()).unwrap();
+    let a: RArray = eval("[1,2,3]").unwrap();
     let mut e = a.each();
     assert_eq!(
         e.next()

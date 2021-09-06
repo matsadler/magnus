@@ -1,8 +1,8 @@
-use magnus::{define_global_variable, StaticSymbol, Symbol, QNIL};
+use magnus::{define_global_variable, StaticSymbol, Symbol, Value, QNIL};
 
 macro_rules! rb_assert {
     ($eval:literal) => {
-        assert!(magnus::eval_static($eval).unwrap().to_bool())
+        assert!(magnus::eval::<bool>($eval).unwrap())
     };
 }
 
@@ -19,7 +19,7 @@ fn it_makes_a_symbol() {
     unsafe { val.replace(sym.into()) };
     rb_assert!("$val == :foo");
 
-    magnus::eval_static(":bar").unwrap();
+    magnus::eval::<Value>(":bar").unwrap();
     let sym = Symbol::new("bar");
     // static because there's a previous Ruby symbol literal
     assert!(sym.is_static());
