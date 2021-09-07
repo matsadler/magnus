@@ -8,8 +8,9 @@ use crate::{
     module::Module,
     ruby_sys::{
         rb_eArgError, rb_eEncodingError, rb_eFatal, rb_eFrozenError, rb_eIndexError,
-        rb_eRangeError, rb_eStopIteration, rb_eTypeError, rb_ensure, rb_errinfo, rb_exc_raise,
-        rb_jump_tag, rb_protect, rb_raise, rb_set_errinfo, ruby_special_consts, VALUE,
+        rb_eRangeError, rb_eScriptError, rb_eStopIteration, rb_eTypeError, rb_ensure, rb_errinfo,
+        rb_exc_raise, rb_jump_tag, rb_protect, rb_raise, rb_set_errinfo, ruby_special_consts,
+        VALUE,
     },
     value::{Value, QNIL},
 };
@@ -116,6 +117,17 @@ impl Error {
     {
         Self::Error(
             unsafe { ExceptionClass::from_rb_value_unchecked(rb_eStopIteration) },
+            msg.into(),
+        )
+    }
+
+    /// Create a new `ScriptError` with `msg`.
+    pub fn script_error<T>(msg: T) -> Self
+    where
+        T: Into<Cow<'static, str>>,
+    {
+        Self::Error(
+            unsafe { ExceptionClass::from_rb_value_unchecked(rb_eScriptError) },
             msg.into(),
         )
     }

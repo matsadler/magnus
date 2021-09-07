@@ -27,6 +27,9 @@ impl RModule {
         }
     }
 
+    /// Define a method in `self`'s scope as a 'module function'. This method
+    /// will be visible as a public 'class' method on the module and a private
+    /// instance method on any object including the module.
     pub fn define_module_function<M>(self, name: &str, func: M)
     where
         M: Method,

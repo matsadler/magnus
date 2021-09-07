@@ -30,6 +30,8 @@ impl RClass {
         Self(NonZeroValue::new_unchecked(Value::new(val)))
     }
 
+    /// Create a new object, an instance of `self`, passing the arguments
+    /// `args` to the initialiser.
     pub fn new_instance<T>(self, args: T) -> Result<Value, Error>
     where
         T: ArgList,

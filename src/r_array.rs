@@ -48,25 +48,31 @@ impl RArray {
         unsafe { NonNull::new_unchecked(self.0.get().as_rb_value() as *mut _) }
     }
 
+    /// Create a new empty `RArray`.
     pub fn new() -> Self {
         unsafe { Self::from_rb_value_unchecked(rb_ary_new()) }
     }
 
+    /// Create a new empty `RArray` with capacity for `n` elements
+    /// pre-allocated.
     pub fn with_capacity(n: usize) -> Self {
         unsafe { Self::from_rb_value_unchecked(rb_ary_new_capa(n as c_long)) }
     }
 
+    /// Concatenate elements from the slice `s` to `self`.
     pub fn cat(self, s: &[Value]) {
         let ptr = s.as_ptr() as *const VALUE;
         unsafe { rb_ary_cat(self.as_rb_value(), ptr, s.len() as c_long) };
     }
 
+    /// Create a new `RArray` containing the elements in `slice`.
     pub fn from_slice(slice: &[Value]) -> Self {
         let ary = Self::with_capacity(slice.len());
         ary.cat(slice);
         ary
     }
 
+    /// Add `item` to the end of `self`.
     pub fn push<T>(self, item: T)
     where
         T: Into<Value>,
@@ -74,6 +80,9 @@ impl RArray {
         unsafe { rb_ary_push(self.as_rb_value(), item.into().as_rb_value()) };
     }
 
+    /// Remove and return the last element of `self`, converting it to a `T`.
+    ///
+    /// Errors if the conversion fails.
     pub fn pop<T>(self) -> Result<T, Error>
     where
         T: TryConvert,
@@ -81,6 +90,7 @@ impl RArray {
         unsafe { Value::new(rb_ary_pop(self.as_rb_value())).try_convert() }
     }
 
+    /// Add `item` to the beginning of `self`.
     pub fn unshift<T>(self, item: T)
     where
         T: Into<Value>,
@@ -88,6 +98,9 @@ impl RArray {
         unsafe { rb_ary_unshift(self.as_rb_value(), item.into().as_rb_value()) };
     }
 
+    /// Remove and return the first element of `self`, converting it to a `T`.
+    ///
+    /// Errors if the conversion fails.
     pub fn shift<T>(self) -> Result<T, Error>
     where
         T: TryConvert,
@@ -95,6 +108,7 @@ impl RArray {
         unsafe { Value::new(rb_ary_shift(self.as_rb_value())).try_convert() }
     }
 
+    /// Create a new `RArray` from a Rust vector.
     pub fn from_vec<T>(vec: Vec<T>) -> Self
     where
         T: Into<Value>,
@@ -106,10 +120,16 @@ impl RArray {
         ary
     }
 
+    /// Return `self` as a slice of [`Value`]s.
+    ///
     /// # Safety
     ///
-    /// Ruby may modify or free the memory backing the returned slice, the
-    /// caller must ensure this does not happen.
+    /// This is directly viewing memory owned and managed by Ruby. Ruby may
+    /// modify or free the memory backing the returned slice, the caller must
+    /// ensure this does not happen.
+    ///
+    /// Ruby must not be allowed to garbage collect or modify `self` while a
+    /// refrence to the slice is held.
     pub unsafe fn as_slice(&self) -> &[Value] {
         self.as_slice_unconstrained()
     }
@@ -132,6 +152,14 @@ impl RArray {
         }
     }
 
+    /// Convert `self` to a Rust vector of `T`s. Errors if converting any
+    /// element in the array fails.
+    ///
+    /// This will only convert to a map of 'owned' Rust native types. The types
+    /// representing Ruby objects can not be stored in a heap-allocated
+    /// datastructure like a [`Vec`] as they are hidden from the mark phase
+    /// of Ruby's garbage collector, and thus may be prematurely garbage
+    /// collected in the following sweep phase.
     pub fn to_vec<T>(self) -> Result<Vec<T>, Error>
     where
         T: TryConvertOwned,
@@ -144,6 +172,9 @@ impl RArray {
         }
     }
 
+    /// Convert `self` to a Rust array of [`Value`]s, of length `N`.
+    ///
+    /// Errors if the Ruby array is not of length `N`.
     pub fn to_value_array<T, const N: usize>(self) -> Result<[Value; N], Error> {
         unsafe {
             self.as_slice()
@@ -152,6 +183,10 @@ impl RArray {
         }
     }
 
+    /// Convert `self` to a Rust array of `T`s, of length `N`.
+    ///
+    /// Errors if converting any element in the array fails, or if the Ruby
+    /// array is not of length `N`.
     pub fn to_array<T, const N: usize>(self) -> Result<[T; N], Error>
     where
         T: TryConvert,
@@ -171,6 +206,27 @@ impl RArray {
         }
     }
 
+    /// Return the element at `offset`, converting it to a `T`.
+    ///
+    /// Errors if the conversion fails.
+    ///
+    /// An offset out of range will return `nil`.
+    ///
+    /// # Examples
+    ///
+    /// ``` no_run
+    /// use magnus::{eval, RArray};
+    ///
+    /// let ary: RArray = eval(r#"["a", "b", "c"]"#).unwrap();
+    ///
+    /// assert_eq!(ary.entry::<String>(0).unwrap(), String::from("a"));
+    /// assert_eq!(ary.entry::<char>(0).unwrap(), 'a');
+    /// assert_eq!(ary.entry::<Option<String>>(0).unwrap(), Some(String::from("a")));
+    /// assert_eq!(ary.entry::<Option<String>>(3).unwrap(), None);
+    ///
+    /// assert!(ary.entry::<i64>(0).is_err());
+    /// assert!(ary.entry::<String>(3).is_err());
+    /// ```
     pub fn entry<T>(self, offset: isize) -> Result<T, Error>
     where
         T: TryConvert,
@@ -178,6 +234,10 @@ impl RArray {
         unsafe { Value::new(rb_ary_entry(self.as_rb_value(), offset as c_long)).try_convert() }
     }
 
+    /// Set the element at `offset`.
+    ///
+    /// If `offset` is beyond the current size of the array the array will be
+    /// expanded and padded with `nil`.
     pub fn store<T>(self, offset: isize, val: T)
     where
         T: Into<Value>,
@@ -191,6 +251,7 @@ impl RArray {
         }
     }
 
+    /// Returns an [`Enumerator`] over `self`.
     pub fn each(self) -> Enumerator {
         // TODO why doesn't rb_ary_each work?
         self.enumeratorize("each", ())

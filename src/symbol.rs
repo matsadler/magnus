@@ -14,7 +14,8 @@ use crate::{
     value::{Id, NonZeroValue, StaticSymbol, Value},
 };
 
-/// A type wrapping either an immediate symbol value or a Value pointer to a RSymbol struct.
+/// A type wrapping either an immediate symbol value or a Value pointer to a
+/// RSymbol struct.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct Symbol(NonZeroValue);
@@ -38,15 +39,24 @@ impl Symbol {
         Self(NonZeroValue::new_unchecked(Value::new(val)))
     }
 
+    /// Create a new `Symbol` from `name`.
     #[inline]
     pub fn new<T: AsRef<str>>(name: T) -> Self {
         name.as_ref().into()
     }
 
+    /// Returns whether `self` is static or not.
+    ///
+    /// Static symbols won't be garbage collected, so should be safe to store
+    /// on the heap. See [`StaticSymbol`].
     pub fn is_static(self) -> bool {
         self.is_static_symbol()
     }
 
+    /// Return the symbol as a string. If the symbol is static this will be a
+    /// `&str`, otherwise an owned `String`.
+    ///
+    /// May error if the name is not valid utf-8.
     pub fn name(self) -> Result<Cow<'static, str>, Error> {
         if let Some(sym) = StaticSymbol::from_value(*self) {
             return sym.name().map(Cow::from);
@@ -58,6 +68,17 @@ impl Symbol {
         }
     }
 
+    /// If `self` is static, returns `self` as a [`StaticSymbol`], otherwise
+    /// returns `None`.
+    pub fn as_static(self) -> Option<StaticSymbol> {
+        StaticSymbol::from_value(*self)
+    }
+
+    /// If `self` is already static simply returns `self` as a
+    /// [`StaticSymbol`]. If `self` is not static it will be made so and
+    /// returned as a [`StaticSymbol`].
+    ///
+    /// Be aware that once static a symbol will never be garbage collected.
     pub fn to_static(self) -> StaticSymbol {
         if let Some(sym) = StaticSymbol::from_value(*self) {
             return sym;

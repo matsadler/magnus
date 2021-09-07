@@ -30,6 +30,10 @@ impl RFloat {
         Self(NonZeroValue::new_unchecked(Value::new(val)))
     }
 
+    /// Create a new `RFloat` from an `f64.`
+    ///
+    /// Returns `Ok(RFloat)` if `n` requires a high precision float, otherwise
+    /// returns `Err(Fixnum)`.
     pub fn from_f64(n: f64) -> Result<Self, Flonum> {
         unsafe {
             let val = Value::new(rb_float_new(n));
@@ -37,6 +41,7 @@ impl RFloat {
         }
     }
 
+    /// Convert `self` to a `f64`.
     pub fn to_f64(self) -> f64 {
         debug_assert_value!(self);
         unsafe { rb_float_value(self.as_rb_value()) }

@@ -37,10 +37,12 @@ impl Float {
         Self(NonZeroValue::new_unchecked(Value::new(val)))
     }
 
+    /// Create a new `Float` from an `f64`.
     pub fn from_f64(n: f64) -> Self {
         unsafe { Float::from_rb_value_unchecked(rb_float_new(n)) }
     }
 
+    /// Convert `self` to a `f64`.
     pub fn to_f64(self) -> f64 {
         unsafe { rb_float_value(self.as_rb_value()) }
     }

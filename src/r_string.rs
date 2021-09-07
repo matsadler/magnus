@@ -1,3 +1,5 @@
+//! Types for working with Ruby’s String class.
+
 use std::{
     borrow::Cow,
     ffi::CStr,
@@ -62,6 +64,9 @@ impl RString {
         unsafe { NonNull::new_unchecked(self.0.get().as_rb_value() as *mut _) }
     }
 
+    /// Create a new Ruby string from the Rust string `s`.
+    ///
+    /// The encoding of the Ruby string will be UTF-8.
     pub fn new(s: &str) -> Self {
         let len = s.len();
         let ptr = s.as_ptr();
@@ -70,33 +75,51 @@ impl RString {
         }
     }
 
-    /// encoding set to ASCII-8BIT (aka BINARY). See also `with_capacity`.
+    /// Create a new Ruby string with capacity `n`.
+    ///
+    /// The encoding will be set to ASCII-8BIT (aka BINARY). See also
+    /// [`with_capacity`](RString::with_capacity).
     pub fn buf_new(n: usize) -> Self {
         unsafe { Self::from_rb_value_unchecked(rb_str_buf_new(n as c_long)) }
     }
 
-    /// encoding set to UTF-8. See also `buf_new`.
+    /// Create a new Ruby string with capacity `n`.
+    ///
+    /// The encoding will be set to UTF-8. See also
+    /// [`buf_new`](RString::buf_new).
     pub fn with_capacity(n: usize) -> Self {
         let s = Self::buf_new(n);
         unsafe { rb_enc_associate_index(s.as_rb_value(), rb_utf8_encindex()) };
         s
     }
 
+    /// Create a new Ruby string from the Rust slice `s`.
+    ///
+    /// The encoding of the Ruby string will be set to ASCII-8BIT (aka BINARY).
     pub fn from_slice(s: &[u8]) -> Self {
         let len = s.len();
         let ptr = s.as_ptr();
         unsafe { Self::from_rb_value_unchecked(rb_str_new(ptr as *const c_char, len as c_long)) }
     }
 
+    /// Create a new Ruby string from the Rust char `c`.
+    ///
+    /// The encoding of the Ruby string will be UTF-8.
     pub fn from_char(c: char) -> Self {
         let mut buf = [0; 4];
         Self::new(c.encode_utf8(&mut buf[..]))
     }
 
+    /// Return `self` as a slice of bytes.
+    ///
     /// # Safety
     ///
-    /// Ruby may modify or free the memory backing the returned slice, the
-    /// caller must ensure this does not happen.
+    /// This is directly viewing memory owned and managed by Ruby. Ruby may
+    /// modify or free the memory backing the returned slice, the caller must
+    /// ensure this does not happen.
+    ///
+    /// Ruby must not be allowed to garbage collect or modify `self` while a
+    /// refrence to the slice is held.
     pub unsafe fn as_slice(&self) -> &[u8] {
         self.as_slice_unconstrained()
     }
@@ -119,7 +142,7 @@ impl RString {
     }
 
     /// Returns true if the encoding for this string is UTF-8 or US-ASCII,
-    /// false otehrwise.
+    /// false otherwise.
     ///
     /// The enoding on a Ruby String is just a label, it provides no guarantee
     /// that the String really is valid UTF-8.
@@ -131,6 +154,8 @@ impl RString {
         }
     }
 
+    /// Returns a new string by reencoding `self` from its current encoding to
+    /// UTF-8.
     pub fn encode_utf8(self) -> Result<Self, Error> {
         unsafe {
             protect(|| {
@@ -144,10 +169,19 @@ impl RString {
         }
     }
 
+    /// Returns a Rust `&str` reference to the value of `self`.
+    ///
+    /// Errors if `self`'s encoding is not UTF-8 (or US-ASCII), or if the
+    /// string is not valid UTF-8.
+    ///
     /// # Safety
     ///
-    /// Ruby may modify or free the memory backing the returned str, the caller
-    /// must ensure this does not happen.
+    /// This is directly viewing memory owned and managed by Ruby. Ruby may
+    /// modify or free the memory backing the returned str, the caller must
+    /// ensure this does not happen.
+    ///
+    /// Ruby must not be allowed to garbage collect or modify `self` while a
+    /// refrence to the str is held.
     pub unsafe fn as_str(&self) -> Result<&str, Error> {
         self.as_str_unconstrained()
     }
@@ -165,15 +199,26 @@ impl RString {
             .map_err(|e| Error::encoding_error(format!("{}", e)))
     }
 
+    /// Returns `self` as a Rust string, ignoring the Ruby encoding and
+    /// dropping any non-UTF-8 characters. If `self` is valid UTF-8 this will
+    /// return a `&str` reference.
+    ///
     /// # Safety
     ///
-    /// Ruby may modify or free the memory backing the returned str, the caller
-    /// must ensure this does not happen.
+    /// This may return a direct view of memory owned and managed by Ruby. Ruby
+    /// may modify or free the memory backing the returned str, the caller must
+    /// ensure this does not happen.
+    ///
+    /// Ruby must not be allowed to garbage collect or modify `self` while a
+    /// refrence to the str is held.
     #[allow(clippy::wrong_self_convention)]
     pub unsafe fn to_string_lossy(&self) -> Cow<'_, str> {
         String::from_utf8_lossy(self.as_slice())
     }
 
+    /// Returns `self` as an owned Rust `String`. The Ruby string will be
+    /// reencoded as UTF-8 if required. Errors if the string can not be encoded
+    /// as UTF-8.
     pub fn to_string(self) -> Result<String, Error> {
         let utf8 = if self.is_utf8_compatible_encoding() {
             self
@@ -185,6 +230,8 @@ impl RString {
             .map_err(|e| Error::encoding_error(format!("{}", e)))
     }
 
+    /// Converts `self` to a [`char`]. Errors if the string is more than one
+    /// character or can not be encoded as UTF-8.
     pub fn to_char(self) -> Result<char, Error> {
         let utf8 = if self.is_utf8_compatible_encoding() {
             self
@@ -199,6 +246,13 @@ impl RString {
         }
     }
 
+    /// Returns whether `self` is a frozen interned string. Interned strings
+    /// are usually string literals with the in files with the
+    /// `# frozen_string_literal: true` 'magic comment'.
+    ///
+    /// Interned strings won't be garbage collected or modified, so should be
+    /// safe to store on the heap or hold a `&str` refrence to. See
+    /// [`as_interned_str`](RString::as_interned_str).
     pub fn is_interned(self) -> bool {
         unsafe {
             self.r_basic_unchecked().as_ref().flags & ruby_rstring_flags::RSTRING_FSTR as VALUE != 0
@@ -206,12 +260,18 @@ impl RString {
     }
 
     /// Returns `Some(FString)` if self is interned, `None` otherwise.
+    ///
+    /// Interned strings won't be garbage collected or modified, so should be
+    /// safe to store on the heap or hold a `&str` refrence to. The `FString`
+    /// type returned by this function provides a way to encode this property
+    /// into the type system, and provides safe methods to access the string
+    /// as a `&str` or slice.
     pub fn as_interned_str(self) -> Option<FString> {
         self.is_interned().then(|| FString(self))
     }
 
-    /// Interns self and returns a FString wrapper. Be aware that once interned
-    /// a string will never be garbage collected.
+    /// Interns self and returns a [`FString`]. Be aware that once interned a
+    /// string will never be garbage collected.
     #[cfg(ruby_gte_3_0)]
     pub fn to_interned_str(self) -> FString {
         unsafe {
@@ -221,6 +281,8 @@ impl RString {
         }
     }
 
+    /// Mutate `self`, adding `other` to the end. Errors if `self` and
+    /// other`'s encodings are not compatible.
     pub fn append(self, other: Self) -> Result<(), Error> {
         unsafe {
             protect(|| Value::new(rb_str_buf_append(self.as_rb_value(), other.as_rb_value())))?;
@@ -228,6 +290,12 @@ impl RString {
         Ok(())
     }
 
+    /// Mutate `self`, adding `buf` to the end.
+    ///
+    /// Note: This ignore's `self`'s encoding, and may result in `self`
+    /// containing invalid bytes for its encoding. It's assumed this will more
+    /// often be used with ASCII-8BIT (aka BINARY) encoded strings. See
+    /// [`buf_new`](RString::buf_new) and [`from_slice`](RString::from_slice).
     pub fn cat<T: AsRef<[u8]>>(self, buf: T) {
         let buf = buf.as_ref();
         let len = buf.len();
@@ -333,23 +401,36 @@ impl TryConvert for RString {
     }
 }
 
+/// FString contains an RString known to be interned.
+///
+/// Interned strings won't be garbage collected or modified, so should be
+/// safe to store on the heap or hold a `&str` refrence to. `FString` provides
+/// a way to encode this property into the type system, and provides safe
+/// methods to access the string as a `&str` or slice.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct FString(RString);
 
 impl FString {
+    /// Returns the interned string as a [`RString`].
     pub fn as_r_string(self) -> RString {
         self.0
     }
 
+    /// Returns the interned string as a slice of bytes.
     pub fn as_slice(self) -> &'static [u8] {
         unsafe { self.as_r_string().as_slice_unconstrained() }
     }
 
+    /// Returns the interned string as a &str. Errors if the string contains
+    /// invliad UTF-8.
     pub fn as_str(self) -> Result<&'static str, Error> {
         unsafe { self.as_r_string().as_str_unconstrained() }
     }
 
+    /// Returns interned string as a Rust string, ignoring the Ruby encoding
+    /// and dropping any non-UTF-8 characters. If the string is valid UTF-8
+    /// this will return a `&str` reference.
     pub fn to_string_lossy(self) -> Cow<'static, str> {
         String::from_utf8_lossy(self.as_slice())
     }

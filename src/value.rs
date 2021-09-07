@@ -317,8 +317,9 @@ impl Value {
     ///
     /// # Safety
     ///
-    /// Ruby may modify or free the memory backing the returned str, the caller
-    /// must ensure this does not happen.
+    /// This may return a direct view of memory owned and managed by Ruby. Ruby
+    /// may modify or free the memory backing the returned str, the caller must
+    /// ensure this does not happen.
     ///
     /// This can be used safely by immediately calling
     /// [`into_owned`](Cow::into_owned) on the return value.
@@ -344,12 +345,13 @@ impl Value {
     }
 
     /// Convert `self` to a string. If an error is encountered returns a
-    /// generic string (usually the objects class name).
+    /// generic string (usually the object's class name).
     ///
     /// # Safety
     ///
-    /// Ruby may modify or free the memory backing the returned str, the caller
-    /// must ensure this does not happen.
+    /// This may return a direct view of memory owned and managed by Ruby. Ruby
+    /// may modify or free the memory backing the returned str, the caller must
+    /// ensure this does not happen.
     #[allow(clippy::wrong_self_convention)]
     pub(crate) unsafe fn to_s_infallible(&self) -> Cow<str> {
         match self.to_s() {
@@ -374,7 +376,7 @@ impl Value {
         }
     }
 
-    /// Return name of `self`'s class.
+    /// Return the name of `self`'s class.
     ///
     /// # Safety
     ///
@@ -630,6 +632,7 @@ pub struct Qfalse(VALUE);
 pub const QFALSE: Qfalse = Qfalse::new();
 
 impl Qfalse {
+    /// Create a new `Qfalse`.
     #[inline]
     pub const fn new() -> Self {
         Qfalse(ruby_special_consts::RUBY_Qfalse as VALUE)
@@ -693,6 +696,7 @@ pub struct Qnil(NonZeroValue);
 pub const QNIL: Qnil = Qnil::new();
 
 impl Qnil {
+    /// Create a new `Qnil`.
     #[inline]
     pub const fn new() -> Self {
         unsafe {
@@ -775,6 +779,7 @@ pub struct Qtrue(NonZeroValue);
 pub const QTRUE: Qtrue = Qtrue::new();
 
 impl Qtrue {
+    /// Create a new `Qtrue`.
     #[inline]
     pub const fn new() -> Self {
         unsafe {
@@ -851,6 +856,7 @@ pub struct Qundef(NonZeroValue);
 pub const QUNDEF: Qundef = Qundef::new();
 
 impl Qundef {
+    /// Create a new `Qundef`.
     #[inline]
     pub const fn new() -> Self {
         unsafe {
@@ -893,12 +899,20 @@ impl Fixnum {
         Self(NonZeroValue::new_unchecked(Value::new(val)))
     }
 
+    /// Create a new `Fixnum` from an `i64.`
+    ///
+    /// Returns `Ok(Fixnum)` if `n` is in range for `Fixnum`, otherwise returns
+    /// `Err(RBignum)`.
     pub fn from_i64(n: i64) -> Result<Self, RBignum> {
         let val = unsafe { Value::new(rb_ll2inum(n)) };
         Self::from_value(val)
             .ok_or_else(|| unsafe { RBignum::from_rb_value_unchecked(val.as_rb_value()) })
     }
 
+    /// Create a new `Fixnum` from a `u64.`
+    ///
+    /// Returns `Ok(Fixnum)` if `n` is in range for `Fixnum`, otherwise returns
+    /// `Err(RBignum)`.
     pub fn from_u64(n: u64) -> Result<Self, RBignum> {
         let val = unsafe { Value::new(rb_ull2inum(n)) };
         Self::from_value(val)
@@ -909,6 +923,8 @@ impl Fixnum {
         unsafe { transmute::<_, c_long>(self.0) < 0 }
     }
 
+    /// Convert `self` to an `i8`. Returns `Err` if `self` is out of range for
+    /// `i8`.
     pub fn to_i8(self) -> Result<i8, Error> {
         let mut res = 0;
         protect(|| {
@@ -921,6 +937,8 @@ impl Fixnum {
         Ok(res as i8)
     }
 
+    /// Convert `self` to an `i16`. Returns `Err` if `self` is out of range for
+    /// `i16`.
     pub fn to_i16(self) -> Result<i16, Error> {
         let mut res = 0;
         protect(|| {
@@ -930,6 +948,8 @@ impl Fixnum {
         Ok(res)
     }
 
+    /// Convert `self` to an `i32`. Returns `Err` if `self` is out of range for
+    /// `i32`.
     pub fn to_i32(self) -> Result<i32, Error> {
         let mut res = 0;
         protect(|| {
@@ -942,10 +962,14 @@ impl Fixnum {
         Ok(res as i32)
     }
 
+    /// Convert `self` to an `i64`. This is infallible as `i64` can represent a
+    /// larger range than `Fixnum`.
     pub fn to_i64(self) -> i64 {
         unsafe { rb_num2ll(self.as_rb_value()) }
     }
 
+    /// Convert `self` to an `isize`. Returns `Err` if `self` is out of range
+    /// for `isize`.
     pub fn to_isize(self) -> Result<isize, Error> {
         let mut res = 0;
         protect(|| {
@@ -958,6 +982,8 @@ impl Fixnum {
         Ok(res as isize)
     }
 
+    /// Convert `self` to a `u8`. Returns `Err` if `self` is negative or out of
+    /// range for `u8`.
     pub fn to_u8(self) -> Result<u8, Error> {
         if self.is_negative() {
             return Err(Error::range_error(
@@ -975,6 +1001,8 @@ impl Fixnum {
         Ok(res as u8)
     }
 
+    /// Convert `self` to a `u16`. Returns `Err` if `self` is negative or out
+    /// of range for `u16`.
     pub fn to_u16(self) -> Result<u16, Error> {
         if self.is_negative() {
             return Err(Error::range_error(
@@ -989,6 +1017,8 @@ impl Fixnum {
         Ok(res)
     }
 
+    /// Convert `self` to a `u32`. Returns `Err` if `self` is negative or out
+    /// of range for `u32`.
     pub fn to_u32(self) -> Result<u32, Error> {
         if self.is_negative() {
             return Err(Error::range_error(
@@ -1006,6 +1036,7 @@ impl Fixnum {
         Ok(res as u32)
     }
 
+    /// Convert `self` to a `u64`. Returns `Err` if `self` is negative.
     pub fn to_u64(self) -> Result<u64, Error> {
         if self.is_negative() {
             return Err(Error::range_error(
@@ -1022,6 +1053,8 @@ impl Fixnum {
         Ok(res)
     }
 
+    /// Convert `self` to a `usize`. Returns `Err` if `self` is negative or out
+    /// of range for `usize`.
     pub fn to_usize(self) -> Result<usize, Error> {
         if self.is_negative() {
             return Err(Error::range_error(
@@ -1099,11 +1132,22 @@ impl StaticSymbol {
         Self(NonZeroValue::new_unchecked(Value::new(val)))
     }
 
+    /// Create a new StaticSymbol.
+    ///
+    /// # Examples
+    /// ``` no_run
+    /// use magnus::StaticSymbol;
+    ///
+    /// let sym = StaticSymbol::new("example");
+    /// ```
     #[inline]
     pub fn new<T: Into<Id>>(name: T) -> Self {
         name.into().into()
     }
 
+    /// Return the symbol as a static string reference.
+    ///
+    /// May error if the name is not valid utf-8.
     pub fn name(self) -> Result<&'static str, Error> {
         Id::from(self).name()
     }
@@ -1171,6 +1215,10 @@ impl Id {
         self.0
     }
 
+    /// Return the symbol name associated with this Id as a static string
+    /// reference.
+    ///
+    /// May error if the name is not valid utf-8.
     pub fn name(self) -> Result<&'static str, Error> {
         unsafe {
             let ptr = rb_id2name(self.as_rb_id());
@@ -1226,12 +1274,17 @@ impl Flonum {
         Self(NonZeroValue::new_unchecked(Value::new(val)))
     }
 
+    /// Create a new `Flonum` from a `f64.`
+    ///
+    /// Returns `Ok(Flonum)` if `n` can be represented as a `Flonum`, otherwise
+    /// returns `Err(RFloat)`.
     pub fn from_f64(n: f64) -> Result<Self, RFloat> {
         let val = unsafe { Value::new(rb_float_new(n)) };
         Self::from_value(val)
             .ok_or_else(|| unsafe { RFloat::from_rb_value_unchecked(val.as_rb_value()) })
     }
 
+    /// Convert `self` to a `f64`.
     pub fn to_f64(self) -> f64 {
         unsafe { rb_float_value(self.as_rb_value()) }
     }

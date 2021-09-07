@@ -1,3 +1,5 @@
+//! Types and functions for working with Ruby’s Hash class.
+
 use std::{collections::HashMap, fmt, hash::Hash, iter::FromIterator, ops::Deref, os::raw::c_int};
 
 use crate::{
@@ -12,10 +14,14 @@ use crate::{
     value::{Fixnum, NonZeroValue, Value, QNIL, QUNDEF},
 };
 
+/// Iteration state for [`RHash::foreach`].
 #[repr(u32)]
 pub enum ForEach {
+    /// Continue iterating.
     Continue,
+    /// Stop iterating.
     Stop,
+    /// Delete the last entry and continue iterating.
     Delete,
 }
 
@@ -40,10 +46,14 @@ impl RHash {
         Self(NonZeroValue::new_unchecked(Value::new(val)))
     }
 
+    /// Create a new empty `RHash`.
     pub fn new() -> RHash {
         unsafe { Self::from_rb_value_unchecked(rb_hash_new()) }
     }
 
+    /// Set the value `val` for the key `key`.
+    ///
+    /// Errors if `self` is frozen or `key` does not respond to `hash`.
     pub fn aset<K, V>(self, key: K, val: V) -> Result<(), Error>
     where
         K: Into<Value>,
@@ -63,8 +73,11 @@ impl RHash {
         Ok(())
     }
 
-    /// returns hash's default if `key` is missing. See also `lookup`, `get`,
-    /// and `fetch`.
+    /// Return the value for `key`, converting it to `U`.
+    ///
+    /// Returns hash's default if `key` is missing. See also
+    /// [`lookup`](RHash::lookup), [`get`](RHash::get), and
+    /// [`fetch`](RHash::fetch).
     pub fn aref<T, U>(self, key: T) -> Result<U, Error>
     where
         T: Into<Value>,
@@ -77,7 +90,10 @@ impl RHash {
         }
     }
 
-    /// returns `nil` if `key` is missing. See also `aref`, `get`, and `fetch`.
+    /// Return the value for `key`, converting it to `U`.
+    ///
+    /// Returns `nil` if `key` is missing. See also [`aref`](RHash::aref),
+    /// [`get`](RHash::get), and [`fetch`](RHash::fetch).
     pub fn lookup<T, U>(self, key: T) -> Result<U, Error>
     where
         T: Into<Value>,
@@ -90,8 +106,10 @@ impl RHash {
         }
     }
 
-    /// returns `None` if `key` is missing. See also `aref`, `lookup`, and
-    /// `fetch`.
+    /// Return the value for `key` as a [`Value`].
+    ///
+    /// Returns `None` if `key` is missing. See also [`aref`](RHash::aref),
+    /// [`lookup`](RHash::lookup), and [`fetch`](RHash::fetch).
     ///
     /// Note: It is possible for very badly behaved key objects to raise an
     /// error during hash lookup. This is unlikely, and for the simplicity of
@@ -114,7 +132,10 @@ impl RHash {
         }
     }
 
-    /// returns `Err` if `key` is missing. See also `aref`, `lookup`, and `get`.
+    /// Return the value for `key`, converting it to `U`.
+    ///
+    /// Returns `Err` if `key` is missing. See also [`aref`](RHash::aref),
+    /// [`lookup`](RHash::lookup), and [`get`](RHash::get).
     pub fn fetch<T, U>(self, key: T) -> Result<U, Error>
     where
         T: Into<Value>,
@@ -152,6 +173,14 @@ impl RHash {
         Ok(())
     }
 
+    /// Run `func` for each key/value pair in `self`.
+    ///
+    /// The result of `func` is checked on each call, when it is
+    /// [`ForEach::Continue`] the iteration will continue, [`ForEach::Stop`]
+    /// will cause the iteration to stop, and [`ForEach::Delete`] will remove
+    /// the key/value pair from `self` and then continue iteration.
+    ///
+    /// Returing an error from `func` behaves like [`ForEach::Stop`].
     pub fn foreach<F>(self, mut func: F) -> Result<(), Error>
     where
         F: FnMut(Value, Value) -> Result<ForEach, Error>,
@@ -167,6 +196,15 @@ impl RHash {
         res
     }
 
+    /// Return `self` converted to a Rust [`HashMap`].
+    ///
+    /// This will only convert to a map of 'owned' Rust native types. The types
+    /// representing Ruby objects can not be stored in a heap-allocated
+    /// datastructure like a [`HashMap`] as they are hidden from the mark phase
+    /// of Ruby's garbage collector, and thus may be prematurely garbage
+    /// collected in the following sweep phase.
+    ///
+    /// Errors if the conversion of any key or value fails.
     pub fn to_hash_map<K, V>(self) -> Result<HashMap<K, V>, Error>
     where
         K: TryConvertOwned + Eq + Hash,
@@ -180,6 +218,15 @@ impl RHash {
         Ok(map)
     }
 
+    /// Convert `self` to a Rust vector of key/value pairs.
+    ///
+    /// This will only convert to a map of 'owned' Rust native types. The types
+    /// representing Ruby objects can not be stored in a heap-allocated
+    /// datastructure like a [`Vec`] as they are hidden from the mark phase
+    /// of Ruby's garbage collector, and thus may be prematurely garbage
+    /// collected in the following sweep phase.
+    ///
+    /// Errors if the conversion of any key or value fails.
     pub fn to_vec<K, V>(self) -> Result<Vec<(K, V)>, Error>
     where
         K: TryConvertOwned,
@@ -193,14 +240,17 @@ impl RHash {
         Ok(vec)
     }
 
+    /// Return the number of entries in `self` as a Ruby [`Fixnum`].
     pub fn size(self) -> Fixnum {
         unsafe { Fixnum::from_rb_value_unchecked(rb_hash_size(self.as_rb_value())) }
     }
 
+    /// Return the number of entries in `self` as a Rust [`usize`].
     pub fn len(self) -> usize {
         self.size().to_usize().unwrap()
     }
 
+    /// Return whether self contains any entries or not.
     pub fn is_empty(self) -> bool {
         self.len() == 0
     }
