@@ -12,6 +12,44 @@ struct InitAttributes {
 
 /// Mark a function as the 'init' function to be run for a library when it is
 /// `require`d by Ruby code.
+///
+/// The init function is used to define your Ruby modules & classes, bind
+/// functions as Ruby methods, etc.
+///
+/// # Examples
+///
+/// ``` ignore
+/// use magnus::{define_module, function, method, prelude::*, Error};
+///
+/// #[magnus::wrap(class = "TwoD::Point", free_immediatly, size)]
+/// struct Point {
+///     x: isize,
+///     y: isize,
+/// }
+///
+/// impl Point {
+///     fn new(x: isize, y: isize) -> Self {
+///         Self { x, y }
+///     }
+///
+///     fn x(&self) -> isize {
+///         self.x
+///     }
+///
+///     fn y(&self) -> isize {
+///         self.y
+///     }
+/// }
+///
+/// #[magnus::init]
+/// fn init() -> Result<(), Error> {
+///     let module = define_module("TwoD")?;
+///     let class = module.define_class("Point", Default::default())?;
+///     class.define_singleton_method("new", function!(Point::new, 1));
+///     class.define_method("x", method!(Point::x, 0));
+///     class.define_method("y", method!(Point::y, 0));
+/// }
+/// ```
 #[proc_macro_attribute]
 pub fn init(attrs: TokenStream, item: TokenStream) -> TokenStream {
     let init = parse_macro_input!(item as ItemFn);
@@ -48,7 +86,65 @@ pub fn init(attrs: TokenStream, item: TokenStream) -> TokenStream {
     tokens.into()
 }
 
-/// Derives `DataTypeFunctions`, allowing the type to implement `TypedData`.
+/// Allow a Rust type to be passed to Ruby, automatically wrapped as a Ruby
+/// object.
+///
+/// See also [`TypedData`].
+///
+/// # Attributes
+///
+/// * `class = "..."` - required, sets the Ruby class to wrap the Rust type.
+///    Supports module paths, e.g. `Foo::Bar::Baz`.
+/// * `name = "..."` - debug name for the type. Defaults to the class name.
+/// * `free_immediatly` - Drop the Rust type as soon as the Ruby object has
+///   been garbage collected. This is only safe to set if the type's [`Drop`]
+///   implmentation does not call Ruby.
+/// * `size` - Report the [`std::mem::size_of_val`] of the type to Ruby, used
+///   to aid in deciding when to run the garbage collector.
+///
+/// # Examples
+///
+/// ``` ignore
+/// #[magnus::wrap(class = "RbPoint", free_immediatly, size)]
+/// struct Point {
+///     x: isize,
+///     y: isize,
+/// }
+///
+/// // the `Point` struct is automatically wrapped in a Ruby `RbPoint` object
+/// // when returned to Ruby.
+/// fn point(x: isize, y: isize) -> Point {
+///     Point { x, y }
+/// }
+///
+/// // Ruby `RbPoint` objects are automatically unwrapped to references to the
+/// // `Point` structs they are wrapping when this function is called from Ruby.
+/// fn distance(a: &Point, b: &Point) -> f64 {
+///     (((b.x - a.x).pow(2) + (b.y - a.y).pow(2)) as f64).sqrt()
+/// }
+///
+/// #[magnus::init]
+/// fn init() {
+///     magnus::define_global_function("point", magnus::function!(point, 2));
+///     magnus::define_global_function("distance", magnus::function!(distance, 2));
+/// }
+/// ```
+#[proc_macro_attribute]
+pub fn wrap(attrs: TokenStream, item: TokenStream) -> TokenStream {
+    let attrs = proc_macro2::TokenStream::from(attrs);
+    let item = proc_macro2::TokenStream::from(item);
+    let tokens = quote! {
+        #[derive(magnus::DataTypeFunctions, magnus::TypedData)]
+        #[magnus(#attrs)]
+        #item
+    };
+    tokens.into()
+}
+
+/// Derives `DataTypeFunctions` with default implementations, for simple uses
+/// of [`TypedData`].
+///
+/// For cases where no custom `DataTypeFunctions` are required.
 #[proc_macro_derive(DataTypeFunctions)]
 pub fn derive_data_type_functions(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
@@ -81,6 +177,55 @@ struct TypedDataAttributes {
 
 /// Derives `TypedData`, allowing the type to be passed to Ruby automatically
 /// wrapped as a Ruby object.
+///
+/// See also [`macro@wrap`].
+///
+/// # Attributes
+///
+/// The `#[magnus(...)]` attribute can be set with the following values.
+///
+/// * `class = "..."` - required, sets the Ruby class to wrap the Rust type.
+///    Supports module paths, e.g. `Foo::Bar::Baz`.
+/// * `name = "..."` - debug name for the type. Defaults to the class name.
+/// * `free_immediatly` - Drop the Rust type as soon as the Ruby object has
+///   been garbage collected. This is only safe to set if the type's [`Drop`]
+///   and `DataTypeFunctions::free` implementations do not call Ruby.
+/// * `mark` - Enable Ruby calling the `DataTypeFunctions::mark` function.
+/// * `size` - Enable Ruby calling the `DataTypeFunctions::size` function.
+/// * `compact` - Enable Ruby calling the `DataTypeFunctions::compact` function.
+/// * `wb_protected` - Enable the `wb_protected` flag.
+/// * `frozen_shareable` - Enable the `frozen_shareable` flag.
+///
+/// # Examples
+///
+/// ``` ignore
+/// use magnus::{DataTypeFunctions, TypedData};
+///
+/// #[derive(DataTypeFunctions, TypedData)]
+/// #[magnus(class = "RbPoint", size, free_immediatly)]
+/// struct Point {
+///     x: isize,
+///     y: isize,
+/// }
+///
+/// // the `Point` struct is automatically wrapped in a Ruby `RbPoint` object
+/// // when returned to Ruby.
+/// fn point(x: isize, y: isize) -> Point {
+///     Point { x, y }
+/// }
+///
+/// // Ruby `RbPoint` objects are automatically unwrapped to references to the
+/// // `Point` structs they are wrapping when this function is called from Ruby.
+/// fn distance(a: &Point, b: &Point) -> f64 {
+///     (((b.x - a.x).pow(2) + (b.y - a.y).pow(2)) as f64).sqrt()
+/// }
+///
+/// #[magnus::init]
+/// fn init() {
+///     magnus::define_global_function("point", magnus::function!(point, 2));
+///     magnus::define_global_function("distance", magnus::function!(distance, 2));
+/// }
+/// ```
 #[proc_macro_derive(TypedData, attributes(magnus))]
 pub fn derive_typed_data(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);

@@ -1,7 +1,4 @@
-use magnus::{
-    define_class, define_global_variable, embed::init, eval, DataTypeFunctions, TypedData, Value,
-    QNIL,
-};
+use magnus::{define_class, define_global_variable, embed::init, eval, Value, QNIL};
 
 macro_rules! rb_assert {
     ($eval:literal) => {
@@ -9,8 +6,7 @@ macro_rules! rb_assert {
     };
 }
 
-#[derive(DataTypeFunctions, TypedData)]
-#[magnus(class = "Example", free_immediatly)]
+#[magnus::wrap(class = "Example", free_immediatly)]
 struct Example {
     value: String,
 }

@@ -30,7 +30,7 @@ pub mod value;
 
 use std::{ffi::CString, mem::transmute};
 
-pub use magnus_macros::{init, DataTypeFunctions, TypedData};
+pub use magnus_macros::{init, wrap, DataTypeFunctions, TypedData};
 
 use error::protect;
 use method::Method;
