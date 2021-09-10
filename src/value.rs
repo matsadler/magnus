@@ -39,6 +39,7 @@ use crate::{
 // This isn't infallible, if the original object was gc'd and that slot
 // reused already this won't panic like it should, but we're trying our
 // best here.
+#[doc(hidden)]
 #[macro_export]
 macro_rules! debug_assert_value {
     ($value:expr) => {

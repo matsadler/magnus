@@ -16,342 +16,340 @@ use crate::{
     value::Value,
 };
 
-/// Trait implemented for function pointers that can be registed as Ruby
-/// methods.
-pub trait Method {
-    fn arity() -> i8;
-    #[allow(clippy::wrong_self_convention)]
-    fn as_ptr(self) -> *mut c_void;
-}
-
-impl Method for unsafe extern "C" fn(Value, RArray) -> Value {
-    fn arity() -> i8 {
-        -2
-    }
-
-    fn as_ptr(self) -> *mut c_void {
-        self as *mut c_void
-    }
-}
-
-impl Method for unsafe extern "C" fn(c_int, *const Value, Value) -> Value {
-    fn arity() -> i8 {
-        -1
-    }
-
-    fn as_ptr(self) -> *mut c_void {
-        self as *mut c_void
-    }
-}
-
-impl Method for unsafe extern "C" fn(Value) -> Value {
-    fn arity() -> i8 {
-        0
-    }
-
-    fn as_ptr(self) -> *mut c_void {
-        self as *mut c_void
-    }
-}
-
-impl Method for unsafe extern "C" fn(Value, Value) -> Value {
-    fn arity() -> i8 {
-        1
-    }
-
-    fn as_ptr(self) -> *mut c_void {
-        self as *mut c_void
-    }
-}
-
-impl Method for unsafe extern "C" fn(Value, Value, Value) -> Value {
-    fn arity() -> i8 {
-        2
-    }
-
-    fn as_ptr(self) -> *mut c_void {
-        self as *mut c_void
-    }
-}
-
-impl Method for unsafe extern "C" fn(Value, Value, Value, Value) -> Value {
-    fn arity() -> i8 {
-        3
-    }
-
-    fn as_ptr(self) -> *mut c_void {
-        self as *mut c_void
-    }
-}
-
-impl Method for unsafe extern "C" fn(Value, Value, Value, Value, Value) -> Value {
-    fn arity() -> i8 {
-        4
-    }
-
-    fn as_ptr(self) -> *mut c_void {
-        self as *mut c_void
-    }
-}
-
-impl Method for unsafe extern "C" fn(Value, Value, Value, Value, Value, Value) -> Value {
-    fn arity() -> i8 {
-        5
-    }
-
-    fn as_ptr(self) -> *mut c_void {
-        self as *mut c_void
-    }
-}
-
-impl Method for unsafe extern "C" fn(Value, Value, Value, Value, Value, Value, Value) -> Value {
-    fn arity() -> i8 {
-        6
-    }
-
-    fn as_ptr(self) -> *mut c_void {
-        self as *mut c_void
-    }
-}
-
-impl Method
-    for unsafe extern "C" fn(Value, Value, Value, Value, Value, Value, Value, Value) -> Value
-{
-    fn arity() -> i8 {
-        7
-    }
-
-    fn as_ptr(self) -> *mut c_void {
-        self as *mut c_void
-    }
-}
-
-impl Method
-    for unsafe extern "C" fn(Value, Value, Value, Value, Value, Value, Value, Value, Value) -> Value
-{
-    fn arity() -> i8 {
-        8
-    }
-
-    fn as_ptr(self) -> *mut c_void {
-        self as *mut c_void
-    }
-}
-
-impl Method
-    for unsafe extern "C" fn(
-        Value,
-        Value,
-        Value,
-        Value,
-        Value,
-        Value,
-        Value,
-        Value,
-        Value,
-        Value,
-    ) -> Value
-{
-    fn arity() -> i8 {
-        9
-    }
-
-    fn as_ptr(self) -> *mut c_void {
-        self as *mut c_void
-    }
-}
-
-impl Method
-    for unsafe extern "C" fn(
-        Value,
-        Value,
-        Value,
-        Value,
-        Value,
-        Value,
-        Value,
-        Value,
-        Value,
-        Value,
-        Value,
-    ) -> Value
-{
-    fn arity() -> i8 {
-        10
-    }
-
-    fn as_ptr(self) -> *mut c_void {
-        self as *mut c_void
-    }
-}
-
-impl Method
-    for unsafe extern "C" fn(
-        Value,
-        Value,
-        Value,
-        Value,
-        Value,
-        Value,
-        Value,
-        Value,
-        Value,
-        Value,
-        Value,
-        Value,
-    ) -> Value
-{
-    fn arity() -> i8 {
-        11
-    }
-
-    fn as_ptr(self) -> *mut c_void {
-        self as *mut c_void
-    }
-}
-
-impl Method
-    for unsafe extern "C" fn(
-        Value,
-        Value,
-        Value,
-        Value,
-        Value,
-        Value,
-        Value,
-        Value,
-        Value,
-        Value,
-        Value,
-        Value,
-        Value,
-    ) -> Value
-{
-    fn arity() -> i8 {
-        12
-    }
-
-    fn as_ptr(self) -> *mut c_void {
-        self as *mut c_void
-    }
-}
-
-impl Method
-    for unsafe extern "C" fn(
-        Value,
-        Value,
-        Value,
-        Value,
-        Value,
-        Value,
-        Value,
-        Value,
-        Value,
-        Value,
-        Value,
-        Value,
-        Value,
-        Value,
-    ) -> Value
-{
-    fn arity() -> i8 {
-        13
-    }
-
-    fn as_ptr(self) -> *mut c_void {
-        self as *mut c_void
-    }
-}
-
-impl Method
-    for unsafe extern "C" fn(
-        Value,
-        Value,
-        Value,
-        Value,
-        Value,
-        Value,
-        Value,
-        Value,
-        Value,
-        Value,
-        Value,
-        Value,
-        Value,
-        Value,
-        Value,
-    ) -> Value
-{
-    fn arity() -> i8 {
-        14
-    }
-
-    fn as_ptr(self) -> *mut c_void {
-        self as *mut c_void
-    }
-}
-
-impl Method
-    for unsafe extern "C" fn(
-        Value,
-        Value,
-        Value,
-        Value,
-        Value,
-        Value,
-        Value,
-        Value,
-        Value,
-        Value,
-        Value,
-        Value,
-        Value,
-        Value,
-        Value,
-        Value,
-    ) -> Value
-{
-    fn arity() -> i8 {
-        15
-    }
-
-    fn as_ptr(self) -> *mut c_void {
-        self as *mut c_void
-    }
-}
-
-impl Method
-    for unsafe extern "C" fn(
-        Value,
-        Value,
-        Value,
-        Value,
-        Value,
-        Value,
-        Value,
-        Value,
-        Value,
-        Value,
-        Value,
-        Value,
-        Value,
-        Value,
-        Value,
-        Value,
-        Value,
-    ) -> Value
-{
-    fn arity() -> i8 {
-        16
-    }
-
-    fn as_ptr(self) -> *mut c_void {
-        self as *mut c_void
-    }
-}
-
 mod private {
     use super::*;
+
+    pub unsafe trait Method {
+        fn arity() -> i8;
+        #[allow(clippy::wrong_self_convention)]
+        fn as_ptr(self) -> *mut c_void;
+    }
+
+    unsafe impl Method for unsafe extern "C" fn(Value, RArray) -> Value {
+        fn arity() -> i8 {
+            -2
+        }
+
+        fn as_ptr(self) -> *mut c_void {
+            self as *mut c_void
+        }
+    }
+
+    unsafe impl Method for unsafe extern "C" fn(c_int, *const Value, Value) -> Value {
+        fn arity() -> i8 {
+            -1
+        }
+
+        fn as_ptr(self) -> *mut c_void {
+            self as *mut c_void
+        }
+    }
+
+    unsafe impl Method for unsafe extern "C" fn(Value) -> Value {
+        fn arity() -> i8 {
+            0
+        }
+
+        fn as_ptr(self) -> *mut c_void {
+            self as *mut c_void
+        }
+    }
+
+    unsafe impl Method for unsafe extern "C" fn(Value, Value) -> Value {
+        fn arity() -> i8 {
+            1
+        }
+
+        fn as_ptr(self) -> *mut c_void {
+            self as *mut c_void
+        }
+    }
+
+    unsafe impl Method for unsafe extern "C" fn(Value, Value, Value) -> Value {
+        fn arity() -> i8 {
+            2
+        }
+
+        fn as_ptr(self) -> *mut c_void {
+            self as *mut c_void
+        }
+    }
+
+    unsafe impl Method for unsafe extern "C" fn(Value, Value, Value, Value) -> Value {
+        fn arity() -> i8 {
+            3
+        }
+
+        fn as_ptr(self) -> *mut c_void {
+            self as *mut c_void
+        }
+    }
+
+    unsafe impl Method for unsafe extern "C" fn(Value, Value, Value, Value, Value) -> Value {
+        fn arity() -> i8 {
+            4
+        }
+
+        fn as_ptr(self) -> *mut c_void {
+            self as *mut c_void
+        }
+    }
+
+    unsafe impl Method for unsafe extern "C" fn(Value, Value, Value, Value, Value, Value) -> Value {
+        fn arity() -> i8 {
+            5
+        }
+
+        fn as_ptr(self) -> *mut c_void {
+            self as *mut c_void
+        }
+    }
+
+    unsafe impl Method for unsafe extern "C" fn(Value, Value, Value, Value, Value, Value, Value) -> Value {
+        fn arity() -> i8 {
+            6
+        }
+
+        fn as_ptr(self) -> *mut c_void {
+            self as *mut c_void
+        }
+    }
+
+    unsafe impl Method
+        for unsafe extern "C" fn(Value, Value, Value, Value, Value, Value, Value, Value) -> Value
+    {
+        fn arity() -> i8 {
+            7
+        }
+
+        fn as_ptr(self) -> *mut c_void {
+            self as *mut c_void
+        }
+    }
+
+    unsafe impl Method
+        for unsafe extern "C" fn(Value, Value, Value, Value, Value, Value, Value, Value, Value) -> Value
+    {
+        fn arity() -> i8 {
+            8
+        }
+
+        fn as_ptr(self) -> *mut c_void {
+            self as *mut c_void
+        }
+    }
+
+    unsafe impl Method
+        for unsafe extern "C" fn(
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+        ) -> Value
+    {
+        fn arity() -> i8 {
+            9
+        }
+
+        fn as_ptr(self) -> *mut c_void {
+            self as *mut c_void
+        }
+    }
+
+    unsafe impl Method
+        for unsafe extern "C" fn(
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+        ) -> Value
+    {
+        fn arity() -> i8 {
+            10
+        }
+
+        fn as_ptr(self) -> *mut c_void {
+            self as *mut c_void
+        }
+    }
+
+    unsafe impl Method
+        for unsafe extern "C" fn(
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+        ) -> Value
+    {
+        fn arity() -> i8 {
+            11
+        }
+
+        fn as_ptr(self) -> *mut c_void {
+            self as *mut c_void
+        }
+    }
+
+    unsafe impl Method
+        for unsafe extern "C" fn(
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+        ) -> Value
+    {
+        fn arity() -> i8 {
+            12
+        }
+
+        fn as_ptr(self) -> *mut c_void {
+            self as *mut c_void
+        }
+    }
+
+    unsafe impl Method
+        for unsafe extern "C" fn(
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+        ) -> Value
+    {
+        fn arity() -> i8 {
+            13
+        }
+
+        fn as_ptr(self) -> *mut c_void {
+            self as *mut c_void
+        }
+    }
+
+    unsafe impl Method
+        for unsafe extern "C" fn(
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+        ) -> Value
+    {
+        fn arity() -> i8 {
+            14
+        }
+
+        fn as_ptr(self) -> *mut c_void {
+            self as *mut c_void
+        }
+    }
+
+    unsafe impl Method
+        for unsafe extern "C" fn(
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+        ) -> Value
+    {
+        fn arity() -> i8 {
+            15
+        }
+
+        fn as_ptr(self) -> *mut c_void {
+            self as *mut c_void
+        }
+    }
+
+    unsafe impl Method
+        for unsafe extern "C" fn(
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+        ) -> Value
+    {
+        fn arity() -> i8 {
+            16
+        }
+
+        fn as_ptr(self) -> *mut c_void {
+            self as *mut c_void
+        }
+    }
 
     pub trait ReturnValue {
         fn into_return_value(self) -> Result<Value, Error>;
@@ -468,6 +466,33 @@ mod private {
     }
 }
 
+/// Trait implemented for function pointers that can be registed as Ruby
+/// methods.
+///
+/// While it is possible to directly write functions that will automatically
+/// implement this trait it is not recommended, as those functions will not
+/// have the type conversions or error handling usually provided by this
+/// library. See the [`method`] and [`function`] macros for
+/// converting functions to an implementor of this trait.
+///
+/// This trait is implimented for the following function signatures:
+///
+/// | Arity | Signature                                                    |
+/// |-------|--------------------------------------------------------------|
+/// |    -2 | `unsafe extern "C" fn(Value, RArray) -> Value;`              |
+/// |    -1 | `unsafe extern "C" fn(c_int, *const Value, Value) -> Value;` |
+/// |     0 | `unsafe extern "C" fn(Value) -> Value;`                      |
+/// |     1 | `unsafe extern "C" fn(Value, Value) -> Value;`               |
+/// |     2 | `unsafe extern "C" fn(Value, Value, Value) -> Value;`        |
+/// |   ... | ...                                                          |
+/// |    16 | ...                                                          |
+///
+/// note: for arity 0..=16 the number of arguments is 1 greater than the arity,
+/// due to the initial `self` argument.
+pub trait Method: private::Method {}
+
+impl<T> Method for T where T: private::Method {}
+
 /// Trait marking types that can be returned to Ruby.
 pub trait ReturnValue: private::ReturnValue {}
 
@@ -483,6 +508,7 @@ impl<T> InitReturn for T where T: private::InitReturn {}
 /// handling, as an 'init' function.
 ///
 /// See the [`init`](magnus_macros::init) macro.
+#[doc(hidden)]
 pub struct Init<Func, Res> {
     func: Func,
     res: PhantomData<Res>,
@@ -519,6 +545,7 @@ where
 /// array of arguments, with type conversions and error handling.
 ///
 /// See the [`method`] macro.
+#[doc(hidden)]
 pub struct MethodRbAry<Func, RbSelf, Args, Res> {
     func: Func,
     rb_self: PhantomData<RbSelf>,
@@ -567,6 +594,7 @@ where
 /// slice of arguments, with type conversions and error handling.
 ///
 /// See the [`method`] macro.
+#[doc(hidden)]
 pub struct MethodCAry<Func, RbSelf, Res> {
     func: Func,
     rb_self: PhantomData<RbSelf>,
@@ -623,6 +651,7 @@ where
 /// arguments, with type conversions and error handling.
 ///
 /// See the [`method`] macro.
+#[doc(hidden)]
 pub struct Method0<Func, RbSelf, Res> {
     func: Func,
     rb_self: PhantomData<RbSelf>,
@@ -668,6 +697,7 @@ where
 /// argument, with type conversions and error handling.
 ///
 /// See the [`method`] macro.
+#[doc(hidden)]
 pub struct Method1<Func, RbSelf, A, Res> {
     func: Func,
     rb_self: PhantomData<RbSelf>,
@@ -716,6 +746,7 @@ where
 /// arguments, with type conversions and error handling.
 ///
 /// See the [`method`] macro.
+#[doc(hidden)]
 pub struct Method2<Func, RbSelf, A, B, Res> {
     func: Func,
     rb_self: PhantomData<RbSelf>,
@@ -767,6 +798,7 @@ where
 /// arguments, with type conversions and error handling.
 ///
 /// See the [`method`] macro.
+#[doc(hidden)]
 pub struct Method3<Func, RbSelf, A, B, C, Res> {
     func: Func,
     rb_self: PhantomData<RbSelf>,
@@ -833,6 +865,7 @@ where
 /// arguments, with type conversions and error handling.
 ///
 /// See the [`method`] macro.
+#[doc(hidden)]
 pub struct Method4<Func, RbSelf, A, B, C, D, Res> {
     func: Func,
     rb_self: PhantomData<RbSelf>,
@@ -911,6 +944,7 @@ where
 /// arguments, with type conversions and error handling.
 ///
 /// See the [`method`] macro.
+#[doc(hidden)]
 pub struct Method5<Func, RbSelf, A, B, C, D, E, Res> {
     func: Func,
     rb_self: PhantomData<RbSelf>,
@@ -995,6 +1029,7 @@ where
 /// arguments, with type conversions and error handling.
 ///
 /// See the [`method`] macro.
+#[doc(hidden)]
 pub struct Method6<Func, RbSelf, A, B, C, D, E, F, Res> {
     func: Func,
     rb_self: PhantomData<RbSelf>,
@@ -1085,6 +1120,7 @@ where
 /// arguments, with type conversions and error handling.
 ///
 /// See the [`method`] macro.
+#[doc(hidden)]
 pub struct Method7<Func, RbSelf, A, B, C, D, E, F, G, Res> {
     func: Func,
     rb_self: PhantomData<RbSelf>,
@@ -1181,6 +1217,7 @@ where
 /// arguments, with type conversions and error handling.
 ///
 /// See the [`method`] macro.
+#[doc(hidden)]
 pub struct Method8<Func, RbSelf, A, B, C, D, E, F, G, H, Res> {
     func: Func,
     rb_self: PhantomData<RbSelf>,
@@ -1283,6 +1320,7 @@ where
 /// arguments, with type conversions and error handling.
 ///
 /// See the [`method`] macro.
+#[doc(hidden)]
 pub struct Method9<Func, RbSelf, A, B, C, D, E, F, G, H, I, Res> {
     func: Func,
     rb_self: PhantomData<RbSelf>,
@@ -1392,6 +1430,7 @@ where
 /// arguments, with type conversions and error handling.
 ///
 /// See the [`method`] macro.
+#[doc(hidden)]
 pub struct Method10<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, Res> {
     func: Func,
     rb_self: PhantomData<RbSelf>,
@@ -1507,6 +1546,7 @@ where
 /// arguments, with type conversions and error handling.
 ///
 /// See the [`method`] macro.
+#[doc(hidden)]
 pub struct Method11<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, Res> {
     func: Func,
     rb_self: PhantomData<RbSelf>,
@@ -1628,6 +1668,7 @@ where
 /// arguments, with type conversions and error handling.
 ///
 /// See the [`method`] macro.
+#[doc(hidden)]
 pub struct Method12<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, Res> {
     func: Func,
     rb_self: PhantomData<RbSelf>,
@@ -1755,6 +1796,7 @@ where
 /// arguments, with type conversions and error handling.
 ///
 /// See the [`method`] macro.
+#[doc(hidden)]
 pub struct Method13<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, M, Res> {
     func: Func,
     rb_self: PhantomData<RbSelf>,
@@ -1888,6 +1930,7 @@ where
 /// arguments, with type conversions and error handling.
 ///
 /// See the [`method`] macro.
+#[doc(hidden)]
 pub struct Method14<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, M, N, Res> {
     func: Func,
     rb_self: PhantomData<RbSelf>,
@@ -2027,6 +2070,7 @@ where
 /// arguments, with type conversions and error handling.
 ///
 /// See the [`method`] macro.
+#[doc(hidden)]
 pub struct Method15<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, Res> {
     func: Func,
     rb_self: PhantomData<RbSelf>,
@@ -2172,6 +2216,7 @@ where
 /// arguments, with type conversions and error handling.
 ///
 /// See the [`method`] macro.
+#[doc(hidden)]
 pub struct Method16<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Res> {
     func: Func,
     rb_self: PhantomData<RbSelf>,
@@ -2319,8 +2364,56 @@ where
     }
 }
 
-/// Converts a Rust function item to a function pointer that can be bound as a
-/// Ruby method taking self.
+/// Wrap a Rust function item with Ruby type conversion and error handling.
+///
+/// This macro wraps the given function and returns a function pointer
+/// implementing the [`Method`] trait, suitable for passing to functions that
+/// define Ruby methods such as
+/// [`define_method`](crate::module::Module::define_method).
+///
+/// Ruby code implicitly always has a `self` parameter available. In the
+/// extention API this is passed explicitly. As a result there is always an
+/// extra `self` argument before the arguments explitly passed in Ruby, and the
+/// number of Rust argument will be one more than the Ruby arity.
+///
+/// The values `-2` and `-1` for `arity` have special meaning. Both indicate
+/// functions with any number of arguments, with `-2` the arguments are passed
+/// as a [`RArray`], with `-1` they are passed as a slice of [`Value`]s.
+///
+/// | Arity | Signature                                                 |
+/// |-------|-----------------------------------------------------------|
+/// |    -2 | `fn(rb_self: T, arguments: RArray) -> Result<R, Error>`   |
+/// |    -1 | `fn(rb_self: T, arguments: &[Value]) -> Result<R, Error>` |
+/// |     0 | `fn(rb_self: T) -> Result<R, Error>`                      |
+/// |     1 | `fn(rb_self: T, arg1: U) -> Result<R, Error>`             |
+/// |     2 | `fn(rb_self: T, arg1: U, arg2: V) -> Result<R, Error>`    |
+/// |   ... | ...                                                       |
+/// |    16 | ...                                                       |
+///
+/// Where `T`, `U`, `V` and so on are any types that implement `TryConvert`,
+/// and `R` implements `Into<Value>`. It is also possible to return just `R`
+/// rather than a `Result` for functions that will never error, and omit the
+/// return value (i.e. return `()`) for a function that returns `nil` to Ruby.
+///
+/// See the [`function`] macro for cases where there is no need to handle the
+/// `self` argument.
+///
+/// # Examples
+///
+/// ``` no_run
+/// use magnus::{define_class, method, prelude::*, Error};
+///
+/// fn rb_is_blank(rb_self: String) -> bool {
+///     rb_self.contains(|c: char| !c.is_whitespace())
+/// }
+///
+/// #[magnus::init]
+/// fn init() -> Result<(), Error> {
+///     let class = define_class("String", Default::default())?;
+///     class.define_method("blank?", method!(rb_is_blank, 0));
+///     Ok(())
+/// }
+/// ```
 #[macro_export]
 macro_rules! method {
     ($name:expr, -2) => {{
@@ -2788,6 +2881,7 @@ macro_rules! method {
 /// taking a Ruby array of arguments, with type conversions and error handling.
 ///
 /// See the [`function`] macro.
+#[doc(hidden)]
 pub struct FunctionRbAry<Func, Args, Res> {
     func: Func,
     args: PhantomData<Args>,
@@ -2832,6 +2926,7 @@ where
 /// taking a slice of arguments, with type conversions and error handling.
 ///
 /// See the [`function`] macro.
+#[doc(hidden)]
 pub struct FunctionCAry<Func, Res> {
     func: Func,
     res: PhantomData<Res>,
@@ -2875,6 +2970,7 @@ where
 /// taking no arguments, with type conversions and error handling.
 ///
 /// See the [`function`] macro.
+#[doc(hidden)]
 pub struct Function0<Func, Res> {
     func: Func,
     res: PhantomData<Res>,
@@ -2916,6 +3012,7 @@ where
 /// taking 1 argument, with type conversions and error handling.
 ///
 /// See the [`function`] macro.
+#[doc(hidden)]
 pub struct Function1<Func, A, Res> {
     func: Func,
     a: PhantomData<A>,
@@ -2959,6 +3056,7 @@ where
 /// taking 2 arguments, with type conversions and error handling.
 ///
 /// See the [`function`] macro.
+#[doc(hidden)]
 pub struct Function2<Func, A, B, Res> {
     func: Func,
     a: PhantomData<A>,
@@ -3006,6 +3104,7 @@ where
 /// taking 3 arguments, with type conversions and error handling.
 ///
 /// See the [`function`] macro.
+#[doc(hidden)]
 pub struct Function3<Func, A, B, C, Res> {
     func: Func,
     a: PhantomData<A>,
@@ -3056,6 +3155,7 @@ where
 /// taking 4 arguments, with type conversions and error handling.
 ///
 /// See the [`function`] macro.
+#[doc(hidden)]
 pub struct Function4<Func, A, B, C, D, Res> {
     func: Func,
     a: PhantomData<A>,
@@ -3122,6 +3222,7 @@ where
 /// taking 5 arguments, with type conversions and error handling.
 ///
 /// See the [`function`] macro.
+#[doc(hidden)]
 pub struct Function5<Func, A, B, C, D, E, Res> {
     func: Func,
     a: PhantomData<A>,
@@ -3200,6 +3301,7 @@ where
 /// taking 6 arguments, with type conversions and error handling.
 ///
 /// See the [`function`] macro.
+#[doc(hidden)]
 pub struct Function6<Func, A, B, C, D, E, F, Res> {
     func: Func,
     a: PhantomData<A>,
@@ -3284,6 +3386,7 @@ where
 /// taking 7 arguments, with type conversions and error handling.
 ///
 /// See the [`function`] macro.
+#[doc(hidden)]
 pub struct Function7<Func, A, B, C, D, E, F, G, Res> {
     func: Func,
     a: PhantomData<A>,
@@ -3374,6 +3477,7 @@ where
 /// taking 8 arguments, with type conversions and error handling.
 ///
 /// See the [`function`] macro.
+#[doc(hidden)]
 pub struct Function8<Func, A, B, C, D, E, F, G, H, Res> {
     func: Func,
     a: PhantomData<A>,
@@ -3470,6 +3574,7 @@ where
 /// taking 9 arguments, with type conversions and error handling.
 ///
 /// See the [`function`] macro.
+#[doc(hidden)]
 pub struct Function9<Func, A, B, C, D, E, F, G, H, I, Res> {
     func: Func,
     a: PhantomData<A>,
@@ -3572,6 +3677,7 @@ where
 /// taking 10 arguments, with type conversions and error handling.
 ///
 /// See the [`function`] macro.
+#[doc(hidden)]
 pub struct Function10<Func, A, B, C, D, E, F, G, H, I, J, Res> {
     func: Func,
     a: PhantomData<A>,
@@ -3680,6 +3786,7 @@ where
 /// taking 11 arguments, with type conversions and error handling.
 ///
 /// See the [`function`] macro.
+#[doc(hidden)]
 pub struct Function11<Func, A, B, C, D, E, F, G, H, I, J, K, Res> {
     func: Func,
     a: PhantomData<A>,
@@ -3795,6 +3902,7 @@ where
 /// taking 12 arguments, with type conversions and error handling.
 ///
 /// See the [`function`] macro.
+#[doc(hidden)]
 pub struct Function12<Func, A, B, C, D, E, F, G, H, I, J, K, L, Res> {
     func: Func,
     a: PhantomData<A>,
@@ -3916,6 +4024,7 @@ where
 /// taking 13 arguments, with type conversions and error handling.
 ///
 /// See the [`function`] macro.
+#[doc(hidden)]
 pub struct Function13<Func, A, B, C, D, E, F, G, H, I, J, K, L, M, Res> {
     func: Func,
     a: PhantomData<A>,
@@ -4043,6 +4152,7 @@ where
 /// taking 14 arguments, with type conversions and error handling.
 ///
 /// See the [`function`] macro.
+#[doc(hidden)]
 pub struct Function14<Func, A, B, C, D, E, F, G, H, I, J, K, L, M, N, Res> {
     func: Func,
     a: PhantomData<A>,
@@ -4176,6 +4286,7 @@ where
 /// taking 15 arguments, with type conversions and error handling.
 ///
 /// See the [`function`] macro.
+#[doc(hidden)]
 pub struct Function15<Func, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, Res> {
     func: Func,
     a: PhantomData<A>,
@@ -4315,6 +4426,7 @@ where
 /// taking 16 arguments, with type conversions and error handling.
 ///
 /// See the [`function`] macro.
+#[doc(hidden)]
 pub struct Function16<Func, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Res> {
     func: Func,
     a: PhantomData<A>,
@@ -4456,8 +4568,51 @@ where
     }
 }
 
-/// Converts a Rust function item to a function pointer that can be bound as a
-/// Ruby method ignoring self.
+/// Wrap a Rust function item with Ruby type conversion and error handling,
+/// ignoring Ruby's `self` argument.
+///
+/// This macro wraps the given function and returns a function pointer
+/// implementing the [`Method`] trait, suitable for passing to functions that
+/// define Ruby methods such as
+/// [`define_method`](crate::module::Module::define_method).
+///
+/// Ruby code implicitly always has a `self` parameter available. In the
+/// extention API this is passed explicitly. The wrapper this macro generates
+/// ignores that argument, and does not pass it to the wrapped function.
+///
+/// The values `-2` and `-1` for `arity` have special meaning. Both indicate
+/// functions with any number of arguments, with `-2` the arguments are passed
+/// as a [`RArray`], with `-1` they are passed as a slice of [`Value`]s.
+///
+/// | Arity | Signature                                     |
+/// |-------|-----------------------------------------------|
+/// |    -2 | `fn(arguments: RArray) -> Result<R, Error>`   |
+/// |    -1 | `fn(arguments: &[Value]) -> Result<R, Error>` |
+/// |     0 | `fn()-> Result<R, Error>`                     |
+/// |     1 | `fn(arg1: T) -> Result<R, Error>`             |
+/// |     2 | `fn(arg1: T, arg2: U) -> Result<R, Error>`    |
+/// |   ... | ...                                           |
+/// |    16 | ...                                           |
+///
+/// Where `T`, `U`, and so on are any types that implement `TryConvert`,
+/// and `R` implements `Into<Value>`. It is also possible to return just `R`
+/// rather than a `Result` for functions that will never error, and omit the
+/// return value (i.e. return `()`) for a function that returns `nil` to Ruby.
+///
+/// See the [`method`] macro for cases where the `self` argument is required.
+///
+/// # Examples
+///
+/// ``` no_run
+/// fn distance(a: (f64, f64), b: (f64, f64)) -> f64 {
+///     ((b.0 - a.0).powi(2) + (b.0 - a.0).powi(2)).sqrt()
+/// }
+///
+/// #[magnus::init]
+/// fn init() {
+///     magnus::define_global_function("distance", magnus::function!(distance, 2));
+/// }
+/// ```
 #[macro_export]
 macro_rules! function {
     ($name:expr, -2) => {{

@@ -19,9 +19,20 @@ struct InitAttributes {
 /// # Examples
 ///
 /// ``` ignore
+/// fn distance(a: (f64, f64), b: (f64, f64)) -> f64 {
+///     ((b.0 - a.0).powi(2) + (b.0 - a.0).powi(2)).sqrt()
+/// }
+///
+/// #[magnus::init]
+/// fn init() {
+///     magnus::define_global_function("distance", magnus::function!(distance, 2));
+/// }
+/// ```
+/// The init function can also return `Result<(), magnus::Error>`.
+/// ``` ignore
 /// use magnus::{define_module, function, method, prelude::*, Error};
 ///
-/// #[magnus::wrap(class = "TwoD::Point", free_immediatly, size)]
+/// #[magnus::wrap(class = "Euclid::Point", free_immediatly, size)]
 /// struct Point {
 ///     x: isize,
 ///     y: isize,
@@ -43,11 +54,12 @@ struct InitAttributes {
 ///
 /// #[magnus::init]
 /// fn init() -> Result<(), Error> {
-///     let module = define_module("TwoD")?;
+///     let module = define_module("Euclid")?;
 ///     let class = module.define_class("Point", Default::default())?;
 ///     class.define_singleton_method("new", function!(Point::new, 1));
 ///     class.define_method("x", method!(Point::x, 0));
 ///     class.define_method("y", method!(Point::y, 0));
+///     Ok(())
 /// }
 /// ```
 #[proc_macro_attribute]
@@ -89,7 +101,7 @@ pub fn init(attrs: TokenStream, item: TokenStream) -> TokenStream {
 /// Allow a Rust type to be passed to Ruby, automatically wrapped as a Ruby
 /// object.
 ///
-/// See also [`TypedData`].
+/// For more control over the wrapped object, see [`TypedData`].
 ///
 /// # Attributes
 ///
@@ -144,7 +156,9 @@ pub fn wrap(attrs: TokenStream, item: TokenStream) -> TokenStream {
 /// Derives `DataTypeFunctions` with default implementations, for simple uses
 /// of [`TypedData`].
 ///
-/// For cases where no custom `DataTypeFunctions` are required.
+/// For cases where no custom `DataTypeFunctions` are required a default
+/// implementation can be derived. The [`macro@wrap`] macro may be a simpler
+/// alternative in this use case.
 #[proc_macro_derive(DataTypeFunctions)]
 pub fn derive_data_type_functions(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
@@ -178,7 +192,7 @@ struct TypedDataAttributes {
 /// Derives `TypedData`, allowing the type to be passed to Ruby automatically
 /// wrapped as a Ruby object.
 ///
-/// See also [`macro@wrap`].
+/// For simple cases, see [`macro@wrap`].
 ///
 /// # Attributes
 ///
@@ -224,6 +238,24 @@ struct TypedDataAttributes {
 /// fn init() {
 ///     magnus::define_global_function("point", magnus::function!(point, 2));
 ///     magnus::define_global_function("distance", magnus::function!(distance, 2));
+/// }
+/// ```
+/// Defining a custom `DataType` function.
+/// ``` ignore
+/// use std::mem::size_of_val;
+/// use magnus::{DataTypeFunctions, TypedData};
+///
+/// #[derive(TypedData)]
+/// #[magnus(class = "Name", size, free_immediatly)]
+/// struct Name {
+///     first: String,
+///     last: String,
+/// }
+///
+/// impl DataTypeFunctions for Name {
+///     fn size(&self) -> usize {
+///         size_of_val(&self.first) + size_of_val(&self.last)
+///     }
 /// }
 /// ```
 #[proc_macro_derive(TypedData, attributes(magnus))]
