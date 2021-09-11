@@ -242,6 +242,29 @@ where
 /// return an Enumerator.
 ///
 /// `I` must implement `Iterator<Item = T>`, where `T` implements `Into<Value>`.
+///
+/// # Examples
+///
+/// ``` no_run
+/// use magnus::{block::{block_given, Yield}, Value};
+///
+/// fn count_to_3(rb_self: Value) -> Yield<impl Iterator<Item = u8>> {
+///     if block_given() {
+///         Yield::Iter((1..=3).into_iter())
+///     } else {
+///         Yield::Enumerator(rb_self.enumeratorize("count_to_3", ()))
+///     }
+/// }
+/// ```
+/// Could be called from Ruby like:
+/// ``` text
+/// a = []
+/// count_to_3 {|i| a << i}   #=> nil
+/// a                         #=> [1,2,3]
+/// enumerator = count_to_3
+/// enumerator.next           #=> 1
+/// enumerator.next           #=> 2
+/// ```
 pub enum Yield<I> {
     Iter(I),
     Enumerator(Enumerator),

@@ -11,7 +11,7 @@ macro_rules! rb_assert {
 
 fn count_to_3(rb_self: Value) -> Yield<impl Iterator<Item = u8>> {
     if block_given() {
-        Yield::Iter(vec![1, 2, 3].into_iter())
+        Yield::Iter((1..=3).into_iter())
     } else {
         Yield::Enumerator(rb_self.enumeratorize("count_to_3", ()))
     }

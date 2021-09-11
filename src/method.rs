@@ -494,12 +494,46 @@ pub trait Method: private::Method {}
 impl<T> Method for T where T: private::Method {}
 
 /// Trait marking types that can be returned to Ruby.
+///
+/// Implemented for the following types:
+///
+/// * `T`
+/// * [`Yield<I>`]
+/// * [`YieldValues<I>`]
+/// * [`YieldSplat<I>`]
+/// * `Result<T, magnus::Error>`
+/// * `Result<Yield<I>, magnus::Error>`
+/// * `Result<YieldValues<I>, magnus::Error>`
+/// * `Result<YieldSplat<I>, magnus::Error>`
+///
+/// where `I` implements `Iterator<Item = T>` and `T` implements `Into<Value>`.
+///
+/// When is `Err(magnus::Error)` returned to Ruby it will be conveted to and
+/// raised as a Ruby exception.
+///
+/// [`Yield`], [`YieldValues`], and [`YieldSplat`] allow returning a Rust
+/// [`Iterator`] to be bridged to Ruby method that calls a block with the
+/// elements of that [`Iterator`].
+///
+/// Note: functions without a specified return value will return `()`. `()`
+/// implements `Into<Value>` (converting to `nil`).
 pub trait ReturnValue: private::ReturnValue {}
 
 impl<T> ReturnValue for T where T: private::ReturnValue {}
 
-/// Trait marking types that can be returned to Ruby from a library [`init`](magnus_macros::init)
-/// function.
+/// Trait marking types that can be returned to Ruby from a library
+/// [`init`](magnus_macros::init) function.
+///
+/// Implemented for the following types:
+///
+/// * `()`
+/// * `Result<(), magnus::Error>`
+///
+/// When is `Err(magnus::Error)` returned to Ruby it will be conveted to and
+/// raised as a Ruby exception.
+///
+/// Note: functions without a specified return value will return `()`. `()`
+/// implements `Into<Value>` (converting to `nil`).
 pub trait InitReturn: private::InitReturn {}
 
 impl<T> InitReturn for T where T: private::InitReturn {}
@@ -2394,6 +2428,7 @@ where
 /// and `R` implements `Into<Value>`. It is also possible to return just `R`
 /// rather than a `Result` for functions that will never error, and omit the
 /// return value (i.e. return `()`) for a function that returns `nil` to Ruby.
+/// See [`ReturnValue`] for more details on what can be returned.
 ///
 /// See the [`function`] macro for cases where there is no need to handle the
 /// `self` argument.
@@ -4598,6 +4633,7 @@ where
 /// and `R` implements `Into<Value>`. It is also possible to return just `R`
 /// rather than a `Result` for functions that will never error, and omit the
 /// return value (i.e. return `()`) for a function that returns `nil` to Ruby.
+/// See [`ReturnValue`] for more details on what can be returned.
 ///
 /// See the [`method`] macro for cases where the `self` argument is required.
 ///
