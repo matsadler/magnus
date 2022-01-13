@@ -8,7 +8,7 @@ use std::{
     process::Command,
 };
 
-const RUBY_VERSIONS: [(u8, u8); 2] = [(2, 7), (3, 0)];
+const RUBY_VERSIONS: [(u8, u8); 3] = [(2, 7), (3, 0), (3, 1)];
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let rbconfig = RbConfig::new()?;
@@ -67,7 +67,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             builder = builder.clang_arg(format!("-I{}", path));
         }
     }
-    if let Ok(cc) = rbconfig.get("CC") {
+    if let Ok(cc) = rbconfig.get("CC").and_then(|cc| rbconfig.get("cflags").map(|flags| format!("{} {}", cc, flags))) {
         if cc.contains("-fdeclspec") {
             builder = builder.clang_arg("-fdeclspec");
         }

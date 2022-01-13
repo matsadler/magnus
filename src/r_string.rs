@@ -125,6 +125,16 @@ impl RString {
     }
 
     unsafe fn as_slice_unconstrained<'a>(self) -> &'a [u8] {
+        #[cfg(ruby_gte_3_1)]
+        unsafe fn embedded_ary_ptr(rstring: RString) -> *const u8 {
+            &rstring.as_internal().as_ref().as_.embed.ary as *const _ as *const u8
+        }
+
+        #[cfg(ruby_lt_3_1)]
+        unsafe fn embedded_ary_ptr(rstring: RString) -> *const u8 {
+            &rstring.as_internal().as_ref().as_.ary as *const _ as *const u8
+        }
+
         debug_assert_value!(self);
         let r_basic = self.r_basic_unchecked();
         let mut f = r_basic.as_ref().flags;
@@ -135,7 +145,7 @@ impl RString {
             f &= ruby_rstring_flags::RSTRING_EMBED_LEN_MASK as VALUE;
             f >>= RSTRING_EMBED_LEN_SHIFT as VALUE;
             slice::from_raw_parts(
-                &self.as_internal().as_ref().as_.ary as *const _ as *const u8,
+                embedded_ary_ptr(self),
                 f as usize,
             )
         }
