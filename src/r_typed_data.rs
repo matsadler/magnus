@@ -101,7 +101,7 @@ impl DataType {
 impl Drop for DataType {
     fn drop(&mut self) {
         unsafe {
-            CString::from_raw(self.wrap_struct_name as *mut _);
+            drop(CString::from_raw(self.wrap_struct_name as *mut _));
         }
     }
 }
