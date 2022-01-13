@@ -107,7 +107,8 @@ pub fn init(attrs: TokenStream, item: TokenStream) -> TokenStream {
 ///
 /// * `class = "..."` - required, sets the Ruby class to wrap the Rust type.
 ///    Supports module paths, e.g. `Foo::Bar::Baz`.
-/// * `name = "..."` - debug name for the type. Defaults to the class name.
+/// * `name = "..."` - debug name for the type, must be unique. Defaults to the
+///   class name.
 /// * `free_immediatly` - Drop the Rust type as soon as the Ruby object has
 ///   been garbage collected. This is only safe to set if the type's [`Drop`]
 ///   implmentation does not call Ruby.
@@ -200,7 +201,8 @@ struct TypedDataAttributes {
 ///
 /// * `class = "..."` - required, sets the Ruby class to wrap the Rust type.
 ///    Supports module paths, e.g. `Foo::Bar::Baz`.
-/// * `name = "..."` - debug name for the type. Defaults to the class name.
+/// * `name = "..."` - debug name for the type, must be unique. Defaults to the
+///   class name.
 /// * `free_immediatly` - Drop the Rust type as soon as the Ruby object has
 ///   been garbage collected. This is only safe to set if the type's [`Drop`]
 ///   and `DataTypeFunctions::free` implementations do not call Ruby.

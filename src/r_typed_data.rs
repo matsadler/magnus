@@ -203,6 +203,9 @@ where
     T: DataTypeFunctions,
 {
     /// Create a new `DataTypeBuilder`.
+    ///
+    /// `name` should be unique per wrapped type. It does not need to be a
+    /// valid Ruby identifier.
     pub fn new(name: &'static str) -> Self {
         Self {
             name,
@@ -297,6 +300,17 @@ where
 
 /// A trait for Rust types that can be used with the `rb_data_typed_object_wrap`
 /// API.
+///
+/// # Safety
+///
+/// This trait is unsafe to impliment as the fields of [`DataType`] returned by
+/// [`TypedData::data_type`] control low level behaviour that can go very wrong
+/// if set incorrectly. Implimenting this trait is the only way a [`DataType`]
+/// can be passed to Ruby and result in safety violations, [`DataType`] is
+/// otherwise safe (but useless) to create.
+///
+/// The [`TypedData`](`derive@crate::TypedData`) or [`wrap`](`crate::wrap`) macros can
+/// help implementing this trait more safely.
 pub unsafe trait TypedData
 where
     Self: Sized,
