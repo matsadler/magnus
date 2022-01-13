@@ -266,7 +266,9 @@ where
 /// enumerator.next           #=> 2
 /// ```
 pub enum Yield<I> {
+    /// Yields `I::Item` to given block.
     Iter(I),
+    /// Returns `Enumerator` from the method.
     Enumerator(Enumerator),
 }
 
@@ -275,7 +277,9 @@ pub enum Yield<I> {
 ///
 /// `I` must implement `Iterator<Item = T>`, where `T` implements [`ArgList`].
 pub enum YieldValues<I> {
+    /// Yields `I::Item` to given block.
     Iter(I),
+    /// Returns `Enumerator` from the method.
     Enumerator(Enumerator),
 }
 
@@ -284,6 +288,8 @@ pub enum YieldValues<I> {
 ///
 /// `I` must implement `Iterator<Item = RArray>`.
 pub enum YieldSplat<I> {
+    /// Yields `I::Item` to given block.
     Iter(I),
+    /// Returns `Enumerator` from the method.
     Enumerator(Enumerator),
 }

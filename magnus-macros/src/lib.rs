@@ -1,3 +1,21 @@
+//! Derive and proc macros for magnus.
+//!
+//! ``` ignore
+//! #[magnus::wrap(class = "RbPoint", free_immediatly, size)]
+//! struct Point {
+//!     x: isize,
+//!     y: isize,
+//! }
+//!
+//! #[magnus::init]
+//! fn init() -> Result<(), magnus::Error> {
+//!     magnus::define_class("RbPoint")?;
+//!     Ok(())
+//! }
+//! ```
+
+#![warn(missing_docs)]
+
 use darling::{util::Flag, FromMeta};
 use proc_macro::TokenStream;
 use proc_macro2::{Ident, Span};
@@ -20,7 +38,7 @@ struct InitAttributes {
 ///
 /// ``` ignore
 /// fn distance(a: (f64, f64), b: (f64, f64)) -> f64 {
-///     ((b.0 - a.0).powi(2) + (b.0 - a.0).powi(2)).sqrt()
+///     ((b.0 - a.0).powi(2) + (b.1 - a.1).powi(2)).sqrt()
 /// }
 ///
 /// #[magnus::init]
@@ -56,7 +74,7 @@ struct InitAttributes {
 /// fn init() -> Result<(), Error> {
 ///     let module = define_module("Euclid")?;
 ///     let class = module.define_class("Point", Default::default())?;
-///     class.define_singleton_method("new", function!(Point::new, 1));
+///     class.define_singleton_method("new", function!(Point::new, 2));
 ///     class.define_method("x", method!(Point::x, 0));
 ///     class.define_method("y", method!(Point::y, 0));
 ///     Ok(())

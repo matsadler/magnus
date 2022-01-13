@@ -67,7 +67,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             builder = builder.clang_arg(format!("-I{}", path));
         }
     }
-    if let Ok(cc) = rbconfig.get("CC").and_then(|cc| rbconfig.get("cflags").map(|flags| format!("{} {}", cc, flags))) {
+    if let Ok(cc) = rbconfig.get("CC").and_then(|cc| {
+        rbconfig
+            .get("cflags")
+            .map(|flags| format!("{} {}", cc, flags))
+    }) {
         if cc.contains("-fdeclspec") {
             builder = builder.clang_arg("-fdeclspec");
         }

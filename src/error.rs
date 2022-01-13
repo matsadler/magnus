@@ -192,13 +192,21 @@ impl From<Exception> for Error {
 #[repr(i32)]
 pub enum Tag {
     // None = 0,
+    /// Early return from a block.
     Return = 1,
+    /// Break from a block.
     Break = 2,
+    /// Early return from a block, continuing to next block call.
     Next = 3,
+    /// Break from a block after an error, block will be subsequently re-run.
     Retry = 4,
+    /// Break from a block that will be subsequently re-run.
     Redo = 5,
+    /// Ruby stack unwound with an error.
     Raise = 6,
+    /// Ruby stack unwound as flow control.
     Throw = 7,
+    /// Block or method exiting early due to unrecoverable error.
     Fatal = 8,
 }
 

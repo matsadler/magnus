@@ -144,10 +144,7 @@ impl RString {
         } else {
             f &= ruby_rstring_flags::RSTRING_EMBED_LEN_MASK as VALUE;
             f >>= RSTRING_EMBED_LEN_SHIFT as VALUE;
-            slice::from_raw_parts(
-                embedded_ary_ptr(self),
-                f as usize,
-            )
+            slice::from_raw_parts(embedded_ary_ptr(self), f as usize)
         }
     }
 

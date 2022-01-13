@@ -557,13 +557,14 @@ impl NonZeroValue {
     }
 }
 
-/// Protects a Ruby Value from the garbage collector
+/// Protects a Ruby Value from the garbage collector.
 ///
 /// See also Value::leak for a value that should be permanently excluded from
-/// garbage collection
+/// garbage collection.
 pub struct BoxValue(Box<Value>);
 
 impl BoxValue {
+    /// Create a new `BoxValue`.
     pub fn new(val: Value) -> Self {
         debug_assert_value!(val);
         let mut boxed = Box::new(val);
@@ -873,6 +874,12 @@ impl Qundef {
         val.is_undef().then(Self::new)
     }
 
+    /// Return `self` as a [`Value`].
+    ///
+    /// It is not a good idea to return this to Ruby code, bad things will
+    /// happen. There are only a handful of places in Ruby's API where it is
+    /// appropriate to pass a [`Value`] created from `Qundef` (hence this
+    /// method, rather than implimenting [`Into<Value>`]).
     #[inline]
     pub fn to_value(self) -> Value {
         self.0.get()

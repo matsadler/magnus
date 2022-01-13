@@ -1,3 +1,48 @@
+//! Magnus is a library for writing Ruby extentions in Rust, or running Ruby
+//! code from Rust.
+//!
+//! # Examples
+//!
+//! ``` no_run
+//! use magnus::{define_module, function, method, prelude::*, Error};
+//!
+//! #[magnus::wrap(class = "Euclid::Point", free_immediatly, size)]
+//! struct Point {
+//!     x: isize,
+//!     y: isize,
+//! }
+//!
+//! impl Point {
+//!     fn new(x: isize, y: isize) -> Self {
+//!         Self { x, y }
+//!     }
+//!
+//!     fn x(&self) -> isize {
+//!         self.x
+//!     }
+//!
+//!     fn y(&self) -> isize {
+//!         self.y
+//!     }
+//! }
+//!
+//! fn distance(a: &Point, b: &Point) -> f64 {
+//!     (((b.x - a.x).pow(2) + (b.y - a.y).pow(2)) as f64).sqrt()
+//! }
+//!
+//! #[magnus::init]
+//! fn init() -> Result<(), Error> {
+//!     let module = define_module("Euclid")?;
+//!     let class = module.define_class("Point", Default::default())?;
+//!     class.define_singleton_method("new", function!(Point::new, 2));
+//!     class.define_method("x", method!(Point::x, 0));
+//!     class.define_method("y", method!(Point::y, 0));
+//!     module.define_module_function("distance", function!(distance, 2));
+//!     Ok(())
+//! }
+//! ```
+#![warn(missing_docs)]
+
 pub mod block;
 pub mod embed;
 mod enumerator;
@@ -87,7 +132,6 @@ pub mod prelude {
 ///     memoize!(RClass: define_class("Foo", Default::default()).unwrap())
 /// }
 /// ```
-///
 #[macro_export]
 macro_rules! memoize {
     ($type:ty: $val:expr) => {{

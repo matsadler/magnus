@@ -105,7 +105,9 @@ mod private {
         }
     }
 
-    unsafe impl Method for unsafe extern "C" fn(Value, Value, Value, Value, Value, Value, Value) -> Value {
+    unsafe impl Method
+        for unsafe extern "C" fn(Value, Value, Value, Value, Value, Value, Value) -> Value
+    {
         fn arity() -> i8 {
             6
         }
@@ -128,7 +130,17 @@ mod private {
     }
 
     unsafe impl Method
-        for unsafe extern "C" fn(Value, Value, Value, Value, Value, Value, Value, Value, Value) -> Value
+        for unsafe extern "C" fn(
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+            Value,
+        ) -> Value
     {
         fn arity() -> i8 {
             8
@@ -548,6 +560,7 @@ pub struct Init<Func, Res> {
     res: PhantomData<Res>,
 }
 
+#[allow(missing_docs)]
 impl<Func, Res> Init<Func, Res>
 where
     Func: Fn() -> Res,
@@ -587,6 +600,7 @@ pub struct MethodRbAry<Func, RbSelf, Args, Res> {
     res: PhantomData<Res>,
 }
 
+#[allow(missing_docs)]
 impl<Func, RbSelf, Args, Res> MethodRbAry<Func, RbSelf, Args, Res>
 where
     Func: Fn(RbSelf, Args) -> Res,
@@ -635,6 +649,7 @@ pub struct MethodCAry<Func, RbSelf, Res> {
     res: PhantomData<Res>,
 }
 
+#[allow(missing_docs)]
 impl<Func, RbSelf, Res> MethodCAry<Func, RbSelf, Res>
 where
     Func: Fn(RbSelf, &[Value]) -> Res,
@@ -692,6 +707,7 @@ pub struct Method0<Func, RbSelf, Res> {
     res: PhantomData<Res>,
 }
 
+#[allow(missing_docs)]
 impl<Func, RbSelf, Res> Method0<Func, RbSelf, Res>
 where
     Func: Fn(RbSelf) -> Res,
@@ -739,6 +755,7 @@ pub struct Method1<Func, RbSelf, A, Res> {
     res: PhantomData<Res>,
 }
 
+#[allow(missing_docs)]
 impl<Func, RbSelf, A, Res> Method1<Func, RbSelf, A, Res>
 where
     Func: Fn(RbSelf, A) -> Res,
@@ -789,6 +806,7 @@ pub struct Method2<Func, RbSelf, A, B, Res> {
     res: PhantomData<Res>,
 }
 
+#[allow(missing_docs)]
 impl<Func, RbSelf, A, B, Res> Method2<Func, RbSelf, A, B, Res>
 where
     Func: Fn(RbSelf, A, B) -> Res,
@@ -842,6 +860,7 @@ pub struct Method3<Func, RbSelf, A, B, C, Res> {
     res: PhantomData<Res>,
 }
 
+#[allow(missing_docs)]
 impl<Func, RbSelf, A, B, C, Res> Method3<Func, RbSelf, A, B, C, Res>
 where
     Func: Fn(RbSelf, A, B, C) -> Res,
@@ -910,6 +929,7 @@ pub struct Method4<Func, RbSelf, A, B, C, D, Res> {
     res: PhantomData<Res>,
 }
 
+#[allow(missing_docs)]
 impl<Func, RbSelf, A, B, C, D, Res> Method4<Func, RbSelf, A, B, C, D, Res>
 where
     Func: Fn(RbSelf, A, B, C, D) -> Res,
@@ -990,6 +1010,7 @@ pub struct Method5<Func, RbSelf, A, B, C, D, E, Res> {
     res: PhantomData<Res>,
 }
 
+#[allow(missing_docs)]
 impl<Func, RbSelf, A, B, C, D, E, Res> Method5<Func, RbSelf, A, B, C, D, E, Res>
 where
     Func: Fn(RbSelf, A, B, C, D, E) -> Res,
@@ -1076,6 +1097,7 @@ pub struct Method6<Func, RbSelf, A, B, C, D, E, F, Res> {
     res: PhantomData<Res>,
 }
 
+#[allow(missing_docs)]
 impl<Func, RbSelf, A, B, C, D, E, F, Res> Method6<Func, RbSelf, A, B, C, D, E, F, Res>
 where
     Func: Fn(RbSelf, A, B, C, D, E, F) -> Res,
@@ -1168,6 +1190,7 @@ pub struct Method7<Func, RbSelf, A, B, C, D, E, F, G, Res> {
     res: PhantomData<Res>,
 }
 
+#[allow(missing_docs)]
 impl<Func, RbSelf, A, B, C, D, E, F, G, Res> Method7<Func, RbSelf, A, B, C, D, E, F, G, Res>
 where
     Func: Fn(RbSelf, A, B, C, D, E, F, G) -> Res,
@@ -1266,6 +1289,7 @@ pub struct Method8<Func, RbSelf, A, B, C, D, E, F, G, H, Res> {
     res: PhantomData<Res>,
 }
 
+#[allow(missing_docs)]
 impl<Func, RbSelf, A, B, C, D, E, F, G, H, Res> Method8<Func, RbSelf, A, B, C, D, E, F, G, H, Res>
 where
     Func: Fn(RbSelf, A, B, C, D, E, F, G, H) -> Res,
@@ -1370,6 +1394,7 @@ pub struct Method9<Func, RbSelf, A, B, C, D, E, F, G, H, I, Res> {
     res: PhantomData<Res>,
 }
 
+#[allow(missing_docs)]
 impl<Func, RbSelf, A, B, C, D, E, F, G, H, I, Res>
     Method9<Func, RbSelf, A, B, C, D, E, F, G, H, I, Res>
 where
@@ -1481,6 +1506,7 @@ pub struct Method10<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, Res> {
     res: PhantomData<Res>,
 }
 
+#[allow(missing_docs)]
 impl<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, Res>
     Method10<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, Res>
 where
@@ -1598,6 +1624,7 @@ pub struct Method11<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, Res> {
     res: PhantomData<Res>,
 }
 
+#[allow(missing_docs)]
 impl<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, Res>
     Method11<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, Res>
 where
@@ -1721,6 +1748,7 @@ pub struct Method12<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, Res> {
     res: PhantomData<Res>,
 }
 
+#[allow(missing_docs)]
 impl<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, Res>
     Method12<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, Res>
 where
@@ -1850,6 +1878,7 @@ pub struct Method13<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, M, Res> {
     res: PhantomData<Res>,
 }
 
+#[allow(missing_docs)]
 impl<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, M, Res>
     Method13<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, M, Res>
 where
@@ -1985,6 +2014,7 @@ pub struct Method14<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, M, N, Res>
     res: PhantomData<Res>,
 }
 
+#[allow(missing_docs)]
 impl<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, M, N, Res>
     Method14<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, M, N, Res>
 where
@@ -2126,6 +2156,7 @@ pub struct Method15<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, R
     res: PhantomData<Res>,
 }
 
+#[allow(missing_docs)]
 impl<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, Res>
     Method15<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, Res>
 where
@@ -2273,6 +2304,7 @@ pub struct Method16<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P
     res: PhantomData<Res>,
 }
 
+#[allow(missing_docs)]
 impl<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Res>
     Method16<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Res>
 where
@@ -2923,6 +2955,7 @@ pub struct FunctionRbAry<Func, Args, Res> {
     res: PhantomData<Res>,
 }
 
+#[allow(missing_docs)]
 impl<Func, Args, Res> FunctionRbAry<Func, Args, Res>
 where
     Func: Fn(Args) -> Res,
@@ -2967,6 +3000,7 @@ pub struct FunctionCAry<Func, Res> {
     res: PhantomData<Res>,
 }
 
+#[allow(missing_docs)]
 impl<Func, Res> FunctionCAry<Func, Res>
 where
     Func: Fn(&[Value]) -> Res,
@@ -3011,6 +3045,7 @@ pub struct Function0<Func, Res> {
     res: PhantomData<Res>,
 }
 
+#[allow(missing_docs)]
 impl<Func, Res> Function0<Func, Res>
 where
     Func: Fn() -> Res,
@@ -3054,6 +3089,7 @@ pub struct Function1<Func, A, Res> {
     res: PhantomData<Res>,
 }
 
+#[allow(missing_docs)]
 impl<Func, A, Res> Function1<Func, A, Res>
 where
     Func: Fn(A) -> Res,
@@ -3099,6 +3135,7 @@ pub struct Function2<Func, A, B, Res> {
     res: PhantomData<Res>,
 }
 
+#[allow(missing_docs)]
 impl<Func, A, B, Res> Function2<Func, A, B, Res>
 where
     Func: Fn(A, B) -> Res,
@@ -3148,6 +3185,7 @@ pub struct Function3<Func, A, B, C, Res> {
     res: PhantomData<Res>,
 }
 
+#[allow(missing_docs)]
 impl<Func, A, B, C, Res> Function3<Func, A, B, C, Res>
 where
     Func: Fn(A, B, C) -> Res,
@@ -3200,6 +3238,7 @@ pub struct Function4<Func, A, B, C, D, Res> {
     res: PhantomData<Res>,
 }
 
+#[allow(missing_docs)]
 impl<Func, A, B, C, D, Res> Function4<Func, A, B, C, D, Res>
 where
     Func: Fn(A, B, C, D) -> Res,
@@ -3268,6 +3307,7 @@ pub struct Function5<Func, A, B, C, D, E, Res> {
     res: PhantomData<Res>,
 }
 
+#[allow(missing_docs)]
 impl<Func, A, B, C, D, E, Res> Function5<Func, A, B, C, D, E, Res>
 where
     Func: Fn(A, B, C, D, E) -> Res,
@@ -3348,6 +3388,7 @@ pub struct Function6<Func, A, B, C, D, E, F, Res> {
     res: PhantomData<Res>,
 }
 
+#[allow(missing_docs)]
 impl<Func, A, B, C, D, E, F, Res> Function6<Func, A, B, C, D, E, F, Res>
 where
     Func: Fn(A, B, C, D, E, F) -> Res,
@@ -3434,6 +3475,7 @@ pub struct Function7<Func, A, B, C, D, E, F, G, Res> {
     res: PhantomData<Res>,
 }
 
+#[allow(missing_docs)]
 impl<Func, A, B, C, D, E, F, G, Res> Function7<Func, A, B, C, D, E, F, G, Res>
 where
     Func: Fn(A, B, C, D, E, F, G) -> Res,
@@ -3526,6 +3568,7 @@ pub struct Function8<Func, A, B, C, D, E, F, G, H, Res> {
     res: PhantomData<Res>,
 }
 
+#[allow(missing_docs)]
 impl<Func, A, B, C, D, E, F, G, H, Res> Function8<Func, A, B, C, D, E, F, G, H, Res>
 where
     Func: Fn(A, B, C, D, E, F, G, H) -> Res,
@@ -3624,6 +3667,7 @@ pub struct Function9<Func, A, B, C, D, E, F, G, H, I, Res> {
     res: PhantomData<Res>,
 }
 
+#[allow(missing_docs)]
 impl<Func, A, B, C, D, E, F, G, H, I, Res> Function9<Func, A, B, C, D, E, F, G, H, I, Res>
 where
     Func: Fn(A, B, C, D, E, F, G, H, I) -> Res,
@@ -3728,6 +3772,7 @@ pub struct Function10<Func, A, B, C, D, E, F, G, H, I, J, Res> {
     res: PhantomData<Res>,
 }
 
+#[allow(missing_docs)]
 impl<Func, A, B, C, D, E, F, G, H, I, J, Res> Function10<Func, A, B, C, D, E, F, G, H, I, J, Res>
 where
     Func: Fn(A, B, C, D, E, F, G, H, I, J) -> Res,
@@ -3838,6 +3883,7 @@ pub struct Function11<Func, A, B, C, D, E, F, G, H, I, J, K, Res> {
     res: PhantomData<Res>,
 }
 
+#[allow(missing_docs)]
 impl<Func, A, B, C, D, E, F, G, H, I, J, K, Res>
     Function11<Func, A, B, C, D, E, F, G, H, I, J, K, Res>
 where
@@ -3955,6 +4001,7 @@ pub struct Function12<Func, A, B, C, D, E, F, G, H, I, J, K, L, Res> {
     res: PhantomData<Res>,
 }
 
+#[allow(missing_docs)]
 impl<Func, A, B, C, D, E, F, G, H, I, J, K, L, Res>
     Function12<Func, A, B, C, D, E, F, G, H, I, J, K, L, Res>
 where
@@ -4078,6 +4125,7 @@ pub struct Function13<Func, A, B, C, D, E, F, G, H, I, J, K, L, M, Res> {
     res: PhantomData<Res>,
 }
 
+#[allow(missing_docs)]
 impl<Func, A, B, C, D, E, F, G, H, I, J, K, L, M, Res>
     Function13<Func, A, B, C, D, E, F, G, H, I, J, K, L, M, Res>
 where
@@ -4207,6 +4255,7 @@ pub struct Function14<Func, A, B, C, D, E, F, G, H, I, J, K, L, M, N, Res> {
     res: PhantomData<Res>,
 }
 
+#[allow(missing_docs)]
 impl<Func, A, B, C, D, E, F, G, H, I, J, K, L, M, N, Res>
     Function14<Func, A, B, C, D, E, F, G, H, I, J, K, L, M, N, Res>
 where
@@ -4342,6 +4391,7 @@ pub struct Function15<Func, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, Res> {
     res: PhantomData<Res>,
 }
 
+#[allow(missing_docs)]
 impl<Func, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, Res>
     Function15<Func, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, Res>
 where
@@ -4483,6 +4533,7 @@ pub struct Function16<Func, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Res>
     res: PhantomData<Res>,
 }
 
+#[allow(missing_docs)]
 impl<Func, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Res>
     Function16<Func, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Res>
 where

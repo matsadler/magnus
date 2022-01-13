@@ -13,6 +13,7 @@ use crate::{
 
 /// Conversions from [`Value`] to Rust types.
 pub trait TryConvert: Sized {
+    /// Convert `val` into `Self`.
     fn try_convert(val: &Value) -> Result<Self, Error>;
 }
 
@@ -20,6 +21,7 @@ pub trait TryConvert: Sized {
 /// Value to another Ruby type. Use this when you need a Rust value that's
 /// divorced from the Ruby runtime, safe to put on the heap, etc.
 pub trait TryConvertOwned: TryConvert {
+    /// Convert `val` into `Self`.
     #[inline]
     fn try_convert_owned(val: Value) -> Result<Self, Error> {
         Self::try_convert(&val)
@@ -721,8 +723,11 @@ impl TryConvertOwned for PathBuf {}
 /// Trait for types that can be used as an arguments list when calling Ruby
 /// methods.
 pub trait ArgList {
+    /// The type of the arguments list. Must convert to `&[Value]` with
+    /// [`AsRef`].
     type Output: AsRef<[Value]>;
 
+    /// Convert `self` into a type that can be used as a Ruby argument list.
     fn into_arg_list(self) -> Self::Output;
 }
 

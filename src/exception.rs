@@ -33,6 +33,8 @@ impl Exception {
         Self(NonZeroValue::new_unchecked(Value::new(val)))
     }
 
+    /// Return the Ruby backtrace for the exception, as a [`RArray`] of
+    /// [`RString`](`crate::r_string::RString`)s.
     pub fn backtrace(&self) -> Result<Option<RArray>, Error> {
         self.funcall("backtrace", ())
     }

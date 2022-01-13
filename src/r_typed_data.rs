@@ -90,6 +90,10 @@ impl Object for RTypedData {}
 pub type DataType = rb_data_type_t;
 
 impl DataType {
+    /// Create a new `DataTypeBuilder`.
+    ///
+    /// `name` should be unique per wrapped type. It does not need to be a
+    /// valid Ruby identifier.
     pub fn builder<T>(name: &'static str) -> DataTypeBuilder<T>
     where
         T: DataTypeFunctions,

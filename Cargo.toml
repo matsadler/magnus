@@ -3,6 +3,7 @@ name = "magnus"
 version = "0.1.0"
 authors = ["Mat Sadler <mat@sourcetagsandcodes.com>"]
 edition = "2018"
+description = "Ruby bindings for Rust."
 
 [workspace]
 members = ["magnus-macros"]
