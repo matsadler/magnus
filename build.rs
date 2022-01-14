@@ -19,7 +19,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .map(|s| s.parse::<u8>())
         .collect::<Result<Vec<u8>, _>>()?;
     let version = (version_parts[0], version_parts[1]);
-    for v in RUBY_VERSIONS {
+    for &v in &RUBY_VERSIONS {
         if version < v {
             println!(r#"cargo:rustc-cfg=ruby_lt_{}_{}"#, v.0, v.1);
         }
@@ -120,7 +120,8 @@ impl RbConfig {
 
         let mut res = HashMap::new();
         for line in config.split('\x1E') {
-            if let Some((key, val)) = line.split_once('\x1F') {
+            let mut parts = line.splitn(2, '\x1F');
+            if let (Some(key), Some(val)) = (parts.next(), parts.next()) {
                 if !val.is_empty() {
                     res.insert(key.to_owned(), val.to_owned());
                 }

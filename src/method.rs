@@ -467,7 +467,7 @@ mod private {
 
     impl InitReturn for () {
         fn into_init_return(self) -> Result<(), Error> {
-            Ok(self)
+            Ok(())
         }
     }
 
