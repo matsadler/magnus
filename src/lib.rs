@@ -44,6 +44,7 @@
 #![warn(missing_docs)]
 
 pub mod block;
+#[cfg(feature = "embed")]
 pub mod embed;
 mod enumerator;
 pub mod error;

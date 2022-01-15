@@ -8,8 +8,14 @@ description = "Ruby bindings for Rust."
 [workspace]
 members = ["magnus-macros"]
 
+[features]
+embed = []
+
 [dependencies]
 magnus-macros = { path = "magnus-macros" }
 
 [build-dependencies]
-bindgen = "0.58"
+bindgen = "0.59"
+
+[dev-dependencies]
+magnus = { path = ".", features = ["embed"] }

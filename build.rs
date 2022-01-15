@@ -1,11 +1,5 @@
 use std::{
-    collections::HashMap,
-    env,
-    error::Error,
-    ffi::OsStr,
-    fmt,
-    path::{Path, PathBuf},
-    process::Command,
+    collections::HashMap, env, error::Error, ffi::OsStr, fmt, path::PathBuf, process::Command,
 };
 
 const RUBY_VERSIONS: [(u8, u8); 3] = [(2, 7), (3, 0), (3, 1)];
@@ -37,20 +31,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
-    match (rbconfig.get("RUBY_SO_NAME"), rbconfig.get("LIBRUBY_A")) {
-        (Ok(_), Ok(_)) if env::var_os("RUBY_STATIC").is_some() => use_static(&rbconfig)?,
-        (Ok(libruby_so), _) => println!("cargo:rustc-link-lib=dylib={}", libruby_so),
-        (Err(_), Ok(_)) => use_static(&rbconfig)?,
-        (Err(e), _) => return Err(e.into()),
-    }
-
-    println!("cargo:rustc-link-search={}", rbconfig.get("libdir")?);
-
-    if !is_command("llvm-config") && is_command("brew") {
-        let output = Command::new("brew").arg("--prefix").output()?;
-        let prefix = String::from_utf8(output.stdout)?;
-        let path = Path::new(&prefix).join("opt/llvm/bin/llvm-config");
-        std::env::set_var("LLVM_CONFIG_PATH", path);
+    if std::env::var_os("CARGO_FEATURE_EMBED").is_some() {
+        match (rbconfig.get("RUBY_SO_NAME"), rbconfig.get("LIBRUBY_A")) {
+            (Ok(_), Ok(_)) if env::var_os("RUBY_STATIC").is_some() => use_static(&rbconfig)?,
+            (Ok(libruby_so), _) => println!("cargo:rustc-link-lib=dylib={}", libruby_so),
+            (Err(_), Ok(_)) => use_static(&rbconfig)?,
+            (Err(e), _) => return Err(e.into()),
+        }
+        println!("cargo:rustc-link-search={}", rbconfig.get("libdir")?);
     }
 
     let mut builder = bindgen::Builder::default()
@@ -77,11 +65,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
     let bindings = builder
-        .allowlist_function("rb_.*")
-        .allowlist_function("ruby_.*")
-        .allowlist_type("ruby_.*")
-        .allowlist_type("R[A-Z].*")
-        .allowlist_type("rbimpl_typeddata_flags")
+        .allowlist_function("r(b|uby)_.*")
+        .allowlist_type("(ruby_|R[A-Z]).*|rbimpl_typeddata_flags")
         .allowlist_var("rb_.*")
         .default_enum_style(bindgen::EnumVariation::Rust {
             non_exhaustive: false,
@@ -195,38 +180,3 @@ impl fmt::Display for BindingError {
 }
 
 impl Error for BindingError {}
-
-fn is_command(name: &str) -> bool {
-    let exts = env::var_os("PATHEXT")
-        .map(|s| env::split_paths(&s).collect::<Vec<_>>())
-        .unwrap_or_else(|| vec![PathBuf::new()]);
-    let path = match env::var_os("PATH") {
-        Some(v) => v,
-        None => return false,
-    };
-    env::split_paths(&path).any(|p| {
-        exts.iter().any(|ext| {
-            let mut exe = PathBuf::new();
-            exe.push(name);
-            exe.push(ext);
-            is_executable(&Path::new(&p).join(exe))
-        })
-    })
-}
-
-#[cfg(unix)]
-fn is_executable(path: &Path) -> bool {
-    use std::os::unix::fs::PermissionsExt;
-
-    let meta = match std::fs::metadata(path) {
-        Ok(v) => v,
-        Err(_) => return false,
-    };
-    let is_executable = meta.permissions().mode() & 0o111 != 0;
-    is_executable && !meta.is_dir()
-}
-
-#[cfg(not(unix))]
-fn is_executable(path: &Path) -> bool {
-    !path.is_dir()
-}
