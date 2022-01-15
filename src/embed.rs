@@ -9,6 +9,9 @@ use crate::ruby_sys::{
     ruby_cleanup, ruby_exec_node, ruby_executable_node, ruby_options, ruby_setup,
 };
 
+#[cfg(windows)]
+use crate::ruby_sys::rb_w32_sysinit;
+
 /// A guard value that will run the cleanup function for the Ruby VM when
 /// dropped.
 pub struct Cleanup();
@@ -51,6 +54,14 @@ unsafe fn init_options(opts: &[&str]) -> Cleanup {
     static INIT: AtomicBool = AtomicBool::new(false);
     match INIT.compare_exchange(false, true, Ordering::SeqCst, Ordering::SeqCst) {
         Ok(false) => {
+            #[cfg(windows)]
+            {
+                let mut argc = 0;
+                let mut argv: [*mut std::os::raw::c_char; 0] = [];
+                let mut argv = argv.as_mut_ptr();
+                rb_w32_sysinit(&mut argc, &mut argv);
+            }
+
             if ruby_setup() != 0 {
                 panic!("Failed to setup Ruby");
             };
@@ -61,9 +72,9 @@ unsafe fn init_options(opts: &[&str]) -> Cleanup {
                 .iter()
                 .map(|cs| cs.as_ptr() as *mut _)
                 .collect::<Vec<_>>();
-            let node = ruby_options(3, argv.as_mut_ptr());
+            let node = ruby_options(argv.len() as i32, argv.as_mut_ptr());
             let mut status = 0;
-            if ruby_executable_node(node, &mut status as *mut _) == 0 {
+            if ruby_executable_node(node, &mut status) == 0 {
                 panic!("Ruby init code not executable");
             }
             if ruby_exec_node(node) != 0 {

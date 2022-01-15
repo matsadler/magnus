@@ -928,7 +928,7 @@ impl Fixnum {
     }
 
     fn is_negative(self) -> bool {
-        unsafe { transmute::<_, c_long>(self.0) < 0 }
+        unsafe { transmute::<_, isize>(self.0) < 0 }
     }
 
     /// Convert `self` to an `i8`. Returns `Err` if `self` is out of range for
