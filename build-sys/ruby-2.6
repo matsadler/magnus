@@ -1,0 +1,23 @@
+#!/bin/bash
+
+set -x
+
+. $(cd $(dirname $0) && pwd)/util.sh
+
+if [ $(ruby_api_version) != 2_6 ]; then
+  exit 1
+fi
+
+bindgen \
+  ruby_sys.h \
+  -o "ruby-$(rbconfig RUBY_API_VERSION)-$(target_arch)-$(target_vendor)-$(target_os).rs" \
+  --allowlist-function "r(b|uby)_.*" \
+  --allowlist-type "(ruby_|R[A-Z]).*|rbimpl_typeddata_flags" \
+  --allowlist-var "rb_.*" \
+  --default-enum-style rust \
+  --no-copy rb_data_type_struct \
+  --no-layout-tests \
+  --no-doc-comments \
+  -- \
+  -I$(rbconfig rubyhdrdir) \
+  -I$(rbconfig rubyarchhdrdir)

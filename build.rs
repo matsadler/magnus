@@ -41,6 +41,20 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("cargo:rustc-link-search={}", rbconfig.get("libdir")?);
     }
 
+    let out_path = PathBuf::from(env::var("OUT_DIR")?).join("ruby_sys.rs");
+
+    // see if a pre-build ruby_sys exists
+    if let Some(ruby_target) = std::env::var("TARGET")
+        .ok()
+        .map(|t| format!("ruby-{}.{}-{}.rs", version.0, version.1, t))
+    {
+        let source_path = PathBuf::from("src").join("ruby_sys").join(ruby_target);
+        if source_path.exists() {
+            std::fs::copy(source_path, out_path)?;
+            return Ok(());
+        }
+    }
+
     let mut builder = bindgen::Builder::default()
         .header("ruby_sys.h")
         .clang_arg(format!("-I{}", rbconfig.get("rubyhdrdir")?))
@@ -77,8 +91,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .generate()
         .map_err(|_| BindingError())?;
 
-    let out_path = PathBuf::from(env::var("OUT_DIR")?);
-    bindings.write_to_file(out_path.join("ruby_sys.rs"))?;
+    bindings.write_to_file(out_path)?;
     Ok(())
 }
 
