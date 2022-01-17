@@ -4,7 +4,7 @@ version = "0.1.0"
 authors = ["Mat Sadler <mat@sourcetagsandcodes.com>"]
 edition = "2018"
 description = "Ruby bindings for Rust."
-# links = "ruby"
+links = "ruby"
 
 [workspace]
 members = ["magnus-macros"]
