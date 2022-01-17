@@ -8,6 +8,7 @@ links = "ruby"
 
 [workspace]
 members = ["magnus-macros"]
+exclude = ["examples/rust_blank/ext/rust_blank"]
 
 [features]
 embed = []
