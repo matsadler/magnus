@@ -7,5 +7,5 @@ fn main() {
 
     magnus::define_global_function("hello", magnus::function!(hello, 1));
 
-    let _ = magnus::eval::<magnus::value::Qnil>(r#"puts hello("world")"#);
+    magnus::eval::<magnus::value::Qnil>(r#"puts hello("world")"#).unwrap();
 }
