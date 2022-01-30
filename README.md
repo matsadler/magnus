@@ -3,6 +3,123 @@
 Ruby bindings for Rust. Write Ruby extension gems in Rust, or call Ruby code
 from a Rust binary.
 
+## Defining Methods
+
+Using Magnus, regular Rust functions can be bound to Ruby as methods with
+automatic type conversion. Callers passing the wrong arguments or incompatible
+types will get the same kind of `ArgumentError` or `TypeError` they are used to
+seeing from Ruby's built in methods.
+
+Defining a function (with no Ruby `self` argument):
+```
+fn fib(n: usize) -> usize {
+    match n {
+        0 => 0,
+        1 | 2 => 1,
+        _ => fib(n - 1) + fib(n - 2),
+    }
+}
+
+magnus::define_global_function("fib", magnus::function!(fib, 1));
+```
+
+Defining a method (with a Ruby `self` argument):
+```
+fn is_blank(rb_self: String) -> bool {
+    !rb_self.contains(|c: char| !c.is_whitespace())
+}
+
+let class = magnus::define_class("String", Default::default())?;
+// 0 as self doesn't count against the number of arguments
+class.define_method("blank?", magnus::method!(is_blank, 0));
+```
+
+## Calling Ruby Methods
+
+Some Ruby methods have direct counterparts in Ruby's C API and therefore in
+Magnus. Ruby's `Object#frozen?` method is available as
+`magnus::Value::check_frozen`, or `Array#[]` becomes `magnus::RArray::aref`.
+
+Other Ruby methods that are defined only in Ruby must be called with
+`magnus::Value::funcall`. All of Magnus' Ruby wrapper types deref to `Value`,
+so `funcall` can be used on all of them.
+
+```
+let s: String = value.funcall("test", ())?; // 0 arguments
+let x: bool = value.funcall("example", ("foo",))?; // 1 argument
+let i: i64 = value.funcall("other", (42, false))?; // 2 arguments, etc
+```
+
+`funcall` will convert return types, returning `Err(magnus::Error)` if the type
+conversion fails or the method call raised an error. To skip type conversion
+make sure the return type is `magnus::Value`.
+
+## Wrapping Rust Types in Ruby Objects
+
+Rust structs and enums can be wrapped in Ruby objects so they can be returned
+to Ruby.
+
+Types can opt-in to this with the `magnus::wrap` macro (or by implementing
+`magnus::TypedData`). Whenever a compatible type is returned to Ruby it will be
+wrapped in the specified class, and whenever it is passed back to Rust it will
+be unwrapped to a reference.
+
+```
+use magnus::{define_class, function, method, prelude::*, Error};
+
+#[magnus::wrap(class = "Point")]
+struct Point {
+    x: isize,
+    y: isize,
+}
+
+impl Point {
+    fn new(x: isize, y: isize) -> Self {
+        Self { x, y }
+    }
+
+    fn x(&self) -> isize {
+        self.x
+    }
+
+    fn y(&self) -> isize {
+        self.y
+    }
+
+    fn distance(&self, other: &Point) -> f64 {
+        (((other.x - self.x).pow(2) + (other.y - self.y).pow(2)) as f64).sqrt()
+    }
+}
+
+#[magnus::init]
+fn init() -> Result<(), Error> {
+    let class = define_class("Point", Default::default())?;
+    class.define_singleton_method("new", function!(Point::new, 2));
+    class.define_method("x", method!(Point::x, 0));
+    class.define_method("y", method!(Point::y, 0));
+    class.define_method("distance", method!(Point::distance, 1));
+    Ok(())
+}
+```
+
+The newtype pattern and `RefCell` can be used if mutability is required:
+
+```
+struct Point {
+    x: isize,
+    y: isize,
+}
+
+#[magnus::wrap(class = "Point")]
+struct MutPoint(std::cell::RefCell<Point>);
+
+impl MutPoint {
+    fn set_x(&self, i: isize) {
+        self.0.borrow_mut().x = i;
+    }
+}
+```
+
 ## Type Conversions
 
 Magnus will automatically convert between Rust and Ruby types, including
@@ -119,6 +236,55 @@ TODO
 ## Embedding Ruby in Rust
 
 TODO
+
+## Ruby version-specific features
+
+Some features may only be present with certain versions of Ruby as features
+are added and removed from Ruby's API. To conditionally enable these features
+your code the following cfg values are set at compile time:
+
+* `ruby_lt_{major}_{minor}` set when the Ruby version is less than to `major.minor`
+* `ruby_lte_{major}_{minor}` set when the Ruby version is less than or equal to `major.minor`
+* `ruby_{major}_{minor}` set when the Ruby version is equal to `major.minor`
+* `ruby_gte_{major}_{minor}` set when the Ruby version is greater than or equal to `major.minor`
+* `ruby_gt_{major}_{minor}` set when the Ruby version is greater than to `major.minor`
+
+for each of `2.7`, `3.0`, and `3.1`.
+
+For example, say we need an interned string (or 'fstring', Ruby's internal
+optimisation of frozen string literals). Before Ruby 3.0 there was no API to
+create one of these from a regular string, only check if a string was already
+interned:
+
+```
+#[cfg(ruby_gte_3_0)]
+fn example(s: RString) -> Result<(), Error> {
+    let interned = s.to_interned_str();
+    // ...
+}
+
+#[cfg(ruby_lt_3_0)]
+fn example(s: RString) -> Result<(), Error> {
+    let interned = match s.as_interned_str() {
+        Some(s) => s,
+        None => return Err(Error::argument_error("String must be a frozen string literal")),
+    };
+    // ...
+}
+```
+
+## Compatibility
+
+Magnus contains pre-built bindings for Ruby 2.6 through 3.1 on Linux x86_64,
+macOS x86_64, and macOS aarch64, plus Ruby 2.6 through 3.0 on Windows x86_64.
+For other Ruby version/platform combinations bindings will be generated at
+compile time, this may require libclang to be installed.
+
+The Minimum supported Rust version is currently Rust 1.51.
+
+Support for statically linking Ruby is provided, but not tested.
+
+Support for 32 bit systems is almost certainly broken, patches are welcome.
 
 ## Alternatives
 
