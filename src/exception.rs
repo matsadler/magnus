@@ -12,6 +12,9 @@ use crate::{
 };
 
 /// Wrapper type for a Value known to be an instance of Ruby's Exception class.
+///
+/// All [`Value`] methods should be available on this type through [`Deref`],
+/// but some may be missed by this documentation.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct Exception(NonZeroValue);
@@ -83,6 +86,9 @@ impl From<Exception> for Value {
 }
 
 /// A Value known to be an instance of Class and subclass of Exception.
+///
+/// All [`Value`] methods should be available on this type through [`Deref`],
+/// but some may be missed by this documentation.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct ExceptionClass(NonZeroValue);

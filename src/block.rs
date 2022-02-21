@@ -15,6 +15,9 @@ use crate::{
 };
 
 /// Wrapper type for a Value known to be an instance of Ruby’s Proc class.
+///
+/// All [`Value`] methods should be available on this type through [`Deref`],
+/// but some may be missed by this documentation.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct Proc(NonZeroValue);

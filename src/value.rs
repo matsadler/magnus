@@ -559,8 +559,11 @@ impl NonZeroValue {
 
 /// Protects a Ruby Value from the garbage collector.
 ///
-/// See also Value::leak for a value that should be permanently excluded from
-/// garbage collection.
+/// See also [`Value::leak`] for a value that should be permanently excluded
+/// from garbage collection.
+///
+/// All [`Value`] methods should be available on this type through [`Deref`],
+/// but some may be missed by this documentation.
 pub struct BoxValue(Box<Value>);
 
 impl BoxValue {
@@ -626,6 +629,9 @@ impl From<BoxValue> for Value {
 }
 
 /// Ruby's `false` value.
+///
+/// All [`Value`] methods should be available on this type through [`Deref`],
+/// but some may be missed by this documentation.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct Qfalse(VALUE);
@@ -690,6 +696,9 @@ impl TryConvert for Qfalse {
 impl TryConvertOwned for Qfalse {}
 
 /// Ruby's `nil` value.
+///
+/// All [`Value`] methods should be available on this type through [`Deref`],
+/// but some may be missed by this documentation.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct Qnil(NonZeroValue);
@@ -773,6 +782,9 @@ impl TryConvert for Qnil {
 impl TryConvertOwned for Qnil {}
 
 /// Ruby's `true` value.
+///
+/// All [`Value`] methods should be available on this type through [`Deref`],
+/// but some may be missed by this documentation.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct Qtrue(NonZeroValue);
@@ -888,6 +900,9 @@ impl Qundef {
 
 /// A Value known to be a fixnum, Ruby's internal representation of small
 /// integers.
+///
+/// All [`Value`] methods should be available on this type through [`Deref`],
+/// but some may be missed by this documentation.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct Fixnum(NonZeroValue);
@@ -1120,6 +1135,9 @@ impl TryConvertOwned for Fixnum {}
 
 /// A static Ruby symbol that will live for the life of the program and never
 /// be garbage collected.
+///
+/// All [`Value`] methods should be available on this type through [`Deref`],
+/// but some may be missed by this documentation.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct StaticSymbol(NonZeroValue);
@@ -1263,6 +1281,9 @@ impl From<Symbol> for Id {
 
 /// A Value known to be a flonum, Ruby's internal representation of low
 /// precision floating point numbers.
+///
+/// All [`Value`] methods should be available on this type through [`Deref`],
+/// but some may be missed by this documentation.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct Flonum(NonZeroValue);

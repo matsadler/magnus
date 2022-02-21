@@ -9,6 +9,9 @@ use crate::{
 
 /// A Value pointer to a RRational struct, Ruby's internal representation of
 /// rational numbers.
+///
+/// All [`Value`] methods should be available on this type through [`Deref`],
+/// but some may be missed by this documentation.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct RRational(NonZeroValue);

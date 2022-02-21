@@ -27,6 +27,9 @@ pub enum ForEach {
 
 /// A Value pointer to a RHash struct, Ruby's internal representation of Hash
 /// objects.
+///
+/// All [`Value`] methods should be available on this type through [`Deref`],
+/// but some may be missed by this documentation.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct RHash(NonZeroValue);

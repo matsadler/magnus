@@ -15,6 +15,9 @@ pub(crate) enum IntegerType {
 }
 
 /// A type wrapping either a fixnum value or a Value pointer to a RBignum.
+///
+/// All [`Value`] methods should be available on this type through [`Deref`],
+/// but some may be missed by this documentation.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct Integer(NonZeroValue);

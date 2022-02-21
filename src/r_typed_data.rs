@@ -38,6 +38,9 @@ const RUBY_TYPED_WB_PROTECTED: u32 = crate::ruby_sys::ruby_fl_type::RUBY_FL_WB_P
 
 /// A Value pointer to a RTypedData struct, Ruby’s internal representation of
 /// objects that wrap foreign types.
+///
+/// All [`Value`] methods should be available on this type through [`Deref`],
+/// but some may be missed by this documentation.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct RTypedData(NonZeroValue);

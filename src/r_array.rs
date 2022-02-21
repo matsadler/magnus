@@ -24,6 +24,9 @@ use crate::ruby_sys::ruby_rarray_flags::RARRAY_EMBED_LEN_SHIFT;
 
 /// A Value pointer to a RArray struct, Ruby's internal representation of an
 /// Array.
+///
+/// All [`Value`] methods should be available on this type through [`Deref`],
+/// but some may be missed by this documentation.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct RArray(NonZeroValue);

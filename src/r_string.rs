@@ -33,6 +33,9 @@ use crate::ruby_sys::ruby_rstring_flags::RSTRING_EMBED_LEN_SHIFT;
 
 /// A Value pointer to a RString struct, Ruby's internal representation of
 /// strings.
+///
+/// All [`Value`] methods should be available on this type through [`Deref`],
+/// but some may be missed by this documentation.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct RString(NonZeroValue);
