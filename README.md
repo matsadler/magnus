@@ -231,11 +231,104 @@ use `unsafe`.
 
 ## Writing an extension gem (calling Rust from Ruby)
 
-TODO
+Ruby extensions must be built as dynamic system libraries, this can be done by
+setting the `crate-type` attribute in your `Cargo.toml`.
+
+**`Cargo.toml`**
+```
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+magnus = "0.1"
+```
+
+When Ruby loads your extension it calls an 'init' function defined in your
+extension. In this function you will need to define your Ruby classes and bind
+Rust functions to Ruby methods. Use the `#[magnus::init]` attribute to mark
+your init function so it can be correctly exposed to Ruby.
+
+**`src/lib.rs`**
+```
+use magnus::{define_global_function, function};
+
+fn distance(a: (f64, f64), b: (f64, f64)) -> f64 {
+    ((b.0 - a.0).powi(2) + (b.1 - a.1).powi(2)).sqrt()
+}
+
+#[magnus::init]
+fn init() {
+    define_global_function("distance", function!(distance, 2));
+}
+```
+
+If you wish to package your extension as a Gem, Rubygems currently does not
+support Rust extensions directly, but a Rakefile can be used to compile your
+Rust extension when the gem is installed.
+
+**`my_example_gem.gemspec`**
+```
+spec.extensions = ["ext/my_example_gem/Rakefile"]
+
+# actually a build time dependency, but that's not an option.
+spec.add_runtime_dependency "rake", "> 1"
+```
+
+See the [`rust_blank`] example for an example Rakefile that can be copied into
+your project without changes. This Rakefile will place the extension at
+`lib/my_example_gem/my_example_gem.so` (or `.bundle` on macOS), which you'd
+load from Ruby like so:
+
+**`lib/my_example_gem.rb`**
+```
+require_relative "my_example_gem/my_example_gem"
+```
+
+[`rust_blank`]: https://github.com/matsadler/magnus/tree/main/examples/rust_blank/ext/rust_blank
+
+### Compiling Extensions
+
+If you are compiling your extension yourself outside of Rubygems you will need
+to pass a number of compiler flags as specified by `ruby -e'p
+RbConfig::CONFIG["DLDFLAGS"]'`. These may need translating from C compiler args
+to rustc args. At a minimum the following should work most of the time:
+
+cargo rustc --release -- -C link-arg=-Wl,-undefined,dynamic_lookup
+
+The compiled library will need to be moved from Cargo's target directory into
+Ruby's load path. On Linux and macOS the library will have the prefix `lib`
+added to the extension name, typically you'd want to rename the file to remove
+this prefix so that you do not need to include it in your Ruby `require`s.
+Additionally on macOS the file extension will need to be changed from `.dylib`
+to `.bundle`.
 
 ## Embedding Ruby in Rust
 
-TODO
+To call Ruby from a Rust program, enable the `embed` feature:
+
+**`Cargo.toml`**
+```
+[dependencies]
+magnus = { version = "0.1", features = ["embed"] }
+```
+
+This enables linking to Ruby and gives access to the `embed` module.
+`magnus::embed::init` must be called before calling Ruby and the value it
+returns must not be dropped until you are done with Ruby. `init` can not be
+called more than once.
+
+**`src/main.rs`**
+```
+use magnus::{embed, eval};
+
+fn main() {
+    let _cleanup = unsafe { embed::init() };
+
+    let val: f64 = eval("rand + rand").unwrap();
+
+    println!("{}", val);
+}
+```
 
 ## Ruby version-specific features
 
@@ -289,8 +382,16 @@ Support for 32 bit systems is almost certainly broken, patches are welcome.
 ## Alternatives
 
 * [rutie](https://github.com/danielpclark/rutie)
+* [rb-sys](https://github.com/ianks/rb-sys)
 * [rosy](https://github.com/nvzqz/rosy)
 * [ruby-sys](https://github.com/steveklabnik/ruby-sys)
 * [ruru](https://github.com/d-unseductable/ruru)
 * [plugger](https://github.com/dylanmckay/plugger)
 * [helix](https://github.com/tildeio/helix)
+
+## Naming
+
+Magnus is named after Magnus the Red a character from the Warhammer 40,000
+universe. A sorcerer who believed he could tame the psychic energy of the Warp.
+Ultimately, his hubris lead to his fall to Chaos, but lets hope using this
+library turns out better for you.
