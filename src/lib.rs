@@ -3,7 +3,7 @@
 //!
 //! # Examples
 //!
-//! ``` no_run
+//! ```
 //! use magnus::{define_module, function, method, prelude::*, Error};
 //!
 //! #[magnus::wrap(class = "Euclid::Point", free_immediatly, size)]
@@ -126,7 +126,7 @@ pub mod prelude {
 ///
 /// # Examples
 ///
-/// ``` no_run
+/// ```
 /// use magnus::{define_class, memoize, RClass};
 ///
 /// fn foo_class() -> &'static RClass {

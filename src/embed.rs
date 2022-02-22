@@ -41,7 +41,7 @@ impl Drop for Cleanup {
 ///
 /// # Examples
 ///
-/// ```no_run
+/// ```
 /// let _cleanup = unsafe { magnus::embed::init() };
 /// ```
 #[inline(always)]

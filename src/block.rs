@@ -248,7 +248,7 @@ where
 ///
 /// # Examples
 ///
-/// ``` no_run
+/// ```
 /// use magnus::{block::{block_given, Yield}, Value};
 ///
 /// fn count_to_3(rb_self: Value) -> Yield<impl Iterator<Item = u8>> {

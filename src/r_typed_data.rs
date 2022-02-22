@@ -326,7 +326,7 @@ where
     ///
     /// # Examples
     ///
-    /// ``` no_run
+    /// ```
     /// use magnus::{define_class, memoize, RClass};
     ///
     /// fn class() -> RClass {
@@ -340,7 +340,7 @@ where
     ///
     /// # Examples
     ///
-    /// ``` no_run
+    /// ```
     /// use magnus::{memoize, r_typed_data::DataTypeBuilder, DataType, DataTypeFunctions};
     ///
     /// #[derive(DataTypeFunctions)]

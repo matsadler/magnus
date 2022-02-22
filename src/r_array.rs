@@ -217,8 +217,9 @@ impl RArray {
     ///
     /// # Examples
     ///
-    /// ``` no_run
+    /// ```
     /// use magnus::{eval, RArray};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let ary: RArray = eval(r#"["a", "b", "c"]"#).unwrap();
     ///

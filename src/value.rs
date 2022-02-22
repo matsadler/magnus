@@ -239,7 +239,7 @@ impl Value {
     /// modify it.
     ///
     /// # Examples
-    /// ``` no_run
+    /// ```
     /// use magnus::{Error, Value};
     ///
     /// fn mutate(val: Value) -> Result<(), Error> {
@@ -327,7 +327,8 @@ impl Value {
     ///
     /// # Examples
     ///
-    /// ``` no_run
+    /// ```
+    /// # let _cleanup = unsafe { magnus::embed::init() };
     /// # let value = magnus::QNIL;
     /// // safe as we neve give Ruby a chance to free the string.
     /// unsafe { value.to_s() }.unwrap().into_owned();
@@ -389,7 +390,8 @@ impl Value {
     ///
     /// # Examples
     ///
-    /// ``` no_run
+    /// ```
+    /// # let _cleanup = unsafe { magnus::embed::init() };
     /// # let value = magnus::QNIL;
     /// // safe as we neve give Ruby a chance to free the string.
     /// unsafe { value.classname() }.into_owned();
@@ -1161,8 +1163,9 @@ impl StaticSymbol {
     /// Create a new StaticSymbol.
     ///
     /// # Examples
-    /// ``` no_run
+    /// ```
     /// use magnus::StaticSymbol;
+    /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let sym = StaticSymbol::new("example");
     /// ```

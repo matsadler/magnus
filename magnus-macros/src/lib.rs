@@ -1,6 +1,6 @@
 //! Derive and proc macros for magnus.
 //!
-//! ``` ignore
+//! ```
 //! #[magnus::wrap(class = "RbPoint", free_immediatly, size)]
 //! struct Point {
 //!     x: isize,
@@ -9,7 +9,7 @@
 //!
 //! #[magnus::init]
 //! fn init() -> Result<(), magnus::Error> {
-//!     magnus::define_class("RbPoint")?;
+//!     magnus::define_class("RbPoint", Default::default())?;
 //!     Ok(())
 //! }
 //! ```
@@ -36,7 +36,7 @@ struct InitAttributes {
 ///
 /// # Examples
 ///
-/// ``` ignore
+/// ```
 /// fn distance(a: (f64, f64), b: (f64, f64)) -> f64 {
 ///     ((b.0 - a.0).powi(2) + (b.1 - a.1).powi(2)).sqrt()
 /// }
@@ -47,7 +47,7 @@ struct InitAttributes {
 /// }
 /// ```
 /// The init function can also return `Result<(), magnus::Error>`.
-/// ``` ignore
+/// ```
 /// use magnus::{define_module, function, method, prelude::*, Error};
 ///
 /// #[magnus::wrap(class = "Euclid::Point", free_immediatly, size)]
@@ -102,7 +102,7 @@ pub fn init(attrs: TokenStream, item: TokenStream) -> TokenStream {
             .into()
         }
     };
-    let extern_init_name = Ident::new(&format!("Init_{}", crate_name), Span::call_site());
+    let extern_init_name = Ident::new(&format!("Init_{}", crate_name.replace("-", "_")), Span::call_site());
 
     let tokens = quote! {
         #init
@@ -135,7 +135,7 @@ pub fn init(attrs: TokenStream, item: TokenStream) -> TokenStream {
 ///
 /// # Examples
 ///
-/// ``` ignore
+/// ```
 /// #[magnus::wrap(class = "RbPoint", free_immediatly, size)]
 /// struct Point {
 ///     x: isize,
@@ -232,7 +232,7 @@ struct TypedDataAttributes {
 ///
 /// # Examples
 ///
-/// ``` ignore
+/// ```
 /// use magnus::{DataTypeFunctions, TypedData};
 ///
 /// #[derive(DataTypeFunctions, TypedData)]
@@ -261,7 +261,7 @@ struct TypedDataAttributes {
 /// }
 /// ```
 /// Defining a custom `DataType` function.
-/// ``` ignore
+/// ```
 /// use std::mem::size_of_val;
 /// use magnus::{DataTypeFunctions, TypedData};
 ///

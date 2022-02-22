@@ -2467,7 +2467,7 @@ where
 ///
 /// # Examples
 ///
-/// ``` no_run
+/// ```
 /// use magnus::{define_class, method, prelude::*, Error};
 ///
 /// fn rb_is_blank(rb_self: String) -> bool {
@@ -4690,7 +4690,7 @@ where
 ///
 /// # Examples
 ///
-/// ``` no_run
+/// ```
 /// fn distance(a: (f64, f64), b: (f64, f64)) -> f64 {
 ///     ((b.0 - a.0).powi(2) + (b.0 - a.0).powi(2)).sqrt()
 /// }
