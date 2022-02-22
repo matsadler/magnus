@@ -43,6 +43,7 @@
 //! ```
 #![warn(missing_docs)]
 
+mod binding;
 pub mod block;
 #[cfg(feature = "embed")]
 pub mod embed;
@@ -87,6 +88,7 @@ use ruby_sys::{
 
 pub use value::{Fixnum, Flonum, StaticSymbol, Value, QFALSE, QNIL, QTRUE};
 pub use {
+    binding::Binding,
     enumerator::Enumerator,
     error::Error,
     exception::{Exception, ExceptionClass},
@@ -194,6 +196,8 @@ where
 ///
 /// Errors if `s` contains a null byte, the conversion fails, or on an uncaught
 /// Ruby exception.
+///
+/// See also the [`eval`](macro@crate::eval) macro.
 pub fn eval<T>(s: &str) -> Result<T, Error>
 where
     T: TryConvert,

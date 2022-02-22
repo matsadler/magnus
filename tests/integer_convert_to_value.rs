@@ -1,23 +1,20 @@
-use magnus::{define_global_variable, QNIL};
-
 macro_rules! rb_assert {
-    ($eval:literal) => {
-        assert!(magnus::eval::<bool>($eval).unwrap())
+    ($s:literal) => {
+        assert!(magnus::eval::<bool>($s).unwrap())
+    };
+    ($s:literal, $($rest:tt)*) => {
+        let result: bool = magnus::eval!($s, $($rest)*).unwrap();
+        assert!(result)
     };
 }
 
 #[test]
 fn it_converts_integers_to_value() {
     let _cleanup = unsafe { magnus::embed::init() };
-    let val = define_global_variable("$val", QNIL).unwrap();
-    rb_assert!("$val == nil");
 
-    unsafe { val.replace((0u8).into()) };
-    rb_assert!("$val == 0");
+    rb_assert!("val == 0", val = 0u8);
 
-    unsafe { val.replace((-1i64).into()) };
-    rb_assert!("$val == -1");
+    rb_assert!("val == -1", val = -1i64);
 
-    unsafe { val.replace(9223372036854775807i64.into()) };
-    rb_assert!("$val == 9223372036854775807");
+    rb_assert!("val == 9223372036854775807", val = 9223372036854775807i64);
 }

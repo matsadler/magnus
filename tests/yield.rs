@@ -1,8 +1,12 @@
 use magnus::{block::yield_value, define_global_function, method, Error, Value};
 
 macro_rules! rb_assert {
-    ($eval:literal) => {
-        assert!(magnus::eval::<bool>($eval).unwrap())
+    ($s:literal) => {
+        assert!(magnus::eval::<bool>($s).unwrap())
+    };
+    ($s:literal, $($rest:tt)*) => {
+        let result: bool = magnus::eval!($s, $($rest)*).unwrap();
+        assert!(result)
     };
 }
 

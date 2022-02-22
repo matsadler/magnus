@@ -1,23 +1,24 @@
-use magnus::{define_global_variable, StaticSymbol, Symbol, Value, QNIL};
+use magnus::{StaticSymbol, Symbol, Value};
 
 macro_rules! rb_assert {
-    ($eval:literal) => {
-        assert!(magnus::eval::<bool>($eval).unwrap())
+    ($s:literal) => {
+        assert!(magnus::eval::<bool>($s).unwrap())
+    };
+    ($s:literal, $($rest:tt)*) => {
+        let result: bool = magnus::eval!($s, $($rest)*).unwrap();
+        assert!(result)
     };
 }
 
 #[test]
 fn it_makes_a_symbol() {
     let _cleanup = unsafe { magnus::embed::init() };
-    let val = define_global_variable("$val", QNIL).unwrap();
-    rb_assert!("$val == nil");
 
     let sym = Symbol::new("foo");
     // not static by default
     assert!(!sym.is_static());
 
-    unsafe { val.replace(sym.into()) };
-    rb_assert!("$val == :foo");
+    rb_assert!("sym == :foo", sym);
 
     magnus::eval::<Value>(":bar").unwrap();
     let sym = Symbol::new("bar");

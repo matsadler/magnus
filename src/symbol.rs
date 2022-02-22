@@ -137,6 +137,12 @@ impl From<String> for Symbol {
     }
 }
 
+impl From<StaticSymbol> for Symbol {
+    fn from(s: StaticSymbol) -> Self {
+        unsafe { Self(NonZeroValue::new_unchecked(s.into())) }
+    }
+}
+
 impl From<Symbol> for Value {
     fn from(val: Symbol) -> Self {
         *val

@@ -324,7 +324,7 @@ use magnus::{embed, eval};
 fn main() {
     let _cleanup = unsafe { embed::init() };
 
-    let val: f64 = eval("rand + rand").unwrap();
+    let val: f64 = eval!("a + rand", a = 1).unwrap();
 
     println!("{}", val);
 }

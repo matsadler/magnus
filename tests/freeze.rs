@@ -1,8 +1,12 @@
-use magnus::{define_global_variable, eval, RArray, Value};
+use magnus::{eval, RArray, Value};
 
 macro_rules! rb_assert {
-    ($eval:literal) => {
-        assert!(magnus::eval::<bool>($eval).unwrap())
+    ($s:literal) => {
+        assert!(magnus::eval::<bool>($s).unwrap())
+    };
+    ($s:literal, $($rest:tt)*) => {
+        let result: bool = magnus::eval!($s, $($rest)*).unwrap();
+        assert!(result)
     };
 }
 
@@ -20,8 +24,7 @@ fn it_can_check_frozen() {
     assert!(eval::<Value>(r#"[1].freeze"#).unwrap().is_frozen());
 
     let val = RArray::new();
-    define_global_variable("$val", val).unwrap();
-    rb_assert!("!$val.frozen?");
+    rb_assert!("!val.frozen?", val);
     val.freeze();
-    rb_assert!("$val.frozen?");
+    rb_assert!("val.frozen?", val);
 }

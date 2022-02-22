@@ -1,15 +1,16 @@
-use magnus::define_global_variable;
-
 macro_rules! rb_assert {
-    ($eval:literal) => {
-        assert!(magnus::eval::<bool>($eval).unwrap())
+    ($s:literal) => {
+        assert!(magnus::eval::<bool>($s).unwrap())
+    };
+    ($s:literal, $($rest:tt)*) => {
+        let result: bool = magnus::eval!($s, $($rest)*).unwrap();
+        assert!(result)
     };
 }
 
 #[test]
 fn it_converts_tuple_to_array() {
     let _cleanup = unsafe { magnus::embed::init() };
-    let _ = define_global_variable("$val", (1, 2.3, (), (4,))).unwrap();
 
-    rb_assert!("$val == [1, 2.3, nil, [4]]")
+    rb_assert!("val == [1, 2.3, nil, [4]]", val = (1, 2.3, (), (4,)));
 }

@@ -1,35 +1,32 @@
 use magnus::{
-    define_global_variable,
     r_struct::{define_struct, RStruct},
-    QNIL,
 };
 
 macro_rules! rb_assert {
-    ($eval:literal) => {
-        assert!(magnus::eval::<bool>($eval).unwrap())
+    ($s:literal) => {
+        assert!(magnus::eval::<bool>($s).unwrap())
+    };
+    ($s:literal, $($rest:tt)*) => {
+        let result: bool = magnus::eval!($s, $($rest)*).unwrap();
+        assert!(result)
     };
 }
 
 #[test]
 fn it_defines_a_struct() {
     let _cleanup = unsafe { magnus::embed::init() };
-    let val = define_global_variable("$val", QNIL).unwrap();
-    rb_assert!("$val == nil");
 
     let struct_class = define_struct(Some("Foo"), ("bar", "baz")).unwrap();
 
-    unsafe { val.replace(struct_class.into()) };
-    rb_assert!(r#"$val.name == "Struct::Foo""#);
-    rb_assert!("$val.members == [:bar, :baz]");
+    rb_assert!(r#"val.name == "Struct::Foo""#, val = struct_class);
+    rb_assert!("val.members == [:bar, :baz]", val = struct_class);
 
     let obj = struct_class.new_instance((1, 2)).unwrap();
 
-    unsafe { val.replace(obj.into()) };
-    rb_assert!("$val.bar == 1");
-    rb_assert!("$val.baz == 2");
+    rb_assert!("val.bar == 1", val = obj);
+    rb_assert!("val.baz == 2", val = obj);
 
-    unsafe { val.replace(define_struct(None, ("foo",)).unwrap().into()) };
-    rb_assert!(r#"$val.name == nil"#);
+    rb_assert!(r#"val.name == nil"#, val = define_struct(None, ("foo",)).unwrap());
 
     let obj = RStruct::from_value(obj).unwrap();
     unsafe {

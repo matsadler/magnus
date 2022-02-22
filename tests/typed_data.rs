@@ -1,8 +1,12 @@
-use magnus::{define_class, define_global_variable, embed::init, eval, Value, QNIL};
+use magnus::{define_class, embed::init, eval, Value};
 
 macro_rules! rb_assert {
-    ($eval:literal) => {
-        assert!(magnus::eval::<bool>($eval).unwrap())
+    ($s:literal) => {
+        assert!(magnus::eval::<bool>($s).unwrap())
+    };
+    ($s:literal, $($rest:tt)*) => {
+        let result: bool = magnus::eval!($s, $($rest)*).unwrap();
+        assert!(result)
     };
 }
 
@@ -24,12 +28,9 @@ fn it_wraps_rust_struct() {
 
     define_class("Example", Default::default()).unwrap();
 
-    let val = define_global_variable("$val", QNIL).unwrap();
-    rb_assert!("$val == nil");
+    let val = make_rb_example("foo");
+    rb_assert!("val.class == Example", val);
 
-    unsafe { val.replace(make_rb_example("foo")) };
-    rb_assert!("$val.class == Example");
-
-    let ex: &Example = eval("$val").unwrap();
+    let ex: &Example = eval!("val", val).unwrap();
     assert_eq!("foo", ex.value)
 }

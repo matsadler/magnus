@@ -1,9 +1,13 @@
-use magnus::{define_global_variable, eval};
+use magnus::eval;
 use std::collections::HashMap;
 
 macro_rules! rb_assert {
-    ($eval:literal) => {
-        assert!(magnus::eval::<bool>($eval).unwrap())
+    ($s:literal) => {
+        assert!(magnus::eval::<bool>($s).unwrap())
+    };
+    ($s:literal, $($rest:tt)*) => {
+        let result: bool = magnus::eval!($s, $($rest)*).unwrap();
+        assert!(result)
     };
 }
 
@@ -22,6 +26,5 @@ fn it_converts_hash_map() {
     let mut map = HashMap::new();
     map.insert("test", (0, 0.5));
     map.insert("example", (1, 3.75));
-    let _ = define_global_variable("$val", map).unwrap();
-    rb_assert!(r#"$val == {"test" => [0, 0.5], "example" => [1, 3.75]}"#)
+    rb_assert!(r#"map == {"test" => [0, 0.5], "example" => [1, 3.75]}"#, map);
 }

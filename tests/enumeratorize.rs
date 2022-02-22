@@ -1,8 +1,12 @@
-use magnus::{define_global_variable, eval, Value};
+use magnus::Value;
 
 macro_rules! rb_assert {
-    ($eval:literal) => {
-        assert!(magnus::eval::<bool>($eval).unwrap())
+    ($s:literal) => {
+        assert!(magnus::eval::<bool>($s).unwrap())
+    };
+    ($s:literal, $($rest:tt)*) => {
+        let result: bool = magnus::eval!($s, $($rest)*).unwrap();
+        assert!(result)
     };
 }
 
@@ -10,7 +14,7 @@ macro_rules! rb_assert {
 fn it_makes_an_enumerator() {
     let _cleanup = unsafe { magnus::embed::init() };
 
-    let val: Value = eval(
+    let val: Value = magnus::eval!(
         "
     class Test
       def each
@@ -20,15 +24,13 @@ fn it_makes_an_enumerator() {
       end
     end
     Test.new
-    ",
+    "
     )
     .unwrap();
 
     let enumerator = val.enumeratorize("each", ());
 
-    let _ = define_global_variable("$val", enumerator);
-
-    rb_assert!("$val.next == 1");
-    rb_assert!("$val.next == 2");
-    rb_assert!("$val.next == 3");
+    rb_assert!("enumerator.next == 1", enumerator);
+    rb_assert!("enumerator.next == 2", enumerator);
+    rb_assert!("enumerator.next == 3", enumerator);
 }
