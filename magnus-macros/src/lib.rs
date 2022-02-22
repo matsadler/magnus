@@ -102,7 +102,10 @@ pub fn init(attrs: TokenStream, item: TokenStream) -> TokenStream {
             .into()
         }
     };
-    let extern_init_name = Ident::new(&format!("Init_{}", crate_name.replace("-", "_")), Span::call_site());
+    let extern_init_name = Ident::new(
+        &format!("Init_{}", crate_name.replace("-", "_")),
+        Span::call_site(),
+    );
 
     let tokens = quote! {
         #init
