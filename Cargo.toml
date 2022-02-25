@@ -5,6 +5,8 @@ authors = ["Mat Sadler <mat@sourcetagsandcodes.com>"]
 edition = "2018"
 description = "Ruby bindings for Rust."
 links = "ruby"
+keywords = ["ruby"]
+categories = ["api-bindings", "development-tools::ffi"]
 
 [workspace]
 members = ["magnus-macros"]
