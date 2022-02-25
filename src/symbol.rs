@@ -14,8 +14,8 @@ use crate::{
     value::{Id, NonZeroValue, StaticSymbol, Value},
 };
 
-/// A type wrapping either an immediate symbol value or a Value pointer to a
-/// RSymbol struct.
+/// A type wrapping either a [`StaticSymbol`] or a Value pointer to a RSymbol
+/// struct.
 ///
 /// All [`Value`] methods should be available on this type through [`Deref`],
 /// but some may be missed by this documentation.
@@ -24,7 +24,7 @@ use crate::{
 pub struct Symbol(NonZeroValue);
 
 impl Symbol {
-    /// Return `Some(RSymbol)` if `val` is a `RSymbol`, `None` otherwise.
+    /// Return `Some(Symbol)` if `val` is a `Symbol`, `None` otherwise.
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
         unsafe {

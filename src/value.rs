@@ -903,6 +903,8 @@ impl Qundef {
 /// A Value known to be a fixnum, Ruby's internal representation of small
 /// integers.
 ///
+/// See also [`Integer`].
+///
 /// All [`Value`] methods should be available on this type through [`Deref`],
 /// but some may be missed by this documentation.
 #[derive(Clone, Copy)]
@@ -1138,6 +1140,8 @@ impl TryConvertOwned for Fixnum {}
 /// A static Ruby symbol that will live for the life of the program and never
 /// be garbage collected.
 ///
+/// See also [`Symbol`].
+///
 /// All [`Value`] methods should be available on this type through [`Deref`],
 /// but some may be missed by this documentation.
 #[derive(Clone, Copy)]
@@ -1282,8 +1286,10 @@ impl From<Symbol> for Id {
     }
 }
 
-/// A Value known to be a flonum, Ruby's internal representation of low
+/// A Value known to be a flonum, Ruby's internal representation of lower
 /// precision floating point numbers.
+///
+/// See also `Float`.
 ///
 /// All [`Value`] methods should be available on this type through [`Deref`],
 /// but some may be missed by this documentation.

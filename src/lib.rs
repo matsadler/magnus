@@ -1,6 +1,55 @@
 //! Magnus is a library for writing Ruby extentions in Rust, or running Ruby
 //! code from Rust.
 //!
+//! # Overview
+//!
+//! All Ruby objects are represented by [`Value`]. To make it easier to work
+//! with values that are instances of specific classes a number of wrapper
+//! types are available. These wrappers will [`Deref`](`std::ops::Deref`) to
+//! `Value`, so you can still use `Value`'s methods on them.
+//!
+//! | Ruby Class | Magnus Type |
+//! |------------|-------------|
+//! | `String`   | [`RString`] |
+//! | `Integer`  | [`Integer`] |
+//! | `Float`    | [`Float`]   |
+//! | `Array`    | [`RArray`]  |
+//! | `Hash`     | [`RHash`]   |
+//! | `Symbol`   | [`Symbol`]  |
+//! | `Class`    | [`RClass`]  |
+//! | `Module`   | [`RModule`] |
+//!
+//! When writing Rust code to be called from Ruby the [`init`] attribute can
+//! be used to mark your init function that Ruby will call when your library
+//! is `require`d.
+//!
+//! When embedding Ruby in a Rust program, see [`embed::init`] for initialising
+//! the Ruby VM.
+//!
+//! The [`method`](`macro@method`) macro can be used to wrap a Rust function
+//! with automatic type conversion and error handing so it can be exposed to
+//! Ruby. The [`TryConvert`] trait handles conversions from Ruby to Rust, and
+//! anything implementing `Into<Value>` can be returned to Ruby. See the
+//! [`Module`] and [`Object`] traits for defining methods.
+//!
+//! [`Value::funcall`] can be used to call Ruby methods from Rust.
+//!
+//! See the [`wrap`] attribute macro for wrapping Rust types as Ruby objects.
+//!
+//! ## Safety
+//!
+//! When using Magnus, in Rust code, Ruby objects must be kept on the stack. If
+//! objects are moved to the heap the Ruby GC can not reach them, and they may
+//! be garbage collected. This could lead to memory safety issues.
+//!
+//! It is not possible to enforce this rule in Rust's type system or via the
+//! borrow checker, users of Magnus must maintain this rule manually.
+//!
+//! While it would be possible to mark any functions that could expose this
+//! unsafty as `unsafe`, that would mean that almost every interaction with
+//! Ruby would be `unsafe`. This would leave no way to differentiate the
+//! *really* unsafe functions that need much more care to use.
+//!
 //! # Examples
 //!
 //! ```
@@ -41,6 +90,7 @@
 //!     Ok(())
 //! }
 //! ```
+
 #![warn(missing_docs)]
 
 mod binding;

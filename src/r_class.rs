@@ -12,6 +12,10 @@ use crate::{
 /// A Value pointer to a RClass struct, Ruby's internal representation of
 /// classes.
 ///
+/// See the [`Module`] trait for defining instance methods and nested
+/// classes/modules.
+/// See the [`Object`] trait for defining singlton methods (aka class methods).
+///
 /// All [`Value`] methods should be available on this type through [`Deref`],
 /// but some may be missed by this documentation.
 #[derive(Clone, Copy)]

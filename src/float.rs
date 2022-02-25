@@ -10,8 +10,8 @@ use crate::{
     value::{NonZeroValue, Value},
 };
 
-/// A type wrapping either a flonum value or a Value known to be an instance of
-/// Float.
+/// A type wrapping either a [`Flonum`](`crate::value::Flonum`) value or a
+/// Value known to be an instance of Float.
 ///
 /// All [`Value`] methods should be available on this type through [`Deref`],
 /// but some may be missed by this documentation.

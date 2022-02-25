@@ -14,7 +14,7 @@ pub(crate) enum IntegerType {
     Bignum(RBignum),
 }
 
-/// A type wrapping either a fixnum value or a Value pointer to a RBignum.
+/// A type wrapping either a [`Fixnum`] or a [`RBignum`].
 ///
 /// All [`Value`] methods should be available on this type through [`Deref`],
 /// but some may be missed by this documentation.
