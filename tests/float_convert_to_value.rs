@@ -13,7 +13,10 @@ fn it_converts_floats_to_value() {
     let _cleanup = unsafe { magnus::embed::init() };
     rb_assert!("val == 0.5", val = 0.5);
 
-    rb_assert!("val == 18446744073709552000.0", val = 18446744073709552000.0);
+    rb_assert!(
+        "val == 18446744073709552000.0",
+        val = 18446744073709552000.0
+    );
 
     rb_assert!("val == Float::INFINITY", val = f64::INFINITY);
 

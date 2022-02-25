@@ -1,6 +1,4 @@
-use magnus::{
-    r_struct::{define_struct, RStruct},
-};
+use magnus::r_struct::{define_struct, RStruct};
 
 macro_rules! rb_assert {
     ($s:literal) => {
@@ -26,7 +24,10 @@ fn it_defines_a_struct() {
     rb_assert!("val.bar == 1", val = obj);
     rb_assert!("val.baz == 2", val = obj);
 
-    rb_assert!(r#"val.name == nil"#, val = define_struct(None, ("foo",)).unwrap());
+    rb_assert!(
+        r#"val.name == nil"#,
+        val = define_struct(None, ("foo",)).unwrap()
+    );
 
     let obj = RStruct::from_value(obj).unwrap();
     unsafe {

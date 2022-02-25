@@ -26,5 +26,8 @@ fn it_converts_hash_map() {
     let mut map = HashMap::new();
     map.insert("test", (0, 0.5));
     map.insert("example", (1, 3.75));
-    rb_assert!(r#"map == {"test" => [0, 0.5], "example" => [1, 3.75]}"#, map);
+    rb_assert!(
+        r#"map == {"test" => [0, 0.5], "example" => [1, 3.75]}"#,
+        map
+    );
 }
