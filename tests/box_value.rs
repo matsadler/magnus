@@ -1,7 +1,4 @@
-use std::ffi::CString;
-
-use magnus::ruby_sys::{rb_define_global_const, rb_gc_start};
-use magnus::{embed::init, eval, value::BoxValue, RString, Value};
+use magnus::{embed::init, eval, gc, value::BoxValue, RString, Value};
 
 #[inline(never)]
 fn box_value() -> BoxValue {
@@ -18,20 +15,10 @@ fn it_keeps_value_alive() {
 
     // make some garbage
     eval::<Value>(r#"1024.times.map {|i| "test#{i}"}"#).unwrap();
-    // run garbage collector
-    unsafe {
-        rb_gc_start();
-    }
-
-    // send value back to Ruby
-    // TODO use nice api for this rather than ruby_sys
-    let s = CString::new("FOO").unwrap();
-    unsafe {
-        rb_define_global_const(s.as_c_str().as_ptr(), std::mem::transmute(*val));
-    }
+    gc::start();
 
     // try and use value
-    eval::<RString>(r#"FOO + "bar""#).unwrap();
+    let _: RString = eval!(r#"foo + "bar""#, foo = val).unwrap();
 
     // didn't segfault? we passed!
 }
