@@ -101,6 +101,7 @@ mod enumerator;
 pub mod error;
 mod exception;
 mod float;
+pub mod gc;
 mod integer;
 pub mod method;
 mod module;
