@@ -7,6 +7,9 @@ description = "Ruby bindings for Rust."
 links = "ruby"
 keywords = ["ruby"]
 categories = ["api-bindings", "development-tools::ffi"]
+repository = "https://github.com/matsadler/magnus"
+homepage = "https://github.com/matsadler/magnus"
+license = "MIT"
 
 [workspace]
 members = ["magnus-macros"]
