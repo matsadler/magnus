@@ -4,11 +4,14 @@ use std::ops::Deref;
 
 use crate::{
     ruby_sys::{
-        rb_gc_adjust_memory_usage, rb_gc_disable, rb_gc_enable, rb_gc_location, rb_gc_mark,
-        rb_gc_mark_locations, rb_gc_mark_movable, rb_gc_start, ssize_t, VALUE,
+        rb_gc_adjust_memory_usage, rb_gc_disable, rb_gc_enable, rb_gc_mark, rb_gc_mark_locations,
+        rb_gc_start, ssize_t, VALUE,
     },
     value::Value,
 };
+
+#[cfg(ruby_gte_2_7)]
+use crate::ruby_sys::{rb_gc_location, rb_gc_mark_movable};
 
 /// Mark an Object.
 ///
@@ -51,6 +54,7 @@ pub fn mark_slice(values: &[Value]) {
 /// invalid to use from Rust when GC is run, you must update any stored objects
 /// with [`location`] inside your implementation of
 /// [`DataTypeFunctions::compact`](`crate::r_typed_data::DataTypeFunctions::compact`).
+#[cfg(ruby_gte_2_7)]
 pub fn mark_movable<T>(value: T)
 where
     T: Deref<Target = Value>,
@@ -68,6 +72,7 @@ where
 ///
 /// Returns a new `Value` that is pointing to the object that `value` used to
 /// point to. If `value` hasn't moved, simply returns `value`.
+#[cfg(ruby_gte_2_7)]
 pub fn location(value: Value) -> Value {
     unsafe { Value::new(rb_gc_location(value.as_rb_value())) }
 }
