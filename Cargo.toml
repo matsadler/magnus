@@ -16,7 +16,7 @@ exclude = ["examples/rust_blank/ext/rust_blank"]
 embed = []
 
 [dependencies]
-magnus-macros = { path = "magnus-macros" }
+magnus-macros = { version = "0.1.0", path = "magnus-macros" }
 
 [build-dependencies]
 bindgen = "0.59"
