@@ -4,6 +4,9 @@ version = "0.1.0"
 authors = ["Mat Sadler <mat@sourcetagsandcodes.com>"]
 edition = "2018"
 description = "Derive and proc macros for magnus"
+repository = "https://github.com/matsadler/magnus"
+homepage = "https://github.com/matsadler/magnus"
+license = "MIT"
 
 [lib]
 proc-macro = true
