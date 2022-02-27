@@ -11,11 +11,11 @@ use std::{
 };
 
 use crate::{
+    class::RClass,
     debug_assert_value,
     error::{protect, Error},
     object::Object,
     r_array::RArray,
-    r_class::RClass,
     ruby_sys::{
         rb_struct_aref, rb_struct_aset, rb_struct_define, rb_struct_getmember, rb_struct_members,
         rb_struct_size, ruby_value_type, VALUE,

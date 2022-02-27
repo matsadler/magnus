@@ -4,13 +4,11 @@ use std::{any::Any, borrow::Cow, ffi::CString, fmt, mem::transmute, ops::Deref, 
 
 use crate::{
     debug_assert_value,
-    exception::{Exception, ExceptionClass},
+    exception::{self, Exception, ExceptionClass},
     module::Module,
     ruby_sys::{
-        rb_eArgError, rb_eEncodingError, rb_eFatal, rb_eFrozenError, rb_eIndexError,
-        rb_eRangeError, rb_eScriptError, rb_eStopIteration, rb_eTypeError, rb_ensure, rb_errinfo,
-        rb_exc_raise, rb_jump_tag, rb_protect, rb_raise, rb_set_errinfo, ruby_special_consts,
-        VALUE,
+        rb_ensure, rb_errinfo, rb_exc_raise, rb_jump_tag, rb_protect, rb_raise, rb_set_errinfo,
+        ruby_special_consts, VALUE,
     },
     value::{Value, QNIL},
 };
@@ -49,10 +47,7 @@ impl Error {
     where
         T: Into<Cow<'static, str>>,
     {
-        Self::Error(
-            unsafe { ExceptionClass::from_rb_value_unchecked(rb_eArgError) },
-            msg.into(),
-        )
+        Self::Error(exception::arg_error(), msg.into())
     }
 
     /// Create a new `RangeError` with `msg`.
@@ -60,10 +55,7 @@ impl Error {
     where
         T: Into<Cow<'static, str>>,
     {
-        Self::Error(
-            unsafe { ExceptionClass::from_rb_value_unchecked(rb_eRangeError) },
-            msg.into(),
-        )
+        Self::Error(exception::range_error(), msg.into())
     }
 
     /// Create a new `TypeError` with `msg`.
@@ -71,10 +63,7 @@ impl Error {
     where
         T: Into<Cow<'static, str>>,
     {
-        Self::Error(
-            unsafe { ExceptionClass::from_rb_value_unchecked(rb_eTypeError) },
-            msg.into(),
-        )
+        Self::Error(exception::type_error(), msg.into())
     }
 
     /// Create a new `EncodingError` with `msg`.
@@ -82,10 +71,7 @@ impl Error {
     where
         T: Into<Cow<'static, str>>,
     {
-        Self::Error(
-            unsafe { ExceptionClass::from_rb_value_unchecked(rb_eEncodingError) },
-            msg.into(),
-        )
+        Self::Error(exception::encoding_error(), msg.into())
     }
 
     /// Create a new `IndexError` with `msg`.
@@ -93,10 +79,7 @@ impl Error {
     where
         T: Into<Cow<'static, str>>,
     {
-        Self::Error(
-            unsafe { ExceptionClass::from_rb_value_unchecked(rb_eIndexError) },
-            msg.into(),
-        )
+        Self::Error(exception::index_error(), msg.into())
     }
 
     /// Create a new `FrozenError` with `msg`.
@@ -104,10 +87,7 @@ impl Error {
     where
         T: Into<Cow<'static, str>>,
     {
-        Self::Error(
-            unsafe { ExceptionClass::from_rb_value_unchecked(rb_eFrozenError) },
-            msg.into(),
-        )
+        Self::Error(exception::frozen_error(), msg.into())
     }
 
     /// Create a new `StopIteration` with `msg`.
@@ -115,10 +95,7 @@ impl Error {
     where
         T: Into<Cow<'static, str>>,
     {
-        Self::Error(
-            unsafe { ExceptionClass::from_rb_value_unchecked(rb_eStopIteration) },
-            msg.into(),
-        )
+        Self::Error(exception::stop_iteration(), msg.into())
     }
 
     /// Create a new `ScriptError` with `msg`.
@@ -126,10 +103,7 @@ impl Error {
     where
         T: Into<Cow<'static, str>>,
     {
-        Self::Error(
-            unsafe { ExceptionClass::from_rb_value_unchecked(rb_eScriptError) },
-            msg.into(),
-        )
+        Self::Error(exception::script_error(), msg.into())
     }
 
     /// Matches the internal `Exception` against `class` with same semantics as
@@ -157,10 +131,7 @@ impl Error {
         } else {
             "panic".into()
         };
-        Self::Error(
-            unsafe { ExceptionClass::from_rb_value_unchecked(rb_eFatal) },
-            msg,
-        )
+        Self::Error(exception::fatal(), msg)
     }
 }
 

@@ -1,9 +1,9 @@
 use std::{fmt, ops::Deref};
 
 use crate::{
+    class::RClass,
     error::{protect, Error},
     object::Object,
-    r_class::RClass,
     ruby_sys::{rb_binding_new, rb_cBinding},
     symbol::Symbol,
     try_convert::TryConvert,

@@ -12,13 +12,13 @@ use std::{
 };
 
 use crate::{
+    class::RClass,
     enumerator::Enumerator,
     error::{protect, Error},
     float::Float,
     integer::{Integer, IntegerType},
     module::Module,
     r_bignum::RBignum,
-    r_class::RClass,
     r_float::RFloat,
     r_string::RString,
     ruby_sys::{

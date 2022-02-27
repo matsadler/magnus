@@ -96,32 +96,31 @@
 mod binding;
 pub mod block;
 #[cfg(feature = "embed")]
+pub mod class;
 pub mod embed;
 mod enumerator;
 pub mod error;
-mod exception;
+pub mod exception;
 mod float;
 pub mod gc;
 mod integer;
 pub mod method;
-mod module;
+pub mod module;
 mod object;
 mod r_array;
 mod r_bignum;
-mod r_class;
 mod r_complex;
 mod r_file;
 mod r_float;
 pub mod r_hash;
 mod r_match;
-mod r_module;
 mod r_object;
 mod r_rational;
 mod r_regexp;
 pub mod r_string;
 pub mod r_struct;
 pub mod r_typed_data;
-mod ruby_sys;
+pub mod ruby_sys;
 mod symbol;
 mod try_convert;
 pub mod value;
@@ -140,22 +139,22 @@ use ruby_sys::{
 pub use value::{Fixnum, Flonum, StaticSymbol, Value, QFALSE, QNIL, QTRUE};
 pub use {
     binding::Binding,
+    class::RClass,
     enumerator::Enumerator,
     error::Error,
     exception::{Exception, ExceptionClass},
     float::Float,
     integer::Integer,
     module::Module,
+    module::RModule,
     object::Object,
     r_array::RArray,
     r_bignum::RBignum,
-    r_class::RClass,
     r_complex::RComplex,
     r_file::RFile,
     r_float::RFloat,
     r_hash::RHash,
     r_match::RMatch,
-    r_module::RModule,
     r_object::RObject,
     r_rational::RRational,
     r_regexp::RRegexp,

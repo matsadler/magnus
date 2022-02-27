@@ -1,9 +1,9 @@
 use std::{fmt, ops::Deref};
 
 use crate::{
+    class::RClass,
     error::Error,
     object::Object,
-    r_class::RClass,
     ruby_sys::{rb_cEnumerator, rb_eStopIteration, VALUE},
     try_convert::TryConvert,
     value::{NonZeroValue, Value},

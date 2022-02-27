@@ -1,13 +1,24 @@
+//! Types and functions for working with Ruby exceptions.
+
 use std::{fmt, ops::Deref};
 
 use crate::{
+    class::RClass,
     debug_assert_value,
     error::Error,
     module::Module,
     object::Object,
     r_array::RArray,
-    r_class::RClass,
-    ruby_sys::{rb_eException, rb_eRuntimeError, VALUE},
+    ruby_sys::{
+        rb_eArgError, rb_eEOFError, rb_eEncCompatError, rb_eEncodingError, rb_eException,
+        rb_eFatal, rb_eFloatDomainError, rb_eFrozenError, rb_eIOError, rb_eIndexError,
+        rb_eInterrupt, rb_eKeyError, rb_eLoadError, rb_eLocalJumpError, rb_eMathDomainError,
+        rb_eNameError, rb_eNoMatchingPatternError, rb_eNoMatchingPatternKeyError, rb_eNoMemError,
+        rb_eNoMethodError, rb_eNotImpError, rb_eRangeError, rb_eRegexpError, rb_eRuntimeError,
+        rb_eScriptError, rb_eSecurityError, rb_eSignal, rb_eStandardError, rb_eStopIteration,
+        rb_eSyntaxError, rb_eSysStackError, rb_eSystemCallError, rb_eSystemExit, rb_eThreadError,
+        rb_eTypeError, rb_eZeroDivError, VALUE,
+    },
     value::{NonZeroValue, Value},
 };
 
@@ -148,3 +159,219 @@ impl From<ExceptionClass> for Value {
 
 impl Object for ExceptionClass {}
 impl Module for ExceptionClass {}
+
+/// Return Ruby's `ArgError` class.
+#[inline]
+pub fn arg_error() -> ExceptionClass {
+    unsafe { ExceptionClass::from_rb_value_unchecked(rb_eArgError) }
+}
+
+/// Return Ruby's `EOFError` class.
+#[inline]
+pub fn eof_error() -> ExceptionClass {
+    unsafe { ExceptionClass::from_rb_value_unchecked(rb_eEOFError) }
+}
+
+/// Return Ruby's `EncCompatError` class.
+#[inline]
+pub fn enc_compat_error() -> ExceptionClass {
+    unsafe { ExceptionClass::from_rb_value_unchecked(rb_eEncCompatError) }
+}
+
+/// Return Ruby's `EncodingError` class.
+#[inline]
+pub fn encoding_error() -> ExceptionClass {
+    unsafe { ExceptionClass::from_rb_value_unchecked(rb_eEncodingError) }
+}
+
+/// Return Ruby's `Exception` class.
+#[inline]
+pub fn exception() -> ExceptionClass {
+    unsafe { ExceptionClass::from_rb_value_unchecked(rb_eException) }
+}
+
+/// Return Ruby's `Fatal` class.
+#[inline]
+pub fn fatal() -> ExceptionClass {
+    unsafe { ExceptionClass::from_rb_value_unchecked(rb_eFatal) }
+}
+
+/// Return Ruby's `FloatDomainError` class.
+#[inline]
+pub fn float_domain_error() -> ExceptionClass {
+    unsafe { ExceptionClass::from_rb_value_unchecked(rb_eFloatDomainError) }
+}
+
+/// Return Ruby's `FrozenError` class.
+#[inline]
+pub fn frozen_error() -> ExceptionClass {
+    unsafe { ExceptionClass::from_rb_value_unchecked(rb_eFrozenError) }
+}
+
+/// Return Ruby's `IOError` class.
+#[inline]
+pub fn io_error() -> ExceptionClass {
+    unsafe { ExceptionClass::from_rb_value_unchecked(rb_eIOError) }
+}
+
+/// Return Ruby's `IndexError` class.
+#[inline]
+pub fn index_error() -> ExceptionClass {
+    unsafe { ExceptionClass::from_rb_value_unchecked(rb_eIndexError) }
+}
+
+/// Return Ruby's `Interrupt` class.
+#[inline]
+pub fn interrupt() -> ExceptionClass {
+    unsafe { ExceptionClass::from_rb_value_unchecked(rb_eInterrupt) }
+}
+
+/// Return Ruby's `KeyError` class.
+#[inline]
+pub fn key_error() -> ExceptionClass {
+    unsafe { ExceptionClass::from_rb_value_unchecked(rb_eKeyError) }
+}
+
+/// Return Ruby's `LoadError` class.
+#[inline]
+pub fn load_error() -> ExceptionClass {
+    unsafe { ExceptionClass::from_rb_value_unchecked(rb_eLoadError) }
+}
+
+/// Return Ruby's `LocalJumpError` class.
+#[inline]
+pub fn local_jump_error() -> ExceptionClass {
+    unsafe { ExceptionClass::from_rb_value_unchecked(rb_eLocalJumpError) }
+}
+
+/// Return Ruby's `MathDomainError` class.
+#[inline]
+pub fn math_domain_error() -> ExceptionClass {
+    unsafe { ExceptionClass::from_rb_value_unchecked(rb_eMathDomainError) }
+}
+
+/// Return Ruby's `NameError` class.
+#[inline]
+pub fn name_error() -> ExceptionClass {
+    unsafe { ExceptionClass::from_rb_value_unchecked(rb_eNameError) }
+}
+
+/// Return Ruby's `NoMatchingPatternError` class.
+#[inline]
+pub fn no_matching_pattern_error() -> ExceptionClass {
+    unsafe { ExceptionClass::from_rb_value_unchecked(rb_eNoMatchingPatternError) }
+}
+
+/// Return Ruby's `NoMatchingPatternKeyError` class.
+#[inline]
+pub fn no_matching_pattern_key_error() -> ExceptionClass {
+    unsafe { ExceptionClass::from_rb_value_unchecked(rb_eNoMatchingPatternKeyError) }
+}
+
+/// Return Ruby's `NoMemError` class.
+#[inline]
+pub fn no_mem_error() -> ExceptionClass {
+    unsafe { ExceptionClass::from_rb_value_unchecked(rb_eNoMemError) }
+}
+
+/// Return Ruby's `NoMethodError` class.
+#[inline]
+pub fn no_method_error() -> ExceptionClass {
+    unsafe { ExceptionClass::from_rb_value_unchecked(rb_eNoMethodError) }
+}
+
+/// Return Ruby's `NotImpError` class.
+#[inline]
+pub fn not_imp_error() -> ExceptionClass {
+    unsafe { ExceptionClass::from_rb_value_unchecked(rb_eNotImpError) }
+}
+
+/// Return Ruby's `RangeError` class.
+#[inline]
+pub fn range_error() -> ExceptionClass {
+    unsafe { ExceptionClass::from_rb_value_unchecked(rb_eRangeError) }
+}
+
+/// Return Ruby's `RegexpError` class.
+#[inline]
+pub fn regexp_error() -> ExceptionClass {
+    unsafe { ExceptionClass::from_rb_value_unchecked(rb_eRegexpError) }
+}
+
+/// Return Ruby's `RuntimeError` class.
+#[inline]
+pub fn runtime_error() -> ExceptionClass {
+    unsafe { ExceptionClass::from_rb_value_unchecked(rb_eRuntimeError) }
+}
+
+/// Return Ruby's `ScriptError` class.
+#[inline]
+pub fn script_error() -> ExceptionClass {
+    unsafe { ExceptionClass::from_rb_value_unchecked(rb_eScriptError) }
+}
+
+/// Return Ruby's `SecurityError` class.
+#[inline]
+pub fn security_error() -> ExceptionClass {
+    unsafe { ExceptionClass::from_rb_value_unchecked(rb_eSecurityError) }
+}
+
+/// Return Ruby's `Signal` class.
+#[inline]
+pub fn signal() -> ExceptionClass {
+    unsafe { ExceptionClass::from_rb_value_unchecked(rb_eSignal) }
+}
+
+/// Return Ruby's `StandardError` class.
+#[inline]
+pub fn standard_error() -> ExceptionClass {
+    unsafe { ExceptionClass::from_rb_value_unchecked(rb_eStandardError) }
+}
+
+/// Return Ruby's `StopIteration` class.
+#[inline]
+pub fn stop_iteration() -> ExceptionClass {
+    unsafe { ExceptionClass::from_rb_value_unchecked(rb_eStopIteration) }
+}
+
+/// Return Ruby's `SyntaxError` class.
+#[inline]
+pub fn syntax_error() -> ExceptionClass {
+    unsafe { ExceptionClass::from_rb_value_unchecked(rb_eSyntaxError) }
+}
+
+/// Return Ruby's `SysStackError` class.
+#[inline]
+pub fn sys_stack_error() -> ExceptionClass {
+    unsafe { ExceptionClass::from_rb_value_unchecked(rb_eSysStackError) }
+}
+
+/// Return Ruby's `SystemCallError` class.
+#[inline]
+pub fn system_call_error() -> ExceptionClass {
+    unsafe { ExceptionClass::from_rb_value_unchecked(rb_eSystemCallError) }
+}
+
+/// Return Ruby's `SystemExit` class.
+#[inline]
+pub fn system_exit() -> ExceptionClass {
+    unsafe { ExceptionClass::from_rb_value_unchecked(rb_eSystemExit) }
+}
+
+/// Return Ruby's `ThreadError` class.
+#[inline]
+pub fn thread_error() -> ExceptionClass {
+    unsafe { ExceptionClass::from_rb_value_unchecked(rb_eThreadError) }
+}
+
+/// Return Ruby's `TypeError` class.
+#[inline]
+pub fn type_error() -> ExceptionClass {
+    unsafe { ExceptionClass::from_rb_value_unchecked(rb_eTypeError) }
+}
+
+/// Return Ruby's `ZeroDivError` class.
+#[inline]
+pub fn zero_div_error() -> ExceptionClass {
+    unsafe { ExceptionClass::from_rb_value_unchecked(rb_eZeroDivError) }
+}

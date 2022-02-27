@@ -13,10 +13,10 @@ use std::{
 };
 
 use crate::{
+    class::RClass,
     debug_assert_value,
     error::{protect, Error},
     object::Object,
-    r_class::RClass,
     ruby_sys::{
         self, rb_check_typeddata, rb_data_type_struct__bindgen_ty_1, rb_data_type_t,
         rb_data_typed_object_wrap, ruby_value_type, size_t, VALUE,
