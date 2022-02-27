@@ -724,6 +724,35 @@ pub struct BoxValue(Box<Value>);
 
 impl BoxValue {
     /// Create a new `BoxValue`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, gc, value::BoxValue, RString, Value};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// # #[inline(never)]
+    /// fn box_value() -> BoxValue {
+    ///     BoxValue::new(*RString::new("foo"))
+    /// }
+    ///
+    /// # // get the Value in a different stack frame and copy it to a BoxValue
+    /// # // test is invalid if this is done in this function.
+    /// let boxed = box_value();
+    ///
+    /// # // make some garbage
+    /// # eval::<Value>(r#"1024.times.map {|i| "test#{i}"}"#).unwrap();
+    /// // run garbage collector
+    /// gc::start();
+    ///
+    /// # // try and use value
+    /// // boxed is still useable
+    /// let result: String = eval!(r#"foo + "bar""#, foo = boxed).unwrap();
+    ///
+    /// assert_eq!(result, "foobar");
+    ///
+    /// # // didn't segfault? we passed!
+    /// ```
     pub fn new(val: Value) -> Self {
         debug_assert_value!(val);
         let mut boxed = Box::new(val);
@@ -786,6 +815,8 @@ impl From<BoxValue> for Value {
 
 /// Ruby's `false` value.
 ///
+/// See [`QFALSE`] to obtain a value of this type.
+///
 /// All [`Value`] methods should be available on this type through [`Deref`],
 /// but some may be missed by this documentation.
 #[derive(Clone, Copy)]
@@ -798,11 +829,21 @@ pub const QFALSE: Qfalse = Qfalse::new();
 impl Qfalse {
     /// Create a new `Qfalse`.
     #[inline]
-    pub const fn new() -> Self {
+    const fn new() -> Self {
         Qfalse(ruby_special_consts::RUBY_Qfalse as VALUE)
     }
 
     /// Return `Some(Qfalse)` if `val` is a `Qfalse`, `None` otherwise.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, value::Qfalse};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// assert!(Qfalse::from_value(eval("false").unwrap()).is_some());
+    /// assert!(Qfalse::from_value(eval("0").unwrap()).is_none());
+    /// ```
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
         val.is_false().then(Self::new)
@@ -853,6 +894,8 @@ impl TryConvertOwned for Qfalse {}
 
 /// Ruby's `nil` value.
 ///
+/// See [`QNIL`] to obtain a value of this type.
+///
 /// All [`Value`] methods should be available on this type through [`Deref`],
 /// but some may be missed by this documentation.
 #[derive(Clone, Copy)]
@@ -865,7 +908,7 @@ pub const QNIL: Qnil = Qnil::new();
 impl Qnil {
     /// Create a new `Qnil`.
     #[inline]
-    pub const fn new() -> Self {
+    const fn new() -> Self {
         unsafe {
             Self(NonZeroValue::new_unchecked(Value::new(
                 ruby_special_consts::RUBY_Qnil as VALUE,
@@ -874,6 +917,16 @@ impl Qnil {
     }
 
     /// Return `Some(Qnil)` if `val` is a `Qnil`, `None` otherwise.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, value::Qnil};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// assert!(Qnil::from_value(eval("nil").unwrap()).is_some());
+    /// assert!(Qnil::from_value(eval("0").unwrap()).is_none());
+    /// ```
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
         val.is_nil().then(Self::new)
@@ -939,6 +992,8 @@ impl TryConvertOwned for Qnil {}
 
 /// Ruby's `true` value.
 ///
+/// See [`QTRUE`] to obtain a value of this type.
+///
 /// All [`Value`] methods should be available on this type through [`Deref`],
 /// but some may be missed by this documentation.
 #[derive(Clone, Copy)]
@@ -951,7 +1006,7 @@ pub const QTRUE: Qtrue = Qtrue::new();
 impl Qtrue {
     /// Create a new `Qtrue`.
     #[inline]
-    pub const fn new() -> Self {
+    const fn new() -> Self {
         unsafe {
             Self(NonZeroValue::new_unchecked(Value::new(
                 ruby_special_consts::RUBY_Qtrue as VALUE,
@@ -960,6 +1015,16 @@ impl Qtrue {
     }
 
     /// Return `Some(Qtrue)` if `val` is a `Qtrue`, `None` otherwise.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, value::Qtrue};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// assert!(Qtrue::from_value(eval("true").unwrap()).is_some());
+    /// assert!(Qtrue::from_value(eval("1").unwrap()).is_none());
+    /// ```
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
         val.is_true().then(Self::new)
@@ -1017,6 +1082,8 @@ impl TryConvertOwned for Qtrue {}
 
 /// A placeholder value that represents an undefined value. Not exposed to
 /// Ruby level code.
+///
+/// See [`QUNDEF`] to obtain a value of this type.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct Qundef(NonZeroValue);
@@ -1028,7 +1095,7 @@ pub const QUNDEF: Qundef = Qundef::new();
 impl Qundef {
     /// Create a new `Qundef`.
     #[inline]
-    pub const fn new() -> Self {
+    const fn new() -> Self {
         unsafe {
             Self(NonZeroValue::new_unchecked(Value::new(
                 ruby_special_consts::RUBY_Qundef as VALUE,
@@ -1037,6 +1104,16 @@ impl Qundef {
     }
 
     /// Return `Some(Qundef)` if `val` is a `Qundef`, `None` otherwise.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, value::Qundef};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// // nil is not undef
+    /// assert!(Qundef::from_value(eval("nil").unwrap()).is_none());
+    /// ```
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
         val.is_undef().then(Self::new)
@@ -1044,12 +1121,14 @@ impl Qundef {
 
     /// Return `self` as a [`Value`].
     ///
+    /// # Safety
+    ///
     /// It is not a good idea to return this to Ruby code, bad things will
     /// happen. There are only a handful of places in Ruby's API where it is
     /// appropriate to pass a [`Value`] created from `Qundef` (hence this
     /// method, rather than implimenting [`Into<Value>`]).
     #[inline]
-    pub fn to_value(self) -> Value {
+    pub unsafe fn to_value(self) -> Value {
         self.0.get()
     }
 }
@@ -1067,6 +1146,19 @@ pub struct Fixnum(NonZeroValue);
 
 impl Fixnum {
     /// Return `Some(Fixnum)` if `val` is a `Fixnum`, `None` otherwise.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, Fixnum};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// assert!(Fixnum::from_value(eval("0").unwrap()).is_some());
+    /// // too big
+    /// assert!(Fixnum::from_value(eval("9223372036854775807").unwrap()).is_none());
+    /// // not an int
+    /// assert!(Fixnum::from_value(eval("1.23").unwrap()).is_none());
+    /// ```
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
         unsafe {
@@ -1084,6 +1176,18 @@ impl Fixnum {
     ///
     /// Returns `Ok(Fixnum)` if `n` is in range for `Fixnum`, otherwise returns
     /// `Err(RBignum)`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, Fixnum};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// assert!(Fixnum::from_i64(0).is_ok());
+    /// // too big
+    /// assert!(Fixnum::from_i64(4611686018427387904).is_err());
+    /// assert!(Fixnum::from_i64(-4611686018427387905).is_err());
+    /// ```
     pub fn from_i64(n: i64) -> Result<Self, RBignum> {
         let val = unsafe { Value::new(rb_ll2inum(n)) };
         Self::from_value(val)
@@ -1094,6 +1198,17 @@ impl Fixnum {
     ///
     /// Returns `Ok(Fixnum)` if `n` is in range for `Fixnum`, otherwise returns
     /// `Err(RBignum)`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, Fixnum};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// assert!(Fixnum::from_u64(0).is_ok());
+    /// // too big
+    /// assert!(Fixnum::from_u64(4611686018427387904).is_err());
+    /// ```
     pub fn from_u64(n: u64) -> Result<Self, RBignum> {
         let val = unsafe { Value::new(rb_ull2inum(n)) };
         Self::from_value(val)
@@ -1106,13 +1221,25 @@ impl Fixnum {
 
     /// Convert `self` to an `i8`. Returns `Err` if `self` is out of range for
     /// `i8`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, Fixnum};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// assert_eq!(eval::<Fixnum>("127").unwrap().to_i8().unwrap(), 127);
+    /// assert!(eval::<Fixnum>("128").unwrap().to_i8().is_err());
+    /// assert_eq!(eval::<Fixnum>("-128").unwrap().to_i8().unwrap(), -128);
+    /// assert!(eval::<Fixnum>("-129").unwrap().to_i8().is_err());
+    /// ```
     pub fn to_i8(self) -> Result<i8, Error> {
         let mut res = 0;
         protect(|| {
             res = unsafe { rb_num2long(self.as_rb_value()) };
             *QNIL
         })?;
-        if res > i8::MAX as c_long {
+        if res > i8::MAX as c_long || res < i8::MIN as c_long {
             return Err(Error::range_error("fixnum too big to convert into `i8`"));
         }
         Ok(res as i8)
@@ -1120,6 +1247,18 @@ impl Fixnum {
 
     /// Convert `self` to an `i16`. Returns `Err` if `self` is out of range for
     /// `i16`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, Fixnum};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// assert_eq!(eval::<Fixnum>("32767").unwrap().to_i16().unwrap(), 32767);
+    /// assert!(eval::<Fixnum>("32768").unwrap().to_i16().is_err());
+    /// assert_eq!(eval::<Fixnum>("-32768").unwrap().to_i16().unwrap(), -32768);
+    /// assert!(eval::<Fixnum>("-32769").unwrap().to_i16().is_err());
+    /// ```
     pub fn to_i16(self) -> Result<i16, Error> {
         let mut res = 0;
         protect(|| {
@@ -1131,13 +1270,25 @@ impl Fixnum {
 
     /// Convert `self` to an `i32`. Returns `Err` if `self` is out of range for
     /// `i32`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, Fixnum};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// assert_eq!(eval::<Fixnum>("2147483647").unwrap().to_i32().unwrap(), 2147483647);
+    /// assert!(eval::<Fixnum>("2147483648").unwrap().to_i32().is_err());
+    /// assert_eq!(eval::<Fixnum>("-2147483648").unwrap().to_i32().unwrap(), -2147483648);
+    /// assert!(eval::<Fixnum>("-2147483649").unwrap().to_i32().is_err());
+    /// ```
     pub fn to_i32(self) -> Result<i32, Error> {
         let mut res = 0;
         protect(|| {
             res = unsafe { rb_num2long(self.as_rb_value()) };
             *QNIL
         })?;
-        if res > i32::MAX as c_long {
+        if res > i32::MAX as c_long || res < i32::MIN as c_long {
             return Err(Error::range_error("fixnum too big to convert into `i32`"));
         }
         Ok(res as i32)
@@ -1145,19 +1296,39 @@ impl Fixnum {
 
     /// Convert `self` to an `i64`. This is infallible as `i64` can represent a
     /// larger range than `Fixnum`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, Fixnum};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// assert_eq!(eval::<Fixnum>("4611686018427387903").unwrap().to_i64(), 4611686018427387903);
+    /// assert_eq!(eval::<Fixnum>("-4611686018427387904").unwrap().to_i64(), -4611686018427387904);
+    /// ```
     pub fn to_i64(self) -> i64 {
         unsafe { rb_num2ll(self.as_rb_value()) }
     }
 
     /// Convert `self` to an `isize`. Returns `Err` if `self` is out of range
     /// for `isize`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, Fixnum};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// assert_eq!(eval::<Fixnum>("4611686018427387903").unwrap().to_isize().unwrap(), 4611686018427387903);
+    /// assert_eq!(eval::<Fixnum>("-4611686018427387904").unwrap().to_isize().unwrap(), -4611686018427387904);
+    /// ```
     pub fn to_isize(self) -> Result<isize, Error> {
         let mut res = 0;
         protect(|| {
             res = unsafe { rb_num2long(self.as_rb_value()) };
             *QNIL
         })?;
-        if res > isize::MAX as c_long {
+        if res > isize::MAX as c_long || res < isize::MIN as c_long {
             return Err(Error::range_error("fixnum too big to convert into `isize`"));
         }
         Ok(res as isize)
@@ -1165,6 +1336,17 @@ impl Fixnum {
 
     /// Convert `self` to a `u8`. Returns `Err` if `self` is negative or out of
     /// range for `u8`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, Fixnum};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// assert_eq!(eval::<Fixnum>("255").unwrap().to_u8().unwrap(), 255);
+    /// assert!(eval::<Fixnum>("256").unwrap().to_u8().is_err());
+    /// assert!(eval::<Fixnum>("-1").unwrap().to_u8().is_err());
+    /// ```
     pub fn to_u8(self) -> Result<u8, Error> {
         if self.is_negative() {
             return Err(Error::range_error(
@@ -1184,6 +1366,17 @@ impl Fixnum {
 
     /// Convert `self` to a `u16`. Returns `Err` if `self` is negative or out
     /// of range for `u16`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, Fixnum};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// assert_eq!(eval::<Fixnum>("65535").unwrap().to_u16().unwrap(), 65535);
+    /// assert!(eval::<Fixnum>("65536").unwrap().to_u16().is_err());
+    /// assert!(eval::<Fixnum>("-1").unwrap().to_u16().is_err());
+    /// ```
     pub fn to_u16(self) -> Result<u16, Error> {
         if self.is_negative() {
             return Err(Error::range_error(
@@ -1200,6 +1393,17 @@ impl Fixnum {
 
     /// Convert `self` to a `u32`. Returns `Err` if `self` is negative or out
     /// of range for `u32`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, Fixnum};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// assert_eq!(eval::<Fixnum>("4294967295").unwrap().to_u32().unwrap(), 4294967295);
+    /// assert!(eval::<Fixnum>("4294967296").unwrap().to_u32().is_err());
+    /// assert!(eval::<Fixnum>("-1").unwrap().to_u32().is_err());
+    /// ```
     pub fn to_u32(self) -> Result<u32, Error> {
         if self.is_negative() {
             return Err(Error::range_error(
@@ -1218,6 +1422,16 @@ impl Fixnum {
     }
 
     /// Convert `self` to a `u64`. Returns `Err` if `self` is negative.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, Fixnum};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// assert_eq!(eval::<Fixnum>("4611686018427387903").unwrap().to_u64().unwrap(), 4611686018427387903);
+    /// assert!(eval::<Fixnum>("-1").unwrap().to_u64().is_err());
+    /// ```
     pub fn to_u64(self) -> Result<u64, Error> {
         if self.is_negative() {
             return Err(Error::range_error(
@@ -1236,6 +1450,16 @@ impl Fixnum {
 
     /// Convert `self` to a `usize`. Returns `Err` if `self` is negative or out
     /// of range for `usize`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, Fixnum};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// assert_eq!(eval::<Fixnum>("4611686018427387903").unwrap().to_usize().unwrap(), 4611686018427387903);
+    /// assert!(eval::<Fixnum>("-1").unwrap().to_usize().is_err());
+    /// ```
     pub fn to_usize(self) -> Result<usize, Error> {
         if self.is_negative() {
             return Err(Error::range_error(
