@@ -110,6 +110,18 @@ impl Value {
     }
 
     /// Returns whether `self` is Ruby's `nil` value.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, Value};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// assert!(eval::<Value>("nil").unwrap().is_nil());
+    /// assert!(!eval::<Value>("Object.new").unwrap().is_nil());
+    /// assert!(!eval::<Value>("0").unwrap().is_nil());
+    /// assert!(!eval::<Value>("[]").unwrap().is_nil());
+    /// ```
     #[inline]
     pub fn is_nil(self) -> bool {
         self.as_rb_value() == ruby_special_consts::RUBY_Qnil as VALUE
@@ -182,6 +194,16 @@ impl Value {
     /// # Panics
     ///
     /// panics if self is `Qundef`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, Value};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// assert_eq!(eval::<Value>("true").unwrap().class().inspect(), "TrueClass");
+    /// assert_eq!(eval::<Value>("[1,2,3]").unwrap().class().inspect(), "Array");
+    /// ```
     pub fn class(self) -> RClass {
         unsafe {
             match self.r_basic() {
@@ -215,6 +237,16 @@ impl Value {
     }
 
     /// Registers `self` as to never be garbage collected.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RArray};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let ary = eval::<RArray>("[1, 2, 3]").unwrap();
+    /// ary.leak();
+    /// ```
     pub fn leak(self) {
         debug_assert_value!(self);
         // safe ffi to Ruby, call doesn't raise
@@ -224,6 +256,17 @@ impl Value {
     /// Returns whether `self` is 'frozen'.
     ///
     /// Ruby prevents modifying frozen objects.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, Value};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// assert!(eval::<Value>(":foo").unwrap().is_frozen());
+    /// assert!(eval::<Value>("42").unwrap().is_frozen());
+    /// assert!(!eval::<Value>("[]").unwrap().is_frozen());
+    /// ```
     pub fn is_frozen(self) -> bool {
         match self.r_basic() {
             None => true,
@@ -240,7 +283,8 @@ impl Value {
     ///
     /// # Examples
     /// ```
-    /// use magnus::{Error, Value};
+    /// use magnus::{eval, Error, Value};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// fn mutate(val: Value) -> Result<(), Error> {
     ///     val.check_frozen()?;
@@ -249,6 +293,9 @@ impl Value {
     ///
     ///     Ok(())
     /// }
+    ///
+    /// assert!(mutate(eval("Object.new").unwrap()).is_ok());
+    /// assert!(mutate(eval(":foo").unwrap()).is_err());
     /// ```
     pub fn check_frozen(self) -> Result<(), Error> {
         if self.is_frozen() {
@@ -262,12 +309,40 @@ impl Value {
     }
 
     /// Mark `self` as frozen.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RArray};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let ary = RArray::new();
+    /// assert!(!ary.is_frozen());
+    /// ary.freeze();
+    /// assert!(ary.is_frozen());
+    /// ```
     pub fn freeze(self) {
         unsafe { rb_obj_freeze(self.as_rb_value()) };
     }
 
     /// Convert `self` to a `bool`, following Ruby's rules of `false` and `nil`
     /// as boolean `false` and everything else boolean `true`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, Value};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// assert!(!eval::<Value>("false").unwrap().to_bool());
+    /// assert!(!eval::<Value>("nil").unwrap().to_bool());
+    ///
+    /// assert!(eval::<Value>("true").unwrap().to_bool());
+    /// assert!(eval::<Value>("0").unwrap().to_bool());
+    /// assert!(eval::<Value>("[]").unwrap().to_bool());
+    /// assert!(eval::<Value>(":foo").unwrap().to_bool());
+    /// assert!(eval::<Value>("Object.new").unwrap().to_bool());
+    /// ```
     #[inline]
     pub fn to_bool(self) -> bool {
         self.as_rb_value() & !(ruby_special_consts::RUBY_Qnil as VALUE) != 0
@@ -278,6 +353,18 @@ impl Value {
     /// Returns `Ok(T)` if the method returns without error and the return
     /// value converts to a `T`, or returns `Err` if the method raises or the
     /// conversion fails.
+    ///
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RArray};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let values = eval::<RArray>(r#"["foo", 1, :bar]"#).unwrap();
+    /// let result: String = values.funcall("join", (" & ",)).unwrap();
+    /// assert_eq!(result, "foo & 1 & bar");
+    /// ```
     pub fn funcall<M, A, T>(self, method: M, args: A) -> Result<T, Error>
     where
         M: Into<Id>,
@@ -302,8 +389,18 @@ impl Value {
 
     /// Convert `self` to a Ruby `String`.
     ///
-    /// If `self` is alreay a `String` is it wrapped as a `RString`, otherwise
+    /// If `self` is already a `String` is it wrapped as a `RString`, otherwise
     /// the Ruby `to_s` method is called.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, class, Value};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let value = eval::<Value>("[]").unwrap();
+    /// assert!(value.to_r_string().unwrap().is_kind_of(class::string()));
+    /// ```
     pub fn to_r_string(self) -> Result<RString, Error> {
         match RString::from_value(self) {
             Some(v) => Ok(v),
@@ -328,10 +425,13 @@ impl Value {
     /// # Examples
     ///
     /// ```
+    /// use magnus::{eval, QTRUE};
     /// # let _cleanup = unsafe { magnus::embed::init() };
-    /// # let value = magnus::QNIL;
+    ///
+    /// let value = QTRUE;
     /// // safe as we neve give Ruby a chance to free the string.
-    /// unsafe { value.to_s() }.unwrap().into_owned();
+    /// let s = unsafe { value.to_s() }.unwrap().into_owned();
+    /// assert_eq!(s, "true");
     /// ```
     #[allow(clippy::wrong_self_convention)]
     pub unsafe fn to_s(&self) -> Result<Cow<str>, Error> {
@@ -367,6 +467,16 @@ impl Value {
     }
 
     /// Convert `self` to its Ruby debug representation.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, Symbol, QNIL};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// assert_eq!(QNIL.inspect(), "nil");
+    /// assert_eq!(Symbol::new("foo").inspect(), ":foo");
+    /// ```
     pub fn inspect(self) -> String {
         unsafe {
             let s = protect(|| Value::new(rb_inspect(self.as_rb_value())))
@@ -391,10 +501,13 @@ impl Value {
     /// # Examples
     ///
     /// ```
+    /// use magnus::{eval, RHash};
     /// # let _cleanup = unsafe { magnus::embed::init() };
-    /// # let value = magnus::QNIL;
+    ///
+    /// let value = RHash::new();
     /// // safe as we neve give Ruby a chance to free the string.
-    /// unsafe { value.classname() }.into_owned();
+    /// let s = unsafe { value.classname() }.into_owned();
+    /// assert_eq!(s, "Hash");
     /// ```
     pub unsafe fn classname(&self) -> Cow<str> {
         let ptr = rb_obj_classname(self.as_rb_value());
@@ -403,6 +516,16 @@ impl Value {
     }
 
     /// Returns whether or not `self` is an instance of `class`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{class, eval, Value};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let value = eval::<Value>("[]").unwrap();
+    /// assert!(value.is_kind_of(class::array()));
+    /// ```
     pub fn is_kind_of<T>(self, class: T) -> bool
     where
         T: Deref<Target = Value> + Module,
@@ -412,6 +535,21 @@ impl Value {
 
     /// Generate an [`Enumerator`] from `method` on `self`, passing `args` to
     /// `method`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{class, eval, RString};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let s = RString::new("foo\\bar\\baz");
+    /// let mut i = 0;
+    /// for line in s.enumeratorize("each_line", ("\\",)) {
+    ///     assert!(line.unwrap().is_kind_of(class::string()));
+    ///     i += 1;
+    /// }
+    /// assert_eq!(i, 3);
+    /// ```
     pub fn enumeratorize<M, A>(self, method: M, args: A) -> Enumerator
     where
         M: Into<Symbol>,
@@ -431,6 +569,22 @@ impl Value {
     }
 
     /// Convert `self` to the Rust type `T`.
+    ///
+    /// See the types that [`TryConvert`] is implemented on for what this
+    /// method can convert to.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, Value};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// assert_eq!(eval::<Value>("42").unwrap().try_convert::<i64>().unwrap(), 42);
+    /// assert_eq!(eval::<Value>("1.23").unwrap().try_convert::<i64>().unwrap(), 1);
+    /// assert_eq!(eval::<Value>("1").unwrap().try_convert::<f64>().unwrap(), 1.0);
+    /// assert_eq!(eval::<Value>("nil").unwrap().try_convert::<Option<i64>>().unwrap(), None);
+    /// assert_eq!(eval::<Value>("42").unwrap().try_convert::<Option<i64>>().unwrap(), Some(42));
+    /// ```
     #[inline]
     pub fn try_convert<T>(&self) -> Result<T, Error>
     where
