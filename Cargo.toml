@@ -9,6 +9,7 @@ keywords = ["ruby"]
 categories = ["api-bindings", "development-tools::ffi"]
 repository = "https://github.com/matsadler/magnus"
 homepage = "https://github.com/matsadler/magnus"
+documentation = "https://docs.rs/magnus/"
 license = "MIT"
 exclude = [".github", ".gitignore", "build-sys/"]
 
