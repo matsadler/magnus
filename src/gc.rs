@@ -90,7 +90,7 @@ pub fn disable() -> bool {
 /// Enable automatic GC run.
 ///
 /// Garbage Collection is enabled by default, calling this function only makes
-/// sense if [`disabled`] was previously called.
+/// sense if [`disable`] was previously called.
 ///
 /// Returns `true` if GC was previously disabled, `false` otherwise.
 pub fn enable() -> bool {
