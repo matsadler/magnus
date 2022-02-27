@@ -13,14 +13,20 @@ use crate::{
         rb_eArgError, rb_eEOFError, rb_eEncCompatError, rb_eEncodingError, rb_eException,
         rb_eFatal, rb_eFloatDomainError, rb_eFrozenError, rb_eIOError, rb_eIndexError,
         rb_eInterrupt, rb_eKeyError, rb_eLoadError, rb_eLocalJumpError, rb_eMathDomainError,
-        rb_eNameError, rb_eNoMatchingPatternError, rb_eNoMatchingPatternKeyError, rb_eNoMemError,
-        rb_eNoMethodError, rb_eNotImpError, rb_eRangeError, rb_eRegexpError, rb_eRuntimeError,
-        rb_eScriptError, rb_eSecurityError, rb_eSignal, rb_eStandardError, rb_eStopIteration,
-        rb_eSyntaxError, rb_eSysStackError, rb_eSystemCallError, rb_eSystemExit, rb_eThreadError,
-        rb_eTypeError, rb_eZeroDivError, VALUE,
+        rb_eNameError, rb_eNoMemError, rb_eNoMethodError,
+        rb_eNotImpError, rb_eRangeError, rb_eRegexpError, rb_eRuntimeError, rb_eScriptError,
+        rb_eSecurityError, rb_eSignal, rb_eStandardError, rb_eStopIteration, rb_eSyntaxError,
+        rb_eSysStackError, rb_eSystemCallError, rb_eSystemExit, rb_eThreadError, rb_eTypeError,
+        rb_eZeroDivError, VALUE,
     },
     value::{NonZeroValue, Value},
 };
+
+#[cfg(ruby_gte_2_7)]
+use crate::ruby_sys::rb_eNoMatchingPatternError;
+
+#[cfg(ruby_gte_3_1)]
+use crate::ruby_sys::rb_eNoMatchingPatternKeyError;
 
 /// Wrapper type for a Value known to be an instance of Ruby's Exception class.
 ///
@@ -257,12 +263,14 @@ pub fn name_error() -> ExceptionClass {
 }
 
 /// Return Ruby's `NoMatchingPatternError` class.
+#[cfg(ruby_gte_2_7)]
 #[inline]
 pub fn no_matching_pattern_error() -> ExceptionClass {
     unsafe { ExceptionClass::from_rb_value_unchecked(rb_eNoMatchingPatternError) }
 }
 
 /// Return Ruby's `NoMatchingPatternKeyError` class.
+#[cfg(ruby_gte_3_1)]
 #[inline]
 pub fn no_matching_pattern_key_error() -> ExceptionClass {
     unsafe { ExceptionClass::from_rb_value_unchecked(rb_eNoMatchingPatternKeyError) }
