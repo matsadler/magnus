@@ -103,7 +103,7 @@ pub fn init(attrs: TokenStream, item: TokenStream) -> TokenStream {
         }
     };
     let extern_init_name = Ident::new(
-        &format!("Init_{}", crate_name.replace("-", "_")),
+        &format!("Init_{}", crate_name.replace('-', "_")),
         Span::call_site(),
     );
 
