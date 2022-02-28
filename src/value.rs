@@ -1277,12 +1277,13 @@ impl Fixnum {
     /// use magnus::{eval, Fixnum};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// assert_eq!(eval::<Fixnum>("2147483647").unwrap().to_i32().unwrap(), 2147483647);
     /// # #[cfg(not(windows))]
+    /// # {
+    /// assert_eq!(eval::<Fixnum>("2147483647").unwrap().to_i32().unwrap(), 2147483647);
     /// assert!(eval::<Fixnum>("2147483648").unwrap().to_i32().is_err());
     /// assert_eq!(eval::<Fixnum>("-2147483648").unwrap().to_i32().unwrap(), -2147483648);
-    /// # #[cfg(not(windows))]
     /// assert!(eval::<Fixnum>("-2147483649").unwrap().to_i32().is_err());
+    /// # }
     /// ```
     pub fn to_i32(self) -> Result<i32, Error> {
         let mut res = 0;
@@ -1403,9 +1404,11 @@ impl Fixnum {
     /// use magnus::{eval, Fixnum};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// assert_eq!(eval::<Fixnum>("4294967295").unwrap().to_u32().unwrap(), 4294967295);
     /// # #[cfg(not(windows))]
+    /// # {
+    /// assert_eq!(eval::<Fixnum>("4294967295").unwrap().to_u32().unwrap(), 4294967295);
     /// assert!(eval::<Fixnum>("4294967296").unwrap().to_u32().is_err());
+    /// # }
     /// assert!(eval::<Fixnum>("-1").unwrap().to_u32().is_err());
     /// ```
     pub fn to_u32(self) -> Result<u32, Error> {
