@@ -1278,8 +1278,10 @@ impl Fixnum {
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// assert_eq!(eval::<Fixnum>("2147483647").unwrap().to_i32().unwrap(), 2147483647);
+    /// # #[cfg(not(windows))]
     /// assert!(eval::<Fixnum>("2147483648").unwrap().to_i32().is_err());
     /// assert_eq!(eval::<Fixnum>("-2147483648").unwrap().to_i32().unwrap(), -2147483648);
+    /// # #[cfg(not(windows))]
     /// assert!(eval::<Fixnum>("-2147483649").unwrap().to_i32().is_err());
     /// ```
     pub fn to_i32(self) -> Result<i32, Error> {
@@ -1303,7 +1305,9 @@ impl Fixnum {
     /// use magnus::{eval, Fixnum};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
+    /// # #[cfg(not(windows))]
     /// assert_eq!(eval::<Fixnum>("4611686018427387903").unwrap().to_i64(), 4611686018427387903);
+    /// # #[cfg(not(windows))]
     /// assert_eq!(eval::<Fixnum>("-4611686018427387904").unwrap().to_i64(), -4611686018427387904);
     /// ```
     pub fn to_i64(self) -> i64 {
@@ -1319,18 +1323,17 @@ impl Fixnum {
     /// use magnus::{eval, Fixnum};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
+    /// # #[cfg(not(windows))]
     /// assert_eq!(eval::<Fixnum>("4611686018427387903").unwrap().to_isize().unwrap(), 4611686018427387903);
+    /// # #[cfg(not(windows))]
     /// assert_eq!(eval::<Fixnum>("-4611686018427387904").unwrap().to_isize().unwrap(), -4611686018427387904);
     /// ```
     pub fn to_isize(self) -> Result<isize, Error> {
         let mut res = 0;
         protect(|| {
-            res = unsafe { rb_num2long(self.as_rb_value()) };
+            res = unsafe { rb_num2ll(self.as_rb_value()) };
             *QNIL
         })?;
-        if res > isize::MAX as c_long || res < isize::MIN as c_long {
-            return Err(Error::range_error("fixnum too big to convert into `isize`"));
-        }
         Ok(res as isize)
     }
 
@@ -1401,6 +1404,7 @@ impl Fixnum {
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// assert_eq!(eval::<Fixnum>("4294967295").unwrap().to_u32().unwrap(), 4294967295);
+    /// # #[cfg(not(windows))]
     /// assert!(eval::<Fixnum>("4294967296").unwrap().to_u32().is_err());
     /// assert!(eval::<Fixnum>("-1").unwrap().to_u32().is_err());
     /// ```
@@ -1429,6 +1433,7 @@ impl Fixnum {
     /// use magnus::{eval, Fixnum};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
+    /// # #[cfg(not(windows))]
     /// assert_eq!(eval::<Fixnum>("4611686018427387903").unwrap().to_u64().unwrap(), 4611686018427387903);
     /// assert!(eval::<Fixnum>("-1").unwrap().to_u64().is_err());
     /// ```
@@ -1457,6 +1462,7 @@ impl Fixnum {
     /// use magnus::{eval, Fixnum};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
+    /// # #[cfg(not(windows))]
     /// assert_eq!(eval::<Fixnum>("4611686018427387903").unwrap().to_usize().unwrap(), 4611686018427387903);
     /// assert!(eval::<Fixnum>("-1").unwrap().to_usize().is_err());
     /// ```
@@ -1468,12 +1474,9 @@ impl Fixnum {
         }
         let mut res = 0;
         protect(|| {
-            res = unsafe { rb_num2ulong(self.as_rb_value()) };
+            res = unsafe { rb_num2ull(self.as_rb_value()) };
             *QNIL
         })?;
-        if res > usize::MAX as c_ulong {
-            return Err(Error::range_error("fixnum too big to convert into `usize`"));
-        }
         Ok(res as usize)
     }
 }
@@ -1509,7 +1512,7 @@ impl TryConvert for Fixnum {
     fn try_convert(val: &Value) -> Result<Self, Error> {
         match val.try_convert::<Integer>()?.integer_type() {
             IntegerType::Fixnum(fix) => Ok(fix),
-            IntegerType::Bignum(_) => Err(Error::range_error("integer to big for fixnum")),
+            IntegerType::Bignum(_) => Err(Error::range_error("integer too big for fixnum")),
         }
     }
 }
