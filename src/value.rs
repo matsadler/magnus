@@ -1710,6 +1710,17 @@ pub struct Flonum(NonZeroValue);
 
 impl Flonum {
     /// Return `Some(Flonum)` if `val` is a `Flonum`, `None` otherwise.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, Flonum};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// assert!(Flonum::from_value(eval("1.7272337110188893e-77").unwrap()).is_some());
+    /// // representable as a Float, but Flonum does not have enough precision
+    /// assert!(Flonum::from_value(eval("1.7272337110188890e-77").unwrap()).is_none());
+    /// ```
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
         unsafe {
@@ -1727,6 +1738,17 @@ impl Flonum {
     ///
     /// Returns `Ok(Flonum)` if `n` can be represented as a `Flonum`, otherwise
     /// returns `Err(RFloat)`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, Flonum};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// assert!(Flonum::from_f64(1.7272337110188893e-77).is_ok());
+    /// // representable as a Float, but Flonum does not have enough precision
+    /// assert!(Flonum::from_f64(1.7272337110188890e-77).is_err());
+    /// ```
     pub fn from_f64(n: f64) -> Result<Self, RFloat> {
         let val = unsafe { Value::new(rb_float_new(n)) };
         Self::from_value(val)
@@ -1734,6 +1756,15 @@ impl Flonum {
     }
 
     /// Convert `self` to a `f64`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, Flonum};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// assert_eq!(eval::<Flonum>("2.0").unwrap().to_f64(), 2.0);
+    /// ```
     pub fn to_f64(self) -> f64 {
         unsafe { rb_float_value(self.as_rb_value()) }
     }
