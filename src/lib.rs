@@ -120,7 +120,7 @@ mod r_regexp;
 pub mod r_string;
 pub mod r_struct;
 pub mod r_typed_data;
-pub mod ruby_sys;
+mod ruby_sys;
 mod symbol;
 mod try_convert;
 pub mod value;
