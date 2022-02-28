@@ -1529,6 +1529,17 @@ pub struct StaticSymbol(NonZeroValue);
 impl StaticSymbol {
     /// Return `Some(StaticSymbol)` if `val` is a `StaticSymbol`, `None`
     /// otherwise.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, StaticSymbol};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// assert!(StaticSymbol::from_value(eval(":foo").unwrap()).is_some());
+    /// assert!(StaticSymbol::from_value(eval(r#""bar""#).unwrap()).is_none());
+    /// assert!(StaticSymbol::from_value(eval(r#""baz".to_sym"#).unwrap()).is_none());
+    /// ```
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
         unsafe {
@@ -1546,10 +1557,12 @@ impl StaticSymbol {
     ///
     /// # Examples
     /// ```
-    /// use magnus::StaticSymbol;
+    /// use magnus::{eval, StaticSymbol};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let sym = StaticSymbol::new("example");
+    /// let result: bool = eval!(":example == sym", sym).unwrap();
+    /// assert!(result);
     /// ```
     #[inline]
     pub fn new<T: Into<Id>>(name: T) -> Self {
@@ -1559,6 +1572,16 @@ impl StaticSymbol {
     /// Return the symbol as a static string reference.
     ///
     /// May error if the name is not valid utf-8.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::StaticSymbol;
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let sym = StaticSymbol::new("example");
+    /// assert_eq!(sym.name().unwrap(), "example");
+    /// ```
     pub fn name(self) -> Result<&'static str, Error> {
         Id::from(self).name()
     }
@@ -1630,6 +1653,16 @@ impl Id {
     /// reference.
     ///
     /// May error if the name is not valid utf-8.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::value::Id;
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let id = Id::from("example");
+    /// assert_eq!(id.name().unwrap(), "example");
+    /// ```
     pub fn name(self) -> Result<&'static str, Error> {
         unsafe {
             let ptr = rb_id2name(self.as_rb_id());
