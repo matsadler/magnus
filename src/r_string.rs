@@ -42,6 +42,16 @@ pub struct RString(NonZeroValue);
 
 impl RString {
     /// Return `Some(RString)` if `val` is a `RString`, `None` otherwise.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RString};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// assert!(RString::from_value(eval(r#""example""#).unwrap()).is_some());
+    /// assert!(RString::from_value(eval(":example").unwrap()).is_none());
+    /// ```
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
         unsafe {
@@ -70,6 +80,17 @@ impl RString {
     /// Create a new Ruby string from the Rust string `s`.
     ///
     /// The encoding of the Ruby string will be UTF-8.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RString};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let val = RString::new("example");
+    /// let res: bool = eval!(r#"val == "example""#, val).unwrap();
+    /// assert!(res);
+    /// ```
     pub fn new(s: &str) -> Self {
         let len = s.len();
         let ptr = s.as_ptr();
@@ -82,6 +103,18 @@ impl RString {
     ///
     /// The encoding will be set to ASCII-8BIT (aka BINARY). See also
     /// [`with_capacity`](RString::with_capacity).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RString};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let buf = RString::buf_new(4096);
+    /// buf.cat(&[13, 14, 10, 13, 11, 14, 14, 15]);
+    /// let res: bool = eval!(r#"buf == "\r\x0E\n\r\v\x0E\x0E\x0F""#, buf).unwrap();
+    /// assert!(res);
+    /// ```
     pub fn buf_new(n: usize) -> Self {
         unsafe { Self::from_rb_value_unchecked(rb_str_buf_new(n as c_long)) }
     }
@@ -90,6 +123,20 @@ impl RString {
     ///
     /// The encoding will be set to UTF-8. See also
     /// [`buf_new`](RString::buf_new).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RString};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let s = RString::with_capacity(9);
+    /// s.cat("foo");
+    /// s.cat("bar");
+    /// s.cat("baz");
+    /// let res: bool = eval!(r#"s == "foobarbaz""#, s).unwrap();
+    /// assert!(res);
+    /// ```
     pub fn with_capacity(n: usize) -> Self {
         let s = Self::buf_new(n);
         unsafe { rb_enc_associate_index(s.as_rb_value(), rb_utf8_encindex()) };
@@ -99,6 +146,17 @@ impl RString {
     /// Create a new Ruby string from the Rust slice `s`.
     ///
     /// The encoding of the Ruby string will be set to ASCII-8BIT (aka BINARY).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RString};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let buf = RString::from_slice(&[13, 14, 10, 13, 11, 14, 14, 15]);
+    /// let res: bool = eval!(r#"buf == "\r\x0E\n\r\v\x0E\x0E\x0F""#, buf).unwrap();
+    /// assert!(res);
+    /// ```
     pub fn from_slice(s: &[u8]) -> Self {
         let len = s.len();
         let ptr = s.as_ptr();
@@ -108,6 +166,26 @@ impl RString {
     /// Create a new Ruby string from the Rust char `c`.
     ///
     /// The encoding of the Ruby string will be UTF-8.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RString};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let c = RString::from_char('a');
+    /// let res: bool = eval!(r#"c == "a""#, c).unwrap();
+    /// assert!(res);
+    /// ```
+    ///
+    /// ```
+    /// use magnus::{eval, RString};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let c = RString::from_char('🦀');
+    /// let res: bool = eval!(r#"c == "🦀""#, c).unwrap();
+    /// assert!(res);
+    /// ```
     pub fn from_char(c: char) -> Self {
         let mut buf = [0; 4];
         Self::new(c.encode_utf8(&mut buf[..]))
@@ -123,6 +201,18 @@ impl RString {
     ///
     /// Ruby must not be allowed to garbage collect or modify `self` while a
     /// refrence to the slice is held.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::RString;
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let s = RString::new("example");
+    /// // safe as we don't give Ruby the chance to mess with the string while
+    /// // we hold a refrence to the slice.
+    /// unsafe { assert_eq!(s.as_slice(), [101, 120, 97, 109, 112, 108, 101]) };
+    /// ```
     pub unsafe fn as_slice(&self) -> &[u8] {
         self.as_slice_unconstrained()
     }
@@ -154,8 +244,30 @@ impl RString {
     /// Returns true if the encoding for this string is UTF-8 or US-ASCII,
     /// false otherwise.
     ///
-    /// The enoding on a Ruby String is just a label, it provides no guarantee
+    /// The encoding on a Ruby String is just a label, it provides no guarantee
     /// that the String really is valid UTF-8.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RString};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let s: RString = eval!(r#"# Encoding: utf-8
+    /// "café"
+    /// "#).unwrap();
+    /// assert!(s.is_utf8_compatible_encoding());
+    /// ```
+    ///
+    /// ```
+    /// use magnus::{eval, RString};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let s: RString = eval!(r#"# Encoding: utf-8
+    /// "café".encode("ISO-8859-1")
+    /// "#).unwrap();
+    /// assert!(!s.is_utf8_compatible_encoding());
+    /// ```
     pub fn is_utf8_compatible_encoding(self) -> bool {
         unsafe {
             let encindex = rb_enc_get_index(self.as_rb_value());
@@ -166,6 +278,22 @@ impl RString {
 
     /// Returns a new string by reencoding `self` from its current encoding to
     /// UTF-8.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RString};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let s: RString = eval!(r#"# Encoding: utf-8
+    /// "café".encode("ISO-8859-1")
+    /// "#).unwrap();
+    /// // safe as we don't give Ruby the chance to mess with the string while
+    /// // we hold a refrence to the slice.
+    /// unsafe { assert_eq!(s.as_slice(), &[99, 97, 102, 233]) };
+    /// let e = s.encode_utf8().unwrap();
+    /// unsafe { assert_eq!(e.as_slice(), &[99, 97, 102, 195, 169]) };
+    /// ```
     pub fn encode_utf8(self) -> Result<Self, Error> {
         unsafe {
             protect(|| {
@@ -192,6 +320,18 @@ impl RString {
     ///
     /// Ruby must not be allowed to garbage collect or modify `self` while a
     /// refrence to the str is held.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::RString;
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let s = RString::new("example");
+    /// // safe as we don't give Ruby the chance to mess with the string while
+    /// // we hold a refrence to the slice.
+    /// unsafe { assert_eq!(s.as_str().unwrap(), "example") };
+    /// ```
     pub unsafe fn as_str(&self) -> Result<&str, Error> {
         self.as_str_unconstrained()
     }
@@ -221,6 +361,18 @@ impl RString {
     ///
     /// Ruby must not be allowed to garbage collect or modify `self` while a
     /// refrence to the str is held.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::RString;
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let s = RString::new("example");
+    /// // safe as we don't give Ruby the chance to mess with the string while
+    /// // we hold a refrence to the slice.
+    /// unsafe { assert_eq!(s.to_string_lossy(), "example") };
+    /// ```
     #[allow(clippy::wrong_self_convention)]
     pub unsafe fn to_string_lossy(&self) -> Cow<'_, str> {
         String::from_utf8_lossy(self.as_slice())
@@ -229,6 +381,16 @@ impl RString {
     /// Returns `self` as an owned Rust `String`. The Ruby string will be
     /// reencoded as UTF-8 if required. Errors if the string can not be encoded
     /// as UTF-8.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::RString;
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let s = RString::new("example");
+    /// assert_eq!(s.to_string().unwrap(), "example");
+    /// ```
     pub fn to_string(self) -> Result<String, Error> {
         let utf8 = if self.is_utf8_compatible_encoding() {
             self
@@ -242,6 +404,16 @@ impl RString {
 
     /// Converts `self` to a [`char`]. Errors if the string is more than one
     /// character or can not be encoded as UTF-8.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::RString;
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let s = RString::new("a");
+    /// assert_eq!(s.to_char().unwrap(), 'a');
+    /// ```
     pub fn to_char(self) -> Result<char, Error> {
         let utf8 = if self.is_utf8_compatible_encoding() {
             self
@@ -263,6 +435,28 @@ impl RString {
     /// Interned strings won't be garbage collected or modified, so should be
     /// safe to store on the heap or hold a `&str` refrence to. See
     /// [`as_interned_str`](RString::as_interned_str).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RString};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let s: RString = eval!(r#"
+    /// ## frozen_string_literal: true
+    ///
+    /// "example"
+    /// "#).unwrap();
+    /// assert!(s.is_interned());
+    /// ```
+    ///
+    /// ```
+    /// use magnus::{eval, RString};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let s: RString = eval!(r#""example""#).unwrap();
+    /// assert!(!s.is_interned());
+    /// ```
     pub fn is_interned(self) -> bool {
         unsafe {
             self.r_basic_unchecked().as_ref().flags & ruby_rstring_flags::RSTRING_FSTR as VALUE != 0
@@ -276,12 +470,44 @@ impl RString {
     /// type returned by this function provides a way to encode this property
     /// into the type system, and provides safe methods to access the string
     /// as a `&str` or slice.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RString};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let s: RString = eval!(r#"
+    /// ## frozen_string_literal: true
+    ///
+    /// "example"
+    /// "#).unwrap();
+    /// assert!(s.as_interned_str().is_some());
+    /// ```
+    ///
+    /// ```
+    /// use magnus::{eval, RString};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let s: RString = eval!(r#""example""#).unwrap();
+    /// assert!(s.as_interned_str().is_none());
+    /// ```
     pub fn as_interned_str(self) -> Option<FString> {
         self.is_interned().then(|| FString(self))
     }
 
     /// Interns self and returns a [`FString`]. Be aware that once interned a
     /// string will never be garbage collected.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RString};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let fstring = RString::new("example").to_interned_str();
+    /// assert_eq!(fstring.as_str(), "example");
+    /// ```
     #[cfg(ruby_gte_3_0)]
     pub fn to_interned_str(self) -> FString {
         unsafe {
@@ -293,6 +519,18 @@ impl RString {
 
     /// Mutate `self`, adding `other` to the end. Errors if `self` and
     /// other`'s encodings are not compatible.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::RString;
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let a = RString::new("foo");
+    /// let b = RString::new("bar");
+    /// a.append(b).unwrap();
+    /// assert_eq!(a.to_string().unwrap(), "foobar");
+    /// ```
     pub fn append(self, other: Self) -> Result<(), Error> {
         unsafe {
             protect(|| Value::new(rb_str_buf_append(self.as_rb_value(), other.as_rb_value())))?;
@@ -306,6 +544,18 @@ impl RString {
     /// containing invalid bytes for its encoding. It's assumed this will more
     /// often be used with ASCII-8BIT (aka BINARY) encoded strings. See
     /// [`buf_new`](RString::buf_new) and [`from_slice`](RString::from_slice).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RString};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let buf = RString::buf_new(4096);
+    /// buf.cat(&[102, 111, 111]);
+    /// buf.cat("bar");
+    /// assert_eq!(buf.to_string().unwrap(), "foobar");
+    /// ```
     pub fn cat<T: AsRef<[u8]>>(self, buf: T) {
         let buf = buf.as_ref();
         let len = buf.len();
@@ -428,12 +678,42 @@ impl FString {
     }
 
     /// Returns the interned string as a slice of bytes.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RString};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let s: RString = eval!(r#"
+    /// ## frozen_string_literal: true
+    ///
+    /// "example"
+    /// "#).unwrap();
+    /// let fstring = s.as_interned_str().unwrap();
+    /// assert_eq!(fstring.as_slice(), &[101, 120, 97, 109, 112, 108, 101]);
+    /// ```
     pub fn as_slice(self) -> &'static [u8] {
         unsafe { self.as_r_string().as_slice_unconstrained() }
     }
 
     /// Returns the interned string as a &str. Errors if the string contains
     /// invliad UTF-8.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RString};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let s: RString = eval!(r#"# Encoding: utf-8
+    /// ## frozen_string_literal: true
+    ///
+    /// "example"
+    /// "#).unwrap();
+    /// let fstring = s.as_interned_str().unwrap();
+    /// assert_eq!(fstring.as_str().unwrap(), "example");
+    /// ```
     pub fn as_str(self) -> Result<&'static str, Error> {
         unsafe { self.as_r_string().as_str_unconstrained() }
     }
@@ -441,6 +721,21 @@ impl FString {
     /// Returns interned string as a Rust string, ignoring the Ruby encoding
     /// and dropping any non-UTF-8 characters. If the string is valid UTF-8
     /// this will return a `&str` reference.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RString};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let s: RString = eval!(r#"
+    /// ## frozen_string_literal: true
+    ///
+    /// "example"
+    /// "#).unwrap();
+    /// let fstring = s.as_interned_str().unwrap();
+    /// assert_eq!(fstring.to_string_lossy(), "example");
+    /// ```
     pub fn to_string_lossy(self) -> Cow<'static, str> {
         String::from_utf8_lossy(self.as_slice())
     }
