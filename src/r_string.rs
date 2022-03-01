@@ -506,7 +506,7 @@ impl RString {
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let fstring = RString::new("example").to_interned_str();
-    /// assert_eq!(fstring.as_str(), "example");
+    /// assert_eq!(fstring.as_str().unwrap(), "example");
     /// ```
     #[cfg(ruby_gte_3_0)]
     pub fn to_interned_str(self) -> FString {
