@@ -24,6 +24,18 @@ pub struct Integer(NonZeroValue);
 
 impl Integer {
     /// Return `Some(Integer)` if `val` is an `Integer`, `None` otherwise.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, Integer};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// assert!(Integer::from_value(eval("0").unwrap()).is_some());
+    /// assert!(Integer::from_value(eval("9223372036854775807").unwrap()).is_some());
+    /// // not an int
+    /// assert!(Integer::from_value(eval("1.23").unwrap()).is_none());
+    /// ```
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
         unsafe {
@@ -52,17 +64,55 @@ impl Integer {
     }
 
     /// Create a new `Integer` from an `i64.`
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, Integer};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let res: bool = eval!("i == 0", i = Integer::from_i64(0)).unwrap();
+    /// assert!(res);
+    /// let res: bool = eval!("i == 4611686018427387904", i = Integer::from_i64(4611686018427387904)).unwrap();
+    /// assert!(res);
+    /// let res: bool = eval!("i == -4611686018427387905", i = Integer::from_i64(-4611686018427387905)).unwrap();
+    /// assert!(res);
+    /// ```
     pub fn from_i64(n: i64) -> Self {
         unsafe { Self::from_rb_value_unchecked(rb_ll2inum(n)) }
     }
 
     /// Create a new `Integer` from a `u64.`
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, Integer};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let res: bool = eval!("i == 0", i = Integer::from_u64(0)).unwrap();
+    /// assert!(res);
+    /// let res: bool = eval!("i == 4611686018427387904", i = Integer::from_u64(4611686018427387904)).unwrap();
+    /// assert!(res);
+    /// ```
     pub fn from_u64(n: u64) -> Self {
         unsafe { Self::from_rb_value_unchecked(rb_ull2inum(n)) }
     }
 
     /// Convert `self` to an `i8`. Returns `Err` if `self` is out of range for
     /// `i8`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, Integer};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// assert_eq!(eval::<Integer>("127").unwrap().to_i8().unwrap(), 127);
+    /// assert!(eval::<Integer>("128").unwrap().to_i8().is_err());
+    /// assert_eq!(eval::<Integer>("-128").unwrap().to_i8().unwrap(), -128);
+    /// assert!(eval::<Integer>("-129").unwrap().to_i8().is_err());
+    /// ```
     pub fn to_i8(self) -> Result<i8, Error> {
         match self.integer_type() {
             IntegerType::Fixnum(fix) => fix.to_i8(),
@@ -74,6 +124,18 @@ impl Integer {
 
     /// Convert `self` to an `i16`. Returns `Err` if `self` is out of range for
     /// `i16`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, Integer};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// assert_eq!(eval::<Integer>("32767").unwrap().to_i16().unwrap(), 32767);
+    /// assert!(eval::<Integer>("32768").unwrap().to_i16().is_err());
+    /// assert_eq!(eval::<Integer>("-32768").unwrap().to_i16().unwrap(), -32768);
+    /// assert!(eval::<Integer>("-32769").unwrap().to_i16().is_err());
+    /// ```
     pub fn to_i16(self) -> Result<i16, Error> {
         match self.integer_type() {
             IntegerType::Fixnum(fix) => fix.to_i16(),
@@ -85,6 +147,18 @@ impl Integer {
 
     /// Convert `self` to an `i32`. Returns `Err` if `self` is out of range for
     /// `i32`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, Integer};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// assert_eq!(eval::<Integer>("2147483647").unwrap().to_i32().unwrap(), 2147483647);
+    /// assert!(eval::<Integer>("2147483648").unwrap().to_i32().is_err());
+    /// assert_eq!(eval::<Integer>("-2147483648").unwrap().to_i32().unwrap(), -2147483648);
+    /// assert!(eval::<Integer>("-2147483649").unwrap().to_i32().is_err());
+    /// ```
     pub fn to_i32(self) -> Result<i32, Error> {
         match self.integer_type() {
             IntegerType::Fixnum(fix) => fix.to_i32(),
@@ -94,6 +168,18 @@ impl Integer {
 
     /// Convert `self` to an `i64`. Returns `Err` if `self` is out of range for
     /// `i64`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, Integer};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// assert_eq!(eval::<Integer>("4611686018427387903").unwrap().to_i64().unwrap(), 4611686018427387903);
+    /// assert_eq!(eval::<Integer>("-4611686018427387904").unwrap().to_i64().unwrap(), -4611686018427387904);
+    /// assert!(eval::<Integer>("9223372036854775808").unwrap().to_i64().is_err());
+    /// assert!(eval::<Integer>("-9223372036854775809").unwrap().to_i64().is_err());
+    /// ```
     pub fn to_i64(self) -> Result<i64, Error> {
         match self.integer_type() {
             IntegerType::Fixnum(fix) => Ok(fix.to_i64()),
@@ -103,6 +189,16 @@ impl Integer {
 
     /// Convert `self` to an `isize`. Returns `Err` if `self` is out of range
     /// for `isize`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, Integer};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// assert_eq!(eval::<Integer>("4611686018427387903").unwrap().to_isize().unwrap(), 4611686018427387903);
+    /// assert_eq!(eval::<Integer>("-4611686018427387904").unwrap().to_isize().unwrap(), -4611686018427387904);
+    /// ```
     pub fn to_isize(self) -> Result<isize, Error> {
         match self.integer_type() {
             IntegerType::Fixnum(fix) => fix.to_isize(),
@@ -112,6 +208,17 @@ impl Integer {
 
     /// Convert `self` to a `u8`. Returns `Err` if `self` is negative or out of
     /// range for `u8`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, Integer};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// assert_eq!(eval::<Integer>("255").unwrap().to_u8().unwrap(), 255);
+    /// assert!(eval::<Integer>("256").unwrap().to_u8().is_err());
+    /// assert!(eval::<Integer>("-1").unwrap().to_u8().is_err());
+    /// ```
     pub fn to_u8(self) -> Result<u8, Error> {
         match self.integer_type() {
             IntegerType::Fixnum(fix) => fix.to_u8(),
@@ -123,6 +230,17 @@ impl Integer {
 
     /// Convert `self` to a `u16`. Returns `Err` if `self` is negative or out
     /// of range for `u16`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, Integer};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// assert_eq!(eval::<Integer>("65535").unwrap().to_u16().unwrap(), 65535);
+    /// assert!(eval::<Integer>("65536").unwrap().to_u16().is_err());
+    /// assert!(eval::<Integer>("-1").unwrap().to_u16().is_err());
+    /// ```
     pub fn to_u16(self) -> Result<u16, Error> {
         match self.integer_type() {
             IntegerType::Fixnum(fix) => fix.to_u16(),
@@ -134,6 +252,17 @@ impl Integer {
 
     /// Convert `self` to a `u32`. Returns `Err` if `self` is negative or out
     /// of range for `u32`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, Integer};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// assert_eq!(eval::<Integer>("4294967295").unwrap().to_u32().unwrap(), 4294967295);
+    /// assert!(eval::<Integer>("4294967296").unwrap().to_u32().is_err());
+    /// assert!(eval::<Integer>("-1").unwrap().to_u32().is_err());
+    /// ```
     pub fn to_u32(self) -> Result<u32, Error> {
         match self.integer_type() {
             IntegerType::Fixnum(fix) => fix.to_u32(),
@@ -143,6 +272,17 @@ impl Integer {
 
     /// Convert `self` to a `u64`. Returns `Err` if `self` is negative or out
     /// of range for `u64`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, Integer};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// assert_eq!(eval::<Integer>("4611686018427387903").unwrap().to_u64().unwrap(), 4611686018427387903);
+    /// assert!(eval::<Integer>("-1").unwrap().to_u64().is_err());
+    /// assert!(eval::<Integer>("18446744073709551616").unwrap().to_u64().is_err());
+    /// ```
     pub fn to_u64(self) -> Result<u64, Error> {
         match self.integer_type() {
             IntegerType::Fixnum(fix) => fix.to_u64(),
@@ -152,6 +292,16 @@ impl Integer {
 
     /// Convert `self` to a `usize`. Returns `Err` if `self` is negative or out
     /// of range for `usize`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, Integer};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// assert_eq!(eval::<Integer>("4611686018427387903").unwrap().to_usize().unwrap(), 4611686018427387903);
+    /// assert!(eval::<Integer>("-1").unwrap().to_usize().is_err());
+    /// ```
     pub fn to_usize(self) -> Result<usize, Error> {
         match self.integer_type() {
             IntegerType::Fixnum(fix) => fix.to_usize(),

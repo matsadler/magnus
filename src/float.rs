@@ -21,6 +21,16 @@ pub struct Float(NonZeroValue);
 
 impl Float {
     /// Return `Some(Float)` if `val` is a `Float`, `None` otherwise.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, Float};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// assert!(Float::from_value(eval("1.7272337110188893e-77").unwrap()).is_some());
+    /// assert!(Float::from_value(eval("1.7272337110188890e-77").unwrap()).is_some());
+    /// ```
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
         unsafe {
@@ -41,11 +51,32 @@ impl Float {
     }
 
     /// Create a new `Float` from an `f64`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, Float};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let res: bool = eval!("f == 1.7272337110188893e-77", f = Float::from_f64(1.7272337110188893e-77)).unwrap();
+    /// assert!(res);
+    /// let res: bool = eval!("f == 1.7272337110188890e-77", f = Float::from_f64(1.7272337110188890e-77)).unwrap();
+    /// assert!(res);
+    /// ```
     pub fn from_f64(n: f64) -> Self {
         unsafe { Float::from_rb_value_unchecked(rb_float_new(n)) }
     }
 
     /// Convert `self` to a `f64`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, Float};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// assert_eq!(eval::<Float>("2.0").unwrap().to_f64(), 2.0);
+    /// ```
     pub fn to_f64(self) -> f64 {
         unsafe { rb_float_value(self.as_rb_value()) }
     }
