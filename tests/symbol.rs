@@ -1,4 +1,4 @@
-use magnus::{StaticSymbol, Symbol, Value};
+use magnus::{eval, StaticSymbol, Symbol, Value};
 
 macro_rules! rb_assert {
     ($s:literal) => {
@@ -29,4 +29,20 @@ fn it_makes_a_symbol() {
     let sym = Symbol::new("baz");
     // static because there's a previous StaticSymbol
     assert!(sym.is_static());
+
+    let sym: Symbol = StaticSymbol::new("qux").into();
+    assert!(sym.is_static());
+
+    let sym = Symbol::new("example");
+    assert!(!sym.is_static());
+    sym.to_static();
+    assert!(sym.is_static());
+
+    let x = eval::<Symbol>(r#""xxx".to_sym"#).unwrap();
+    assert!(!x.is_static());
+    eval::<StaticSymbol>(":xxx").unwrap();
+
+    let y = eval::<Symbol>(r#""yyy".to_sym"#).unwrap();
+    assert!(!y.is_static());
+    StaticSymbol::from_value(eval::<Value>(":yyy").unwrap()).unwrap();
 }

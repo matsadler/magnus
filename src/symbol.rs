@@ -1,15 +1,12 @@
-use std::{
-    borrow::Cow,
-    fmt,
-    ops::Deref,
-    os::raw::{c_char, c_long},
-};
+use std::{borrow::Cow, fmt, ops::Deref};
 
 use crate::{
     debug_assert_value,
     error::{protect, Error},
     r_string::RString,
-    ruby_sys::{rb_id2sym, rb_intern2, rb_sym2str, rb_to_symbol, ruby_value_type, VALUE},
+    ruby_sys::{
+        rb_check_id, rb_id2sym, rb_intern_str, rb_sym2str, rb_to_symbol, ruby_value_type, VALUE,
+    },
     try_convert::TryConvert,
     value::{Id, NonZeroValue, StaticSymbol, Value},
 };
@@ -25,6 +22,17 @@ pub struct Symbol(NonZeroValue);
 
 impl Symbol {
     /// Return `Some(Symbol)` if `val` is a `Symbol`, `None` otherwise.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, Symbol};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// assert!(Symbol::from_value(eval(":foo").unwrap()).is_some());
+    /// assert!(Symbol::from_value(eval(r#""bar".to_sym"#).unwrap()).is_some());
+    /// assert!(Symbol::from_value(eval(r#""baz""#).unwrap()).is_none());
+    /// ```
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
         unsafe {
@@ -43,6 +51,17 @@ impl Symbol {
     }
 
     /// Create a new `Symbol` from `name`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, Symbol};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let sym = Symbol::new("example");
+    /// let result: bool = eval!(":example == sym", sym).unwrap();
+    /// assert!(result);
+    /// ```
     #[inline]
     pub fn new<T: AsRef<str>>(name: T) -> Self {
         name.as_ref().into()
@@ -52,16 +71,41 @@ impl Symbol {
     ///
     /// Static symbols won't be garbage collected, so should be safe to store
     /// on the heap. See [`StaticSymbol`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, Symbol};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// assert!(eval::<Symbol>(":foo").unwrap().is_static());
+    /// assert!(!Symbol::new("bar").is_static());
+    /// assert!(!eval::<Symbol>(r#""baz".to_sym"#).unwrap().is_static());
+    /// ```
     pub fn is_static(self) -> bool {
-        self.is_static_symbol()
+        if self.is_static_symbol() {
+            return true;
+        }
+        let mut p = self.as_rb_value();
+        unsafe { rb_check_id(&mut p as *mut _) != 0 }
     }
 
     /// Return the symbol as a string. If the symbol is static this will be a
     /// `&str`, otherwise an owned `String`.
     ///
     /// May error if the name is not valid utf-8.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::Symbol;
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let sym = Symbol::new("example");
+    /// assert_eq!(sym.name().unwrap(), "example");
+    /// ```
     pub fn name(self) -> Result<Cow<'static, str>, Error> {
-        if let Some(sym) = StaticSymbol::from_value(*self) {
+        if let Some(sym) = self.as_static() {
             return sym.name().map(Cow::from);
         }
         unsafe {
@@ -73,8 +117,20 @@ impl Symbol {
 
     /// If `self` is static, returns `self` as a [`StaticSymbol`], otherwise
     /// returns `None`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, Symbol};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// assert!(eval::<Symbol>(":foo").unwrap().as_static().is_some());
+    /// assert!(Symbol::new("bar").as_static().is_none());
+    /// assert!(eval::<Symbol>(r#""baz".to_sym"#).unwrap().as_static().is_none());
+    /// ```
     pub fn as_static(self) -> Option<StaticSymbol> {
-        StaticSymbol::from_value(*self)
+        self.is_static()
+            .then(|| unsafe { StaticSymbol::from_rb_value_unchecked(self.as_rb_value()) })
     }
 
     /// If `self` is already static simply returns `self` as a
@@ -82,15 +138,24 @@ impl Symbol {
     /// returned as a [`StaticSymbol`].
     ///
     /// Be aware that once static a symbol will never be garbage collected.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, Symbol};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let sym = Symbol::new("example");
+    /// let static_sym = sym.to_static();
+    /// ```
     pub fn to_static(self) -> StaticSymbol {
         if let Some(sym) = StaticSymbol::from_value(*self) {
             return sym;
         }
         unsafe {
-            let name = RString::from_rb_value_unchecked(rb_sym2str(self.as_rb_value()));
-            let slice = name.as_slice();
-            let id = rb_intern2(slice.as_ptr() as *const c_char, slice.len() as c_long);
-            StaticSymbol::from_value(Value::new(rb_id2sym(id))).unwrap()
+            let name = rb_sym2str(self.as_rb_value());
+            let id = rb_intern_str(name);
+            StaticSymbol::from_rb_value_unchecked(rb_id2sym(id))
         }
     }
 }
