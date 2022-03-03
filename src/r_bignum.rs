@@ -1,7 +1,7 @@
 use std::{
     fmt,
     ops::Deref,
-    os::raw::{c_long, c_ulong},
+    os::raw::{c_long, c_longlong, c_ulong, c_ulonglong},
 };
 
 use crate::{
@@ -110,10 +110,10 @@ impl RBignum {
         debug_assert_value!(self);
         let mut res = 0;
         protect(|| {
-            res = unsafe { rb_num2long(self.as_rb_value()) };
+            res = unsafe { rb_num2ll(self.as_rb_value()) };
             *QNIL
         })?;
-        if res > isize::MAX as c_long {
+        if res > isize::MAX as c_longlong {
             return Err(Error::range_error("bignum too big to convert into `isize`"));
         }
         Ok(res as isize)
@@ -170,10 +170,10 @@ impl RBignum {
         }
         let mut res = 0;
         protect(|| {
-            res = unsafe { rb_num2ulong(self.as_rb_value()) };
+            res = unsafe { rb_num2ull(self.as_rb_value()) };
             *QNIL
         })?;
-        if res > usize::MAX as c_ulong {
+        if res > usize::MAX as c_ulonglong {
             return Err(Error::range_error("bignum too big to convert into `usize`"));
         }
         Ok(res as usize)
