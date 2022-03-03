@@ -33,6 +33,17 @@ pub struct RArray(NonZeroValue);
 
 impl RArray {
     /// Return `Some(RArray)` if `val` is a `RArray`, `None` otherwise.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RArray};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// assert!(RArray::from_value(eval(r#"[true, 0, "example"]"#).unwrap()).is_some());
+    /// assert!(RArray::from_value(eval(r#"{"answer" => 42}"#).unwrap()).is_none());
+    /// assert!(RArray::from_value(eval(r"nil").unwrap()).is_none());
+    /// ```
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
         unsafe {
@@ -52,23 +63,111 @@ impl RArray {
     }
 
     /// Create a new empty `RArray`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RArray};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let ary = RArray::new();
+    /// assert!(ary.is_empty());
+    /// ```
     pub fn new() -> Self {
         unsafe { Self::from_rb_value_unchecked(rb_ary_new()) }
     }
 
     /// Create a new empty `RArray` with capacity for `n` elements
     /// pre-allocated.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RArray};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let ary = RArray::with_capacity(16);
+    /// assert!(ary.is_empty());
+    /// ```
     pub fn with_capacity(n: usize) -> Self {
         unsafe { Self::from_rb_value_unchecked(rb_ary_new_capa(n as c_long)) }
     }
 
+    /// Return the number of entries in `self` as a Rust [`usize`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RArray};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let ary = RArray::new();
+    /// assert_eq!(ary.len(), 0);
+    ///
+    /// let ary = eval::<RArray>("[:a, :b, :c]").unwrap();
+    /// assert_eq!(ary.len(), 3)
+    /// ```
+    pub fn len(self) -> usize {
+        debug_assert_value!(self);
+        unsafe {
+            let r_basic = self.r_basic_unchecked();
+            let flags = r_basic.as_ref().flags;
+            if (flags & ruby_rarray_flags::RARRAY_EMBED_FLAG as VALUE) != 0 {
+                let len = (flags >> RARRAY_EMBED_LEN_SHIFT as VALUE)
+                    & (ruby_rarray_flags::RARRAY_EMBED_LEN_MASK as VALUE
+                        >> RARRAY_EMBED_LEN_SHIFT as VALUE);
+                len.try_into().unwrap()
+            } else {
+                self.as_internal().as_ref().as_.heap.len.try_into().unwrap()
+            }
+        }
+    }
+
+    /// Return whether self contains any entries or not.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RArray};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let ary = RArray::new();
+    /// assert!(ary.is_empty());
+    /// ```
+    pub fn is_empty(self) -> bool {
+        self.len() == 0
+    }
+
     /// Concatenate elements from the slice `s` to `self`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, Integer, QNIL, RArray, Symbol};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let ary = RArray::new();
+    /// ary.cat(&[*Symbol::new("a"), *Integer::from_i64(1), *QNIL]);
+    /// let res: bool = eval!("ary == [:a, 1, nil]", ary).unwrap();
+    /// assert!(res);
+    /// ```
     pub fn cat(self, s: &[Value]) {
         let ptr = s.as_ptr() as *const VALUE;
         unsafe { rb_ary_cat(self.as_rb_value(), ptr, s.len() as c_long) };
     }
 
     /// Create a new `RArray` containing the elements in `slice`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, Integer, QNIL, RArray, Symbol};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let ary = RArray::from_slice(&[*Symbol::new("a"), *Integer::from_i64(1), *QNIL]);
+    /// let res: bool = eval!("ary == [:a, 1, nil]", ary).unwrap();
+    /// assert!(res);
+    /// ```
     pub fn from_slice(slice: &[Value]) -> Self {
         let ary = Self::with_capacity(slice.len());
         ary.cat(slice);
@@ -76,6 +175,20 @@ impl RArray {
     }
 
     /// Add `item` to the end of `self`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RArray, Symbol};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let ary = RArray::new();
+    /// ary.push(Symbol::new("a"));
+    /// ary.push(1);
+    /// ary.push(());
+    /// let res: bool = eval!("ary == [:a, 1, nil]", ary).unwrap();
+    /// assert!(res);
+    /// ```
     pub fn push<T>(self, item: T)
     where
         T: Into<Value>,
@@ -86,6 +199,30 @@ impl RArray {
     /// Remove and return the last element of `self`, converting it to a `T`.
     ///
     /// Errors if the conversion fails.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RArray};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let ary = eval::<RArray>("[1, 2, 3]").unwrap();
+    /// assert_eq!(ary.pop::<i64>().unwrap(), 3);
+    /// assert_eq!(ary.pop::<i64>().unwrap(), 2);
+    /// assert_eq!(ary.pop::<i64>().unwrap(), 1);
+    /// assert!(ary.pop::<i64>().is_err());
+    /// ```
+    ///
+    /// ```
+    /// use magnus::{eval, RArray};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let ary = eval::<RArray>("[1, 2, 3]").unwrap();
+    /// assert_eq!(ary.pop::<Option<i64>>().unwrap(), Some(3));
+    /// assert_eq!(ary.pop::<Option<i64>>().unwrap(), Some(2));
+    /// assert_eq!(ary.pop::<Option<i64>>().unwrap(), Some(1));
+    /// assert_eq!(ary.pop::<Option<i64>>().unwrap(), None);
+    /// ```
     pub fn pop<T>(self) -> Result<T, Error>
     where
         T: TryConvert,
@@ -94,6 +231,20 @@ impl RArray {
     }
 
     /// Add `item` to the beginning of `self`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RArray, Symbol};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let ary = RArray::new();
+    /// ary.unshift(Symbol::new("a"));
+    /// ary.unshift(1);
+    /// ary.unshift(());
+    /// let res: bool = eval!("ary == [nil, 1, :a]", ary).unwrap();
+    /// assert!(res);
+    /// ```
     pub fn unshift<T>(self, item: T)
     where
         T: Into<Value>,
@@ -104,6 +255,30 @@ impl RArray {
     /// Remove and return the first element of `self`, converting it to a `T`.
     ///
     /// Errors if the conversion fails.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RArray};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let ary = eval::<RArray>("[1, 2, 3]").unwrap();
+    /// assert_eq!(ary.shift::<i64>().unwrap(), 1);
+    /// assert_eq!(ary.shift::<i64>().unwrap(), 2);
+    /// assert_eq!(ary.shift::<i64>().unwrap(), 3);
+    /// assert!(ary.shift::<i64>().is_err());
+    /// ```
+    ///
+    /// ```
+    /// use magnus::{eval, RArray};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let ary = eval::<RArray>("[1, 2, 3]").unwrap();
+    /// assert_eq!(ary.shift::<Option<i64>>().unwrap(), Some(1));
+    /// assert_eq!(ary.shift::<Option<i64>>().unwrap(), Some(2));
+    /// assert_eq!(ary.shift::<Option<i64>>().unwrap(), Some(3));
+    /// assert_eq!(ary.shift::<Option<i64>>().unwrap(), None);
+    /// ```
     pub fn shift<T>(self) -> Result<T, Error>
     where
         T: TryConvert,
@@ -112,6 +287,17 @@ impl RArray {
     }
 
     /// Create a new `RArray` from a Rust vector.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RArray};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let ary = RArray::from_vec(vec![1, 2, 3]);
+    /// let res: bool = eval!("ary == [1, 2, 3]", ary).unwrap();
+    /// assert!(res);
+    /// ```
     pub fn from_vec<T>(vec: Vec<T>) -> Self
     where
         T: Into<Value>,
@@ -133,6 +319,20 @@ impl RArray {
     ///
     /// Ruby must not be allowed to garbage collect or modify `self` while a
     /// refrence to the slice is held.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RArray};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let ary = eval::<RArray>("[1, 2, 3, 4, 5]").unwrap();
+    /// // must not call any Ruby api that may modify ary while we have a
+    /// // refrence to the return value of ::from_slice()
+    /// let middle = unsafe { RArray::from_slice(&ary.as_slice()[1..4]) };
+    /// let res: bool = eval!("middle == [2, 3, 4]", middle).unwrap();
+    /// assert!(res);
+    /// ```
     pub unsafe fn as_slice(&self) -> &[Value] {
         self.as_slice_unconstrained()
     }
@@ -163,6 +363,16 @@ impl RArray {
     /// datastructure like a [`Vec`] as they are hidden from the mark phase
     /// of Ruby's garbage collector, and thus may be prematurely garbage
     /// collected in the following sweep phase.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RArray};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let ary = eval::<RArray>("[1, 2, 3]").unwrap();
+    /// assert_eq!(ary.to_vec::<i64>().unwrap(), vec![1, 2, 3]);
+    /// ```
     pub fn to_vec<T>(self) -> Result<Vec<T>, Error>
     where
         T: TryConvertOwned,
@@ -178,7 +388,19 @@ impl RArray {
     /// Convert `self` to a Rust array of [`Value`]s, of length `N`.
     ///
     /// Errors if the Ruby array is not of length `N`.
-    pub fn to_value_array<T, const N: usize>(self) -> Result<[Value; N], Error> {
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RArray};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let ary = eval::<RArray>("[1, 2, 3]").unwrap();
+    /// assert!(ary.to_value_array::<3>().is_ok());
+    /// assert!(ary.to_value_array::<2>().is_err());
+    /// assert!(ary.to_value_array::<4>().is_err());
+    /// ```
+    pub fn to_value_array<const N: usize>(self) -> Result<[Value; N], Error> {
         unsafe {
             self.as_slice()
                 .try_into()
@@ -190,6 +412,18 @@ impl RArray {
     ///
     /// Errors if converting any element in the array fails, or if the Ruby
     /// array is not of length `N`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RArray};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let ary = eval::<RArray>("[1, 2, 3]").unwrap();
+    /// assert_eq!(ary.to_array::<i64, 3>().unwrap(), [1, 2, 3]);
+    /// assert!(ary.to_array::<i64, 2>().is_err());
+    /// assert!(ary.to_array::<i64, 4>().is_err());
+    /// ```
     pub fn to_array<T, const N: usize>(self) -> Result<[T; N], Error>
     where
         T: TryConvert,
@@ -226,6 +460,8 @@ impl RArray {
     /// assert_eq!(ary.entry::<String>(0).unwrap(), String::from("a"));
     /// assert_eq!(ary.entry::<char>(0).unwrap(), 'a');
     /// assert_eq!(ary.entry::<Option<String>>(0).unwrap(), Some(String::from("a")));
+    /// assert_eq!(ary.entry::<String>(1).unwrap(), String::from("b"));
+    /// assert_eq!(ary.entry::<String>(-1).unwrap(), String::from("c"));
     /// assert_eq!(ary.entry::<Option<String>>(3).unwrap(), None);
     ///
     /// assert!(ary.entry::<i64>(0).is_err());
@@ -242,6 +478,21 @@ impl RArray {
     ///
     /// If `offset` is beyond the current size of the array the array will be
     /// expanded and padded with `nil`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RArray, Symbol};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let ary = RArray::from_vec(vec![Symbol::new("a"), Symbol::new("b"), Symbol::new("c")]);
+    /// ary.store(0, Symbol::new("d"));
+    /// ary.store(5, Symbol::new("e"));
+    /// ary.store(6, Symbol::new("f"));
+    /// ary.store(-1, Symbol::new("g"));
+    /// let res: bool = eval!("ary == [:d, :b, :c, nil, nil, :e, :g]", ary).unwrap();
+    /// assert!(res);
+    /// ```
     pub fn store<T>(self, offset: isize, val: T)
     where
         T: Into<Value>,
@@ -256,6 +507,19 @@ impl RArray {
     }
 
     /// Returns an [`Enumerator`] over `self`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RArray};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let mut res = Vec::new();
+    /// for i in eval::<RArray>("[1, 2, 3]").unwrap().each() {
+    ///     res.push(i.unwrap().try_convert::<i64>().unwrap());
+    /// }
+    /// assert_eq!(res, vec![1, 2, 3]);
+    /// ```
     pub fn each(self) -> Enumerator {
         // TODO why doesn't rb_ary_each work?
         self.enumeratorize("each", ())
