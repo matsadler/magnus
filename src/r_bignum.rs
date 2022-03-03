@@ -29,6 +29,19 @@ pub struct RBignum(NonZeroValue);
 
 impl RBignum {
     /// Return `Some(RBignum)` if `val` is a `RBignum`, `None` otherwise.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RBignum};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// assert!(RBignum::from_value(eval("9223372036854775807").unwrap()).is_some());
+    /// // too small
+    /// assert!(RBignum::from_value(eval("0").unwrap()).is_none());
+    /// // not an int
+    /// assert!(RBignum::from_value(eval("1.23").unwrap()).is_none());
+    /// ```
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
         unsafe {
@@ -46,6 +59,18 @@ impl RBignum {
     ///
     /// Returns `Ok(RBignum)` if `n` is large enough to require a bignum,
     /// otherwise returns `Err(Fixnum)`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RBignum};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// assert!(RBignum::from_i64(4611686018427387904).is_ok());
+    /// assert!(RBignum::from_i64(-4611686018427387905).is_ok());
+    /// // too small
+    /// assert!(RBignum::from_i64(0).is_err());
+    /// ```
     pub fn from_i64(n: i64) -> Result<Self, Fixnum> {
         unsafe {
             let val = Value::new(rb_ll2inum(n));
@@ -58,6 +83,17 @@ impl RBignum {
     ///
     /// Returns `Ok(RBignum)` if `n` is large enough to require a bignum,
     /// otherwise returns `Err(Fixnum)`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RBignum};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// assert!(RBignum::from_u64(4611686018427387904).is_ok());
+    /// // too small
+    /// assert!(RBignum::from_u64(0).is_err());
+    /// ```
     pub fn from_u64(n: u64) -> Result<Self, Fixnum> {
         unsafe {
             let val = Value::new(rb_ull2inum(n));
@@ -94,6 +130,18 @@ impl RBignum {
 
     /// Convert `self` to an `i64`. Returns `Err` if `self` is out of range for
     /// `i64`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RBignum};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// assert_eq!(eval::<RBignum>("4611686018427387904").unwrap().to_i64().unwrap(), 4611686018427387904);
+    /// assert_eq!(eval::<RBignum>("-4611686018427387905").unwrap().to_i64().unwrap(), -4611686018427387905);
+    /// assert!(eval::<RBignum>("9223372036854775808").unwrap().to_i64().is_err());
+    /// assert!(eval::<RBignum>("-9223372036854775809").unwrap().to_i64().is_err());
+    /// ```
     pub fn to_i64(self) -> Result<i64, Error> {
         debug_assert_value!(self);
         let mut res = 0;
@@ -106,6 +154,16 @@ impl RBignum {
 
     /// Convert `self` to an `isize`. Returns `Err` if `self` is out of range
     /// for `isize`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RBignum};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// assert_eq!(eval::<RBignum>("4611686018427387904").unwrap().to_isize().unwrap(), 4611686018427387904);
+    /// assert_eq!(eval::<RBignum>("-4611686018427387905").unwrap().to_isize().unwrap(), -4611686018427387905);
+    /// ```
     pub fn to_isize(self) -> Result<isize, Error> {
         debug_assert_value!(self);
         let mut res = 0;
@@ -144,6 +202,16 @@ impl RBignum {
 
     /// Convert `self` to a `u64`. Returns `Err` if `self` is negative or out
     /// of range for `u64`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RBignum};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// assert_eq!(eval::<RBignum>("4611686018427387904").unwrap().to_u64().unwrap(), 4611686018427387904);
+    /// assert!(eval::<RBignum>("18446744073709551616").unwrap().to_u64().is_err());
+    /// ```
     pub fn to_u64(self) -> Result<u64, Error> {
         debug_assert_value!(self);
         if self.is_negative() {
@@ -161,6 +229,16 @@ impl RBignum {
 
     /// Convert `self` to a `usize`. Returns `Err` if `self` is negative or out
     /// of range for `usize`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RBignum};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// assert_eq!(eval::<RBignum>("4611686018427387904").unwrap().to_usize().unwrap(), 4611686018427387904);
+    /// assert!(eval::<RBignum>("18446744073709551616").unwrap().to_usize().is_err());
+    /// ```
     pub fn to_usize(self) -> Result<usize, Error> {
         debug_assert_value!(self);
         if self.is_negative() {
