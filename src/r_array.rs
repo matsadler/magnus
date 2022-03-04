@@ -7,10 +7,12 @@ use crate::{
     enumerator::Enumerator,
     error::{protect, Error},
     object::Object,
+    r_string::RString,
     ruby_sys::{
-        self, rb_ary_cat, rb_ary_entry, rb_ary_new, rb_ary_new_capa, rb_ary_pop, rb_ary_push,
-        rb_ary_shift, rb_ary_store, rb_ary_to_ary, rb_ary_unshift, ruby_rarray_flags,
-        ruby_value_type, VALUE,
+        self, rb_ary_cat, rb_ary_entry, rb_ary_includes, rb_ary_join, rb_ary_new, rb_ary_new_capa,
+        rb_ary_new_from_values, rb_ary_pop, rb_ary_push, rb_ary_replace, rb_ary_shared_with_p,
+        rb_ary_shift, rb_ary_store, rb_ary_subseq, rb_ary_to_ary, rb_ary_unshift,
+        ruby_rarray_flags, ruby_value_type, VALUE,
     },
     try_convert::{TryConvert, TryConvertOwned},
     value::{NonZeroValue, Value, QNIL},
@@ -138,6 +140,36 @@ impl RArray {
         self.len() == 0
     }
 
+    /// Returns `true` if `val` is in `self`, `false` otherwise.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RArray, Symbol, QNIL};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let ary = eval::<RArray>(r#"[:foo, "bar", 2]"#).unwrap();
+    /// assert!(ary.includes(Symbol::new("foo")));
+    /// assert!(ary.includes("bar"));
+    /// assert!(ary.includes(2));
+    /// // 2.0 == 2 in Ruby
+    /// assert!(ary.includes(2.0));
+    /// assert!(!ary.includes("foo"));
+    /// assert!(!ary.includes(QNIL));
+    /// ```
+    pub fn includes<T>(self, val: T) -> bool
+    where
+        T: Into<Value>,
+    {
+        unsafe {
+            Value::new(rb_ary_includes(
+                self.as_rb_value(),
+                val.into().as_rb_value(),
+            ))
+            .to_bool()
+        }
+    }
+
     /// Concatenate elements from the slice `s` to `self`.
     ///
     /// Returns `Err` if `self` is frozen.
@@ -174,9 +206,8 @@ impl RArray {
     /// assert!(res);
     /// ```
     pub fn from_slice(slice: &[Value]) -> Self {
-        let ary = Self::with_capacity(slice.len());
-        ary.cat(slice);
-        ary
+        let ptr = slice.as_ptr() as *const VALUE;
+        unsafe { Self::from_rb_value_unchecked(rb_ary_new_from_values(slice.len() as c_long, ptr)) }
     }
 
     /// Add `item` to the end of `self`.
@@ -468,6 +499,27 @@ impl RArray {
         }
     }
 
+    /// Stringify the contents of `self` and join the sequence with `sep`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, Integer, RArray, Symbol, QNIL};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let ary = RArray::from_slice(&[*Symbol::new("a"), *Integer::from_i64(1), *QNIL]);
+    /// assert_eq!(ary.join(", ").unwrap().to_string().unwrap(), "a, 1, ")
+    /// ```
+    pub fn join<T>(self, sep: T) -> Result<RString, Error>
+    where
+        T: Into<RString>,
+    {
+        unsafe {
+            protect(|| Value::new(rb_ary_join(self.as_rb_value(), sep.into().as_rb_value())))
+                .map(|val| RString::from_rb_value_unchecked(val.as_rb_value()))
+        }
+    }
+
     /// Return the element at `offset`, converting it to a `T`.
     ///
     /// Errors if the conversion fails.
@@ -554,6 +606,102 @@ impl RArray {
     pub fn each(self) -> Enumerator {
         // TODO why doesn't rb_ary_each work?
         self.enumeratorize("each", ())
+    }
+
+    /// Returns true if both `self` and `other` share the same backing storage.
+    ///
+    /// It is possible for two Ruby Arrays to share the same backing storage,
+    /// and only when one of them is modified will the copy-on-write cost be
+    /// paid.
+    ///
+    /// Currently, this method will only return `true` if `self` and `other`
+    /// are of the same length, even though Ruby may continue to use the same
+    /// backing storage after popping a value from either of the arrays.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RArray, Value};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let ary = RArray::from_vec(vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+    /// let copy = RArray::new();
+    /// copy.replace(ary);
+    /// assert!(ary.is_shared(copy));
+    /// assert!(copy.is_shared(ary));
+    /// copy.push(11);
+    /// assert!(!ary.is_shared(copy));
+    /// assert!(!copy.is_shared(ary));
+    /// ```
+    pub fn is_shared(self, other: Self) -> bool {
+        unsafe {
+            Value::new(rb_ary_shared_with_p(
+                self.as_rb_value(),
+                other.as_rb_value(),
+            ))
+            .to_bool()
+        }
+    }
+
+    /// Replace the contents of `self` with `from`.
+    ///
+    /// `from` is unmodified, and `self` becomes a copy of `from`. `self`'s
+    /// former contents are abandoned.
+    ///
+    /// This is a very cheep operation, `self` will point at `from`'s backing
+    /// storage until one is modified, and only then will the copy-on-write
+    /// cost be paid.
+    ///
+    /// Returns `Err` if `self` is frozen.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RArray};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let ary = RArray::from_vec(vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+    /// let copy = RArray::new();
+    /// copy.replace(ary);
+    /// assert!(copy.is_shared(ary));
+    /// copy.push(11);
+    /// assert!(!copy.is_shared(ary));
+    /// ```
+    pub fn replace(self, from: Self) -> Result<(), Error> {
+        protect(|| unsafe { Value::new(rb_ary_replace(self.as_rb_value(), from.as_rb_value())) })
+            .map(|_| ())
+    }
+
+    /// Create a new array from a subsequence of `self`.
+    ///
+    /// This is a very cheep operation, as `self` and the new array will share
+    /// thier backing storage until one is modified.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RArray, Value};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let ary = RArray::from_vec(vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+    /// let a = ary.subseq(0, 5).unwrap();
+    /// let b = ary.subseq(5, 5).unwrap();
+    /// assert_eq!(a.to_vec::<i64>().unwrap(), vec![1, 2, 3, 4, 5]);
+    /// assert_eq!(b.to_vec::<i64>().unwrap(), vec![6, 7, 8, 9, 10]);
+    /// # // is_shared() only returns true when lengths match
+    /// # assert_eq!(a.len(), b.len());
+    /// # assert!(a.is_shared(b));
+    /// ```
+    // TODO maybe take a range instead of offset and length
+    pub fn subseq(self, offset: usize, length: usize) -> Option<Self> {
+        unsafe {
+            let val = Value::new(rb_ary_subseq(
+                self.as_rb_value(),
+                offset as c_long,
+                length as c_long,
+            ));
+            (!val.is_nil()).then(|| Self::from_rb_value_unchecked(val.as_rb_value()))
+        }
     }
 }
 

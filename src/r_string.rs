@@ -598,6 +598,18 @@ impl io::Write for RString {
     }
 }
 
+impl From<&str> for RString {
+    fn from(val: &str) -> Self {
+        RString::new(val)
+    }
+}
+
+impl From<String> for RString {
+    fn from(val: String) -> Self {
+        RString::new(&val)
+    }
+}
+
 impl From<RString> for Value {
     fn from(val: RString) -> Self {
         *val
