@@ -13,7 +13,7 @@ use crate::{
         ruby_value_type, VALUE,
     },
     try_convert::{TryConvert, TryConvertOwned},
-    value::{NonZeroValue, Value},
+    value::{NonZeroValue, Value, QNIL},
 };
 
 #[cfg(ruby_gte_3_0)]
@@ -140,6 +140,8 @@ impl RArray {
 
     /// Concatenate elements from the slice `s` to `self`.
     ///
+    /// Returns `Err` if `self` is frozen.
+    ///
     /// # Examples
     ///
     /// ```
@@ -147,13 +149,16 @@ impl RArray {
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let ary = RArray::new();
-    /// ary.cat(&[*Symbol::new("a"), *Integer::from_i64(1), *QNIL]);
+    /// ary.cat(&[*Symbol::new("a"), *Integer::from_i64(1), *QNIL]).unwrap();
     /// let res: bool = eval!("ary == [:a, 1, nil]", ary).unwrap();
     /// assert!(res);
     /// ```
-    pub fn cat(self, s: &[Value]) {
+    pub fn cat(self, s: &[Value]) -> Result<(), Error> {
         let ptr = s.as_ptr() as *const VALUE;
-        unsafe { rb_ary_cat(self.as_rb_value(), ptr, s.len() as c_long) };
+        unsafe {
+            protect(|| Value::new(rb_ary_cat(self.as_rb_value(), ptr, s.len() as c_long)))
+                .map(|_| ())
+        }
     }
 
     /// Create a new `RArray` containing the elements in `slice`.
@@ -176,6 +181,8 @@ impl RArray {
 
     /// Add `item` to the end of `self`.
     ///
+    /// Returns `Err` if `self` is frozen.
+    ///
     /// # Examples
     ///
     /// ```
@@ -183,22 +190,25 @@ impl RArray {
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let ary = RArray::new();
-    /// ary.push(Symbol::new("a"));
-    /// ary.push(1);
-    /// ary.push(());
+    /// ary.push(Symbol::new("a")).unwrap();
+    /// ary.push(1).unwrap();
+    /// ary.push(()).unwrap();
     /// let res: bool = eval!("ary == [:a, 1, nil]", ary).unwrap();
     /// assert!(res);
     /// ```
-    pub fn push<T>(self, item: T)
+    pub fn push<T>(self, item: T) -> Result<(), Error>
     where
         T: Into<Value>,
     {
-        unsafe { rb_ary_push(self.as_rb_value(), item.into().as_rb_value()) };
+        unsafe {
+            protect(|| Value::new(rb_ary_push(self.as_rb_value(), item.into().as_rb_value())))
+                .map(|_| ())
+        }
     }
 
     /// Remove and return the last element of `self`, converting it to a `T`.
     ///
-    /// Errors if the conversion fails.
+    /// Errors if `self` is frozen or if the conversion fails.
     ///
     /// # Examples
     ///
@@ -227,10 +237,14 @@ impl RArray {
     where
         T: TryConvert,
     {
-        unsafe { Value::new(rb_ary_pop(self.as_rb_value())).try_convert() }
+        unsafe {
+            protect(|| Value::new(rb_ary_pop(self.as_rb_value()))).and_then(|val| val.try_convert())
+        }
     }
 
     /// Add `item` to the beginning of `self`.
+    ///
+    /// Returns `Err` if `self` is frozen.
     ///
     /// # Examples
     ///
@@ -245,16 +259,24 @@ impl RArray {
     /// let res: bool = eval!("ary == [nil, 1, :a]", ary).unwrap();
     /// assert!(res);
     /// ```
-    pub fn unshift<T>(self, item: T)
+    pub fn unshift<T>(self, item: T) -> Result<(), Error>
     where
         T: Into<Value>,
     {
-        unsafe { rb_ary_unshift(self.as_rb_value(), item.into().as_rb_value()) };
+        unsafe {
+            protect(|| {
+                Value::new(rb_ary_unshift(
+                    self.as_rb_value(),
+                    item.into().as_rb_value(),
+                ))
+            })
+            .map(|_| ())
+        }
     }
 
     /// Remove and return the first element of `self`, converting it to a `T`.
     ///
-    /// Errors if the conversion fails.
+    /// Errors if `self` is frozen or if the conversion fails.
     ///
     /// # Examples
     ///
@@ -283,7 +305,10 @@ impl RArray {
     where
         T: TryConvert,
     {
-        unsafe { Value::new(rb_ary_shift(self.as_rb_value())).try_convert() }
+        unsafe {
+            protect(|| Value::new(rb_ary_shift(self.as_rb_value())))
+                .and_then(|val| val.try_convert())
+        }
     }
 
     /// Create a new `RArray` from a Rust vector.
@@ -304,7 +329,7 @@ impl RArray {
     {
         let ary = Self::with_capacity(vec.len());
         for v in vec {
-            ary.push(v);
+            ary.push(v).unwrap();
         }
         ary
     }
@@ -479,6 +504,8 @@ impl RArray {
     /// If `offset` is beyond the current size of the array the array will be
     /// expanded and padded with `nil`.
     ///
+    /// Returns `Err` if `self` is frozen.
+    ///
     /// # Examples
     ///
     /// ```
@@ -493,16 +520,20 @@ impl RArray {
     /// let res: bool = eval!("ary == [:d, :b, :c, nil, nil, :e, :g]", ary).unwrap();
     /// assert!(res);
     /// ```
-    pub fn store<T>(self, offset: isize, val: T)
+    pub fn store<T>(self, offset: isize, val: T) -> Result<(), Error>
     where
         T: Into<Value>,
     {
         unsafe {
-            rb_ary_store(
-                self.as_rb_value(),
-                offset as c_long,
-                val.into().as_rb_value(),
-            );
+            protect(|| {
+                rb_ary_store(
+                    self.as_rb_value(),
+                    offset as c_long,
+                    val.into().as_rb_value(),
+                );
+                *QNIL
+            })
+            .map(|_| ())
         }
     }
 
@@ -842,7 +873,7 @@ where
             RArray::new()
         };
         for i in iter {
-            array.push(i);
+            array.push(i).unwrap();
         }
         array
     }
