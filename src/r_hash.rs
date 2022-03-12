@@ -36,6 +36,17 @@ pub struct RHash(NonZeroValue);
 
 impl RHash {
     /// Return `Some(RHash)` if `val` is a `RHash`, `None` otherwise.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RHash};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// assert!(RHash::from_value(eval(r#"{"answer" => 42}"#).unwrap()).is_some());
+    /// assert!(RHash::from_value(eval("[]").unwrap()).is_none());
+    /// assert!(RHash::from_value(eval("nil").unwrap()).is_none());
+    /// ```
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
         unsafe {
@@ -50,6 +61,16 @@ impl RHash {
     }
 
     /// Create a new empty `RHash`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::RHash;
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let hash = RHash::new();
+    /// assert!(hash.is_empty());
+    /// ```
     pub fn new() -> RHash {
         unsafe { Self::from_rb_value_unchecked(rb_hash_new()) }
     }
@@ -57,6 +78,18 @@ impl RHash {
     /// Set the value `val` for the key `key`.
     ///
     /// Errors if `self` is frozen or `key` does not respond to `hash`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RHash};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let hash = RHash::new();
+    /// hash.aset("answer", 42);
+    /// let res: bool = eval!(r#"hash == {"answer" => 42}"#, hash).unwrap();
+    /// assert!(res);
+    /// ```
     pub fn aset<K, V>(self, key: K, val: V) -> Result<(), Error>
     where
         K: Into<Value>,
@@ -81,6 +114,34 @@ impl RHash {
     /// Returns hash's default if `key` is missing. See also
     /// [`lookup`](RHash::lookup), [`get`](RHash::get), and
     /// [`fetch`](RHash::fetch).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{value::Qnil, RHash};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let hash = RHash::new();
+    /// hash.aset("answer", 42);
+    /// assert_eq!(hash.aref::<_, i64>("answer").unwrap(), 42);
+    /// assert!(hash.aref::<_, Qnil>("missing").is_ok());
+    /// assert_eq!(hash.aref::<_, Option<i64>>("answer").unwrap(), Some(42));
+    /// assert_eq!(hash.aref::<_, Option<i64>>("missing").unwrap(), None);
+    /// ```
+    ///
+    /// ```
+    /// use magnus::{eval, RHash};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let hash = eval::<RHash>(r#"
+    ///   hash = {"answer" => 42}
+    ///   hash.default = 0
+    ///   hash
+    /// "#).unwrap();
+    /// assert_eq!(hash.aref::<_, i64>("answer").unwrap(), 42);
+    /// assert_eq!(hash.aref::<_, i64>("missing").unwrap(), 0);
+    /// assert_eq!(hash.aref::<_, i64>(()).unwrap(), 0);
+    /// ```
     pub fn aref<T, U>(self, key: T) -> Result<U, Error>
     where
         T: Into<Value>,
@@ -97,6 +158,23 @@ impl RHash {
     ///
     /// Returns `nil` if `key` is missing. See also [`aref`](RHash::aref),
     /// [`get`](RHash::get), and [`fetch`](RHash::fetch).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, value::Qnil, RHash};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let hash = eval::<RHash>(r#"
+    ///   hash = {"answer" => 42}
+    ///   hash.default = 0
+    ///   hash
+    /// "#).unwrap();
+    /// assert_eq!(hash.lookup::<_, i64>("answer").unwrap(), 42);
+    /// assert!(hash.lookup::<_, Qnil>("missing").is_ok());
+    /// assert_eq!(hash.lookup::<_, Option<i64>>("answer").unwrap(), Some(42));
+    /// assert_eq!(hash.lookup::<_, Option<i64>>("missing").unwrap(), None);
+    /// ```
     pub fn lookup<T, U>(self, key: T) -> Result<U, Error>
     where
         T: Into<Value>,
@@ -117,6 +195,18 @@ impl RHash {
     /// Note: It is possible for very badly behaved key objects to raise an
     /// error during hash lookup. This is unlikely, and for the simplicity of
     /// this api any errors will result in `None`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::RHash;
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let hash = RHash::new();
+    /// hash.aset("answer", 42);
+    /// assert!(hash.get("answer").is_some());
+    /// assert!(hash.get("missing").is_none());
+    /// ```
     pub fn get<T>(self, key: T) -> Option<Value>
     where
         T: Into<Value>,
@@ -139,6 +229,23 @@ impl RHash {
     ///
     /// Returns `Err` if `key` is missing. See also [`aref`](RHash::aref),
     /// [`lookup`](RHash::lookup), and [`get`](RHash::get).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, value::Qnil, RHash};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let hash = eval::<RHash>(r#"
+    ///   hash = {"answer" => 42}
+    ///   hash.default = 0
+    ///   hash
+    /// "#).unwrap();
+    /// assert_eq!(hash.fetch::<_, i64>("answer").unwrap(), 42);
+    /// assert!(hash.fetch::<_, i64>("missing").is_err());
+    /// assert_eq!(hash.fetch::<_, Option<i64>>("answer").unwrap(), Some(42));
+    /// assert!(hash.fetch::<_, Option<i64>>("missing").is_err());
+    /// ```
     pub fn fetch<T, U>(self, key: T) -> Result<U, Error>
     where
         T: Into<Value>,
@@ -184,6 +291,25 @@ impl RHash {
     /// the key/value pair from `self` and then continue iteration.
     ///
     /// Returing an error from `func` behaves like [`ForEach::Stop`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, r_hash::ForEach, RHash};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let hash = eval::<RHash>(r#"{"foo" => 1, "bar" => 2, "baz" => 4, "qux" => 8}"#).unwrap();
+    /// let mut found = None;
+    /// hash.foreach(|key, value| {
+    ///     if value.try_convert::<i64>()? > 3 {
+    ///         found = Some(key.try_convert()?);
+    ///         Ok(ForEach::Stop)
+    ///     } else {
+    ///         Ok(ForEach::Continue)
+    ///     }
+    /// }).unwrap();
+    /// assert_eq!(found, Some(String::from("baz")));
+    /// ```
     pub fn foreach<F>(self, mut func: F) -> Result<(), Error>
     where
         F: FnMut(Value, Value) -> Result<ForEach, Error>,
@@ -208,6 +334,19 @@ impl RHash {
     /// collected in the following sweep phase.
     ///
     /// Errors if the conversion of any key or value fails.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use std::collections::HashMap;
+    /// use magnus::{eval, RHash};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let r_hash = eval::<RHash>(r#"{"answer" => 42}"#).unwrap();
+    /// let mut hash_map = HashMap::new();
+    /// hash_map.insert(String::from("answer"), 42);
+    /// assert_eq!(r_hash.to_hash_map().unwrap(), hash_map);
+    /// ```
     pub fn to_hash_map<K, V>(self) -> Result<HashMap<K, V>, Error>
     where
         K: TryConvertOwned + Eq + Hash,
@@ -230,6 +369,17 @@ impl RHash {
     /// collected in the following sweep phase.
     ///
     /// Errors if the conversion of any key or value fails.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use std::collections::HashMap;
+    /// use magnus::{eval, RHash};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let r_hash = eval::<RHash>(r#"{"answer" => 42}"#).unwrap();
+    /// assert_eq!(r_hash.to_vec().unwrap(), vec![(String::from("answer"), 42)]);
+    /// ```
     pub fn to_vec<K, V>(self) -> Result<Vec<(K, V)>, Error>
     where
         K: TryConvertOwned,
@@ -244,16 +394,48 @@ impl RHash {
     }
 
     /// Return the number of entries in `self` as a Ruby [`Fixnum`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RHash};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let hash = eval::<RHash>(r#"{"foo" => 1, "bar" => 2, "baz" => 4}"#).unwrap();
+    /// assert_eq!(hash.size().to_i64(), 3);
+    /// ```
     pub fn size(self) -> Fixnum {
         unsafe { Fixnum::from_rb_value_unchecked(rb_hash_size(self.as_rb_value())) }
     }
 
     /// Return the number of entries in `self` as a Rust [`usize`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RHash};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let hash = eval::<RHash>(r#"{"foo" => 1, "bar" => 2, "baz" => 4}"#).unwrap();
+    /// assert_eq!(hash.len(), 3);
+    /// ```
     pub fn len(self) -> usize {
         self.size().to_usize().unwrap()
     }
 
     /// Return whether self contains any entries or not.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::RHash;
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let hash = RHash::new();
+    /// assert!(hash.is_empty());
+    /// hash.aset("answer", 42);
+    /// assert!(!hash.is_empty());
+    /// ```
     pub fn is_empty(self) -> bool {
         self.len() == 0
     }
