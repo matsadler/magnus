@@ -171,6 +171,7 @@ See the `magnus::Value` type, for all types implementing `Into<Value>`, plus
 | `String`, `&str`, `char`, `&Path`, `PathBuf`      | `String`                                |
 | `bool`                                            | `true`/`false`                          |
 | `()`                                              | `nil`                                   |
+| `Range`, `RangeFrom`, `RangeTo`, `RangeInclusive` | `Range`                                 |
 | `Option<T>`                                       | `T` or `nil`                            |
 | `Result<T, magnus::Error>` (return only)          | `T` or raises error                     |
 | `(T, U)`, `(T, U, V)`, etc, `[T; N]`, `Vec<T>`    | `Array`                                 |
