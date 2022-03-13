@@ -15,7 +15,10 @@ fn it_converts_ranges() {
     rb_assert!("range == (2...7)", range = 2..7);
     rb_assert!("range == (2..7)", range = 2..=7);
     rb_assert!("range == (2..)", range = 2..);
-    rb_assert!("range == (...7)", range = ..7);
-    rb_assert!("range == (..7)", range = ..=7);
+    #[cfg(ruby_gte_2_7)]
+    {
+        rb_assert!("range == (...7)", range = ..7);
+        rb_assert!("range == (..7)", range = ..=7);
+    }
     rb_assert!("range == Range.new(nil, nil)", range = ..);
 }
