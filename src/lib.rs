@@ -162,6 +162,7 @@ pub use {
     r_string::RString,
     r_struct::RStruct,
     r_typed_data::{DataType, DataTypeFunctions, RTypedData, TypedData},
+    range::Range,
     symbol::Symbol,
     try_convert::{ArgList, TryConvert},
 };

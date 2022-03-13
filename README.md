@@ -144,6 +144,7 @@ See `magnus::TryConvert` for more details.
 | `String`, `PathBuf`, `char`, `magnus::RString`    | `String`, `#to_str`                     |
 | `magnus::Symbol`                                  | `Symbol`, `#to_sym`                     |
 | `bool`                                            | any object                              |
+| `magnus::Range`                                   | `Range`                                 |
 | `Option<T>`                                       | `T` or `nil`                            |
 | `(T, U)`, `(T, U, V)`, etc                        | `[T, U]`, `[T, U, V]`, etc, `#to_ary`   |
 | `[T; N]`                                          | `[T]`, `#to_ary`                        |

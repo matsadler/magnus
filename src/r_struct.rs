@@ -87,6 +87,10 @@ impl RStruct {
         }
     }
 
+    pub(crate) unsafe fn from_rb_value_unchecked(val: VALUE) -> Self {
+        Self(NonZeroValue::new_unchecked(Value::new(val)))
+    }
+
     fn as_internal(self) -> NonNull<sys::RStruct> {
         // safe as inner value is NonZero
         unsafe { NonNull::new_unchecked(self.0.get().as_rb_value() as *mut _) }
