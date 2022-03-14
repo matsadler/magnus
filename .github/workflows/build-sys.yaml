@@ -12,7 +12,7 @@ jobs:
         os:
         - ubuntu-latest
         - macos-latest
-        - windows-latest
+        - windows-2019
         ruby-version:
         - "2.6"
         - "2.7"
@@ -28,7 +28,7 @@ jobs:
       if: matrix.os == 'ubuntu-latest'
       run: echo LD_LIBRARY_PATH=$(ruby -e 'print RbConfig::CONFIG["libdir"]') >> $GITHUB_ENV
     - name: Fix clang
-      if: matrix.os == 'windows-latest' && matrix.ruby-version == '3.1'
+      if: matrix.os == 'windows-2019' && matrix.ruby-version == '3.1'
       run: |
         pacman --remove --cascade mingw-w64-x86_64-clang
         pacman --sync --noconfirm --needed $ENV:MINGW_PACKAGE_PREFIX-clang
