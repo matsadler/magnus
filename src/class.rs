@@ -4,6 +4,7 @@ use std::{fmt, ops::Deref, os::raw::c_int};
 
 use crate::{
     error::{protect, Error},
+    exception,
     module::Module,
     object::Object,
     ruby_sys::{
@@ -109,10 +110,12 @@ impl TryConvert for RClass {
     fn try_convert(val: &Value) -> Result<Self, Error> {
         match Self::from_value(*val) {
             Some(v) => Ok(v),
-            None => Err(Error::type_error(format!(
-                "no implicit conversion of {} into Class",
-                unsafe { val.classname() },
-            ))),
+            None => Err(Error::new(
+                exception::type_error(),
+                format!("no implicit conversion of {} into Class", unsafe {
+                    val.classname()
+                },),
+            )),
         }
     }
 }
@@ -201,7 +204,7 @@ pub fn integer() -> RClass {
     unsafe { RClass::from_rb_value_unchecked(rb_cInteger) }
 }
 
-/// Return Ruby's `Match` class.
+/// Return Ruby's `MatchData` class.
 #[inline]
 pub fn match_class() -> RClass {
     unsafe { RClass::from_rb_value_unchecked(rb_cMatch) }
@@ -219,7 +222,7 @@ pub fn module() -> RClass {
     unsafe { RClass::from_rb_value_unchecked(rb_cModule) }
 }
 
-/// Return Ruby's `NameErrorMesg` class.
+/// Return Ruby's `NameError::Message` class.
 #[inline]
 pub fn name_error_mesg() -> RClass {
     unsafe { RClass::from_rb_value_unchecked(rb_cNameErrorMesg) }
@@ -280,7 +283,7 @@ pub fn regexp() -> RClass {
     unsafe { RClass::from_rb_value_unchecked(rb_cRegexp) }
 }
 
-/// Return Ruby's `Stat` class.
+/// Return Ruby's `File::Stat` class.
 #[inline]
 pub fn stat() -> RClass {
     unsafe { RClass::from_rb_value_unchecked(rb_cStat) }

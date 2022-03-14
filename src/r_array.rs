@@ -6,6 +6,7 @@ use crate::{
     debug_assert_value,
     enumerator::Enumerator,
     error::{protect, Error},
+    exception,
     object::Object,
     r_string::RString,
     ruby_sys::{
@@ -458,9 +459,12 @@ impl RArray {
     /// ```
     pub fn to_value_array<const N: usize>(self) -> Result<[Value; N], Error> {
         unsafe {
-            self.as_slice()
-                .try_into()
-                .map_err(|_| Error::type_error(format!("expected Array of length {}", N)))
+            self.as_slice().try_into().map_err(|_| {
+                Error::new(
+                    exception::type_error(),
+                    format!("expected Array of length {}", N),
+                )
+            })
         }
     }
 
@@ -487,7 +491,10 @@ impl RArray {
         unsafe {
             let slice = self.as_slice();
             if slice.len() != N {
-                return Err(Error::type_error(format!("expected Array of length {}", N)));
+                return Err(Error::new(
+                    exception::type_error(),
+                    format!("expected Array of length {}", N),
+                ));
             }
             // one day might be able to collect direct into an array, but for
             // now need to go via Vec

@@ -5,6 +5,7 @@ use std::{fmt, mem::forget, ops::Deref, os::raw::c_int};
 use crate::{
     enumerator::Enumerator,
     error::{ensure, protect, Error},
+    exception,
     r_array::RArray,
     ruby_sys::{
         rb_block_given_p, rb_block_proc, rb_obj_is_proc, rb_proc_call, rb_yield, rb_yield_splat,
@@ -86,18 +87,23 @@ impl TryConvert for Proc {
         let p_val: Value = match val.funcall("to_proc", ()) {
             Ok(v) => v,
             Err(_) => {
-                return Err(Error::type_error(format!(
-                    "no implicit conversion of {} into Proc",
-                    unsafe { val.classname() },
-                )))
+                return Err(Error::new(
+                    exception::type_error(),
+                    format!("no implicit conversion of {} into Proc", unsafe {
+                        val.classname()
+                    },),
+                ))
             }
         };
         Proc::from_value(*val).ok_or_else(|| {
-            Error::type_error(format!(
-                "can't convert {0} to Proc ({0}#to_proc gives {1})",
-                unsafe { val.classname() },
-                unsafe { p_val.classname() },
-            ))
+            Error::new(
+                exception::type_error(),
+                format!(
+                    "can't convert {0} to Proc ({0}#to_proc gives {1})",
+                    unsafe { val.classname() },
+                    unsafe { p_val.classname() },
+                ),
+            )
         })
     }
 }

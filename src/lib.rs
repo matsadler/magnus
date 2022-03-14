@@ -257,7 +257,8 @@ where
     let mut state = 0;
     // safe ffi to Ruby, captures raised errors (+ brake, throw, etc) as state
     let result = unsafe {
-        let s = CString::new(s).map_err(|e| Error::script_error(e.to_string()))?;
+        let s =
+            CString::new(s).map_err(|e| Error::new(exception::script_error(), e.to_string()))?;
         rb_eval_string_protect(s.as_c_str().as_ptr(), &mut state as *mut _)
     };
 

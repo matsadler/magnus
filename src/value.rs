@@ -12,9 +12,10 @@ use std::{
 };
 
 use crate::{
-    class::RClass,
+    class::{self, RClass},
     enumerator::Enumerator,
     error::{protect, Error},
+    exception,
     float::Float,
     integer::{Integer, IntegerType},
     module::Module,
@@ -22,8 +23,7 @@ use crate::{
     r_float::RFloat,
     r_string::RString,
     ruby_sys::{
-        rb_any_to_s, rb_cFalseClass, rb_cFloat, rb_cInteger, rb_cNilClass, rb_cSymbol,
-        rb_cTrueClass, rb_check_id, rb_enumeratorize_with_size, rb_float_new, rb_float_value,
+        rb_any_to_s, rb_check_id, rb_enumeratorize_with_size, rb_float_new, rb_float_value,
         rb_funcallv, rb_gc_register_address, rb_gc_register_mark_object, rb_gc_unregister_address,
         rb_id2name, rb_id2sym, rb_inspect, rb_intern2, rb_ll2inum, rb_num2ll, rb_num2long,
         rb_num2short, rb_num2ull, rb_num2ulong, rb_num2ushort, rb_obj_as_string, rb_obj_classname,
@@ -210,19 +210,19 @@ impl Value {
                 Some(r_basic) => RClass::from_rb_value_unchecked(r_basic.as_ref().klass),
                 None => {
                     if self.is_false() {
-                        RClass::from_rb_value_unchecked(rb_cFalseClass)
+                        class::false_class()
                     } else if self.is_nil() {
-                        RClass::from_rb_value_unchecked(rb_cNilClass)
+                        class::nil_class()
                     } else if self.is_true() {
-                        RClass::from_rb_value_unchecked(rb_cTrueClass)
+                        class::true_class()
                     } else if self.is_undef() {
                         panic!("undef does not have a class")
                     } else if self.is_fixnum() {
-                        RClass::from_rb_value_unchecked(rb_cInteger)
+                        class::integer()
                     } else if self.is_static_symbol() {
-                        RClass::from_rb_value_unchecked(rb_cSymbol)
+                        class::symbol()
                     } else if self.is_flonum() {
-                        RClass::from_rb_value_unchecked(rb_cFloat)
+                        class::float()
                     } else {
                         unreachable!()
                     }
@@ -299,10 +299,10 @@ impl Value {
     /// ```
     pub fn check_frozen(self) -> Result<(), Error> {
         if self.is_frozen() {
-            Err(Error::frozen_error(format!(
-                "can't modify frozen {}",
-                unsafe { self.classname() }
-            )))
+            Err(Error::new(
+                exception::frozen_error(),
+                format!("can't modify frozen {}", unsafe { self.classname() }),
+            ))
         } else {
             Ok(())
         }
@@ -883,10 +883,12 @@ impl TryConvert for Qfalse {
     #[inline]
     fn try_convert(val: &Value) -> Result<Self, Error> {
         Self::from_value(*val).ok_or_else(|| {
-            Error::type_error(format!(
-                "no implicit conversion of {} into FalseClass",
-                unsafe { val.classname() },
-            ))
+            Error::new(
+                exception::type_error(),
+                format!("no implicit conversion of {} into FalseClass", unsafe {
+                    val.classname()
+                },),
+            )
         })
     }
 }
@@ -981,10 +983,12 @@ impl TryConvert for Qnil {
     #[inline]
     fn try_convert(val: &Value) -> Result<Self, Error> {
         Self::from_value(*val).ok_or_else(|| {
-            Error::type_error(format!(
-                "no implicit conversion of {} into NilClass",
-                unsafe { val.classname() },
-            ))
+            Error::new(
+                exception::type_error(),
+                format!("no implicit conversion of {} into NilClass", unsafe {
+                    val.classname()
+                },),
+            )
         })
     }
 }
@@ -1071,10 +1075,12 @@ impl TryConvert for Qtrue {
     #[inline]
     fn try_convert(val: &Value) -> Result<Self, Error> {
         Self::from_value(*val).ok_or_else(|| {
-            Error::type_error(format!(
-                "no implicit conversion of {} into TrueClass",
-                unsafe { val.classname() },
-            ))
+            Error::new(
+                exception::type_error(),
+                format!("no implicit conversion of {} into TrueClass", unsafe {
+                    val.classname()
+                },),
+            )
         })
     }
 }
@@ -1240,7 +1246,10 @@ impl Fixnum {
             *QNIL
         })?;
         if res > i8::MAX as c_long || res < i8::MIN as c_long {
-            return Err(Error::range_error("fixnum too big to convert into `i8`"));
+            return Err(Error::new(
+                exception::range_error(),
+                "fixnum too big to convert into `i8`",
+            ));
         }
         Ok(res as i8)
     }
@@ -1292,7 +1301,10 @@ impl Fixnum {
             *QNIL
         })?;
         if res > i32::MAX as c_long || res < i32::MIN as c_long {
-            return Err(Error::range_error("fixnum too big to convert into `i32`"));
+            return Err(Error::new(
+                exception::range_error(),
+                "fixnum too big to convert into `i32`",
+            ));
         }
         Ok(res as i32)
     }
@@ -1353,7 +1365,8 @@ impl Fixnum {
     /// ```
     pub fn to_u8(self) -> Result<u8, Error> {
         if self.is_negative() {
-            return Err(Error::range_error(
+            return Err(Error::new(
+                exception::range_error(),
                 "can't convert negative integer to unsigned",
             ));
         }
@@ -1363,7 +1376,10 @@ impl Fixnum {
             *QNIL
         })?;
         if res > u8::MAX as c_ulong {
-            return Err(Error::range_error("fixnum too big to convert into `u8`"));
+            return Err(Error::new(
+                exception::range_error(),
+                "fixnum too big to convert into `u8`",
+            ));
         }
         Ok(res as u8)
     }
@@ -1383,7 +1399,8 @@ impl Fixnum {
     /// ```
     pub fn to_u16(self) -> Result<u16, Error> {
         if self.is_negative() {
-            return Err(Error::range_error(
+            return Err(Error::new(
+                exception::range_error(),
                 "can't convert negative integer to unsigned",
             ));
         }
@@ -1413,7 +1430,8 @@ impl Fixnum {
     /// ```
     pub fn to_u32(self) -> Result<u32, Error> {
         if self.is_negative() {
-            return Err(Error::range_error(
+            return Err(Error::new(
+                exception::range_error(),
                 "can't convert negative integer to unsigned",
             ));
         }
@@ -1423,7 +1441,10 @@ impl Fixnum {
             *QNIL
         })?;
         if res > u32::MAX as c_ulong {
-            return Err(Error::range_error("fixnum too big to convert into `u32`"));
+            return Err(Error::new(
+                exception::range_error(),
+                "fixnum too big to convert into `u32`",
+            ));
         }
         Ok(res as u32)
     }
@@ -1442,7 +1463,8 @@ impl Fixnum {
     /// ```
     pub fn to_u64(self) -> Result<u64, Error> {
         if self.is_negative() {
-            return Err(Error::range_error(
+            return Err(Error::new(
+                exception::range_error(),
                 "can't convert negative integer to unsigned",
             ));
         }
@@ -1471,7 +1493,8 @@ impl Fixnum {
     /// ```
     pub fn to_usize(self) -> Result<usize, Error> {
         if self.is_negative() {
-            return Err(Error::range_error(
+            return Err(Error::new(
+                exception::range_error(),
                 "can't convert negative integer to unsigned",
             ));
         }
@@ -1515,7 +1538,10 @@ impl TryConvert for Fixnum {
     fn try_convert(val: &Value) -> Result<Self, Error> {
         match val.try_convert::<Integer>()?.integer_type() {
             IntegerType::Fixnum(fix) => Ok(fix),
-            IntegerType::Bignum(_) => Err(Error::range_error("integer too big for fixnum")),
+            IntegerType::Bignum(_) => Err(Error::new(
+                exception::range_error(),
+                "integer too big for fixnum",
+            )),
         }
     }
 }
@@ -1684,7 +1710,7 @@ impl Id {
             let ptr = rb_id2name(self.as_rb_id());
             let cstr = CStr::from_ptr(ptr);
             cstr.to_str()
-                .map_err(|e| Error::encoding_error(e.to_string()))
+                .map_err(|e| Error::new(exception::encoding_error(), e.to_string()))
         }
     }
 }
@@ -1819,7 +1845,10 @@ impl TryConvert for Flonum {
         if let Some(flonum) = Flonum::from_value(*float) {
             Ok(flonum)
         } else {
-            Err(Error::range_error("float out of range for flonum"))
+            Err(Error::new(
+                exception::range_error(),
+                "float out of range for flonum",
+            ))
         }
     }
 }

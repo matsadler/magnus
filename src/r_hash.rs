@@ -5,6 +5,7 @@ use std::{collections::HashMap, fmt, hash::Hash, iter::FromIterator, ops::Deref,
 use crate::{
     debug_assert_value,
     error::{protect, Error},
+    exception,
     object::Object,
     ruby_sys::{
         rb_check_hash_type, rb_hash_aref, rb_hash_aset, rb_hash_fetch, rb_hash_foreach,
@@ -506,10 +507,10 @@ impl TryConvert for RHash {
         unsafe {
             protect(|| Value::new(rb_check_hash_type(val.as_rb_value()))).and_then(|res| {
                 Self::from_value(res).ok_or_else(|| {
-                    Error::type_error(format!(
-                        "no implicit conversion of {} into Hash",
-                        val.class()
-                    ))
+                    Error::new(
+                        exception::type_error(),
+                        format!("no implicit conversion of {} into Hash", val.class()),
+                    )
                 })
             })
         }

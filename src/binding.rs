@@ -1,10 +1,11 @@
 use std::{fmt, ops::Deref};
 
 use crate::{
-    class::RClass,
+    class,
     error::{protect, Error},
+    exception,
     object::Object,
-    ruby_sys::{rb_binding_new, rb_cBinding},
+    ruby_sys::rb_binding_new,
     symbol::Symbol,
     try_convert::TryConvert,
     value::{NonZeroValue, Value},
@@ -42,7 +43,7 @@ impl Binding {
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
         unsafe {
-            val.is_kind_of(RClass::from_rb_value_unchecked(rb_cBinding))
+            val.is_kind_of(class::binding())
                 .then(|| Self(NonZeroValue::new_unchecked(val)))
         }
     }
@@ -144,10 +145,12 @@ impl TryConvert for Binding {
     #[inline]
     fn try_convert(val: &Value) -> Result<Self, Error> {
         Self::from_value(*val).ok_or_else(|| {
-            Error::type_error(format!(
-                "no implicit conversion of {} into Binding",
-                unsafe { val.classname() },
-            ))
+            Error::new(
+                exception::type_error(),
+                format!("no implicit conversion of {} into Binding", unsafe {
+                    val.classname()
+                },),
+            )
         })
     }
 }

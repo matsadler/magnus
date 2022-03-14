@@ -1,10 +1,11 @@
 use std::{fmt, ops::Deref};
 
 use crate::{
-    class::RClass,
+    class,
     error::Error,
+    exception,
     object::Object,
-    ruby_sys::{rb_cEnumerator, rb_eStopIteration, VALUE},
+    ruby_sys::VALUE,
     try_convert::TryConvert,
     value::{NonZeroValue, Value},
 };
@@ -22,7 +23,7 @@ impl Enumerator {
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
         unsafe {
-            val.is_kind_of(RClass::from_rb_value_unchecked(rb_cEnumerator))
+            val.is_kind_of(class::enumerator())
                 .then(|| Self(NonZeroValue::new_unchecked(val)))
         }
     }
@@ -37,12 +38,10 @@ impl Iterator for Enumerator {
     type Item = Result<Value, Error>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        unsafe {
-            match self.funcall("next", ()) {
-                Ok(v) => Some(Ok(v)),
-                Err(e) if e.is_kind_of(RClass::from_rb_value_unchecked(rb_eStopIteration)) => None,
-                Err(e) => Some(Err(e)),
-            }
+        match self.funcall("next", ()) {
+            Ok(v) => Some(Ok(v)),
+            Err(e) if e.is_kind_of(exception::stop_iteration()) => None,
+            Err(e) => Some(Err(e)),
         }
     }
 }
@@ -79,10 +78,12 @@ impl TryConvert for Enumerator {
     #[inline]
     fn try_convert(val: &Value) -> Result<Self, Error> {
         Self::from_value(*val).ok_or_else(|| {
-            Error::type_error(format!(
-                "no implicit conversion of {} into Enumerator",
-                unsafe { val.classname() },
-            ))
+            Error::new(
+                exception::type_error(),
+                format!("no implicit conversion of {} into Enumerator", unsafe {
+                    val.classname()
+                },),
+            )
         })
     }
 }

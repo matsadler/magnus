@@ -6,6 +6,7 @@ use crate::{
     class::RClass,
     debug_assert_value,
     error::{protect, Error},
+    exception,
     method::Method,
     object::Object,
     ruby_sys::{
@@ -100,10 +101,12 @@ impl TryConvert for RModule {
     #[inline]
     fn try_convert(val: &Value) -> Result<Self, Error> {
         Self::from_value(*val).ok_or_else(|| {
-            Error::type_error(format!(
-                "no implicit conversion of {} into Module",
-                unsafe { val.classname() },
-            ))
+            Error::new(
+                exception::type_error(),
+                format!("no implicit conversion of {} into Module", unsafe {
+                    val.classname()
+                },),
+            )
         })
     }
 }
@@ -269,13 +272,13 @@ pub fn process() -> RModule {
     unsafe { RModule::from_rb_value_unchecked(rb_mProcess) }
 }
 
-/// Return Ruby's `WaitReadable` module.
+/// Return Ruby's `IO::WaitReadable` module.
 #[inline]
 pub fn wait_readable() -> RModule {
     unsafe { RModule::from_rb_value_unchecked(rb_mWaitReadable) }
 }
 
-/// Return Ruby's `WaitWritable` module.
+/// Return Ruby's `IO::WaitWritable` module.
 #[inline]
 pub fn wait_writable() -> RModule {
     unsafe { RModule::from_rb_value_unchecked(rb_mWaitWritable) }

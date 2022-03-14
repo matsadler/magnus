@@ -9,11 +9,12 @@ use std::{
 };
 
 use crate::{
-    class::RClass,
+    class,
     error::{protect, Error},
+    exception,
     object::Object,
     r_struct::RStruct,
-    ruby_sys::{rb_cRange, rb_range_beg_len, rb_range_new},
+    ruby_sys::{rb_range_beg_len, rb_range_new},
     try_convert::TryConvert,
     value::{Value, QNIL},
 };
@@ -40,11 +41,9 @@ impl Range {
     /// ```
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
-        unsafe {
-            RStruct::from_value(val)
-                .filter(|_| val.is_kind_of(RClass::from_rb_value_unchecked(rb_cRange)))
-                .map(Self)
-        }
+        RStruct::from_value(val)
+            .filter(|_| val.is_kind_of(class::range()))
+            .map(Self)
     }
 
     /// Create a new `Range`.
@@ -325,9 +324,12 @@ impl TryConvert for Range {
     #[inline]
     fn try_convert(val: &Value) -> Result<Self, Error> {
         Self::from_value(*val).ok_or_else(|| {
-            Error::type_error(format!("no implicit conversion of {} into Range", unsafe {
-                val.classname()
-            },))
+            Error::new(
+                exception::type_error(),
+                format!("no implicit conversion of {} into Range", unsafe {
+                    val.classname()
+                },),
+            )
         })
     }
 }

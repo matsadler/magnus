@@ -3,6 +3,7 @@ use std::{borrow::Cow, fmt, ops::Deref};
 use crate::{
     debug_assert_value,
     error::{protect, Error},
+    exception,
     r_string::RString,
     ruby_sys::{
         rb_check_id, rb_id2sym, rb_intern_str, rb_sym2str, rb_to_symbol, ruby_value_type, VALUE,
@@ -218,10 +219,12 @@ impl TryConvert for Symbol {
     #[inline]
     fn try_convert(val: &Value) -> Result<Self, Error> {
         Self::from_value(*val).ok_or_else(|| {
-            Error::type_error(format!(
-                "no implicit conversion of {} into Symbol",
-                unsafe { val.classname() },
-            ))
+            Error::new(
+                exception::type_error(),
+                format!("no implicit conversion of {} into Symbol", unsafe {
+                    val.classname()
+                },),
+            )
         })
     }
 }

@@ -16,6 +16,7 @@ use crate::{
     class::RClass,
     debug_assert_value,
     error::{protect, Error},
+    exception,
     object::Object,
     ruby_sys::{
         self, rb_check_typeddata, rb_data_type_struct__bindgen_ty_1, rb_data_type_t,
@@ -369,11 +370,14 @@ where
                 *QNIL
             });
             res.ok_or_else(|| {
-                Error::type_error(format!(
-                    "no implicit conversion of {} into {}",
-                    val.classname(),
-                    T::class()
-                ))
+                Error::new(
+                    exception::type_error(),
+                    format!(
+                        "no implicit conversion of {} into {}",
+                        val.classname(),
+                        T::class()
+                    ),
+                )
             })
         }
     }

@@ -14,6 +14,7 @@ use std::{
 use crate::{
     debug_assert_value,
     error::{protect, Error},
+    exception,
     object::Object,
     ruby_sys::{
         self, rb_enc_associate_index, rb_enc_get, rb_enc_get_index, rb_str_buf_append,
@@ -340,13 +341,13 @@ impl RString {
         if !self.is_utf8_compatible_encoding() {
             let enc = rb_enc_get(self.as_rb_value());
             let name = CStr::from_ptr((*enc).name).to_string_lossy();
-            return Err(Error::encoding_error(format!(
-                "expected utf-8, got {}",
-                name
-            )));
+            return Err(Error::new(
+                exception::encoding_error(),
+                format!("expected utf-8, got {}", name),
+            ));
         }
         str::from_utf8(self.as_slice_unconstrained())
-            .map_err(|e| Error::encoding_error(format!("{}", e)))
+            .map_err(|e| Error::new(exception::encoding_error(), format!("{}", e)))
     }
 
     /// Returns `self` as a Rust string, ignoring the Ruby encoding and
@@ -399,7 +400,7 @@ impl RString {
         };
         str::from_utf8(unsafe { utf8.as_slice() })
             .map(ToOwned::to_owned)
-            .map_err(|e| Error::encoding_error(format!("{}", e)))
+            .map_err(|e| Error::new(exception::encoding_error(), format!("{}", e)))
     }
 
     /// Converts `self` to a [`char`]. Errors if the string is more than one
@@ -422,9 +423,14 @@ impl RString {
         };
         unsafe {
             str::from_utf8(utf8.as_slice())
-                .map_err(|e| Error::encoding_error(format!("{}", e)))?
+                .map_err(|e| Error::new(exception::encoding_error(), format!("{}", e)))?
                 .parse()
-                .map_err(|e| Error::type_error(format!("could not convert string to char, {}", e)))
+                .map_err(|e| {
+                    Error::new(
+                        exception::type_error(),
+                        format!("could not convert string to char, {}", e),
+                    )
+                })
         }
     }
 

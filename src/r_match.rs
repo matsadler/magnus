@@ -2,6 +2,7 @@ use std::{fmt, ops::Deref};
 
 use crate::{
     error::Error,
+    exception,
     object::Object,
     ruby_sys::ruby_value_type,
     try_convert::TryConvert,
@@ -60,10 +61,12 @@ impl TryConvert for RMatch {
     #[inline]
     fn try_convert(val: &Value) -> Result<Self, Error> {
         Self::from_value(*val).ok_or_else(|| {
-            Error::type_error(format!(
-                "no implicit conversion of {} into MatchData",
-                unsafe { val.classname() },
-            ))
+            Error::new(
+                exception::type_error(),
+                format!("no implicit conversion of {} into MatchData", unsafe {
+                    val.classname()
+                },),
+            )
         })
     }
 }

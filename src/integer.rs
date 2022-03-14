@@ -3,6 +3,7 @@ use std::{fmt, ops::Deref};
 use crate::{
     debug_assert_value,
     error::{protect, Error},
+    exception,
     r_bignum::RBignum,
     ruby_sys::{rb_ll2inum, rb_to_int, rb_ull2inum, ruby_special_consts, ruby_value_type, VALUE},
     try_convert::TryConvert,
@@ -116,9 +117,10 @@ impl Integer {
     pub fn to_i8(self) -> Result<i8, Error> {
         match self.integer_type() {
             IntegerType::Fixnum(fix) => fix.to_i8(),
-            IntegerType::Bignum(_) => {
-                Err(Error::range_error("bignum too big to convert into `i8`"))
-            }
+            IntegerType::Bignum(_) => Err(Error::new(
+                exception::range_error(),
+                "bignum too big to convert into `i8`",
+            )),
         }
     }
 
@@ -139,9 +141,10 @@ impl Integer {
     pub fn to_i16(self) -> Result<i16, Error> {
         match self.integer_type() {
             IntegerType::Fixnum(fix) => fix.to_i16(),
-            IntegerType::Bignum(_) => {
-                Err(Error::range_error("bignum too big to convert into `i16`"))
-            }
+            IntegerType::Bignum(_) => Err(Error::new(
+                exception::range_error(),
+                "bignum too big to convert into `i16`",
+            )),
         }
     }
 
@@ -222,9 +225,10 @@ impl Integer {
     pub fn to_u8(self) -> Result<u8, Error> {
         match self.integer_type() {
             IntegerType::Fixnum(fix) => fix.to_u8(),
-            IntegerType::Bignum(_) => {
-                Err(Error::range_error("bignum too big to convert into `u8`"))
-            }
+            IntegerType::Bignum(_) => Err(Error::new(
+                exception::range_error(),
+                "bignum too big to convert into `u8`",
+            )),
         }
     }
 
@@ -244,9 +248,10 @@ impl Integer {
     pub fn to_u16(self) -> Result<u16, Error> {
         match self.integer_type() {
             IntegerType::Fixnum(fix) => fix.to_u16(),
-            IntegerType::Bignum(_) => {
-                Err(Error::range_error("bignum too big to convert into `u16`"))
-            }
+            IntegerType::Bignum(_) => Err(Error::new(
+                exception::range_error(),
+                "bignum too big to convert into `u16`",
+            )),
         }
     }
 

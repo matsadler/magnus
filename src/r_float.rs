@@ -3,6 +3,7 @@ use std::{fmt, ops::Deref};
 use crate::{
     debug_assert_value,
     error::Error,
+    exception,
     float::Float,
     ruby_sys::{rb_float_new, rb_float_value, ruby_value_type, VALUE},
     try_convert::TryConvert,
@@ -84,7 +85,10 @@ impl TryConvert for RFloat {
         if let Some(rfloat) = RFloat::from_value(*float) {
             Ok(rfloat)
         } else {
-            Err(Error::range_error("float in range for flonum"))
+            Err(Error::new(
+                exception::range_error(),
+                "float in range for flonum",
+            ))
         }
     }
 }

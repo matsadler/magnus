@@ -7,6 +7,7 @@ use std::{
 use crate::{
     debug_assert_value,
     error::{protect, Error},
+    exception,
     integer::{Integer, IntegerType},
     ruby_sys::{
         rb_ll2inum, rb_num2ll, rb_num2long, rb_num2ull, rb_num2ulong, rb_ull2inum, ruby_fl_type,
@@ -123,7 +124,10 @@ impl RBignum {
             *QNIL
         })?;
         if res > i32::MAX as c_long {
-            return Err(Error::range_error("bignum too big to convert into `i32`"));
+            return Err(Error::new(
+                exception::range_error(),
+                "bignum too big to convert into `i32`",
+            ));
         }
         Ok(res as i32)
     }
@@ -172,7 +176,10 @@ impl RBignum {
             *QNIL
         })?;
         if res > isize::MAX as c_longlong {
-            return Err(Error::range_error("bignum too big to convert into `isize`"));
+            return Err(Error::new(
+                exception::range_error(),
+                "bignum too big to convert into `isize`",
+            ));
         }
         Ok(res as isize)
     }
@@ -185,7 +192,8 @@ impl RBignum {
     pub fn to_u32(self) -> Result<u32, Error> {
         debug_assert_value!(self);
         if self.is_negative() {
-            return Err(Error::range_error(
+            return Err(Error::new(
+                exception::range_error(),
                 "can't convert negative integer to unsigned",
             ));
         }
@@ -195,7 +203,10 @@ impl RBignum {
             *QNIL
         })?;
         if res > u32::MAX as c_ulong {
-            return Err(Error::range_error("bignum too big to convert into `u32`"));
+            return Err(Error::new(
+                exception::range_error(),
+                "bignum too big to convert into `u32`",
+            ));
         }
         Ok(res as u32)
     }
@@ -215,7 +226,8 @@ impl RBignum {
     pub fn to_u64(self) -> Result<u64, Error> {
         debug_assert_value!(self);
         if self.is_negative() {
-            return Err(Error::range_error(
+            return Err(Error::new(
+                exception::range_error(),
                 "can't convert negative integer to unsigned",
             ));
         }
@@ -242,7 +254,8 @@ impl RBignum {
     pub fn to_usize(self) -> Result<usize, Error> {
         debug_assert_value!(self);
         if self.is_negative() {
-            return Err(Error::range_error(
+            return Err(Error::new(
+                exception::range_error(),
                 "can't convert negative integer to unsigned",
             ));
         }
@@ -252,7 +265,10 @@ impl RBignum {
             *QNIL
         })?;
         if res > usize::MAX as c_ulonglong {
-            return Err(Error::range_error("bignum too big to convert into `usize`"));
+            return Err(Error::new(
+                exception::range_error(),
+                "bignum too big to convert into `usize`",
+            ));
         }
         Ok(res as usize)
     }
@@ -288,7 +304,10 @@ impl TryConvert for RBignum {
     #[inline]
     fn try_convert(val: &Value) -> Result<Self, Error> {
         match val.try_convert::<Integer>()?.integer_type() {
-            IntegerType::Fixnum(_) => Err(Error::range_error("integer to small for bignum")),
+            IntegerType::Fixnum(_) => Err(Error::new(
+                exception::range_error(),
+                "integer to small for bignum",
+            )),
             IntegerType::Bignum(big) => Ok(big),
         }
     }

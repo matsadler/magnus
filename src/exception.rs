@@ -166,7 +166,7 @@ impl From<ExceptionClass> for Value {
 impl Object for ExceptionClass {}
 impl Module for ExceptionClass {}
 
-/// Return Ruby's `ArgError` class.
+/// Return Ruby's `ArgumentError` class.
 #[inline]
 pub fn arg_error() -> ExceptionClass {
     unsafe { ExceptionClass::from_rb_value_unchecked(rb_eArgError) }
@@ -178,7 +178,7 @@ pub fn eof_error() -> ExceptionClass {
     unsafe { ExceptionClass::from_rb_value_unchecked(rb_eEOFError) }
 }
 
-/// Return Ruby's `EncCompatError` class.
+/// Return Ruby's `Encoding::CompatibilityError` class.
 #[inline]
 pub fn enc_compat_error() -> ExceptionClass {
     unsafe { ExceptionClass::from_rb_value_unchecked(rb_eEncCompatError) }
@@ -196,7 +196,7 @@ pub fn exception() -> ExceptionClass {
     unsafe { ExceptionClass::from_rb_value_unchecked(rb_eException) }
 }
 
-/// Return Ruby's `Fatal` class.
+/// Return Ruby's `fatal` class.
 #[inline]
 pub fn fatal() -> ExceptionClass {
     unsafe { ExceptionClass::from_rb_value_unchecked(rb_eFatal) }
@@ -250,7 +250,7 @@ pub fn local_jump_error() -> ExceptionClass {
     unsafe { ExceptionClass::from_rb_value_unchecked(rb_eLocalJumpError) }
 }
 
-/// Return Ruby's `MathDomainError` class.
+/// Return Ruby's `Math::DomainError` class.
 #[inline]
 pub fn math_domain_error() -> ExceptionClass {
     unsafe { ExceptionClass::from_rb_value_unchecked(rb_eMathDomainError) }
@@ -276,7 +276,7 @@ pub fn no_matching_pattern_key_error() -> ExceptionClass {
     unsafe { ExceptionClass::from_rb_value_unchecked(rb_eNoMatchingPatternKeyError) }
 }
 
-/// Return Ruby's `NoMemError` class.
+/// Return Ruby's `NoMemoryError` class.
 #[inline]
 pub fn no_mem_error() -> ExceptionClass {
     unsafe { ExceptionClass::from_rb_value_unchecked(rb_eNoMemError) }
@@ -324,7 +324,7 @@ pub fn security_error() -> ExceptionClass {
     unsafe { ExceptionClass::from_rb_value_unchecked(rb_eSecurityError) }
 }
 
-/// Return Ruby's `Signal` class.
+/// Return Ruby's `SignalException` class.
 #[inline]
 pub fn signal() -> ExceptionClass {
     unsafe { ExceptionClass::from_rb_value_unchecked(rb_eSignal) }
@@ -348,7 +348,7 @@ pub fn syntax_error() -> ExceptionClass {
     unsafe { ExceptionClass::from_rb_value_unchecked(rb_eSyntaxError) }
 }
 
-/// Return Ruby's `SysStackError` class.
+/// Return Ruby's `SystemStackError` class.
 #[inline]
 pub fn sys_stack_error() -> ExceptionClass {
     unsafe { ExceptionClass::from_rb_value_unchecked(rb_eSysStackError) }
@@ -378,7 +378,7 @@ pub fn type_error() -> ExceptionClass {
     unsafe { ExceptionClass::from_rb_value_unchecked(rb_eTypeError) }
 }
 
-/// Return Ruby's `ZeroDivError` class.
+/// Return Ruby's `ZeroDivisionError` class.
 #[inline]
 pub fn zero_div_error() -> ExceptionClass {
     unsafe { ExceptionClass::from_rb_value_unchecked(rb_eZeroDivError) }

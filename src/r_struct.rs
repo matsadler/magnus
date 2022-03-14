@@ -14,6 +14,7 @@ use crate::{
     class::RClass,
     debug_assert_value,
     error::{protect, Error},
+    exception,
     object::Object,
     r_array::RArray,
     ruby_sys::{
@@ -135,11 +136,14 @@ impl RStruct {
             slice
                 .get(index)
                 .ok_or_else(|| {
-                    Error::index_error(format!(
-                        "offset {} too large for struct(size:{})",
-                        index,
-                        slice.len()
-                    ))
+                    Error::new(
+                        exception::index_error(),
+                        format!(
+                            "offset {} too large for struct(size:{})",
+                            index,
+                            slice.len()
+                        ),
+                    )
                 })
                 .and_then(|v| v.try_convert())
         }
@@ -249,10 +253,12 @@ impl TryConvert for RStruct {
     #[inline]
     fn try_convert(val: &Value) -> Result<Self, Error> {
         Self::from_value(*val).ok_or_else(|| {
-            Error::type_error(format!(
-                "no implicit conversion of {} into Struct",
-                unsafe { val.classname() },
-            ))
+            Error::new(
+                exception::type_error(),
+                format!("no implicit conversion of {} into Struct", unsafe {
+                    val.classname()
+                },),
+            )
         })
     }
 }
