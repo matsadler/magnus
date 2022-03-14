@@ -18,10 +18,6 @@ jobs:
         - "2.7"
         - "3.0"
         - "3.1"
-        exclude:
-        # environment for Ruby 3.1 on Windows is messed up
-        - os: windows-latest
-          ruby-version: "3.1"
     steps:
     - uses: actions/checkout@v2
     - name: Set up Ruby
@@ -31,6 +27,11 @@ jobs:
     - name: Set LD_LIBRARY_PATH
       if: matrix.os == 'ubuntu-latest'
       run: echo LD_LIBRARY_PATH=$(ruby -e 'print RbConfig::CONFIG["libdir"]') >> $GITHUB_ENV
+    - name: Fix clang
+      if: matrix.os == 'windows-latest' && matrix.ruby-version == '3.1'
+      run: |
+        pacman --remove --cascade mingw-w64-x86_64-clang
+        pacman --sync --noconfirm --needed $ENV:MINGW_PACKAGE_PREFIX-clang
     - name: Build
       shell: bash
       run: build-sys/ruby-${{ matrix.ruby-version }}
