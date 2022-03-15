@@ -5,6 +5,8 @@ use std::{
 const RUBY_VERSIONS: [(u8, u8); 3] = [(2, 7), (3, 0), (3, 1)];
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
+    println!("cargo:rerun-if-env-changed=RUBY");
+
     let rbconfig = RbConfig::new()?;
 
     let version_parts = rbconfig
