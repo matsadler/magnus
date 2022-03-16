@@ -441,6 +441,10 @@ impl Value {
         let slice = args.as_ref();
         let mut some_block = Some(block);
         let closure = &mut some_block as *mut Option<F> as VALUE;
+        let call_func =
+            call::<F, R> as unsafe extern "C" fn(VALUE, VALUE, c_int, *const VALUE, VALUE) -> VALUE;
+        #[cfg(ruby_lt_2_7)]
+        let call_func: unsafe extern "C" fn() -> VALUE = unsafe { std::mem::transmute(call_func) };
 
         protect(|| unsafe {
             Value::new(rb_block_call(
@@ -448,7 +452,7 @@ impl Value {
                 id.as_rb_id(),
                 slice.len() as c_int,
                 slice.as_ptr() as *const VALUE,
-                Some(call::<F, R>),
+                Some(call_func),
                 closure,
             ))
         })
