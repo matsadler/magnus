@@ -8,10 +8,11 @@ use std::{
     num::NonZeroUsize,
     ops::{Deref, DerefMut},
     os::raw::{c_char, c_int, c_long, c_ulong},
-    ptr,
+    ptr, slice,
 };
 
 use crate::{
+    block::Proc,
     class::{self, RClass},
     enumerator::Enumerator,
     error::{protect, Error},
@@ -23,12 +24,12 @@ use crate::{
     r_float::RFloat,
     r_string::RString,
     ruby_sys::{
-        rb_any_to_s, rb_check_id, rb_enumeratorize_with_size, rb_float_new, rb_float_value,
-        rb_funcallv, rb_gc_register_address, rb_gc_register_mark_object, rb_gc_unregister_address,
-        rb_id2name, rb_id2sym, rb_inspect, rb_intern2, rb_ll2inum, rb_num2ll, rb_num2long,
-        rb_num2short, rb_num2ull, rb_num2ulong, rb_num2ushort, rb_obj_as_string, rb_obj_classname,
-        rb_obj_freeze, rb_obj_is_kind_of, rb_sym2id, rb_ull2inum, ruby_fl_type,
-        ruby_special_consts, ruby_value_type, RBasic, ID, VALUE,
+        rb_any_to_s, rb_block_call, rb_check_id, rb_enumeratorize_with_size, rb_float_new,
+        rb_float_value, rb_funcallv, rb_gc_register_address, rb_gc_register_mark_object,
+        rb_gc_unregister_address, rb_id2name, rb_id2sym, rb_inspect, rb_intern2, rb_ll2inum,
+        rb_num2ll, rb_num2long, rb_num2short, rb_num2ull, rb_num2ulong, rb_num2ushort,
+        rb_obj_as_string, rb_obj_classname, rb_obj_freeze, rb_obj_is_kind_of, rb_sym2id,
+        rb_ull2inum, ruby_fl_type, ruby_special_consts, ruby_value_type, RBasic, ID, VALUE,
     },
     symbol::Symbol,
     try_convert::{ArgList, TryConvert, TryConvertOwned},
@@ -385,6 +386,48 @@ impl Value {
             })
             .and_then(|v| v.try_convert())
         }
+    }
+
+    pub fn block_call<M, A, F, T>(self, method: M, args: A, block: F) -> Result<T, Error>
+    where
+        M: Into<Id>,
+        A: ArgList,
+        F: FnMut(&[Value], Option<Proc>) -> Value,
+        T: TryConvert,
+    {
+        unsafe extern "C" fn call<F>(
+            _yielded_arg: VALUE,
+            callback_arg: VALUE,
+            argc: c_int,
+            argv: *const VALUE,
+            blockarg: VALUE,
+        ) -> VALUE
+        where
+            F: FnMut(&[Value], Option<Proc>) -> Value,
+        {
+            let closure = (&mut *(callback_arg as *mut Option<F>)).as_mut().unwrap();
+            let args = slice::from_raw_parts(argv as *const Value, argc as usize);
+            let opt_proc = Proc::from_value(Value::new(blockarg));
+            (closure)(args, opt_proc).as_rb_value()
+        }
+
+        let id = method.into();
+        let args = args.into_arg_list();
+        let slice = args.as_ref();
+        let mut some_block = Some(block);
+        let closure = &mut some_block as *mut Option<F> as VALUE;
+
+        protect(|| unsafe {
+            Value::new(rb_block_call(
+                self.as_rb_value(),
+                id.as_rb_id(),
+                slice.len() as c_int,
+                slice.as_ptr() as *const VALUE,
+                Some(call::<F>),
+                closure,
+            ))
+        })
+        .and_then(|v| v.try_convert())
     }
 
     /// Convert `self` to a Ruby `String`.
