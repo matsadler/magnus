@@ -8,7 +8,8 @@ use std::{ffi::c_void, marker::PhantomData, os::raw::c_int, panic::AssertUnwindS
 
 use crate::{
     block::{
-        do_yield_iter, do_yield_splat_iter, do_yield_values_iter, Yield, YieldSplat, YieldValues,
+        do_yield_iter, do_yield_splat_iter, do_yield_values_iter, Proc, Yield, YieldSplat,
+        YieldValues,
     },
     error::{raise, Error},
     r_array::RArray,
@@ -476,6 +477,28 @@ mod private {
             self
         }
     }
+
+    pub trait BlockReturn {
+        fn into_block_return(self) -> Result<Value, Error>;
+    }
+
+    impl<T> BlockReturn for Result<T, Error>
+    where
+        T: Into<Value>,
+    {
+        fn into_block_return(self) -> Result<Value, Error> {
+            self.map(Into::into)
+        }
+    }
+
+    impl<T> BlockReturn for T
+    where
+        T: Into<Value>,
+    {
+        fn into_block_return(self) -> Result<Value, Error> {
+            Ok(self).into_block_return()
+        }
+    }
 }
 
 /// Trait implemented for function pointers that can be registed as Ruby
@@ -550,6 +573,24 @@ pub trait InitReturn: private::InitReturn {}
 
 impl<T> InitReturn for T where T: private::InitReturn {}
 
+/// Trait marking types that can be returned to Ruby from a block.
+///
+/// Implemented for the following types:
+///
+/// * `T`
+/// * `Result<T, magnus::Error>`
+///
+/// where `T` implements `Into<Value>`.
+///
+/// When is `Err(magnus::Error)` returned to Ruby it will be conveted to and
+/// raised as a Ruby exception.
+///
+/// Note: functions without a specified return value will return `()`. `()`
+/// implements `Into<Value>` (converting to `nil`).
+pub trait BlockReturn: private::BlockReturn {}
+
+impl<T> BlockReturn for T where T: private::BlockReturn {}
+
 /// Helper type for wrapping a function with type conversions and error
 /// handling, as an 'init' function.
 ///
@@ -585,6 +626,61 @@ where
             Ok(v) => v,
             Err(e) => raise(e),
         }
+    }
+}
+
+/// Helper type for wrapping a function with type conversions and error
+/// handling, as an 'block' function.
+///
+/// See the [`Value::block_call`] function.
+#[doc(hidden)]
+pub struct Block<Func, Res> {
+    func: Func,
+    res: PhantomData<Res>,
+}
+
+#[allow(missing_docs)]
+impl<Func, Res> Block<Func, Res>
+where
+    Func: FnMut(&[Value], Option<Proc>) -> Res,
+    Res: BlockReturn,
+{
+    #[inline]
+    pub fn new(func: Func) -> Self {
+        Self {
+            func,
+            res: Default::default(),
+        }
+    }
+
+    #[inline]
+    pub unsafe fn call_handle_error(
+        self,
+        argc: c_int,
+        argv: *const Value,
+        blockarg: Value,
+    ) -> Value {
+        let res = match std::panic::catch_unwind(AssertUnwindSafe(|| {
+            self.call_convert_value(argc, argv, blockarg)
+        })) {
+            Ok(v) => v,
+            Err(e) => Err(Error::from_panic(e)),
+        };
+        match res {
+            Ok(v) => v,
+            Err(e) => raise(e),
+        }
+    }
+
+    #[inline]
+    unsafe fn call_convert_value(
+        mut self,
+        argc: c_int,
+        argv: *const Value,
+        blockarg: Value,
+    ) -> Result<Value, Error> {
+        let args = slice::from_raw_parts(argv, argc as usize);
+        (self.func)(args, Proc::from_value(blockarg)).into_block_return()
     }
 }
 

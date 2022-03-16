@@ -8,7 +8,7 @@ use std::{
     num::NonZeroUsize,
     ops::{Deref, DerefMut},
     os::raw::{c_char, c_int, c_long, c_ulong},
-    ptr, slice,
+    ptr,
 };
 
 use crate::{
@@ -19,6 +19,7 @@ use crate::{
     exception,
     float::Float,
     integer::{Integer, IntegerType},
+    method::{Block, BlockReturn},
     module::Module,
     r_bignum::RBignum,
     r_float::RFloat,
@@ -355,7 +356,6 @@ impl Value {
     /// value converts to a `T`, or returns `Err` if the method raises or the
     /// conversion fails.
     ///
-    ///
     /// # Examples
     ///
     /// ```
@@ -388,14 +388,38 @@ impl Value {
         }
     }
 
-    pub fn block_call<M, A, F, T>(self, method: M, args: A, block: F) -> Result<T, Error>
+    /// Call the method named `method` on `self` with `args` and `block`.
+    ///
+    /// Simmilar to [`funcall`], but passes `block` as a Ruby block to the
+    /// method.
+    ///
+    /// The function passed as `block` will receive values yielded to the block
+    /// as a slice of [`Value`]s, plus `Some(Proc)` if the block itself was
+    /// called with a block, or `None` otherwise.
+    ///
+    /// The `block` function may return any `R` or `Result<R, Error>` where `R`
+    /// implements `Into<Value>`. Returning `Err(Error)` will raise the error
+    /// as a Ruby exception.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RArray, Value};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let values = eval::<RArray>(r#"["foo", 1, :bar]"#).unwrap();
+    /// let _: Value = values.block_call("map!", (), |args, _block| args.first().unwrap().to_r_string()).unwrap();
+    /// assert_eq!(values.to_vec::<String>().unwrap(), vec!["foo", "1", "bar"]);
+    /// ```
+    pub fn block_call<M, A, F, R, T>(self, method: M, args: A, block: F) -> Result<T, Error>
     where
         M: Into<Id>,
         A: ArgList,
-        F: FnMut(&[Value], Option<Proc>) -> Value,
+        F: FnMut(&[Value], Option<Proc>) -> R,
+        R: BlockReturn,
         T: TryConvert,
     {
-        unsafe extern "C" fn call<F>(
+        unsafe extern "C" fn call<F, R>(
             _yielded_arg: VALUE,
             callback_arg: VALUE,
             argc: c_int,
@@ -403,12 +427,13 @@ impl Value {
             blockarg: VALUE,
         ) -> VALUE
         where
-            F: FnMut(&[Value], Option<Proc>) -> Value,
+            F: FnMut(&[Value], Option<Proc>) -> R,
+            R: BlockReturn,
         {
             let closure = (&mut *(callback_arg as *mut Option<F>)).as_mut().unwrap();
-            let args = slice::from_raw_parts(argv as *const Value, argc as usize);
-            let opt_proc = Proc::from_value(Value::new(blockarg));
-            (closure)(args, opt_proc).as_rb_value()
+            Block::new(closure)
+                .call_handle_error(argc, argv as *const Value, Value::new(blockarg))
+                .as_rb_value()
         }
 
         let id = method.into();
@@ -423,7 +448,7 @@ impl Value {
                 id.as_rb_id(),
                 slice.len() as c_int,
                 slice.as_ptr() as *const VALUE,
-                Some(call::<F>),
+                Some(call::<F, R>),
                 closure,
             ))
         })
