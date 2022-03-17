@@ -3,6 +3,7 @@
 use std::{fmt, ops::Deref, os::raw::c_int};
 
 use crate::{
+    debug_assert_value,
     error::{protect, Error},
     exception,
     module::Module,
@@ -13,7 +14,7 @@ use crate::{
         rb_cInteger, rb_cMatch, rb_cMethod, rb_cModule, rb_cNameErrorMesg, rb_cNilClass,
         rb_cNumeric, rb_cObject, rb_cProc, rb_cRandom, rb_cRange, rb_cRational, rb_cRegexp,
         rb_cStat, rb_cString, rb_cStruct, rb_cSymbol, rb_cThread, rb_cTime, rb_cTrueClass,
-        rb_cUnboundMethod, rb_class_new_instance, ruby_value_type, VALUE,
+        rb_cUnboundMethod, rb_class_new, rb_class_new_instance, ruby_value_type, VALUE,
     },
     try_convert::{ArgList, TryConvert},
     value::{NonZeroValue, Value},
@@ -37,6 +38,17 @@ pub struct RClass(NonZeroValue);
 
 impl RClass {
     /// Return `Some(RClass)` if `val` is a `RClass`, `None` otherwise.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RClass};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// assert!(RClass::from_value(eval("String").unwrap()).is_some());
+    /// assert!(RClass::from_value(eval("Enumerable").unwrap()).is_none());
+    /// assert!(RClass::from_value(eval("nil").unwrap()).is_none());
+    /// ```
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
         unsafe {
@@ -50,8 +62,39 @@ impl RClass {
         Self(NonZeroValue::new_unchecked(Value::new(val)))
     }
 
+    /// Create a new anonymous class.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{class, RClass};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let class = RClass::new(Default::default()).unwrap();
+    /// assert!(class.is_kind_of(class::class()));
+    /// ```
+    pub fn new(superclass: RClass) -> Result<RClass, Error> {
+        debug_assert_value!(superclass);
+        let superclass = superclass.as_rb_value();
+        unsafe {
+            let res = protect(|| Value::new(rb_class_new(superclass)));
+            res.map(|v| Self::from_rb_value_unchecked(v.as_rb_value()))
+        }
+    }
+
     /// Create a new object, an instance of `self`, passing the arguments
     /// `args` to the initialiser.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::class;
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let s = class::string().new_instance(()).unwrap();
+    /// assert!(s.is_kind_of(class::string()));
+    /// assert_eq!(s.to_string(), "");
+    /// ```
     pub fn new_instance<T>(self, args: T) -> Result<Value, Error>
     where
         T: ArgList,
