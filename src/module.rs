@@ -14,7 +14,7 @@ use crate::{
         rb_define_module_function, rb_define_module_id_under, rb_define_private_method,
         rb_define_protected_method, rb_mComparable, rb_mEnumerable, rb_mErrno, rb_mFileTest,
         rb_mGC, rb_mKernel, rb_mMath, rb_mProcess, rb_mWaitReadable, rb_mWaitWritable,
-        ruby_value_type, VALUE,
+        rb_module_new, ruby_value_type, VALUE,
     },
     try_convert::TryConvert,
     value::{Id, NonZeroValue, Value},
@@ -35,6 +35,17 @@ pub struct RModule(NonZeroValue);
 
 impl RModule {
     /// Return `Some(RModule)` if `val` is a `RModule`, `None` otherwise.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RModule};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// assert!(RModule::from_value(eval("Enumerable").unwrap()).is_some());
+    /// assert!(RModule::from_value(eval("String").unwrap()).is_none());
+    /// assert!(RModule::from_value(eval("nil").unwrap()).is_none());
+    /// ```
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
         unsafe {
@@ -48,9 +59,47 @@ impl RModule {
         Self(NonZeroValue::new_unchecked(Value::new(val)))
     }
 
+    /// Create a new anonymous module.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{class, RModule};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let module = RModule::new();
+    /// assert!(module.is_kind_of(class::module()));
+    /// ```
+    pub fn new() -> Self {
+        unsafe { Self::from_rb_value_unchecked(rb_module_new()) }
+    }
+
     /// Define a method in `self`'s scope as a 'module function'. This method
     /// will be visible as a public 'class' method on the module and a private
     /// instance method on any object including the module.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{define_module, eval, function, RString};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// fn greet() -> RString {
+    ///    RString::new("Hello, world!")
+    /// }
+    ///
+    /// let module = define_module("Greeting").unwrap();
+    /// module.define_module_function("greet", function!(greet, 0));
+    ///
+    /// let res = eval::<bool>(r#"Greeting.greet == "Hello, world!""#).unwrap();
+    /// assert!(res);
+    ///
+    /// let res = eval::<bool>(r#"
+    ///     include Greeting
+    ///     greet == "Hello, world!"
+    /// "#).unwrap();
+    /// assert!(res);
+    /// ```
     pub fn define_module_function<M>(self, name: &str, func: M)
     where
         M: Method,
@@ -114,6 +163,17 @@ impl TryConvert for RModule {
 /// Functions available on both classes and modules.
 pub trait Module: Object + Deref<Target = Value> + Copy {
     /// Define a class in `self`'s scope.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{class, define_module, Module};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let outer = define_module("Outer").unwrap();
+    /// let inner = outer.define_class("Inner", Default::default()).unwrap();
+    /// assert!(inner.is_kind_of(class::class()));
+    /// ```
     fn define_class<T: Into<Id>>(self, name: T, superclass: RClass) -> Result<RClass, Error> {
         debug_assert_value!(self);
         debug_assert_value!(superclass);
@@ -132,6 +192,17 @@ pub trait Module: Object + Deref<Target = Value> + Copy {
     }
 
     /// Define a module in `self`'s scope.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{class, define_module, Module};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let outer = define_module("Outer").unwrap();
+    /// let inner = outer.define_module("Inner").unwrap();
+    /// assert!(inner.is_kind_of(class::module()));
+    /// ```
     fn define_module<T: Into<Id>>(self, name: T) -> Result<RModule, Error> {
         let id = name.into();
         unsafe {
@@ -143,6 +214,22 @@ pub trait Module: Object + Deref<Target = Value> + Copy {
     }
 
     /// Get the value for the constant `name` within `self`'s scope.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{class, eval, Module, RClass, Value};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// eval::<Value>("
+    ///     class Example
+    ///       VALUE = 42
+    ///     end
+    /// ").unwrap();
+    ///
+    /// let class = class::object().const_get::<_, RClass>("Example").unwrap();
+    /// assert_eq!(class.const_get::<_, i64>("VALUE").unwrap(), 42);
+    /// ```
     fn const_get<T, U>(self, name: T) -> Result<U, Error>
     where
         T: Into<Id>,
@@ -155,9 +242,21 @@ pub trait Module: Object + Deref<Target = Value> + Copy {
         res.and_then(|v| v.try_convert())
     }
 
-    /// Returns whether or not `other` inherits from `self`.
+    /// Returns whether or not `self` inherits from `other`.
     ///
     /// Classes including a module are considered to inherit from that module.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, Module, RClass};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let a = RClass::new(Default::default()).unwrap();
+    /// let b = RClass::new(a).unwrap();
+    /// assert!(b.is_inherited(a));
+    /// assert!(!a.is_inherited(b));
+    /// ```
     fn is_inherited<T>(self, other: T) -> bool
     where
         T: Deref<Target = Value> + Module,
