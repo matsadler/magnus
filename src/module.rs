@@ -271,6 +271,22 @@ pub trait Module: Object + Deref<Target = Value> + Copy {
     }
 
     /// Define a method in `self`'s scope.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{class, eval, method, Module};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// fn escape_unicode(s: String) -> String {
+    ///     s.escape_unicode().to_string()
+    /// }
+    ///
+    /// class::string().define_method("escape_unicode", method!(escape_unicode, 0));
+    ///
+    /// let res = eval::<bool>(r#""🤖\etest".escape_unicode == "\\u{1f916}\\u{1b}\\u{74}\\u{65}\\u{73}\\u{74}""#).unwrap();
+    /// assert!(res);
+    /// ```
     fn define_method<T, M>(self, name: T, func: M)
     where
         T: Into<Id>,
@@ -289,6 +305,36 @@ pub trait Module: Object + Deref<Target = Value> + Copy {
     }
 
     /// Define a private method in `self`'s scope.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{class, eval, exception, function, Module, Value};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// fn percent_encode(c: char) -> String {
+    ///     if c.is_ascii_alphanumeric() || c == '-' || c == '_' || c == '.' || c == '~' {
+    ///         String::from(c)
+    ///     } else {
+    ///         format!("%{:X}", c as u32)
+    ///     }
+    /// }
+    ///
+    /// class::string().define_private_method("percent_encode_char", function!(percent_encode, 1));
+    ///
+    /// eval::<Value>(r#"
+    ///     class String
+    ///       def percent_encode
+    ///         chars.map {|c| percent_encode_char(c)}.join("")
+    ///       end
+    ///     end
+    /// "#).unwrap();
+    ///
+    /// let res = eval::<bool>(r#""foo bar".percent_encode == "foo%20bar""#).unwrap();
+    /// assert!(res);
+    ///
+    /// assert!(eval::<bool>(r#"" ".percent_encode_char(" ")"#).unwrap_err().is_kind_of(exception::no_method_error()));
+    /// ```
     fn define_private_method<M>(self, name: &str, func: M)
     where
         M: Method,
@@ -306,6 +352,39 @@ pub trait Module: Object + Deref<Target = Value> + Copy {
     }
 
     /// Define a protected method in `self`'s scope.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{class, eval, exception, method, Module, Value};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// fn escape_unicode(s: String) -> String {
+    ///     s.escape_unicode().to_string()
+    /// }
+    ///
+    /// fn is_invisible(c: char) -> bool {
+    ///     c.is_control() || c.is_whitespace()
+    /// }
+    ///
+    /// class::string().define_method("escape_unicode", method!(escape_unicode, 0));
+    /// class::string().define_protected_method("invisible?", method!(is_invisible, 0));
+    ///
+    /// eval::<Value>(r#"
+    ///     class String
+    ///       def escape_invisible
+    ///         chars.map {|c| c.invisible? ? c.escape_unicode : c}.join("")
+    ///       end
+    ///     end
+    /// "#).unwrap();
+    ///
+    /// let res = eval::<bool>(r#"# Encoding: utf-8
+    ///     "🤖\tfoo bar".escape_invisible == "🤖\\u{9}foo\\u{20}bar"
+    /// "#).unwrap();
+    /// assert!(res);
+    ///
+    /// assert!(eval::<bool>(r#"" ".invisible?"#).unwrap_err().is_kind_of(exception::no_method_error()));
+    /// ```
     fn define_protected_method<M>(self, name: &str, func: M)
     where
         M: Method,
