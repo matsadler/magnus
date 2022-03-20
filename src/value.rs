@@ -390,8 +390,8 @@ impl Value {
 
     /// Call the method named `method` on `self` with `args` and `block`.
     ///
-    /// Simmilar to [`funcall`], but passes `block` as a Ruby block to the
-    /// method.
+    /// Simmilar to [`funcall`][Value::funcall], but passes `block` as a Ruby
+    /// block to the method.
     ///
     /// The function passed as `block` will receive values yielded to the block
     /// as a slice of [`Value`]s, plus `Some(Proc)` if the block itself was
