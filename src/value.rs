@@ -611,10 +611,10 @@ impl Value {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{class, eval, RString};
+    /// use magnus::{class, eval, r_string};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// let s = RString::new("foo\\bar\\baz");
+    /// let s = r_string!("foo\\bar\\baz");
     /// let mut i = 0;
     /// for line in s.enumeratorize("each_line", ("\\",)) {
     ///     assert!(line.unwrap().is_kind_of(class::string()));

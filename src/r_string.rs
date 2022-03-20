@@ -18,7 +18,7 @@ use crate::{
     object::Object,
     ruby_sys::{
         self, rb_enc_associate_index, rb_enc_get, rb_enc_get_index, rb_str_buf_append,
-        rb_str_buf_new, rb_str_cat, rb_str_conv_enc, rb_str_new, rb_str_to_str,
+        rb_str_buf_new, rb_str_cat, rb_str_conv_enc, rb_str_new, rb_utf8_str_new_static, rb_str_to_str,
         rb_usascii_encindex, rb_utf8_encindex, rb_utf8_encoding, rb_utf8_str_new,
         ruby_rstring_flags, ruby_value_type, VALUE,
     },
@@ -98,6 +98,13 @@ impl RString {
         unsafe {
             Self::from_rb_value_unchecked(rb_utf8_str_new(ptr as *const c_char, len as c_long))
         }
+    }
+
+    /// Implementation detail of [`r_string`].
+    #[doc(hidden)]
+    #[inline]
+    pub unsafe fn new_lit(ptr: *const c_char, len: c_long) -> Self {
+        Self::from_rb_value_unchecked(rb_utf8_str_new_static(ptr, len))
     }
 
     /// Create a new Ruby string with capacity `n`.
@@ -775,4 +782,27 @@ impl From<FString> for Value {
     fn from(val: FString) -> Self {
         *val.as_r_string()
     }
+}
+
+/// Create a [`RString`] from a Rust str literal.
+///
+/// # Examples
+///
+/// ```
+/// use magnus::{eval, r_string};
+/// # let _cleanup = unsafe { magnus::embed::init() };
+///
+/// let s = r_string!("Hello, world!");
+/// let res: bool = eval!(r#"s == "Hello, world!""#, s).unwrap();
+/// assert!(res);
+/// ```
+#[macro_export]
+macro_rules! r_string {
+    ($lit:expr) => {{
+        let s = concat!($lit, "\0");
+        let len = s.len() - 1;
+        unsafe {
+            $crate::RString::new_lit(s.as_ptr() as *const _, len as _)
+        }
+    }}
 }

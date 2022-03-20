@@ -81,11 +81,11 @@ impl RModule {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{define_module, eval, function, RString};
+    /// use magnus::{define_module, eval, function, r_string, RString};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// fn greet() -> RString {
-    ///    RString::new("Hello, world!")
+    ///    r_string!("Hello, world!")
     /// }
     ///
     /// let module = define_module("Greeting").unwrap();
