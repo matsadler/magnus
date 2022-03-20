@@ -5,6 +5,7 @@ use crate::{
     error::{protect, Error},
     exception,
     object::Object,
+    r_string::RString,
     ruby_sys::rb_binding_new,
     symbol::Symbol,
     try_convert::TryConvert,
@@ -57,13 +58,14 @@ impl Binding {
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let binding = Binding::new();
-    /// assert_eq!(binding.eval::<i64>("1 + 2").unwrap(), 3);
+    /// assert_eq!(binding.eval::<_, i64>("1 + 2").unwrap(), 3);
     /// ```
-    pub fn eval<T>(&self, s: &str) -> Result<T, Error>
+    pub fn eval<T, U>(&self, s: T) -> Result<U, Error>
     where
-        T: TryConvert,
+        T: Into<RString>,
+        U: TryConvert,
     {
-        self.funcall("eval", (s,))
+        self.funcall("eval", (s.into(),))
     }
 
     /// Get the named local variable from the binding.
@@ -155,7 +157,7 @@ impl TryConvert for Binding {
     }
 }
 
-/// Evaluate a string of Ruby code with the given local variables.
+/// Evaluate a literal string of Ruby code with the given local variables.
 ///
 /// Any type that implements `Into<Value>` can be passed to Ruby.
 ///
@@ -178,12 +180,12 @@ impl TryConvert for Binding {
 #[macro_export]
 macro_rules! eval {
     ($s:literal) => {{
-        $crate::eval($s)
+        $crate::eval::<$crate::Binding>("binding").unwrap().eval($crate::r_string!($s))
     }};
     ($s:literal, $($rest:tt)*) => {{
-        let binding = $crate::Binding::new();
+        let binding = $crate::eval::<$crate::Binding>("binding").unwrap();
         $crate::bind!(binding, $($rest)*);
-        binding.eval($s)
+        binding.eval($crate::r_string!($s))
     }}
 }
 

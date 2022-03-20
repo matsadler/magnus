@@ -378,7 +378,7 @@ pub trait Module: Object + Deref<Target = Value> + Copy {
     ///     end
     /// "#).unwrap();
     ///
-    /// let res = eval::<bool>(r#"# Encoding: utf-8
+    /// let res: bool = eval!(r#"
     ///     "🤖\tfoo bar".escape_invisible == "🤖\\u{9}foo\\u{20}bar"
     /// "#).unwrap();
     /// assert!(res);

@@ -261,9 +261,7 @@ impl RString {
     /// use magnus::{eval, RString};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// let s: RString = eval!(r#"# Encoding: utf-8
-    /// "café"
-    /// "#).unwrap();
+    /// let s: RString = eval!(r#""café""#).unwrap();
     /// assert!(s.is_utf8_compatible_encoding());
     /// ```
     ///
@@ -271,9 +269,7 @@ impl RString {
     /// use magnus::{eval, RString};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// let s: RString = eval!(r#"# Encoding: utf-8
-    /// "café".encode("ISO-8859-1")
-    /// "#).unwrap();
+    /// let s: RString = eval!(r#""café".encode("ISO-8859-1")"#).unwrap();
     /// assert!(!s.is_utf8_compatible_encoding());
     /// ```
     pub fn is_utf8_compatible_encoding(self) -> bool {
@@ -293,9 +289,7 @@ impl RString {
     /// use magnus::{eval, RString};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// let s: RString = eval!(r#"# Encoding: utf-8
-    /// "café".encode("ISO-8859-1")
-    /// "#).unwrap();
+    /// let s: RString = eval!(r#""café".encode("ISO-8859-1")"#).unwrap();
     /// // safe as we don't give Ruby the chance to mess with the string while
     /// // we hold a refrence to the slice.
     /// unsafe { assert_eq!(s.as_slice(), &[99, 97, 102, 233]) };
@@ -731,9 +725,7 @@ impl FString {
     /// use magnus::{eval, RString};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// let s: RString = eval!(r#"# Encoding: utf-8
-    /// ## frozen_string_literal: true
-    ///
+    /// let s: RString = eval!(r#"# frozen_string_literal: true
     /// "example"
     /// "#).unwrap();
     /// let fstring = s.as_interned_str().unwrap();
