@@ -18,9 +18,9 @@ use crate::{
     object::Object,
     ruby_sys::{
         self, rb_enc_associate_index, rb_enc_get, rb_enc_get_index, rb_str_buf_append,
-        rb_str_buf_new, rb_str_cat, rb_str_conv_enc, rb_str_new, rb_utf8_str_new_static, rb_str_to_str,
+        rb_str_buf_new, rb_str_cat, rb_str_conv_enc, rb_str_new, rb_str_to_str,
         rb_usascii_encindex, rb_utf8_encindex, rb_utf8_encoding, rb_utf8_str_new,
-        ruby_rstring_flags, ruby_value_type, VALUE,
+        rb_utf8_str_new_static, ruby_rstring_flags, ruby_value_type, VALUE,
     },
     try_convert::TryConvert,
     value::{NonZeroValue, Value},
@@ -801,8 +801,6 @@ macro_rules! r_string {
     ($lit:expr) => {{
         let s = concat!($lit, "\0");
         let len = s.len() - 1;
-        unsafe {
-            $crate::RString::new_lit(s.as_ptr() as *const _, len as _)
-        }
-    }}
+        unsafe { $crate::RString::new_lit(s.as_ptr() as *const _, len as _) }
+    }};
 }
