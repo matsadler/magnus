@@ -95,8 +95,8 @@
 
 mod binding;
 pub mod block;
-#[cfg(feature = "embed")]
 pub mod class;
+#[cfg(feature = "embed")]
 pub mod embed;
 mod enumerator;
 pub mod error;
