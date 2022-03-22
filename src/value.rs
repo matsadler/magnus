@@ -25,12 +25,13 @@ use crate::{
     r_float::RFloat,
     r_string::RString,
     ruby_sys::{
-        rb_any_to_s, rb_block_call, rb_check_id, rb_enumeratorize_with_size, rb_float_new,
-        rb_float_value, rb_funcallv, rb_gc_register_address, rb_gc_register_mark_object,
-        rb_gc_unregister_address, rb_id2name, rb_id2sym, rb_inspect, rb_intern2, rb_ll2inum,
-        rb_num2ll, rb_num2long, rb_num2short, rb_num2ull, rb_num2ulong, rb_num2ushort,
-        rb_obj_as_string, rb_obj_classname, rb_obj_freeze, rb_obj_is_kind_of, rb_sym2id,
-        rb_ull2inum, ruby_fl_type, ruby_special_consts, ruby_value_type, RBasic, ID, VALUE,
+        rb_any_to_s, rb_block_call, rb_check_id, rb_enumeratorize_with_size, rb_eql, rb_equal,
+        rb_float_new, rb_float_value, rb_funcallv, rb_gc_register_address,
+        rb_gc_register_mark_object, rb_gc_unregister_address, rb_id2name, rb_id2sym, rb_inspect,
+        rb_intern2, rb_ll2inum, rb_num2ll, rb_num2long, rb_num2short, rb_num2ull, rb_num2ulong,
+        rb_num2ushort, rb_obj_as_string, rb_obj_classname, rb_obj_freeze, rb_obj_is_kind_of,
+        rb_sym2id, rb_ull2inum, ruby_fl_type, ruby_special_consts, ruby_value_type, RBasic, ID,
+        VALUE,
     },
     symbol::Symbol,
     try_convert::{ArgList, TryConvert, TryConvertOwned},
@@ -188,6 +189,104 @@ impl Value {
                     unreachable!()
                 }
             }
+        }
+    }
+
+    /// Checks for equality, delegating to the Ruby method `#==`.
+    ///
+    /// Ruby optimises this check if `self` and `other` are the same object
+    /// or some built-in types, then calling the `#==` method will be skipped.
+    ///
+    /// Returns `Err` if `#==` raises.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Integer, RArray};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let a = RArray::from_vec(vec![1, 2, 3]);
+    /// let b = RArray::from_vec(vec![1, 2, 3]);
+    /// let c = RArray::from_vec(vec![4, 5, 6]);
+    /// let d = Integer::from_i64(1);
+    /// assert!(a.equal(a).unwrap());
+    /// assert!(a.equal(b).unwrap());
+    /// assert!(!a.equal(c).unwrap());
+    /// assert!(!a.equal(d).unwrap());
+    /// ```
+    ///
+    /// ```
+    /// use magnus::{eval, Value};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let (a, b): (Value, Value) = eval!("
+    ///     class Example
+    ///       def ==(other)
+    ///         raise
+    ///       end
+    ///     end
+    ///     [Example.new, Example.new]
+    /// ").unwrap();
+    ///
+    /// assert!(a.equal(&b).is_err());
+    /// ```
+    pub fn equal<T>(self, other: T) -> Result<bool, Error>
+    where
+        T: Deref<Target = Value>,
+    {
+        unsafe {
+            protect(|| Value::new(rb_equal(self.as_rb_value(), other.as_rb_value())))
+                .map(Value::to_bool)
+        }
+    }
+
+    /// Checks for equality, delegating to the Ruby method `#eql?`.
+    ///
+    /// See [`Value::equal`] for the equivalent of the `#==` method.
+    ///
+    /// Ruby optimises this check if `self` and `other` are the same object
+    /// or some built-in types, then calling the `#==` method will be skipped.
+    ///
+    /// Returns `Err` if `#eql?` raises.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Integer, RArray};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let a = RArray::from_vec(vec![1, 2, 3]);
+    /// let b = RArray::from_vec(vec![1, 2, 3]);
+    /// let c = RArray::from_vec(vec![4, 5, 6]);
+    /// let d = Integer::from_i64(1);
+    /// assert!(a.eql(a).unwrap());
+    /// assert!(a.eql(b).unwrap());
+    /// assert!(!a.eql(c).unwrap());
+    /// assert!(!a.eql(d).unwrap());
+    /// ```
+    ///
+    /// ```
+    /// use magnus::{eval, Value};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let (a, b): (Value, Value) = eval!("
+    ///     class Example
+    ///       def eql?(other)
+    ///         raise
+    ///       end
+    ///     end
+    ///     [Example.new, Example.new]
+    /// ").unwrap();
+    ///
+    /// assert!(a.eql(&b).is_err());
+    /// ```
+    pub fn eql<T>(self, other: T) -> Result<bool, Error>
+    where
+        T: Deref<Target = Value>,
+    {
+        unsafe {
+            protect(|| Value::new(rb_eql(self.as_rb_value(), other.as_rb_value()) as VALUE))
+                .map(Value::to_bool)
         }
     }
 
