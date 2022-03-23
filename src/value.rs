@@ -25,13 +25,13 @@ use crate::{
     r_float::RFloat,
     r_string::RString,
     ruby_sys::{
-        rb_any_to_s, rb_block_call, rb_check_id, rb_enumeratorize_with_size, rb_eql, rb_equal,
-        rb_float_new, rb_float_value, rb_funcallv, rb_gc_register_address,
+        rb_any_to_s, rb_block_call, rb_check_funcall, rb_check_id, rb_enumeratorize_with_size,
+        rb_eql, rb_equal, rb_float_new, rb_float_value, rb_funcallv, rb_gc_register_address,
         rb_gc_register_mark_object, rb_gc_unregister_address, rb_id2name, rb_id2sym, rb_inspect,
         rb_intern2, rb_ll2inum, rb_num2ll, rb_num2long, rb_num2short, rb_num2ull, rb_num2ulong,
         rb_num2ushort, rb_obj_as_string, rb_obj_classname, rb_obj_freeze, rb_obj_is_kind_of,
-        rb_sym2id, rb_ull2inum, ruby_fl_type, ruby_special_consts, ruby_value_type, RBasic, ID,
-        VALUE,
+        rb_obj_respond_to, rb_sym2id, rb_ull2inum, ruby_fl_type, ruby_special_consts,
+        ruby_value_type, RBasic, ID, VALUE,
     },
     symbol::Symbol,
     try_convert::{ArgList, TryConvert, TryConvertOwned},
@@ -487,6 +487,51 @@ impl Value {
         }
     }
 
+    /// If `self` responds to the method named `method`, call it with `args`.
+    ///
+    /// Returns `Some(Ok(T))` if the method exists and returns without error,
+    /// `None` if it does not exist, or `Some(Err)` if an exception was raised.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Float, Integer, RString};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let val = Float::from_f64(1.23);
+    /// let res: Integer = val.check_funcall("to_int", ()).unwrap().unwrap();
+    /// assert_eq!(res.to_i64().unwrap(), 1);
+    ///
+    /// let val = RString::new("1.23");
+    /// let res: Option<Result<Integer, _>> = val.check_funcall("to_int", ());
+    /// assert!(res.is_none());
+    /// ```
+    pub fn check_funcall<M, A, T>(self, method: M, args: A) -> Option<Result<T, Error>>
+    where
+        M: Into<Id>,
+        A: ArgList,
+        T: TryConvert,
+    {
+        let id = method.into();
+        let args = args.into_arg_list();
+        let slice = args.as_ref();
+        unsafe {
+            let result = protect(|| {
+                Value::new(rb_check_funcall(
+                    self.as_rb_value(),
+                    id.as_rb_id(),
+                    slice.len() as c_int,
+                    slice.as_ptr() as *const VALUE,
+                ))
+            });
+            match result {
+                Ok(v) if v.is_undef() => None,
+                Ok(v) => Some(v.try_convert()),
+                Err(e) => Some(Err(e)),
+            }
+        }
+    }
+
     /// Call the method named `method` on `self` with `args` and `block`.
     ///
     /// Simmilar to [`funcall`][Value::funcall], but passes `block` as a Ruby
@@ -556,6 +601,43 @@ impl Value {
             ))
         })
         .and_then(|v| v.try_convert())
+    }
+
+    /// Check if `self` responds to the given Ruby method.
+    ///
+    /// The `include_private` agument controls whether `self`'s private methods
+    /// are checked. If `false` they are not, if `true` they are.
+    ///
+    /// See also [`Value::check_funcall`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::RString;
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let s = RString::new("example");
+    /// assert!(s.respond_to("to_str", false).unwrap());
+    /// assert!(!s.respond_to("puts", false).unwrap());
+    /// assert!(s.respond_to("puts", true).unwrap());
+    /// assert!(!s.respond_to("non_existant", false).unwrap());
+    /// assert!(!s.respond_to("non_existant", true).unwrap());
+    /// ```
+    pub fn respond_to<M>(self, method: M, include_private: bool) -> Result<bool, Error>
+    where
+        M: Into<Id>,
+    {
+        let id = method.into();
+        let mut res = false;
+        protect(|| {
+            unsafe {
+                res =
+                    rb_obj_respond_to(self.as_rb_value(), id.as_rb_id(), include_private as c_int)
+                        != 0;
+            }
+            *QNIL
+        })?;
+        Ok(res)
     }
 
     /// Convert `self` to a Ruby `String`.
