@@ -49,6 +49,15 @@ impl ArgSpec {
             block,
         }
     }
+
+    fn len(&self) -> usize {
+        self.required
+            + self.optional
+            + self.splat as usize
+            + self.trailing
+            + self.keywords as usize
+            + self.block as usize
+    }
 }
 
 impl fmt::Display for ArgSpec {
@@ -974,7 +983,8 @@ where
 // Nice-ish interface to rb_scan_args, but returns `Value`s without conversion.
 fn scan_args_untyped(args: &[Value], arg_spec: ArgSpec) -> Result<ScannedArgs, Error> {
     let mut out = [*QNIL; 30];
-    let parsed = unsafe { scan_args_impl(args, &arg_spec.to_string(), &mut out)? };
+    let parsed =
+        unsafe { scan_args_impl(args, &arg_spec.to_string(), &mut out[..arg_spec.len()])? };
 
     Ok(ScannedArgs {
         arg_spec,
