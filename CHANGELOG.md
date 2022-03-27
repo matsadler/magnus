@@ -25,12 +25,12 @@
 - `eval!` macro uses anonymous (rather than caller's) binding.
 
 ### Deprecated
-
-### Removed
 - `Qfalse::new`, `Qnil::new`, `Qtrue::new`, `Qundef::new` (use
   QFALSE/QNIL/QTRUE/QUNDEF).
 - Functions for generating an `Error` with a specific Ruby type. E.g.
   `Error::type_error("...")` is now `Error::new(exception::type_error(), "...")`
+
+### Removed
 
 ### Fixed
 - Converting Ruby integers to `isize`/`i64`/`usize`/`u64` on Windows.
