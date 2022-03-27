@@ -13,6 +13,10 @@
 - Support calling Ruby methods with Rust closure as a Ruby block.
 - `Class::new` and `Module::new` for creating anonymous classes/modules.
 - `r_string!` macro to create Ruby string from a `str` literal.
+- `Value::equal` and `Value::eql` for object equality.
+- `Value::respond_to` and `Value::check_funcall` for conditionally calling Ruby
+  methods only when they are defined.
+- `scan_args` and `get_kwargs` for complex argument parsing.
 
 ### Changed
 - `Qundef::to_value` now marked `unsafe`.
