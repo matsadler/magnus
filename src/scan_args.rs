@@ -8,9 +8,9 @@ use crate::{
     exception,
     r_array::RArray,
     r_hash::RHash,
-    ruby_sys::{rb_scan_args, VALUE},
+    ruby_sys::{rb_get_kwargs, rb_scan_args, ID, VALUE},
     try_convert::{TryConvert, TryConvertOwned},
-    value::{Value, QNIL},
+    value::{Id, Value, QNIL},
 };
 
 struct ArgSpec {
@@ -928,7 +928,7 @@ impl<T> ScanArgsBlock for T where T: private::ScanArgsBlock {}
 /// `def getaddrinfo(nodename, service, family=nil, socktype=nil, protocol=nil, flags=nil, timeout: nil)`.
 /// ```
 /// use magnus::{
-///     define_class, error::Error, eval, function, scan_args::scan_args, Object, RHash, Symbol, Value,
+///     define_class, error::Error, eval, function, scan_args::{scan_args, get_kwargs}, Object, RHash, Symbol, Value,
 /// };
 /// # let _cleanup = unsafe { magnus::embed::init() };
 ///
@@ -941,7 +941,8 @@ impl<T> ScanArgsBlock for T where T: private::ScanArgsBlock {}
 ///         Option<i64>,
 ///         Option<i64>,
 ///     ) = args.optional;
-///     let kw: RHash = args.keywords;
+///     let kw = get_kwargs::<_, (usize,), (), ()>(args.keywords, &["timeout"], &[])?;
+///     let (timeout,) = kw.required;
 ///
 ///     todo!()
 /// }
@@ -1709,4 +1710,121 @@ unsafe fn scan_args_impl(args: &[Value], fmt: &str, out: &mut [Value]) -> Result
         })?,
     };
     Ok(result)
+}
+
+/// Arguments returned from [`get_kwargs`].
+pub struct KwArgs<Req, Opt, Splat> {
+    /// Required arguments.
+    pub required: Req,
+    /// Optional arguments.
+    pub optional: Opt,
+    /// The splat argument.
+    pub splat: Splat,
+}
+
+/// Deconstruct keyword arguments.
+///
+/// Extracts `required` and `optional` arguments from the given `kw` hash.
+///
+/// # Panics
+///
+/// This function will panic if `required` or `optional` arguments don't match
+/// the length of the `Req` and `Opt` type parameters.
+///
+/// # Examples
+///
+/// The rough equivalent of `def example(a:, b:, c: nil, **rest)` would be:
+/// ```
+/// use magnus::{class, error::Error, method, scan_args::get_kwargs, Module, RHash, Value};
+/// # let _cleanup = unsafe { magnus::embed::init() };
+///
+/// fn example(rb_self: Value, kw: RHash) -> Result<Value, Error> {
+///     let args = get_kwargs(kw, &["a", "b"], &["c"])?;
+///     let (a, b): (String, usize) = args.required;
+///     let (c,): (Option<bool>,) = args.optional;
+///     let rest: RHash = args.splat;
+///
+///     todo!()
+/// }
+///
+/// class::object().define_method("example", method!(example, 1));
+/// ```
+/// The rough equivalent of `def example(a: nil)` would be:
+/// ```
+/// use magnus::{class, error::Error, method, scan_args::get_kwargs, Module, RHash, Value};
+/// # let _cleanup = unsafe { magnus::embed::init() };
+///
+/// fn example(rb_self: Value, kw: RHash) -> Result<Value, Error> {
+///     let args = get_kwargs(kw, &[], &["a"])?;
+///     let _: () = args.required;
+///     let (a,): (Option<String>,) = args.optional;
+///     let _: () = args.splat;
+///
+///     todo!()
+/// }
+///
+/// class::object().define_method("example", method!(example, 1));
+/// ```
+/// or, specifying the types slightly differently:
+/// ```
+/// use magnus::{class, error::Error, method, scan_args::get_kwargs, Module, RHash, Value};
+/// # let _cleanup = unsafe { magnus::embed::init() };
+///
+/// fn example(rb_self: Value, kw: RHash) -> Result<Value, Error> {
+///     let args = get_kwargs::<_, (), (Option<String>,), ()>(kw, &[], &["a"])?;
+///     let (a,) = args.optional;
+///
+///     todo!()
+/// }
+///
+/// class::object().define_method("example", method!(example, 1));
+/// ```
+pub fn get_kwargs<T, Req, Opt, Splat>(
+    kw: RHash,
+    required: &[T],
+    optional: &[T],
+) -> Result<KwArgs<Req, Opt, Splat>, Error>
+where
+    T: Into<Id> + Copy,
+    Req: ScanArgsRequired,
+    Opt: ScanArgsOpt,
+    Splat: ScanArgsKw,
+{
+    assert_eq!(required.len(), Req::LEN);
+    assert_eq!(optional.len(), Opt::LEN);
+
+    let ids = required
+        .iter()
+        .copied()
+        .map(Into::into)
+        .chain(optional.iter().copied().map(Into::into))
+        .collect::<Vec<Id>>();
+    let optional_len = if Splat::REQ {
+        -(optional.len() as i8 + 1)
+    } else {
+        optional.len() as i8
+    };
+    let mut out = [*QNIL; 19];
+    let total = Req::LEN + Opt::LEN + Splat::REQ as usize;
+
+    let mut parsed = 0;
+    unsafe {
+        protect(|| {
+            parsed = rb_get_kwargs(
+                kw.as_rb_value(),
+                ids.as_ptr() as *const ID,
+                required.len() as c_int,
+                optional_len as c_int,
+                out[..total].as_mut_ptr() as *mut VALUE,
+            ) as usize;
+            *QNIL
+        })?;
+    };
+
+    let opt_end = Req::LEN + Opt::LEN.min(parsed - Req::LEN);
+    Ok(KwArgs {
+        required: Req::from_slice(&out[..Req::LEN])?,
+        optional: Opt::from_slice(&out[Req::LEN..opt_end])?,
+        splat: Splat::from_opt(Splat::REQ.then(|| out[Req::LEN + Opt::LEN]))?,
+    })
 }
