@@ -122,6 +122,7 @@ pub mod r_struct;
 pub mod r_typed_data;
 mod range;
 mod ruby_sys;
+pub mod scan_args;
 mod symbol;
 mod try_convert;
 pub mod value;
