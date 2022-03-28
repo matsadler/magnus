@@ -113,7 +113,11 @@ impl ScannedArgs {
 
     fn optional(&self) -> &[Value] {
         let start = self.arg_spec.required;
-        let end = start + self.arg_spec.optional.min(self.parsed - start);
+        let end = start
+            + self
+                .arg_spec
+                .optional
+                .min(self.parsed - start - self.arg_spec.trailing);
         &self.args[start..end]
     }
 
@@ -1825,6 +1829,6 @@ where
     Ok(KwArgs {
         required: Req::from_slice(&out[..Req::LEN])?,
         optional: Opt::from_slice(&out[Req::LEN..opt_end])?,
-        splat: Splat::from_opt(Splat::REQ.then(|| out[Req::LEN + Opt::LEN]))?,
+        splat: Splat::from_opt(Splat::REQ.then(|| kw.into()))?,
     })
 }
