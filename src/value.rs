@@ -1082,7 +1082,7 @@ pub const QFALSE: Qfalse = Qfalse::new();
 
 impl Qfalse {
     /// Create a new `Qfalse`.
-    #[deprecated(since="0.2.0", note="please use `QFALSE` instead")]
+    #[deprecated(since = "0.2.0", note = "please use `QFALSE` instead")]
     #[inline]
     pub const fn new() -> Self {
         Qfalse(ruby_special_consts::RUBY_Qfalse as VALUE)
@@ -1166,7 +1166,7 @@ pub const QNIL: Qnil = Qnil::new();
 
 impl Qnil {
     /// Create a new `Qnil`.
-    #[deprecated(since="0.2.0", note="please use `QNIL` instead")]
+    #[deprecated(since = "0.2.0", note = "please use `QNIL` instead")]
     #[inline]
     pub const fn new() -> Self {
         unsafe {
@@ -1269,7 +1269,7 @@ pub const QTRUE: Qtrue = Qtrue::new();
 
 impl Qtrue {
     /// Create a new `Qtrue`.
-    #[deprecated(since="0.2.0", note="please use `QTRUE` instead")]
+    #[deprecated(since = "0.2.0", note = "please use `QTRUE` instead")]
     #[inline]
     pub const fn new() -> Self {
         unsafe {
@@ -1363,7 +1363,7 @@ pub const QUNDEF: Qundef = Qundef::new();
 
 impl Qundef {
     /// Create a new `Qundef`.
-    #[deprecated(since="0.2.0", note="please use `QUNDEF` instead")]
+    #[deprecated(since = "0.2.0", note = "please use `QUNDEF` instead")]
     #[inline]
     pub const fn new() -> Self {
         unsafe {

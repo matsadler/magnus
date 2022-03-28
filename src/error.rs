@@ -43,7 +43,10 @@ impl Error {
     }
 
     /// Create a new `ArgumentError` with `msg`.
-    #[deprecated(since="0.2.0", note="please use `Error::new(exception::arg_error(), msg)` instead")]
+    #[deprecated(
+        since = "0.2.0",
+        note = "please use `Error::new(exception::arg_error(), msg)` instead"
+    )]
     pub fn argument_error<T>(msg: T) -> Self
     where
         T: Into<Cow<'static, str>>,
@@ -52,7 +55,10 @@ impl Error {
     }
 
     /// Create a new `RangeError` with `msg`.
-    #[deprecated(since="0.2.0", note="please use `Error::new(exception::range_error(), msg)` instead")]
+    #[deprecated(
+        since = "0.2.0",
+        note = "please use `Error::new(exception::range_error(), msg)` instead"
+    )]
     pub fn range_error<T>(msg: T) -> Self
     where
         T: Into<Cow<'static, str>>,
@@ -61,7 +67,10 @@ impl Error {
     }
 
     /// Create a new `TypeError` with `msg`.
-    #[deprecated(since="0.2.0", note="please use `Error::new(exception::type_error(), msg)` instead")]
+    #[deprecated(
+        since = "0.2.0",
+        note = "please use `Error::new(exception::type_error(), msg)` instead"
+    )]
     pub fn type_error<T>(msg: T) -> Self
     where
         T: Into<Cow<'static, str>>,
@@ -70,7 +79,10 @@ impl Error {
     }
 
     /// Create a new `EncodingError` with `msg`.
-    #[deprecated(since="0.2.0", note="please use `Error::new(exception::encoding_error(), msg)` instead")]
+    #[deprecated(
+        since = "0.2.0",
+        note = "please use `Error::new(exception::encoding_error(), msg)` instead"
+    )]
     pub fn encoding_error<T>(msg: T) -> Self
     where
         T: Into<Cow<'static, str>>,
@@ -79,7 +91,10 @@ impl Error {
     }
 
     /// Create a new `IndexError` with `msg`.
-    #[deprecated(since="0.2.0", note="please use `Error::new(exception::index_error(), msg)` instead")]
+    #[deprecated(
+        since = "0.2.0",
+        note = "please use `Error::new(exception::index_error(), msg)` instead"
+    )]
     pub fn index_error<T>(msg: T) -> Self
     where
         T: Into<Cow<'static, str>>,
@@ -88,7 +103,10 @@ impl Error {
     }
 
     /// Create a new `FrozenError` with `msg`.
-    #[deprecated(since="0.2.0", note="please use `Error::new(exception::frozen_error(), msg)` instead")]
+    #[deprecated(
+        since = "0.2.0",
+        note = "please use `Error::new(exception::frozen_error(), msg)` instead"
+    )]
     pub fn frozen_error<T>(msg: T) -> Self
     where
         T: Into<Cow<'static, str>>,
@@ -97,7 +115,10 @@ impl Error {
     }
 
     /// Create a new `StopIteration` with `msg`.
-    #[deprecated(since="0.2.0", note="please use `Error::new(exception::stop_iteration(), msg)` instead")]
+    #[deprecated(
+        since = "0.2.0",
+        note = "please use `Error::new(exception::stop_iteration(), msg)` instead"
+    )]
     pub fn stop_iteration<T>(msg: T) -> Self
     where
         T: Into<Cow<'static, str>>,
@@ -106,7 +127,10 @@ impl Error {
     }
 
     /// Create a new `ScriptError` with `msg`.
-    #[deprecated(since="0.2.0", note="please use `Error::new(exception::script_error(), msg)` instead")]
+    #[deprecated(
+        since = "0.2.0",
+        note = "please use `Error::new(exception::script_error(), msg)` instead"
+    )]
     pub fn script_error<T>(msg: T) -> Self
     where
         T: Into<Cow<'static, str>>,
