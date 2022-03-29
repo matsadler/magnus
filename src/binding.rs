@@ -31,6 +31,8 @@ impl Binding {
     ///
     /// let binding = Binding::new();
     /// ```
+    #[cfg(ruby_lte_3_1)]
+    #[deprecated(since = "0.2.0", note = "this will no longer function as of Ruby 3.2")]
     #[allow(clippy::new_without_default)]
     pub fn new() -> Self {
         unsafe {
@@ -54,10 +56,10 @@ impl Binding {
     /// # Examples
     ///
     /// ```
-    /// use magnus::Binding;
+    /// use magnus::{eval, Binding};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// let binding = Binding::new();
+    /// let binding = eval::<Binding>("binding").unwrap();
     /// assert_eq!(binding.eval::<_, i64>("1 + 2").unwrap(), 3);
     /// ```
     pub fn eval<T, U>(&self, s: T) -> Result<U, Error>
@@ -77,10 +79,10 @@ impl Binding {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{Binding, Value};
+    /// use magnus::{eval, Binding, Value};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// let binding = Binding::new();
+    /// let binding = eval::<Binding>("binding").unwrap();
     /// binding.local_variable_set("a", 1);
     /// assert_eq!(binding.local_variable_get::<_, i64>("a").unwrap(), 1);
     /// assert!(binding.local_variable_get::<_, Value>("b").is_err());
@@ -98,10 +100,10 @@ impl Binding {
     /// # Examples
     ///
     /// ```
-    /// use magnus::Binding;
+    /// use magnus::{eval, Binding};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// let binding = Binding::new();
+    /// let binding = eval::<Binding>("binding").unwrap();
     /// binding.local_variable_set("a", 1);
     /// assert_eq!(binding.local_variable_get::<_, i64>("a").unwrap(), 1);
     /// ```

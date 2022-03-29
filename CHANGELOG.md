@@ -29,6 +29,8 @@
   QFALSE/QNIL/QTRUE/QUNDEF).
 - Functions for generating an `Error` with a specific Ruby type. E.g.
   `Error::type_error("...")` is now `Error::new(exception::type_error(), "...")`
+- `Binding::new`. This will be removed in the future as the underlying
+  `rb_binding_new` will not function as of Ruby 3.2.
 
 ### Removed
 
