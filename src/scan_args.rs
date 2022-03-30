@@ -1,4 +1,30 @@
 //! Types and functions for complex method arguments.
+//!
+//! Ruby's APIs to define methods, exposed in magnus through functions such as
+//! [`define_method`](crate::module::Module::define_method) and the [`method`]
+//! macro, allow defining methods with a fixed number of positional arguments,
+//! or an unbounded collection of arguments as a slice or Ruby array. The
+//! functions in this module allow for more complex agument handling.
+//!
+//! Ruby arguments can be classified as follows:
+//! ``` text
+//! def example(a, b, c=nil, d=nil, *rest, e, f, g:, h:, i: nil, j: nil, **kwargs, &block)
+//!             \__/  \__________/  \___/  \__/  \____/  \____________/  \______/  \____/
+//!               |        |          |      |     |            |           |        |
+//!            required    |        splat    |  keywords     keywords    keywords  block
+//!                     optional             | (required)   (optional)   (splat)
+//!                                          |
+//!                                       trailing
+//!                                       required
+//! ```
+//!
+//! The [`scan_args`] function can be used with a method defined as
+//! `method!(name, -1)` (i.e. receiving a slice of arguments) to implement this
+//! more complex functionality.
+//!
+//! The [`get_kwargs`] function is used to extract keywords from a Ruby `Hash`
+//! of keywords and implement the behaviour around required and optional
+//! keyword arguments.
 
 use std::{ffi::CString, fmt, mem::transmute, os::raw::c_int};
 
@@ -859,26 +885,57 @@ mod private {
 
 /// Trait implemented for types that can be retrieved as required arguments by
 /// [`scan_args`].
+///
+/// This trait is implemented for `(T0,)`, `(T0, T1)`, `(T0, T1, T2)`, etc,
+/// through to a length of 9, where `T0`, `T1`, etc implement [`TryConvert`].
+///
+/// `()` also impliments this trait as a placeholder indicating no required
+/// arguments are required.
 pub trait ScanArgsRequired: private::ScanArgsRequired {}
 impl<T> ScanArgsRequired for T where T: private::ScanArgsRequired {}
 
 /// Trait implemented for types that can be retrieved as optional arguments by
 /// [`scan_args`].
+///
+/// This trait is implemented for `(Option<T0>,)`, `(Option<T0>, Option<T1>)`,
+/// etc, through to a length of 9, where `T0`, `T1`, etc implement
+/// [`TryConvert`].
+///
+/// `()` also impliments this trait as a placeholder indicating no optional
+/// arguments are required.
 pub trait ScanArgsOpt: private::ScanArgsOpt {}
 impl<T> ScanArgsOpt for T where T: private::ScanArgsOpt {}
 
 /// Trait implemented for types that can be retrieved a 'splat' argument by
 /// [`scan_args`].
+///
+/// This trait is implemented for `Vec<T>` where `T` implements [`TryConvert`]
+/// and converts to an owned Rust value (not a handle to a Ruby object). It is
+/// also implemented for [`RArray`].
+///
+/// `()` also impliments this trait as a placeholder indicating no splat
+/// argument is required.
 pub trait ScanArgsSplat: private::ScanArgsSplat {}
 impl<T> ScanArgsSplat for T where T: private::ScanArgsSplat {}
 
 /// Trait implemented for types that can be retrieved as keyword arguments by
 /// [`scan_args`].
+///
+/// This trait is implemented for [`RHash`].
+///
+/// `()` also impliments this trait as a placeholder indicating no keyword
+/// arguments are required.
 pub trait ScanArgsKw: private::ScanArgsKw {}
 impl<T> ScanArgsKw for T where T: private::ScanArgsKw {}
 
 /// Trait implemented for types that can be retrieved as a block argument by
 /// [`scan_args`].
+///
+/// This trait is implemented for [`Proc`] and `Option<Proc>`.
+///
+/// `()` also impliments this trait as a placeholder for when no block argument
+/// is required, although Ruby will still allow a block to be passed, it will
+/// just ignore it (as is standard for all Ruby methods).
 pub trait ScanArgsBlock: private::ScanArgsBlock {}
 impl<T> ScanArgsBlock for T where T: private::ScanArgsBlock {}
 
@@ -887,12 +944,17 @@ impl<T> ScanArgsBlock for T where T: private::ScanArgsBlock {}
 /// This function can be used to implement Ruby methods with more complex
 /// signatures, including optional arguments and 'splats'.
 ///
+/// The format of the arguments required is driven by the types in the return
+/// value. The stuct [`Args`] is returned but the types of its fields are
+/// determined by type parameters. The type `()` is used as a placeholder when
+/// a set of arguments is not required.
+///
 /// # Examples
 ///
 /// `TCPServer::new`'s argument handling. This is roughly equivalent to
 /// `def new(hostname=nil, port)`.
 /// ```
-/// use magnus::{define_class, error::Error, eval, function, scan_args::scan_args, Object, Value};
+/// use magnus::{define_class, error::Error, function, scan_args::scan_args, Object, Value};
 /// # let _cleanup = unsafe { magnus::embed::init() };
 ///
 /// fn tcp_svr_init(args: &[Value]) -> Result<Value, Error> {
@@ -904,16 +966,24 @@ impl<T> ScanArgsBlock for T where T: private::ScanArgsBlock {}
 ///     let _: () = args.keywords;
 ///     let _: () = args.block;
 ///
-///     todo!()
+///     // ...
+/// #   let res = magnus::RArray::with_capacity(2);
+/// #   res.push(hostname)?;
+/// #   res.push(port)?;
+/// #   Ok(res.into())
 /// }
 ///
 /// let class = define_class("TCPServer", Default::default()).unwrap();
 /// class.define_singleton_method("new", function!(tcp_svr_init, -1));
+/// # let res = magnus::eval::<bool>(r#"TCPServer.new("foo", 1) == ["foo", 1]"#).unwrap();
+/// # assert!(res);
+/// # let res = magnus::eval::<bool>(r#"TCPServer.new(2) == [nil, 2]"#).unwrap();
+/// # assert!(res);
 /// ```
 ///
 /// The same example as above, specifying the types slightly differently.
 /// ```
-/// use magnus::{define_class, error::Error, eval, function, scan_args::scan_args, Object, Value};
+/// use magnus::{define_class, error::Error, function, scan_args::scan_args, Object, Value};
 /// # let _cleanup = unsafe { magnus::embed::init() };
 ///
 /// fn tcp_svr_init(args: &[Value]) -> Result<Value, Error> {
@@ -921,18 +991,26 @@ impl<T> ScanArgsBlock for T where T: private::ScanArgsBlock {}
 ///     let (hostname,) = args.optional;
 ///     let (port,) = args.trailing;
 ///
-///     todo!()
+///     // ...
+/// #   let res = magnus::RArray::with_capacity(2);
+/// #   res.push(hostname)?;
+/// #   res.push(port)?;
+/// #   Ok(res.into())
 /// }
 ///
 /// let class = define_class("TCPServer", Default::default()).unwrap();
 /// class.define_singleton_method("new", function!(tcp_svr_init, -1));
+/// # let res = magnus::eval::<bool>(r#"TCPServer.new("foo", 1) == ["foo", 1]"#).unwrap();
+/// # assert!(res);
+/// # let res = magnus::eval::<bool>(r#"TCPServer.new(2) == [nil, 2]"#).unwrap();
+/// # assert!(res);
 /// ```
 ///
 /// `Addrinfo::getaddrinfo`'s argument handling. This is roughly equivalent to
 /// `def getaddrinfo(nodename, service, family=nil, socktype=nil, protocol=nil, flags=nil, timeout: nil)`.
 /// ```
 /// use magnus::{
-///     define_class, error::Error, eval, function, scan_args::{scan_args, get_kwargs}, Object, RHash, Symbol, Value,
+///     define_class, error::Error, function, scan_args::{scan_args, get_kwargs}, Object, RHash, Symbol, Value,
 /// };
 /// # let _cleanup = unsafe { magnus::embed::init() };
 ///
@@ -945,14 +1023,27 @@ impl<T> ScanArgsBlock for T where T: private::ScanArgsBlock {}
 ///         Option<i64>,
 ///         Option<i64>,
 ///     ) = args.optional;
-///     let kw = get_kwargs::<_, (usize,), (), ()>(args.keywords, &["timeout"], &[])?;
-///     let (timeout,) = kw.required;
+///     let kw = get_kwargs::<_, (), (Option<usize>,), ()>(args.keywords, &[], &["timeout"])?;
+///     let (timeout,) = kw.optional;
 ///
-///     todo!()
+///     // ...
+/// #   let res = magnus::RArray::with_capacity(7);
+/// #   res.push(nodename)?;
+/// #   res.push(service)?;
+/// #   res.push(family)?;
+/// #   res.push(socktype)?;
+/// #   res.push(protocol)?;
+/// #   res.push(flags)?;
+/// #   res.push(timeout)?;
+/// #   Ok(res.into())
 /// }
 ///
 /// let class = define_class("Addrinfo", Default::default()).unwrap();
 /// class.define_singleton_method("getaddrinfo", function!(getaddrinfo, -1));
+/// # let res = magnus::eval::<bool>(r#"Addrinfo.getaddrinfo("a", 1) == ["a", 1, nil, nil, nil, nil, nil]"#).unwrap();
+/// # assert!(res);
+/// # let res = magnus::eval::<bool>(r#"Addrinfo.getaddrinfo("a", 1, :b, :c, 3, 4, timeout: 5) == ["a", 1, :b, :c, 3, 4, 5]"#).unwrap();
+/// # assert!(res);
 /// ```
 pub fn scan_args<Req, Opt, Splat, Trail, Kw, Block>(
     args: &[Value],
@@ -1730,6 +1821,11 @@ pub struct KwArgs<Req, Opt, Splat> {
 ///
 /// Extracts `required` and `optional` arguments from the given `kw` hash.
 ///
+/// The format of the arguments required is driven by the types in the return
+/// value. The stuct [`KwArgs`] is returned but the types of its fields are
+/// determined by type parameters. The type `()` is used as a placeholder when
+/// a set of arguments is not required.
+///
 /// # Panics
 ///
 /// This function will panic if `required` or `optional` arguments don't match
@@ -1748,40 +1844,65 @@ pub struct KwArgs<Req, Opt, Splat> {
 ///     let (c,): (Option<bool>,) = args.optional;
 ///     let rest: RHash = args.splat;
 ///
-///     todo!()
+///     // ...
+/// #   let res = magnus::RArray::with_capacity(4);
+/// #   res.push(a)?;
+/// #   res.push(b)?;
+/// #   res.push(c)?;
+/// #   res.push(rest)?;
+/// #   Ok(res.into())
 /// }
 ///
 /// class::object().define_method("example", method!(example, 1));
+/// # let res = magnus::eval::<bool>(r#"Object.new.example(a: "foo", b: 1, c: true, d: "bar") == ["foo", 1, true, {d: "bar"}]"#).unwrap();
+/// # assert!(res);
+/// # let res = magnus::eval::<bool>(r#"Object.new.example(a: "foo", b: 1) == ["foo", 1, nil, {}]"#).unwrap();
+/// # assert!(res);
 /// ```
-/// The rough equivalent of `def example(a: nil)` would be:
+/// The rough equivalent of `def example(a: "foo")` would be:
 /// ```
-/// use magnus::{class, error::Error, method, scan_args::get_kwargs, Module, RHash, Value};
+/// use magnus::{class, error::Error, method, scan_args::{get_kwargs, scan_args}, Module, RHash, Value};
 /// # let _cleanup = unsafe { magnus::embed::init() };
 ///
-/// fn example(rb_self: Value, kw: RHash) -> Result<Value, Error> {
-///     let args = get_kwargs(kw, &[], &["a"])?;
+/// fn example(rb_self: Value, args: &[Value]) -> Result<Value, Error> {
+///     let args = scan_args::<(), (), (), (), _, ()>(args)?;
+///     let args = get_kwargs(args.keywords, &[], &["a"])?;
 ///     let _: () = args.required;
 ///     let (a,): (Option<String>,) = args.optional;
 ///     let _: () = args.splat;
 ///
-///     todo!()
+///     let a  = a.unwrap_or_else(|| String::from("foo"));
+///
+///     // ...
+///     Ok(a.into())
 /// }
 ///
-/// class::object().define_method("example", method!(example, 1));
+/// class::object().define_method("example", method!(example, -1));
+/// # let res = magnus::eval::<bool>(r#"Object.new.example(a: "test") == "test""#).unwrap();
+/// # assert!(res);
+/// # let res = magnus::eval::<bool>(r#"Object.new.example == "foo""#).unwrap();
+/// # assert!(res);
 /// ```
 /// or, specifying the types slightly differently:
 /// ```
-/// use magnus::{class, error::Error, method, scan_args::get_kwargs, Module, RHash, Value};
+/// use magnus::{class, error::Error, method, scan_args::{get_kwargs, scan_args}, Module, RHash, Value};
 /// # let _cleanup = unsafe { magnus::embed::init() };
 ///
-/// fn example(rb_self: Value, kw: RHash) -> Result<Value, Error> {
-///     let args = get_kwargs::<_, (), (Option<String>,), ()>(kw, &[], &["a"])?;
+/// fn example(rb_self: Value, args: &[Value]) -> Result<Value, Error> {
+///     let args = scan_args::<(), (), (), (), RHash, ()>(args)?;
+///     let args = get_kwargs::<_, (), (Option<String>,), ()>(args.keywords, &[], &["a"])?;
 ///     let (a,) = args.optional;
+///     let a  = a.unwrap_or_else(|| String::from("foo"));
 ///
-///     todo!()
+///     // ...
+///     Ok(a.into())
 /// }
 ///
-/// class::object().define_method("example", method!(example, 1));
+/// class::object().define_method("example", method!(example, -1));
+/// # let res = magnus::eval::<bool>(r#"Object.new.example(a: "test") == "test""#).unwrap();
+/// # assert!(res);
+/// # let res = magnus::eval::<bool>(r#"Object.new.example == "foo""#).unwrap();
+/// # assert!(res);
 /// ```
 pub fn get_kwargs<T, Req, Opt, Splat>(
     kw: RHash,

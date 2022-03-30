@@ -2541,6 +2541,9 @@ where
 /// The values `-2` and `-1` for `arity` have special meaning. Both indicate
 /// functions with any number of arguments, with `-2` the arguments are passed
 /// as a [`RArray`], with `-1` they are passed as a slice of [`Value`]s.
+/// Arity of `-1` can be used with [`scan_args`](crate::scan_args::scan_args)
+/// and [`get_kwargs`](crate::scan_args::get_kwargs) for more complex method
+/// signatures.
 ///
 /// | Arity | Signature                                                 |
 /// |-------|-----------------------------------------------------------|
@@ -4765,6 +4768,9 @@ where
 /// The values `-2` and `-1` for `arity` have special meaning. Both indicate
 /// functions with any number of arguments, with `-2` the arguments are passed
 /// as a [`RArray`], with `-1` they are passed as a slice of [`Value`]s.
+/// Arity of `-1` can be used with [`scan_args`](crate::scan_args::scan_args)
+/// and [`get_kwargs`](crate::scan_args::get_kwargs) for more complex method
+/// signatures.
 ///
 /// | Arity | Signature                                     |
 /// |-------|-----------------------------------------------|
