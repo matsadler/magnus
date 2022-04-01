@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 ### Added
+
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Security
+
+## [0.2.0] - 2022-03-31
+### Added
 - Functions in `class`, `module`, and `error` modules to access built-in
   classes/modules.
 - Many doc examples.
@@ -32,16 +45,12 @@
 - `Binding::new`. This will be removed in the future as the underlying
   `rb_binding_new` will not function as of Ruby 3.2.
 
-### Removed
-
 ### Fixed
 - Converting Ruby integers to `isize`/`i64`/`usize`/`u64` on Windows.
 - Edge case where static symbol created after a dynamic symbol with the same
   name wouldn't be detected as static.
 - Many `RArray` methods now correctly protect from exceptions (instead
   returning `Result<_, Error>` when an exception occurs).
-
-### Security
 
 ## [0.1.0] - 2022-02-25
 ### Added
@@ -58,5 +67,6 @@
 - Pre-built bindings for Ruby 2.6 - 3.1 on common platforms, build-time
   generated bindings otherwise.
 
-[Unreleased] https://github.com/matsadler/magnus/compare/0.1.0...HEAD
+[Unreleased] https://github.com/matsadler/magnus/compare/0.2.0...HEAD
+[0.2.0]: https://github.com/matsadler/magnus/compare/0.1.0...0.2.0
 [0.1.0]: https://github.com/matsadler/magnus/tree/0.1.0

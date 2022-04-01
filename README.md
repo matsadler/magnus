@@ -242,7 +242,7 @@ setting the `crate-type` attribute in your `Cargo.toml`.
 crate-type = ["cdylib"]
 
 [dependencies]
-magnus = "0.1"
+magnus = "0.2"
 ```
 
 When Ruby loads your extension it calls an 'init' function defined in your
@@ -311,7 +311,7 @@ To call Ruby from a Rust program, enable the `embed` feature:
 **`Cargo.toml`**
 ```
 [dependencies]
-magnus = { version = "0.1", features = ["embed"] }
+magnus = { version = "0.2", features = ["embed"] }
 ```
 
 This enables linking to Ruby and gives access to the `embed` module.
