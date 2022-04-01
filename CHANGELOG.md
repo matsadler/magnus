@@ -43,7 +43,7 @@
 
 ### Security
 
-## [0.1.0] - 22-01-25
+## [0.1.0] - 2022-02-25
 ### Added
 - Support for most core classes, `String`, `Symbol`, `Integer`, `Float`,
   `Array`, `Hash` and more.
