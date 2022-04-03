@@ -2667,7 +2667,7 @@ macro_rules! method {
             d: $crate::Value,
             e: $crate::Value,
         ) -> $crate::Value {
-            $crate::method::Method5::new($name).call_handle_error(rb_self, a, b, c, d, e, f)
+            $crate::method::Method5::new($name).call_handle_error(rb_self, a, b, c, d, e)
         }
         anon as unsafe extern "C" fn(
             $crate::Value,
@@ -4889,7 +4889,7 @@ macro_rules! function {
             d: $crate::Value,
             e: $crate::Value,
         ) -> $crate::Value {
-            $crate::method::Function5::new($name).call_handle_error(a, b, c, d, e, f)
+            $crate::method::Function5::new($name).call_handle_error(a, b, c, d, e)
         }
         anon as unsafe extern "C" fn(
             $crate::Value,

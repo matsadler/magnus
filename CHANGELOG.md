@@ -10,6 +10,8 @@
 ### Removed
 
 ### Fixed
+- Fixed compilation error in `method!` and `function!` macros with arity
+  argument of 5
 
 ### Security
 
