@@ -10,10 +10,14 @@
 ### Removed
 
 ### Fixed
-- Fixed compilation error in `method!` and `function!` macros with arity
-  argument of 5
 
 ### Security
+
+## [0.2.1] - 2022-04-03
+
+### Fixed
+- Fixed compilation error in `method!` and `function!` macros with arity
+  argument of 5
 
 ## [0.2.0] - 2022-03-31
 ### Added
@@ -69,6 +73,7 @@
 - Pre-built bindings for Ruby 2.6 - 3.1 on common platforms, build-time
   generated bindings otherwise.
 
-[Unreleased] https://github.com/matsadler/magnus/compare/0.2.0...HEAD
+[Unreleased] https://github.com/matsadler/magnus/compare/0.2.1...HEAD
+[0.2.1]: https://github.com/matsadler/magnus/compare/0.2.0...0.2.1
 [0.2.0]: https://github.com/matsadler/magnus/compare/0.1.0...0.2.0
 [0.1.0]: https://github.com/matsadler/magnus/tree/0.1.0
