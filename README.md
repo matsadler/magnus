@@ -332,42 +332,6 @@ fn main() {
 }
 ```
 
-## Ruby version-specific features
-
-Some features may only be present with certain versions of Ruby as features
-are added and removed from Ruby's API. To conditionally enable these features
-your code the following cfg values are set at compile time:
-
-* `ruby_lt_{major}_{minor}` set when the Ruby version is less than to `major.minor`
-* `ruby_lte_{major}_{minor}` set when the Ruby version is less than or equal to `major.minor`
-* `ruby_{major}_{minor}` set when the Ruby version is equal to `major.minor`
-* `ruby_gte_{major}_{minor}` set when the Ruby version is greater than or equal to `major.minor`
-* `ruby_gt_{major}_{minor}` set when the Ruby version is greater than to `major.minor`
-
-for each of `2.7`, `3.0`, and `3.1`.
-
-For example, say we need an interned string (or 'fstring', Ruby's internal
-optimisation of frozen string literals). Before Ruby 3.0 there was no API to
-create one of these from a regular string, only check if a string was already
-interned:
-
-```
-#[cfg(ruby_gte_3_0)]
-fn example(s: RString) -> Result<(), Error> {
-    let interned = s.to_interned_str();
-    // ...
-}
-
-#[cfg(ruby_lt_3_0)]
-fn example(s: RString) -> Result<(), Error> {
-    let interned = match s.as_interned_str() {
-        Some(s) => s,
-        None => return Err(Error::argument_error("String must be a frozen string literal")),
-    };
-    // ...
-}
-```
-
 ## Compatibility
 
 Magnus contains pre-built bindings for Ruby 2.6 through 3.1 on Linux x86_64,
