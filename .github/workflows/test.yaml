@@ -41,3 +41,6 @@ jobs:
         pacman --sync --noconfirm --needed $ENV:MINGW_PACKAGE_PREFIX-clang
     - name: Run tests
       run: cargo test
+    - name: Example gem tests
+      working-directory: examples/rust_blank
+      run: rake test

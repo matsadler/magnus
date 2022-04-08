@@ -38,21 +38,47 @@ class RakeCargoHelper
     @cargo_target_dir = dir || "target"
   end
 
+  def self.flags
+    cc_flags = Shellwords.split(RbConfig.expand(RbConfig::MAKEFILE_CONFIG["CC"].dup))
+
+    ["-C", "linker=#{cc_flags.shift}",
+      *cc_flags.flat_map {|a| ["-C", "link-arg=#{a}"] },
+      "-L", "native=#{RbConfig::CONFIG["libdir"]}",
+      *dld_flags,
+      *platform_flags]
+  end
+
   def self.dld_flags
-    map = {"-L" => "-L native=", "-l" => "-l", "-F" => "-l framework="}
-    map.default_proc = proc {|_, key| "-C link_arg=#{key}"}
     Shellwords.split(RbConfig::CONFIG["DLDFLAGS"]).flat_map do |arg|
-      k, v = arg.split(/(?<=..)/, 2)
-      case k
-      when "-L"
-        [k, "native=#{v}"]
-      when "-l"
-        [k, v]
-      when "-F"
-        ["-l", "framework=#{v}"]
-      else
-        ["-C", "link_arg=#{k}#{v}"]
-      end
+      arg = arg.gsub(/\$\((\w+)\)/) do
+        $1 == "DEFFILE" ? nil : RbConfig::CONFIG[name]
+      end.strip
+      next [] if arg.empty?
+
+      transform_flag(arg)
+    end
+  end
+
+  def self.platform_flags
+    return unless RbConfig::CONFIG["target_os"] =~ /mingw/i
+
+    [*Shellwords.split(RbConfig::CONFIG["LIBRUBYARG"]).flat_map {|arg| transform_flag(arg)},
+      "-C", "link-arg=-Wl,--dynamicbase",
+      "-C", "link-arg=-Wl,--disable-auto-image-base",
+      "-C", "link-arg=-static-libgcc"]
+  end
+
+  def self.transform_flag(arg)
+    k, v = arg.split(/(?<=..)/, 2)
+    case k
+    when "-L"
+      [k, "native=#{v}"]
+    when "-l"
+      [k, v]
+    when "-F"
+      ["-l", "framework=#{v}"]
+    else
+      ["-C", "link_arg=#{k}#{v}"]
     end
   end
 
@@ -98,7 +124,7 @@ end
 
 desc "build gem native extension"
 task build: [:cargo, :cd] do
-  sh "cargo", "rustc", *(["--locked", "--release"] unless @dev), "--", *RakeCargoHelper.dld_flags
+  sh "cargo", "rustc", *(["--locked", "--release"] unless @dev), "--", *RakeCargoHelper.flags
 end
 
 desc "clean up release build artifacts"
