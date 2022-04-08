@@ -11,7 +11,7 @@ types will get the same kind of `ArgumentError` or `TypeError` they are used to
 seeing from Ruby's built in methods.
 
 Defining a function (with no Ruby `self` argument):
-```
+```rust
 fn fib(n: usize) -> usize {
     match n {
         0 => 0,
@@ -24,7 +24,7 @@ magnus::define_global_function("fib", magnus::function!(fib, 1));
 ```
 
 Defining a method (with a Ruby `self` argument):
-```
+```rust
 fn is_blank(rb_self: String) -> bool {
     !rb_self.contains(|c: char| !c.is_whitespace())
 }
@@ -44,7 +44,7 @@ Other Ruby methods that are defined only in Ruby must be called with
 `magnus::Value::funcall`. All of Magnus' Ruby wrapper types deref to `Value`,
 so `funcall` can be used on all of them.
 
-```
+```rust
 let s: String = value.funcall("test", ())?; // 0 arguments
 let x: bool = value.funcall("example", ("foo",))?; // 1 argument
 let i: i64 = value.funcall("other", (42, false))?; // 2 arguments, etc
@@ -64,7 +64,7 @@ Types can opt-in to this with the `magnus::wrap` macro (or by implementing
 wrapped in the specified class, and whenever it is passed back to Rust it will
 be unwrapped to a reference.
 
-```
+```rust
 use magnus::{define_class, function, method, prelude::*, Error};
 
 #[magnus::wrap(class = "Point")]
@@ -104,7 +104,7 @@ fn init() -> Result<(), Error> {
 
 The newtype pattern and `RefCell` can be used if mutability is required:
 
-```
+```rust
 struct Point {
     x: isize,
     y: isize,
@@ -191,7 +191,7 @@ For example, if you wanted to ensure your function is always passed a UTF-8
 encoded String so you can take a reference without allocating you could do the
 following:
 
-```
+```rust
 fn example(val: magnus::Value) -> Result<(), magnus::Error> {
     // checks value is a String, does not call #to_str
     let r_string = RString::from_value(val).ok_or_else(|| magnus::Error::type_error("expected string"))?;
@@ -237,7 +237,7 @@ Ruby extensions must be built as dynamic system libraries, this can be done by
 setting the `crate-type` attribute in your `Cargo.toml`.
 
 **`Cargo.toml`**
-```
+```toml
 [lib]
 crate-type = ["cdylib"]
 
@@ -251,7 +251,7 @@ Rust functions to Ruby methods. Use the `#[magnus::init]` attribute to mark
 your init function so it can be correctly exposed to Ruby.
 
 **`src/lib.rs`**
-```
+```rust
 use magnus::{define_global_function, function};
 
 fn distance(a: (f64, f64), b: (f64, f64)) -> f64 {
@@ -269,7 +269,7 @@ support Rust extensions directly, but a Rakefile can be used to compile your
 Rust extension when the gem is installed.
 
 **`my_example_gem.gemspec`**
-```
+```ruby
 spec.extensions = ["ext/my_example_gem/Rakefile"]
 
 # actually a build time dependency, but that's not an option.
@@ -282,7 +282,7 @@ your project without changes. This Rakefile will place the extension at
 load from Ruby like so:
 
 **`lib/my_example_gem.rb`**
-```
+```ruby
 require_relative "my_example_gem/my_example_gem"
 ```
 
@@ -295,7 +295,9 @@ to pass a number of compiler flags as specified by `ruby -e'p
 RbConfig::CONFIG["DLDFLAGS"]'`. These may need translating from C compiler args
 to rustc args. At a minimum the following should work most of the time:
 
+```shell
 cargo rustc --release -- -C link-arg=-Wl,-undefined,dynamic_lookup
+```
 
 The compiled library will need to be moved from Cargo's target directory into
 Ruby's load path. On Linux and macOS the library will have the prefix `lib`
@@ -309,7 +311,7 @@ to `.bundle`.
 To call Ruby from a Rust program, enable the `embed` feature:
 
 **`Cargo.toml`**
-```
+```toml
 [dependencies]
 magnus = { version = "0.2", features = ["embed"] }
 ```
@@ -320,7 +322,7 @@ returns must not be dropped until you are done with Ruby. `init` can not be
 called more than once.
 
 **`src/main.rs`**
-```
+```rust
 use magnus::{embed, eval};
 
 fn main() {
