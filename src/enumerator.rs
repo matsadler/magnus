@@ -7,7 +7,7 @@ use crate::{
     object::Object,
     ruby_sys::VALUE,
     try_convert::TryConvert,
-    value::{NonZeroValue, Value},
+    value::{private, NonZeroValue, ReprValue, Value},
 };
 
 /// Wrapper type for a Value known to be an instance of Ruby's Enumerator class.
@@ -73,6 +73,18 @@ impl From<Enumerator> for Value {
 }
 
 impl Object for Enumerator {}
+
+unsafe impl private::ReprValue for Enumerator {
+    fn to_value(self) -> Value {
+        *self
+    }
+
+    unsafe fn from_value_unchecked(val: Value) -> Self {
+        Self(NonZeroValue::new_unchecked(val))
+    }
+}
+
+impl ReprValue for Enumerator {}
 
 impl TryConvert for Enumerator {
     #[inline]

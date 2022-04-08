@@ -23,7 +23,7 @@ use crate::{
         rb_data_typed_object_wrap, ruby_value_type, size_t, VALUE,
     },
     try_convert::TryConvert,
-    value::{NonZeroValue, Value, QNIL},
+    value::{private, NonZeroValue, ReprValue, Value, QNIL},
 };
 
 #[cfg(ruby_gte_3_0)]
@@ -88,6 +88,18 @@ impl From<RTypedData> for Value {
 }
 
 impl Object for RTypedData {}
+
+unsafe impl private::ReprValue for RTypedData {
+    fn to_value(self) -> Value {
+        *self
+    }
+
+    unsafe fn from_value_unchecked(val: Value) -> Self {
+        Self(NonZeroValue::new_unchecked(val))
+    }
+}
+
+impl ReprValue for RTypedData {}
 
 /// A C struct containing metadata on a Rust type, for use with the
 /// `rb_data_typed_object_wrap` API.

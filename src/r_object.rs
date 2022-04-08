@@ -6,7 +6,7 @@ use crate::{
     object::Object,
     ruby_sys::ruby_value_type,
     try_convert::TryConvert,
-    value::{NonZeroValue, Value},
+    value::{private, NonZeroValue, ReprValue, Value},
 };
 
 /// A Value pointer to a RObject struct, Ruby's internal representation of
@@ -56,6 +56,18 @@ impl From<RObject> for Value {
 }
 
 impl Object for RObject {}
+
+unsafe impl private::ReprValue for RObject {
+    fn to_value(self) -> Value {
+        *self
+    }
+
+    unsafe fn from_value_unchecked(val: Value) -> Self {
+        Self(NonZeroValue::new_unchecked(val))
+    }
+}
+
+impl ReprValue for RObject {}
 
 impl TryConvert for RObject {
     #[inline]

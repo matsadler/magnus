@@ -7,7 +7,7 @@ use crate::{
         rb_gc_adjust_memory_usage, rb_gc_disable, rb_gc_enable, rb_gc_mark, rb_gc_mark_locations,
         rb_gc_start, ssize_t, VALUE,
     },
-    value::Value,
+    value::{ReprValue, Value},
 };
 
 #[cfg(ruby_gte_2_7)]
@@ -28,7 +28,10 @@ where
 ///
 /// Used to mark any stored Ruby objects when implementing
 /// [`DataTypeFunctions::mark`](`crate::r_typed_data::DataTypeFunctions::mark`).
-pub fn mark_slice(values: &[Value]) {
+pub fn mark_slice<T>(values: &[T])
+where
+    T: ReprValue,
+{
     if let (Some(start), Some(end)) = (values.first(), values.last()) {
         unsafe {
             rb_gc_mark_locations(
@@ -73,8 +76,11 @@ where
 /// Returns a new `Value` that is pointing to the object that `value` used to
 /// point to. If `value` hasn't moved, simply returns `value`.
 #[cfg(ruby_gte_2_7)]
-pub fn location(value: Value) -> Value {
-    unsafe { Value::new(rb_gc_location(value.as_rb_value())) }
+pub fn location<T>(value: T) -> T
+where
+    T: ReprValue,
+{
+    unsafe { T::from_value_unchecked(Value::new(rb_gc_location(value.to_value().as_rb_value()))) }
 }
 
 /// Disable automatic GC runs.

@@ -16,7 +16,7 @@ use crate::{
     r_struct::RStruct,
     ruby_sys::{rb_range_beg_len, rb_range_new},
     try_convert::TryConvert,
-    value::{Value, QNIL},
+    value::{private, ReprValue, Value, QNIL},
 };
 
 /// Wrapper type for a Value known to be an instance of Ruby's Range class.
@@ -323,6 +323,18 @@ where
 }
 
 impl Object for Range {}
+
+unsafe impl private::ReprValue for Range {
+    fn to_value(self) -> Value {
+        *self
+    }
+
+    unsafe fn from_value_unchecked(val: Value) -> Self {
+        Self(RStruct::from_value_unchecked(val))
+    }
+}
+
+impl ReprValue for Range {}
 
 impl TryConvert for Range {
     #[inline]

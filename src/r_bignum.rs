@@ -14,7 +14,7 @@ use crate::{
         ruby_value_type, VALUE,
     },
     try_convert::TryConvert,
-    value::{Fixnum, NonZeroValue, Value, QNIL},
+    value::{private, Fixnum, NonZeroValue, ReprValue, Value, QNIL},
 };
 
 /// A Value pointer to a RBignum struct, Ruby's internal representation of
@@ -299,6 +299,18 @@ impl From<RBignum> for Value {
         *val
     }
 }
+
+unsafe impl private::ReprValue for RBignum {
+    fn to_value(self) -> Value {
+        *self
+    }
+
+    unsafe fn from_value_unchecked(val: Value) -> Self {
+        Self(NonZeroValue::new_unchecked(val))
+    }
+}
+
+impl ReprValue for RBignum {}
 
 impl TryConvert for RBignum {
     #[inline]

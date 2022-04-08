@@ -17,7 +17,7 @@ use crate::{
         rb_module_new, ruby_value_type, VALUE,
     },
     try_convert::TryConvert,
-    value::{Id, NonZeroValue, Value},
+    value::{private, Id, NonZeroValue, ReprValue, Value},
 };
 
 /// A Value pointer to a RModule struct, Ruby's internal representation of
@@ -145,6 +145,18 @@ impl From<RModule> for Value {
 
 impl Object for RModule {}
 impl Module for RModule {}
+
+unsafe impl private::ReprValue for RModule {
+    fn to_value(self) -> Value {
+        *self
+    }
+
+    unsafe fn from_value_unchecked(val: Value) -> Self {
+        Self(NonZeroValue::new_unchecked(val))
+    }
+}
+
+impl ReprValue for RModule {}
 
 impl TryConvert for RModule {
     #[inline]

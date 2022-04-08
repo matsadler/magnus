@@ -19,7 +19,7 @@ use crate::{
         rb_eSystemCallError, rb_eSystemExit, rb_eThreadError, rb_eTypeError, rb_eZeroDivError,
         VALUE,
     },
-    value::{NonZeroValue, Value},
+    value::{private, NonZeroValue, ReprValue, Value},
 };
 
 #[cfg(ruby_gte_2_7)]
@@ -102,6 +102,18 @@ impl From<Exception> for Value {
     }
 }
 
+unsafe impl private::ReprValue for Exception {
+    fn to_value(self) -> Value {
+        *self
+    }
+
+    unsafe fn from_value_unchecked(val: Value) -> Self {
+        Self(NonZeroValue::new_unchecked(val))
+    }
+}
+
+impl ReprValue for Exception {}
+
 /// A Value known to be an instance of Class and subclass of Exception.
 ///
 /// All [`Value`] methods should be available on this type through [`Deref`],
@@ -165,6 +177,18 @@ impl From<ExceptionClass> for Value {
 
 impl Object for ExceptionClass {}
 impl Module for ExceptionClass {}
+
+unsafe impl private::ReprValue for ExceptionClass {
+    fn to_value(self) -> Value {
+        *self
+    }
+
+    unsafe fn from_value_unchecked(val: Value) -> Self {
+        Self(NonZeroValue::new_unchecked(val))
+    }
+}
+
+impl ReprValue for ExceptionClass {}
 
 /// Return Ruby's `ArgumentError` class.
 #[inline]

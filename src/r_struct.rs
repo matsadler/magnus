@@ -23,7 +23,7 @@ use crate::{
     },
     symbol::Symbol,
     try_convert::TryConvert,
-    value::{Id, NonZeroValue, Value},
+    value::{self, Id, NonZeroValue, Value},
 };
 
 // Ruby provides some inline functions to get a pointer to the struct's
@@ -248,6 +248,16 @@ impl From<RStruct> for Value {
 }
 
 impl Object for RStruct {}
+
+unsafe impl value::private::ReprValue for RStruct {
+    fn to_value(self) -> Value {
+        *self
+    }
+
+    unsafe fn from_value_unchecked(val: Value) -> Self {
+        Self(NonZeroValue::new_unchecked(val))
+    }
+}
 
 impl TryConvert for RStruct {
     #[inline]

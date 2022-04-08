@@ -944,6 +944,55 @@ impl TryConvert for Value {
     }
 }
 
+pub(crate) mod private {
+    use super::*;
+
+    /// Marker trait for types that have the same representation as [`Value`].
+    ///
+    /// Types that are `ReprValue` can be safely transmuted to Value.
+    ///
+    /// # Safety
+    ///
+    /// This trait should only be implemented for types that a guaranteed to
+    /// have the same layout as [`Value`] and have come from the Ruby VM.
+    pub unsafe trait ReprValue {
+        /// Convert `self` to a [`Value`].
+        ///
+        /// Usually types that implement this trait will also implement
+        /// `Deref<Target = Value>`. You should prefer `*data` over
+        /// `data.to_value()`.
+        ///
+        /// This method is for use cases where we effectively want
+        /// `transmute::<_, Value>(data)`.
+        fn to_value(self) -> Value;
+
+        /// Convert `val` to a `Self`.
+        ///
+        /// # Safety
+        ///
+        /// This should only be used when `val` is known to uphold all the
+        // invariants of `Self`. It is recommended not to use this method.
+        unsafe fn from_value_unchecked(val: Value) -> Self;
+    }
+}
+
+/// Marker trait for types that have the same representation as [`Value`].
+///
+/// Types that are `ReprValue` can be safely transmuted to Value.
+pub trait ReprValue: private::ReprValue {}
+
+unsafe impl private::ReprValue for Value {
+    fn to_value(self) -> Value {
+        self
+    }
+
+    unsafe fn from_value_unchecked(val: Value) -> Self {
+        val
+    }
+}
+
+impl ReprValue for Value {}
+
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub(crate) struct NonZeroValue(NonZeroUsize);
@@ -1074,7 +1123,7 @@ impl From<BoxValue> for Value {
 /// but some may be missed by this documentation.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
-pub struct Qfalse(VALUE);
+pub struct Qfalse(Value);
 
 /// Ruby's `false` value.
 #[allow(deprecated)]
@@ -1085,7 +1134,7 @@ impl Qfalse {
     #[deprecated(since = "0.2.0", note = "please use `QFALSE` instead")]
     #[inline]
     pub const fn new() -> Self {
-        Qfalse(ruby_special_consts::RUBY_Qfalse as VALUE)
+        Qfalse(Value::new(ruby_special_consts::RUBY_Qfalse as VALUE))
     }
 
     /// Return `Some(Qfalse)` if `val` is a `Qfalse`, `None` otherwise.
@@ -1110,10 +1159,7 @@ impl Deref for Qfalse {
     type Target = Value;
 
     fn deref(&self) -> &Self::Target {
-        let self_ptr = self as *const Self;
-        let value_ptr = self_ptr as *const Self::Target;
-        // we just got this pointer from &self, so we know it's valid to deref
-        unsafe { &*value_ptr }
+        &self.0
     }
 }
 
@@ -1134,6 +1180,18 @@ impl From<Qfalse> for Value {
         *val
     }
 }
+
+unsafe impl private::ReprValue for Qfalse {
+    fn to_value(self) -> Value {
+        *self
+    }
+
+    unsafe fn from_value_unchecked(val: Value) -> Self {
+        Self(val)
+    }
+}
+
+impl ReprValue for Qfalse {}
 
 impl TryConvert for Qfalse {
     #[inline]
@@ -1238,6 +1296,18 @@ where
     }
 }
 
+unsafe impl private::ReprValue for Qnil {
+    fn to_value(self) -> Value {
+        *self
+    }
+
+    unsafe fn from_value_unchecked(val: Value) -> Self {
+        Self(NonZeroValue::new_unchecked(val))
+    }
+}
+
+impl ReprValue for Qnil {}
+
 impl TryConvert for Qnil {
     #[inline]
     fn try_convert(val: &Value) -> Result<Self, Error> {
@@ -1332,6 +1402,18 @@ impl From<bool> for Value {
         }
     }
 }
+
+unsafe impl private::ReprValue for Qtrue {
+    fn to_value(self) -> Value {
+        *self
+    }
+
+    unsafe fn from_value_unchecked(val: Value) -> Self {
+        Self(NonZeroValue::new_unchecked(val))
+    }
+}
+
+impl ReprValue for Qtrue {}
 
 impl TryConvert for Qtrue {
     #[inline]
@@ -1798,6 +1880,18 @@ impl From<Fixnum> for Value {
     }
 }
 
+unsafe impl private::ReprValue for Fixnum {
+    fn to_value(self) -> Value {
+        *self
+    }
+
+    unsafe fn from_value_unchecked(val: Value) -> Self {
+        Self(NonZeroValue::new_unchecked(val))
+    }
+}
+
+impl ReprValue for Fixnum {}
+
 impl TryConvert for Fixnum {
     #[inline]
     fn try_convert(val: &Value) -> Result<Self, Error> {
@@ -1937,6 +2031,18 @@ impl From<StaticSymbol> for Value {
         *val
     }
 }
+
+unsafe impl private::ReprValue for StaticSymbol {
+    fn to_value(self) -> Value {
+        *self
+    }
+
+    unsafe fn from_value_unchecked(val: Value) -> Self {
+        Self(NonZeroValue::new_unchecked(val))
+    }
+}
+
+impl ReprValue for StaticSymbol {}
 
 impl TryConvert for StaticSymbol {
     #[inline]
@@ -2102,6 +2208,18 @@ impl From<Flonum> for Value {
         *val
     }
 }
+
+unsafe impl private::ReprValue for Flonum {
+    fn to_value(self) -> Value {
+        *self
+    }
+
+    unsafe fn from_value_unchecked(val: Value) -> Self {
+        Self(NonZeroValue::new_unchecked(val))
+    }
+}
+
+impl ReprValue for Flonum {}
 
 impl TryConvert for Flonum {
     #[inline]

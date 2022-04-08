@@ -7,7 +7,7 @@ use crate::{
     r_bignum::RBignum,
     ruby_sys::{rb_ll2inum, rb_to_int, rb_ull2inum, ruby_special_consts, ruby_value_type, VALUE},
     try_convert::TryConvert,
-    value::{Fixnum, NonZeroValue, Value},
+    value::{private, Fixnum, NonZeroValue, ReprValue, Value},
 };
 
 pub(crate) enum IntegerType {
@@ -340,6 +340,18 @@ impl From<Integer> for Value {
         *val
     }
 }
+
+unsafe impl private::ReprValue for Integer {
+    fn to_value(self) -> Value {
+        *self
+    }
+
+    unsafe fn from_value_unchecked(val: Value) -> Self {
+        Self(NonZeroValue::new_unchecked(val))
+    }
+}
+
+impl ReprValue for Integer {}
 
 impl TryConvert for Integer {
     #[inline]

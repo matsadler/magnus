@@ -7,7 +7,7 @@ use crate::{
         rb_float_new, rb_float_value, rb_to_float, ruby_special_consts, ruby_value_type, VALUE,
     },
     try_convert::TryConvert,
-    value::{NonZeroValue, Value},
+    value::{private, NonZeroValue, ReprValue, Value},
 };
 
 /// A type wrapping either a [`Flonum`](`crate::value::Flonum`) value or a
@@ -107,6 +107,18 @@ impl From<Float> for Value {
         *val
     }
 }
+
+unsafe impl private::ReprValue for Float {
+    fn to_value(self) -> Value {
+        *self
+    }
+
+    unsafe fn from_value_unchecked(val: Value) -> Self {
+        Self(NonZeroValue::new_unchecked(val))
+    }
+}
+
+impl ReprValue for Float {}
 
 impl TryConvert for Float {
     #[inline]

@@ -16,7 +16,7 @@ use crate::{
         ruby_rarray_flags, ruby_value_type, VALUE,
     },
     try_convert::{TryConvert, TryConvertOwned},
-    value::{NonZeroValue, Value, QNIL},
+    value::{private, NonZeroValue, ReprValue, Value, QNIL},
 };
 
 #[cfg(ruby_gte_3_0)]
@@ -186,7 +186,20 @@ impl RArray {
     /// let res: bool = eval!("ary == [:a, 1, nil]", ary).unwrap();
     /// assert!(res);
     /// ```
-    pub fn cat(self, s: &[Value]) -> Result<(), Error> {
+    ///
+    /// ```
+    /// use magnus::{eval, RArray, Symbol};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let ary = RArray::new();
+    /// ary.cat(&[Symbol::new("a"), Symbol::new("b"), Symbol::new("c")]).unwrap();
+    /// let res: bool = eval!("ary == [:a, :b, :c]", ary).unwrap();
+    /// assert!(res);
+    /// ```
+    pub fn cat<T>(self, s: &[T]) -> Result<(), Error>
+    where
+        T: ReprValue,
+    {
         let ptr = s.as_ptr() as *const VALUE;
         unsafe {
             protect(|| Value::new(rb_ary_cat(self.as_rb_value(), ptr, s.len() as c_long)))
@@ -206,7 +219,19 @@ impl RArray {
     /// let res: bool = eval!("ary == [:a, 1, nil]", ary).unwrap();
     /// assert!(res);
     /// ```
-    pub fn from_slice(slice: &[Value]) -> Self {
+    ///
+    /// ```
+    /// use magnus::{eval, RArray, Symbol};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let ary = RArray::from_slice(&[Symbol::new("a"), Symbol::new("b"), Symbol::new("c")]);
+    /// let res: bool = eval!("ary == [:a, :b, :c]", ary).unwrap();
+    /// assert!(res);
+    /// ```
+    pub fn from_slice<T>(slice: &[T]) -> Self
+    where
+        T: ReprValue,
+    {
         let ptr = slice.as_ptr() as *const VALUE;
         unsafe { Self::from_rb_value_unchecked(rb_ary_new_from_values(slice.len() as c_long, ptr)) }
     }
@@ -1035,6 +1060,18 @@ where
 }
 
 impl Object for RArray {}
+
+unsafe impl private::ReprValue for RArray {
+    fn to_value(self) -> Value {
+        *self
+    }
+
+    unsafe fn from_value_unchecked(val: Value) -> Self {
+        Self(NonZeroValue::new_unchecked(val))
+    }
+}
+
+impl ReprValue for RArray {}
 
 impl TryConvert for RArray {
     #[inline]

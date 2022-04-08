@@ -12,7 +12,7 @@ use crate::{
         rb_yield_values2, VALUE,
     },
     try_convert::{ArgList, RArrayArgList, TryConvert},
-    value::{NonZeroValue, Value},
+    value::{private, NonZeroValue, ReprValue, Value},
 };
 
 /// Wrapper type for a Value known to be an instance of Ruby’s Proc class.
@@ -77,6 +77,18 @@ impl From<Proc> for Value {
         *val
     }
 }
+
+unsafe impl private::ReprValue for Proc {
+    fn to_value(self) -> Value {
+        *self
+    }
+
+    unsafe fn from_value_unchecked(val: Value) -> Self {
+        Self(NonZeroValue::new_unchecked(val))
+    }
+}
+
+impl ReprValue for Proc {}
 
 impl TryConvert for Proc {
     #[inline]

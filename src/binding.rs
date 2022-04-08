@@ -9,7 +9,7 @@ use crate::{
     ruby_sys::rb_binding_new,
     symbol::Symbol,
     try_convert::TryConvert,
-    value::{NonZeroValue, Value},
+    value::{private, NonZeroValue, ReprValue, Value},
 };
 
 /// A Value known to be an instance of Binding.
@@ -144,6 +144,18 @@ impl From<Binding> for Value {
 }
 
 impl Object for Binding {}
+
+unsafe impl private::ReprValue for Binding {
+    fn to_value(self) -> Value {
+        *self
+    }
+
+    unsafe fn from_value_unchecked(val: Value) -> Self {
+        Self(NonZeroValue::new_unchecked(val))
+    }
+}
+
+impl ReprValue for Binding {}
 
 impl TryConvert for Binding {
     #[inline]

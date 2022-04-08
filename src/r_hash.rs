@@ -12,7 +12,7 @@ use crate::{
         rb_hash_lookup, rb_hash_lookup2, rb_hash_new, rb_hash_size, ruby_value_type, VALUE,
     },
     try_convert::{TryConvert, TryConvertOwned},
-    value::{Fixnum, NonZeroValue, Value, QNIL, QUNDEF},
+    value::{private, Fixnum, NonZeroValue, ReprValue, Value, QNIL, QUNDEF},
 };
 
 /// Iteration state for [`RHash::foreach`].
@@ -496,6 +496,18 @@ where
 }
 
 impl Object for RHash {}
+
+unsafe impl private::ReprValue for RHash {
+    fn to_value(self) -> Value {
+        *self
+    }
+
+    unsafe fn from_value_unchecked(val: Value) -> Self {
+        Self(NonZeroValue::new_unchecked(val))
+    }
+}
+
+impl ReprValue for RHash {}
 
 impl TryConvert for RHash {
     #[inline]

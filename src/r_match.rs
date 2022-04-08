@@ -6,7 +6,7 @@ use crate::{
     object::Object,
     ruby_sys::ruby_value_type,
     try_convert::TryConvert,
-    value::{NonZeroValue, Value},
+    value::{private, NonZeroValue, ReprValue, Value},
 };
 
 /// A Value pointer to a RMatch struct, Ruby's internal representation of the
@@ -56,6 +56,18 @@ impl From<RMatch> for Value {
 }
 
 impl Object for RMatch {}
+
+unsafe impl private::ReprValue for RMatch {
+    fn to_value(self) -> Value {
+        *self
+    }
+
+    unsafe fn from_value_unchecked(val: Value) -> Self {
+        Self(NonZeroValue::new_unchecked(val))
+    }
+}
+
+impl ReprValue for RMatch {}
 
 impl TryConvert for RMatch {
     #[inline]

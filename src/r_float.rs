@@ -7,7 +7,7 @@ use crate::{
     float::Float,
     ruby_sys::{rb_float_new, rb_float_value, ruby_value_type, VALUE},
     try_convert::TryConvert,
-    value::{Flonum, NonZeroValue, Value},
+    value::{private, Flonum, NonZeroValue, ReprValue, Value},
 };
 
 /// A Value pointer to a RFloat struct, Ruby's internal representation of
@@ -77,6 +77,18 @@ impl From<RFloat> for Value {
         *val
     }
 }
+
+unsafe impl private::ReprValue for RFloat {
+    fn to_value(self) -> Value {
+        *self
+    }
+
+    unsafe fn from_value_unchecked(val: Value) -> Self {
+        Self(NonZeroValue::new_unchecked(val))
+    }
+}
+
+impl ReprValue for RFloat {}
 
 impl TryConvert for RFloat {
     #[inline]

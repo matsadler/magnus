@@ -9,7 +9,7 @@ use crate::{
         rb_check_id, rb_id2sym, rb_intern_str, rb_sym2str, rb_to_symbol, ruby_value_type, VALUE,
     },
     try_convert::TryConvert,
-    value::{Id, NonZeroValue, StaticSymbol, Value},
+    value::{private, Id, NonZeroValue, ReprValue, StaticSymbol, Value},
 };
 
 /// A type wrapping either a [`StaticSymbol`] or a Value pointer to a RSymbol
@@ -214,6 +214,18 @@ impl From<Symbol> for Value {
         *val
     }
 }
+
+unsafe impl private::ReprValue for Symbol {
+    fn to_value(self) -> Value {
+        *self
+    }
+
+    unsafe fn from_value_unchecked(val: Value) -> Self {
+        Self(NonZeroValue::new_unchecked(val))
+    }
+}
+
+impl ReprValue for Symbol {}
 
 impl TryConvert for Symbol {
     #[inline]

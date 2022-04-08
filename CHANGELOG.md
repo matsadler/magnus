@@ -4,6 +4,12 @@
 ### Added
 
 ### Changed
+- `RArray::cat`, `RArray::from_slice`, and `gc::mark_slice` will accept a
+  slice of any Ruby type as an argument, rather than only a slice of `Value`.
+  This may change type inference rules such that things like
+  `RArray::from_slice(&[1.into()])` will no longer work. Use
+  `RArray::from_slice(&[Value::from(1)])` instead.
+- Similar to above, `gc::location` will accept any Ruby type as an argument.
 
 ### Deprecated
 

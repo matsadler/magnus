@@ -6,7 +6,7 @@ use crate::{
     object::Object,
     ruby_sys::ruby_value_type,
     try_convert::TryConvert,
-    value::{NonZeroValue, Value},
+    value::{private, NonZeroValue, ReprValue, Value},
 };
 
 /// A Value pointer to a RFile struct, Ruby's internal representation of files.
@@ -55,6 +55,18 @@ impl From<RFile> for Value {
 }
 
 impl Object for RFile {}
+
+unsafe impl private::ReprValue for RFile {
+    fn to_value(self) -> Value {
+        *self
+    }
+
+    unsafe fn from_value_unchecked(val: Value) -> Self {
+        Self(NonZeroValue::new_unchecked(val))
+    }
+}
+
+impl ReprValue for RFile {}
 
 impl TryConvert for RFile {
     #[inline]

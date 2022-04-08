@@ -23,7 +23,7 @@ use crate::{
         rb_utf8_str_new_static, ruby_rstring_flags, ruby_value_type, VALUE,
     },
     try_convert::TryConvert,
-    value::{NonZeroValue, Value},
+    value::{private, NonZeroValue, ReprValue, Value},
 };
 
 #[cfg(ruby_gte_3_0)]
@@ -664,6 +664,18 @@ impl From<PathBuf> for Value {
 
 impl Object for RString {}
 
+unsafe impl private::ReprValue for RString {
+    fn to_value(self) -> Value {
+        *self
+    }
+
+    unsafe fn from_value_unchecked(val: Value) -> Self {
+        Self(NonZeroValue::new_unchecked(val))
+    }
+}
+
+impl ReprValue for RString {}
+
 impl TryConvert for RString {
     #[inline]
     fn try_convert(val: &Value) -> Result<Self, Error> {
@@ -758,6 +770,14 @@ impl FString {
     }
 }
 
+impl Deref for FString {
+    type Target = Value;
+
+    fn deref(&self) -> &Self::Target {
+        self.0.deref()
+    }
+}
+
 impl fmt::Display for FString {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", unsafe { self.as_r_string().to_s_infallible() })
@@ -775,6 +795,18 @@ impl From<FString> for Value {
         *val.as_r_string()
     }
 }
+
+unsafe impl private::ReprValue for FString {
+    fn to_value(self) -> Value {
+        *self
+    }
+
+    unsafe fn from_value_unchecked(val: Value) -> Self {
+        Self(RString::from_value_unchecked(val))
+    }
+}
+
+impl ReprValue for FString {}
 
 /// Create a [`RString`] from a Rust str literal.
 ///

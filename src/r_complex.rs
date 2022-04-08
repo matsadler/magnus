@@ -5,7 +5,7 @@ use crate::{
     exception,
     ruby_sys::ruby_value_type,
     try_convert::TryConvert,
-    value::{NonZeroValue, Value},
+    value::{private, NonZeroValue, ReprValue, Value},
 };
 
 /// A Value pointer to a RComplex struct, Ruby's internal representation of
@@ -53,6 +53,18 @@ impl From<RComplex> for Value {
         *val
     }
 }
+
+unsafe impl private::ReprValue for RComplex {
+    fn to_value(self) -> Value {
+        *self
+    }
+
+    unsafe fn from_value_unchecked(val: Value) -> Self {
+        Self(NonZeroValue::new_unchecked(val))
+    }
+}
+
+impl ReprValue for RComplex {}
 
 impl TryConvert for RComplex {
     #[inline]

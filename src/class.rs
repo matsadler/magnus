@@ -17,7 +17,7 @@ use crate::{
         rb_cUnboundMethod, rb_class_new, rb_class_new_instance, ruby_value_type, VALUE,
     },
     try_convert::{ArgList, TryConvert},
-    value::{NonZeroValue, Value},
+    value::{private, NonZeroValue, ReprValue, Value},
 };
 
 #[cfg(ruby_gte_3_1)]
@@ -147,6 +147,18 @@ impl From<RClass> for Value {
 
 impl Object for RClass {}
 impl Module for RClass {}
+
+unsafe impl private::ReprValue for RClass {
+    fn to_value(self) -> Value {
+        *self
+    }
+
+    unsafe fn from_value_unchecked(val: Value) -> Self {
+        Self(NonZeroValue::new_unchecked(val))
+    }
+}
+
+impl ReprValue for RClass {}
 
 impl TryConvert for RClass {
     #[inline]
