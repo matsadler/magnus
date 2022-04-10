@@ -18,9 +18,9 @@ use crate::{
     object::Object,
     ruby_sys::{
         self, rb_enc_associate_index, rb_enc_get, rb_enc_get_index, rb_str_buf_append,
-        rb_str_buf_new, rb_str_cat, rb_str_conv_enc, rb_str_new, rb_str_to_str,
-        rb_usascii_encindex, rb_utf8_encindex, rb_utf8_encoding, rb_utf8_str_new,
-        rb_utf8_str_new_static, ruby_rstring_flags, ruby_value_type, VALUE,
+        rb_str_buf_new, rb_str_cat, rb_str_conv_enc, rb_str_new, rb_str_new_frozen,
+        rb_str_new_shared, rb_str_to_str, rb_usascii_encindex, rb_utf8_encindex, rb_utf8_encoding,
+        rb_utf8_str_new, rb_utf8_str_new_static, ruby_rstring_flags, ruby_value_type, VALUE,
     },
     try_convert::TryConvert,
     value::{private, NonZeroValue, ReprValue, Value},
@@ -197,6 +197,56 @@ impl RString {
     pub fn from_char(c: char) -> Self {
         let mut buf = [0; 4];
         Self::new(c.encode_utf8(&mut buf[..]))
+    }
+
+    /// Create a new Ruby string that shares the same backing data as `s`.
+    ///
+    /// Both string objects will point at the same underlying data until one is
+    /// modified, and only then will the data be duplicated. This operation is
+    /// cheep, and useful for cases where you may need to modify a string, but
+    /// don't want to mutate a value passed to your function.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RString};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let s = RString::new("example");
+    /// let dup = RString::new_shared(s);
+    /// let res: bool = eval!("s == dup", s, dup).unwrap();
+    /// assert!(res);
+    /// // mutating one doesn't mutate both
+    /// dup.cat("foo");
+    /// let res: bool = eval!("s != dup", s, dup).unwrap();
+    /// assert!(res);
+    /// ```
+    pub fn new_shared(s: Self) -> Self {
+        unsafe { Self::from_rb_value_unchecked(rb_str_new_shared(s.as_rb_value())) }
+    }
+
+    /// Create a new Ruby string that is a frozen copy of `s`.
+    ///
+    /// This can be used to get a copy of a string that is guranteed not to be
+    /// modified while you are referencing it.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RString};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let orig = RString::new("example");
+    /// let frozen = RString::new_frozen(orig);
+    /// let res: bool = eval!(r#"frozen == "example""#, frozen).unwrap();
+    /// assert!(res);
+    /// // mutating original doesn't impact the frozen copy
+    /// orig.cat("foo");
+    /// let res: bool = eval!(r#"frozen == "example""#, frozen).unwrap();
+    /// assert!(res);
+    /// ```
+    pub fn new_frozen(s: Self) -> Self {
+        unsafe { Self::from_rb_value_unchecked(rb_str_new_frozen(s.as_rb_value())) }
     }
 
     /// Return `self` as a slice of bytes.

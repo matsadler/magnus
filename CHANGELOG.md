@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 ### Added
+- `RString::new_shared` and `RString::new_frozen`.
 
 ### Changed
 - `RArray::cat`, `RArray::from_slice`, and `gc::mark_slice` will accept a
