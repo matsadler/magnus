@@ -2,7 +2,6 @@
 
 use std::{
     borrow::Cow,
-    ffi::CStr,
     fmt, io,
     ops::Deref,
     os::raw::{c_char, c_long},
@@ -13,14 +12,14 @@ use std::{
 
 use crate::{
     debug_assert_value,
+    encoding::{self, EncodingCapable, RbEncoding},
     error::{protect, Error},
     exception,
     object::Object,
     ruby_sys::{
-        self, rb_enc_associate_index, rb_enc_get, rb_enc_get_index, rb_str_buf_append,
-        rb_str_buf_new, rb_str_cat, rb_str_conv_enc, rb_str_new, rb_str_new_frozen,
-        rb_str_new_shared, rb_str_to_str, rb_usascii_encindex, rb_utf8_encindex, rb_utf8_encoding,
-        rb_utf8_str_new, rb_utf8_str_new_static, ruby_rstring_flags, ruby_value_type, VALUE,
+        self, rb_str_buf_append, rb_str_buf_new, rb_str_cat, rb_str_conv_enc, rb_str_new,
+        rb_str_new_frozen, rb_str_new_shared, rb_str_to_str, rb_utf8_str_new,
+        rb_utf8_str_new_static, ruby_rstring_flags, ruby_value_type, VALUE,
     },
     try_convert::TryConvert,
     value::{private, NonZeroValue, ReprValue, Value},
@@ -147,7 +146,7 @@ impl RString {
     /// ```
     pub fn with_capacity(n: usize) -> Self {
         let s = Self::buf_new(n);
-        unsafe { rb_enc_associate_index(s.as_rb_value(), rb_utf8_encindex()) };
+        s.enc_associate(encoding::Index::utf8()).unwrap();
         s
     }
 
@@ -323,36 +322,47 @@ impl RString {
     /// assert!(!s.is_utf8_compatible_encoding());
     /// ```
     pub fn is_utf8_compatible_encoding(self) -> bool {
-        unsafe {
-            let encindex = rb_enc_get_index(self.as_rb_value());
-            // us-ascii is a 100% compatible subset of utf8
-            encindex == rb_utf8_encindex() || encindex == rb_usascii_encindex()
-        }
+        let encindex = self.enc_get();
+        // us-ascii is a 100% compatible subset of utf8
+        encindex == encoding::Index::utf8() || encindex == encoding::Index::usascii()
     }
 
     /// Returns a new string by reencoding `self` from its current encoding to
     /// UTF-8.
+    #[deprecated(
+        since = "0.3.0",
+        note = "please use `r_string.conv_enc(RbEncoding::utf8())` instead"
+    )]
+    pub fn encode_utf8(self) -> Result<Self, Error> {
+        self.conv_enc(RbEncoding::utf8())
+    }
+
+    /// Returns a new string by reencoding `self` from its current encoding to
+    /// the given `enc`.
     ///
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, RString};
+    /// use magnus::{encoding::RbEncoding, eval, RString};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let s: RString = eval!(r#""café".encode("ISO-8859-1")"#).unwrap();
     /// // safe as we don't give Ruby the chance to mess with the string while
     /// // we hold a refrence to the slice.
     /// unsafe { assert_eq!(s.as_slice(), &[99, 97, 102, 233]) };
-    /// let e = s.encode_utf8().unwrap();
+    /// let e = s.conv_enc(RbEncoding::utf8()).unwrap();
     /// unsafe { assert_eq!(e.as_slice(), &[99, 97, 102, 195, 169]) };
     /// ```
-    pub fn encode_utf8(self) -> Result<Self, Error> {
+    pub fn conv_enc<T>(self, enc: T) -> Result<Self, Error>
+    where
+        T: Into<RbEncoding>,
+    {
         unsafe {
             protect(|| {
                 Value::new(rb_str_conv_enc(
                     self.as_rb_value(),
                     ptr::null_mut(),
-                    rb_utf8_encoding(),
+                    enc.into().as_ptr(),
                 ))
             })
             .map(|v| Self::from_rb_value_unchecked(v.as_rb_value()))
@@ -390,11 +400,10 @@ impl RString {
 
     pub(crate) unsafe fn as_str_unconstrained<'a>(self) -> Result<&'a str, Error> {
         if !self.is_utf8_compatible_encoding() {
-            let enc = rb_enc_get(self.as_rb_value());
-            let name = CStr::from_ptr((*enc).name).to_string_lossy();
+            let enc = RbEncoding::from(self.enc_get());
             return Err(Error::new(
                 exception::encoding_error(),
-                format!("expected utf-8, got {}", name),
+                format!("expected utf-8, got {}", enc.name()),
             ));
         }
         str::from_utf8(self.as_slice_unconstrained())
@@ -447,7 +456,7 @@ impl RString {
         let utf8 = if self.is_utf8_compatible_encoding() {
             self
         } else {
-            self.encode_utf8()?
+            self.conv_enc(RbEncoding::utf8())?
         };
         str::from_utf8(unsafe { utf8.as_slice() })
             .map(ToOwned::to_owned)
@@ -470,7 +479,7 @@ impl RString {
         let utf8 = if self.is_utf8_compatible_encoding() {
             self
         } else {
-            self.encode_utf8()?
+            self.conv_enc(RbEncoding::utf8())?
         };
         unsafe {
             str::from_utf8(utf8.as_slice())
@@ -642,6 +651,8 @@ impl fmt::Debug for RString {
         write!(f, "{}", self.inspect())
     }
 }
+
+impl EncodingCapable for RString {}
 
 impl io::Write for RString {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {

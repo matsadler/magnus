@@ -98,6 +98,7 @@ pub mod block;
 pub mod class;
 #[cfg(feature = "embed")]
 pub mod embed;
+pub mod encoding;
 mod enumerator;
 pub mod error;
 pub mod exception;

@@ -145,6 +145,7 @@ See `magnus::TryConvert` for more details.
 | `magnus::Symbol`                                  | `Symbol`, `#to_sym`                     |
 | `bool`                                            | any object                              |
 | `magnus::Range`                                   | `Range`                                 |
+| `magnus::Encoding`, `magnus::RbEncoding`          | `Encoding`, encoding name as a string   |
 | `Option<T>`                                       | `T` or `nil`                            |
 | `(T, U)`, `(T, U, V)`, etc                        | `[T, U]`, `[T, U, V]`, etc, `#to_ary`   |
 | `[T; N]`                                          | `[T]`, `#to_ary`                        |

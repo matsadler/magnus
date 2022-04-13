@@ -14,6 +14,7 @@ use std::{
 use crate::{
     block::Proc,
     class::{self, RClass},
+    encoding::RbEncoding,
     enumerator::Enumerator,
     error::{protect, Error},
     exception,
@@ -737,7 +738,10 @@ impl Value {
                 .unwrap_or_else(|_| {
                     RString::from_rb_value_unchecked(rb_any_to_s(self.as_rb_value()))
                 });
-            s.encode_utf8().unwrap_or(s).to_string_lossy().into_owned()
+            s.conv_enc(RbEncoding::utf8())
+                .unwrap_or(s)
+                .to_string_lossy()
+                .into_owned()
         }
     }
 

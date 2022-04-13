@@ -3,6 +3,7 @@
 ## [Unreleased]
 ### Added
 - `RString::new_shared` and `RString::new_frozen`.
+- `encoding` module, including `encoding::Index` and `RbEncoding` types.
 
 ### Changed
 - `RArray::cat`, `RArray::from_slice`, and `gc::mark_slice` will accept a
@@ -13,6 +14,7 @@
 - Similar to above, `gc::location` will accept any Ruby type as an argument.
 
 ### Deprecated
+- `String::encode_utf8`, use `r_string.conv_enc(RbEncoding::utf8())` instead.
 
 ### Removed
 
