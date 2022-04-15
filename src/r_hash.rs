@@ -2,15 +2,16 @@
 
 use std::{collections::HashMap, fmt, hash::Hash, iter::FromIterator, ops::Deref, os::raw::c_int};
 
+use crate::ruby_sys::{
+    rb_check_hash_type, rb_hash_aref, rb_hash_aset, rb_hash_fetch, rb_hash_foreach, rb_hash_lookup,
+    rb_hash_lookup2, rb_hash_new, rb_hash_size, ruby_value_type, VALUE,
+};
+
 use crate::{
     debug_assert_value,
     error::{protect, Error},
     exception,
     object::Object,
-    ruby_sys::{
-        rb_check_hash_type, rb_hash_aref, rb_hash_aset, rb_hash_fetch, rb_hash_foreach,
-        rb_hash_lookup, rb_hash_lookup2, rb_hash_new, rb_hash_size, ruby_value_type, VALUE,
-    },
     try_convert::{TryConvert, TryConvertOwned},
     value::{private, Fixnum, NonZeroValue, ReprValue, Value, QNIL, QUNDEF},
 };

@@ -2,6 +2,14 @@
 
 use std::{ffi::CString, fmt, mem::transmute, ops::Deref};
 
+use crate::ruby_sys::{
+    rb_class_inherited_p, rb_const_get, rb_define_class_id_under, rb_define_method_id,
+    rb_define_module_function, rb_define_module_id_under, rb_define_private_method,
+    rb_define_protected_method, rb_mComparable, rb_mEnumerable, rb_mErrno, rb_mFileTest, rb_mGC,
+    rb_mKernel, rb_mMath, rb_mProcess, rb_mWaitReadable, rb_mWaitWritable, rb_module_new,
+    ruby_value_type, VALUE,
+};
+
 use crate::{
     class::RClass,
     debug_assert_value,
@@ -9,13 +17,6 @@ use crate::{
     exception,
     method::Method,
     object::Object,
-    ruby_sys::{
-        rb_class_inherited_p, rb_const_get, rb_define_class_id_under, rb_define_method_id,
-        rb_define_module_function, rb_define_module_id_under, rb_define_private_method,
-        rb_define_protected_method, rb_mComparable, rb_mEnumerable, rb_mErrno, rb_mFileTest,
-        rb_mGC, rb_mKernel, rb_mMath, rb_mProcess, rb_mWaitReadable, rb_mWaitWritable,
-        rb_module_new, ruby_value_type, VALUE,
-    },
     try_convert::TryConvert,
     value::{private, Id, NonZeroValue, ReprValue, Value},
 };

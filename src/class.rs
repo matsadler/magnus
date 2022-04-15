@@ -2,26 +2,27 @@
 
 use std::{fmt, ops::Deref, os::raw::c_int};
 
+use crate::ruby_sys::{
+    self, rb_cArray, rb_cBasicObject, rb_cBinding, rb_cClass, rb_cComplex, rb_cDir, rb_cEncoding,
+    rb_cEnumerator, rb_cFalseClass, rb_cFile, rb_cFloat, rb_cHash, rb_cIO, rb_cInteger, rb_cMatch,
+    rb_cMethod, rb_cModule, rb_cNameErrorMesg, rb_cNilClass, rb_cNumeric, rb_cObject, rb_cProc,
+    rb_cRandom, rb_cRange, rb_cRational, rb_cRegexp, rb_cStat, rb_cString, rb_cStruct, rb_cSymbol,
+    rb_cThread, rb_cTime, rb_cTrueClass, rb_cUnboundMethod, rb_class_new, rb_class_new_instance,
+    ruby_value_type, VALUE,
+};
+
+#[cfg(ruby_gte_3_1)]
+use crate::ruby_sys::rb_cRefinement;
+
 use crate::{
     debug_assert_value,
     error::{protect, Error},
     exception,
     module::Module,
     object::Object,
-    ruby_sys::{
-        self, rb_cArray, rb_cBasicObject, rb_cBinding, rb_cClass, rb_cComplex, rb_cDir,
-        rb_cEncoding, rb_cEnumerator, rb_cFalseClass, rb_cFile, rb_cFloat, rb_cHash, rb_cIO,
-        rb_cInteger, rb_cMatch, rb_cMethod, rb_cModule, rb_cNameErrorMesg, rb_cNilClass,
-        rb_cNumeric, rb_cObject, rb_cProc, rb_cRandom, rb_cRange, rb_cRational, rb_cRegexp,
-        rb_cStat, rb_cString, rb_cStruct, rb_cSymbol, rb_cThread, rb_cTime, rb_cTrueClass,
-        rb_cUnboundMethod, rb_class_new, rb_class_new_instance, ruby_value_type, VALUE,
-    },
     try_convert::{ArgList, TryConvert},
     value::{private, NonZeroValue, ReprValue, Value},
 };
-
-#[cfg(ruby_gte_3_1)]
-use crate::ruby_sys::rb_cRefinement;
 
 /// A Value pointer to a RClass struct, Ruby's internal representation of
 /// classes.

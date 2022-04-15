@@ -1,12 +1,13 @@
 use std::{fmt, ops::Deref};
 
+use crate::ruby_sys::rb_binding_new;
+
 use crate::{
     class,
     error::{protect, Error},
     exception,
     object::Object,
     r_string::RString,
-    ruby_sys::rb_binding_new,
     symbol::Symbol,
     try_convert::TryConvert,
     value::{private, NonZeroValue, ReprValue, Value},

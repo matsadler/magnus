@@ -2,21 +2,11 @@ use std::{
     convert::TryInto, fmt, iter::FromIterator, ops::Deref, os::raw::c_long, ptr::NonNull, slice,
 };
 
-use crate::{
-    debug_assert_value,
-    enumerator::Enumerator,
-    error::{protect, Error},
-    exception,
-    object::Object,
-    r_string::RString,
-    ruby_sys::{
-        self, rb_ary_cat, rb_ary_entry, rb_ary_includes, rb_ary_join, rb_ary_new, rb_ary_new_capa,
-        rb_ary_new_from_values, rb_ary_pop, rb_ary_push, rb_ary_replace, rb_ary_shared_with_p,
-        rb_ary_shift, rb_ary_store, rb_ary_subseq, rb_ary_to_ary, rb_ary_unshift,
-        ruby_rarray_flags, ruby_value_type, VALUE,
-    },
-    try_convert::{TryConvert, TryConvertOwned},
-    value::{private, NonZeroValue, ReprValue, Value, QNIL},
+use crate::ruby_sys::{
+    self, rb_ary_cat, rb_ary_entry, rb_ary_includes, rb_ary_join, rb_ary_new, rb_ary_new_capa,
+    rb_ary_new_from_values, rb_ary_pop, rb_ary_push, rb_ary_replace, rb_ary_shared_with_p,
+    rb_ary_shift, rb_ary_store, rb_ary_subseq, rb_ary_to_ary, rb_ary_unshift, ruby_rarray_flags,
+    ruby_value_type, VALUE,
 };
 
 #[cfg(ruby_gte_3_0)]
@@ -24,6 +14,17 @@ use crate::ruby_sys::ruby_rarray_consts::RARRAY_EMBED_LEN_SHIFT;
 
 #[cfg(ruby_lt_3_0)]
 use crate::ruby_sys::ruby_rarray_flags::RARRAY_EMBED_LEN_SHIFT;
+
+use crate::{
+    debug_assert_value,
+    enumerator::Enumerator,
+    error::{protect, Error},
+    exception,
+    object::Object,
+    r_string::RString,
+    try_convert::{TryConvert, TryConvertOwned},
+    value::{private, NonZeroValue, ReprValue, Value, QNIL},
+};
 
 /// A Value pointer to a RArray struct, Ruby's internal representation of an
 /// Array.

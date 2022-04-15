@@ -12,18 +12,9 @@ use std::{
     ptr::{self, NonNull},
 };
 
-use crate::{
-    class::RClass,
-    debug_assert_value,
-    error::{protect, Error},
-    exception,
-    object::Object,
-    ruby_sys::{
-        self, rb_check_typeddata, rb_data_type_struct__bindgen_ty_1, rb_data_type_t,
-        rb_data_typed_object_wrap, ruby_value_type, size_t, VALUE,
-    },
-    try_convert::TryConvert,
-    value::{private, NonZeroValue, ReprValue, Value, QNIL},
+use crate::ruby_sys::{
+    self, rb_check_typeddata, rb_data_type_struct__bindgen_ty_1, rb_data_type_t,
+    rb_data_typed_object_wrap, ruby_value_type, size_t, VALUE,
 };
 
 #[cfg(ruby_gte_3_0)]
@@ -36,6 +27,16 @@ const RUBY_TYPED_FREE_IMMEDIATELY: u32 = 1;
 
 #[cfg(ruby_lt_3_0)]
 const RUBY_TYPED_WB_PROTECTED: u32 = crate::ruby_sys::ruby_fl_type::RUBY_FL_WB_PROTECTED as u32;
+
+use crate::{
+    class::RClass,
+    debug_assert_value,
+    error::{protect, Error},
+    exception,
+    object::Object,
+    try_convert::TryConvert,
+    value::{private, NonZeroValue, ReprValue, Value, QNIL},
+};
 
 /// A Value pointer to a RTypedData struct, Ruby’s internal representation of
 /// objects that wrap foreign types.
@@ -103,7 +104,8 @@ impl ReprValue for RTypedData {}
 
 /// A C struct containing metadata on a Rust type, for use with the
 /// `rb_data_typed_object_wrap` API.
-pub type DataType = rb_data_type_t;
+#[repr(transparent)]
+pub struct DataType(rb_data_type_t);
 
 impl DataType {
     /// Create a new `DataTypeBuilder`.
@@ -116,12 +118,16 @@ impl DataType {
     {
         DataTypeBuilder::new(name)
     }
+
+    fn as_rb_data_type(&self) -> &rb_data_type_t {
+        &self.0
+    }
 }
 
 impl Drop for DataType {
     fn drop(&mut self) {
         unsafe {
-            drop(CString::from_raw(self.wrap_struct_name as *mut _));
+            drop(CString::from_raw(self.0.wrap_struct_name as *mut _));
         }
     }
 }
@@ -298,7 +304,7 @@ where
         let dsize = self.size.then(|| T::extern_size as _);
         #[cfg(ruby_gte_2_7)]
         let dcompact = self.compact.then(|| T::extern_compact as _);
-        DataType {
+        DataType(rb_data_type_t {
             wrap_struct_name: CString::new(self.name).unwrap().into_raw() as _,
             function: rb_data_type_struct__bindgen_ty_1 {
                 dmark,
@@ -314,7 +320,7 @@ where
             parent: ptr::null(),
             data: ptr::null_mut(),
             flags,
-        }
+        })
     }
 }
 
@@ -376,8 +382,10 @@ where
         unsafe {
             let mut res = None;
             let _ = protect(|| {
-                res = (rb_check_typeddata(val.as_rb_value(), T::data_type() as *const _)
-                    as *const T)
+                res = (rb_check_typeddata(
+                    val.as_rb_value(),
+                    T::data_type().as_rb_data_type() as *const _,
+                ) as *const T)
                     .as_ref();
                 *QNIL
             });
@@ -405,7 +413,7 @@ where
             rb_data_typed_object_wrap(
                 T::class().as_rb_value(),
                 Box::into_raw(boxed) as *mut _,
-                T::data_type() as *const _,
+                T::data_type().as_rb_data_type() as *const _,
             )
         };
         Value::new(value_ptr)

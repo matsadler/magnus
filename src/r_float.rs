@@ -1,11 +1,12 @@
 use std::{fmt, ops::Deref};
 
+use crate::ruby_sys::{rb_float_new, rb_float_value, ruby_value_type, VALUE};
+
 use crate::{
     debug_assert_value,
     error::Error,
     exception,
     float::Float,
-    ruby_sys::{rb_float_new, rb_float_value, ruby_value_type, VALUE},
     try_convert::TryConvert,
     value::{private, Flonum, NonZeroValue, ReprValue, Value},
 };

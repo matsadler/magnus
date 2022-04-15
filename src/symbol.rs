@@ -1,13 +1,14 @@
 use std::{borrow::Cow, fmt, ops::Deref};
 
+use crate::ruby_sys::{
+    rb_check_id, rb_id2sym, rb_intern_str, rb_sym2str, rb_to_symbol, ruby_value_type, VALUE,
+};
+
 use crate::{
     debug_assert_value,
     error::{protect, Error},
     exception,
     r_string::RString,
-    ruby_sys::{
-        rb_check_id, rb_id2sym, rb_intern_str, rb_sym2str, rb_to_symbol, ruby_value_type, VALUE,
-    },
     try_convert::TryConvert,
     value::{private, Id, NonZeroValue, ReprValue, StaticSymbol, Value},
 };

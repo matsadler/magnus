@@ -24,22 +24,22 @@ use std::{
     ptr::{self, NonNull},
 };
 
+use crate::ruby_sys::{
+    rb_ascii8bit_encindex, rb_ascii8bit_encoding, rb_default_external_encoding,
+    rb_default_internal_encoding, rb_enc_associate_index, rb_enc_check, rb_enc_compatible,
+    rb_enc_default_external, rb_enc_default_internal, rb_enc_find, rb_enc_find_index,
+    rb_enc_from_encoding, rb_enc_from_index, rb_enc_get_index, rb_enc_set_index, rb_enc_to_index,
+    rb_encoding, rb_filesystem_encindex, rb_filesystem_encoding, rb_find_encoding,
+    rb_locale_encindex, rb_locale_encoding, rb_to_encoding, rb_to_encoding_index,
+    rb_usascii_encindex, rb_usascii_encoding, rb_utf8_encindex, rb_utf8_encoding,
+};
+
 use crate::{
     class,
     error::{protect, Error},
     exception,
     object::Object,
     r_string::RString,
-    ruby_sys::{
-        rb_ascii8bit_encindex, rb_ascii8bit_encoding, rb_default_external_encoding,
-        rb_default_internal_encoding, rb_enc_associate_index, rb_enc_check, rb_enc_compatible,
-        rb_enc_default_external, rb_enc_default_internal, rb_enc_find, rb_enc_find_index,
-        rb_enc_from_encoding, rb_enc_from_index, rb_enc_get_index, rb_enc_set_index,
-        rb_enc_to_index, rb_encoding, rb_filesystem_encindex, rb_filesystem_encoding,
-        rb_find_encoding, rb_locale_encindex, rb_locale_encoding, rb_to_encoding,
-        rb_to_encoding_index, rb_usascii_encindex, rb_usascii_encoding, rb_utf8_encindex,
-        rb_utf8_encoding,
-    },
     try_convert::TryConvert,
     value::{private, NonZeroValue, ReprValue, Value, QNIL},
 };

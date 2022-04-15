@@ -130,14 +130,15 @@ pub mod value;
 
 use std::{ffi::CString, mem::transmute};
 
+use crate::ruby_sys::{
+    rb_define_class, rb_define_global_function, rb_define_module, rb_define_variable, rb_errinfo,
+    rb_eval_string_protect, rb_set_errinfo, VALUE,
+};
+
 pub use magnus_macros::{init, wrap, DataTypeFunctions, TypedData};
 
 use error::protect;
 use method::Method;
-use ruby_sys::{
-    rb_define_class, rb_define_global_function, rb_define_module, rb_define_variable, rb_errinfo,
-    rb_eval_string_protect, rb_set_errinfo, VALUE,
-};
 
 pub use value::{Fixnum, Flonum, StaticSymbol, Value, QFALSE, QNIL, QTRUE};
 pub use {

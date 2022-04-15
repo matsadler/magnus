@@ -28,13 +28,14 @@
 
 use std::{ffi::CString, fmt, mem::transmute, os::raw::c_int};
 
+use crate::ruby_sys::{rb_get_kwargs, rb_scan_args, ID, VALUE};
+
 use crate::{
     block::Proc,
     error::{protect, Error},
     exception,
     r_array::RArray,
     r_hash::RHash,
-    ruby_sys::{rb_get_kwargs, rb_scan_args, ID, VALUE},
     try_convert::{TryConvert, TryConvertOwned},
     value::{Id, Value, QNIL},
 };

@@ -2,13 +2,12 @@
 
 use std::ops::Deref;
 
-use crate::{
-    ruby_sys::{
-        rb_gc_adjust_memory_usage, rb_gc_disable, rb_gc_enable, rb_gc_mark, rb_gc_mark_locations,
-        rb_gc_start, ssize_t, VALUE,
-    },
-    value::{ReprValue, Value},
+use crate::ruby_sys::{
+    rb_gc_adjust_memory_usage, rb_gc_disable, rb_gc_enable, rb_gc_mark, rb_gc_mark_locations,
+    rb_gc_start, ssize_t, VALUE,
 };
+
+use crate::value::{ReprValue, Value};
 
 #[cfg(ruby_gte_2_7)]
 use crate::ruby_sys::{rb_gc_location, rb_gc_mark_movable};

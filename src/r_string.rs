@@ -10,19 +10,10 @@ use std::{
     slice, str,
 };
 
-use crate::{
-    debug_assert_value,
-    encoding::{self, EncodingCapable, RbEncoding},
-    error::{protect, Error},
-    exception,
-    object::Object,
-    ruby_sys::{
-        self, rb_str_buf_append, rb_str_buf_new, rb_str_cat, rb_str_conv_enc, rb_str_new,
-        rb_str_new_frozen, rb_str_new_shared, rb_str_to_str, rb_utf8_str_new,
-        rb_utf8_str_new_static, ruby_rstring_flags, ruby_value_type, VALUE,
-    },
-    try_convert::TryConvert,
-    value::{private, NonZeroValue, ReprValue, Value},
+use crate::ruby_sys::{
+    self, rb_str_buf_append, rb_str_buf_new, rb_str_cat, rb_str_conv_enc, rb_str_new,
+    rb_str_new_frozen, rb_str_new_shared, rb_str_to_str, rb_utf8_str_new, rb_utf8_str_new_static,
+    ruby_rstring_flags, ruby_value_type, VALUE,
 };
 
 #[cfg(ruby_gte_3_0)]
@@ -30,6 +21,16 @@ use crate::ruby_sys::{rb_str_to_interned_str, ruby_rstring_consts::RSTRING_EMBED
 
 #[cfg(ruby_lt_3_0)]
 use crate::ruby_sys::ruby_rstring_flags::RSTRING_EMBED_LEN_SHIFT;
+
+use crate::{
+    debug_assert_value,
+    encoding::{self, EncodingCapable, RbEncoding},
+    error::{protect, Error},
+    exception,
+    object::Object,
+    try_convert::TryConvert,
+    value::{private, NonZeroValue, ReprValue, Value},
+};
 
 /// A Value pointer to a RString struct, Ruby's internal representation of
 /// strings.

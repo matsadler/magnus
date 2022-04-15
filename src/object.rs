@@ -1,10 +1,11 @@
 use std::{ffi::CString, mem::transmute, ops::Deref};
 
+use crate::ruby_sys::{rb_define_singleton_method, rb_ivar_get, rb_ivar_set};
+
 use crate::{
     debug_assert_value,
     error::{protect, Error},
     method::Method,
-    ruby_sys::{rb_define_singleton_method, rb_ivar_get, rb_ivar_set},
     try_convert::TryConvert,
     value::{Id, Value},
 };

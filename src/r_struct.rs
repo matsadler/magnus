@@ -10,6 +10,11 @@ use std::{
     slice,
 };
 
+use crate::ruby_sys::{
+    rb_struct_aref, rb_struct_aset, rb_struct_define, rb_struct_getmember, rb_struct_members,
+    rb_struct_size, ruby_value_type, VALUE,
+};
+
 use crate::{
     class::RClass,
     debug_assert_value,
@@ -17,10 +22,6 @@ use crate::{
     exception,
     object::Object,
     r_array::RArray,
-    ruby_sys::{
-        rb_struct_aref, rb_struct_aset, rb_struct_define, rb_struct_getmember, rb_struct_members,
-        rb_struct_size, ruby_value_type, VALUE,
-    },
     symbol::Symbol,
     try_convert::TryConvert,
     value::{self, Id, NonZeroValue, Value},

@@ -1,5 +1,7 @@
 use std::path::PathBuf;
 
+use crate::ruby_sys::{rb_get_path, rb_num2dbl};
+
 use crate::{
     debug_assert_value,
     error::{protect, Error},
@@ -8,7 +10,6 @@ use crate::{
     r_array::RArray,
     r_hash::RHash,
     r_string::RString,
-    ruby_sys::{rb_get_path, rb_num2dbl},
     value::{Value, QNIL},
 };
 
