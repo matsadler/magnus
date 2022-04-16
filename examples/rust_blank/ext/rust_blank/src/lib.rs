@@ -1,4 +1,4 @@
-use magnus::{define_class, method, prelude::*, Error, RString};
+use magnus::{define_class, encoding::RbEncoding, method, prelude::*, Error, RString};
 
 fn is_blank(s: &str) -> bool {
     !s.contains(|c: char| !c.is_whitespace())
@@ -12,7 +12,7 @@ fn rb_is_blank(rb_self: RString) -> Result<bool, Error> {
     unsafe {
         match rb_self.as_str() {
             Ok(s) => Ok(is_blank(s)),
-            Err(_) => Ok(is_blank(rb_self.encode_utf8()?.as_str()?)),
+            Err(_) => Ok(is_blank(rb_self.conv_enc(RbEncoding::utf8())?.as_str()?)),
         }
     }
 }
