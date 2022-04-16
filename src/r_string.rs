@@ -199,6 +199,37 @@ impl RString {
         Self::new(c.encode_utf8(&mut buf[..]))
     }
 
+    /// Create a new Ruby string containing the codepoint `code` in the
+    /// encoding `enc`.
+    ///
+    /// The encoding of the Ruby string will be the passed encoding `enc`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, encoding::RbEncoding, RString};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let c = RString::chr(97, RbEncoding::usascii()).unwrap();
+    /// let res: bool = eval!(r#"c == "a""#, c).unwrap();
+    /// assert!(res);
+    /// ```
+    ///
+    /// ```
+    /// use magnus::{eval, encoding::RbEncoding, RString};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let c = RString::chr(129408, RbEncoding::utf8()).unwrap();
+    /// let res: bool = eval!(r#"c == "🦀""#, c).unwrap();
+    /// assert!(res);
+    /// ```
+    pub fn chr<T>(code: u32, enc: T) -> Result<Self, Error>
+    where
+        T: Into<RbEncoding>,
+    {
+        enc.into().chr(code)
+    }
+
     /// Create a new Ruby string that shares the same backing data as `s`.
     ///
     /// Both string objects will point at the same underlying data until one is
