@@ -702,6 +702,20 @@ impl TryConvert for Index {
     }
 }
 
+/// Possible states of how a string matches its encoding.
+#[repr(u32)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+pub enum Coderange {
+    /// It is unknown if the string is valid for its encoding.
+    Unknown = 0,
+    /// The string is entirely within the 0 to 127 ASCII range.
+    SevenBit = 1048576,
+    /// The string is valid for its encoding.
+    Valid = 2097152,
+    /// The string holds values that are invalid for its encoding.
+    Broken = 3145728,
+}
+
 /// Trait that marks Ruby types cable of having an encoding.
 pub trait EncodingCapable: Deref<Target = Value> {
     /// Get the encoding of `self`.

@@ -3,6 +3,7 @@
 use std::{
     borrow::Cow,
     fmt, io,
+    mem::transmute,
     ops::Deref,
     os::raw::{c_char, c_long},
     path::{Path, PathBuf},
@@ -11,9 +12,9 @@ use std::{
 };
 
 use crate::ruby_sys::{
-    self, rb_str_buf_append, rb_str_buf_new, rb_str_cat, rb_str_conv_enc, rb_str_new,
-    rb_str_new_frozen, rb_str_new_shared, rb_str_to_str, rb_utf8_str_new, rb_utf8_str_new_static,
-    ruby_rstring_flags, ruby_value_type, VALUE,
+    self, rb_enc_str_coderange, rb_str_buf_append, rb_str_buf_new, rb_str_cat, rb_str_conv_enc,
+    rb_str_new, rb_str_new_frozen, rb_str_new_shared, rb_str_to_str, rb_utf8_str_new,
+    rb_utf8_str_new_static, ruby_coderange_type, ruby_rstring_flags, ruby_value_type, VALUE,
 };
 
 #[cfg(ruby_gte_3_0)]
@@ -24,7 +25,7 @@ use crate::ruby_sys::ruby_rstring_flags::RSTRING_EMBED_LEN_SHIFT;
 
 use crate::{
     debug_assert_value,
-    encoding::{self, EncodingCapable, RbEncoding},
+    encoding::{self, Coderange, EncodingCapable, RbEncoding},
     error::{protect, Error},
     exception,
     object::Object,
@@ -401,6 +402,142 @@ impl RString {
         }
     }
 
+    /// Returns the cached coderange value that describes how `self` relates to
+    /// its encoding.
+    ///
+    /// See also [`enc_coderange_scan`](RString::enc_coderange_scan).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{encoding::Coderange, RString};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// // Coderange is unknown on creation.
+    /// let s = RString::new("test");
+    /// assert_eq!(s.enc_coderange(), Coderange::Unknown);
+    ///
+    /// // Methods that operate on the string using the encoding will set the
+    /// // coderange as a side effect.
+    /// let _: usize = s.funcall("length", ()).unwrap();
+    /// assert_eq!(s.enc_coderange(), Coderange::SevenBit);
+    ///
+    /// // Operations with two strings with known coderanges will set it
+    /// // appropriately.
+    /// let t = RString::new("🦀");
+    /// let _: usize = t.funcall("length", ()).unwrap();
+    /// assert_eq!(t.enc_coderange(), Coderange::Valid);
+    /// s.append(t).unwrap();
+    /// assert_eq!(s.enc_coderange(), Coderange::Valid);
+    ///
+    /// // Operations that modify the string with an unknown coderange will
+    /// // set the coderange back to unknown.
+    /// s.cat([128]);
+    /// assert_eq!(s.enc_coderange(), Coderange::Unknown);
+    ///
+    /// // Which may leave the string with a broken encoding.
+    /// let _: usize = s.funcall("length", ()).unwrap();
+    /// assert_eq!(s.enc_coderange(), Coderange::Broken);
+    /// ```
+    pub fn enc_coderange(self) -> Coderange {
+        unsafe {
+            transmute(
+                (self.r_basic_unchecked().as_ref().flags
+                    & ruby_coderange_type::RUBY_ENC_CODERANGE_MASK as VALUE) as u32,
+            )
+        }
+    }
+
+    /// Scans `self` to establish its coderange.
+    ///
+    /// If the coderange is already known, simply returns the known value.
+    /// See also [`enc_coderange`](RString::enc_coderange).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{encoding::Coderange, RString};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let s = RString::new("test");
+    /// assert_eq!(s.enc_coderange_scan(), Coderange::SevenBit);
+    /// ```
+    pub fn enc_coderange_scan(self) -> Coderange {
+        unsafe { transmute(rb_enc_str_coderange(self.as_rb_value()) as u32) }
+    }
+
+    /// Clear `self`'s cached coderange, setting it to `Unknown`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{encoding::Coderange, RString};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let s = RString::new("🦀");
+    /// // trigger setting coderange
+    /// let _: usize = s.funcall("length", ()).unwrap();
+    /// assert_eq!(s.enc_coderange(), Coderange::Valid);
+    ///
+    /// s.enc_coderange_clear();
+    /// assert_eq!(s.enc_coderange(), Coderange::Unknown);
+    /// ```
+    pub fn enc_coderange_clear(self) {
+        unsafe {
+            self.r_basic_unchecked().as_mut().flags &=
+                !(ruby_coderange_type::RUBY_ENC_CODERANGE_MASK as VALUE)
+        }
+    }
+
+    /// Sets `self`'s cached coderange.
+    ///
+    /// Rather than using the method it is recommended to set the coderange to
+    /// `Unknown` with [`enc_coderange_clear`](RString::enc_coderange_clear)
+    /// and let Ruby determine the coderange lazily when needed.
+    ///
+    /// # Safety
+    ///
+    /// This must be set correctly. `SevenBit` if all codepoints are within
+    /// 0..=127, `Valid` if the string is valid for its encoding, or `Broken`
+    /// if it is not. `Unknown` can be set safely with
+    /// [`enc_coderange_clear`](RString::enc_coderange_clear).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{encoding::{self, Coderange, EncodingCapable}, exception, Error, RString};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// fn crabbify(s: RString) -> Result<(), Error> {
+    ///     if s.enc_get() != encoding::Index::utf8() {
+    ///         return Err(Error::new(exception::encoding_error(), "expected utf-8"));
+    ///     }
+    ///     let original = s.enc_coderange();
+    ///     // ::cat() will clear the coderange
+    ///     s.cat("🦀");
+    ///     // we added a multibyte char, so if we started with `SevenBit` it
+    ///     // should be upgraded to `Valid`, and if it was `Valid` it is still
+    ///     // `Valid`.
+    ///     if original == Coderange::SevenBit || original == Coderange::Valid {
+    ///         unsafe {
+    ///             s.enc_coderange_set(Coderange::Valid);
+    ///         }
+    ///     }
+    ///     Ok(())
+    /// }
+    ///
+    /// let s = RString::new("test");
+    /// // trigger setting coderange
+    /// let _: usize = s.funcall("length", ()).unwrap();
+    ///
+    /// crabbify(s).unwrap();
+    /// assert_eq!(s.enc_coderange(), Coderange::Valid);
+    /// ```
+    pub unsafe fn enc_coderange_set(self, cr: Coderange) {
+        self.enc_coderange_clear();
+        self.r_basic_unchecked().as_mut().flags |= cr as VALUE;
+    }
+
     /// Returns a Rust `&str` reference to the value of `self`.
     ///
     /// Errors if `self`'s encoding is not UTF-8 (or US-ASCII), or if the
@@ -430,16 +567,23 @@ impl RString {
         self.as_str_unconstrained()
     }
 
-    pub(crate) unsafe fn as_str_unconstrained<'a>(self) -> Result<&'a str, Error> {
-        if !self.is_utf8_compatible_encoding() {
-            let enc = RbEncoding::from(self.enc_get());
-            return Err(Error::new(
+    unsafe fn as_str_unconstrained<'a>(self) -> Result<&'a str, Error> {
+        let enc = self.enc_get();
+        let cr = self.enc_coderange();
+        let is_utf8_compat = self.is_utf8_compatible_encoding();
+        if (is_utf8_compat && (cr == Coderange::SevenBit || cr == Coderange::Valid))
+            || (enc == encoding::Index::ascii8bit() && cr == Coderange::SevenBit)
+        {
+            Ok(str::from_utf8_unchecked(self.as_slice_unconstrained()))
+        } else if is_utf8_compat {
+            str::from_utf8(self.as_slice_unconstrained())
+                .map_err(|e| Error::new(exception::encoding_error(), format!("{}", e)))
+        } else {
+            Err(Error::new(
                 exception::encoding_error(),
-                format!("expected utf-8, got {}", enc.name()),
-            ));
+                format!("expected utf-8, got {}", RbEncoding::from(enc).name()),
+            ))
         }
-        str::from_utf8(self.as_slice_unconstrained())
-            .map_err(|e| Error::new(exception::encoding_error(), format!("{}", e)))
     }
 
     /// Returns `self` as a Rust string, ignoring the Ruby encoding and
