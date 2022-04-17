@@ -5,6 +5,8 @@
 - `RString::new_shared` and `RString::new_frozen`.
 - `encoding` module, including `encoding::Index` and `RbEncoding` types.
 - `RString::enc_coderange` and related methods.
+- `RString::codepoints` and `RString::char_bytes` iterators over string
+  contents.
 
 ### Changed
 - `RArray::cat`, `RArray::from_slice`, and `gc::mark_slice` will accept a

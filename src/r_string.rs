@@ -3,6 +3,7 @@
 use std::{
     borrow::Cow,
     fmt, io,
+    iter::Iterator,
     mem::transmute,
     ops::Deref,
     os::raw::{c_char, c_long},
@@ -328,6 +329,70 @@ impl RString {
             f &= ruby_rstring_flags::RSTRING_EMBED_LEN_MASK as VALUE;
             f >>= RSTRING_EMBED_LEN_SHIFT as VALUE;
             slice::from_raw_parts(embedded_ary_ptr(self), f as usize)
+        }
+    }
+
+    /// Return an iterator over `self`'s codepoints.
+    ///
+    /// # Safety
+    ///
+    /// The returned iterator references memory owned and managed by Ruby. Ruby
+    /// may modify or free that memory, the caller must ensure this does not
+    /// happen at any time while still holding a reference to the iterator.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Error, RString};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let s = RString::new("🦀 café");
+    ///
+    /// let codepoints = unsafe {
+    ///     // ensure string isn't mutated during iteration by creating a
+    ///     // frozen copy and iterating over that
+    ///     let f = RString::new_frozen(s);
+    ///     f.codepoints().collect::<Result<Vec<_>, Error>>().unwrap()
+    /// };
+    ///
+    /// assert_eq!(codepoints, [129408, 32, 99, 97, 102, 233]);
+    /// ```
+    pub unsafe fn codepoints(&self) -> Codepoints {
+        Codepoints {
+            slice: self.as_slice(),
+            encoding: self.enc_get().into(),
+        }
+    }
+
+    /// Return an iterator over `self`'s chars as slices of bytes.
+    ///
+    /// # Safety
+    ///
+    /// The returned iterator references memory owned and managed by Ruby. Ruby
+    /// may modify or free that memory, the caller must ensure this does not
+    /// happen at any time while still holding a reference to the iterator.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::RString;
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let s = RString::new("🦀 café");
+    ///
+    /// // ensure string isn't mutated during iteration by creating a frozen
+    /// // copy and iterating over that
+    /// let f = RString::new_frozen(s);
+    /// let codepoints = unsafe {
+    ///     f.char_bytes().collect::<Vec<_>>()
+    /// };
+    ///
+    /// assert_eq!(codepoints, [&[240, 159, 166, 128][..], &[32], &[99], &[97], &[102], &[195, 169]]);
+    /// ```
+    pub unsafe fn char_bytes(&self) -> CharBytes {
+        CharBytes {
+            slice: self.as_slice(),
+            encoding: self.enc_get().into(),
         }
     }
 
@@ -1044,6 +1109,49 @@ unsafe impl private::ReprValue for FString {
 }
 
 impl ReprValue for FString {}
+
+/// An iterator over a Ruby string's codepoints.
+pub struct Codepoints<'a> {
+    slice: &'a [u8],
+    encoding: RbEncoding,
+}
+
+impl<'a> Iterator for Codepoints<'a> {
+    type Item = Result<u32, Error>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.slice.is_empty() {
+            return None;
+        }
+        match self.encoding.codepoint_len(self.slice) {
+            Ok((codepoint, len)) => {
+                self.slice = &self.slice[len..];
+                Some(Ok(codepoint))
+            }
+            Err(e) => Some(Err(e)),
+        }
+    }
+}
+
+/// An iterator over a Ruby string's chars as slices of bytes.
+pub struct CharBytes<'a> {
+    slice: &'a [u8],
+    encoding: RbEncoding,
+}
+
+impl<'a> Iterator for CharBytes<'a> {
+    type Item = &'a [u8];
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.slice.is_empty() {
+            return None;
+        }
+        let len = self.encoding.mbclen(self.slice);
+        let bytes = &self.slice[..len];
+        self.slice = &self.slice[len..];
+        Some(bytes)
+    }
+}
 
 /// Create a [`RString`] from a Rust str literal.
 ///
