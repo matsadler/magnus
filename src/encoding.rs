@@ -564,6 +564,45 @@ impl RbEncoding {
                 .map(|v| RString::from_rb_value_unchecked(v.as_rb_value()))
         }
     }
+
+    /// Returns `true` if the first character in `slice` is a newline in the
+    /// encoding `self`, `false` otherwise.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, encoding::RbEncoding};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// assert!(RbEncoding::utf8().is_mbc_newline(&[10]));
+    /// assert!(!RbEncoding::utf8().is_mbc_newline(&[32]));
+    /// ```
+    pub fn is_mbc_newline(&self, slice: &[u8]) -> bool {
+        let Range { start: p, end: e } = slice.as_ptr_range();
+        unsafe {
+            self.0.as_ref().is_mbc_newline.unwrap()(p as *const _, e as *const _, self.as_ptr())
+                != 0
+        }
+    }
+
+    /// Returns whether the given codepoint `code` is of the character type
+    /// `ctype` in the encoding `self`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, encoding::{CType, RbEncoding}};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// assert!(RbEncoding::utf8().is_code_ctype(9, CType::Space));   // "\t"
+    /// assert!(RbEncoding::utf8().is_code_ctype(32, CType::Space));  // " "
+    /// assert!(!RbEncoding::utf8().is_code_ctype(65, CType::Space)); // "A"
+    /// assert!(RbEncoding::utf8().is_code_ctype(65, CType::Alnum));  // "A"
+    /// assert!(RbEncoding::utf8().is_code_ctype(65, CType::Upper));  // "A"
+    /// ```
+    pub fn is_code_ctype(&self, code: u32, ctype: CType) -> bool {
+        unsafe { self.0.as_ref().is_code_ctype.unwrap()(code, ctype as _, self.as_ptr()) != 0 }
+    }
 }
 
 /// Return value for [`RbEncoding::precise_mbclen`].
@@ -575,6 +614,42 @@ pub enum MbcLen {
     NeedMore(usize),
     /// The bytes at the start of the slice are not valid for the encoding.
     Invalid,
+}
+
+/// A character type.
+#[repr(u32)]
+#[derive(Debug, Copy, Clone)]
+pub enum CType {
+    /// Newline.
+    Newline = 0,
+    /// Alphabetical.
+    Alpha = 1,
+    /// Blank.
+    Blank = 2,
+    /// Control.
+    Cntrl = 3,
+    /// Digit.
+    Digit = 4,
+    /// Graph.
+    Graph = 5,
+    /// Lowercase.
+    Lower = 6,
+    /// Printable.
+    Print = 7,
+    /// Punctuation.
+    Punct = 8,
+    /// Whitespace.
+    Space = 9,
+    /// Uppercase.
+    Upper = 10,
+    /// Xdigit.
+    Xdigit = 11,
+    /// Word.
+    Word = 12,
+    /// Alphanumeric.
+    Alnum = 13,
+    /// ASCII.
+    Ascii = 14,
 }
 
 impl From<RbEncoding> for Encoding {
