@@ -22,6 +22,8 @@
 ### Removed
 
 ### Fixed
+- creating a `StaticSymbol` from a `&str` with characters outside the ASCII
+  range.
 
 ### Security
 
