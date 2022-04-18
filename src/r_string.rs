@@ -1128,7 +1128,10 @@ impl<'a> Iterator for Codepoints<'a> {
                 self.slice = &self.slice[len..];
                 Some(Ok(codepoint))
             }
-            Err(e) => Some(Err(e)),
+            Err(e) => {
+                self.slice = &self.slice[self.slice.len()..];
+                Some(Err(e))
+            }
         }
     }
 }
