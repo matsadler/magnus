@@ -24,7 +24,7 @@ use crate::ruby_sys::{
 use crate::{
     block::Proc,
     class::{self, RClass},
-    encoding::RbEncoding,
+    encoding::{EncodingCapable, RbEncoding},
     enumerator::Enumerator,
     error::{protect, Error},
     exception,
@@ -2012,6 +2012,8 @@ impl fmt::Debug for StaticSymbol {
         write!(f, "{}", self.inspect())
     }
 }
+
+impl EncodingCapable for StaticSymbol {}
 
 impl From<Id> for StaticSymbol {
     fn from(id: Id) -> Self {

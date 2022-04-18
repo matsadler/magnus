@@ -6,6 +6,7 @@ use crate::ruby_sys::{
 
 use crate::{
     debug_assert_value,
+    encoding::EncodingCapable,
     error::{protect, Error},
     exception,
     r_string::RString,
@@ -181,6 +182,8 @@ impl fmt::Debug for Symbol {
         write!(f, "{}", self.inspect())
     }
 }
+
+impl EncodingCapable for Symbol {}
 
 impl From<Id> for Symbol {
     fn from(id: Id) -> Self {

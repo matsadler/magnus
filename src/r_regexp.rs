@@ -3,6 +3,7 @@ use std::{fmt, ops::Deref};
 use crate::ruby_sys::ruby_value_type;
 
 use crate::{
+    encoding::EncodingCapable,
     error::Error,
     exception,
     try_convert::TryConvert,
@@ -48,6 +49,8 @@ impl fmt::Debug for RRegexp {
         write!(f, "{}", self.inspect())
     }
 }
+
+impl EncodingCapable for RRegexp {}
 
 impl From<RRegexp> for Value {
     fn from(val: RRegexp) -> Self {
