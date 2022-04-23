@@ -34,11 +34,6 @@ jobs:
     - name: Set LD_LIBRARY_PATH
       if: matrix.os == 'ubuntu-latest'
       run: echo LD_LIBRARY_PATH=$(ruby -e 'print RbConfig::CONFIG["libdir"]') >> $GITHUB_ENV
-    - name: Fix clang
-      if: matrix.os == 'windows-latest' && matrix.ruby-version == '3.1'
-      run: |
-        pacman --remove --cascade mingw-w64-x86_64-clang
-        pacman --sync --noconfirm --needed $ENV:MINGW_PACKAGE_PREFIX-clang
     - name: Run tests
       run: cargo test
     - name: Example gem tests
