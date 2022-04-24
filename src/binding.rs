@@ -1,6 +1,6 @@
 use std::{fmt, ops::Deref};
 
-use crate::ruby_sys::rb_binding_new;
+use crate::ruby_sys::{rb_binding_new, VALUE};
 
 use crate::{
     class,
@@ -36,11 +36,12 @@ impl Binding {
     #[deprecated(since = "0.2.0", note = "this will no longer function as of Ruby 3.2")]
     #[allow(clippy::new_without_default)]
     pub fn new() -> Self {
-        unsafe {
-            protect(|| Value::new(rb_binding_new()))
-                .map(|v| Self(NonZeroValue::new_unchecked(v)))
-                .unwrap()
-        }
+        protect(|| unsafe { Self::from_rb_value_unchecked(rb_binding_new()) }).unwrap()
+    }
+
+    #[inline]
+    pub(crate) unsafe fn from_rb_value_unchecked(val: VALUE) -> Self {
+        Self(NonZeroValue::new_unchecked(Value::new(val)))
     }
 
     /// Return `Some(Binding)` if `val` is a `Binding`, `None` otherwise.

@@ -505,7 +505,7 @@ impl RbEncoding {
                     self.as_ptr(),
                 )
             };
-            *QNIL
+            QNIL
         })?;
         Ok((c as u32, len as usize))
     }
@@ -531,7 +531,7 @@ impl RbEncoding {
         let mut len = 0;
         protect(|| {
             unsafe { len = rb_enc_codelen(code, self.as_ptr()) as usize }
-            *QNIL
+            QNIL
         })?;
         Ok(len)
     }
@@ -559,10 +559,9 @@ impl RbEncoding {
     /// assert!(res);
     /// ```
     pub fn chr(&self, code: u32) -> Result<RString, Error> {
-        unsafe {
-            protect(|| Value::new(rb_enc_uint_chr(code, self.as_ptr())))
-                .map(|v| RString::from_rb_value_unchecked(v.as_rb_value()))
-        }
+        protect(|| unsafe {
+            RString::from_rb_value_unchecked(rb_enc_uint_chr(code, self.as_ptr()))
+        })
     }
 
     /// Returns `true` if the first character in `slice` is a newline in the
@@ -676,7 +675,7 @@ impl TryConvert for RbEncoding {
         let mut ptr = ptr::null_mut();
         protect(|| {
             ptr = unsafe { rb_to_encoding(val.as_rb_value()) };
-            *QNIL
+            QNIL
         })?;
         Ok(Self::new(ptr).unwrap())
     }
@@ -739,7 +738,7 @@ impl Index {
         let mut i = 0;
         protect(|| {
             i = unsafe { rb_enc_find_index(name.as_ptr()) };
-            *QNIL
+            QNIL
         })?;
         if i == -1 {
             return Err(Error::new(
@@ -834,7 +833,7 @@ pub trait EncodingCapable: Deref<Target = Value> {
     {
         protect(|| {
             unsafe { rb_enc_set_index(self.as_rb_value(), enc.into().to_int()) };
-            *QNIL
+            QNIL
         })?;
         Ok(())
     }
@@ -927,7 +926,7 @@ where
     let mut ptr = ptr::null_mut();
     protect(|| {
         ptr = unsafe { rb_enc_check(v1.as_rb_value(), v2.as_rb_value()) };
-        *QNIL
+        QNIL
     })?;
     Ok(RbEncoding::new(ptr).unwrap())
 }
@@ -962,7 +961,7 @@ where
 {
     protect(|| {
         unsafe { rb_enc_copy(dst.as_rb_value(), src.as_rb_value()) };
-        *QNIL
+        QNIL
     })?;
     Ok(())
 }

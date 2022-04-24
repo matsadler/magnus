@@ -209,19 +209,15 @@ pub fn define_class(name: &str, superclass: RClass) -> Result<RClass, Error> {
     debug_assert_value!(superclass);
     let name = CString::new(name).unwrap();
     let superclass = superclass.as_rb_value();
-    unsafe {
-        let res = protect(|| Value::new(rb_define_class(name.as_ptr(), superclass)));
-        res.map(|v| RClass::from_value(v).unwrap())
-    }
+    protect(|| unsafe {
+        RClass::from_rb_value_unchecked(rb_define_class(name.as_ptr(), superclass))
+    })
 }
 
 /// Define a module in the root scope.
 pub fn define_module(name: &str) -> Result<RModule, Error> {
     let name = CString::new(name).unwrap();
-    unsafe {
-        let res = protect(|| Value::new(rb_define_module(name.as_ptr())));
-        res.map(|v| RModule::from_value(v).unwrap())
-    }
+    protect(|| unsafe { RModule::from_rb_value_unchecked(rb_define_module(name.as_ptr())) })
 }
 
 /// Define a global variable.

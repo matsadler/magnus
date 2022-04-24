@@ -11,7 +11,7 @@ use crate::{
     debug_assert_value,
     exception::{self, Exception, ExceptionClass},
     module::Module,
-    value::{Value, QNIL},
+    value::{ReprValue, Value, QNIL},
 };
 
 /// A Rust representation of a Ruby `Exception` or other interrupt.
@@ -243,18 +243,20 @@ impl fmt::Display for Tag {
 /// All functions exposed by magnus that call Ruby in a way that may raise
 /// already use this internally, but this is provided for anyone calling
 /// the Ruby C API directly.
-pub fn protect<F>(func: F) -> Result<Value, Error>
+pub fn protect<F, T>(func: F) -> Result<T, Error>
 where
-    F: FnOnce() -> Value,
+    F: FnOnce() -> T,
+    T: ReprValue,
 {
     // nested function as this is totally unsafe to call out of this context
     // arg should not be a VALUE, but a mutable pointer to F, cast to VALUE
-    unsafe extern "C" fn call<F>(arg: VALUE) -> VALUE
+    unsafe extern "C" fn call<F, T>(arg: VALUE) -> VALUE
     where
-        F: FnOnce() -> Value,
+        F: FnOnce() -> T,
+        T: ReprValue,
     {
         let closure = (&mut *(arg as *mut Option<F>)).take().unwrap();
-        (closure)().as_rb_value()
+        (closure)().to_value().as_rb_value()
     }
 
     // Tag::None
@@ -274,12 +276,12 @@ where
     let result = unsafe {
         let mut some_func = Some(func);
         let closure = &mut some_func as *mut Option<F> as VALUE;
-        rb_protect(Some(call::<F>), closure, &mut state as *mut c_int)
+        rb_protect(Some(call::<F, T>), closure, &mut state as *mut c_int)
     };
 
     match state {
         // Tag::None
-        0 => Ok(Value::new(result)),
+        0 => unsafe { Ok(T::from_value_unchecked(Value::new(result))) },
         // Tag::Raise
         6 => unsafe {
             let ex = Exception::from_rb_value_unchecked(rb_errinfo());

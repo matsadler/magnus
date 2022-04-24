@@ -387,7 +387,7 @@ where
                     T::data_type().as_rb_data_type() as *const _,
                 ) as *const T)
                     .as_ref();
-                *QNIL
+                QNIL
             });
             res.ok_or_else(|| {
                 Error::new(

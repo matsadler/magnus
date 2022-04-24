@@ -75,16 +75,13 @@ impl Range {
         T: Into<Value>,
         U: Into<Value>,
     {
-        unsafe {
-            protect(|| {
-                Value::new(rb_range_new(
-                    beg.into().as_rb_value(),
-                    end.into().as_rb_value(),
-                    excl as c_int,
-                ))
-            })
-            .map(|val| Self(RStruct::from_rb_value_unchecked(val.as_rb_value())))
-        }
+        protect(|| unsafe {
+            Self(RStruct::from_rb_value_unchecked(rb_range_new(
+                beg.into().as_rb_value(),
+                end.into().as_rb_value(),
+                excl as c_int,
+            )))
+        })
     }
 
     /// Return the value that defines the beginning of the range, converting it

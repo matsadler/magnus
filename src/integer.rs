@@ -359,15 +359,12 @@ impl ReprValue for Integer {}
 impl TryConvert for Integer {
     #[inline]
     fn try_convert(val: &Value) -> Result<Self, Error> {
-        unsafe {
-            match Self::from_value(*val) {
-                Some(i) => Ok(i),
-                None => protect(|| {
-                    debug_assert_value!(val);
-                    Value::new(rb_to_int(val.as_rb_value()))
-                })
-                .map(|res| Self::from_rb_value_unchecked(res.as_rb_value())),
-            }
+        match Self::from_value(*val) {
+            Some(i) => Ok(i),
+            None => protect(|| {
+                debug_assert_value!(val);
+                unsafe { Self::from_rb_value_unchecked(rb_to_int(val.as_rb_value())) }
+            }),
         }
     }
 }

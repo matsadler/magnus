@@ -159,10 +159,8 @@ impl RStruct {
         U: TryConvert,
     {
         let index = index.into();
-        unsafe {
-            protect(|| Value::new(rb_struct_aref(self.as_rb_value(), index.as_rb_value())))
-                .and_then(|v| v.try_convert())
-        }
+        protect(|| unsafe { Value::new(rb_struct_aref(self.as_rb_value(), index.as_rb_value())) })
+            .and_then(|v| v.try_convert())
     }
 
     /// Return the value for the member at `index`.
@@ -215,10 +213,8 @@ impl RStruct {
         U: TryConvert,
     {
         let id = id.into();
-        unsafe {
-            protect(|| Value::new(rb_struct_getmember(self.as_rb_value(), id.as_rb_id())))
-                .and_then(|v| v.try_convert())
-        }
+        protect(|| unsafe { Value::new(rb_struct_getmember(self.as_rb_value(), id.as_rb_id())) })
+            .and_then(|v| v.try_convert())
     }
 }
 
@@ -295,16 +291,13 @@ impl StructMembers for (&str,) {
     fn define(self, name: Option<&str>) -> Result<RClass, Error> {
         let name = name.map(|n| CString::new(n).unwrap());
         let arg0 = CString::new(self.0).unwrap();
-        unsafe {
-            protect(|| {
-                Value::new(rb_struct_define(
-                    name.as_ref().map(|n| n.as_ptr()).unwrap_or_else(null),
-                    arg0.as_ptr(),
-                    null::<c_char>(),
-                ))
-            })
-            .map(|v| RClass::from_rb_value_unchecked(v.as_rb_value()))
-        }
+        protect(|| unsafe {
+            RClass::from_rb_value_unchecked(rb_struct_define(
+                name.as_ref().map(|n| n.as_ptr()).unwrap_or_else(null),
+                arg0.as_ptr(),
+                null::<c_char>(),
+            ))
+        })
     }
 }
 
@@ -313,17 +306,14 @@ impl StructMembers for (&str, &str) {
         let name = name.map(|n| CString::new(n).unwrap());
         let arg0 = CString::new(self.0).unwrap();
         let arg1 = CString::new(self.1).unwrap();
-        unsafe {
-            protect(|| {
-                Value::new(rb_struct_define(
-                    name.as_ref().map(|n| n.as_ptr()).unwrap_or_else(null),
-                    arg0.as_ptr(),
-                    arg1.as_ptr(),
-                    null::<c_char>(),
-                ))
-            })
-            .map(|v| RClass::from_rb_value_unchecked(v.as_rb_value()))
-        }
+        protect(|| unsafe {
+            RClass::from_rb_value_unchecked(rb_struct_define(
+                name.as_ref().map(|n| n.as_ptr()).unwrap_or_else(null),
+                arg0.as_ptr(),
+                arg1.as_ptr(),
+                null::<c_char>(),
+            ))
+        })
     }
 }
 
@@ -333,18 +323,15 @@ impl StructMembers for (&str, &str, &str) {
         let arg0 = CString::new(self.0).unwrap();
         let arg1 = CString::new(self.1).unwrap();
         let arg2 = CString::new(self.2).unwrap();
-        unsafe {
-            protect(|| {
-                Value::new(rb_struct_define(
-                    name.as_ref().map(|n| n.as_ptr()).unwrap_or_else(null),
-                    arg0.as_ptr(),
-                    arg1.as_ptr(),
-                    arg2.as_ptr(),
-                    null::<c_char>(),
-                ))
-            })
-            .map(|v| RClass::from_rb_value_unchecked(v.as_rb_value()))
-        }
+        protect(|| unsafe {
+            RClass::from_rb_value_unchecked(rb_struct_define(
+                name.as_ref().map(|n| n.as_ptr()).unwrap_or_else(null),
+                arg0.as_ptr(),
+                arg1.as_ptr(),
+                arg2.as_ptr(),
+                null::<c_char>(),
+            ))
+        })
     }
 }
 
@@ -355,19 +342,16 @@ impl StructMembers for (&str, &str, &str, &str) {
         let arg1 = CString::new(self.1).unwrap();
         let arg2 = CString::new(self.2).unwrap();
         let arg3 = CString::new(self.3).unwrap();
-        unsafe {
-            protect(|| {
-                Value::new(rb_struct_define(
-                    name.as_ref().map(|n| n.as_ptr()).unwrap_or_else(null),
-                    arg0.as_ptr(),
-                    arg1.as_ptr(),
-                    arg2.as_ptr(),
-                    arg3.as_ptr(),
-                    null::<c_char>(),
-                ))
-            })
-            .map(|v| RClass::from_rb_value_unchecked(v.as_rb_value()))
-        }
+        protect(|| unsafe {
+            RClass::from_rb_value_unchecked(rb_struct_define(
+                name.as_ref().map(|n| n.as_ptr()).unwrap_or_else(null),
+                arg0.as_ptr(),
+                arg1.as_ptr(),
+                arg2.as_ptr(),
+                arg3.as_ptr(),
+                null::<c_char>(),
+            ))
+        })
     }
 }
 
@@ -379,20 +363,17 @@ impl StructMembers for (&str, &str, &str, &str, &str) {
         let arg2 = CString::new(self.2).unwrap();
         let arg3 = CString::new(self.3).unwrap();
         let arg4 = CString::new(self.4).unwrap();
-        unsafe {
-            protect(|| {
-                Value::new(rb_struct_define(
-                    name.as_ref().map(|n| n.as_ptr()).unwrap_or_else(null),
-                    arg0.as_ptr(),
-                    arg1.as_ptr(),
-                    arg2.as_ptr(),
-                    arg3.as_ptr(),
-                    arg4.as_ptr(),
-                    null::<c_char>(),
-                ))
-            })
-            .map(|v| RClass::from_rb_value_unchecked(v.as_rb_value()))
-        }
+        protect(|| unsafe {
+            RClass::from_rb_value_unchecked(rb_struct_define(
+                name.as_ref().map(|n| n.as_ptr()).unwrap_or_else(null),
+                arg0.as_ptr(),
+                arg1.as_ptr(),
+                arg2.as_ptr(),
+                arg3.as_ptr(),
+                arg4.as_ptr(),
+                null::<c_char>(),
+            ))
+        })
     }
 }
 
@@ -405,21 +386,18 @@ impl StructMembers for (&str, &str, &str, &str, &str, &str) {
         let arg3 = CString::new(self.3).unwrap();
         let arg4 = CString::new(self.4).unwrap();
         let arg5 = CString::new(self.5).unwrap();
-        unsafe {
-            protect(|| {
-                Value::new(rb_struct_define(
-                    name.as_ref().map(|n| n.as_ptr()).unwrap_or_else(null),
-                    arg0.as_ptr(),
-                    arg1.as_ptr(),
-                    arg2.as_ptr(),
-                    arg3.as_ptr(),
-                    arg4.as_ptr(),
-                    arg5.as_ptr(),
-                    null::<c_char>(),
-                ))
-            })
-            .map(|v| RClass::from_rb_value_unchecked(v.as_rb_value()))
-        }
+        protect(|| unsafe {
+            RClass::from_rb_value_unchecked(rb_struct_define(
+                name.as_ref().map(|n| n.as_ptr()).unwrap_or_else(null),
+                arg0.as_ptr(),
+                arg1.as_ptr(),
+                arg2.as_ptr(),
+                arg3.as_ptr(),
+                arg4.as_ptr(),
+                arg5.as_ptr(),
+                null::<c_char>(),
+            ))
+        })
     }
 }
 
@@ -433,22 +411,19 @@ impl StructMembers for (&str, &str, &str, &str, &str, &str, &str) {
         let arg4 = CString::new(self.4).unwrap();
         let arg5 = CString::new(self.5).unwrap();
         let arg6 = CString::new(self.6).unwrap();
-        unsafe {
-            protect(|| {
-                Value::new(rb_struct_define(
-                    name.as_ref().map(|n| n.as_ptr()).unwrap_or_else(null),
-                    arg0.as_ptr(),
-                    arg1.as_ptr(),
-                    arg2.as_ptr(),
-                    arg3.as_ptr(),
-                    arg4.as_ptr(),
-                    arg5.as_ptr(),
-                    arg6.as_ptr(),
-                    null::<c_char>(),
-                ))
-            })
-            .map(|v| RClass::from_rb_value_unchecked(v.as_rb_value()))
-        }
+        protect(|| unsafe {
+            RClass::from_rb_value_unchecked(rb_struct_define(
+                name.as_ref().map(|n| n.as_ptr()).unwrap_or_else(null),
+                arg0.as_ptr(),
+                arg1.as_ptr(),
+                arg2.as_ptr(),
+                arg3.as_ptr(),
+                arg4.as_ptr(),
+                arg5.as_ptr(),
+                arg6.as_ptr(),
+                null::<c_char>(),
+            ))
+        })
     }
 }
 
@@ -463,23 +438,20 @@ impl StructMembers for (&str, &str, &str, &str, &str, &str, &str, &str) {
         let arg5 = CString::new(self.5).unwrap();
         let arg6 = CString::new(self.6).unwrap();
         let arg7 = CString::new(self.7).unwrap();
-        unsafe {
-            protect(|| {
-                Value::new(rb_struct_define(
-                    name.as_ref().map(|n| n.as_ptr()).unwrap_or_else(null),
-                    arg0.as_ptr(),
-                    arg1.as_ptr(),
-                    arg2.as_ptr(),
-                    arg3.as_ptr(),
-                    arg4.as_ptr(),
-                    arg5.as_ptr(),
-                    arg6.as_ptr(),
-                    arg7.as_ptr(),
-                    null::<c_char>(),
-                ))
-            })
-            .map(|v| RClass::from_rb_value_unchecked(v.as_rb_value()))
-        }
+        protect(|| unsafe {
+            RClass::from_rb_value_unchecked(rb_struct_define(
+                name.as_ref().map(|n| n.as_ptr()).unwrap_or_else(null),
+                arg0.as_ptr(),
+                arg1.as_ptr(),
+                arg2.as_ptr(),
+                arg3.as_ptr(),
+                arg4.as_ptr(),
+                arg5.as_ptr(),
+                arg6.as_ptr(),
+                arg7.as_ptr(),
+                null::<c_char>(),
+            ))
+        })
     }
 }
 
@@ -495,24 +467,21 @@ impl StructMembers for (&str, &str, &str, &str, &str, &str, &str, &str, &str) {
         let arg6 = CString::new(self.6).unwrap();
         let arg7 = CString::new(self.7).unwrap();
         let arg8 = CString::new(self.8).unwrap();
-        unsafe {
-            protect(|| {
-                Value::new(rb_struct_define(
-                    name.as_ref().map(|n| n.as_ptr()).unwrap_or_else(null),
-                    arg0.as_ptr(),
-                    arg1.as_ptr(),
-                    arg2.as_ptr(),
-                    arg3.as_ptr(),
-                    arg4.as_ptr(),
-                    arg5.as_ptr(),
-                    arg6.as_ptr(),
-                    arg7.as_ptr(),
-                    arg8.as_ptr(),
-                    null::<c_char>(),
-                ))
-            })
-            .map(|v| RClass::from_rb_value_unchecked(v.as_rb_value()))
-        }
+        protect(|| unsafe {
+            RClass::from_rb_value_unchecked(rb_struct_define(
+                name.as_ref().map(|n| n.as_ptr()).unwrap_or_else(null),
+                arg0.as_ptr(),
+                arg1.as_ptr(),
+                arg2.as_ptr(),
+                arg3.as_ptr(),
+                arg4.as_ptr(),
+                arg5.as_ptr(),
+                arg6.as_ptr(),
+                arg7.as_ptr(),
+                arg8.as_ptr(),
+                null::<c_char>(),
+            ))
+        })
     }
 }
 
@@ -529,25 +498,22 @@ impl StructMembers for (&str, &str, &str, &str, &str, &str, &str, &str, &str, &s
         let arg7 = CString::new(self.7).unwrap();
         let arg8 = CString::new(self.8).unwrap();
         let arg9 = CString::new(self.9).unwrap();
-        unsafe {
-            protect(|| {
-                Value::new(rb_struct_define(
-                    name.as_ref().map(|n| n.as_ptr()).unwrap_or_else(null),
-                    arg0.as_ptr(),
-                    arg1.as_ptr(),
-                    arg2.as_ptr(),
-                    arg3.as_ptr(),
-                    arg4.as_ptr(),
-                    arg5.as_ptr(),
-                    arg6.as_ptr(),
-                    arg7.as_ptr(),
-                    arg8.as_ptr(),
-                    arg9.as_ptr(),
-                    null::<c_char>(),
-                ))
-            })
-            .map(|v| RClass::from_rb_value_unchecked(v.as_rb_value()))
-        }
+        protect(|| unsafe {
+            RClass::from_rb_value_unchecked(rb_struct_define(
+                name.as_ref().map(|n| n.as_ptr()).unwrap_or_else(null),
+                arg0.as_ptr(),
+                arg1.as_ptr(),
+                arg2.as_ptr(),
+                arg3.as_ptr(),
+                arg4.as_ptr(),
+                arg5.as_ptr(),
+                arg6.as_ptr(),
+                arg7.as_ptr(),
+                arg8.as_ptr(),
+                arg9.as_ptr(),
+                null::<c_char>(),
+            ))
+        })
     }
 }
 
@@ -579,26 +545,23 @@ impl StructMembers
         let arg8 = CString::new(self.8).unwrap();
         let arg9 = CString::new(self.9).unwrap();
         let arg10 = CString::new(self.10).unwrap();
-        unsafe {
-            protect(|| {
-                Value::new(rb_struct_define(
-                    name.as_ref().map(|n| n.as_ptr()).unwrap_or_else(null),
-                    arg0.as_ptr(),
-                    arg1.as_ptr(),
-                    arg2.as_ptr(),
-                    arg3.as_ptr(),
-                    arg4.as_ptr(),
-                    arg5.as_ptr(),
-                    arg6.as_ptr(),
-                    arg7.as_ptr(),
-                    arg8.as_ptr(),
-                    arg9.as_ptr(),
-                    arg10.as_ptr(),
-                    null::<c_char>(),
-                ))
-            })
-            .map(|v| RClass::from_rb_value_unchecked(v.as_rb_value()))
-        }
+        protect(|| unsafe {
+            RClass::from_rb_value_unchecked(rb_struct_define(
+                name.as_ref().map(|n| n.as_ptr()).unwrap_or_else(null),
+                arg0.as_ptr(),
+                arg1.as_ptr(),
+                arg2.as_ptr(),
+                arg3.as_ptr(),
+                arg4.as_ptr(),
+                arg5.as_ptr(),
+                arg6.as_ptr(),
+                arg7.as_ptr(),
+                arg8.as_ptr(),
+                arg9.as_ptr(),
+                arg10.as_ptr(),
+                null::<c_char>(),
+            ))
+        })
     }
 }
 
@@ -632,26 +595,23 @@ impl StructMembers
         let arg9 = CString::new(self.9).unwrap();
         let arg10 = CString::new(self.10).unwrap();
         let arg11 = CString::new(self.11).unwrap();
-        unsafe {
-            protect(|| {
-                Value::new(rb_struct_define(
-                    name.as_ref().map(|n| n.as_ptr()).unwrap_or_else(null),
-                    arg0.as_ptr(),
-                    arg1.as_ptr(),
-                    arg2.as_ptr(),
-                    arg3.as_ptr(),
-                    arg4.as_ptr(),
-                    arg5.as_ptr(),
-                    arg6.as_ptr(),
-                    arg7.as_ptr(),
-                    arg8.as_ptr(),
-                    arg9.as_ptr(),
-                    arg10.as_ptr(),
-                    arg11.as_ptr(),
-                    null::<c_char>(),
-                ))
-            })
-            .map(|v| RClass::from_rb_value_unchecked(v.as_rb_value()))
-        }
+        protect(|| unsafe {
+            RClass::from_rb_value_unchecked(rb_struct_define(
+                name.as_ref().map(|n| n.as_ptr()).unwrap_or_else(null),
+                arg0.as_ptr(),
+                arg1.as_ptr(),
+                arg2.as_ptr(),
+                arg3.as_ptr(),
+                arg4.as_ptr(),
+                arg5.as_ptr(),
+                arg6.as_ptr(),
+                arg7.as_ptr(),
+                arg8.as_ptr(),
+                arg9.as_ptr(),
+                arg10.as_ptr(),
+                arg11.as_ptr(),
+                null::<c_char>(),
+            ))
+        })
     }
 }

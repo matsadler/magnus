@@ -1,4 +1,7 @@
-use magnus::{eval, encoding::{self, EncodingCapable}, RRegexp, RString, StaticSymbol, Symbol};
+use magnus::{
+    encoding::{self, EncodingCapable},
+    eval, RRegexp, RString, StaticSymbol, Symbol,
+};
 
 #[test]
 fn it_works_across_type() {

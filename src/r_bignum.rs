@@ -122,7 +122,7 @@ impl RBignum {
         let mut res = 0;
         protect(|| {
             res = unsafe { rb_num2long(self.as_rb_value()) };
-            *QNIL
+            QNIL
         })?;
         if res > i32::MAX as c_long {
             return Err(Error::new(
@@ -152,7 +152,7 @@ impl RBignum {
         let mut res = 0;
         protect(|| {
             res = unsafe { rb_num2ll(self.as_rb_value()) };
-            *QNIL
+            QNIL
         })?;
         Ok(res)
     }
@@ -174,7 +174,7 @@ impl RBignum {
         let mut res = 0;
         protect(|| {
             res = unsafe { rb_num2ll(self.as_rb_value()) };
-            *QNIL
+            QNIL
         })?;
         if res > isize::MAX as c_longlong {
             return Err(Error::new(
@@ -201,7 +201,7 @@ impl RBignum {
         let mut res = 0;
         protect(|| {
             res = unsafe { rb_num2ulong(self.as_rb_value()) };
-            *QNIL
+            QNIL
         })?;
         if res > u32::MAX as c_ulong {
             return Err(Error::new(
@@ -235,7 +235,7 @@ impl RBignum {
         let mut res = 0;
         protect(|| {
             res = unsafe { rb_num2ull(self.as_rb_value()) };
-            *QNIL
+            QNIL
         })?;
         Ok(res)
     }
@@ -263,7 +263,7 @@ impl RBignum {
         let mut res = 0;
         protect(|| {
             res = unsafe { rb_num2ull(self.as_rb_value()) };
-            *QNIL
+            QNIL
         })?;
         if res > usize::MAX as c_ulonglong {
             return Err(Error::new(

@@ -150,10 +150,8 @@ impl RHash {
         U: TryConvert,
     {
         let key = key.into();
-        unsafe {
-            protect(|| Value::new(rb_hash_aref(self.as_rb_value(), key.as_rb_value())))
-                .and_then(|v| v.try_convert())
-        }
+        protect(|| unsafe { Value::new(rb_hash_aref(self.as_rb_value(), key.as_rb_value())) })
+            .and_then(|v| v.try_convert())
     }
 
     /// Return the value for `key`, converting it to `U`.
@@ -183,10 +181,8 @@ impl RHash {
         U: TryConvert,
     {
         let key = key.into();
-        unsafe {
-            protect(|| Value::new(rb_hash_lookup(self.as_rb_value(), key.as_rb_value())))
-                .and_then(|v| v.try_convert())
-        }
+        protect(|| unsafe { Value::new(rb_hash_lookup(self.as_rb_value(), key.as_rb_value())) })
+            .and_then(|v| v.try_convert())
     }
 
     /// Return the value for `key` as a [`Value`].
@@ -214,17 +210,15 @@ impl RHash {
         T: Into<Value>,
     {
         let key = key.into();
-        unsafe {
-            protect(|| {
-                Value::new(rb_hash_lookup2(
-                    self.as_rb_value(),
-                    key.as_rb_value(),
-                    QUNDEF.to_value().as_rb_value(),
-                ))
-            })
-            .ok()
-            .and_then(|v| (!v.is_undef()).then(|| v))
-        }
+        protect(|| unsafe {
+            Value::new(rb_hash_lookup2(
+                self.as_rb_value(),
+                key.as_rb_value(),
+                QUNDEF.to_value().as_rb_value(),
+            ))
+        })
+        .ok()
+        .and_then(|v| (!v.is_undef()).then(|| v))
     }
 
     /// Return the value for `key`, converting it to `U`.
@@ -254,10 +248,8 @@ impl RHash {
         U: TryConvert,
     {
         let key = key.into();
-        unsafe {
-            protect(|| Value::new(rb_hash_fetch(self.as_rb_value(), key.as_rb_value())))
-                .and_then(|v| v.try_convert())
-        }
+        protect(|| unsafe { Value::new(rb_hash_fetch(self.as_rb_value(), key.as_rb_value())) })
+            .and_then(|v| v.try_convert())
     }
 
     fn base_foreach<F>(self, mut func: F) -> Result<(), Error>
@@ -279,7 +271,7 @@ impl RHash {
                 #[cfg(ruby_lt_2_7)]
                 let fptr: unsafe extern "C" fn() -> c_int = std::mem::transmute(fptr);
                 rb_hash_foreach(self.as_rb_value(), Some(fptr), arg);
-                QNIL.into()
+                QNIL
             })?;
         }
         Ok(())

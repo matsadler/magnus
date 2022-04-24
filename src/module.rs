@@ -192,16 +192,13 @@ pub trait Module: Object + Deref<Target = Value> + Copy {
         debug_assert_value!(superclass);
         let id = name.into();
         let superclass = superclass.as_rb_value();
-        unsafe {
-            let res = protect(|| {
-                Value::new(rb_define_class_id_under(
-                    self.as_rb_value(),
-                    id.as_rb_id(),
-                    superclass,
-                ))
-            });
-            res.map(|v| RClass::from_value(v).unwrap())
-        }
+        protect(|| unsafe {
+            RClass::from_rb_value_unchecked(rb_define_class_id_under(
+                self.as_rb_value(),
+                id.as_rb_id(),
+                superclass,
+            ))
+        })
     }
 
     /// Define a module in `self`'s scope.
@@ -218,12 +215,12 @@ pub trait Module: Object + Deref<Target = Value> + Copy {
     /// ```
     fn define_module<T: Into<Id>>(self, name: T) -> Result<RModule, Error> {
         let id = name.into();
-        unsafe {
-            let res = protect(|| {
-                Value::new(rb_define_module_id_under(self.as_rb_value(), id.as_rb_id()))
-            });
-            res.map(|v| RModule::from_value(v).unwrap())
-        }
+        protect(|| unsafe {
+            RModule::from_rb_value_unchecked(rb_define_module_id_under(
+                self.as_rb_value(),
+                id.as_rb_id(),
+            ))
+        })
     }
 
     /// Get the value for the constant `name` within `self`'s scope.

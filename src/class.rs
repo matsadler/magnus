@@ -77,10 +77,7 @@ impl RClass {
     pub fn new(superclass: RClass) -> Result<RClass, Error> {
         debug_assert_value!(superclass);
         let superclass = superclass.as_rb_value();
-        unsafe {
-            let res = protect(|| Value::new(rb_class_new(superclass)));
-            res.map(|v| Self::from_rb_value_unchecked(v.as_rb_value()))
-        }
+        protect(|| unsafe { Self::from_rb_value_unchecked(rb_class_new(superclass)) })
     }
 
     /// Create a new object, an instance of `self`, passing the arguments

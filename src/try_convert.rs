@@ -155,7 +155,7 @@ impl TryConvert for f64 {
         let mut res = 0.0;
         protect(|| {
             res = unsafe { rb_num2dbl(val.as_rb_value()) };
-            *QNIL
+            QNIL
         })?;
         Ok(res)
     }
@@ -735,8 +735,8 @@ impl TryConvert for PathBuf {
         use std::os::unix::ffi::OsStringExt;
 
         let bytes = unsafe {
-            let val = protect(|| Value::new(rb_get_path(val.as_rb_value())))?;
-            let r_string = RString::from_rb_value_unchecked(val.as_rb_value());
+            let r_string =
+                protect(|| RString::from_rb_value_unchecked(rb_get_path(val.as_rb_value())))?;
             r_string.as_slice().to_owned()
         };
         Ok(std::ffi::OsString::from_vec(bytes).into())
@@ -747,12 +747,9 @@ impl TryConvert for PathBuf {
 impl TryConvert for PathBuf {
     #[inline]
     fn try_convert(val: &Value) -> Result<Self, Error> {
-        unsafe {
-            let val = protect(|| Value::new(rb_get_path(val.as_rb_value())))?;
-            RString::from_rb_value_unchecked(val.as_rb_value())
-                .to_string()
-                .map(Into::into)
-        }
+        protect(|| unsafe { RString::from_rb_value_unchecked(rb_get_path(val.as_rb_value())) })?
+            .to_string()
+            .map(Into::into)
     }
 }
 

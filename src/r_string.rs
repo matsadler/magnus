@@ -455,16 +455,13 @@ impl RString {
     where
         T: Into<RbEncoding>,
     {
-        unsafe {
-            protect(|| {
-                Value::new(rb_str_conv_enc(
-                    self.as_rb_value(),
-                    ptr::null_mut(),
-                    enc.into().as_ptr(),
-                ))
-            })
-            .map(|v| Self::from_rb_value_unchecked(v.as_rb_value()))
-        }
+        protect(|| unsafe {
+            Self::from_rb_value_unchecked(rb_str_conv_enc(
+                self.as_rb_value(),
+                ptr::null_mut(),
+                enc.into().as_ptr(),
+            ))
+        })
     }
 
     /// Returns the cached coderange value that describes how `self` relates to
@@ -839,9 +836,9 @@ impl RString {
     /// assert_eq!(a.to_string().unwrap(), "foobar");
     /// ```
     pub fn append(self, other: Self) -> Result<(), Error> {
-        unsafe {
-            protect(|| Value::new(rb_str_buf_append(self.as_rb_value(), other.as_rb_value())))?;
-        }
+        protect(|| unsafe {
+            Value::new(rb_str_buf_append(self.as_rb_value(), other.as_rb_value()))
+        })?;
         Ok(())
     }
 
@@ -981,15 +978,12 @@ impl ReprValue for RString {}
 impl TryConvert for RString {
     #[inline]
     fn try_convert(val: &Value) -> Result<Self, Error> {
-        unsafe {
-            match Self::from_value(*val) {
-                Some(i) => Ok(i),
-                None => protect(|| {
-                    debug_assert_value!(val);
-                    Value::new(rb_str_to_str(val.as_rb_value()))
-                })
-                .map(|res| Self::from_rb_value_unchecked(res.as_rb_value())),
-            }
+        match Self::from_value(*val) {
+            Some(i) => Ok(i),
+            None => protect(|| {
+                debug_assert_value!(val);
+                unsafe { Self::from_rb_value_unchecked(rb_str_to_str(val.as_rb_value())) }
+            }),
         }
     }
 }

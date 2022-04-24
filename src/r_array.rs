@@ -202,10 +202,8 @@ impl RArray {
         T: ReprValue,
     {
         let ptr = s.as_ptr() as *const VALUE;
-        unsafe {
-            protect(|| Value::new(rb_ary_cat(self.as_rb_value(), ptr, s.len() as c_long)))
-                .map(|_| ())
-        }
+        protect(|| unsafe { Value::new(rb_ary_cat(self.as_rb_value(), ptr, s.len() as c_long)) })?;
+        Ok(())
     }
 
     /// Create a new `RArray` containing the elements in `slice`.
@@ -258,10 +256,10 @@ impl RArray {
     where
         T: Into<Value>,
     {
-        unsafe {
-            protect(|| Value::new(rb_ary_push(self.as_rb_value(), item.into().as_rb_value())))
-                .map(|_| ())
-        }
+        protect(|| unsafe {
+            Value::new(rb_ary_push(self.as_rb_value(), item.into().as_rb_value()))
+        })?;
+        Ok(())
     }
 
     /// Remove and return the last element of `self`, converting it to a `T`.
@@ -295,9 +293,8 @@ impl RArray {
     where
         T: TryConvert,
     {
-        unsafe {
-            protect(|| Value::new(rb_ary_pop(self.as_rb_value()))).and_then(|val| val.try_convert())
-        }
+        protect(|| unsafe { Value::new(rb_ary_pop(self.as_rb_value())) })
+            .and_then(|val| val.try_convert())
     }
 
     /// Add `item` to the beginning of `self`.
@@ -321,15 +318,13 @@ impl RArray {
     where
         T: Into<Value>,
     {
-        unsafe {
-            protect(|| {
-                Value::new(rb_ary_unshift(
-                    self.as_rb_value(),
-                    item.into().as_rb_value(),
-                ))
-            })
-            .map(|_| ())
-        }
+        protect(|| unsafe {
+            Value::new(rb_ary_unshift(
+                self.as_rb_value(),
+                item.into().as_rb_value(),
+            ))
+        })?;
+        Ok(())
     }
 
     /// Remove and return the first element of `self`, converting it to a `T`.
@@ -363,10 +358,8 @@ impl RArray {
     where
         T: TryConvert,
     {
-        unsafe {
-            protect(|| Value::new(rb_ary_shift(self.as_rb_value())))
-                .and_then(|val| val.try_convert())
-        }
+        protect(|| unsafe { Value::new(rb_ary_shift(self.as_rb_value())) })
+            .and_then(|val| val.try_convert())
     }
 
     /// Create a new `RArray` from a Rust vector.
@@ -547,10 +540,12 @@ impl RArray {
     where
         T: Into<RString>,
     {
-        unsafe {
-            protect(|| Value::new(rb_ary_join(self.as_rb_value(), sep.into().as_rb_value())))
-                .map(|val| RString::from_rb_value_unchecked(val.as_rb_value()))
-        }
+        protect(|| unsafe {
+            RString::from_rb_value_unchecked(rb_ary_join(
+                self.as_rb_value(),
+                sep.into().as_rb_value(),
+            ))
+        })
     }
 
     /// Return the element at `offset`, converting it to a `T`.
@@ -609,17 +604,15 @@ impl RArray {
     where
         T: Into<Value>,
     {
-        unsafe {
-            protect(|| {
-                rb_ary_store(
-                    self.as_rb_value(),
-                    offset as c_long,
-                    val.into().as_rb_value(),
-                );
-                *QNIL
-            })
-            .map(|_| ())
-        }
+        protect(|| unsafe {
+            rb_ary_store(
+                self.as_rb_value(),
+                offset as c_long,
+                val.into().as_rb_value(),
+            );
+            QNIL
+        })?;
+        Ok(())
     }
 
     /// Returns an [`Enumerator`] over `self`.
@@ -701,8 +694,8 @@ impl RArray {
     /// assert!(!copy.is_shared(ary));
     /// ```
     pub fn replace(self, from: Self) -> Result<(), Error> {
-        protect(|| unsafe { Value::new(rb_ary_replace(self.as_rb_value(), from.as_rb_value())) })
-            .map(|_| ())
+        protect(|| unsafe { Value::new(rb_ary_replace(self.as_rb_value(), from.as_rb_value())) })?;
+        Ok(())
     }
 
     /// Create a new array from a subsequence of `self`.
@@ -1077,15 +1070,12 @@ impl ReprValue for RArray {}
 impl TryConvert for RArray {
     #[inline]
     fn try_convert(val: &Value) -> Result<Self, Error> {
-        unsafe {
-            match Self::from_value(*val) {
-                Some(i) => Ok(i),
-                None => protect(|| {
-                    debug_assert_value!(val);
-                    Value::new(rb_ary_to_ary(val.as_rb_value()))
-                })
-                .map(|res| Self::from_rb_value_unchecked(res.as_rb_value())),
-            }
+        match Self::from_value(*val) {
+            Some(i) => Ok(i),
+            None => protect(|| {
+                debug_assert_value!(val);
+                unsafe { Self::from_rb_value_unchecked(rb_ary_to_ary(val.as_rb_value())) }
+            }),
         }
     }
 }

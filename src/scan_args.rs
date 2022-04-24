@@ -1102,11 +1102,11 @@ unsafe fn scan_args_impl(args: &[Value], fmt: &str, out: &mut [Value]) -> Result
     match out.len() {
         0 => protect(|| {
             result = rb_scan_args(argc, argv, fmt) as usize;
-            *QNIL
+            QNIL
         })?,
         1 => protect(|| {
             result = rb_scan_args(argc, argv, fmt, &mut out[0] as *mut VALUE) as usize;
-            *QNIL
+            QNIL
         })?,
         2 => protect(|| {
             result = rb_scan_args(
@@ -1116,7 +1116,7 @@ unsafe fn scan_args_impl(args: &[Value], fmt: &str, out: &mut [Value]) -> Result
                 &mut out[0] as *mut VALUE,
                 &mut out[1] as *mut VALUE,
             ) as usize;
-            *QNIL
+            QNIL
         })?,
         3 => protect(|| {
             result = rb_scan_args(
@@ -1127,7 +1127,7 @@ unsafe fn scan_args_impl(args: &[Value], fmt: &str, out: &mut [Value]) -> Result
                 &mut out[1] as *mut VALUE,
                 &mut out[2] as *mut VALUE,
             ) as usize;
-            *QNIL
+            QNIL
         })?,
         4 => protect(|| {
             result = rb_scan_args(
@@ -1139,7 +1139,7 @@ unsafe fn scan_args_impl(args: &[Value], fmt: &str, out: &mut [Value]) -> Result
                 &mut out[2] as *mut VALUE,
                 &mut out[3] as *mut VALUE,
             ) as usize;
-            *QNIL
+            QNIL
         })?,
         5 => protect(|| {
             result = rb_scan_args(
@@ -1152,7 +1152,7 @@ unsafe fn scan_args_impl(args: &[Value], fmt: &str, out: &mut [Value]) -> Result
                 &mut out[3] as *mut VALUE,
                 &mut out[4] as *mut VALUE,
             ) as usize;
-            *QNIL
+            QNIL
         })?,
         6 => protect(|| {
             result = rb_scan_args(
@@ -1166,7 +1166,7 @@ unsafe fn scan_args_impl(args: &[Value], fmt: &str, out: &mut [Value]) -> Result
                 &mut out[4] as *mut VALUE,
                 &mut out[5] as *mut VALUE,
             ) as usize;
-            *QNIL
+            QNIL
         })?,
         7 => protect(|| {
             result = rb_scan_args(
@@ -1181,7 +1181,7 @@ unsafe fn scan_args_impl(args: &[Value], fmt: &str, out: &mut [Value]) -> Result
                 &mut out[5] as *mut VALUE,
                 &mut out[6] as *mut VALUE,
             ) as usize;
-            *QNIL
+            QNIL
         })?,
         8 => protect(|| {
             result = rb_scan_args(
@@ -1197,7 +1197,7 @@ unsafe fn scan_args_impl(args: &[Value], fmt: &str, out: &mut [Value]) -> Result
                 &mut out[6] as *mut VALUE,
                 &mut out[7] as *mut VALUE,
             ) as usize;
-            *QNIL
+            QNIL
         })?,
         9 => protect(|| {
             result = rb_scan_args(
@@ -1214,7 +1214,7 @@ unsafe fn scan_args_impl(args: &[Value], fmt: &str, out: &mut [Value]) -> Result
                 &mut out[7] as *mut VALUE,
                 &mut out[8] as *mut VALUE,
             ) as usize;
-            *QNIL
+            QNIL
         })?,
         10 => protect(|| {
             result = rb_scan_args(
@@ -1232,7 +1232,7 @@ unsafe fn scan_args_impl(args: &[Value], fmt: &str, out: &mut [Value]) -> Result
                 &mut out[8] as *mut VALUE,
                 &mut out[9] as *mut VALUE,
             ) as usize;
-            *QNIL
+            QNIL
         })?,
         11 => protect(|| {
             result = rb_scan_args(
@@ -1251,7 +1251,7 @@ unsafe fn scan_args_impl(args: &[Value], fmt: &str, out: &mut [Value]) -> Result
                 &mut out[9] as *mut VALUE,
                 &mut out[10] as *mut VALUE,
             ) as usize;
-            *QNIL
+            QNIL
         })?,
         12 => protect(|| {
             result = rb_scan_args(
@@ -1271,7 +1271,7 @@ unsafe fn scan_args_impl(args: &[Value], fmt: &str, out: &mut [Value]) -> Result
                 &mut out[10] as *mut VALUE,
                 &mut out[11] as *mut VALUE,
             ) as usize;
-            *QNIL
+            QNIL
         })?,
         13 => protect(|| {
             result = rb_scan_args(
@@ -1292,7 +1292,7 @@ unsafe fn scan_args_impl(args: &[Value], fmt: &str, out: &mut [Value]) -> Result
                 &mut out[11] as *mut VALUE,
                 &mut out[12] as *mut VALUE,
             ) as usize;
-            *QNIL
+            QNIL
         })?,
         14 => protect(|| {
             result = rb_scan_args(
@@ -1314,7 +1314,7 @@ unsafe fn scan_args_impl(args: &[Value], fmt: &str, out: &mut [Value]) -> Result
                 &mut out[12] as *mut VALUE,
                 &mut out[13] as *mut VALUE,
             ) as usize;
-            *QNIL
+            QNIL
         })?,
         15 => protect(|| {
             result = rb_scan_args(
@@ -1337,7 +1337,7 @@ unsafe fn scan_args_impl(args: &[Value], fmt: &str, out: &mut [Value]) -> Result
                 &mut out[13] as *mut VALUE,
                 &mut out[14] as *mut VALUE,
             ) as usize;
-            *QNIL
+            QNIL
         })?,
         16 => protect(|| {
             result = rb_scan_args(
@@ -1361,7 +1361,7 @@ unsafe fn scan_args_impl(args: &[Value], fmt: &str, out: &mut [Value]) -> Result
                 &mut out[14] as *mut VALUE,
                 &mut out[15] as *mut VALUE,
             ) as usize;
-            *QNIL
+            QNIL
         })?,
         17 => protect(|| {
             result = rb_scan_args(
@@ -1386,7 +1386,7 @@ unsafe fn scan_args_impl(args: &[Value], fmt: &str, out: &mut [Value]) -> Result
                 &mut out[15] as *mut VALUE,
                 &mut out[16] as *mut VALUE,
             ) as usize;
-            *QNIL
+            QNIL
         })?,
         18 => protect(|| {
             result = rb_scan_args(
@@ -1412,7 +1412,7 @@ unsafe fn scan_args_impl(args: &[Value], fmt: &str, out: &mut [Value]) -> Result
                 &mut out[16] as *mut VALUE,
                 &mut out[17] as *mut VALUE,
             ) as usize;
-            *QNIL
+            QNIL
         })?,
         19 => protect(|| {
             result = rb_scan_args(
@@ -1439,7 +1439,7 @@ unsafe fn scan_args_impl(args: &[Value], fmt: &str, out: &mut [Value]) -> Result
                 &mut out[17] as *mut VALUE,
                 &mut out[18] as *mut VALUE,
             ) as usize;
-            *QNIL
+            QNIL
         })?,
         20 => protect(|| {
             result = rb_scan_args(
@@ -1467,7 +1467,7 @@ unsafe fn scan_args_impl(args: &[Value], fmt: &str, out: &mut [Value]) -> Result
                 &mut out[18] as *mut VALUE,
                 &mut out[19] as *mut VALUE,
             ) as usize;
-            *QNIL
+            QNIL
         })?,
         21 => protect(|| {
             result = rb_scan_args(
@@ -1496,7 +1496,7 @@ unsafe fn scan_args_impl(args: &[Value], fmt: &str, out: &mut [Value]) -> Result
                 &mut out[19] as *mut VALUE,
                 &mut out[20] as *mut VALUE,
             ) as usize;
-            *QNIL
+            QNIL
         })?,
         22 => protect(|| {
             result = rb_scan_args(
@@ -1526,7 +1526,7 @@ unsafe fn scan_args_impl(args: &[Value], fmt: &str, out: &mut [Value]) -> Result
                 &mut out[20] as *mut VALUE,
                 &mut out[21] as *mut VALUE,
             ) as usize;
-            *QNIL
+            QNIL
         })?,
         23 => protect(|| {
             result = rb_scan_args(
@@ -1557,7 +1557,7 @@ unsafe fn scan_args_impl(args: &[Value], fmt: &str, out: &mut [Value]) -> Result
                 &mut out[21] as *mut VALUE,
                 &mut out[22] as *mut VALUE,
             ) as usize;
-            *QNIL
+            QNIL
         })?,
         24 => protect(|| {
             result = rb_scan_args(
@@ -1589,7 +1589,7 @@ unsafe fn scan_args_impl(args: &[Value], fmt: &str, out: &mut [Value]) -> Result
                 &mut out[22] as *mut VALUE,
                 &mut out[23] as *mut VALUE,
             ) as usize;
-            *QNIL
+            QNIL
         })?,
         25 => protect(|| {
             result = rb_scan_args(
@@ -1622,7 +1622,7 @@ unsafe fn scan_args_impl(args: &[Value], fmt: &str, out: &mut [Value]) -> Result
                 &mut out[23] as *mut VALUE,
                 &mut out[24] as *mut VALUE,
             ) as usize;
-            *QNIL
+            QNIL
         })?,
         26 => protect(|| {
             result = rb_scan_args(
@@ -1656,7 +1656,7 @@ unsafe fn scan_args_impl(args: &[Value], fmt: &str, out: &mut [Value]) -> Result
                 &mut out[24] as *mut VALUE,
                 &mut out[25] as *mut VALUE,
             ) as usize;
-            *QNIL
+            QNIL
         })?,
         27 => protect(|| {
             result = rb_scan_args(
@@ -1691,7 +1691,7 @@ unsafe fn scan_args_impl(args: &[Value], fmt: &str, out: &mut [Value]) -> Result
                 &mut out[25] as *mut VALUE,
                 &mut out[26] as *mut VALUE,
             ) as usize;
-            *QNIL
+            QNIL
         })?,
         28 => protect(|| {
             result = rb_scan_args(
@@ -1727,7 +1727,7 @@ unsafe fn scan_args_impl(args: &[Value], fmt: &str, out: &mut [Value]) -> Result
                 &mut out[26] as *mut VALUE,
                 &mut out[27] as *mut VALUE,
             ) as usize;
-            *QNIL
+            QNIL
         })?,
         29 => protect(|| {
             result = rb_scan_args(
@@ -1764,7 +1764,7 @@ unsafe fn scan_args_impl(args: &[Value], fmt: &str, out: &mut [Value]) -> Result
                 &mut out[27] as *mut VALUE,
                 &mut out[28] as *mut VALUE,
             ) as usize;
-            *QNIL
+            QNIL
         })?,
         _ => protect(|| {
             result = rb_scan_args(
@@ -1802,7 +1802,7 @@ unsafe fn scan_args_impl(args: &[Value], fmt: &str, out: &mut [Value]) -> Result
                 &mut out[28] as *mut VALUE,
                 &mut out[29] as *mut VALUE,
             ) as usize;
-            *QNIL
+            QNIL
         })?,
     };
     Ok(result)
@@ -1943,7 +1943,7 @@ where
                 optional_len as c_int,
                 out[..total].as_mut_ptr() as *mut VALUE,
             ) as usize;
-            *QNIL
+            QNIL
         })?;
     };
 

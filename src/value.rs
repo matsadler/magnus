@@ -637,7 +637,7 @@ impl Value {
                     rb_obj_respond_to(self.as_rb_value(), id.as_rb_id(), include_private as c_int)
                         != 0;
             }
-            *QNIL
+            QNIL
         })?;
         Ok(res)
     }
@@ -659,10 +659,9 @@ impl Value {
     pub fn to_r_string(self) -> Result<RString, Error> {
         match RString::from_value(self) {
             Some(v) => Ok(v),
-            None => unsafe {
-                protect(|| Value::new(rb_obj_as_string(self.as_rb_value())))
-                    .map(|v| RString::from_rb_value_unchecked(v.as_rb_value()))
-            },
+            None => protect(|| unsafe {
+                RString::from_rb_value_unchecked(rb_obj_as_string(self.as_rb_value()))
+            }),
         }
     }
 
@@ -734,8 +733,7 @@ impl Value {
     /// ```
     pub fn inspect(self) -> String {
         unsafe {
-            let s = protect(|| Value::new(rb_inspect(self.as_rb_value())))
-                .map(|v| RString::from_rb_value_unchecked(v.as_rb_value()))
+            let s = protect(|| RString::from_rb_value_unchecked(rb_inspect(self.as_rb_value())))
                 .unwrap_or_else(|_| {
                     RString::from_rb_value_unchecked(rb_any_to_s(self.as_rb_value()))
                 });
@@ -1595,7 +1593,7 @@ impl Fixnum {
         let mut res = 0;
         protect(|| {
             res = unsafe { rb_num2long(self.as_rb_value()) };
-            *QNIL
+            QNIL
         })?;
         if res > i8::MAX as c_long || res < i8::MIN as c_long {
             return Err(Error::new(
@@ -1624,7 +1622,7 @@ impl Fixnum {
         let mut res = 0;
         protect(|| {
             res = unsafe { rb_num2short(self.as_rb_value()) };
-            *QNIL
+            QNIL
         })?;
         Ok(res)
     }
@@ -1650,7 +1648,7 @@ impl Fixnum {
         let mut res = 0;
         protect(|| {
             res = unsafe { rb_num2long(self.as_rb_value()) };
-            *QNIL
+            QNIL
         })?;
         if res > i32::MAX as c_long || res < i32::MIN as c_long {
             return Err(Error::new(
@@ -1697,7 +1695,7 @@ impl Fixnum {
         let mut res = 0;
         protect(|| {
             res = unsafe { rb_num2ll(self.as_rb_value()) };
-            *QNIL
+            QNIL
         })?;
         Ok(res as isize)
     }
@@ -1725,7 +1723,7 @@ impl Fixnum {
         let mut res = 0;
         protect(|| {
             res = unsafe { rb_num2ulong(self.as_rb_value()) };
-            *QNIL
+            QNIL
         })?;
         if res > u8::MAX as c_ulong {
             return Err(Error::new(
@@ -1759,7 +1757,7 @@ impl Fixnum {
         let mut res = 0;
         protect(|| {
             res = unsafe { rb_num2ushort(self.as_rb_value()) };
-            *QNIL
+            QNIL
         })?;
         Ok(res)
     }
@@ -1790,7 +1788,7 @@ impl Fixnum {
         let mut res = 0;
         protect(|| {
             res = unsafe { rb_num2ulong(self.as_rb_value()) };
-            *QNIL
+            QNIL
         })?;
         if res > u32::MAX as c_ulong {
             return Err(Error::new(
@@ -1824,7 +1822,7 @@ impl Fixnum {
         unsafe {
             protect(|| {
                 res = rb_num2ull(self.as_rb_value());
-                *QNIL
+                QNIL
             })?;
         }
         Ok(res)
@@ -1853,7 +1851,7 @@ impl Fixnum {
         let mut res = 0;
         protect(|| {
             res = unsafe { rb_num2ull(self.as_rb_value()) };
-            *QNIL
+            QNIL
         })?;
         Ok(res as usize)
     }

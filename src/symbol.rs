@@ -193,11 +193,10 @@ impl From<Id> for Symbol {
 
 impl From<&str> for Symbol {
     fn from(s: &str) -> Self {
-        unsafe {
-            protect(|| Value::new(rb_to_symbol(RString::new(s).as_rb_value())))
-                .map(|v| Self::from_rb_value_unchecked(v.as_rb_value()))
-                .unwrap()
-        }
+        protect(|| unsafe {
+            Self::from_rb_value_unchecked(rb_to_symbol(RString::new(s).as_rb_value()))
+        })
+        .unwrap()
     }
 }
 
