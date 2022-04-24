@@ -7,6 +7,8 @@
 - `RString::enc_coderange` and related methods.
 - `RString::codepoints` and `RString::char_bytes` iterators over string
   contents.
+- The following methods for `RArray`: `dup`, `concat`, `plus`, `delete`,
+  `delete_at`, `resize`, `reverse`, `rotate, and `sort`.
 
 ### Changed
 - `RArray::cat`, `RArray::from_slice`, and `gc::mark_slice` will accept a

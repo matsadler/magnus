@@ -3,10 +3,11 @@ use std::{
 };
 
 use crate::ruby_sys::{
-    self, rb_ary_cat, rb_ary_entry, rb_ary_includes, rb_ary_join, rb_ary_new, rb_ary_new_capa,
-    rb_ary_new_from_values, rb_ary_pop, rb_ary_push, rb_ary_replace, rb_ary_shared_with_p,
-    rb_ary_shift, rb_ary_store, rb_ary_subseq, rb_ary_to_ary, rb_ary_unshift, ruby_rarray_flags,
-    ruby_value_type, VALUE,
+    self, rb_ary_cat, rb_ary_clear, rb_ary_concat, rb_ary_delete, rb_ary_delete_at, rb_ary_entry,
+    rb_ary_includes, rb_ary_join, rb_ary_new, rb_ary_new_capa, rb_ary_new_from_values, rb_ary_plus,
+    rb_ary_pop, rb_ary_push, rb_ary_replace, rb_ary_resize, rb_ary_reverse, rb_ary_rotate,
+    rb_ary_shared_with_p, rb_ary_shift, rb_ary_sort_bang, rb_ary_store, rb_ary_subseq,
+    rb_ary_to_ary, rb_ary_unshift, ruby_rarray_flags, ruby_value_type, VALUE,
 };
 
 #[cfg(ruby_gte_3_0)]
@@ -95,6 +96,32 @@ impl RArray {
     /// ```
     pub fn with_capacity(n: usize) -> Self {
         unsafe { Self::from_rb_value_unchecked(rb_ary_new_capa(n as c_long)) }
+    }
+
+    /// Create a new `RArray` that is a duplicate of `self`.
+    ///
+    /// The new array is only a shallow clone.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RArray};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let a = RArray::from_vec(vec![1, 2, 3]);
+    /// let b = a.dup();
+    /// let res: bool = eval!("a == b", a, b).unwrap();
+    /// assert!(res);
+    /// a.push(4);
+    /// b.push(5);
+    /// let res: bool = eval!("a == [1, 2, 3, 4]", a).unwrap();
+    /// assert!(res);
+    /// let res: bool = eval!("b == [1, 2, 3, 5]", b).unwrap();
+    /// assert!(res);
+    /// ```
+    pub fn dup(self) -> Self {
+        // rb_ary_subseq does a cheep copy-on-write
+        unsafe { Self::from_rb_value_unchecked(rb_ary_subseq(self.as_rb_value(), 0, c_long::MAX)) }
     }
 
     /// Return the number of entries in `self` as a Rust [`usize`].
@@ -204,6 +231,54 @@ impl RArray {
         let ptr = s.as_ptr() as *const VALUE;
         protect(|| unsafe { Value::new(rb_ary_cat(self.as_rb_value(), ptr, s.len() as c_long)) })?;
         Ok(())
+    }
+
+    /// Concatenate elements from Ruby array `other` to `self`.
+    ///
+    /// Returns `Err` if `self` is frozen.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, Integer, QNIL, RArray, Symbol};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let a = RArray::from_vec(vec![1, 2, 3]);
+    /// let b = RArray::from_vec(vec!["a", "b", "c"]);
+    /// a.concat(b).unwrap();
+    /// let res: bool = eval!(r#"a == [1, 2, 3, "a", "b", "c"]"#, a).unwrap();
+    /// assert!(res);
+    /// let res: bool = eval!(r#"b == ["a", "b", "c"]"#, b).unwrap();
+    /// assert!(res);
+    /// ```
+    pub fn concat(self, other: Self) -> Result<(), Error> {
+        protect(|| unsafe { Value::new(rb_ary_concat(self.as_rb_value(), other.as_rb_value())) })?;
+        Ok(())
+    }
+
+    /// Create a new `RArray` containing the both the elements in `self` and
+    /// `other`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, Integer, QNIL, RArray, Symbol};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let a = RArray::from_vec(vec![1, 2, 3]);
+    /// let b = RArray::from_vec(vec!["a", "b", "c"]);
+    /// let c = a.plus(b);
+    /// let res: bool = eval!(r#"c == [1, 2, 3, "a", "b", "c"]"#, c).unwrap();
+    /// assert!(res);
+    /// let res: bool = eval!(r#"a == [1, 2, 3]"#, a).unwrap();
+    /// assert!(res);
+    /// let res: bool = eval!(r#"b == ["a", "b", "c"]"#, b).unwrap();
+    /// assert!(res);
+    /// ```
+    pub fn plus(self, other: Self) -> Self {
+        unsafe {
+            Self::from_rb_value_unchecked(rb_ary_plus(self.as_rb_value(), other.as_rb_value()))
+        }
     }
 
     /// Create a new `RArray` containing the elements in `slice`.
@@ -360,6 +435,182 @@ impl RArray {
     {
         protect(|| unsafe { Value::new(rb_ary_shift(self.as_rb_value())) })
             .and_then(|val| val.try_convert())
+    }
+
+    /// Remove all elements from `self` that match `item`'s `==` method.
+    ///
+    /// Returns `Err` if `self` is frozen.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RArray};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let ary = RArray::from_vec(vec![1, 1, 2, 3]);
+    /// ary.delete(1).unwrap();
+    /// let res: bool = eval!("ary == [2, 3]", ary).unwrap();
+    /// assert!(res);
+    /// ```
+    pub fn delete<T>(self, item: T) -> Result<(), Error>
+    where
+        T: Into<Value>,
+    {
+        protect(|| unsafe {
+            Value::new(rb_ary_delete(self.as_rb_value(), item.into().as_rb_value()))
+        })?;
+        Ok(())
+    }
+
+    /// Remove and return the element of `self` at `index`, converting it to a
+    /// `T`.
+    ///
+    /// `index` may be negative, in which case it counts backward from the end
+    /// of the array.
+    ///
+    /// Returns `Err` if `self` is frozen or if the conversion fails.
+    ///
+    /// The returned element will be Ruby's `nil` when `index` is out of bounds
+    /// this makes it impossible to distingush between out of bounds and
+    /// removing `nil` without an additional length check.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RArray};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let ary = RArray::from_vec(vec!["a", "b", "c"]);
+    /// let removed: Option::<String> = ary.delete_at(1).unwrap();
+    /// assert_eq!(removed, Some(String::from("b")));
+    /// let res: bool = eval!(r#"ary == ["a", "c"]"#, ary).unwrap();
+    /// assert!(res);
+    /// ```
+    pub fn delete_at<T>(self, index: isize) -> Result<T, Error>
+    where
+        T: TryConvert,
+    {
+        protect(|| unsafe { Value::new(rb_ary_delete_at(self.as_rb_value(), index as c_long)) })
+            .and_then(|val| val.try_convert())
+    }
+
+    /// Remove all elements from `self`
+    ///
+    /// Returns `Err` if `self` is frozen.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RArray};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let ary = RArray::from_vec::<i64>(vec![1, 2, 3]);
+    /// ary.clear().unwrap();
+    /// let res: bool = eval!("ary == []", ary).unwrap();
+    /// assert!(res);
+    /// ```
+    pub fn clear(self) -> Result<(), Error> {
+        protect(|| unsafe { Value::new(rb_ary_clear(self.as_rb_value())) })?;
+        Ok(())
+    }
+
+    /// Expand or shrink the length of `self`.
+    ///
+    /// When increasing the length of the array empty positions will be filled
+    /// with `nil`.
+    ///
+    /// Returns `Err` if `self` is frozen.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RArray};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let ary = RArray::from_vec::<i64>(vec![1, 2, 3]);
+    /// ary.resize(5).unwrap();
+    /// let res: bool = eval!("ary == [1, 2, 3, nil, nil]", ary).unwrap();
+    /// assert!(res);
+    /// ary.resize(2).unwrap();
+    /// let res: bool = eval!("ary == [1, 2]", ary).unwrap();
+    /// assert!(res);
+    /// ```
+    pub fn resize(self, len: usize) -> Result<(), Error> {
+        protect(|| unsafe { Value::new(rb_ary_resize(self.as_rb_value(), len as c_long)) })?;
+        Ok(())
+    }
+
+    /// Reverses the order of `self` in place.
+    ///
+    /// Returns `Err` if `self` is frozen.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RArray};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let ary = RArray::from_vec::<i64>(vec![1, 2, 3]);
+    /// ary.reverse().unwrap();
+    /// let res: bool = eval!("ary == [3, 2, 1]", ary).unwrap();
+    /// assert!(res);
+    /// ```
+    pub fn reverse(self) -> Result<(), Error> {
+        protect(|| unsafe { Value::new(rb_ary_reverse(self.as_rb_value())) })?;
+        Ok(())
+    }
+
+    /// Rotates the elements of `self` in place by `rot` positions.
+    ///
+    /// If `rot` is positive elements are rotated to the left, if negative,
+    /// to the right.
+    ///
+    /// Returns `Err` if `self` is frozen.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RArray};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let ary = RArray::from_vec::<i64>(vec![1, 2, 3, 4, 5, 6, 7]);
+    /// ary.rotate(3).unwrap();
+    /// let res: bool = eval!("ary == [4, 5, 6, 7, 1, 2, 3]", ary).unwrap();
+    /// assert!(res);
+    /// ```
+    ///
+    /// ```
+    /// use magnus::{eval, RArray};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let ary = RArray::from_vec::<i64>(vec![1, 2, 3, 4, 5, 6, 7]);
+    /// ary.rotate(-3).unwrap();
+    /// let res: bool = eval!("ary == [5, 6, 7, 1, 2, 3, 4]", ary).unwrap();
+    /// assert!(res);
+    /// ```
+    pub fn rotate(self, rot: isize) -> Result<(), Error> {
+        protect(|| unsafe { Value::new(rb_ary_rotate(self.as_rb_value(), rot as c_long)) })?;
+        Ok(())
+    }
+
+    /// Storts the elements of `self` in place using Ruby's `<=>` operator.
+    ///
+    /// Returns `Err` if `self` is frozen.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RArray};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let ary = RArray::from_vec::<i64>(vec![2, 1, 3]);
+    /// ary.sort().unwrap();
+    /// let res: bool = eval!("ary == [1, 2, 3]", ary).unwrap();
+    /// assert!(res);
+    /// ```
+    pub fn sort(self) -> Result<(), Error> {
+        protect(|| unsafe { Value::new(rb_ary_sort_bang(self.as_rb_value())) })?;
+        Ok(())
     }
 
     /// Create a new `RArray` from a Rust vector.
