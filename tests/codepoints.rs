@@ -1,4 +1,4 @@
-use magnus::{Error, RString};
+use magnus::RString;
 
 #[test]
 fn it_stops_on_err() {
