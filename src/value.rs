@@ -15,11 +15,16 @@ use crate::ruby_sys::{
     rb_any_to_s, rb_block_call, rb_check_funcall, rb_check_id, rb_enumeratorize_with_size, rb_eql,
     rb_equal, rb_float_new, rb_float_value, rb_funcallv, rb_gc_register_address,
     rb_gc_register_mark_object, rb_gc_unregister_address, rb_id2name, rb_id2sym, rb_inspect,
-    rb_intern3, rb_ll2inum, rb_num2ll, rb_num2long, rb_num2short, rb_num2ull, rb_num2ulong,
-    rb_num2ushort, rb_obj_as_string, rb_obj_classname, rb_obj_freeze, rb_obj_is_kind_of,
+    rb_intern3, rb_ll2inum, rb_obj_as_string, rb_obj_classname, rb_obj_freeze, rb_obj_is_kind_of,
     rb_obj_respond_to, rb_sym2id, rb_ull2inum, ruby_fl_type, ruby_special_consts, ruby_value_type,
     RBasic, ID, VALUE,
 };
+
+// These don't seem to appear consistently in bindgen output, not sure if they
+// aren't consistently defined in the headers or what. Lets just do it
+// ourselves.
+const RUBY_FIXNUM_MAX: c_ulong = (c_long::MAX / 2) as c_ulong;
+const RUBY_FIXNUM_MIN: c_long = c_long::MIN / 2;
 
 use crate::{
     block::Proc,
@@ -1528,6 +1533,14 @@ impl Fixnum {
         Self(NonZeroValue::new_unchecked(Value::new(val)))
     }
 
+    #[inline]
+    pub(crate) fn from_i64_impl(n: i64) -> Option<Self> {
+        ((n as c_ulong) < RUBY_FIXNUM_MAX + 1 && (n as c_long) >= RUBY_FIXNUM_MIN).then(|| unsafe {
+            let x = transmute::<_, usize>(n as isize);
+            Self::from_rb_value_unchecked(x.wrapping_add(x.wrapping_add(1)) as VALUE)
+        })
+    }
+
     /// Create a new `Fixnum` from an `i64.`
     ///
     /// Returns `Ok(Fixnum)` if `n` is in range for `Fixnum`, otherwise returns
@@ -1544,10 +1557,10 @@ impl Fixnum {
     /// assert!(Fixnum::from_i64(4611686018427387904).is_err());
     /// assert!(Fixnum::from_i64(-4611686018427387905).is_err());
     /// ```
+    #[inline]
     pub fn from_i64(n: i64) -> Result<Self, RBignum> {
-        let val = unsafe { Value::new(rb_ll2inum(n)) };
-        Self::from_value(val)
-            .ok_or_else(|| unsafe { RBignum::from_rb_value_unchecked(val.as_rb_value()) })
+        Self::from_i64_impl(n)
+            .ok_or_else(|| unsafe { RBignum::from_rb_value_unchecked(rb_ll2inum(n)) })
     }
 
     /// Create a new `Fixnum` from a `u64.`
@@ -1565,10 +1578,10 @@ impl Fixnum {
     /// // too big
     /// assert!(Fixnum::from_u64(4611686018427387904).is_err());
     /// ```
+    #[inline]
     pub fn from_u64(n: u64) -> Result<Self, RBignum> {
-        let val = unsafe { Value::new(rb_ull2inum(n)) };
-        Self::from_value(val)
-            .ok_or_else(|| unsafe { RBignum::from_rb_value_unchecked(val.as_rb_value()) })
+        Self::from_i64_impl(n as i64)
+            .ok_or_else(|| unsafe { RBignum::from_rb_value_unchecked(rb_ull2inum(n)) })
     }
 
     fn is_negative(self) -> bool {
@@ -1589,13 +1602,10 @@ impl Fixnum {
     /// assert_eq!(eval::<Fixnum>("-128").unwrap().to_i8().unwrap(), -128);
     /// assert!(eval::<Fixnum>("-129").unwrap().to_i8().is_err());
     /// ```
+    #[inline]
     pub fn to_i8(self) -> Result<i8, Error> {
-        let mut res = 0;
-        protect(|| {
-            res = unsafe { rb_num2long(self.as_rb_value()) };
-            QNIL
-        })?;
-        if res > i8::MAX as c_long || res < i8::MIN as c_long {
+        let res = self.to_isize();
+        if res > i8::MAX as isize || res < i8::MIN as isize {
             return Err(Error::new(
                 exception::range_error(),
                 "fixnum too big to convert into `i8`",
@@ -1618,13 +1628,16 @@ impl Fixnum {
     /// assert_eq!(eval::<Fixnum>("-32768").unwrap().to_i16().unwrap(), -32768);
     /// assert!(eval::<Fixnum>("-32769").unwrap().to_i16().is_err());
     /// ```
+    #[inline]
     pub fn to_i16(self) -> Result<i16, Error> {
-        let mut res = 0;
-        protect(|| {
-            res = unsafe { rb_num2short(self.as_rb_value()) };
-            QNIL
-        })?;
-        Ok(res)
+        let res = self.to_isize();
+        if res > i16::MAX as isize || res < i16::MIN as isize {
+            return Err(Error::new(
+                exception::range_error(),
+                "fixnum too big to convert into `i16`",
+            ));
+        }
+        Ok(res as i16)
     }
 
     /// Convert `self` to an `i32`. Returns `Err` if `self` is out of range for
@@ -1644,13 +1657,10 @@ impl Fixnum {
     /// assert!(eval::<Fixnum>("-2147483649").unwrap().to_i32().is_err());
     /// # }
     /// ```
+    #[inline]
     pub fn to_i32(self) -> Result<i32, Error> {
-        let mut res = 0;
-        protect(|| {
-            res = unsafe { rb_num2long(self.as_rb_value()) };
-            QNIL
-        })?;
-        if res > i32::MAX as c_long || res < i32::MIN as c_long {
+        let res = self.to_isize();
+        if res > i32::MAX as isize || res < i32::MIN as isize {
             return Err(Error::new(
                 exception::range_error(),
                 "fixnum too big to convert into `i32`",
@@ -1673,8 +1683,9 @@ impl Fixnum {
     /// # #[cfg(not(windows))]
     /// assert_eq!(eval::<Fixnum>("-4611686018427387904").unwrap().to_i64(), -4611686018427387904);
     /// ```
+    #[inline]
     pub fn to_i64(self) -> i64 {
-        unsafe { rb_num2ll(self.as_rb_value()) }
+        self.to_isize() as i64
     }
 
     /// Convert `self` to an `isize`. Returns `Err` if `self` is out of range
@@ -1687,17 +1698,13 @@ impl Fixnum {
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// # #[cfg(not(windows))]
-    /// assert_eq!(eval::<Fixnum>("4611686018427387903").unwrap().to_isize().unwrap(), 4611686018427387903);
+    /// assert_eq!(eval::<Fixnum>("4611686018427387903").unwrap().to_isize(), 4611686018427387903);
     /// # #[cfg(not(windows))]
-    /// assert_eq!(eval::<Fixnum>("-4611686018427387904").unwrap().to_isize().unwrap(), -4611686018427387904);
+    /// assert_eq!(eval::<Fixnum>("-4611686018427387904").unwrap().to_isize(), -4611686018427387904);
     /// ```
-    pub fn to_isize(self) -> Result<isize, Error> {
-        let mut res = 0;
-        protect(|| {
-            res = unsafe { rb_num2ll(self.as_rb_value()) };
-            QNIL
-        })?;
-        Ok(res as isize)
+    #[inline]
+    pub fn to_isize(self) -> isize {
+        unsafe { transmute::<_, isize>(self) >> 1 }
     }
 
     /// Convert `self` to a `u8`. Returns `Err` if `self` is negative or out of
@@ -1713,6 +1720,7 @@ impl Fixnum {
     /// assert!(eval::<Fixnum>("256").unwrap().to_u8().is_err());
     /// assert!(eval::<Fixnum>("-1").unwrap().to_u8().is_err());
     /// ```
+    #[inline]
     pub fn to_u8(self) -> Result<u8, Error> {
         if self.is_negative() {
             return Err(Error::new(
@@ -1720,12 +1728,8 @@ impl Fixnum {
                 "can't convert negative integer to unsigned",
             ));
         }
-        let mut res = 0;
-        protect(|| {
-            res = unsafe { rb_num2ulong(self.as_rb_value()) };
-            QNIL
-        })?;
-        if res > u8::MAX as c_ulong {
+        let res = self.to_isize();
+        if res > u8::MAX as isize {
             return Err(Error::new(
                 exception::range_error(),
                 "fixnum too big to convert into `u8`",
@@ -1747,6 +1751,7 @@ impl Fixnum {
     /// assert!(eval::<Fixnum>("65536").unwrap().to_u16().is_err());
     /// assert!(eval::<Fixnum>("-1").unwrap().to_u16().is_err());
     /// ```
+    #[inline]
     pub fn to_u16(self) -> Result<u16, Error> {
         if self.is_negative() {
             return Err(Error::new(
@@ -1754,12 +1759,14 @@ impl Fixnum {
                 "can't convert negative integer to unsigned",
             ));
         }
-        let mut res = 0;
-        protect(|| {
-            res = unsafe { rb_num2ushort(self.as_rb_value()) };
-            QNIL
-        })?;
-        Ok(res)
+        let res = self.to_isize();
+        if res > u16::MAX as isize {
+            return Err(Error::new(
+                exception::range_error(),
+                "fixnum too big to convert into `u16`",
+            ));
+        }
+        Ok(res as u16)
     }
 
     /// Convert `self` to a `u32`. Returns `Err` if `self` is negative or out
@@ -1778,6 +1785,7 @@ impl Fixnum {
     /// # }
     /// assert!(eval::<Fixnum>("-1").unwrap().to_u32().is_err());
     /// ```
+    #[inline]
     pub fn to_u32(self) -> Result<u32, Error> {
         if self.is_negative() {
             return Err(Error::new(
@@ -1785,12 +1793,8 @@ impl Fixnum {
                 "can't convert negative integer to unsigned",
             ));
         }
-        let mut res = 0;
-        protect(|| {
-            res = unsafe { rb_num2ulong(self.as_rb_value()) };
-            QNIL
-        })?;
-        if res > u32::MAX as c_ulong {
+        let res = self.to_isize();
+        if res > u32::MAX as isize {
             return Err(Error::new(
                 exception::range_error(),
                 "fixnum too big to convert into `u32`",
@@ -1811,6 +1815,7 @@ impl Fixnum {
     /// assert_eq!(eval::<Fixnum>("4611686018427387903").unwrap().to_u64().unwrap(), 4611686018427387903);
     /// assert!(eval::<Fixnum>("-1").unwrap().to_u64().is_err());
     /// ```
+    #[inline]
     pub fn to_u64(self) -> Result<u64, Error> {
         if self.is_negative() {
             return Err(Error::new(
@@ -1818,14 +1823,7 @@ impl Fixnum {
                 "can't convert negative integer to unsigned",
             ));
         }
-        let mut res = 0;
-        unsafe {
-            protect(|| {
-                res = rb_num2ull(self.as_rb_value());
-                QNIL
-            })?;
-        }
-        Ok(res)
+        Ok(self.to_isize() as u64)
     }
 
     /// Convert `self` to a `usize`. Returns `Err` if `self` is negative or out
@@ -1841,6 +1839,7 @@ impl Fixnum {
     /// assert_eq!(eval::<Fixnum>("4611686018427387903").unwrap().to_usize().unwrap(), 4611686018427387903);
     /// assert!(eval::<Fixnum>("-1").unwrap().to_usize().is_err());
     /// ```
+    #[inline]
     pub fn to_usize(self) -> Result<usize, Error> {
         if self.is_negative() {
             return Err(Error::new(
@@ -1848,12 +1847,7 @@ impl Fixnum {
                 "can't convert negative integer to unsigned",
             ));
         }
-        let mut res = 0;
-        protect(|| {
-            res = unsafe { rb_num2ull(self.as_rb_value()) };
-            QNIL
-        })?;
-        Ok(res as usize)
+        Ok(self.to_isize() as usize)
     }
 }
 

@@ -82,8 +82,15 @@ impl Integer {
     /// let res: bool = eval!("i == -4611686018427387905", i = Integer::from_i64(-4611686018427387905)).unwrap();
     /// assert!(res);
     /// ```
+    #[inline]
     pub fn from_i64(n: i64) -> Self {
-        unsafe { Self::from_rb_value_unchecked(rb_ll2inum(n)) }
+        unsafe {
+            Self::from_rb_value_unchecked(
+                Fixnum::from_i64_impl(n)
+                    .map(|f| f.as_rb_value())
+                    .unwrap_or_else(|| rb_ll2inum(n)),
+            )
+        }
     }
 
     /// Create a new `Integer` from a `u64.`
@@ -99,8 +106,15 @@ impl Integer {
     /// let res: bool = eval!("i == 4611686018427387904", i = Integer::from_u64(4611686018427387904)).unwrap();
     /// assert!(res);
     /// ```
+    #[inline]
     pub fn from_u64(n: u64) -> Self {
-        unsafe { Self::from_rb_value_unchecked(rb_ull2inum(n)) }
+        unsafe {
+            Self::from_rb_value_unchecked(
+                Fixnum::from_i64_impl(n as i64)
+                    .map(|f| f.as_rb_value())
+                    .unwrap_or_else(|| rb_ull2inum(n)),
+            )
+        }
     }
 
     /// Convert `self` to an `i8`. Returns `Err` if `self` is out of range for
@@ -117,6 +131,7 @@ impl Integer {
     /// assert_eq!(eval::<Integer>("-128").unwrap().to_i8().unwrap(), -128);
     /// assert!(eval::<Integer>("-129").unwrap().to_i8().is_err());
     /// ```
+    #[inline]
     pub fn to_i8(self) -> Result<i8, Error> {
         match self.integer_type() {
             IntegerType::Fixnum(fix) => fix.to_i8(),
@@ -141,6 +156,7 @@ impl Integer {
     /// assert_eq!(eval::<Integer>("-32768").unwrap().to_i16().unwrap(), -32768);
     /// assert!(eval::<Integer>("-32769").unwrap().to_i16().is_err());
     /// ```
+    #[inline]
     pub fn to_i16(self) -> Result<i16, Error> {
         match self.integer_type() {
             IntegerType::Fixnum(fix) => fix.to_i16(),
@@ -165,6 +181,7 @@ impl Integer {
     /// assert_eq!(eval::<Integer>("-2147483648").unwrap().to_i32().unwrap(), -2147483648);
     /// assert!(eval::<Integer>("-2147483649").unwrap().to_i32().is_err());
     /// ```
+    #[inline]
     pub fn to_i32(self) -> Result<i32, Error> {
         match self.integer_type() {
             IntegerType::Fixnum(fix) => fix.to_i32(),
@@ -186,6 +203,7 @@ impl Integer {
     /// assert!(eval::<Integer>("9223372036854775808").unwrap().to_i64().is_err());
     /// assert!(eval::<Integer>("-9223372036854775809").unwrap().to_i64().is_err());
     /// ```
+    #[inline]
     pub fn to_i64(self) -> Result<i64, Error> {
         match self.integer_type() {
             IntegerType::Fixnum(fix) => Ok(fix.to_i64()),
@@ -205,9 +223,10 @@ impl Integer {
     /// assert_eq!(eval::<Integer>("4611686018427387903").unwrap().to_isize().unwrap(), 4611686018427387903);
     /// assert_eq!(eval::<Integer>("-4611686018427387904").unwrap().to_isize().unwrap(), -4611686018427387904);
     /// ```
+    #[inline]
     pub fn to_isize(self) -> Result<isize, Error> {
         match self.integer_type() {
-            IntegerType::Fixnum(fix) => fix.to_isize(),
+            IntegerType::Fixnum(fix) => Ok(fix.to_isize()),
             IntegerType::Bignum(big) => big.to_isize(),
         }
     }
@@ -225,6 +244,7 @@ impl Integer {
     /// assert!(eval::<Integer>("256").unwrap().to_u8().is_err());
     /// assert!(eval::<Integer>("-1").unwrap().to_u8().is_err());
     /// ```
+    #[inline]
     pub fn to_u8(self) -> Result<u8, Error> {
         match self.integer_type() {
             IntegerType::Fixnum(fix) => fix.to_u8(),
@@ -248,6 +268,7 @@ impl Integer {
     /// assert!(eval::<Integer>("65536").unwrap().to_u16().is_err());
     /// assert!(eval::<Integer>("-1").unwrap().to_u16().is_err());
     /// ```
+    #[inline]
     pub fn to_u16(self) -> Result<u16, Error> {
         match self.integer_type() {
             IntegerType::Fixnum(fix) => fix.to_u16(),
@@ -271,6 +292,7 @@ impl Integer {
     /// assert!(eval::<Integer>("4294967296").unwrap().to_u32().is_err());
     /// assert!(eval::<Integer>("-1").unwrap().to_u32().is_err());
     /// ```
+    #[inline]
     pub fn to_u32(self) -> Result<u32, Error> {
         match self.integer_type() {
             IntegerType::Fixnum(fix) => fix.to_u32(),
@@ -291,6 +313,7 @@ impl Integer {
     /// assert!(eval::<Integer>("-1").unwrap().to_u64().is_err());
     /// assert!(eval::<Integer>("18446744073709551616").unwrap().to_u64().is_err());
     /// ```
+    #[inline]
     pub fn to_u64(self) -> Result<u64, Error> {
         match self.integer_type() {
             IntegerType::Fixnum(fix) => fix.to_u64(),
@@ -310,6 +333,7 @@ impl Integer {
     /// assert_eq!(eval::<Integer>("4611686018427387903").unwrap().to_usize().unwrap(), 4611686018427387903);
     /// assert!(eval::<Integer>("-1").unwrap().to_usize().is_err());
     /// ```
+    #[inline]
     pub fn to_usize(self) -> Result<usize, Error> {
         match self.integer_type() {
             IntegerType::Fixnum(fix) => fix.to_usize(),
