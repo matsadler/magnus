@@ -80,6 +80,83 @@ where
         }
     }
 }
+pub const RUBY_H: u32 = 1;
+pub const HAVE_RUBY_ATOMIC_H: u32 = 1;
+pub const HAVE_RUBY_DEBUG_H: u32 = 1;
+pub const HAVE_RUBY_DEFINES_H: u32 = 1;
+pub const HAVE_RUBY_ENCODING_H: u32 = 1;
+pub const HAVE_RUBY_FIBER_SCHEDULER_H: u32 = 1;
+pub const HAVE_RUBY_INTERN_H: u32 = 1;
+pub const HAVE_RUBY_IO_H: u32 = 1;
+pub const HAVE_RUBY_MEMORY_VIEW_H: u32 = 1;
+pub const HAVE_RUBY_MISSING_H: u32 = 1;
+pub const HAVE_RUBY_ONIGMO_H: u32 = 1;
+pub const HAVE_RUBY_ONIGURUMA_H: u32 = 1;
+pub const HAVE_RUBY_RACTOR_H: u32 = 1;
+pub const HAVE_RUBY_RANDOM_H: u32 = 1;
+pub const HAVE_RUBY_RE_H: u32 = 1;
+pub const HAVE_RUBY_REGEX_H: u32 = 1;
+pub const HAVE_RUBY_RUBY_H: u32 = 1;
+pub const HAVE_RUBY_ST_H: u32 = 1;
+pub const HAVE_RUBY_THREAD_H: u32 = 1;
+pub const HAVE_RUBY_THREAD_NATIVE_H: u32 = 1;
+pub const HAVE_RUBY_UTIL_H: u32 = 1;
+pub const HAVE_RUBY_VERSION_H: u32 = 1;
+pub const HAVE_RUBY_VM_H: u32 = 1;
+pub const HAVE_RUBY_WIN32_H: u32 = 1;
+pub const RUBY_RUBY_H: u32 = 1;
+pub const INCLUDE_RUBY_CONFIG_H: u32 = 1;
+pub const RUBY_MSVCRT_VERSION: u32 = 140;
+pub const RUBY_PLATFORM: &[u8; 15usize] = b"x64-mingw-ucrt\0";
+pub const RUBY_DEFINES_H: u32 = 1;
+pub const RBIMPL_RUBY_DEBUG: u32 = 0;
+pub const RUBY_DEBUG: u32 = 0;
+pub const RUBY_NDEBUG: u32 = 1;
+pub const RUBY_WIN32_H: u32 = 1;
+pub const RUBY_MISSING_H: u32 = 1;
+pub const RUBY_MBCHAR_MAXSIZE: u32 = 2147483647;
+pub const RUBY_FIXNUM_MAX: u32 = 1073741823;
+pub const RUBY_FIXNUM_MIN: i32 = -1073741824;
+pub const RUBY_ST_H: u32 = 1;
+pub const RUBY_UNTYPED_DATA_WARNING: u32 = 0;
+pub const RUBY_RUBY_BACKWARD_H: u32 = 1;
+pub const RUBY_EVENT_NONE: u32 = 0;
+pub const RUBY_EVENT_LINE: u32 = 1;
+pub const RUBY_EVENT_CLASS: u32 = 2;
+pub const RUBY_EVENT_END: u32 = 4;
+pub const RUBY_EVENT_CALL: u32 = 8;
+pub const RUBY_EVENT_RETURN: u32 = 16;
+pub const RUBY_EVENT_C_CALL: u32 = 32;
+pub const RUBY_EVENT_C_RETURN: u32 = 64;
+pub const RUBY_EVENT_RAISE: u32 = 128;
+pub const RUBY_EVENT_ALL: u32 = 255;
+pub const RUBY_EVENT_B_CALL: u32 = 256;
+pub const RUBY_EVENT_B_RETURN: u32 = 512;
+pub const RUBY_EVENT_THREAD_BEGIN: u32 = 1024;
+pub const RUBY_EVENT_THREAD_END: u32 = 2048;
+pub const RUBY_EVENT_FIBER_SWITCH: u32 = 4096;
+pub const RUBY_EVENT_SCRIPT_COMPILED: u32 = 8192;
+pub const RUBY_EVENT_TRACEPOINT_ALL: u32 = 65535;
+pub const RUBY_EVENT_RESERVED_FOR_INTERNAL_USE: u32 = 196608;
+pub const RUBY_INTERNAL_EVENT_SWITCH: u32 = 262144;
+pub const RUBY_EVENT_SWITCH: u32 = 262144;
+pub const RUBY_INTERNAL_EVENT_NEWOBJ: u32 = 1048576;
+pub const RUBY_INTERNAL_EVENT_FREEOBJ: u32 = 2097152;
+pub const RUBY_INTERNAL_EVENT_GC_START: u32 = 4194304;
+pub const RUBY_INTERNAL_EVENT_GC_END_MARK: u32 = 8388608;
+pub const RUBY_INTERNAL_EVENT_GC_END_SWEEP: u32 = 16777216;
+pub const RUBY_INTERNAL_EVENT_GC_ENTER: u32 = 33554432;
+pub const RUBY_INTERNAL_EVENT_GC_EXIT: u32 = 67108864;
+pub const RUBY_INTERNAL_EVENT_OBJSPACE_MASK: u32 = 133169152;
+pub const RUBY_INTERNAL_EVENT_MASK: u32 = 4294901760;
+pub const RUBY_INTEGER_UNIFICATION: u32 = 1;
+pub const RUBY_BLOCK_CALL_FUNC_TAKES_BLOCKARG: u32 = 1;
+pub const RUBY_ALLOCV_LIMIT: u32 = 1024;
+pub const RUBY_PRI_VALUE_MARK: &[u8; 2usize] = b"\x0B\0";
+pub const RUBY_INTERN_H: u32 = 1;
+pub const RUBY_VM: u32 = 1;
+pub const RUBY_SUBST_H: u32 = 1;
+pub const RUBY_ENCODING_H: u32 = 1;
 pub type va_list = __builtin_va_list;
 pub type size_t = ::std::os::raw::c_ulonglong;
 pub type ssize_t = ::std::os::raw::c_longlong;
@@ -3682,6 +3759,12 @@ pub enum ruby_fl_type {
     RUBY_FL_USER18 = 1073741824,
     RUBY_FL_USER19 = -2147483648,
 }
+pub const RUBY_FL_DUPPED: _bindgen_ty_2 = _bindgen_ty_2::RUBY_FL_DUPPED;
+#[repr(u32)]
+#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
+pub enum _bindgen_ty_2 {
+    RUBY_FL_DUPPED = 1055,
+}
 extern "C" {
     pub fn rb_obj_infect(victim: VALUE, carrier: VALUE);
 }
@@ -5540,6 +5623,12 @@ extern "C" {
 }
 extern "C" {
     pub fn rb_get_path_no_checksafe(arg1: VALUE) -> VALUE;
+}
+extern "C" {
+    pub fn rb_varargs_bad_length(
+        arg1: ::std::os::raw::c_int,
+        arg2: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
 }
 extern "C" {
     pub fn rb_class2name(klass: VALUE) -> *const ::std::os::raw::c_char;
