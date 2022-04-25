@@ -13,7 +13,7 @@ bindgen \
   -o "ruby-$(rbconfig RUBY_API_VERSION)-$(target_arch)-$(target_vendor)-$(target_os).rs" \
   --allowlist-function "r(b|uby)_.*" \
   --allowlist-type "(ruby_|R[A-Z]).*|rbimpl_typeddata_flags" \
-  --allowlist-var "rb_.*" \
+  --allowlist-var "rb_.*|RUBY_.*" \
   --default-enum-style rust \
   --no-copy rb_data_type_struct \
   --no-layout-tests \
