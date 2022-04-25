@@ -4,7 +4,7 @@ set -x
 
 . $(cd $(dirname $0) && pwd)/util.sh
 
-if [ $(ruby_api_version) != 2_7 ]; then
+if [ $(rbconfig RUBY_API_VERSION) != 2.7 ]; then
   exit 1
 fi
 
