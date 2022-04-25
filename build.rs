@@ -83,7 +83,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let bindings = builder
         .allowlist_function("r(b|uby)_.*")
         .allowlist_type("(ruby_|R[A-Z]).*|rbimpl_typeddata_flags")
-        .allowlist_var("rb_.*")
+        .allowlist_var("rb_.*|RUBY_.*")
         .default_enum_style(bindgen::EnumVariation::Rust {
             non_exhaustive: false,
         })
