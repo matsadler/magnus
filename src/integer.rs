@@ -1,4 +1,4 @@
-use std::{fmt, ops::Deref};
+use std::{convert::TryFrom, fmt, ops::Deref};
 
 use crate::ruby_sys::{
     rb_ll2inum, rb_to_int, rb_ull2inum, ruby_special_consts, ruby_value_type, VALUE,
@@ -110,7 +110,7 @@ impl Integer {
     pub fn from_u64(n: u64) -> Self {
         unsafe {
             Self::from_rb_value_unchecked(
-                Fixnum::from_i64_impl(n as i64)
+                Fixnum::from_i64_impl(i64::try_from(n).unwrap_or(i64::MAX))
                     .map(|f| f.as_rb_value())
                     .unwrap_or_else(|| rb_ull2inum(n)),
             )

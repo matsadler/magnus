@@ -2,6 +2,7 @@
 
 use std::{
     borrow::Cow,
+    convert::TryFrom,
     ffi::CStr,
     fmt,
     mem::transmute,
@@ -1535,10 +1536,12 @@ impl Fixnum {
 
     #[inline]
     pub(crate) fn from_i64_impl(n: i64) -> Option<Self> {
-        ((n as c_ulong) < RUBY_FIXNUM_MAX + 1 && (n as c_long) >= RUBY_FIXNUM_MIN).then(|| unsafe {
-            let x = transmute::<_, usize>(n as isize);
-            Self::from_rb_value_unchecked(x.wrapping_add(x.wrapping_add(1)) as VALUE)
-        })
+        (c_ulong::try_from(n).unwrap_or(c_ulong::MAX) < RUBY_FIXNUM_MAX + 1
+            && c_long::try_from(n).unwrap_or(c_long::MAX) >= RUBY_FIXNUM_MIN)
+            .then(|| unsafe {
+                let x = transmute::<_, usize>(n as isize);
+                Self::from_rb_value_unchecked(x.wrapping_add(x.wrapping_add(1)) as VALUE)
+            })
     }
 
     /// Create a new `Fixnum` from an `i64.`
@@ -1580,7 +1583,7 @@ impl Fixnum {
     /// ```
     #[inline]
     pub fn from_u64(n: u64) -> Result<Self, RBignum> {
-        Self::from_i64_impl(n as i64)
+        Self::from_i64_impl(i64::try_from(n).unwrap_or(i64::MAX))
             .ok_or_else(|| unsafe { RBignum::from_rb_value_unchecked(rb_ull2inum(n)) })
     }
 
