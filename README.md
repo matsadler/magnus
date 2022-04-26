@@ -3,6 +3,12 @@
 Ruby bindings for Rust. Write Ruby extension gems in Rust, or call Ruby code
 from a Rust binary.
 
+[API Docs] | [GitHub] | [crates.io]
+
+[API Docs]: https://docs.rs/magnus/latest/magnus/
+[GitHub]: https://github.com/matsadler/magnus
+[crates.io]: https://crates.io/crates/magnus
+
 ## Defining Methods
 
 Using Magnus, regular Rust functions can be bound to Ruby as methods with
