@@ -14,7 +14,7 @@ use std::{
 
 use crate::ruby_sys::{
     rb_any_to_s, rb_block_call, rb_check_funcall, rb_check_id, rb_enumeratorize_with_size, rb_eql,
-    rb_equal, rb_float_new, rb_float_value, rb_funcallv, rb_gc_register_address,
+    rb_equal, rb_float_new_in_heap, rb_funcallv, rb_gc_register_address,
     rb_gc_register_mark_object, rb_gc_unregister_address, rb_id2name, rb_id2sym, rb_inspect,
     rb_intern3, rb_ll2inum, rb_obj_as_string, rb_obj_classname, rb_obj_freeze, rb_obj_is_kind_of,
     rb_obj_respond_to, rb_sym2id, rb_ull2inum, ruby_fl_type, ruby_special_consts, ruby_value_type,
@@ -2160,6 +2160,18 @@ impl Flonum {
         Self(NonZeroValue::new_unchecked(Value::new(val)))
     }
 
+    #[inline]
+    pub(crate) fn from_f64_impl(d: f64) -> Option<Self> {
+        let v = d.to_bits();
+        let bits = v >> 60 & 0x7;
+        if v != 0x3000000000000000 && (bits - 3) & !0x01 == 0 {
+            return Some(unsafe { Self::from_rb_value_unchecked(v.rotate_left(3) & !0x01 | 0x02) });
+        } else if v == 0 {
+            return Some(unsafe { Self::from_rb_value_unchecked(0x8000000000000002) });
+        }
+        None
+    }
+
     /// Create a new `Flonum` from a `f64.`
     ///
     /// Returns `Ok(Flonum)` if `n` can be represented as a `Flonum`, otherwise
@@ -2175,10 +2187,10 @@ impl Flonum {
     /// // representable as a Float, but Flonum does not have enough precision
     /// assert!(Flonum::from_f64(1.7272337110188890e-77).is_err());
     /// ```
+    #[inline]
     pub fn from_f64(n: f64) -> Result<Self, RFloat> {
-        let val = unsafe { Value::new(rb_float_new(n)) };
-        Self::from_value(val)
-            .ok_or_else(|| unsafe { RFloat::from_rb_value_unchecked(val.as_rb_value()) })
+        Self::from_f64_impl(n)
+            .ok_or_else(|| unsafe { RFloat::from_rb_value_unchecked(rb_float_new_in_heap(n)) })
     }
 
     /// Convert `self` to a `f64`.
@@ -2191,8 +2203,15 @@ impl Flonum {
     ///
     /// assert_eq!(eval::<Flonum>("2.0").unwrap().to_f64(), 2.0);
     /// ```
+    #[inline]
     pub fn to_f64(self) -> f64 {
-        unsafe { rb_float_value(self.as_rb_value()) }
+        let v = self.as_rb_value();
+        if v != 0x8000000000000002 {
+            let b63 = v >> 63;
+            let v = (2_u64.wrapping_sub(b63) | v & !0x03).rotate_right(3);
+            return f64::from_bits(v);
+        }
+        0.0
     }
 }
 

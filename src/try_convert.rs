@@ -10,7 +10,7 @@ use crate::{
     r_array::RArray,
     r_hash::RHash,
     r_string::RString,
-    value::{Value, QNIL},
+    value::{Fixnum, Flonum, Value, QNIL},
 };
 
 /// Conversions from [`Value`] to Rust types.
@@ -151,6 +151,12 @@ impl TryConvertOwned for f32 {}
 impl TryConvert for f64 {
     #[inline]
     fn try_convert(val: &Value) -> Result<Self, Error> {
+        if let Some(fixnum) = Fixnum::from_value(*val) {
+            return Ok(fixnum.to_isize() as f64);
+        }
+        if let Some(flonum) = Flonum::from_value(*val) {
+            return Ok(flonum.to_f64());
+        }
         debug_assert_value!(val);
         let mut res = 0.0;
         protect(|| {

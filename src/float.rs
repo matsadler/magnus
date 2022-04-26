@@ -1,14 +1,14 @@
 use std::{fmt, ops::Deref};
 
 use crate::ruby_sys::{
-    rb_float_new, rb_float_value, rb_to_float, ruby_special_consts, ruby_value_type, VALUE,
+    rb_float_new_in_heap, rb_float_value, rb_to_float, ruby_special_consts, ruby_value_type, VALUE,
 };
 
 use crate::{
     debug_assert_value,
     error::{protect, Error},
     try_convert::TryConvert,
-    value::{private, NonZeroValue, ReprValue, Value},
+    value::{private, Flonum, NonZeroValue, ReprValue, Value},
 };
 
 /// A type wrapping either a [`Flonum`](`crate::value::Flonum`) value or a
@@ -64,8 +64,15 @@ impl Float {
     /// let res: bool = eval!("f == 1.7272337110188890e-77", f = Float::from_f64(1.7272337110188890e-77)).unwrap();
     /// assert!(res);
     /// ```
+    #[inline]
     pub fn from_f64(n: f64) -> Self {
-        unsafe { Float::from_rb_value_unchecked(rb_float_new(n)) }
+        unsafe {
+            Self::from_rb_value_unchecked(
+                Flonum::from_f64_impl(n)
+                    .map(|f| f.as_rb_value())
+                    .unwrap_or_else(|| rb_float_new_in_heap(n)),
+            )
+        }
     }
 
     /// Convert `self` to a `f64`.
@@ -78,7 +85,11 @@ impl Float {
     ///
     /// assert_eq!(eval::<Float>("2.0").unwrap().to_f64(), 2.0);
     /// ```
+    #[inline]
     pub fn to_f64(self) -> f64 {
+        if let Some(flonum) = Flonum::from_value(*self) {
+            return flonum.to_f64();
+        }
         unsafe { rb_float_value(self.as_rb_value()) }
     }
 }
