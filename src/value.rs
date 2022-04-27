@@ -1536,12 +1536,17 @@ impl Fixnum {
 
     #[inline]
     pub(crate) fn from_i64_impl(n: i64) -> Option<Self> {
-        (c_ulong::try_from(n).unwrap_or(c_ulong::MAX) < RUBY_FIXNUM_MAX + 1
-            && c_long::try_from(n).unwrap_or(c_long::MAX) >= RUBY_FIXNUM_MIN)
-            .then(|| unsafe {
-                let x = transmute::<_, usize>(n as isize);
-                Self::from_rb_value_unchecked(x.wrapping_add(x.wrapping_add(1)) as VALUE)
-            })
+        #[allow(clippy::useless_conversion)] // not useless when c_long != i64
+        (c_ulong::try_from(n)
+            .map(|n| n < RUBY_FIXNUM_MAX + 1)
+            .unwrap_or(false)
+            && c_long::try_from(n)
+                .map(|n| n >= RUBY_FIXNUM_MIN)
+                .unwrap_or(false))
+        .then(|| unsafe {
+            let x = transmute::<_, usize>(n as isize);
+            Self::from_rb_value_unchecked(x.wrapping_add(x.wrapping_add(1)) as VALUE)
+        })
     }
 
     /// Create a new `Fixnum` from an `i64.`
