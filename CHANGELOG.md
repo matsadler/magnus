@@ -17,6 +17,8 @@
   `RArray::from_slice(&[1.into()])` will no longer work. Use
   `RArray::from_slice(&[Value::from(1)])` instead.
 - Similar to above, `gc::location` will accept any Ruby type as an argument.
+- Improved performance for conversion between Ruby floats/integers and Rust
+  types
 
 ### Deprecated
 - `String::encode_utf8`, use `r_string.conv_enc(RbEncoding::utf8())` instead.
