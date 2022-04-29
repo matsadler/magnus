@@ -13,9 +13,10 @@ use std::{
 };
 
 use crate::ruby_sys::{
-    self, rb_enc_str_coderange, rb_str_buf_append, rb_str_buf_new, rb_str_cat, rb_str_conv_enc,
-    rb_str_new, rb_str_new_frozen, rb_str_new_shared, rb_str_to_str, rb_utf8_str_new,
-    rb_utf8_str_new_static, ruby_coderange_type, ruby_rstring_flags, ruby_value_type, VALUE,
+    self, rb_enc_str_coderange, rb_enc_str_new, rb_str_buf_append, rb_str_buf_new, rb_str_cat,
+    rb_str_conv_enc, rb_str_new, rb_str_new_frozen, rb_str_new_shared, rb_str_strlen,
+    rb_str_to_str, rb_utf8_str_new, rb_utf8_str_new_static, ruby_coderange_type,
+    ruby_rstring_flags, ruby_value_type, VALUE,
 };
 
 #[cfg(ruby_gte_3_0)]
@@ -171,6 +172,44 @@ impl RString {
         let len = s.len();
         let ptr = s.as_ptr();
         unsafe { Self::from_rb_value_unchecked(rb_str_new(ptr as *const c_char, len as c_long)) }
+    }
+
+    /// Create a new Ruby string from the value `s` with the encoding `enc`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, encoding::RbEncoding, RString};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let val = RString::enc_new("example", RbEncoding::usascii());
+    /// let res: bool = eval!(r#"val == "example""#, val).unwrap();
+    /// assert!(res);
+    /// ```
+    ///
+    /// ```
+    /// use magnus::{eval, encoding::RbEncoding, RString};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let val = RString::enc_new([255, 128, 128], RbEncoding::ascii8bit());
+    /// let res: bool = eval!(r#"val == "\xFF\x80\x80".force_encoding("BINARY")"#, val).unwrap();
+    /// assert!(res);
+    /// ```
+    pub fn enc_new<T, E>(s: T, enc: E) -> Self
+    where
+        T: AsRef<[u8]>,
+        E: Into<RbEncoding>,
+    {
+        let s = s.as_ref();
+        let len = s.len();
+        let ptr = s.as_ptr();
+        unsafe {
+            Self::from_rb_value_unchecked(rb_enc_str_new(
+                ptr as *const c_char,
+                len as c_long,
+                enc.into().as_ptr(),
+            ))
+        }
     }
 
     /// Create a new Ruby string from the Rust char `c`.
@@ -867,6 +906,52 @@ impl RString {
         unsafe {
             rb_str_cat(self.as_rb_value(), ptr as *const c_char, len as c_long);
         }
+    }
+
+    /// Returns the number of bytes in `self`.
+    ///
+    /// See also [`length`](RString::length).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RString};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let s = RString::new("🦀 Hello, Ferris");
+    /// assert_eq!(s.len(), 18);
+    /// ```
+    pub fn len(self) -> usize {
+        debug_assert_value!(self);
+        unsafe {
+            let r_basic = self.r_basic_unchecked();
+            let mut f = r_basic.as_ref().flags;
+            if (f & ruby_rstring_flags::RSTRING_NOEMBED as VALUE) != 0 {
+                let h = self.as_internal().as_ref().as_.heap;
+                h.len as usize
+            } else {
+                f &= ruby_rstring_flags::RSTRING_EMBED_LEN_MASK as VALUE;
+                f >>= RSTRING_EMBED_LEN_SHIFT as VALUE;
+                f as usize
+            }
+        }
+    }
+
+    /// Returns the number of characters in `self`.
+    ///
+    /// See also [`len`](RString::len).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RString};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let s = RString::new("🦀 Hello, Ferris");
+    /// assert_eq!(s.length(), 15);
+    /// ```
+    pub fn length(self) -> usize {
+        unsafe { rb_str_strlen(self.as_rb_value()) as usize }
     }
 }
 
