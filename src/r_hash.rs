@@ -3,8 +3,9 @@
 use std::{collections::HashMap, fmt, hash::Hash, iter::FromIterator, ops::Deref, os::raw::c_int};
 
 use crate::ruby_sys::{
-    rb_check_hash_type, rb_hash_aref, rb_hash_aset, rb_hash_fetch, rb_hash_foreach, rb_hash_lookup,
-    rb_hash_lookup2, rb_hash_new, rb_hash_size, ruby_value_type, VALUE,
+    rb_check_hash_type, rb_hash_aref, rb_hash_aset, rb_hash_clear, rb_hash_delete, rb_hash_fetch,
+    rb_hash_foreach, rb_hash_lookup, rb_hash_lookup2, rb_hash_new, rb_hash_size, ruby_value_type,
+    VALUE,
 };
 
 use crate::{
@@ -250,6 +251,51 @@ impl RHash {
         let key = key.into();
         protect(|| unsafe { Value::new(rb_hash_fetch(self.as_rb_value(), key.as_rb_value())) })
             .and_then(|v| v.try_convert())
+    }
+
+    /// Removes the key `key` from self and returns the associated value,
+    /// converting it to `U`.
+    ///
+    /// Returns `nil` if `key` is missing.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, value::Qnil, RHash};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let hash = eval::<RHash>(r#"hash = {"answer" => 42}"#).unwrap();
+    /// assert_eq!(hash.delete::<_, i64>("answer").unwrap(), 42);
+    /// assert!(hash.delete::<_, Qnil>("answer").is_ok());
+    /// ```
+    pub fn delete<T, U>(self, key: T) -> Result<U, Error>
+    where
+        T: Into<Value>,
+        U: TryConvert,
+    {
+        let key = key.into();
+        protect(|| unsafe { Value::new(rb_hash_delete(self.as_rb_value(), key.as_rb_value())) })
+            .and_then(|v| v.try_convert())
+    }
+
+    /// Removes all entries from `self`.
+    ///
+    /// Errors if `self` is frozen.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RHash};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let hash: RHash = eval(r#"{"answer" => 42}"#).unwrap();
+    /// assert!(!hash.is_empty());
+    /// hash.clear().unwrap();
+    /// assert!(hash.is_empty());
+    /// ```
+    pub fn clear(self) -> Result<(), Error> {
+        protect(|| unsafe { Value::new(rb_hash_clear(self.as_rb_value())) })?;
+        Ok(())
     }
 
     fn base_foreach<F>(self, mut func: F) -> Result<(), Error>
