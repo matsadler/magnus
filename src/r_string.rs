@@ -953,6 +953,21 @@ impl RString {
     pub fn length(self) -> usize {
         unsafe { rb_str_strlen(self.as_rb_value()) as usize }
     }
+
+    /// Return whether self contains any characters or not.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::RString;
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let s = RString::new("");
+    /// assert!(s.is_empty());
+    /// ```
+    pub fn is_empty(self) -> bool {
+        self.len() == 0
+    }
 }
 
 impl Deref for RString {

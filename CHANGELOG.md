@@ -9,7 +9,7 @@
   contents.
 - The following methods for `RArray`: `dup`, `concat`, `plus`, `delete`,
   `delete_at`, `resize`, `reverse`, `rotate, and `sort`.
-- New methods for `RString`: `enc_new`, `len`, and `length`.
+- New methods for `RString`: `enc_new`, `len`, `length`, and `is_empty`.
 
 ### Changed
 - `RArray::cat`, `RArray::from_slice`, and `gc::mark_slice` will accept a
