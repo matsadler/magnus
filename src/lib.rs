@@ -135,6 +135,12 @@ use crate::ruby_sys::{
     rb_eval_string_protect, rb_set_errinfo, VALUE,
 };
 
+#[cfg(ruby_lt_2_7)]
+use crate::ruby_sys::rb_require;
+
+#[cfg(ruby_gte_2_7)]
+use crate::ruby_sys::rb_require_string;
+
 pub use magnus_macros::{init, wrap, DataTypeFunctions, TypedData};
 
 use error::protect;
@@ -241,6 +247,31 @@ where
     unsafe {
         rb_define_global_function(name.as_ptr(), transmute(func.as_ptr()), M::arity().into());
     }
+}
+
+/// Finds and loads the given feature if not already loaded.
+///
+/// # Examples
+///
+/// ```
+/// # let _cleanup = unsafe { magnus::embed::init() };
+/// use magnus::require;
+///
+/// assert!(require("net/http").unwrap());
+/// ```
+#[cfg(ruby_gte_2_7)]
+pub fn require<T>(feature: T) -> Result<bool, Error>
+where
+    T: Into<RString>,
+{
+    let feature = feature.into();
+    protect(|| unsafe { Value::new(rb_require_string(feature.as_rb_value())) })
+        .and_then(|v| v.try_convert())
+}
+#[cfg(ruby_lt_2_7)]
+pub fn require(feature: &str) -> Result<bool, Error> {
+    let feature = CString::new(feature).unwrap();
+    protect(|| unsafe { Value::new(rb_require(feature.as_ptr())) }).and_then(|v| v.try_convert())
 }
 
 /// Evaluate a string of Ruby code, converting the result to a `T`.
