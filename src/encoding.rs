@@ -21,7 +21,7 @@ use std::{
     ffi::{CStr, CString},
     fmt,
     ops::{Deref, Range},
-    os::raw::c_int,
+    os::raw::{c_char, c_int},
     ptr::{self, NonNull},
 };
 
@@ -329,7 +329,7 @@ impl RbEncoding {
     /// ```
     pub fn mbclen(&self, slice: &[u8]) -> usize {
         let Range { start: p, end: e } = slice.as_ptr_range();
-        unsafe { rb_enc_mbclen(p as *const i8, e as *const i8, self.as_ptr()) as usize }
+        unsafe { rb_enc_mbclen(p as *const c_char, e as *const c_char, self.as_ptr()) as usize }
     }
 
     /// Returns the number of bytes of the first character in `slice`.
@@ -370,7 +370,9 @@ impl RbEncoding {
     /// ```
     pub fn fast_mbclen(&self, slice: &[u8]) -> usize {
         let Range { start: p, end: e } = slice.as_ptr_range();
-        unsafe { rb_enc_fast_mbclen(p as *const i8, e as *const i8, self.as_ptr()) as usize }
+        unsafe {
+            rb_enc_fast_mbclen(p as *const c_char, e as *const c_char, self.as_ptr()) as usize
+        }
     }
 
     /// Returns the number of bytes of the first character in `slice`.
@@ -406,7 +408,8 @@ impl RbEncoding {
     /// ```
     pub fn precise_mbclen(&self, slice: &[u8]) -> MbcLen {
         let Range { start: p, end: e } = slice.as_ptr_range();
-        let r = unsafe { rb_enc_precise_mbclen(p as *const i8, e as *const i8, self.as_ptr()) };
+        let r =
+            unsafe { rb_enc_precise_mbclen(p as *const c_char, e as *const c_char, self.as_ptr()) };
         if 0 < r {
             MbcLen::CharFound(r as usize)
         } else if r < -1 {
@@ -455,8 +458,8 @@ impl RbEncoding {
         let mut len = 0;
         let c = unsafe {
             rb_enc_ascget(
-                p as *const i8,
-                e as *const i8,
+                p as *const c_char,
+                e as *const c_char,
                 &mut len as *mut _,
                 self.as_ptr(),
             )
@@ -499,8 +502,8 @@ impl RbEncoding {
         protect(|| {
             c = unsafe {
                 rb_enc_codepoint_len(
-                    p as *const i8,
-                    e as *const i8,
+                    p as *const c_char,
+                    e as *const c_char,
                     &mut len as *mut _,
                     self.as_ptr(),
                 )
