@@ -1,8 +1,9 @@
 use std::{ffi::CString, mem::transmute, ops::Deref};
 
-use crate::ruby_sys::{rb_define_singleton_method, rb_ivar_get, rb_ivar_set};
+use crate::ruby_sys::{rb_define_singleton_method, rb_ivar_get, rb_ivar_set, rb_singleton_class};
 
 use crate::{
+    class::RClass,
     debug_assert_value,
     error::{protect, Error},
     method::Method,
@@ -67,5 +68,23 @@ pub trait Object: Deref<Target = Value> + Copy {
             })
         }?;
         Ok(())
+    }
+
+    /// Finds or creates the singleton class of `self`.
+    ///
+    /// Returns `Err` if `self` can not have a singleton class.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Object, RString};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// assert!(RString::new("example").singleton_class().is_ok());
+    /// ```
+    fn singleton_class(self) -> Result<RClass, Error> {
+        protect(|| unsafe {
+            RClass::from_rb_value_unchecked(rb_singleton_class(self.as_rb_value()))
+        })
     }
 }

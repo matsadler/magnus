@@ -12,6 +12,7 @@
 - New methods for `RString`: `enc_new`, `len`, `length`, and `is_empty`.
 - `RHash` gains the methods `delete` and `clear`.
 - `require` function
+- `Object::singleton_class`
 
 ### Changed
 - `RArray::cat`, `RArray::from_slice`, and `gc::mark_slice` will accept a
