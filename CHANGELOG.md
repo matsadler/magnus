@@ -32,6 +32,8 @@
 ### Fixed
 - creating a `StaticSymbol` from a `&str` with characters outside the ASCII
   range.
+- panicking in any of the functions of `DataTypeFunctions` will abort the
+  process to avoid undefined behaviour
 
 ### Security
 

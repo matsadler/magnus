@@ -9,6 +9,8 @@ use std::{
     marker::PhantomData,
     mem::size_of_val,
     ops::Deref,
+    panic::catch_unwind,
+    process::abort,
     ptr::{self, NonNull},
 };
 
@@ -144,6 +146,9 @@ where
     /// this in a Drop implementation for your type.
     ///
     /// The default implementation simply drops `self`.
+    ///
+    /// This function **must not** panic. The process will abort if this
+    /// function panics.
     fn free(self: Box<Self>) {}
 
     /// Called when Ruby marks this object as part of garbage collection.
@@ -152,12 +157,18 @@ where
     /// values in this function to avoid them being garbage collected.
     ///
     /// The default implementation does nothing.
-    fn mark(&mut self) {}
+    ///
+    /// This function **must not** panic. The process will abort if this
+    /// function panics.
+    fn mark(&self) {}
 
     /// Called by Ruby to establish the memory size of this data, to optimise
     /// when garbage collection happens.
     ///
     /// The default implementation delegates to [`std::mem::size_of_val`].
+    ///
+    /// This function **must not** panic. The process will abort if this
+    /// function panics.
     fn size(&self) -> usize {
         size_of_val(self)
     }
@@ -168,7 +179,10 @@ where
     /// you must update them in this function.
     ///
     /// The default implementation does nothing.
-    fn compact(&mut self) {}
+    ///
+    /// This function **must not** panic. The process will abort if this
+    /// function panics.
+    fn compact(&self) {}
 
     /// Extern wrapper for `free`. Don't define or call.
     ///
@@ -176,9 +190,13 @@ where
     ///
     /// `ptr` must be a vaild pointer to a `Box<Self>`, and must not be aliased
     /// This function will free the memory pointed to by `ptr`.
+    ///
+    /// This function must not panic.
     #[doc(hidden)]
     unsafe extern "C" fn extern_free(ptr: *mut c_void) {
-        Self::free(Box::from_raw(ptr as *mut _))
+        if catch_unwind(|| Self::free(Box::from_raw(ptr as *mut _))).is_err() {
+            abort()
+        }
     }
 
     /// Extern wrapper for `mark`. Don't define or call.
@@ -186,9 +204,13 @@ where
     /// # Safety
     ///
     /// `ptr` must be a vaild pointer to a `Self`, and must not be aliased.
+    ///
+    /// This function must not panic.
     #[doc(hidden)]
     unsafe extern "C" fn extern_mark(ptr: *mut c_void) {
-        Self::mark(&mut *(ptr as *mut Self));
+        if catch_unwind(|| Self::mark(&*(ptr as *mut Self))).is_err() {
+            abort()
+        }
     }
 
     /// Extern wrapper for `size`. Don't define or call.
@@ -196,9 +218,14 @@ where
     /// # Safety
     ///
     /// `ptr` must be a vaild pointer to a `Self`.
+    ///
+    /// This function must not panic.
     #[doc(hidden)]
     unsafe extern "C" fn extern_size(ptr: *const c_void) -> size_t {
-        Self::size(&*(ptr as *const Self)) as size_t
+        match catch_unwind(|| Self::size(&*(ptr as *const Self)) as size_t) {
+            Ok(v) => v,
+            Err(_) => abort(),
+        }
     }
 
     /// Extern wrapper for `compact`. Don't define or call.
@@ -206,9 +233,13 @@ where
     /// # Safety
     ///
     /// `ptr` must be a vaild pointer to a `Self`, and must not be aliased.
+    ///
+    /// This function must not panic.
     #[doc(hidden)]
     unsafe extern "C" fn extern_compact(ptr: *mut c_void) {
-        Self::compact(&mut *(ptr as *mut Self));
+        if catch_unwind(|| Self::compact(&*(ptr as *mut Self))).is_err() {
+            abort()
+        }
     }
 }
 
