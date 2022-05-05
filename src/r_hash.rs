@@ -1,6 +1,9 @@
 //! Types and functions for working with Ruby’s Hash class.
 
-use std::{collections::HashMap, fmt, hash::Hash, iter::FromIterator, ops::Deref, os::raw::c_int};
+use std::{
+    collections::HashMap, fmt, hash::Hash, iter::FromIterator, marker::PhantomData, ops::Deref,
+    os::raw::c_int, panic::AssertUnwindSafe,
+};
 
 use crate::ruby_sys::{
     rb_check_hash_type, rb_hash_aref, rb_hash_aset, rb_hash_clear, rb_hash_delete, rb_hash_fetch,
@@ -10,7 +13,7 @@ use crate::ruby_sys::{
 
 use crate::{
     debug_assert_value,
-    error::{protect, Error},
+    error::{protect, raise, Error},
     exception,
     object::Object,
     try_convert::{TryConvert, TryConvertOwned},
@@ -26,6 +29,52 @@ pub enum ForEach {
     Stop,
     /// Delete the last entry and continue iterating.
     Delete,
+}
+
+/// Helper type for wrapping a function with type conversions and error
+/// handling for `RHash::foreach`.
+#[doc(hidden)]
+pub struct ForEachCallback<Func, K, V> {
+    func: Func,
+    key: PhantomData<K>,
+    value: PhantomData<V>,
+}
+
+#[allow(missing_docs)]
+#[allow(clippy::missing_safety_doc)]
+impl<Func, K, V> ForEachCallback<Func, K, V>
+where
+    Func: FnMut(K, V) -> Result<ForEach, Error>,
+    K: TryConvert,
+    V: TryConvert,
+{
+    #[inline]
+    pub fn new(func: Func) -> Self {
+        Self {
+            func,
+            key: Default::default(),
+            value: Default::default(),
+        }
+    }
+
+    #[inline]
+    pub unsafe fn call_handle_error(self, key: Value, value: Value) -> ForEach {
+        let res = match std::panic::catch_unwind(AssertUnwindSafe(|| {
+            self.call_convert_value(key, value)
+        })) {
+            Ok(v) => v,
+            Err(e) => Err(Error::from_panic(e)),
+        };
+        match res {
+            Ok(v) => v,
+            Err(e) => raise(e),
+        }
+    }
+
+    #[inline]
+    unsafe fn call_convert_value(mut self, key: Value, value: Value) -> Result<ForEach, Error> {
+        (self.func)(key.try_convert()?, value.try_convert()?)
+    }
 }
 
 /// A Value pointer to a RHash struct, Ruby's internal representation of Hash
@@ -298,31 +347,6 @@ impl RHash {
         Ok(())
     }
 
-    fn base_foreach<F>(self, mut func: F) -> Result<(), Error>
-    where
-        F: FnMut(Value, Value) -> ForEach,
-    {
-        unsafe extern "C" fn iter<F>(key: VALUE, value: VALUE, arg: VALUE) -> c_int
-        where
-            F: FnMut(Value, Value) -> ForEach,
-        {
-            let closure = &mut *(arg as *mut F);
-            (closure)(Value::new(key), Value::new(value)) as c_int
-        }
-
-        unsafe {
-            let arg = &mut func as *mut F as VALUE;
-            protect(|| {
-                let fptr = iter::<F> as unsafe extern "C" fn(VALUE, VALUE, VALUE) -> c_int;
-                #[cfg(ruby_lt_2_7)]
-                let fptr: unsafe extern "C" fn() -> c_int = std::mem::transmute(fptr);
-                rb_hash_foreach(self.as_rb_value(), Some(fptr), arg);
-                QNIL
-            })?;
-        }
-        Ok(())
-    }
-
     /// Run `func` for each key/value pair in `self`.
     ///
     /// The result of `func` is checked on each call, when it is
@@ -340,9 +364,9 @@ impl RHash {
     ///
     /// let hash = eval::<RHash>(r#"{"foo" => 1, "bar" => 2, "baz" => 4, "qux" => 8}"#).unwrap();
     /// let mut found = None;
-    /// hash.foreach(|key, value| {
-    ///     if value.try_convert::<i64>()? > 3 {
-    ///         found = Some(key.try_convert()?);
+    /// hash.foreach(|key: String, value: i64| {
+    ///     if value > 3 {
+    ///         found = Some(key);
     ///         Ok(ForEach::Stop)
     ///     } else {
     ///         Ok(ForEach::Continue)
@@ -350,19 +374,34 @@ impl RHash {
     /// }).unwrap();
     /// assert_eq!(found, Some(String::from("baz")));
     /// ```
-    pub fn foreach<F>(self, mut func: F) -> Result<(), Error>
+    pub fn foreach<F, K, V>(self, mut func: F) -> Result<(), Error>
     where
-        F: FnMut(Value, Value) -> Result<ForEach, Error>,
+        F: FnMut(K, V) -> Result<ForEach, Error>,
+        K: TryConvert,
+        V: TryConvert,
     {
-        let mut res = Ok(());
-        self.base_foreach(|key, value| match func(key, value) {
-            Ok(v) => v,
-            Err(e) => {
-                res = Err(e);
-                ForEach::Stop
-            }
-        })?;
-        res
+        unsafe extern "C" fn iter<F, K, V>(key: VALUE, value: VALUE, arg: VALUE) -> c_int
+        where
+            F: FnMut(K, V) -> Result<ForEach, Error>,
+            K: TryConvert,
+            V: TryConvert,
+        {
+            let closure = &mut *(arg as *mut F);
+            ForEachCallback::new(closure).call_handle_error(Value::new(key), Value::new(value))
+                as c_int
+        }
+
+        unsafe {
+            let arg = &mut func as *mut F as VALUE;
+            protect(|| {
+                let fptr = iter::<F, K, V> as unsafe extern "C" fn(VALUE, VALUE, VALUE) -> c_int;
+                #[cfg(ruby_lt_2_7)]
+                let fptr: unsafe extern "C" fn() -> c_int = std::mem::transmute(fptr);
+                rb_hash_foreach(self.as_rb_value(), Some(fptr), arg);
+                QNIL
+            })?;
+        }
+        Ok(())
     }
 
     /// Return `self` converted to a Rust [`HashMap`].
@@ -394,7 +433,7 @@ impl RHash {
     {
         let mut map = HashMap::new();
         self.foreach(|key, value| {
-            map.insert(key.try_convert()?, value.try_convert()?);
+            map.insert(key, value);
             Ok(ForEach::Continue)
         })?;
         Ok(map)
@@ -427,7 +466,7 @@ impl RHash {
     {
         let mut vec = Vec::with_capacity(self.len());
         self.foreach(|key, value| {
-            vec.push((key.try_convert()?, value.try_convert()?));
+            vec.push((key, value));
             Ok(ForEach::Continue)
         })?;
         Ok(vec)

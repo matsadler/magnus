@@ -23,6 +23,8 @@
 - Similar to above, `gc::location` will accept any Ruby type as an argument.
 - Improved performance for conversion between Ruby floats/integers and Rust
   types
+- The parameters to the closure passed to `RHash::foreach` will now be
+  automatically converted from `Value` to Rust types.
 
 ### Deprecated
 - `String::encode_utf8`, use `r_string.conv_enc(RbEncoding::utf8())` instead.
@@ -33,7 +35,9 @@
 - creating a `StaticSymbol` from a `&str` with characters outside the ASCII
   range.
 - panicking in any of the functions of `DataTypeFunctions` will abort the
-  process to avoid undefined behaviour
+  process to avoid undefined behaviour.
+- panicking in the closure passed to `RHash::foreach` won't result in undefined
+  behaviour.
 
 ### Security
 
