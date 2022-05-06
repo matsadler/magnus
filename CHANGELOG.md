@@ -11,8 +11,9 @@
   `delete_at`, `resize`, `reverse`, `rotate, and `sort`.
 - New methods for `RString`: `enc_new`, `len`, `length`, and `is_empty`.
 - `RHash` gains the methods `delete` and `clear`.
-- `require` function
-- `Object::singleton_class`
+- `require` function.
+- `Object::singleton_class`.
+- `Proc::new`, `Proc::arity`, and `Proc::is_lambda`.
 
 ### Changed
 - `RArray::cat`, `RArray::from_slice`, and `gc::mark_slice` will accept a
@@ -22,7 +23,7 @@
   `RArray::from_slice(&[Value::from(1)])` instead.
 - Similar to above, `gc::location` will accept any Ruby type as an argument.
 - Improved performance for conversion between Ruby floats/integers and Rust
-  types
+  types.
 - The parameters to the closure passed to `RHash::foreach` will now be
   automatically converted from `Value` to Rust types.
 

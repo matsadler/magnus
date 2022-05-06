@@ -3,14 +3,15 @@
 use std::{fmt, mem::forget, ops::Deref, os::raw::c_int};
 
 use crate::ruby_sys::{
-    rb_block_given_p, rb_block_proc, rb_obj_is_proc, rb_proc_call, rb_yield, rb_yield_splat,
-    rb_yield_values2, VALUE,
+    rb_block_given_p, rb_block_proc, rb_obj_is_proc, rb_proc_arity, rb_proc_call, rb_proc_lambda_p,
+    rb_proc_new, rb_yield, rb_yield_splat, rb_yield_values2, VALUE,
 };
 
 use crate::{
     enumerator::Enumerator,
     error::{ensure, protect, Error},
     exception,
+    method::{Block, BlockReturn},
     r_array::RArray,
     try_convert::{ArgList, RArrayArgList, TryConvert},
     value::{private, NonZeroValue, ReprValue, Value},
@@ -35,6 +36,62 @@ impl Proc {
         }
     }
 
+    #[inline]
+    pub(crate) unsafe fn from_rb_value_unchecked(val: VALUE) -> Self {
+        Self(NonZeroValue::new_unchecked(Value::new(val)))
+    }
+
+    /// Create a new `Proc`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{block::Proc, eval};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let proc = Proc::new(|args, _block| {
+    ///     let acc = args.get(0).unwrap().try_convert::<i64>()?;
+    ///     let i = args.get(1).unwrap().try_convert::<i64>()?;
+    ///     Ok(acc + i)
+    /// });
+    ///
+    /// let res: bool = eval!("proc.call(1, 2) == 3", proc).unwrap();
+    /// assert!(res);
+    ///
+    /// let res: bool = eval!("[1, 2, 3, 4, 5].inject(&proc) == 15", proc).unwrap();
+    /// assert!(res);
+    /// ```
+    pub fn new<F, R>(mut block: F) -> Self
+    where
+        F: FnMut(&[Value], Option<Proc>) -> R,
+        R: BlockReturn,
+    {
+        unsafe extern "C" fn call<F, R>(
+            _yielded_arg: VALUE,
+            callback_arg: VALUE,
+            argc: c_int,
+            argv: *const VALUE,
+            blockarg: VALUE,
+        ) -> VALUE
+        where
+            F: FnMut(&[Value], Option<Proc>) -> R,
+            R: BlockReturn,
+        {
+            let closure = &mut *(callback_arg as *mut F);
+            Block::new(closure)
+                .call_handle_error(argc, argv as *const Value, Value::new(blockarg))
+                .as_rb_value()
+        }
+
+        let closure = &mut block as *mut F as VALUE;
+        let call_func =
+            call::<F, R> as unsafe extern "C" fn(VALUE, VALUE, c_int, *const VALUE, VALUE) -> VALUE;
+        #[cfg(ruby_lt_2_7)]
+        let call_func: unsafe extern "C" fn() -> VALUE = unsafe { std::mem::transmute(call_func) };
+
+        unsafe { Proc::from_rb_value_unchecked(rb_proc_new(Some(call_func), closure)) }
+    }
+
     /// Call the proc with `args`.
     ///
     /// Returns `Ok(T)` if the proc runs without error and the return value
@@ -50,6 +107,59 @@ impl Proc {
             protect(|| Value::new(rb_proc_call(self.as_rb_value(), args.as_rb_value())))
                 .and_then(|v| v.try_convert())
         }
+    }
+
+    /// Returns the number of arguments `self` takes.
+    ///
+    /// If `self` takes no arguments, returns `0`.
+    /// If `self` takes only required arguments, returns the number of required
+    /// arguments.
+    /// If `self` is a lambda and has optional arguments, or is not a lambda
+    /// and takes a splat argument, returns `-n-1`, where `n` is the number of
+    /// required arguments.
+    /// If `self` is not a lambda, and takes a finite number of optional
+    /// arguments, returns the number of required arguments.
+    /// Keyword arguments are considered as a single additional argument, that
+    /// argument being required if any keyword argument is required.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{block::Proc, eval};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let proc = eval::<Proc>("proc {nil}", ).unwrap();
+    /// assert_eq!(proc.arity(), 0);
+    ///
+    /// let proc = eval::<Proc>("proc {|a| a + 1}", ).unwrap();
+    /// assert_eq!(proc.arity(), 1);
+    ///
+    /// let proc = eval::<Proc>("proc {|a, b| a + b}", ).unwrap();
+    /// assert_eq!(proc.arity(), 2);
+    ///
+    /// let proc = eval::<Proc>("proc {|*args| args.sum}", ).unwrap();
+    /// assert_eq!(proc.arity(), -1);
+    /// ```
+    pub fn arity(self) -> i64 {
+        unsafe { rb_proc_arity(self.as_rb_value()) as i64 }
+    }
+
+    /// Returns whether or not `self` is a lambda.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{block::Proc, eval};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let proc = eval::<Proc>("proc {|a, b| a + b}", ).unwrap();
+    /// assert!(!proc.is_lambda());
+    ///
+    /// let proc = eval::<Proc>("lambda {|a, b| a + b}", ).unwrap();
+    /// assert!(proc.is_lambda());
+    /// ```
+    pub fn is_lambda(self) -> bool {
+        unsafe { Value::new(rb_proc_lambda_p(self.as_rb_value())).to_bool() }
     }
 }
 
