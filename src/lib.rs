@@ -128,11 +128,12 @@ mod symbol;
 mod try_convert;
 pub mod value;
 
-use std::{ffi::CString, mem::transmute};
+use std::{ffi::CString, mem::transmute, os::raw::c_int};
 
 use crate::ruby_sys::{
-    rb_define_class, rb_define_global_function, rb_define_module, rb_define_variable, rb_errinfo,
-    rb_eval_string_protect, rb_set_errinfo, VALUE,
+    rb_call_super, rb_current_receiver, rb_define_class, rb_define_global_function,
+    rb_define_module, rb_define_variable, rb_errinfo, rb_eval_string_protect, rb_set_errinfo,
+    VALUE,
 };
 
 #[cfg(ruby_lt_2_7)]
@@ -246,6 +247,39 @@ where
     let name = CString::new(name).unwrap();
     unsafe {
         rb_define_global_function(name.as_ptr(), transmute(func.as_ptr()), M::arity().into());
+    }
+}
+
+/// Return the Ruby `self` of the current method context.
+///
+/// Returns `Err` if called outside a method context or the conversion fails.
+pub fn current_receiver<T>() -> Result<T, Error>
+where
+    T: TryConvert,
+{
+    protect(|| unsafe { Value::new(rb_current_receiver()) }).and_then(|v| v.try_convert())
+}
+
+/// Call the super method of the current method context.
+///
+/// Returns `Ok(T)` if the super method exists and returns without error, and
+/// the return value converts to a `T`, or returns `Err` if there is no super
+/// method, the super method raises or the conversion fails.
+pub fn call_super<A, T>(args: A) -> Result<T, Error>
+where
+    A: ArgList,
+    T: TryConvert,
+{
+    unsafe {
+        let args = args.into_arg_list();
+        let slice = args.as_ref();
+        protect(|| {
+            Value::new(rb_call_super(
+                slice.len() as c_int,
+                slice.as_ptr() as *const VALUE,
+            ))
+        })
+        .and_then(|v| v.try_convert())
     }
 }
 
