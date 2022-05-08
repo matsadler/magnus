@@ -3,7 +3,7 @@
 use std::{any::Any, borrow::Cow, ffi::CString, fmt, mem::transmute, ops::Deref, os::raw::c_int};
 
 use crate::ruby_sys::{
-    rb_ensure, rb_errinfo, rb_exc_raise, rb_jump_tag, rb_protect, rb_raise, rb_set_errinfo,
+    rb_bug, rb_ensure, rb_errinfo, rb_exc_raise, rb_jump_tag, rb_protect, rb_raise, rb_set_errinfo,
     ruby_special_consts, VALUE,
 };
 
@@ -351,4 +351,23 @@ pub(crate) fn raise(e: Error) -> ! {
             unreachable!()
         }
     }
+}
+
+pub(crate) fn bug_from_panic(e: Box<dyn Any + Send + 'static>, or: &str) -> ! {
+    let msg: Cow<'_, str> = if let Some(&m) = e.downcast_ref::<&'static str>() {
+        m.into()
+    } else if let Some(m) = e.downcast_ref::<String>() {
+        m.clone().into()
+    } else {
+        or.into()
+    };
+    bug(&msg)
+}
+
+/// Immediately terminate the process, printing Ruby internal state for
+/// debugging.
+pub fn bug(s: &str) -> ! {
+    let s = CString::new(s).unwrap_or_else(|_| CString::new("panic").unwrap());
+    unsafe { rb_bug(s.as_ptr()) };
+    unreachable!()
 }

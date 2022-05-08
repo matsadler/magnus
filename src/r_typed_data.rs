@@ -10,7 +10,6 @@ use std::{
     mem::size_of_val,
     ops::Deref,
     panic::catch_unwind,
-    process::abort,
     ptr::{self, NonNull},
 };
 
@@ -33,7 +32,7 @@ const RUBY_TYPED_WB_PROTECTED: u32 = crate::ruby_sys::ruby_fl_type::RUBY_FL_WB_P
 use crate::{
     class::RClass,
     debug_assert_value,
-    error::{protect, Error},
+    error::{bug_from_panic, protect, Error},
     exception,
     object::Object,
     try_convert::TryConvert,
@@ -194,8 +193,8 @@ where
     /// This function must not panic.
     #[doc(hidden)]
     unsafe extern "C" fn extern_free(ptr: *mut c_void) {
-        if catch_unwind(|| Self::free(Box::from_raw(ptr as *mut _))).is_err() {
-            abort()
+        if let Err(e) = catch_unwind(|| Self::free(Box::from_raw(ptr as *mut _))) {
+            bug_from_panic(e, "panic in DataTypeFunctions::free")
         }
     }
 
@@ -208,8 +207,8 @@ where
     /// This function must not panic.
     #[doc(hidden)]
     unsafe extern "C" fn extern_mark(ptr: *mut c_void) {
-        if catch_unwind(|| Self::mark(&*(ptr as *mut Self))).is_err() {
-            abort()
+        if let Err(e) = catch_unwind(|| Self::mark(&*(ptr as *mut Self))) {
+            bug_from_panic(e, "panic in DataTypeFunctions::mark")
         }
     }
 
@@ -224,7 +223,7 @@ where
     unsafe extern "C" fn extern_size(ptr: *const c_void) -> size_t {
         match catch_unwind(|| Self::size(&*(ptr as *const Self)) as size_t) {
             Ok(v) => v,
-            Err(_) => abort(),
+            Err(e) => bug_from_panic(e, "panic in DataTypeFunctions::size"),
         }
     }
 
@@ -237,8 +236,8 @@ where
     /// This function must not panic.
     #[doc(hidden)]
     unsafe extern "C" fn extern_compact(ptr: *mut c_void) {
-        if catch_unwind(|| Self::compact(&*(ptr as *mut Self))).is_err() {
-            abort()
+        if let Err(e) = catch_unwind(|| Self::compact(&*(ptr as *mut Self))) {
+            bug_from_panic(e, "panic in DataTypeFunctions::compact")
         }
     }
 }
