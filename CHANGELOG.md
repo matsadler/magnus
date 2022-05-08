@@ -14,6 +14,7 @@
 - `require`, `current_receiver`, and `call_super` functions.
 - `Object::singleton_class`.
 - `Proc::new`, `Proc::arity`, and `Proc::is_lambda`.
+- `superclass` and `name` methods for `RClass`.
 
 ### Changed
 - `RArray::cat`, `RArray::from_slice`, and `gc::mark_slice` will accept a

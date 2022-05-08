@@ -1,14 +1,14 @@
 //! Types and functions for working with Ruby classes.
 
-use std::{fmt, ops::Deref, os::raw::c_int};
+use std::{borrow::Cow, ffi::CStr, fmt, ops::Deref, os::raw::c_int};
 
 use crate::ruby_sys::{
     self, rb_cArray, rb_cBasicObject, rb_cBinding, rb_cClass, rb_cComplex, rb_cDir, rb_cEncoding,
     rb_cEnumerator, rb_cFalseClass, rb_cFile, rb_cFloat, rb_cHash, rb_cIO, rb_cInteger, rb_cMatch,
     rb_cMethod, rb_cModule, rb_cNameErrorMesg, rb_cNilClass, rb_cNumeric, rb_cObject, rb_cProc,
     rb_cRandom, rb_cRange, rb_cRational, rb_cRegexp, rb_cStat, rb_cString, rb_cStruct, rb_cSymbol,
-    rb_cThread, rb_cTime, rb_cTrueClass, rb_cUnboundMethod, rb_class_new, rb_class_new_instance,
-    ruby_value_type, VALUE,
+    rb_cThread, rb_cTime, rb_cTrueClass, rb_cUnboundMethod, rb_class2name, rb_class_new,
+    rb_class_new_instance, rb_class_superclass, ruby_value_type, VALUE,
 };
 
 #[cfg(ruby_gte_3_1)]
@@ -108,6 +108,52 @@ impl RClass {
                 ))
             })
         }
+    }
+
+    /// Returns the parent class of `self`.
+    ///
+    /// Returns `Err` if `self` can not have a parent class.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{class, eval};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let klass = class::hash().superclass().unwrap();
+    /// assert!(klass.equal(class::object()).unwrap());
+    /// ```
+    pub fn superclass(self) -> Result<Self, Error> {
+        protect(|| unsafe {
+            RClass::from_rb_value_unchecked(rb_class_superclass(self.as_rb_value()))
+        })
+    }
+
+    /// Return the name of `self`.
+    ///
+    /// # Safety
+    ///
+    /// Ruby may modify or free the memory backing the returned str, the caller
+    /// must ensure this does not happen.
+    ///
+    /// This can be used safely by immediately calling
+    /// [`into_owned`](Cow::into_owned) on the return value.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{class, eval};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let value = class::hash();
+    /// // safe as we neve give Ruby a chance to free the string.
+    /// let s = unsafe { value.name() }.into_owned();
+    /// assert_eq!(s, "Hash");
+    /// ```
+    pub unsafe fn name(&self) -> Cow<str> {
+        let ptr = rb_class2name(self.as_rb_value());
+        let cstr = CStr::from_ptr(ptr);
+        cstr.to_string_lossy()
     }
 }
 
