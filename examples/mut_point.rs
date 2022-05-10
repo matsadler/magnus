@@ -1,6 +1,6 @@
 use std::cell::RefCell;
 
-use magnus::{define_class, embed, eval, function, method, prelude::*, wrap};
+use magnus::{define_class, embed, eval, function, method, prelude::*, wrap, Error};
 
 struct Point {
     x: isize,
@@ -36,16 +36,16 @@ impl MutPoint {
     }
 }
 
-fn main() {
+fn main() -> Result<(), Error> {
     let _cleanup = unsafe { embed::init() };
 
-    let class = define_class("Point", Default::default()).unwrap();
-    class.define_singleton_method("new", function!(MutPoint::new, 2));
-    class.define_method("x", method!(MutPoint::x, 0));
-    class.define_method("x=", method!(MutPoint::set_x, 1));
-    class.define_method("y", method!(MutPoint::y, 0));
-    class.define_method("y=", method!(MutPoint::set_y, 1));
-    class.define_method("distance", method!(MutPoint::distance, 1));
+    let class = define_class("Point", Default::default())?;
+    class.define_singleton_method("new", function!(MutPoint::new, 2))?;
+    class.define_method("x", method!(MutPoint::x, 0))?;
+    class.define_method("x=", method!(MutPoint::set_x, 1))?;
+    class.define_method("y", method!(MutPoint::y, 0))?;
+    class.define_method("y=", method!(MutPoint::set_y, 1))?;
+    class.define_method("distance", method!(MutPoint::distance, 1))?;
 
     let d: f64 = eval(
         "a = Point.new(0, 0)
@@ -53,8 +53,8 @@ fn main() {
          b.x = 5
          b.y = 10
          a.distance(b)",
-    )
-    .unwrap();
+    )?;
 
     println!("{}", d);
+    Ok(())
 }

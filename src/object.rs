@@ -8,7 +8,7 @@ use crate::{
     error::{protect, Error},
     method::Method,
     try_convert::TryConvert,
-    value::{Id, Value},
+    value::{Id, Value, QNIL},
 };
 
 /// Functions available all non-immediate values.
@@ -17,20 +17,24 @@ pub trait Object: Deref<Target = Value> + Copy {
     ///
     /// Singleton methods defined on a class are Ruby's method for implementing
     /// 'class' methods.
-    fn define_singleton_method<M>(self, name: &str, func: M)
+    fn define_singleton_method<M>(self, name: &str, func: M) -> Result<(), Error>
     where
         M: Method,
     {
         debug_assert_value!(self);
         let name = CString::new(name).unwrap();
-        unsafe {
-            rb_define_singleton_method(
-                self.as_rb_value(),
-                name.as_ptr(),
-                transmute(func.as_ptr()),
-                M::arity().into(),
-            );
-        }
+        protect(|| {
+            unsafe {
+                rb_define_singleton_method(
+                    self.as_rb_value(),
+                    name.as_ptr(),
+                    transmute(func.as_ptr()),
+                    M::arity().into(),
+                );
+            };
+            QNIL
+        })?;
+        Ok(())
     }
 
     /// Get the value for the instance variable `name` within `self`'s scope.

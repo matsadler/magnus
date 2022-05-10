@@ -27,6 +27,10 @@
   types.
 - The parameters to the closure passed to `RHash::foreach` will now be
   automatically converted from `Value` to Rust types.
+- `Module::define_method`, `Module::define_private_method`,
+  `Module::define_protected_method`, `RModule::define_singleton_method`, and
+  `Object::define_singleton_method` all return `Result<(), Error>` rather than
+  `()` as they may fail in the unusual case that the receiver is frozen.
 
 ### Deprecated
 - `String::encode_utf8`, use `r_string.conv_enc(RbEncoding::utf8())` instead.

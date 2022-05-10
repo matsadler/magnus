@@ -74,9 +74,9 @@ struct InitAttributes {
 /// fn init() -> Result<(), Error> {
 ///     let module = define_module("Euclid")?;
 ///     let class = module.define_class("Point", Default::default())?;
-///     class.define_singleton_method("new", function!(Point::new, 2));
-///     class.define_method("x", method!(Point::x, 0));
-///     class.define_method("y", method!(Point::y, 0));
+///     class.define_singleton_method("new", function!(Point::new, 2))?;
+///     class.define_method("x", method!(Point::x, 0))?;
+///     class.define_method("y", method!(Point::y, 0))?;
 ///     Ok(())
 /// }
 /// ```

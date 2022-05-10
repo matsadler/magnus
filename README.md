@@ -37,7 +37,7 @@ fn is_blank(rb_self: String) -> bool {
 
 let class = magnus::define_class("String", Default::default())?;
 // 0 as self doesn't count against the number of arguments
-class.define_method("blank?", magnus::method!(is_blank, 0));
+class.define_method("blank?", magnus::method!(is_blank, 0))?;
 ```
 
 ## Calling Ruby Methods
@@ -100,10 +100,10 @@ impl Point {
 #[magnus::init]
 fn init() -> Result<(), Error> {
     let class = define_class("Point", Default::default())?;
-    class.define_singleton_method("new", function!(Point::new, 2));
-    class.define_method("x", method!(Point::x, 0));
-    class.define_method("y", method!(Point::y, 0));
-    class.define_method("distance", method!(Point::distance, 1));
+    class.define_singleton_method("new", function!(Point::new, 2))?;
+    class.define_method("x", method!(Point::x, 0))?;
+    class.define_method("y", method!(Point::y, 0))?;
+    class.define_method("distance", method!(Point::distance, 1))?;
     Ok(())
 }
 ```

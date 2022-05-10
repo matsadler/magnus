@@ -20,6 +20,6 @@ fn rb_is_blank(rb_self: RString) -> Result<bool, Error> {
 #[magnus::init]
 fn init() -> Result<(), Error> {
     let class = define_class("String", Default::default())?;
-    class.define_method("blank?", method!(rb_is_blank, 0));
+    class.define_method("blank?", method!(rb_is_blank, 0))?;
     Ok(())
 }

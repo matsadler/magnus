@@ -975,7 +975,7 @@ impl<T> ScanArgsBlock for T where T: private::ScanArgsBlock {}
 /// }
 ///
 /// let class = define_class("TCPServer", Default::default()).unwrap();
-/// class.define_singleton_method("new", function!(tcp_svr_init, -1));
+/// class.define_singleton_method("new", function!(tcp_svr_init, -1)).unwrap();
 /// # let res = magnus::eval::<bool>(r#"TCPServer.new("foo", 1) == ["foo", 1]"#).unwrap();
 /// # assert!(res);
 /// # let res = magnus::eval::<bool>(r#"TCPServer.new(2) == [nil, 2]"#).unwrap();
@@ -1000,7 +1000,7 @@ impl<T> ScanArgsBlock for T where T: private::ScanArgsBlock {}
 /// }
 ///
 /// let class = define_class("TCPServer", Default::default()).unwrap();
-/// class.define_singleton_method("new", function!(tcp_svr_init, -1));
+/// class.define_singleton_method("new", function!(tcp_svr_init, -1)).unwrap();
 /// # let res = magnus::eval::<bool>(r#"TCPServer.new("foo", 1) == ["foo", 1]"#).unwrap();
 /// # assert!(res);
 /// # let res = magnus::eval::<bool>(r#"TCPServer.new(2) == [nil, 2]"#).unwrap();
@@ -1040,7 +1040,7 @@ impl<T> ScanArgsBlock for T where T: private::ScanArgsBlock {}
 /// }
 ///
 /// let class = define_class("Addrinfo", Default::default()).unwrap();
-/// class.define_singleton_method("getaddrinfo", function!(getaddrinfo, -1));
+/// class.define_singleton_method("getaddrinfo", function!(getaddrinfo, -1)).unwrap();
 /// # let res = magnus::eval::<bool>(r#"Addrinfo.getaddrinfo("a", 1) == ["a", 1, nil, nil, nil, nil, nil]"#).unwrap();
 /// # assert!(res);
 /// # let res = magnus::eval::<bool>(r#"Addrinfo.getaddrinfo("a", 1, :b, :c, 3, 4, timeout: 5) == ["a", 1, :b, :c, 3, 4, 5]"#).unwrap();
@@ -1854,7 +1854,7 @@ pub struct KwArgs<Req, Opt, Splat> {
 /// #   Ok(res.into())
 /// }
 ///
-/// class::object().define_method("example", method!(example, 1));
+/// class::object().define_method("example", method!(example, 1)).unwrap();
 /// # let res = magnus::eval::<bool>(r#"Object.new.example(a: "foo", b: 1, c: true, d: "bar") == ["foo", 1, true, {d: "bar"}]"#).unwrap();
 /// # assert!(res);
 /// # let res = magnus::eval::<bool>(r#"Object.new.example(a: "foo", b: 1) == ["foo", 1, nil, {}]"#).unwrap();
@@ -1878,7 +1878,7 @@ pub struct KwArgs<Req, Opt, Splat> {
 ///     Ok(a.into())
 /// }
 ///
-/// class::object().define_method("example", method!(example, -1));
+/// class::object().define_method("example", method!(example, -1)).unwrap();
 /// # let res = magnus::eval::<bool>(r#"Object.new.example(a: "test") == "test""#).unwrap();
 /// # assert!(res);
 /// # let res = magnus::eval::<bool>(r#"Object.new.example == "foo""#).unwrap();
@@ -1899,7 +1899,7 @@ pub struct KwArgs<Req, Opt, Splat> {
 ///     Ok(a.into())
 /// }
 ///
-/// class::object().define_method("example", method!(example, -1));
+/// class::object().define_method("example", method!(example, -1)).unwrap();
 /// # let res = magnus::eval::<bool>(r#"Object.new.example(a: "test") == "test""#).unwrap();
 /// # assert!(res);
 /// # let res = magnus::eval::<bool>(r#"Object.new.example == "foo""#).unwrap();

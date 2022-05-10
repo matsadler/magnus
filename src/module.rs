@@ -18,7 +18,7 @@ use crate::{
     method::Method,
     object::Object,
     try_convert::TryConvert,
-    value::{private, Id, NonZeroValue, ReprValue, Value},
+    value::{private, Id, NonZeroValue, ReprValue, Value, QNIL},
 };
 
 /// A Value pointer to a RModule struct, Ruby's internal representation of
@@ -90,7 +90,7 @@ impl RModule {
     /// }
     ///
     /// let module = define_module("Greeting").unwrap();
-    /// module.define_module_function("greet", function!(greet, 0));
+    /// module.define_module_function("greet", function!(greet, 0)).unwrap();
     ///
     /// let res = eval::<bool>(r#"Greeting.greet == "Hello, world!""#).unwrap();
     /// assert!(res);
@@ -101,20 +101,24 @@ impl RModule {
     /// "#).unwrap();
     /// assert!(res);
     /// ```
-    pub fn define_module_function<M>(self, name: &str, func: M)
+    pub fn define_module_function<M>(self, name: &str, func: M) -> Result<(), Error>
     where
         M: Method,
     {
         debug_assert_value!(self);
         let name = CString::new(name).unwrap();
-        unsafe {
-            rb_define_module_function(
-                self.as_rb_value(),
-                name.as_ptr(),
-                transmute(func.as_ptr()),
-                M::arity().into(),
-            );
-        }
+        protect(|| {
+            unsafe {
+                rb_define_module_function(
+                    self.as_rb_value(),
+                    name.as_ptr(),
+                    transmute(func.as_ptr()),
+                    M::arity().into(),
+                );
+            };
+            QNIL
+        })?;
+        Ok(())
     }
 }
 
@@ -292,26 +296,30 @@ pub trait Module: Object + Deref<Target = Value> + Copy {
     ///     s.escape_unicode().to_string()
     /// }
     ///
-    /// class::string().define_method("escape_unicode", method!(escape_unicode, 0));
+    /// class::string().define_method("escape_unicode", method!(escape_unicode, 0)).unwrap();
     ///
     /// let res = eval::<bool>(r#""🤖\etest".escape_unicode == "\\u{1f916}\\u{1b}\\u{74}\\u{65}\\u{73}\\u{74}""#).unwrap();
     /// assert!(res);
     /// ```
-    fn define_method<T, M>(self, name: T, func: M)
+    fn define_method<T, M>(self, name: T, func: M) -> Result<(), Error>
     where
         T: Into<Id>,
         M: Method,
     {
         debug_assert_value!(self);
         let id = name.into();
-        unsafe {
-            rb_define_method_id(
-                self.as_rb_value(),
-                id.as_rb_id(),
-                transmute(func.as_ptr()),
-                M::arity().into(),
-            );
-        }
+        protect(|| {
+            unsafe {
+                rb_define_method_id(
+                    self.as_rb_value(),
+                    id.as_rb_id(),
+                    transmute(func.as_ptr()),
+                    M::arity().into(),
+                );
+            };
+            QNIL
+        })?;
+        Ok(())
     }
 
     /// Define a private method in `self`'s scope.
@@ -330,7 +338,7 @@ pub trait Module: Object + Deref<Target = Value> + Copy {
     ///     }
     /// }
     ///
-    /// class::string().define_private_method("percent_encode_char", function!(percent_encode, 1));
+    /// class::string().define_private_method("percent_encode_char", function!(percent_encode, 1)).unwrap();
     ///
     /// eval::<Value>(r#"
     ///     class String
@@ -345,20 +353,24 @@ pub trait Module: Object + Deref<Target = Value> + Copy {
     ///
     /// assert!(eval::<bool>(r#"" ".percent_encode_char(" ")"#).unwrap_err().is_kind_of(exception::no_method_error()));
     /// ```
-    fn define_private_method<M>(self, name: &str, func: M)
+    fn define_private_method<M>(self, name: &str, func: M) -> Result<(), Error>
     where
         M: Method,
     {
         debug_assert_value!(self);
         let name = CString::new(name).unwrap();
-        unsafe {
-            rb_define_private_method(
-                self.as_rb_value(),
-                name.as_ptr(),
-                transmute(func.as_ptr()),
-                M::arity().into(),
-            );
-        }
+        protect(|| {
+            unsafe {
+                rb_define_private_method(
+                    self.as_rb_value(),
+                    name.as_ptr(),
+                    transmute(func.as_ptr()),
+                    M::arity().into(),
+                );
+            };
+            QNIL
+        })?;
+        Ok(())
     }
 
     /// Define a protected method in `self`'s scope.
@@ -377,8 +389,8 @@ pub trait Module: Object + Deref<Target = Value> + Copy {
     ///     c.is_control() || c.is_whitespace()
     /// }
     ///
-    /// class::string().define_method("escape_unicode", method!(escape_unicode, 0));
-    /// class::string().define_protected_method("invisible?", method!(is_invisible, 0));
+    /// class::string().define_method("escape_unicode", method!(escape_unicode, 0)).unwrap();
+    /// class::string().define_protected_method("invisible?", method!(is_invisible, 0)).unwrap();
     ///
     /// eval::<Value>(r#"
     ///     class String
@@ -395,20 +407,24 @@ pub trait Module: Object + Deref<Target = Value> + Copy {
     ///
     /// assert!(eval::<bool>(r#"" ".invisible?"#).unwrap_err().is_kind_of(exception::no_method_error()));
     /// ```
-    fn define_protected_method<M>(self, name: &str, func: M)
+    fn define_protected_method<M>(self, name: &str, func: M) -> Result<(), Error>
     where
         M: Method,
     {
         debug_assert_value!(self);
         let name = CString::new(name).unwrap();
-        unsafe {
-            rb_define_protected_method(
-                self.as_rb_value(),
-                name.as_ptr(),
-                transmute(func.as_ptr()),
-                M::arity().into(),
-            );
-        }
+        protect(|| {
+            unsafe {
+                rb_define_protected_method(
+                    self.as_rb_value(),
+                    name.as_ptr(),
+                    transmute(func.as_ptr()),
+                    M::arity().into(),
+                );
+            };
+            QNIL
+        })?;
+        Ok(())
     }
 }
 
