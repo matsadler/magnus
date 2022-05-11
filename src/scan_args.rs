@@ -26,9 +26,15 @@
 //! of keywords and implement the behaviour around required and optional
 //! keyword arguments.
 
-use std::{ffi::CString, fmt, mem::transmute, os::raw::c_int};
+use std::{
+    ffi::CString,
+    fmt,
+    mem::transmute,
+    ops::{Bound, RangeBounds},
+    os::raw::c_int,
+};
 
-use crate::ruby_sys::{rb_get_kwargs, rb_scan_args, ID, VALUE};
+use crate::ruby_sys::{rb_error_arity, rb_get_kwargs, rb_scan_args, ID, VALUE};
 
 use crate::{
     block::Proc,
@@ -1953,4 +1959,47 @@ where
         optional: Opt::from_slice(&out[Req::LEN..opt_end])?,
         splat: Splat::from_opt(Splat::REQ.then(|| kw.into()))?,
     })
+}
+
+/// Returns `Err` containing a Ruby `ArgumentError` if `len` is not within
+/// `bounds`.
+///
+/// # Examples
+///
+/// ```
+/// use magnus::{define_global_function, eval, function, scan_args::check_arity, Error, RArray, RString, Value};
+/// # let _cleanup = unsafe { magnus::embed::init() };
+///
+/// fn example(args: &[Value]) -> Result<RString, Error> {
+///     check_arity(args.len(), 2..5)?;
+///     RArray::from_slice(args).join(", ")
+/// }
+///
+/// define_global_function("example", function!(example, -1));
+///
+/// assert_eq!(eval::<String>("example(1)").unwrap_err().to_string(), "wrong number of arguments (given 1, expected 2..4)");
+/// assert_eq!(eval::<String>("example(1, 2, 3, 4, 5)").unwrap_err().to_string(), "wrong number of arguments (given 5, expected 2..4)");
+/// ```
+pub fn check_arity<T>(len: usize, bounds: T) -> Result<(), Error>
+where
+    T: RangeBounds<usize>,
+{
+    if !bounds.contains(&len) {
+        let min = match bounds.start_bound() {
+            Bound::Included(v) => *v as c_int,
+            Bound::Excluded(_) => unreachable!(),
+            Bound::Unbounded => 0,
+        };
+        let max = match bounds.end_bound() {
+            Bound::Included(v) => *v as c_int,
+            Bound::Excluded(v) if *v == 0 => 0,
+            Bound::Excluded(v) => (v - 1) as c_int,
+            Bound::Unbounded => -1,
+        };
+        protect(|| {
+            unsafe { rb_error_arity(len as c_int, min, max) };
+            QNIL
+        })?;
+    }
+    Ok(())
 }
