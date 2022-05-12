@@ -12,10 +12,12 @@
 - New methods for `RString`: `enc_new`, `len`, `length`, and `is_empty`.
 - `RHash` gains the methods `delete` and `clear`.
 - `require`, `current_receiver`, and `call_super` functions.
-- `Object::singleton_class`.
+- `Object::singleton_class` and `Object::extend_object`.
 - `Proc::new`, `Proc::arity`, and `Proc::is_lambda`.
 - `superclass` and `name` methods for `RClass`.
-- `scan_args::check_arity`
+- `scan_args::check_arity`.
+- Methods for `Module`: `include_module`, `prepend_module`, `const_set`,
+  `ancestors`, `define_attr`, and `define_alias`.
 
 ### Changed
 - `RArray::cat`, `RArray::from_slice`, and `gc::mark_slice` will accept a

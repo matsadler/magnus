@@ -1,12 +1,15 @@
 use std::{ffi::CString, mem::transmute, ops::Deref};
 
-use crate::ruby_sys::{rb_define_singleton_method, rb_ivar_get, rb_ivar_set, rb_singleton_class};
+use crate::ruby_sys::{
+    rb_define_singleton_method, rb_extend_object, rb_ivar_get, rb_ivar_set, rb_singleton_class,
+};
 
 use crate::{
     class::RClass,
     debug_assert_value,
     error::{protect, Error},
     method::Method,
+    module::RModule,
     try_convert::TryConvert,
     value::{Id, Value, QNIL},
 };
@@ -90,5 +93,32 @@ pub trait Object: Deref<Target = Value> + Copy {
         protect(|| unsafe {
             RClass::from_rb_value_unchecked(rb_singleton_class(self.as_rb_value()))
         })
+    }
+
+    /// Extend `self` with `module`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{class, function, Module, Object, RModule, RObject};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// fn example() -> i64 {
+    ///     42
+    /// }
+    ///
+    /// let module = RModule::new();
+    /// module.define_method("example", function!(example, 0)).unwrap();
+    ///
+    /// let obj: RObject = class::object().new_instance(()).unwrap().try_convert().unwrap();
+    /// obj.extend_object(module).unwrap();
+    /// assert_eq!(obj.funcall::<_, _, i64>("example", ()).unwrap(), 42);
+    /// ```
+    fn extend_object(self, module: RModule) -> Result<(), Error> {
+        protect(|| unsafe {
+            rb_extend_object(self.as_rb_value(), module.as_rb_value());
+            QNIL
+        })?;
+        Ok(())
     }
 }

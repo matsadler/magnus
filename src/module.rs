@@ -1,12 +1,13 @@
 //! Types and functions for working with Ruby modules.
 
-use std::{ffi::CString, fmt, mem::transmute, ops::Deref};
+use std::{ffi::CString, fmt, mem::transmute, ops::Deref, os::raw::c_int};
 
 use crate::ruby_sys::{
-    rb_class_inherited_p, rb_const_get, rb_define_class_id_under, rb_define_method_id,
-    rb_define_module_function, rb_define_module_id_under, rb_define_private_method,
-    rb_define_protected_method, rb_mComparable, rb_mEnumerable, rb_mErrno, rb_mFileTest, rb_mGC,
-    rb_mKernel, rb_mMath, rb_mProcess, rb_mWaitReadable, rb_mWaitWritable, rb_module_new,
+    rb_alias, rb_attr, rb_class_inherited_p, rb_const_get, rb_const_set, rb_define_class_id_under,
+    rb_define_method_id, rb_define_module_function, rb_define_module_id_under,
+    rb_define_private_method, rb_define_protected_method, rb_include_module, rb_mComparable,
+    rb_mEnumerable, rb_mErrno, rb_mFileTest, rb_mGC, rb_mKernel, rb_mMath, rb_mProcess,
+    rb_mWaitReadable, rb_mWaitWritable, rb_mod_ancestors, rb_module_new, rb_prepend_module,
     ruby_value_type, VALUE,
 };
 
@@ -17,6 +18,7 @@ use crate::{
     exception,
     method::Method,
     object::Object,
+    r_array::RArray,
     try_convert::TryConvert,
     value::{private, Id, NonZeroValue, ReprValue, Value, QNIL},
 };
@@ -227,6 +229,107 @@ pub trait Module: Object + Deref<Target = Value> + Copy {
         })
     }
 
+    /// Include `module` into `self`.
+    ///
+    /// Effectively makes `module` the superclass of `self`. See also
+    /// [`prepend_module`](Module::prepend_module).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{function, Module, RClass, RModule};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// fn example() -> i64 {
+    ///     42
+    /// }
+    ///
+    /// let module = RModule::new();
+    /// module.define_method("example", function!(example, 0)).unwrap();
+    ///
+    /// let class = RClass::new(Default::default()).unwrap();
+    /// class.include_module(module);
+    ///
+    /// let obj = class.new_instance(()).unwrap();
+    /// assert_eq!(obj.funcall::<_, _, i64>("example", ()).unwrap(), 42);
+    /// ```
+    fn include_module(self, module: RModule) -> Result<(), Error> {
+        protect(|| unsafe {
+            rb_include_module(self.as_rb_value(), module.as_rb_value());
+            QNIL
+        })?;
+        Ok(())
+    }
+
+    /// Prepend `self` with `module`.
+    ///
+    /// Similar to [`include_module`](Module::include_module), but inserts
+    /// `module` as if it were a subclass in the inheritance chain.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{call_super, eval, function, Error, Module, RClass, RModule};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// fn super_example() -> i64 {
+    ///     40
+    /// }
+    ///
+    /// fn example() -> Result<i64, Error> {
+    ///     Ok(call_super::<_, i64>(())? + 2)
+    /// }
+    ///
+    /// let module = RModule::new();
+    /// module.define_method("example", function!(example, 0)).unwrap();
+    ///
+    /// let class: RClass = eval(r#"
+    ///     class Example
+    ///       def example
+    ///         40
+    ///       end
+    ///     end
+    ///     Example
+    /// "#).unwrap();
+    /// class.prepend_module(module);
+    ///
+    /// let obj = class.new_instance(()).unwrap();
+    /// assert_eq!(obj.funcall::<_, _, i64>("example", ()).unwrap(), 42);
+    /// ```
+    fn prepend_module(self, module: RModule) -> Result<(), Error> {
+        protect(|| unsafe {
+            rb_prepend_module(self.as_rb_value(), module.as_rb_value());
+            QNIL
+        })?;
+        Ok(())
+    }
+
+    /// Set the value for the constant `name` within `self`'s scope.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{class, eval, Module, RClass, Value};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// class::array().const_set("EXAMPLE", 42).unwrap();
+    ///
+    /// assert_eq!(eval::<i64>("Array::EXAMPLE").unwrap(), 42);
+    /// ```
+    fn const_set<T, U>(self, name: T, value: U) -> Result<(), Error>
+    where
+        T: Into<Id>,
+        U: Into<Value>,
+    {
+        let id = name.into();
+        let val = value.into();
+        protect(|| unsafe {
+            rb_const_set(self.as_rb_value(), id.as_rb_id(), val.as_rb_value());
+            QNIL
+        })?;
+        Ok(())
+    }
+
     /// Get the value for the constant `name` within `self`'s scope.
     ///
     /// # Examples
@@ -282,6 +385,23 @@ pub trait Module: Object + Deref<Target = Value> + Copy {
             ))
             .to_bool()
         }
+    }
+
+    /// Return the classes and modules `self` inherits, includes, or prepends.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{class, eval, Module};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let ary = class::string().ancestors();
+    ///
+    /// let res: bool = eval!("ary == [String, Comparable, Object, Kernel, BasicObject]", ary).unwrap();
+    /// assert!(res);
+    /// ```
+    fn ancestors(self) -> RArray {
+        unsafe { RArray::from_rb_value_unchecked(rb_mod_ancestors(self.as_rb_value())) }
     }
 
     /// Define a method in `self`'s scope.
@@ -425,6 +545,101 @@ pub trait Module: Object + Deref<Target = Value> + Copy {
             QNIL
         })?;
         Ok(())
+    }
+
+    /// Define public accessor methods for the attribute `name`.
+    ///
+    /// `name` should be **without** the preceding `@`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Attr, Module, RClass, Value};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let class = RClass::new(Default::default()).unwrap();
+    /// class.define_attr("example", Attr::ReadWrite).unwrap();
+    ///
+    /// let obj = class.new_instance(()).unwrap();
+    /// let _: Value = obj.funcall("example=", (42,)).unwrap();
+    /// assert_eq!(obj.funcall::<_, _, i64>("example", ()).unwrap(), 42);
+    /// ```
+    fn define_attr<T>(self, name: T, rw: Attr) -> Result<(), Error>
+    where
+        T: Into<Id>,
+    {
+        let id = name.into();
+        protect(|| unsafe {
+            rb_attr(
+                self.as_rb_value(),
+                id.as_rb_id(),
+                rw.is_read() as c_int,
+                rw.is_write() as c_int,
+                0,
+            );
+            QNIL
+        })?;
+        Ok(())
+    }
+
+    /// Alias the method `src` of `self` as `dst`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{function, Module, RClass};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// fn example() -> i64 {
+    ///     42
+    /// }
+    ///
+    /// let class = RClass::new(Default::default()).unwrap();
+    /// class.define_method("example", function!(example, 0)).unwrap();
+    /// class.define_alias("test", "example").unwrap();
+    ///
+    /// let obj = class.new_instance(()).unwrap();
+    /// assert_eq!(obj.funcall::<_, _, i64>("test", ()).unwrap(), 42);
+    /// ```
+    fn define_alias<T, U>(self, dst: T, src: U) -> Result<(), Error>
+    where
+        T: Into<Id>,
+        U: Into<Id>,
+    {
+        let d_id = dst.into();
+        let s_id = src.into();
+        protect(|| unsafe {
+            rb_alias(self.as_rb_value(), d_id.as_rb_id(), s_id.as_rb_id());
+            QNIL
+        })?;
+        Ok(())
+    }
+}
+
+/// Argument for [`define_attr`](Module::define_attr).
+#[derive(Clone, Copy, Debug)]
+pub enum Attr {
+    /// Define a reader method like `name`.
+    Read,
+    /// Define a writer method like `name=`.
+    Write,
+    /// Define both reader and writer methods like `name` and `name=`.
+    ReadWrite,
+}
+
+impl Attr {
+    fn is_read(self) -> bool {
+        match self {
+            Attr::Read | Attr::ReadWrite => true,
+            Attr::Write => false,
+        }
+    }
+
+    fn is_write(self) -> bool {
+        match self {
+            Attr::Write | Attr::ReadWrite => true,
+            Attr::Read => false,
+        }
     }
 }
 
