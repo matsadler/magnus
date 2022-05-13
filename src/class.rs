@@ -370,7 +370,8 @@ pub fn rational() -> RClass {
 }
 
 /// Return Ruby's `Refinement` class.
-#[cfg(ruby_gte_3_1)]
+#[cfg(any(ruby_gte_3_1, docsrs))]
+#[cfg_attr(docsrs, doc(cfg(ruby_gte_3_1)))]
 #[inline]
 pub fn refinement() -> RClass {
     unsafe { RClass::from_rb_value_unchecked(rb_cRefinement) }

@@ -851,7 +851,8 @@ impl RString {
     /// let fstring = RString::new("example").to_interned_str();
     /// assert_eq!(fstring.as_str().unwrap(), "example");
     /// ```
-    #[cfg(ruby_gte_3_0)]
+    #[cfg(any(ruby_gte_3_0, docsrs))]
+    #[cfg_attr(docsrs, doc(cfg(ruby_gte_3_0)))]
     pub fn to_interned_str(self) -> FString {
         unsafe {
             FString(RString::from_rb_value_unchecked(rb_str_to_interned_str(

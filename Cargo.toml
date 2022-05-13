@@ -28,3 +28,6 @@ bindgen = "0.59"
 
 [dev-dependencies]
 magnus = { path = ".", features = ["embed"] }
+
+[package.metadata.docs.rs]
+rustc-args = ["--cfg", "docsrs"]

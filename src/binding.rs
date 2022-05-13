@@ -32,7 +32,8 @@ impl Binding {
     ///
     /// let binding = Binding::new();
     /// ```
-    #[cfg(ruby_lte_3_1)]
+    #[cfg(any(ruby_lte_3_1, docsrs))]
+    #[cfg_attr(docsrs, doc(cfg(ruby_lte_3_1)))]
     #[deprecated(since = "0.2.0", note = "this will no longer function as of Ruby 3.2")]
     #[allow(clippy::new_without_default)]
     pub fn new() -> Self {

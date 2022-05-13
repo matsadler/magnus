@@ -287,14 +287,16 @@ pub fn name_error() -> ExceptionClass {
 }
 
 /// Return Ruby's `NoMatchingPatternError` class.
-#[cfg(ruby_gte_2_7)]
+#[cfg(any(ruby_gte_2_7, docsrs))]
+#[cfg_attr(docsrs, doc(cfg(ruby_gte_2_7)))]
 #[inline]
 pub fn no_matching_pattern_error() -> ExceptionClass {
     unsafe { ExceptionClass::from_rb_value_unchecked(rb_eNoMatchingPatternError) }
 }
 
 /// Return Ruby's `NoMatchingPatternKeyError` class.
-#[cfg(ruby_gte_3_1)]
+#[cfg(any(ruby_gte_3_1, docsrs))]
+#[cfg_attr(docsrs, doc(cfg(ruby_gte_3_1)))]
 #[inline]
 pub fn no_matching_pattern_key_error() -> ExceptionClass {
     unsafe { ExceptionClass::from_rb_value_unchecked(rb_eNoMatchingPatternKeyError) }

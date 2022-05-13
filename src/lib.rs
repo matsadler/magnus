@@ -91,12 +91,14 @@
 //! }
 //! ```
 
+#![cfg_attr(docsrs, feature(doc_cfg))]
 #![warn(missing_docs)]
 
 mod binding;
 pub mod block;
 pub mod class;
 #[cfg(feature = "embed")]
+#[cfg_attr(docsrs, doc(cfg(feature = "embed")))]
 pub mod embed;
 pub mod encoding;
 mod enumerator;
@@ -301,6 +303,17 @@ where
     protect(|| unsafe { Value::new(rb_require_string(feature.as_rb_value())) })
         .and_then(|v| v.try_convert())
 }
+
+/// Finds and loads the given feature if not already loaded.
+///
+/// # Examples
+///
+/// ```
+/// # let _cleanup = unsafe { magnus::embed::init() };
+/// use magnus::require;
+///
+/// assert!(require("net/http").unwrap());
+/// ```
 #[cfg(ruby_lt_2_7)]
 pub fn require(feature: &str) -> Result<bool, Error> {
     let feature = CString::new(feature).unwrap();

@@ -56,7 +56,8 @@ where
 /// invalid to use from Rust when GC is run, you must update any stored objects
 /// with [`location`] inside your implementation of
 /// [`DataTypeFunctions::compact`](`crate::r_typed_data::DataTypeFunctions::compact`).
-#[cfg(ruby_gte_2_7)]
+#[cfg(any(ruby_gte_2_7, docsrs))]
+#[cfg_attr(docsrs, doc(cfg(ruby_gte_2_7)))]
 pub fn mark_movable<T>(value: T)
 where
     T: Deref<Target = Value>,
@@ -74,7 +75,8 @@ where
 ///
 /// Returns a new `Value` that is pointing to the object that `value` used to
 /// point to. If `value` hasn't moved, simply returns `value`.
-#[cfg(ruby_gte_2_7)]
+#[cfg(any(ruby_gte_2_7, docsrs))]
+#[cfg_attr(docsrs, doc(cfg(ruby_gte_2_7)))]
 pub fn location<T>(value: T) -> T
 where
     T: ReprValue,
