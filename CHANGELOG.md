@@ -20,6 +20,8 @@
   `ancestors`, `define_attr`, and `define_alias`.
 - `rb-sys-interop` feature to use low level bindings from rb-sys, and `rb_sys`
   module to expose functions for working with rb-sys.
+- Added `gc::register_mark_object`, `gc::register_address`,
+  `gc::unregister_address`, `gc::count`, `gc::stat`, and `gc::all_stats`.
 
 ### Changed
 - `RArray::cat`, `RArray::from_slice`, and `gc::mark_slice` will accept a
@@ -40,6 +42,7 @@
 
 ### Deprecated
 - `String::encode_utf8`, use `r_string.conv_enc(RbEncoding::utf8())` instead.
+- `Value::leak`, use `gc::register_mark_object` instead.
 
 ### Removed
 - `error::protect` removed as it should not be needed when using Magnus. For

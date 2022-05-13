@@ -356,6 +356,10 @@ impl Value {
     /// let ary = eval::<RArray>("[1, 2, 3]").unwrap();
     /// ary.leak();
     /// ```
+    #[deprecated(
+        since = "0.3.0",
+        note = "please use `gc::register_mark_object` instead"
+    )]
     pub fn leak(self) {
         debug_assert_value!(self);
         // safe ffi to Ruby, call doesn't raise

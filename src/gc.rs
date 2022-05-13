@@ -3,11 +3,17 @@
 use std::ops::Deref;
 
 use crate::ruby_sys::{
-    rb_gc_adjust_memory_usage, rb_gc_disable, rb_gc_enable, rb_gc_mark, rb_gc_mark_locations,
-    rb_gc_start, ssize_t, VALUE,
+    rb_gc_adjust_memory_usage, rb_gc_count, rb_gc_disable, rb_gc_enable, rb_gc_mark,
+    rb_gc_mark_locations, rb_gc_register_address, rb_gc_register_mark_object, rb_gc_start,
+    rb_gc_stat, rb_gc_unregister_address, ssize_t, VALUE,
 };
 
-use crate::value::{ReprValue, Value};
+use crate::{
+    error::{protect, Error},
+    r_hash::RHash,
+    symbol::Symbol,
+    value::{ReprValue, Value, QNIL},
+};
 
 #[cfg(ruby_gte_2_7)]
 use crate::ruby_sys::{rb_gc_location, rb_gc_mark_movable};
@@ -84,6 +90,40 @@ where
     unsafe { T::from_value_unchecked(Value::new(rb_gc_location(value.to_value().as_rb_value()))) }
 }
 
+/// Registers `value` to never be garbage collected.
+///
+/// This is essentially a deliberate memory leak.
+pub fn register_mark_object<T>(value: T)
+where
+    T: ReprValue,
+{
+    unsafe { rb_gc_register_mark_object(value.to_value().as_rb_value()) }
+}
+
+/// Inform Ruby's garbage collector that `valref` points to a live Ruby object.
+///
+/// Prevents Ruby moving or collecting `valref`. This should be used on
+/// `static` items to prevent them being collected instead of relying on Ruby
+/// constants/globals to allways refrence the value.
+///
+/// See also [`BoxValue`](crate::value::BoxValue).
+pub fn register_address<T>(valref: &T)
+where
+    T: ReprValue,
+{
+    unsafe { rb_gc_register_address(valref as *const _ as *mut VALUE) }
+}
+
+/// Inform Ruby's garbage collector that `valref` that was previously
+/// registered with [`register_address`] no longer points to a live Ruby
+/// object.
+pub fn unregister_address<T>(valref: &T)
+where
+    T: ReprValue,
+{
+    unsafe { rb_gc_unregister_address(valref as *const _ as *mut VALUE) }
+}
+
 /// Disable automatic GC runs.
 ///
 /// This could result in other Ruby api functions unexpectedly raising
@@ -127,4 +167,31 @@ pub fn start() {
 /// Pass negative numbers to indicate memory has been freed.
 pub fn adjust_memory_usage(diff: i32) {
     unsafe { rb_gc_adjust_memory_usage(diff as ssize_t) };
+}
+
+/// Returns the number of garbage collections that have been run since the
+/// start of the process.
+pub fn count() -> usize {
+    unsafe { rb_gc_count() as usize }
+}
+
+/// Returns the GC profiling value for `key`.
+pub fn stat<T>(key: T) -> Result<usize, Error>
+where
+    T: Into<Symbol>,
+{
+    let sym = key.into();
+    let mut res = 0;
+    protect(|| {
+        res = unsafe { rb_gc_stat(sym.as_rb_value()) as usize };
+        QNIL
+    })?;
+    Ok(res)
+}
+
+/// Returns all possible key/value pairs for [`stat`] as a Ruby Hash.
+pub fn all_stats() -> RHash {
+    let res = RHash::new();
+    unsafe { rb_gc_stat(res.as_rb_value()) };
+    res
 }
