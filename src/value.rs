@@ -2065,6 +2065,7 @@ impl TryConvertOwned for StaticSymbol {}
 pub struct Id(ID);
 
 impl Id {
+    #[cfg(feature = "rb-sys-interop")]
     pub(crate) fn new(id: ID) -> Self {
         Self(id)
     }
