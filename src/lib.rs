@@ -232,7 +232,7 @@ pub fn define_module(name: &str) -> Result<RModule, Error> {
 }
 
 /// Define a global variable.
-pub fn define_global_variable<T: Into<Value>>(name: &str, initial: T) -> Result<*mut Value, Error> {
+pub fn define_variable<T: Into<Value>>(name: &str, initial: T) -> Result<*mut Value, Error> {
     let initial = initial.into();
     debug_assert_value!(initial);
     let name = CString::new(name).unwrap();
@@ -241,6 +241,12 @@ pub fn define_global_variable<T: Into<Value>>(name: &str, initial: T) -> Result<
         rb_define_variable(name.as_ptr(), ptr as *mut VALUE);
     }
     Ok(ptr)
+}
+
+/// Define a global variable.
+#[deprecated(since = "0.3.0", note = "please use `define_variable` instead")]
+pub fn define_global_variable<T: Into<Value>>(name: &str, initial: T) -> Result<*mut Value, Error> {
+    define_variable(name, initial)
 }
 
 /// Define a method in the root scope.

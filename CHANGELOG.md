@@ -43,6 +43,8 @@
 ### Deprecated
 - `String::encode_utf8`, use `r_string.conv_enc(RbEncoding::utf8())` instead.
 - `Value::leak`, use `gc::register_mark_object` instead.
+- `define_global_variable` (use `define_variable`) to better match Ruby C API
+  naming.
 
 ### Removed
 - `error::protect` removed as it should not be needed when using Magnus. For
