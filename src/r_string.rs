@@ -641,6 +641,35 @@ impl RString {
 
     /// Returns a Rust `&str` reference to the value of `self`.
     ///
+    /// Returns `None` if `self`'s encoding is not UTF-8 (or US-ASCII), or if
+    /// the string is not valid UTF-8.
+    ///
+    /// # Safety
+    ///
+    /// This is directly viewing memory owned and managed by Ruby. Ruby may
+    /// modify or free the memory backing the returned str, the caller must
+    /// ensure this does not happen.
+    ///
+    /// Ruby must not be allowed to garbage collect or modify `self` while a
+    /// refrence to the str is held.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::RString;
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let s = RString::new("example");
+    /// // safe as we don't give Ruby the chance to mess with the string while
+    /// // we hold a refrence to the slice.
+    /// unsafe { assert_eq!(s.test_as_str().unwrap(), "example") };
+    /// ```
+    pub unsafe fn test_as_str(&self) -> Option<&str> {
+        self.test_as_str_unconstrained()
+    }
+
+    /// Returns a Rust `&str` reference to the value of `self`.
+    ///
     /// Errors if `self`'s encoding is not UTF-8 (or US-ASCII), or if the
     /// string is not valid UTF-8.
     ///
@@ -668,23 +697,22 @@ impl RString {
         self.as_str_unconstrained()
     }
 
-    unsafe fn as_str_unconstrained<'a>(self) -> Result<&'a str, Error> {
+    unsafe fn test_as_str_unconstrained<'a>(self) -> Option<&'a str> {
         let enc = self.enc_get();
-        let cr = self.enc_coderange();
-        let is_utf8_compat = self.is_utf8_compatible_encoding();
-        if (is_utf8_compat && (cr == Coderange::SevenBit || cr == Coderange::Valid))
-            || (enc == encoding::Index::ascii8bit() && cr == Coderange::SevenBit)
-        {
-            Ok(str::from_utf8_unchecked(self.as_slice_unconstrained()))
-        } else if is_utf8_compat {
-            str::from_utf8(self.as_slice_unconstrained())
-                .map_err(|e| Error::new(exception::encoding_error(), format!("{}", e)))
-        } else {
-            Err(Error::new(
-                exception::encoding_error(),
-                format!("expected utf-8, got {}", RbEncoding::from(enc).name()),
-            ))
-        }
+        let cr = self.enc_coderange_scan();
+        ((self.is_utf8_compatible_encoding() && (cr == Coderange::SevenBit || cr == Coderange::Valid))
+            || (enc == encoding::Index::ascii8bit() && cr == Coderange::SevenBit)).then(|| str::from_utf8_unchecked(self.as_slice_unconstrained()))
+    }
+
+    unsafe fn as_str_unconstrained<'a>(self) -> Result<&'a str, Error> {
+        self.test_as_str_unconstrained().ok_or_else(|| {
+            let msg: Cow<'static, str> = if self.is_utf8_compatible_encoding() {
+                format!("expected utf-8, got {}", RbEncoding::from(self.enc_get()).name()).into()
+            } else {
+                "invalid byte sequence in UTF-8".into()
+            };
+            Error::new(exception::encoding_error(), msg)
+        })
     }
 
     /// Returns `self` as a Rust string, ignoring the Ruby encoding and
@@ -1125,7 +1153,26 @@ impl FString {
         unsafe { self.as_r_string().as_slice_unconstrained() }
     }
 
-    /// Returns the interned string as a &str. Errors if the string contains
+    /// Returns the interned string as a `&str` or `None` string contains
+    /// invliad UTF-8.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RString};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let s: RString = eval!(r#"# frozen_string_literal: true
+    /// "example"
+    /// "#).unwrap();
+    /// let fstring = s.as_interned_str().unwrap();
+    /// assert_eq!(fstring.test_as_str().unwrap(), "example");
+    /// ```
+    pub fn test_as_str(self) -> Option<&'static str> {
+        unsafe { self.as_r_string().test_as_str_unconstrained() }
+    }
+
+    /// Returns the interned string as a `&str`. Errors if the string contains
     /// invliad UTF-8.
     ///
     /// # Examples
