@@ -3,8 +3,8 @@
 use std::{any::Any, borrow::Cow, ffi::CString, fmt, mem::transmute, ops::Deref, os::raw::c_int};
 
 use crate::ruby_sys::{
-    rb_bug, rb_ensure, rb_errinfo, rb_exc_raise, rb_jump_tag, rb_protect, rb_raise, rb_set_errinfo,
-    ruby_special_consts, VALUE,
+    rb_bug, rb_ensure, rb_errinfo, rb_exc_raise, rb_iter_break, rb_iter_break_value, rb_jump_tag,
+    rb_protect, rb_raise, rb_set_errinfo, ruby_special_consts, VALUE,
 };
 
 use crate::{
@@ -137,6 +137,28 @@ impl Error {
         T: Into<Cow<'static, str>>,
     {
         Self::Error(exception::script_error(), msg.into())
+    }
+
+    /// Create a new error that will break from a loop when returned to Ruby.
+    pub fn iter_break<T>(val: Option<T>) -> Self
+    where
+        T: Into<Value>,
+    {
+        match val {
+            Some(val) => {
+                let val = val.into();
+                protect(|| {
+                    unsafe { rb_iter_break_value(val.as_rb_value()) };
+                    QNIL
+                })
+                .unwrap_err()
+            }
+            None => protect(|| {
+                unsafe { rb_iter_break() };
+                QNIL
+            })
+            .unwrap_err(),
+        }
     }
 
     /// Matches the internal `Exception` against `class` with same semantics as

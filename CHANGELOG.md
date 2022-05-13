@@ -23,6 +23,7 @@
   module to expose functions for working with rb-sys.
 - Added `gc::register_mark_object`, `gc::register_address`,
   `gc::unregister_address`, `gc::count`, `gc::stat`, and `gc::all_stats`.
+- `Error::iter_break`.
 
 ### Changed
 - `RArray::cat`, `RArray::from_slice`, and `gc::mark_slice` will accept a
