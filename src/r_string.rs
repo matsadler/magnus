@@ -700,14 +700,20 @@ impl RString {
     unsafe fn test_as_str_unconstrained<'a>(self) -> Option<&'a str> {
         let enc = self.enc_get();
         let cr = self.enc_coderange_scan();
-        ((self.is_utf8_compatible_encoding() && (cr == Coderange::SevenBit || cr == Coderange::Valid))
-            || (enc == encoding::Index::ascii8bit() && cr == Coderange::SevenBit)).then(|| str::from_utf8_unchecked(self.as_slice_unconstrained()))
+        ((self.is_utf8_compatible_encoding()
+            && (cr == Coderange::SevenBit || cr == Coderange::Valid))
+            || (enc == encoding::Index::ascii8bit() && cr == Coderange::SevenBit))
+            .then(|| str::from_utf8_unchecked(self.as_slice_unconstrained()))
     }
 
     unsafe fn as_str_unconstrained<'a>(self) -> Result<&'a str, Error> {
         self.test_as_str_unconstrained().ok_or_else(|| {
             let msg: Cow<'static, str> = if self.is_utf8_compatible_encoding() {
-                format!("expected utf-8, got {}", RbEncoding::from(self.enc_get()).name()).into()
+                format!(
+                    "expected utf-8, got {}",
+                    RbEncoding::from(self.enc_get()).name()
+                )
+                .into()
             } else {
                 "invalid byte sequence in UTF-8".into()
             };
