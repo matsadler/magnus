@@ -28,6 +28,7 @@
   `RArray::from_slice(&[1.into()])` will no longer work. Use
   `RArray::from_slice(&[Value::from(1)])` instead.
 - Similar to above, `gc::location` will accept any Ruby type as an argument.
+- `BoxValue` can hold any Ruby type, not just `Value`.
 - Improved performance for conversion between Ruby floats/integers and Rust
   types.
 - The parameters to the closure passed to `RHash::foreach` will now be

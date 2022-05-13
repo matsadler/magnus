@@ -964,7 +964,7 @@ pub(crate) mod private {
     ///
     /// This trait should only be implemented for types that a guaranteed to
     /// have the same layout as [`Value`] and have come from the Ruby VM.
-    pub unsafe trait ReprValue {
+    pub unsafe trait ReprValue: Copy {
         /// Convert `self` to a [`Value`].
         ///
         /// Usually types that implement this trait will also implement
@@ -1031,9 +1031,12 @@ impl NonZeroValue {
 ///
 /// All [`Value`] methods should be available on this type through [`Deref`],
 /// but some may be missed by this documentation.
-pub struct BoxValue(Box<Value>);
+pub struct BoxValue<T>(Box<T>);
 
-impl BoxValue {
+impl<T> BoxValue<T>
+where
+    T: ReprValue,
+{
     /// Create a new `BoxValue`.
     ///
     /// # Examples
@@ -1043,8 +1046,8 @@ impl BoxValue {
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// # #[inline(never)]
-    /// fn box_value() -> BoxValue {
-    ///     BoxValue::new(*RString::new("foo"))
+    /// fn box_value() -> BoxValue<RString> {
+    ///     BoxValue::new(RString::new("foo"))
     /// }
     ///
     /// # // get the Value in a different stack frame and copy it to a BoxValue
@@ -1064,15 +1067,14 @@ impl BoxValue {
     ///
     /// # // didn't segfault? we passed!
     /// ```
-    pub fn new(val: Value) -> Self {
-        debug_assert_value!(val);
+    pub fn new(val: T) -> Self {
         let mut boxed = Box::new(val);
         unsafe { rb_gc_register_address(boxed.as_mut() as *mut _ as *mut VALUE) };
         Self(boxed)
     }
 }
 
-impl Drop for BoxValue {
+impl<T> Drop for BoxValue<T> {
     fn drop(&mut self) {
         unsafe {
             rb_gc_unregister_address(self.0.as_mut() as *mut _ as *mut VALUE);
@@ -1080,47 +1082,56 @@ impl Drop for BoxValue {
     }
 }
 
-impl AsRef<Value> for BoxValue {
-    fn as_ref(&self) -> &Value {
+impl<T> AsRef<T> for BoxValue<T> {
+    fn as_ref(&self) -> &T {
         &self.0
     }
 }
 
-impl AsMut<Value> for BoxValue {
-    fn as_mut(&mut self) -> &mut Value {
+impl<T> AsMut<T> for BoxValue<T> {
+    fn as_mut(&mut self) -> &mut T {
         &mut self.0
     }
 }
 
-impl Deref for BoxValue {
-    type Target = Value;
+impl<T> Deref for BoxValue<T> {
+    type Target = T;
 
     fn deref(&self) -> &Self::Target {
         &self.0
     }
 }
 
-impl DerefMut for BoxValue {
+impl<T> DerefMut for BoxValue<T> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.0
     }
 }
 
-impl fmt::Display for BoxValue {
+impl<T> fmt::Display for BoxValue<T>
+where
+    T: ReprValue,
+{
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", unsafe { self.to_s_infallible() })
+        write!(f, "{}", unsafe { self.to_value().to_s_infallible() })
     }
 }
 
-impl fmt::Debug for BoxValue {
+impl<T> fmt::Debug for BoxValue<T>
+where
+    T: ReprValue,
+{
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.inspect())
+        write!(f, "{}", self.to_value().inspect())
     }
 }
 
-impl From<BoxValue> for Value {
-    fn from(val: BoxValue) -> Self {
-        *val
+impl<T> From<BoxValue<T>> for Value
+where
+    T: ReprValue,
+{
+    fn from(val: BoxValue<T>) -> Self {
+        val.to_value()
     }
 }
 
