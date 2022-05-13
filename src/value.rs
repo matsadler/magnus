@@ -2065,6 +2065,10 @@ impl TryConvertOwned for StaticSymbol {}
 pub struct Id(ID);
 
 impl Id {
+    pub(crate) fn new(id: ID) -> Self {
+        Self(id)
+    }
+
     pub(crate) fn as_rb_id(self) -> ID {
         self.0
     }

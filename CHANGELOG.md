@@ -18,6 +18,8 @@
 - `scan_args::check_arity`.
 - Methods for `Module`: `include_module`, `prepend_module`, `const_set`,
   `ancestors`, `define_attr`, and `define_alias`.
+- `rb-sys-interop` feature to use low level bindings from rb-sys, and `rb_sys`
+  module to expose functions for working with rb-sys.
 
 ### Changed
 - `RArray::cat`, `RArray::from_slice`, and `gc::mark_slice` will accept a
@@ -39,6 +41,9 @@
 - `String::encode_utf8`, use `r_string.conv_enc(RbEncoding::utf8())` instead.
 
 ### Removed
+- `error::protect` removed as it should not be needed when using Magnus. For
+  use with rb-sys enable the `rb-sys-interop` feature and use
+  `magnus::rb_sys::protect`.
 
 ### Fixed
 - creating a `StaticSymbol` from a `&str` with characters outside the ASCII

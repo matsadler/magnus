@@ -8,4 +8,8 @@
 #![allow(clippy::upper_case_acronyms)]
 
 // see build.rs
+#[cfg(not(feature = "rb-sys-interop"))]
 include!(concat!(env!("OUT_DIR"), "/ruby_sys.rs"));
+
+#[cfg(feature = "rb-sys-interop")]
+pub use rb_sys::*;

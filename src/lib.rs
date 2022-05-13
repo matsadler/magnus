@@ -124,6 +124,9 @@ pub mod r_string;
 pub mod r_struct;
 pub mod r_typed_data;
 mod range;
+#[cfg(feature = "rb-sys-interop")]
+#[cfg_attr(docsrs, doc(cfg(feature = "rb-sys-interop")))]
+pub mod rb_sys;
 mod ruby_sys;
 pub mod scan_args;
 mod symbol;

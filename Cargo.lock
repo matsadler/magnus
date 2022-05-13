@@ -232,6 +232,7 @@ dependencies = [
  "bindgen",
  "magnus",
  "magnus-macros",
+ "rb-sys",
 ]
 
 [[package]]
@@ -274,6 +275,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "19b17cddbe7ec3f8bc800887bab5e717348c95ea2ca0b1bf0837fb964dc67099"
 
 [[package]]
+name = "pkg-config"
+version = "0.3.25"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1df8c4ec4b0627e53bdf214615ad287367e482558cf84b109250b37464dc03ae"
+
+[[package]]
 name = "proc-macro2"
 version = "1.0.37"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -289,6 +296,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a1feb54ed693b93a84e14094943b84b7c4eae204c512b7ccb95ab0c66d278ad1"
 dependencies = [
  "proc-macro2",
+]
+
+[[package]]
+name = "rb-sys"
+version = "0.8.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4db52af35291b64ce86f23f755b4576c20e3063b517269252b2f8cc883ca00e6"
+dependencies = [
+ "bindgen",
+ "libc",
+ "pkg-config",
 ]
 
 [[package]]
