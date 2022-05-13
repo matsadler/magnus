@@ -11,7 +11,8 @@
   `delete_at`, `resize`, `reverse`, `rotate, and `sort`.
 - New methods for `RString`: `enc_new`, `len`, `length`, and `is_empty`.
 - `RHash` gains the methods `delete` and `clear`.
-- `require`, `current_receiver`, and `call_super` functions.
+- `require`, `current_receiver`, `call_super`, and `define_global_const`
+  functions.
 - `Object::singleton_class` and `Object::extend_object`.
 - `Proc::new`, `Proc::arity`, and `Proc::is_lambda`.
 - `superclass` and `name` methods for `RClass`.

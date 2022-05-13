@@ -136,9 +136,9 @@ pub mod value;
 use std::{ffi::CString, mem::transmute, os::raw::c_int};
 
 use crate::ruby_sys::{
-    rb_call_super, rb_current_receiver, rb_define_class, rb_define_global_function,
-    rb_define_module, rb_define_variable, rb_errinfo, rb_eval_string_protect, rb_set_errinfo,
-    VALUE,
+    rb_call_super, rb_current_receiver, rb_define_class, rb_define_global_const,
+    rb_define_global_function, rb_define_module, rb_define_variable, rb_errinfo,
+    rb_eval_string_protect, rb_set_errinfo, VALUE,
 };
 
 #[cfg(ruby_lt_2_7)]
@@ -247,6 +247,22 @@ pub fn define_variable<T: Into<Value>>(name: &str, initial: T) -> Result<*mut Va
 #[deprecated(since = "0.3.0", note = "please use `define_variable` instead")]
 pub fn define_global_variable<T: Into<Value>>(name: &str, initial: T) -> Result<*mut Value, Error> {
     define_variable(name, initial)
+}
+
+/// Define a global constant.
+pub fn define_global_const<T>(name: &str, value: T) -> Result<(), Error>
+where
+    T: Into<Value>,
+{
+    let value = value.into();
+    let name = CString::new(name).unwrap();
+    protect(|| {
+        unsafe {
+            rb_define_global_const(name.as_ptr(), value.as_rb_value());
+        }
+        QNIL
+    })?;
+    Ok(())
 }
 
 /// Define a method in the root scope.
