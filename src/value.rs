@@ -13,12 +13,12 @@ use std::{
 };
 
 use crate::ruby_sys::{
-    rb_any_to_s, rb_block_call, rb_check_funcall, rb_check_id, rb_enumeratorize_with_size, rb_eql,
-    rb_equal, rb_float_new_in_heap, rb_funcallv, rb_gc_register_address,
-    rb_gc_register_mark_object, rb_gc_unregister_address, rb_id2name, rb_id2sym, rb_inspect,
-    rb_intern3, rb_ll2inum, rb_obj_as_string, rb_obj_classname, rb_obj_freeze, rb_obj_is_kind_of,
-    rb_obj_respond_to, rb_sym2id, rb_ull2inum, ruby_fl_type, ruby_special_consts, ruby_value_type,
-    RBasic, ID, VALUE,
+    rb_any_to_s, rb_block_call, rb_check_funcall, rb_check_id, rb_check_id_cstr,
+    rb_check_symbol_cstr, rb_enumeratorize_with_size, rb_eql, rb_equal, rb_float_new_in_heap,
+    rb_funcallv, rb_gc_register_address, rb_gc_register_mark_object, rb_gc_unregister_address,
+    rb_id2name, rb_id2sym, rb_inspect, rb_intern3, rb_ll2inum, rb_obj_as_string, rb_obj_classname,
+    rb_obj_freeze, rb_obj_is_kind_of, rb_obj_respond_to, rb_sym2id, rb_ull2inum, ruby_fl_type,
+    ruby_special_consts, ruby_value_type, RBasic, ID, VALUE,
 };
 
 // These don't seem to appear consistently in bindgen output, not sure if they
@@ -1990,6 +1990,29 @@ impl StaticSymbol {
         name.into().into()
     }
 
+    /// Return the `Id` for `name`, if one exists.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, StaticSymbol};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// assert!(StaticSymbol::check("example").is_none());
+    /// eval::<StaticSymbol>(":example").unwrap();
+    /// assert!(StaticSymbol::check("example").is_some());
+    /// ```
+    pub fn check(name: &str) -> Option<Self> {
+        unsafe {
+            let res = Value::new(rb_check_symbol_cstr(
+                name.as_ptr() as *mut c_char,
+                name.len() as i64,
+                RbEncoding::utf8().as_ptr(),
+            ));
+            (!res.is_nil()).then(|| Self::from_rb_value_unchecked(res.as_rb_value()))
+        }
+    }
+
     /// Return the symbol as a static string reference.
     ///
     /// May error if the name is not valid utf-8.
@@ -2080,13 +2103,35 @@ impl TryConvertOwned for StaticSymbol {}
 pub struct Id(ID);
 
 impl Id {
-    #[cfg(feature = "rb-sys-interop")]
     pub(crate) fn new(id: ID) -> Self {
         Self(id)
     }
 
     pub(crate) fn as_rb_id(self) -> ID {
         self.0
+    }
+
+    /// Return the `Id` for `name`, if one exists.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{value::{Id}, StaticSymbol};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// assert!(Id::check("example").is_none());
+    /// StaticSymbol::new("example");
+    /// assert!(Id::check("example").is_some());
+    /// ```
+    pub fn check(name: &str) -> Option<Self> {
+        let res = unsafe {
+            rb_check_id_cstr(
+                name.as_ptr() as *mut c_char,
+                name.len() as i64,
+                RbEncoding::utf8().as_ptr(),
+            )
+        };
+        (res != 0).then(|| Self::new(res))
     }
 
     /// Return the symbol name associated with this Id as a static string

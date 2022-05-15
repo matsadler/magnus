@@ -24,6 +24,7 @@
 - Added `gc::register_mark_object`, `gc::register_address`,
   `gc::unregister_address`, `gc::count`, `gc::stat`, and `gc::all_stats`.
 - `Error::iter_break`.
+- `StaticSymbol::check` and `Id::check` to check if a symbol exists.
 
 ### Changed
 - `RArray::cat`, `RArray::from_slice`, and `gc::mark_slice` will accept a
