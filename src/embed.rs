@@ -6,11 +6,14 @@ use std::{
 };
 
 use crate::ruby_sys::{
-    ruby_cleanup, ruby_exec_node, ruby_executable_node, ruby_options, ruby_setup,
+    ruby_cleanup, ruby_exec_node, ruby_executable_node, ruby_options, ruby_set_script_name,
+    ruby_setup,
 };
 
 #[cfg(windows)]
 use crate::ruby_sys::rb_w32_sysinit;
+
+use crate::r_string::RString;
 
 /// A guard value that will run the cleanup function for the Ruby VM when
 /// dropped.
@@ -85,4 +88,13 @@ unsafe fn init_options(opts: &[&str]) -> Cleanup {
         Err(true) => panic!("Ruby already initialized"),
         r => panic!("unexpected INIT state {:?}", r),
     }
+}
+
+/// Sets the current script name.
+pub fn ruby_script<T>(name: T)
+where
+    T: Into<RString>,
+{
+    let name = name.into();
+    unsafe { ruby_set_script_name(name.as_rb_value()) };
 }
