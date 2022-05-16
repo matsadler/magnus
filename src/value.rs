@@ -2006,7 +2006,7 @@ impl StaticSymbol {
         unsafe {
             let res = Value::new(rb_check_symbol_cstr(
                 name.as_ptr() as *mut c_char,
-                name.len() as i64,
+                name.len() as c_long,
                 RbEncoding::utf8().as_ptr(),
             ));
             (!res.is_nil()).then(|| Self::from_rb_value_unchecked(res.as_rb_value()))
@@ -2127,7 +2127,7 @@ impl Id {
         let res = unsafe {
             rb_check_id_cstr(
                 name.as_ptr() as *mut c_char,
-                name.len() as i64,
+                name.len() as c_long,
                 RbEncoding::utf8().as_ptr(),
             )
         };
