@@ -283,7 +283,7 @@ where
 ///
 /// **Note:** A method using `yield_splat` converted to an Enumerator with
 /// `to_enum`/[`Value::enumeratorize`] will result in a non-functional
-/// Enumerator. See [`YieldValues`] for an alternative.
+/// Enumerator. See [`YieldSplat`] for an alternative.
 pub fn yield_splat<T>(vals: RArray) -> Result<T, Error>
 where
     T: TryConvert,
