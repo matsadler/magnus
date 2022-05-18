@@ -103,15 +103,15 @@
 // implemented, alternatives, etc.
 //!
 //! ## A-N
-//! 
+//!
 // * `Check_Type`:
 //! * `Data_Get_Struct`: See [`wrap`] and [`TypedData`].
 //! * `Data_Make_Struct`: See [`wrap`] and [`TypedData`].
 //! * `Data_Wrap_Struct`: See [`wrap`] and [`TypedData`].
 // * `ExportStringValue`:
-//! 
+//!
 // ## `onig`
-//! 
+//!
 // * `onigenc_ascii_only_case_map`:
 // * `onigenc_get_default_encoding`:
 // * `onigenc_get_left_adjust_char_head`:
@@ -181,9 +181,9 @@
 // * `onig_set_verb_warn_func`:
 // * `onig_set_warn_func`:
 // * `onig_version`:
-// 
+//
 //! ## `RARRAY`
-// 
+//
 //! * `RARRAY`: Similar to [`RArray::from_value`].
 //! * `RARRAY_ASET`: Similar to [`RArray::store`].
 //! * `RARRAY_CONST_PTR`: Similar to [`RArray::as_slice`].
@@ -199,17 +199,17 @@
 // * `RARRAY_PTR_USE_START_TRANSIENT`:
 // * `RARRAY_PTR_USE_TRANSIENT`:
 // * `RARRAY_TRANSIENT_P`:
-//! 
+//!
 //! ## RB
-//! 
+//!
 // * `RBASIC`:
 // * `RBASIC_CLASS`:
 // * `RBIGNUM_NEGATIVE_P`:
 // * `RBIGNUM_POSITIVE_P`:
 // * `RBIGNUM_SIGN`:
-//! 
+//!
 //! ## `rb_a`-`rb_arx`
-//! 
+//!
 // * `rb_absint_numwords`:
 // * `rb_absint_singlebit_p`:
 // * `rb_absint_size`:
@@ -232,9 +232,9 @@
 // * `rb_arithmetic_sequence_extract`:
 // * `rb_Array`:
 // * `rb_array_len`:
-//! 
+//!
 //! ## `rb_ary`
-//! 
+//!
 // * `rb_ary_aref`:
 // * `rb_ary_assoc`:
 //! * `rb_ary_cat`: [`RArray::cat`].
@@ -277,9 +277,9 @@
 //! * `rb_ary_to_ary`: See [`TryConvert`] and [`Value::try_convert`].
 //! * `rb_ary_to_s`: Not implemented directly, see [`Value::to_r_string`].
 //! * `rb_ary_unshift`: [`RArray::unshift`].
-//! 
+//!
 //! ## `rb_as`-`rb_az`
-//! 
+//!
 //! * `rb_ascii8bit_encindex`: [`encoding::Index::ascii8bit`].
 //! * `rb_ascii8bit_encoding`:
 //!   [`RbEncoding::ascii8bit`](encoding::RbEncoding::ascii8bit).
@@ -290,9 +290,9 @@
 // * `rb_autoload`:
 // * `rb_autoload_load`:
 // * `rb_autoload_p`:
-//! 
+//!
 //! ## `rb_b`
-//! 
+//!
 // * `rb_backref_get`:
 // * `rb_backref_set`:
 // * `rb_backtrace`:
@@ -338,9 +338,9 @@
 //! * `rb_bug`: [`error::bug`].
 // * `rb_bug_errno`:
 // * `RB_BUILTIN_TYPE`:
-//! 
+//!
 //! ## `rb_c`
-//! 
+//!
 //! * `rb_call_super`: [`call_super`].
 // * `rb_call_super_kw`:
 // * `rb_catch`:
@@ -450,9 +450,9 @@
 // * `rb_cvar_set`:
 // * `rb_cv_get`:
 // * `rb_cv_set`:
-//! 
+//!
 //! ## `rb_d`
-//! 
+//!
 //! * `rb_data_object_make`: See [`wrap`] and [`TypedData`].
 //! * `rb_data_object_wrap`: See [`wrap`] and [`TypedData`].
 //! * `rb_data_object_zalloc`: See [`wrap`] and [`TypedData`].
@@ -506,9 +506,9 @@
 // * `rb_disable_super`:
 // * `rb_during_gc`:
 // * `RB_DYNAMIC_SYM_P`:
-//! 
+//!
 //! ## `rb_e`-`rb_enb`
-//! 
+//!
 // * `rb_each`:
 // * `rb_econv_append`:
 // * `rb_econv_asciicompat_encoding`:
@@ -535,9 +535,9 @@
 // * `rb_econv_substr_append`:
 // * `rb_econv_substr_convert`:
 // * `rb_enable_super`:
-//! 
+//!
 //! ## `rb_enc`
-//! 
+//!
 // * `RB_ENCODING_CODERANGE_SET`:
 // * `RB_ENCODING_GET`:
 // * `RB_ENCODING_GET_INLINED`:
@@ -636,9 +636,9 @@
 //! * `rb_enc_uint_chr`: [`RbEncoding::chr`](encoding::RbEncoding::chr).
 // * `rb_enc_unicode_p`:
 // * `rb_enc_vsprintf`:
-//! 
+//!
 //! ## `rb_en`-`rb_ez`
-//! 
+//!
 // * `rb_ensure`:
 //! * `rb_enumeratorize`: See [`Value::enumeratorize`].
 //! * `rb_enumeratorize_with_size`: Simmilar to [`Value::enumeratorize`].
@@ -674,9 +674,9 @@
 // * `rb_extract_keywords`:
 // * `RB_EXT_RACTOR_SAFE`:
 // * `rb_ext_ractor_safe`:
-//! 
+//!
 //! ## `rb_f`
-//! 
+//!
 // * `rb_fatal`:
 // * `rb_fdopen`:
 // * `rb_fd_clr`:
@@ -807,9 +807,9 @@
 // * `rb_f_sprintf`:
 // * `rb_f_trace_var`:
 // * `rb_f_untrace_var`:
-//! 
+//!
 //! ## `rb_g`
-//! 
+//!
 //! * `rb_gc`: [`gc::start`].
 //! * `rb_gc_adjust_memory_usage`: [`gc::adjust_memory_usage`].
 // * `rb_gc_call_finalizer_at_exit`:
@@ -851,9 +851,9 @@
 // * `rb_gvar_val_setter`:
 // * `rb_gv_get`:
 // * `rb_gv_set`:
-//! 
+//!
 //! # `rb_h`
-//! 
+//!
 // * `rb_Hash`:
 // * `rb_hash`:
 //! * `rb_hash_aref`: [`RHash::aref`].
@@ -881,9 +881,9 @@
 // * `rb_hash_uint`:
 // * `rb_hash_uint32`:
 // * `rb_hash_update_by`:
-//! 
+//!
 //! ## `rb_i`-`rb_in`
-//! 
+//!
 //! * `rb_id2name`: [`Id::name`](value::Id::name).
 // * `rb_id2str`:
 // * `RB_ID2SYM`:
@@ -913,9 +913,9 @@
 // * `rb_int_pair_to_real`:
 // * `rb_int_positive_pow`:
 // * `rb_invalid_str`:
-//! 
+//!
 //! ## `rb_io`
-//! 
+//!
 // * `rb_io_addstr`:
 // * `rb_io_ascii8bit_binmode`:
 // * `rb_io_binmode`:
@@ -961,9 +961,9 @@
 // * `rb_io_ungetc`:
 // * `rb_io_wait`:
 // * `rb_io_write`:
-//! 
+//!
 //! ## `rb_is`-`rb_iz`
-//! 
+//!
 // * `rb_isalnum`:
 // * `rb_isalpha`:
 // * `rb_isascii`:
@@ -994,14 +994,14 @@
 //! * `rb_ivar_set`: [`Object::ivar_set`].
 // * `rb_iv_get`:
 // * `rb_iv_set`:
-//! 
+//!
 //! ## `rb_j`-`rb_k`
-//! 
+//!
 //! * `rb_jump_tag`: Return [`Error`].
 // * `rb_keyword_given_p`:
-//! 
+//!
 //! ## `rb_l`
-//! 
+//!
 // * `rb_lastline_get`:
 // * `rb_lastline_set`:
 // * `rb_last_status_get`:
@@ -1026,9 +1026,9 @@
 // * `rb_long2int_inline`:
 // * `RB_LONG2NUM`:
 // * `rb_long2num_inline`:
-//! 
+//!
 //! ## `rb_m`
-//! 
+//!
 // * `rb_make_backtrace`:
 // * `rb_make_exception`:
 // * `rb_mark_hash`:
@@ -1094,9 +1094,9 @@
 // * `rb_mutex_synchronize`:
 // * `rb_mutex_trylock`:
 // * `rb_mutex_unlock`:
-//! 
+//!
 //! ## `rb_n`
-//! 
+//!
 // * `rb_name_error`:
 // * `rb_name_error_str`:
 // * `rb_nativethread_lock_destroy`:
@@ -1157,9 +1157,9 @@
 // * `rb_num_coerce_cmp`:
 // * `rb_num_coerce_relop`:
 // * `rb_num_zerodiv`:
-//! 
+//!
 //! ## `rb_o`
-//! 
+//!
 // * `rb_obj_alloc`:
 //! * `rb_obj_as_string`: [`Value::to_r_string`].
 // * `rb_obj_call_init`:
@@ -1204,9 +1204,9 @@
 // * `RB_OBJ_WRITE`:
 // * `RB_OBJ_WRITTEN`:
 // * `rb_out_of_int`:
-//! 
+//!
 //! ## `rb_p`
-//! 
+//!
 // * `rb_p`:
 // * `rb_path2class`:
 // * `rb_path_check`:
@@ -1240,9 +1240,9 @@
 //!   [`rb_sys::protect`] with `rb-sys-interop` feature for calling raw Ruby api.
 // * `rb_provide`:
 // * `rb_provided`:
-//! 
+//!
 //! ## `rb_r`
-//! 
+//!
 // * `rb_ractor_local_storage_ptr`:
 // * `rb_ractor_local_storage_ptr_newkey`:
 // * `rb_ractor_local_storage_ptr_set`:
@@ -1327,9 +1327,9 @@
 // * `rb_respond_to`:
 // * `rb_ruby_debug_ptr`:
 // * `rb_ruby_verbose_ptr`:
-//! 
+//!
 //! # `rb_s`-`rb_strl`
-//! 
+//!
 //! * `rb_scan_args`: [`scan_args::scan_args`].
 // * `rb_scan_args_bad_format`:
 // * `rb_scan_args_kw`:
@@ -1359,9 +1359,9 @@
 // * `rb_string_value_cstr`:
 // * `rb_string_value_ptr`:
 // * `rb_strlen_lit`:
-//! 
+//!
 //! # `rb_struct`
-//! 
+//!
 // * `rb_struct_alloc`: See [`RClass::new_instance`].
 // * `rb_struct_alloc_noinit`:
 //! * `rb_struct_aref`: [`RStruct::aref`].
@@ -1377,9 +1377,9 @@
 // * `rb_struct_ptr`:
 //! * `rb_struct_size`: [`RStruct::size`].
 // * `rb_struct_s_members`:
-//! 
+//!
 //! ## `rb_str`
-//! 
+//!
 // * `rb_str_append`:
 // * `rb_str_associate`:
 // * `rb_str_associated`:
@@ -1453,9 +1453,9 @@
 // * `rb_str_unlocktmp`:
 // * `rb_str_update`:
 // * `rb_str_vcatf`:
-//! 
+//!
 //! # `rb_st_`
-//! 
+//!
 // * `rb_st_add_direct`:
 // * `rb_st_cleanup_safe`:
 // * `rb_st_clear`:
@@ -1495,9 +1495,9 @@
 // * `rb_st_update`:
 // * `rb_st_values`:
 // * `rb_st_values_check`:
-//! 
+//!
 //! ## `rb_sy`-`rb_sz`
-//! 
+//!
 // * `RB_SYM2ID`:
 //! * `rb_sym2id`: [`std::convert::From`].
 //! * `rb_sym2str`: [`Symbol::name`].
@@ -1513,9 +1513,9 @@
 // * `rb_sys_fail`:
 // * `rb_sys_fail_str`:
 // * `rb_sys_warning`:
-//! 
+//!
 //! ## `rb_t`
-//! 
+//!
 //! * `RB_TEST`: [`Value::to_bool`] / [`TryConvert`] / [`Value::try_convert`].
 // * `rb_thread_add_event_hook`:
 // * `rb_thread_add_event_hook2`:
@@ -1591,9 +1591,9 @@
 // * `rb_typeddata_is_kind_of`:
 // * `RB_TYPE_P`:
 // * `rb_type_p`:
-//! 
+//!
 //! ## `rb_u`
-//! 
+//!
 // * `rb_uint2big`:
 // * `rb_uint2inum`:
 // * `RB_UINT2NUM`:
@@ -1612,7 +1612,7 @@
 // * `RB_UNLIKELY`:
 // * `rb_update_max_fd`:
 //! * `rb_usascii_encindex`: [`encoding::Index::usascii`].
-//! * `rb_usascii_encoding`: 
+//! * `rb_usascii_encoding`:
 //!   [`RbEncoding::usascii`](encoding::RbEncoding::usascii).
 // * `rb_usascii_str_new`:
 // * `rb_usascii_str_new_cstr`:
@@ -1627,9 +1627,9 @@
 //! * `rb_utf8_str_new_literal`: Simmilar to [`r_string!`].
 //! * `rb_utf8_str_new_static`: [`r_string!`].
 // * `rb_uv_to_utf8`:
-//! 
+//!
 //! ## `rb_v`-`rb_z`
-//! 
+//!
 // * `rb_vrescue2`:
 // * `rb_vsprintf`:
 // * `rb_w32_fd_copy`:
@@ -1650,9 +1650,9 @@
 // * `rb_yield_values_kw`:
 // * `RB_ZALLOC`:
 // * `RB_ZALLOC_N`:
-//! 
+//!
 //! ## `rc`-`rt`
-//! 
+//!
 // * `RCLASS`:
 // * `RCLASS_SUPER`:
 // * `RDATA`:
@@ -1692,9 +1692,9 @@
 // * `RTYPEDDATA_DATA`:
 // * `RTYPEDDATA_P`:
 // * `RTYPEDDATA_TYPE`:
-//! 
+//!
 //! ## `ruby_`
-//! 
+//!
 // * `RUBY_ALIGNAS`:
 // * `RUBY_ALIGNOF`:
 // * `RUBY_ASSERT`:
@@ -1783,9 +1783,9 @@
 // * `ruby_xmalloc2`:
 // * `ruby_xrealloc`:
 // * `ruby_xrealloc2`:
-//! 
+//!
 //! ## S-Z
-//! 
+//!
 // * `setproctitle`:
 // * `set_little_endian_p`:
 // * `set_native_size_p`:
