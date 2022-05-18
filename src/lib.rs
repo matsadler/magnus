@@ -1362,7 +1362,7 @@
 //! 
 //! # `rb_struct`
 //! 
-// * `rb_struct_alloc`:
+// * `rb_struct_alloc`: See [`RClass::new_instance`].
 // * `rb_struct_alloc_noinit`:
 //! * `rb_struct_aref`: [`RStruct::aref`].
 //! * `rb_struct_aset`: [`RStruct::aset`].
@@ -1373,7 +1373,7 @@
 //! * `rb_struct_getmember`: [`RStruct::getmember`].
 // * `rb_struct_initialize`:
 //! * `rb_struct_members`: [`RStruct::members`].
-// * `rb_struct_new`:
+//! * `rb_struct_new`: See [`RClass::new_instance`].
 // * `rb_struct_ptr`:
 //! * `rb_struct_size`: [`RStruct::size`].
 // * `rb_struct_s_members`:
