@@ -4,7 +4,7 @@ use std::{any::Any, borrow::Cow, ffi::CString, fmt, mem::transmute, ops::Deref, 
 
 use crate::ruby_sys::{
     rb_bug, rb_ensure, rb_errinfo, rb_exc_raise, rb_iter_break, rb_iter_break_value, rb_jump_tag,
-    rb_protect, rb_raise, rb_set_errinfo, ruby_special_consts, VALUE,
+    rb_protect, rb_raise, rb_set_errinfo, rb_warning, ruby_special_consts, VALUE,
 };
 
 use crate::{
@@ -296,4 +296,12 @@ pub fn bug(s: &str) -> ! {
     let s = CString::new(s).unwrap_or_else(|_| CString::new("panic").unwrap());
     unsafe { rb_bug(s.as_ptr()) };
     unreachable!()
+}
+
+/// Outputs `s` to Ruby's stderr if Ruby is configured to output warnings.
+///
+/// Otherwise does nothing.
+pub fn warning(s: &str) {
+    let s = CString::new(s).unwrap();
+    unsafe { rb_warning(s.as_ptr()) };
 }

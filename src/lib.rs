@@ -1636,7 +1636,7 @@
 // * `rb_w32_fd_dup`:
 // * `rb_waitpid`:
 // * `rb_warn`:
-// * `rb_warning`:
+//! * `rb_warning`: [`error::warning`].
 // * `rb_write_error`:
 // * `rb_write_error2`:
 //! * `rb_yield`: [`block::yield_value`] / return [`block::Yield`].
