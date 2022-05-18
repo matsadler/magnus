@@ -53,6 +53,10 @@
 - `error::protect` removed as it should not be needed when using Magnus. For
   use with rb-sys enable the `rb-sys-interop` feature and use
   `magnus::rb_sys::protect`.
+- `Qfalse::new`, `Qnil::new`, `Qtrue::new`, `Qundef::new` (use
+  QFALSE/QNIL/QTRUE/QUNDEF).
+- Functions for generating an `Error` with a specific Ruby type. E.g.
+  `Error::type_error("...")`, use `Error::new(exception::type_error(), "...")`.
 
 ### Fixed
 - creating a `StaticSymbol` from a `&str` with characters outside the ASCII

@@ -1150,14 +1150,12 @@ where
 pub struct Qfalse(Value);
 
 /// Ruby's `false` value.
-#[allow(deprecated)]
 pub const QFALSE: Qfalse = Qfalse::new();
 
 impl Qfalse {
     /// Create a new `Qfalse`.
-    #[deprecated(since = "0.2.0", note = "please use `QFALSE` instead")]
     #[inline]
-    pub const fn new() -> Self {
+    const fn new() -> Self {
         Qfalse(Value::new(ruby_special_consts::RUBY_Qfalse as VALUE))
     }
 
@@ -1174,7 +1172,6 @@ impl Qfalse {
     /// ```
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
-        #[allow(deprecated)]
         val.is_false().then(Self::new)
     }
 }
@@ -1243,14 +1240,12 @@ impl TryConvertOwned for Qfalse {}
 pub struct Qnil(NonZeroValue);
 
 /// Ruby's `nil` value.
-#[allow(deprecated)]
 pub const QNIL: Qnil = Qnil::new();
 
 impl Qnil {
     /// Create a new `Qnil`.
-    #[deprecated(since = "0.2.0", note = "please use `QNIL` instead")]
     #[inline]
-    pub const fn new() -> Self {
+    const fn new() -> Self {
         unsafe {
             Self(NonZeroValue::new_unchecked(Value::new(
                 ruby_special_consts::RUBY_Qnil as VALUE,
@@ -1271,7 +1266,6 @@ impl Qnil {
     /// ```
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
-        #[allow(deprecated)]
         val.is_nil().then(Self::new)
     }
 }
@@ -1358,14 +1352,12 @@ impl TryConvertOwned for Qnil {}
 pub struct Qtrue(NonZeroValue);
 
 /// Ruby's `true` value.
-#[allow(deprecated)]
 pub const QTRUE: Qtrue = Qtrue::new();
 
 impl Qtrue {
     /// Create a new `Qtrue`.
-    #[deprecated(since = "0.2.0", note = "please use `QTRUE` instead")]
     #[inline]
-    pub const fn new() -> Self {
+    const fn new() -> Self {
         unsafe {
             Self(NonZeroValue::new_unchecked(Value::new(
                 ruby_special_consts::RUBY_Qtrue as VALUE,
@@ -1386,7 +1378,6 @@ impl Qtrue {
     /// ```
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
-        #[allow(deprecated)]
         val.is_true().then(Self::new)
     }
 }
@@ -1464,14 +1455,12 @@ pub struct Qundef(NonZeroValue);
 
 /// A placeholder value that represents an undefined value. Not exposed to
 /// Ruby level code.
-#[allow(deprecated)]
 pub const QUNDEF: Qundef = Qundef::new();
 
 impl Qundef {
     /// Create a new `Qundef`.
-    #[deprecated(since = "0.2.0", note = "please use `QUNDEF` instead")]
     #[inline]
-    pub const fn new() -> Self {
+    const fn new() -> Self {
         unsafe {
             Self(NonZeroValue::new_unchecked(Value::new(
                 ruby_special_consts::RUBY_Qundef as VALUE,
@@ -1492,7 +1481,6 @@ impl Qundef {
     /// ```
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
-        #[allow(deprecated)]
         val.is_undef().then(Self::new)
     }
 
