@@ -507,8 +507,9 @@ mod private {
 /// While it is possible to directly write functions that will automatically
 /// implement this trait it is not recommended, as those functions will not
 /// have the type conversions or error handling usually provided by this
-/// library. See the [`method`] and [`function`] macros for
-/// converting functions to an implementor of this trait.
+/// library. See the [`method`](crate::method!) and
+/// [`function`](crate::function!) macros for converting functions to an
+/// implementor of this trait.
 ///
 /// This trait is implimented for the following function signatures:
 ///
@@ -687,7 +688,7 @@ where
 /// Helper type for wrapping a function as a Ruby method taking self and a Ruby
 /// array of arguments, with type conversions and error handling.
 ///
-/// See the [`method`] macro.
+/// See the [`method`](crate::method!) macro.
 #[doc(hidden)]
 pub struct MethodRbAry<Func, RbSelf, Args, Res> {
     func: Func,
@@ -737,7 +738,7 @@ where
 /// Helper type for wrapping a function as a Ruby method taking self and a
 /// slice of arguments, with type conversions and error handling.
 ///
-/// See the [`method`] macro.
+/// See the [`method`](crate::method!) macro.
 #[doc(hidden)]
 pub struct MethodCAry<Func, RbSelf, Res> {
     func: Func,
@@ -795,7 +796,7 @@ where
 /// Helper type for wrapping a function as a Ruby method taking self and no
 /// arguments, with type conversions and error handling.
 ///
-/// See the [`method`] macro.
+/// See the [`method`](crate::method!) macro.
 #[doc(hidden)]
 pub struct Method0<Func, RbSelf, Res> {
     func: Func,
@@ -842,7 +843,7 @@ where
 /// Helper type for wrapping a function as a Ruby method taking self and 1
 /// argument, with type conversions and error handling.
 ///
-/// See the [`method`] macro.
+/// See the [`method`](crate::method!) macro.
 #[doc(hidden)]
 pub struct Method1<Func, RbSelf, A, Res> {
     func: Func,
@@ -892,7 +893,7 @@ where
 /// Helper type for wrapping a function as a Ruby method taking self and 2
 /// arguments, with type conversions and error handling.
 ///
-/// See the [`method`] macro.
+/// See the [`method`](crate::method!) macro.
 #[doc(hidden)]
 pub struct Method2<Func, RbSelf, A, B, Res> {
     func: Func,
@@ -945,7 +946,7 @@ where
 /// Helper type for wrapping a function as a Ruby method taking self and 3
 /// arguments, with type conversions and error handling.
 ///
-/// See the [`method`] macro.
+/// See the [`method`](crate::method!) macro.
 #[doc(hidden)]
 pub struct Method3<Func, RbSelf, A, B, C, Res> {
     func: Func,
@@ -1013,7 +1014,7 @@ where
 /// Helper type for wrapping a function as a Ruby method taking self and 4
 /// arguments, with type conversions and error handling.
 ///
-/// See the [`method`] macro.
+/// See the [`method`](crate::method!) macro.
 #[doc(hidden)]
 pub struct Method4<Func, RbSelf, A, B, C, D, Res> {
     func: Func,
@@ -1093,7 +1094,7 @@ where
 /// Helper type for wrapping a function as a Ruby method taking self and 5
 /// arguments, with type conversions and error handling.
 ///
-/// See the [`method`] macro.
+/// See the [`method`](crate::method!) macro.
 #[doc(hidden)]
 pub struct Method5<Func, RbSelf, A, B, C, D, E, Res> {
     func: Func,
@@ -1179,7 +1180,7 @@ where
 /// Helper type for wrapping a function as a Ruby method taking self and 6
 /// arguments, with type conversions and error handling.
 ///
-/// See the [`method`] macro.
+/// See the [`method`](crate::method!) macro.
 #[doc(hidden)]
 pub struct Method6<Func, RbSelf, A, B, C, D, E, F, Res> {
     func: Func,
@@ -1271,7 +1272,7 @@ where
 /// Helper type for wrapping a function as a Ruby method taking self and 7
 /// arguments, with type conversions and error handling.
 ///
-/// See the [`method`] macro.
+/// See the [`method`](crate::method!) macro.
 #[doc(hidden)]
 pub struct Method7<Func, RbSelf, A, B, C, D, E, F, G, Res> {
     func: Func,
@@ -1369,7 +1370,7 @@ where
 /// Helper type for wrapping a function as a Ruby method taking self and 8
 /// arguments, with type conversions and error handling.
 ///
-/// See the [`method`] macro.
+/// See the [`method`](crate::method!) macro.
 #[doc(hidden)]
 pub struct Method8<Func, RbSelf, A, B, C, D, E, F, G, H, Res> {
     func: Func,
@@ -1473,7 +1474,7 @@ where
 /// Helper type for wrapping a function as a Ruby method taking self and 9
 /// arguments, with type conversions and error handling.
 ///
-/// See the [`method`] macro.
+/// See the [`method`](crate::method!) macro.
 #[doc(hidden)]
 pub struct Method9<Func, RbSelf, A, B, C, D, E, F, G, H, I, Res> {
     func: Func,
@@ -1584,7 +1585,7 @@ where
 /// Helper type for wrapping a function as a Ruby method taking self and 10
 /// arguments, with type conversions and error handling.
 ///
-/// See the [`method`] macro.
+/// See the [`method`](crate::method!) macro.
 #[doc(hidden)]
 pub struct Method10<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, Res> {
     func: Func,
@@ -1701,7 +1702,7 @@ where
 /// Helper type for wrapping a function as a Ruby method taking self and 11
 /// arguments, with type conversions and error handling.
 ///
-/// See the [`method`] macro.
+/// See the [`method`](crate::method!) macro.
 #[doc(hidden)]
 pub struct Method11<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, Res> {
     func: Func,
@@ -1824,7 +1825,7 @@ where
 /// Helper type for wrapping a function as a Ruby method taking self and 12
 /// arguments, with type conversions and error handling.
 ///
-/// See the [`method`] macro.
+/// See the [`method`](crate::method!) macro.
 #[doc(hidden)]
 pub struct Method12<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, Res> {
     func: Func,
@@ -1953,7 +1954,7 @@ where
 /// Helper type for wrapping a function as a Ruby method taking self and 13
 /// arguments, with type conversions and error handling.
 ///
-/// See the [`method`] macro.
+/// See the [`method`](crate::method!) macro.
 #[doc(hidden)]
 pub struct Method13<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, M, Res> {
     func: Func,
@@ -2088,7 +2089,7 @@ where
 /// Helper type for wrapping a function as a Ruby method taking self and 14
 /// arguments, with type conversions and error handling.
 ///
-/// See the [`method`] macro.
+/// See the [`method`](crate::method!) macro.
 #[doc(hidden)]
 pub struct Method14<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, M, N, Res> {
     func: Func,
@@ -2229,7 +2230,7 @@ where
 /// Helper type for wrapping a function as a Ruby method taking self and 15
 /// arguments, with type conversions and error handling.
 ///
-/// See the [`method`] macro.
+/// See the [`method`](crate::method!) macro.
 #[doc(hidden)]
 pub struct Method15<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, Res> {
     func: Func,
@@ -2376,7 +2377,7 @@ where
 /// Helper type for wrapping a function as a Ruby method taking self and 16
 /// arguments, with type conversions and error handling.
 ///
-/// See the [`method`] macro.
+/// See the [`method`](crate::method!) macro.
 #[doc(hidden)]
 pub struct Method16<Func, RbSelf, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Res> {
     func: Func,
@@ -2561,8 +2562,8 @@ where
 /// return value (i.e. return `()`) for a function that returns `nil` to Ruby.
 /// See [`ReturnValue`] for more details on what can be returned.
 ///
-/// See the [`function`] macro for cases where there is no need to handle the
-/// `self` argument.
+/// See the [`function`](crate::function!) macro for cases where there is no
+/// need to handle the `self` argument.
 ///
 /// # Examples
 ///
@@ -3046,7 +3047,7 @@ macro_rules! method {
 /// Helper type for wrapping a function as a Ruby method ignoring self and
 /// taking a Ruby array of arguments, with type conversions and error handling.
 ///
-/// See the [`function`] macro.
+/// See the [`function`](crate::function!) macro.
 #[doc(hidden)]
 pub struct FunctionRbAry<Func, Args, Res> {
     func: Func,
@@ -3092,7 +3093,7 @@ where
 /// Helper type for wrapping a function as a Ruby method ignoring self and
 /// taking a slice of arguments, with type conversions and error handling.
 ///
-/// See the [`function`] macro.
+/// See the [`function`](crate::function!) macro.
 #[doc(hidden)]
 pub struct FunctionCAry<Func, Res> {
     func: Func,
@@ -3137,7 +3138,7 @@ where
 /// Helper type for wrapping a function as a Ruby method ignoring self and
 /// taking no arguments, with type conversions and error handling.
 ///
-/// See the [`function`] macro.
+/// See the [`function`](crate::function!) macro.
 #[doc(hidden)]
 pub struct Function0<Func, Res> {
     func: Func,
@@ -3180,7 +3181,7 @@ where
 /// Helper type for wrapping a function as a Ruby method ignoring self and
 /// taking 1 argument, with type conversions and error handling.
 ///
-/// See the [`function`] macro.
+/// See the [`function`](crate::function!) macro.
 #[doc(hidden)]
 pub struct Function1<Func, A, Res> {
     func: Func,
@@ -3225,7 +3226,7 @@ where
 /// Helper type for wrapping a function as a Ruby method ignoring self and
 /// taking 2 arguments, with type conversions and error handling.
 ///
-/// See the [`function`] macro.
+/// See the [`function`](crate::function!) macro.
 #[doc(hidden)]
 pub struct Function2<Func, A, B, Res> {
     func: Func,
@@ -3274,7 +3275,7 @@ where
 /// Helper type for wrapping a function as a Ruby method ignoring self and
 /// taking 3 arguments, with type conversions and error handling.
 ///
-/// See the [`function`] macro.
+/// See the [`function`](crate::function!) macro.
 #[doc(hidden)]
 pub struct Function3<Func, A, B, C, Res> {
     func: Func,
@@ -3326,7 +3327,7 @@ where
 /// Helper type for wrapping a function as a Ruby method ignoring self and
 /// taking 4 arguments, with type conversions and error handling.
 ///
-/// See the [`function`] macro.
+/// See the [`function`](crate::function!) macro.
 #[doc(hidden)]
 pub struct Function4<Func, A, B, C, D, Res> {
     func: Func,
@@ -3394,7 +3395,7 @@ where
 /// Helper type for wrapping a function as a Ruby method ignoring self and
 /// taking 5 arguments, with type conversions and error handling.
 ///
-/// See the [`function`] macro.
+/// See the [`function`](crate::function!) macro.
 #[doc(hidden)]
 pub struct Function5<Func, A, B, C, D, E, Res> {
     func: Func,
@@ -3474,7 +3475,7 @@ where
 /// Helper type for wrapping a function as a Ruby method ignoring self and
 /// taking 6 arguments, with type conversions and error handling.
 ///
-/// See the [`function`] macro.
+/// See the [`function`](crate::function!) macro.
 #[doc(hidden)]
 pub struct Function6<Func, A, B, C, D, E, F, Res> {
     func: Func,
@@ -3560,7 +3561,7 @@ where
 /// Helper type for wrapping a function as a Ruby method ignoring self and
 /// taking 7 arguments, with type conversions and error handling.
 ///
-/// See the [`function`] macro.
+/// See the [`function`](crate::function!) macro.
 #[doc(hidden)]
 pub struct Function7<Func, A, B, C, D, E, F, G, Res> {
     func: Func,
@@ -3652,7 +3653,7 @@ where
 /// Helper type for wrapping a function as a Ruby method ignoring self and
 /// taking 8 arguments, with type conversions and error handling.
 ///
-/// See the [`function`] macro.
+/// See the [`function`](crate::function!) macro.
 #[doc(hidden)]
 pub struct Function8<Func, A, B, C, D, E, F, G, H, Res> {
     func: Func,
@@ -3750,7 +3751,7 @@ where
 /// Helper type for wrapping a function as a Ruby method ignoring self and
 /// taking 9 arguments, with type conversions and error handling.
 ///
-/// See the [`function`] macro.
+/// See the [`function`](crate::function!) macro.
 #[doc(hidden)]
 pub struct Function9<Func, A, B, C, D, E, F, G, H, I, Res> {
     func: Func,
@@ -3854,7 +3855,7 @@ where
 /// Helper type for wrapping a function as a Ruby method ignoring self and
 /// taking 10 arguments, with type conversions and error handling.
 ///
-/// See the [`function`] macro.
+/// See the [`function`](crate::function!) macro.
 #[doc(hidden)]
 pub struct Function10<Func, A, B, C, D, E, F, G, H, I, J, Res> {
     func: Func,
@@ -3964,7 +3965,7 @@ where
 /// Helper type for wrapping a function as a Ruby method ignoring self and
 /// taking 11 arguments, with type conversions and error handling.
 ///
-/// See the [`function`] macro.
+/// See the [`function`](crate::function!) macro.
 #[doc(hidden)]
 pub struct Function11<Func, A, B, C, D, E, F, G, H, I, J, K, Res> {
     func: Func,
@@ -4081,7 +4082,7 @@ where
 /// Helper type for wrapping a function as a Ruby method ignoring self and
 /// taking 12 arguments, with type conversions and error handling.
 ///
-/// See the [`function`] macro.
+/// See the [`function`](crate::function!) macro.
 #[doc(hidden)]
 pub struct Function12<Func, A, B, C, D, E, F, G, H, I, J, K, L, Res> {
     func: Func,
@@ -4204,7 +4205,7 @@ where
 /// Helper type for wrapping a function as a Ruby method ignoring self and
 /// taking 13 arguments, with type conversions and error handling.
 ///
-/// See the [`function`] macro.
+/// See the [`function`](crate::function!) macro.
 #[doc(hidden)]
 pub struct Function13<Func, A, B, C, D, E, F, G, H, I, J, K, L, M, Res> {
     func: Func,
@@ -4333,7 +4334,7 @@ where
 /// Helper type for wrapping a function as a Ruby method ignoring self and
 /// taking 14 arguments, with type conversions and error handling.
 ///
-/// See the [`function`] macro.
+/// See the [`function`](crate::function!) macro.
 #[doc(hidden)]
 pub struct Function14<Func, A, B, C, D, E, F, G, H, I, J, K, L, M, N, Res> {
     func: Func,
@@ -4468,7 +4469,7 @@ where
 /// Helper type for wrapping a function as a Ruby method ignoring self and
 /// taking 15 arguments, with type conversions and error handling.
 ///
-/// See the [`function`] macro.
+/// See the [`function`](crate::function!) macro.
 #[doc(hidden)]
 pub struct Function15<Func, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, Res> {
     func: Func,
@@ -4609,7 +4610,7 @@ where
 /// Helper type for wrapping a function as a Ruby method ignoring self and
 /// taking 16 arguments, with type conversions and error handling.
 ///
-/// See the [`function`] macro.
+/// See the [`function`](crate::function!) macro.
 #[doc(hidden)]
 pub struct Function16<Func, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Res> {
     func: Func,
@@ -4788,7 +4789,7 @@ where
 /// return value (i.e. return `()`) for a function that returns `nil` to Ruby.
 /// See [`ReturnValue`] for more details on what can be returned.
 ///
-/// See the [`method`] macro for cases where the `self` argument is required.
+/// See the [`method`](crate::method!) macro for cases where the `self` argument is required.
 ///
 /// # Examples
 ///
