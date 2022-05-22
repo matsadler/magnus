@@ -13,6 +13,11 @@
 
 ### Security
 
+## [0.3.1] - 2022-05-21
+
+### Fixed
+- Integer overflow in Ruby Float to f64 conversion
+
 ## [0.3.0] - 2022-05-18
 ### Added
 - `RString::new_shared` and `RString::new_frozen`.
@@ -139,7 +144,8 @@
 - Pre-built bindings for Ruby 2.6 - 3.1 on common platforms, build-time
   generated bindings otherwise.
 
-[Unreleased]: https://github.com/matsadler/magnus/compare/0.3.0...HEAD
+[Unreleased]: https://github.com/matsadler/magnus/compare/0.3.1...HEAD
+[0.3.1]: https://github.com/matsadler/magnus/compare/0.3.0...0.3.1
 [0.3.0]: https://github.com/matsadler/magnus/compare/0.2.1...0.3.0
 [0.2.1]: https://github.com/matsadler/magnus/compare/0.2.0...0.2.1
 [0.2.0]: https://github.com/matsadler/magnus/compare/0.1.0...0.2.0
