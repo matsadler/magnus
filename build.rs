@@ -118,6 +118,14 @@ impl RbConfig {
             .arg("-e")
             .arg("print RbConfig::CONFIG.map {|kv| kv.join(\"\x1F\")}.join(\"\x1E\")")
             .output()?;
+
+        if !output.status.success() {
+            let code = output.status.code();
+            let out = String::from_utf8(output.stdout)?;
+            let err = String::from_utf8(output.stderr)?;
+            return Err(RbConfigError::BadExit(BadExit { code, out, err }));
+        }
+
         let config = String::from_utf8(output.stdout)?;
 
         let mut res = HashMap::new();
@@ -141,7 +149,29 @@ impl RbConfig {
 }
 
 #[derive(Debug)]
+struct BadExit {
+    code: Option<i32>,
+    out: String,
+    err: String,
+}
+
+impl fmt::Display for BadExit {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let code = self
+            .code
+            .map(|i| i.to_string())
+            .unwrap_or_else(|| String::from("?"));
+        writeln!(f, "Bad exit! code: {code}")?;
+        writeln!(f, "        stdout: {}", self.out)?;
+        writeln!(f, "        stderr: {}", self.err)
+    }
+}
+
+impl Error for BadExit {}
+
+#[derive(Debug)]
 enum RbConfigError {
+    BadExit(BadExit),
     Io(std::io::Error),
     Utf8(std::string::FromUtf8Error),
 }
@@ -149,6 +179,7 @@ enum RbConfigError {
 impl fmt::Display for RbConfigError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            Self::BadExit(e) => e.fmt(f),
             Self::Io(e) => e.fmt(f),
             Self::Utf8(e) => e.fmt(f),
         }
@@ -158,6 +189,7 @@ impl fmt::Display for RbConfigError {
 impl Error for RbConfigError {
     fn source(&self) -> Option<&(dyn Error + 'static)> {
         match self {
+            Self::BadExit(e) => Some(e),
             Self::Io(e) => Some(e),
             Self::Utf8(e) => Some(e),
         }
