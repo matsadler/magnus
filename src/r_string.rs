@@ -5,6 +5,7 @@ use std::{
     fmt, io,
     iter::Iterator,
     mem::transmute,
+    ops::BitAndAssign,
     ops::Deref,
     os::raw::{c_char, c_long},
     path::{Path, PathBuf},
@@ -15,7 +16,7 @@ use std::{
 use crate::ruby_sys::{
     self, rb_enc_str_coderange, rb_enc_str_new, rb_str_buf_append, rb_str_buf_new, rb_str_cat,
     rb_str_conv_enc, rb_str_new, rb_str_new_frozen, rb_str_new_shared, rb_str_strlen,
-    rb_str_to_str, rb_utf8_str_new, rb_utf8_str_new_static, ruby_coderange_type,
+    rb_str_to_str, rb_utf8_str_new, rb_utf8_str_new_static, ruby_coderange_type, ruby_fl_type,
     ruby_rstring_flags, ruby_value_type, VALUE,
 };
 
@@ -101,6 +102,57 @@ impl RString {
         unsafe {
             Self::from_rb_value_unchecked(rb_utf8_str_new(ptr as *const c_char, len as c_long))
         }
+    }
+
+    /// Create a new Ruby string and transfers ownership completely to Ruby
+    ///
+    /// The benefit of using this method is it will avoid any `memcpy` of the string in Ruby, at
+    /// the cost of losing ownership of the Rust string. Use this method when you want to cheaply
+    /// pass a String to Ruby.
+    ///
+    /// The encoding of the Ruby string will be UTF-8.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RString};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let my_string = String::from("Hello, world!");
+    /// let val = RString::new_static(my_string);
+    /// let res: bool = eval!(r#"val == "Hello, world!""#, val).unwrap();
+    /// assert!(res);
+    /// ```
+    pub fn new_static<S: Into<String>>(s: S) -> Self {
+        let s = s.into();
+        let ptr = s.as_ptr();
+        let len = s.len();
+
+        std::mem::forget(s);
+
+        unsafe { Self::new_lit(ptr as _, len as _) }
+    }
+
+    /// Marks the string as freeable by Ruby
+    ///
+    /// This method allows the underlying string to be freeable by Ruby (i.e. for a static Ruby
+    /// string). After calling this function, it is no longer safe to interact with this RString in
+    /// Rust. As such, `mark_freeable` consumes ownership so it can no longer be used.
+    ///
+    /// ```
+    /// use magnus::RString;
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let my_string = String::from("Free me!");
+    /// let s = RString::new_static(my_string);
+    /// s.mark_freeable();
+    ///
+    /// # can no longer access `my_string`
+    /// ```
+    pub fn mark_freeable(self) {
+        let mut flags = unsafe { self.r_basic_unchecked().as_ref().flags };
+        flags.bitand_assign(ruby_fl_type::RUBY_FL_USER18 as u64);
+        std::mem::drop(self);
     }
 
     /// Implementation detail of [`r_string`].
