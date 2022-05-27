@@ -151,7 +151,7 @@ impl RString {
     /// ```
     pub fn mark_freeable(self) {
         let mut flags = unsafe { self.r_basic_unchecked().as_ref().flags };
-        flags.bitand_assign(ruby_fl_type::RUBY_FL_USER18 as u64);
+        flags.bitand_assign(ruby_fl_type::RUBY_FL_USER18 as u64); // STR_NOFREE
         std::mem::drop(self);
     }
 
