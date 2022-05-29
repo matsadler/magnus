@@ -330,7 +330,7 @@
 // * `rb_big_unpack`:
 // * `rb_big_xor`:
 //! * `rb_binding_new`: [`Binding::new`]. Unimplemented >= Ruby 3.2.
-//! * `rb_block_call`: [`Value::block_call`].
+//! * `rb_block_call`: [`Value::block_call_fn`].
 // * `rb_block_call_kw`:
 //! * `rb_block_given_p`: [`block::block_given`].
 // * `rb_block_lambda`:
@@ -1223,7 +1223,7 @@
 // * `rb_proc_call_with_block_kw`:
 // * `rb_proc_exec`:
 //! * `rb_proc_lambda_p`: [`Proc::is_lambda`](block::Proc::is_lambda).
-//! * `rb_proc_new`: [`Proc::new`](block::Proc::new).
+//! * `rb_proc_new`: [`Proc::new`](block::Proc::from_fn).
 // * `rb_proc_times`:
 // * `rb_profile_frames`:
 // * `rb_profile_frame_absolute_path`:

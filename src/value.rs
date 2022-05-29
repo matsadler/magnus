@@ -564,18 +564,22 @@ impl Value {
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let values = eval::<RArray>(r#"["foo", 1, :bar]"#).unwrap();
-    /// let _: Value = values.block_call("map!", (), |args, _block| args.first().unwrap().to_r_string()).unwrap();
+    /// let _: Value = values.block_call_fn("map!", (), |args, _block| args.first().unwrap().to_r_string()).unwrap();
     /// assert_eq!(values.to_vec::<String>().unwrap(), vec!["foo", "1", "bar"]);
     /// ```
-    pub fn block_call<M, A, F, R, T>(self, method: M, args: A, block: F) -> Result<T, Error>
+    pub fn block_call_fn<M, A, R, T>(
+        self,
+        method: M,
+        args: A,
+        block: fn(&[Value], Option<Proc>) -> R,
+    ) -> Result<T, Error>
     where
         M: Into<Id>,
         A: ArgList,
-        F: FnMut(&[Value], Option<Proc>) -> R,
         R: BlockReturn,
         T: TryConvert,
     {
-        unsafe extern "C" fn call<F, R>(
+        unsafe extern "C" fn call<R>(
             _yielded_arg: VALUE,
             callback_arg: VALUE,
             argc: c_int,
@@ -583,11 +587,10 @@ impl Value {
             blockarg: VALUE,
         ) -> VALUE
         where
-            F: FnMut(&[Value], Option<Proc>) -> R,
             R: BlockReturn,
         {
-            let closure = (&mut *(callback_arg as *mut Option<F>)).as_mut().unwrap();
-            Block::new(closure)
+            let func = std::mem::transmute::<VALUE, fn(&[Value], Option<Proc>) -> R>(callback_arg);
+            Block::new(func)
                 .call_handle_error(argc, argv as *const Value, Value::new(blockarg))
                 .as_rb_value()
         }
@@ -595,21 +598,19 @@ impl Value {
         let id = method.into();
         let args = args.into_arg_list();
         let slice = args.as_ref();
-        let mut some_block = Some(block);
-        let closure = &mut some_block as *mut Option<F> as VALUE;
-        let call_func =
-            call::<F, R> as unsafe extern "C" fn(VALUE, VALUE, c_int, *const VALUE, VALUE) -> VALUE;
+        let call_func = call::<R> as unsafe extern "C" fn(VALUE, VALUE, c_int, *const VALUE, VALUE) -> VALUE;
         #[cfg(ruby_lt_2_7)]
         let call_func: unsafe extern "C" fn() -> VALUE = unsafe { std::mem::transmute(call_func) };
 
         protect(|| unsafe {
+            #[allow(clippy::fn_to_numeric_cast)]
             Value::new(rb_block_call(
                 self.as_rb_value(),
                 id.as_rb_id(),
                 slice.len() as c_int,
                 slice.as_ptr() as *const VALUE,
                 Some(call_func),
-                closure,
+                block as VALUE,
             ))
         })
         .and_then(|v| v.try_convert())

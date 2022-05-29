@@ -49,7 +49,7 @@ impl Proc {
     /// use magnus::{block::Proc, eval};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// let proc = Proc::new(|args, _block| {
+    /// let proc = Proc::from_fn(|args, _block| {
     ///     let acc = args.get(0).unwrap().try_convert::<i64>()?;
     ///     let i = args.get(1).unwrap().try_convert::<i64>()?;
     ///     Ok(acc + i)
@@ -61,12 +61,11 @@ impl Proc {
     /// let res: bool = eval!("[1, 2, 3, 4, 5].inject(&proc) == 15", proc).unwrap();
     /// assert!(res);
     /// ```
-    pub fn new<F, R>(mut block: F) -> Self
+    pub fn from_fn<R>(block: fn(&[Value], Option<Proc>) -> R) -> Self
     where
-        F: FnMut(&[Value], Option<Proc>) -> R,
         R: BlockReturn,
     {
-        unsafe extern "C" fn call<F, R>(
+        unsafe extern "C" fn call<R>(
             _yielded_arg: VALUE,
             callback_arg: VALUE,
             argc: c_int,
@@ -74,22 +73,22 @@ impl Proc {
             blockarg: VALUE,
         ) -> VALUE
         where
-            F: FnMut(&[Value], Option<Proc>) -> R,
             R: BlockReturn,
         {
-            let closure = &mut *(callback_arg as *mut F);
-            Block::new(closure)
+            let func = std::mem::transmute::<VALUE, fn(&[Value], Option<Proc>) -> R>(callback_arg);
+            Block::new(func)
                 .call_handle_error(argc, argv as *const Value, Value::new(blockarg))
                 .as_rb_value()
         }
 
-        let closure = &mut block as *mut F as VALUE;
-        let call_func =
-            call::<F, R> as unsafe extern "C" fn(VALUE, VALUE, c_int, *const VALUE, VALUE) -> VALUE;
+        let call_func = call::<R> as unsafe extern "C" fn(VALUE, VALUE, c_int, *const VALUE, VALUE) -> VALUE;
         #[cfg(ruby_lt_2_7)]
         let call_func: unsafe extern "C" fn() -> VALUE = unsafe { std::mem::transmute(call_func) };
 
-        unsafe { Proc::from_rb_value_unchecked(rb_proc_new(Some(call_func), closure)) }
+        unsafe {
+            #[allow(clippy::fn_to_numeric_cast)]
+            Proc::from_rb_value_unchecked(rb_proc_new(Some(call_func), block as VALUE))
+        }
     }
 
     /// Call the proc with `args`.
