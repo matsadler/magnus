@@ -559,7 +559,7 @@ impl Value {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ``` ignore
     /// use magnus::{eval, RArray, Value};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
@@ -567,7 +567,8 @@ impl Value {
     /// let _: Value = values.block_call_fn("map!", (), |args, _block| args.first().unwrap().to_r_string()).unwrap();
     /// assert_eq!(values.to_vec::<String>().unwrap(), vec!["foo", "1", "bar"]);
     /// ```
-    pub fn block_call_fn<M, A, R, T>(
+    #[allow(dead_code)]
+    fn block_call_fn<M, A, R, T>(
         self,
         method: M,
         args: A,

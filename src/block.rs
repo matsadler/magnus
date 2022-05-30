@@ -47,7 +47,7 @@ impl Proc {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ``` ignore
     /// use magnus::{block::Proc, eval};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
@@ -63,7 +63,8 @@ impl Proc {
     /// let res: bool = eval!("[1, 2, 3, 4, 5].inject(&proc) == 15", proc).unwrap();
     /// assert!(res);
     /// ```
-    pub fn from_fn<R>(block: fn(&[Value], Option<Proc>) -> R) -> Self
+    #[allow(dead_code)]
+    fn from_fn<R>(block: fn(&[Value], Option<Proc>) -> R) -> Self
     where
         R: BlockReturn,
     {
