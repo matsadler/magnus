@@ -161,7 +161,7 @@ impl fmt::Display for BadExit {
             .code
             .map(|i| i.to_string())
             .unwrap_or_else(|| String::from("?"));
-        writeln!(f, "Bad exit! code: {code}")?;
+        writeln!(f, "Bad exit! code: {}", code)?;
         writeln!(f, "        stdout: {}", self.out)?;
         writeln!(f, "        stderr: {}", self.err)
     }
