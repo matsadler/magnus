@@ -3,16 +3,18 @@
 use std::{fmt, mem::forget, ops::Deref, os::raw::c_int};
 
 use crate::ruby_sys::{
-    rb_block_given_p, rb_block_proc, rb_obj_is_proc, rb_proc_arity, rb_proc_call, rb_proc_lambda_p,
-    rb_proc_new, rb_yield, rb_yield_splat, rb_yield_values2, VALUE,
+    rb_block_given_p, rb_block_proc, rb_data_typed_object_wrap, rb_obj_is_proc, rb_proc_arity,
+    rb_proc_call, rb_proc_lambda_p, rb_proc_new, rb_yield, rb_yield_splat, rb_yield_values2, VALUE,
 };
 
 use crate::{
     enumerator::Enumerator,
     error::{ensure, protect, Error},
-    exception,
+    exception, memoize,
     method::{Block, BlockReturn},
+    object::Object,
     r_array::RArray,
+    r_typed_data::{DataType, DataTypeFunctions},
     try_convert::{ArgList, RArrayArgList, TryConvert},
     value::{private, NonZeroValue, ReprValue, Value},
 };
@@ -81,7 +83,8 @@ impl Proc {
                 .as_rb_value()
         }
 
-        let call_func = call::<R> as unsafe extern "C" fn(VALUE, VALUE, c_int, *const VALUE, VALUE) -> VALUE;
+        let call_func =
+            call::<R> as unsafe extern "C" fn(VALUE, VALUE, c_int, *const VALUE, VALUE) -> VALUE;
         #[cfg(ruby_lt_2_7)]
         let call_func: unsafe extern "C" fn() -> VALUE = unsafe { std::mem::transmute(call_func) };
 
@@ -89,6 +92,62 @@ impl Proc {
             #[allow(clippy::fn_to_numeric_cast)]
             Proc::from_rb_value_unchecked(rb_proc_new(Some(call_func), block as VALUE))
         }
+    }
+
+    /// Create a new `Proc`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{block::Proc, eval};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let proc = Proc::new(|args, _block| {
+    ///     let acc = args.get(0).unwrap().try_convert::<i64>()?;
+    ///     let i = args.get(1).unwrap().try_convert::<i64>()?;
+    ///     Ok(acc + i)
+    /// });
+    ///
+    /// let res: bool = eval!("proc.call(1, 2) == 3", proc).unwrap();
+    /// assert!(res);
+    ///
+    /// let res: bool = eval!("[1, 2, 3, 4, 5].inject(&proc) == 15", proc).unwrap();
+    /// assert!(res);
+    /// ```
+    pub fn new<F, R>(block: F) -> Self
+    where
+        F: FnMut(&[Value], Option<Proc>) -> R,
+        R: BlockReturn,
+    {
+        unsafe extern "C" fn call<F, R>(
+            _yielded_arg: VALUE,
+            callback_arg: VALUE,
+            argc: c_int,
+            argv: *const VALUE,
+            blockarg: VALUE,
+        ) -> VALUE
+        where
+            F: FnMut(&[Value], Option<Proc>) -> R,
+            R: BlockReturn,
+        {
+            let closure = &mut *(callback_arg as *mut F);
+            Block::new(closure)
+                .call_handle_error(argc, argv as *const Value, Value::new(blockarg))
+                .as_rb_value()
+        }
+
+        let (closure, keepalive) = wrap_closure(block);
+        let call_func =
+            call::<F, R> as unsafe extern "C" fn(VALUE, VALUE, c_int, *const VALUE, VALUE) -> VALUE;
+        #[cfg(ruby_lt_2_7)]
+        let call_func: unsafe extern "C" fn() -> VALUE = unsafe { std::mem::transmute(call_func) };
+
+        let proc = unsafe {
+            Proc::from_rb_value_unchecked(rb_proc_new(Some(call_func), closure as VALUE))
+        };
+        // ivar without @ prefix is invisible from Ruby
+        proc.ivar_set("__rust_closure", keepalive).unwrap();
+        proc
     }
 
     /// Call the proc with `args`.
@@ -188,6 +247,8 @@ impl From<Proc> for Value {
     }
 }
 
+impl Object for Proc {}
+
 unsafe impl private::ReprValue for Proc {
     fn to_value(self) -> Value {
         *self
@@ -228,6 +289,34 @@ impl TryConvert for Proc {
             )
         })
     }
+}
+
+/// Wrap a closure in a Ruby object with no class.
+///
+/// This effectivly makes the closure's lifetime managed by Ruby. It will be
+/// dropped when the returned `Value` is garbage collected.
+fn wrap_closure<F, R>(func: F) -> (*mut F, Value)
+where
+    F: FnMut(&[Value], Option<Proc>) -> R,
+    R: BlockReturn,
+{
+    struct Closure();
+    impl DataTypeFunctions for Closure {}
+    let data_type = memoize!(DataType: {
+        let mut builder = DataType::builder::<Closure>("rust closure");
+        builder.free_immediatly();
+        builder.build()
+    });
+    let boxed = Box::new(func);
+    let ptr = Box::into_raw(boxed);
+    let value = unsafe {
+        Value::new(rb_data_typed_object_wrap(
+            0, // using 0 for the class will hide the object from ObjectSpace
+            ptr as *mut _,
+            data_type.as_rb_data_type() as *const _,
+        ))
+    };
+    (ptr, value)
 }
 
 /// Returns whether a Ruby block has been supplied to the current method.

@@ -15,10 +15,10 @@ use std::{
 use crate::ruby_sys::{
     rb_any_to_s, rb_block_call, rb_check_funcall, rb_check_id, rb_check_id_cstr,
     rb_check_symbol_cstr, rb_enumeratorize_with_size, rb_eql, rb_equal, rb_float_new_in_heap,
-    rb_funcallv, rb_gc_register_address, rb_gc_register_mark_object, rb_gc_unregister_address,
-    rb_id2name, rb_id2sym, rb_inspect, rb_intern3, rb_ll2inum, rb_obj_as_string, rb_obj_classname,
-    rb_obj_freeze, rb_obj_is_kind_of, rb_obj_respond_to, rb_sym2id, rb_ull2inum, ruby_fl_type,
-    ruby_special_consts, ruby_value_type, RBasic, ID, VALUE,
+    rb_funcall_with_block, rb_funcallv, rb_gc_register_address, rb_gc_register_mark_object,
+    rb_gc_unregister_address, rb_id2name, rb_id2sym, rb_inspect, rb_intern3, rb_ll2inum,
+    rb_obj_as_string, rb_obj_classname, rb_obj_freeze, rb_obj_is_kind_of, rb_obj_respond_to,
+    rb_sym2id, rb_ull2inum, ruby_fl_type, ruby_special_consts, ruby_value_type, RBasic, ID, VALUE,
 };
 
 // These don't seem to appear consistently in bindgen output, not sure if they
@@ -598,7 +598,8 @@ impl Value {
         let id = method.into();
         let args = args.into_arg_list();
         let slice = args.as_ref();
-        let call_func = call::<R> as unsafe extern "C" fn(VALUE, VALUE, c_int, *const VALUE, VALUE) -> VALUE;
+        let call_func =
+            call::<R> as unsafe extern "C" fn(VALUE, VALUE, c_int, *const VALUE, VALUE) -> VALUE;
         #[cfg(ruby_lt_2_7)]
         let call_func: unsafe extern "C" fn() -> VALUE = unsafe { std::mem::transmute(call_func) };
 
@@ -614,6 +615,55 @@ impl Value {
             ))
         })
         .and_then(|v| v.try_convert())
+    }
+
+    /// Call the method named `method` on `self` with `args` and `block`.
+    ///
+    /// Simmilar to [`funcall`][Value::funcall], but passes `block` as a Ruby
+    /// block to the method.
+    ///
+    /// The function passed as `block` will receive values yielded to the block
+    /// as a slice of [`Value`]s, plus `Some(Proc)` if the block itself was
+    /// called with a block, or `None` otherwise.
+    ///
+    /// The `block` function may return any `R` or `Result<R, Error>` where `R`
+    /// implements `Into<Value>`. Returning `Err(Error)` will raise the error
+    /// as a Ruby exception.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RArray, Value};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let values = eval::<RArray>(r#"["foo", 1, :bar]"#).unwrap();
+    /// let _: Value = values.block_call("map!", (), |args, _block| args.first().unwrap().to_r_string()).unwrap();
+    /// assert_eq!(values.to_vec::<String>().unwrap(), vec!["foo", "1", "bar"]);
+    /// ```
+    pub fn block_call<M, A, F, R, T>(self, method: M, args: A, block: F) -> Result<T, Error>
+    where
+        M: Into<Id>,
+        A: ArgList,
+        F: FnMut(&[Value], Option<Proc>) -> R,
+        R: BlockReturn,
+        T: TryConvert,
+    {
+        let proc = Proc::new(block);
+        unsafe {
+            let id = method.into();
+            let args = args.into_arg_list();
+            let slice = args.as_ref();
+            protect(|| {
+                Value::new(rb_funcall_with_block(
+                    self.as_rb_value(),
+                    id.as_rb_id(),
+                    slice.len() as c_int,
+                    slice.as_ptr() as *const VALUE,
+                    proc.as_rb_value(),
+                ))
+            })
+            .and_then(|v| v.try_convert())
+        }
     }
 
     /// Check if `self` responds to the given Ruby method.

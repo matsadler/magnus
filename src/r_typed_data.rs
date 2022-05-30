@@ -120,7 +120,7 @@ impl DataType {
         DataTypeBuilder::new(name)
     }
 
-    fn as_rb_data_type(&self) -> &rb_data_type_t {
+    pub(crate) fn as_rb_data_type(&self) -> &rb_data_type_t {
         &self.0
     }
 }
