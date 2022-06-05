@@ -15,7 +15,7 @@ exclude = [".github", ".gitignore", "build-sys/"]
 
 [workspace]
 members = ["magnus-macros"]
-exclude = ["examples/rust_blank/ext/rust_blank"]
+exclude = ["examples/rust_blank/ext/rust_blank", "examples/custom_exception_ruby/ext/ahriman", "examples/custom_exception_rust/ext/ahriman"]
 
 [features]
 embed = []

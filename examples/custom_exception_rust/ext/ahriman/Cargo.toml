@@ -1,0 +1,11 @@
+[package]
+name = "ahriman"
+version = "0.1.0"
+authors = ["Mat Sadler <mat@sourcetagsandcodes.com>"]
+edition = "2018"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+magnus = { path = "../../../.." }
