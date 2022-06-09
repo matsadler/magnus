@@ -2,8 +2,14 @@
 
 ## [Unreleased]
 ### Added
+- `Value::funcall_with_block`
 
 ### Changed
+- Only function pointers (fn or non-capturing closure) are accepted as argument
+  for `Value::block_call`. Use `Proc::from_fn` + `Value::funcall_with_block`
+  for closures that capture variables.
+- `Proc::new` only accepts a function pointer, use `Proc::from_fn` for closures
+  that capture variables.
 
 ### Deprecated
 

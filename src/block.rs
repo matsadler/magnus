@@ -45,13 +45,17 @@ impl Proc {
 
     /// Create a new `Proc`.
     ///
+    /// As `block` is a function pointer, only functions and closures that do
+    /// not capture any variables are permitted. For more flexibility (at the
+    /// cost of allocating) see [`from_fn`](Proc::from_fn).
+    ///
     /// # Examples
     ///
-    /// ``` ignore
+    /// ```
     /// use magnus::{block::Proc, eval};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// let proc = Proc::from_fn(|args, _block| {
+    /// let proc = Proc::new(|args, _block| {
     ///     let acc = args.get(0).unwrap().try_convert::<i64>()?;
     ///     let i = args.get(1).unwrap().try_convert::<i64>()?;
     ///     Ok(acc + i)
@@ -63,8 +67,7 @@ impl Proc {
     /// let res: bool = eval!("[1, 2, 3, 4, 5].inject(&proc) == 15", proc).unwrap();
     /// assert!(res);
     /// ```
-    #[allow(dead_code)]
-    fn from_fn<R>(block: fn(&[Value], Option<Proc>) -> R) -> Self
+    pub fn new<R>(block: fn(&[Value], Option<Proc>) -> R) -> Self
     where
         R: BlockReturn,
     {
@@ -97,13 +100,16 @@ impl Proc {
 
     /// Create a new `Proc`.
     ///
+    /// See also [`Proc::new`], which is more efficient when `block` is a
+    /// function or closure that does not capture any variables.
+    ///
     /// # Examples
     ///
     /// ```
     /// use magnus::{block::Proc, eval};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// let proc = Proc::new(|args, _block| {
+    /// let proc = Proc::from_fn(|args, _block| {
     ///     let acc = args.get(0).unwrap().try_convert::<i64>()?;
     ///     let i = args.get(1).unwrap().try_convert::<i64>()?;
     ///     Ok(acc + i)
@@ -115,9 +121,9 @@ impl Proc {
     /// let res: bool = eval!("[1, 2, 3, 4, 5].inject(&proc) == 15", proc).unwrap();
     /// assert!(res);
     /// ```
-    pub fn new<F, R>(block: F) -> Self
+    pub fn from_fn<F, R>(block: F) -> Self
     where
-        F: FnMut(&[Value], Option<Proc>) -> R,
+        F: 'static + FnMut(&[Value], Option<Proc>) -> R,
         R: BlockReturn,
     {
         unsafe extern "C" fn call<F, R>(

@@ -795,7 +795,7 @@
 // * `rb_funcallv_public_kw`:
 // * `rb_funcall_passing_block`:
 // * `rb_funcall_passing_block_kw`:
-// * `rb_funcall_with_block`:
+//! * `rb_funcall_with_block`: [`Value::funcall_with_block`].
 // * `rb_funcall_with_block_kw`:
 // * `rb_f_abort`:
 // * `rb_f_exec`:
@@ -1223,7 +1223,7 @@
 // * `rb_proc_call_with_block_kw`:
 // * `rb_proc_exec`:
 //! * `rb_proc_lambda_p`: [`Proc::is_lambda`](block::Proc::is_lambda).
-//! * `rb_proc_new`: [`Proc::new`](block::Proc::new).
+//! * `rb_proc_new`: [`Proc::new`](block::Proc::new) & [`Proc::from_fn`](block::Proc::from_fn).
 // * `rb_proc_times`:
 // * `rb_profile_frames`:
 // * `rb_profile_frame_absolute_path`:

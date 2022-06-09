@@ -546,8 +546,54 @@ impl Value {
 
     /// Call the method named `method` on `self` with `args` and `block`.
     ///
-    /// Simmilar to [`funcall`][Value::funcall], but passes `block` as a Ruby
+    /// Similar to [`funcall`](Value::funcall), but passes `block` as a Ruby
     /// block to the method.
+    ///
+    /// See also [`block_call`](Value::block_call).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, block::Proc, RArray, Value};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let values = eval::<RArray>(r#"["foo", 1, :bar]"#).unwrap();
+    /// let block = Proc::new(|args, _block| args.first().unwrap().to_r_string());
+    /// let _: Value = values.funcall_with_block("map!", (), block).unwrap();
+    /// assert_eq!(values.to_vec::<String>().unwrap(), vec!["foo", "1", "bar"]);
+    /// ```
+    pub fn funcall_with_block<M, A, T>(self, method: M, args: A, block: Proc) -> Result<T, Error>
+    where
+        M: Into<Id>,
+        A: ArgList,
+        T: TryConvert,
+    {
+        unsafe {
+            let id = method.into();
+            let args = args.into_arg_list();
+            let slice = args.as_ref();
+            protect(|| {
+                Value::new(rb_funcall_with_block(
+                    self.as_rb_value(),
+                    id.as_rb_id(),
+                    slice.len() as c_int,
+                    slice.as_ptr() as *const VALUE,
+                    block.as_rb_value(),
+                ))
+            })
+            .and_then(|v| v.try_convert())
+        }
+    }
+
+    /// Call the method named `method` on `self` with `args` and `block`.
+    ///
+    /// Similar to [`funcall`](Value::funcall), but passes `block` as a Ruby
+    /// block to the method.
+    ///
+    /// As `block` is a function pointer, only functions and closures that do
+    /// not capture any variables are permitted. For more flexibility (at the
+    /// cost of allocating) see [`Proc::from_fn`] and
+    /// [`funcall_with_block`](Value::funcall_with_block).
     ///
     /// The function passed as `block` will receive values yielded to the block
     /// as a slice of [`Value`]s, plus `Some(Proc)` if the block itself was
@@ -559,16 +605,15 @@ impl Value {
     ///
     /// # Examples
     ///
-    /// ``` ignore
+    /// ```
     /// use magnus::{eval, RArray, Value};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let values = eval::<RArray>(r#"["foo", 1, :bar]"#).unwrap();
-    /// let _: Value = values.block_call_fn("map!", (), |args, _block| args.first().unwrap().to_r_string()).unwrap();
+    /// let _: Value = values.block_call("map!", (), |args, _block| args.first().unwrap().to_r_string()).unwrap();
     /// assert_eq!(values.to_vec::<String>().unwrap(), vec!["foo", "1", "bar"]);
     /// ```
-    #[allow(dead_code)]
-    fn block_call_fn<M, A, R, T>(
+    pub fn block_call<M, A, R, T>(
         self,
         method: M,
         args: A,
@@ -616,55 +661,6 @@ impl Value {
             ))
         })
         .and_then(|v| v.try_convert())
-    }
-
-    /// Call the method named `method` on `self` with `args` and `block`.
-    ///
-    /// Simmilar to [`funcall`][Value::funcall], but passes `block` as a Ruby
-    /// block to the method.
-    ///
-    /// The function passed as `block` will receive values yielded to the block
-    /// as a slice of [`Value`]s, plus `Some(Proc)` if the block itself was
-    /// called with a block, or `None` otherwise.
-    ///
-    /// The `block` function may return any `R` or `Result<R, Error>` where `R`
-    /// implements `Into<Value>`. Returning `Err(Error)` will raise the error
-    /// as a Ruby exception.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use magnus::{eval, RArray, Value};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
-    ///
-    /// let values = eval::<RArray>(r#"["foo", 1, :bar]"#).unwrap();
-    /// let _: Value = values.block_call("map!", (), |args, _block| args.first().unwrap().to_r_string()).unwrap();
-    /// assert_eq!(values.to_vec::<String>().unwrap(), vec!["foo", "1", "bar"]);
-    /// ```
-    pub fn block_call<M, A, F, R, T>(self, method: M, args: A, block: F) -> Result<T, Error>
-    where
-        M: Into<Id>,
-        A: ArgList,
-        F: FnMut(&[Value], Option<Proc>) -> R,
-        R: BlockReturn,
-        T: TryConvert,
-    {
-        let proc = Proc::new(block);
-        unsafe {
-            let id = method.into();
-            let args = args.into_arg_list();
-            let slice = args.as_ref();
-            protect(|| {
-                Value::new(rb_funcall_with_block(
-                    self.as_rb_value(),
-                    id.as_rb_id(),
-                    slice.len() as c_int,
-                    slice.as_ptr() as *const VALUE,
-                    proc.as_rb_value(),
-                ))
-            })
-            .and_then(|v| v.try_convert())
-        }
     }
 
     /// Check if `self` responds to the given Ruby method.

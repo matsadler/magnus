@@ -2,7 +2,7 @@ use magnus::{block::Proc, eval};
 
 fn make_proc() -> Proc {
     let x = String::from("foo");
-    Proc::new(move |_args, _block| Ok(x.clone()))
+    Proc::from_fn(move |_args, _block| Ok(x.clone()))
 }
 
 #[test]
