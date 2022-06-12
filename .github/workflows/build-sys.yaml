@@ -34,7 +34,7 @@ jobs:
         pacman --sync --noconfirm --needed $ENV:MINGW_PACKAGE_PREFIX-clang
     - name: Build
       shell: bash
-      run: build-sys/ruby-${{ matrix.ruby-version }}
+      run: ./build-sys.sh
     - name: Upload
       uses: actions/upload-artifact@v2
       with:
