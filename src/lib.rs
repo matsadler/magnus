@@ -1859,11 +1859,12 @@ pub use magnus_macros::{init, wrap, DataTypeFunctions, TypedData};
 
 use error::protect;
 use method::Method;
+use value::private::ReprValue as _;
 
 pub use value::{Fixnum, Flonum, StaticSymbol, Value, QFALSE, QNIL, QTRUE};
 pub use {
     binding::Binding,
-    class::RClass,
+    class::{Class, RClass},
     enumerator::Enumerator,
     error::Error,
     exception::{Exception, ExceptionClass},
@@ -1891,7 +1892,7 @@ pub use {
 
 /// Traits that commonly should be in scope.
 pub mod prelude {
-    pub use crate::{module::Module, object::Object};
+    pub use crate::{class::Class, module::Module, object::Object};
 }
 
 /// Utility to simplify initialising a static with [`std::sync::Once`].
@@ -1937,6 +1938,12 @@ pub fn define_class(name: &str, superclass: RClass) -> Result<RClass, Error> {
 pub fn define_module(name: &str) -> Result<RModule, Error> {
     let name = CString::new(name).unwrap();
     protect(|| unsafe { RModule::from_rb_value_unchecked(rb_define_module(name.as_ptr())) })
+}
+
+/// Define an exception class in the root scope.
+pub fn define_error(name: &str, superclass: ExceptionClass) -> Result<ExceptionClass, Error> {
+    define_class(name, superclass.as_r_class())
+        .map(|c| unsafe { ExceptionClass::from_value_unchecked(*c) })
 }
 
 /// Define a global variable.

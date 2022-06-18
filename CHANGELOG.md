@@ -2,7 +2,11 @@
 
 ## [Unreleased]
 ### Added
-- `Value::funcall_with_block`
+- `Value::funcall_with_block`.
+- impl `TryConvert` for `Exception` and `ExceptionClass`.
+- `Class` trait (implemented for `RClass` and `ExceptionClass`).
+- `define_error` and `Module::define_error` helpers for defining an Exception
+  Class.
 
 ### Changed
 - Only function pointers (fn or non-capturing closure) are accepted as argument
@@ -10,6 +14,8 @@
   for closures that capture variables.
 - `Proc::new` only accepts a function pointer, use `Proc::from_fn` for closures
   that capture variables.
+- `ExceptionClass::default()` now returns `StandardError` rather than
+  `RuntimeError`.
 
 ### Deprecated
 

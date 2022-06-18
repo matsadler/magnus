@@ -3,7 +3,7 @@ use magnus::{
     exception::{self, ExceptionClass},
     function, memoize,
     prelude::*,
-    Error, RClass, RModule,
+    Error, RModule,
 };
 
 fn ahriman() -> RModule {
@@ -11,17 +11,11 @@ fn ahriman() -> RModule {
 }
 
 fn error() -> ExceptionClass {
-    *memoize!(ExceptionClass: {
-        let class = ahriman().define_class("Error", RClass::from_value(*exception::standard_error()).unwrap()).unwrap();
-        ExceptionClass::from_value(*class).unwrap()
-    })
+    *memoize!(ExceptionClass: ahriman().define_error("Error", exception::standard_error()).unwrap())
 }
 
 fn rubric_error() -> ExceptionClass {
-    *memoize!(ExceptionClass: {
-        let class = ahriman().define_class("RubricError", RClass::from_value(*error()).unwrap()).unwrap();
-        ExceptionClass::from_value(*class).unwrap()
-    })
+    *memoize!(ExceptionClass: ahriman().define_error("RubricError", error()).unwrap())
 }
 
 fn cast_rubric() -> Result<(), Error> {

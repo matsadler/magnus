@@ -40,7 +40,7 @@ impl Error {
     where
         T: Into<Cow<'static, str>>,
     {
-        Self::Error(Default::default(), msg.into())
+        Self::Error(exception::runtime_error(), msg.into())
     }
 
     /// Create a new error that will break from a loop when returned to Ruby.

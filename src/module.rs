@@ -12,15 +12,18 @@ use crate::ruby_sys::{
 };
 
 use crate::{
-    class::RClass,
+    class::{Class, RClass},
     debug_assert_value,
     error::{protect, Error},
-    exception,
+    exception::{self, ExceptionClass},
     method::Method,
     object::Object,
     r_array::RArray,
     try_convert::TryConvert,
-    value::{private, Id, NonZeroValue, ReprValue, Value, QNIL},
+    value::{
+        private::{self, ReprValue as _},
+        Id, NonZeroValue, ReprValue, Value, QNIL,
+    },
 };
 
 /// A Value pointer to a RModule struct, Ruby's internal representation of
@@ -227,6 +230,27 @@ pub trait Module: Object + Deref<Target = Value> + Copy {
                 id.as_rb_id(),
             ))
         })
+    }
+
+    /// Define an exception class in `self`'s scope.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{exception, define_module, Module};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let outer = define_module("Outer").unwrap();
+    /// let inner = outer.define_error("InnerError", Default::default()).unwrap();
+    /// assert!(inner.is_inherited(exception::standard_error()));
+    /// ```
+    fn define_error<T: Into<Id>>(
+        self,
+        name: T,
+        superclass: ExceptionClass,
+    ) -> Result<ExceptionClass, Error> {
+        self.define_class(name, superclass.as_r_class())
+            .map(|c| unsafe { ExceptionClass::from_value_unchecked(*c) })
     }
 
     /// Include `module` into `self`.

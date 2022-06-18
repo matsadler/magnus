@@ -75,9 +75,7 @@ impl RClass {
     /// assert!(class.is_kind_of(class::class()));
     /// ```
     pub fn new(superclass: RClass) -> Result<RClass, Error> {
-        debug_assert_value!(superclass);
-        let superclass = superclass.as_rb_value();
-        protect(|| unsafe { Self::from_rb_value_unchecked(rb_class_new(superclass)) })
+        Class::new(superclass)
     }
 
     /// Create a new object, an instance of `self`, passing the arguments
@@ -97,17 +95,7 @@ impl RClass {
     where
         T: ArgList,
     {
-        let args = args.into_arg_list();
-        let slice = args.as_ref();
-        unsafe {
-            protect(|| {
-                Value::new(rb_class_new_instance(
-                    slice.len() as c_int,
-                    slice.as_ptr() as *const VALUE,
-                    self.as_rb_value(),
-                ))
-            })
-        }
+        Class::new_instance(self, args)
     }
 
     /// Returns the parent class of `self`.
@@ -124,9 +112,7 @@ impl RClass {
     /// assert!(klass.equal(class::object()).unwrap());
     /// ```
     pub fn superclass(self) -> Result<Self, Error> {
-        protect(|| unsafe {
-            RClass::from_rb_value_unchecked(rb_class_superclass(self.as_rb_value()))
-        })
+        Class::superclass(self)
     }
 
     /// Return the name of `self`.
@@ -151,9 +137,7 @@ impl RClass {
     /// assert_eq!(s, "Hash");
     /// ```
     pub unsafe fn name(&self) -> Cow<str> {
-        let ptr = rb_class2name(self.as_rb_value());
-        let cstr = CStr::from_ptr(ptr);
-        cstr.to_string_lossy()
+        Class::name(self)
     }
 }
 
@@ -216,6 +200,134 @@ impl TryConvert for RClass {
                 },),
             )),
         }
+    }
+}
+
+/// Functions available on all types representing a Ruby class.
+pub trait Class: Module {
+    /// The type representing an instance of the class `Self`.
+    type Instance;
+
+    /// Create a new anonymous class.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{exception, prelude::*, ExceptionClass};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// assert!(ExceptionClass::new(exception::standard_error()).is_ok());
+    /// ```
+    fn new(superclass: Self) -> Result<Self, Error>;
+
+    /// Create a new object, an instance of `self`, passing the arguments
+    /// `args` to the initialiser.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{exception, prelude::*};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let s = exception::standard_error().new_instance(("bang!",)).unwrap();
+    /// assert!(s.is_kind_of(exception::standard_error()));
+    /// ```
+    fn new_instance<T>(self, args: T) -> Result<Self::Instance, Error>
+    where
+        T: ArgList;
+
+    /// Returns the parent class of `self`.
+    ///
+    /// Returns `Err` if `self` can not have a parent class.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{class, exception, prelude::*};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let klass = exception::exception().superclass().unwrap();
+    /// assert!(klass.equal(class::object()).unwrap());
+    /// ```
+    fn superclass(self) -> Result<RClass, Error> {
+        protect(|| unsafe {
+            RClass::from_rb_value_unchecked(rb_class_superclass(self.as_rb_value()))
+        })
+    }
+
+    /// Return the name of `self`.
+    ///
+    /// # Safety
+    ///
+    /// Ruby may modify or free the memory backing the returned str, the caller
+    /// must ensure this does not happen.
+    ///
+    /// This can be used safely by immediately calling
+    /// [`into_owned`](Cow::into_owned) on the return value.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{exception, prelude::*};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let value = exception::standard_error();
+    /// // safe as we neve give Ruby a chance to free the string.
+    /// let s = unsafe { value.name() }.into_owned();
+    /// assert_eq!(s, "StandardError");
+    /// ```
+    unsafe fn name(&self) -> Cow<str> {
+        let ptr = rb_class2name(self.as_rb_value());
+        let cstr = CStr::from_ptr(ptr);
+        cstr.to_string_lossy()
+    }
+
+    /// Return `self` as an [`RClass`].
+    fn as_r_class(self) -> RClass {
+        RClass::from_value(*self).unwrap()
+    }
+}
+
+impl Class for RClass {
+    type Instance = Value;
+
+    fn new(superclass: Self) -> Result<Self, Error> {
+        debug_assert_value!(superclass);
+        let superclass = superclass.as_rb_value();
+        protect(|| unsafe { Self::from_rb_value_unchecked(rb_class_new(superclass)) })
+    }
+
+    fn new_instance<T>(self, args: T) -> Result<Self::Instance, Error>
+    where
+        T: ArgList,
+    {
+        let args = args.into_arg_list();
+        let slice = args.as_ref();
+        unsafe {
+            protect(|| {
+                Value::new(rb_class_new_instance(
+                    slice.len() as c_int,
+                    slice.as_ptr() as *const VALUE,
+                    self.as_rb_value(),
+                ))
+            })
+        }
+    }
+
+    fn superclass(self) -> Result<RClass, Error> {
+        protect(|| unsafe {
+            RClass::from_rb_value_unchecked(rb_class_superclass(self.as_rb_value()))
+        })
+    }
+
+    unsafe fn name(&self) -> Cow<str> {
+        let ptr = rb_class2name(self.as_rb_value());
+        let cstr = CStr::from_ptr(ptr);
+        cstr.to_string_lossy()
+    }
+
+    fn as_r_class(self) -> RClass {
+        self
     }
 }
 
