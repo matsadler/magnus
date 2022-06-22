@@ -53,6 +53,8 @@ jobs:
         key: ${{ runner.os }}-ruby-${{ matrix.ruby-version }}-build-${{ hashFiles('**/Cargo.lock') }}
     - name: Run tests
       run: cargo test
+    - name: Run tests (rb-sys-interop)
+      run: cargo test --features rb-sys-interop
     - name: Example gem tests (blank?)
       working-directory: examples/rust_blank
       run: rake test
