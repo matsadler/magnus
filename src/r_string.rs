@@ -8,22 +8,30 @@ use std::{
     ops::Deref,
     os::raw::{c_char, c_long},
     path::{Path, PathBuf},
-    ptr::{self, NonNull},
-    slice, str,
+    ptr, slice, str,
 };
 
 use crate::ruby_sys::{
-    self, rb_enc_str_coderange, rb_enc_str_new, rb_str_buf_append, rb_str_buf_new, rb_str_cat,
+    rb_enc_str_coderange, rb_enc_str_new, rb_str_buf_append, rb_str_buf_new, rb_str_cat,
     rb_str_conv_enc, rb_str_new, rb_str_new_frozen, rb_str_new_shared, rb_str_strlen,
     rb_str_to_str, rb_utf8_str_new, rb_utf8_str_new_static, ruby_coderange_type,
     ruby_rstring_flags, ruby_value_type, VALUE,
 };
 
-#[cfg(ruby_gte_3_0)]
-use crate::ruby_sys::{rb_str_to_interned_str, ruby_rstring_consts::RSTRING_EMBED_LEN_SHIFT};
+#[cfg(all(ruby_lt_3_0, not(feature = "rb-sys-interop")))]
+use crate::ruby_sys::ruby_rstring_consts::RSTRING_EMBED_LEN_SHIFT;
 
-#[cfg(ruby_lt_3_0)]
-use crate::ruby_sys::ruby_rstring_flags::RSTRING_EMBED_LEN_SHIFT;
+#[cfg(all(ruby_gte_3_0, not(feature = "rb-sys-interop")))]
+use crate::ruby_sys::ruby_rstring_consts::RSTRING_EMBED_LEN_SHIFT;
+
+#[cfg(all(ruby_lt_3_0, not(feature = "rb-sys-interop")))]
+use crate::ruby_sys::ruby_rstring_flags::RSTRING_EMBED_LEN_MASK;
+
+#[cfg(all(ruby_gte_3_0, not(feature = "rb-sys-interop")))]
+use crate::ruby_sys::ruby_rstring_flags::RSTRING_EMBED_LEN_MASK;
+
+#[cfg(ruby_gte_3_0)]
+use crate::ruby_sys::rb_str_to_interned_str;
 
 use crate::{
     debug_assert_value,
@@ -76,9 +84,10 @@ impl RString {
         Self(NonZeroValue::new_unchecked(Value::new(val)))
     }
 
-    fn as_internal(self) -> NonNull<ruby_sys::RString> {
+    #[cfg(not(feature = "rb-sys-interop"))]
+    fn as_internal(self) -> ptr::NonNull<crate::ruby_sys::RString> {
         // safe as inner value is NonZero
-        unsafe { NonNull::new_unchecked(self.0.get().as_rb_value() as *mut _) }
+        unsafe { ptr::NonNull::new_unchecked(self.0.get().as_rb_value() as *mut _) }
     }
 
     /// Create a new Ruby string from the Rust string `s`.
@@ -347,6 +356,7 @@ impl RString {
         self.as_slice_unconstrained()
     }
 
+    #[cfg(not(feature = "rb-sys-interop"))]
     unsafe fn as_slice_unconstrained<'a>(self) -> &'a [u8] {
         #[cfg(ruby_gte_3_1)]
         unsafe fn embedded_ary_ptr(rstring: RString) -> *const u8 {
@@ -365,10 +375,19 @@ impl RString {
             let h = self.as_internal().as_ref().as_.heap;
             slice::from_raw_parts(h.ptr as *const u8, h.len as usize)
         } else {
-            f &= ruby_rstring_flags::RSTRING_EMBED_LEN_MASK as VALUE;
+            f &= RSTRING_EMBED_LEN_MASK as VALUE;
             f >>= RSTRING_EMBED_LEN_SHIFT as VALUE;
             slice::from_raw_parts(embedded_ary_ptr(self), f as usize)
         }
+    }
+
+    #[cfg(feature = "rb-sys-interop")]
+    unsafe fn as_slice_unconstrained<'a>(self) -> &'a [u8] {
+        debug_assert_value!(self);
+        slice::from_raw_parts(
+            rb_sys::macros::RSTRING_PTR(self.as_rb_value()) as _,
+            rb_sys::macros::RSTRING_LEN(self.as_rb_value()) as usize,
+        )
     }
 
     /// Return an iterator over `self`'s codepoints.
@@ -956,6 +975,7 @@ impl RString {
     /// let s = RString::new("🦀 Hello, Ferris");
     /// assert_eq!(s.len(), 18);
     /// ```
+    #[cfg(not(feature = "rb-sys-interop"))]
     pub fn len(self) -> usize {
         debug_assert_value!(self);
         unsafe {
@@ -965,11 +985,30 @@ impl RString {
                 let h = self.as_internal().as_ref().as_.heap;
                 h.len as usize
             } else {
-                f &= ruby_rstring_flags::RSTRING_EMBED_LEN_MASK as VALUE;
+                f &= RSTRING_EMBED_LEN_MASK as VALUE;
                 f >>= RSTRING_EMBED_LEN_SHIFT as VALUE;
                 f as usize
             }
         }
+    }
+
+    /// Returns the number of bytes in `self`.
+    ///
+    /// See also [`length`](RString::length).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RString};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let s = RString::new("🦀 Hello, Ferris");
+    /// assert_eq!(s.len(), 18);
+    /// ```
+    #[cfg(feature = "rb-sys-interop")]
+    pub fn len(self) -> usize {
+        debug_assert_value!(self);
+        unsafe { rb_sys::macros::RSTRING_LEN(self.as_rb_value()) as usize }
     }
 
     /// Returns the number of characters in `self`.
