@@ -43,7 +43,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("cargo:rustc-link-search={}", rbconfig.get("libdir")?);
     }
 
-    if std::env::var_os("CARGO_FEATURE_RBSYS").is_none() {
+    if std::env::var_os("CARGO_FEATURE_RB_SYS_INTEROP").is_none() {
         let out_path = PathBuf::from(env::var("OUT_DIR")?).join("ruby_sys.rs");
 
         // see if a pre-build ruby_sys exists
