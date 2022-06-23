@@ -2,7 +2,7 @@ use std::{
     collections::HashMap, env, error::Error, ffi::OsStr, fmt, path::PathBuf, process::Command,
 };
 
-const RUBY_VERSIONS: [(u8, u8); 3] = [(2, 7), (3, 0), (3, 1)];
+const RUBY_VERSIONS: [(u8, u8); 4] = [(2, 7), (3, 0), (3, 1), (3, 2)];
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("cargo:rerun-if-env-changed=RUBY");

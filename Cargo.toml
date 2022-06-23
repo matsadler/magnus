@@ -25,7 +25,7 @@ rb-sys-interop = ["rb-sys"]
 magnus-macros = { version = "0.1.0", path = "magnus-macros" }
 
 [target.'cfg(unix)'.dependencies]
-rb-sys = { version = "0.8.1", optional = true }
+rb-sys = { version = "0.9.7", features = ["bindgen-rbimpls", "bindgen-deprecated-types"], optional = true }
 
 [target.'cfg(windows)'.dependencies]
 rb-sys = { version = "0.8.1", features = ["link-ruby"], optional = true }
