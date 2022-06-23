@@ -2,7 +2,7 @@ use std::{
     collections::HashMap, env, error::Error, ffi::OsStr, fmt, path::PathBuf, process::Command,
 };
 
-const RUBY_VERSIONS: [(u8, u8); 3] = [(2, 7), (3, 0), (3, 1)];
+const RUBY_VERSIONS: [(u8, u8); 4] = [(2, 7), (3, 0), (3, 1), (3, 2)];
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("cargo:rerun-if-env-changed=RUBY");
@@ -33,17 +33,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
-    if std::env::var_os("CARGO_FEATURE_EMBED").is_some() || cfg!(windows) {
-        match (rbconfig.get("RUBY_SO_NAME"), rbconfig.get("LIBRUBY_A")) {
-            (Ok(_), Ok(_)) if env::var_os("RUBY_STATIC").is_some() => use_static(&rbconfig)?,
-            (Ok(libruby_so), _) => println!("cargo:rustc-link-lib=dylib={}", libruby_so),
-            (Err(_), Ok(_)) => use_static(&rbconfig)?,
-            (Err(e), _) => return Err(e.into()),
-        }
-        println!("cargo:rustc-link-search={}", rbconfig.get("libdir")?);
-    }
-
     if std::env::var_os("CARGO_FEATURE_RB_SYS_INTEROP").is_none() {
+        if std::env::var_os("CARGO_FEATURE_EMBED").is_some() || cfg!(windows) {
+            match (rbconfig.get("RUBY_SO_NAME"), rbconfig.get("LIBRUBY_A")) {
+                (Ok(_), Ok(_)) if env::var_os("RUBY_STATIC").is_some() => use_static(&rbconfig)?,
+                (Ok(libruby_so), _) => println!("cargo:rustc-link-lib=dylib={}", libruby_so),
+                (Err(_), Ok(_)) => use_static(&rbconfig)?,
+                (Err(e), _) => return Err(e.into()),
+            }
+            println!("cargo:rustc-link-search={}", rbconfig.get("libdir")?);
+        }
+
         let out_path = PathBuf::from(env::var("OUT_DIR")?).join("ruby_sys.rs");
 
         // see if a pre-build ruby_sys exists
