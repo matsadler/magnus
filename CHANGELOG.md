@@ -7,6 +7,8 @@
 - `Class` trait (implemented for `RClass` and `ExceptionClass`).
 - `define_error` and `Module::define_error` helpers for defining an Exception
   Class.
+- `RTypedData::wrap` and `RTypedData::get` inherent methods for wrapping Rust
+  types in Ruby objects.
 
 ### Changed
 - Only function pointers (fn or non-capturing closure) are accepted as argument
