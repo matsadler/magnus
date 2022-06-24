@@ -33,7 +33,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
-    if std::env::var_os("CARGO_FEATURE_EMBED").is_some() || cfg!(windows) {
+    if std::env::var_os("CARGO_FEATURE_EMBED").is_some()
+        || cfg!(windows) && std::env::var_os("CARGO_FEATURE_RB_SYS_INTEROP").is_none()
+    {
         match (rbconfig.get("RUBY_SO_NAME"), rbconfig.get("LIBRUBY_A")) {
             (Ok(_), Ok(_)) if env::var_os("RUBY_STATIC").is_some() => use_static(&rbconfig)?,
             (Ok(libruby_so), _) => println!("cargo:rustc-link-lib=dylib={}", libruby_so),
