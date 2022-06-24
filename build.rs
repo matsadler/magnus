@@ -40,7 +40,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             (Err(_), Ok(_)) => use_static(&rbconfig)?,
             (Err(e), _) => return Err(e.into()),
         }
-        println!("cargo:rustc-link-search={}", rbconfig.get("libdir")?);
     }
 
     if !using_rb_sys() {
