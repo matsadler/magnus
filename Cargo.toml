@@ -37,7 +37,7 @@ rb-sys = { version = "0.9.9", default-features = false, features = ["link-ruby",
 bindgen = "0.59"
 
 [dev-dependencies]
-magnus = { path = ".", features = ["embed", "rb-sys-interop"] }
+magnus = { path = ".", features = ["embed"] }
 
 [package.metadata.docs.rs]
 all-features = true
