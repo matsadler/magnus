@@ -1803,7 +1803,7 @@
 #![warn(missing_docs)]
 
 // Needed for linking
-#[cfg(feature = "rb-sys-interop")]
+#[cfg(all(feature = "rb-sys-interop", feature = "embed"))]
 extern crate rb_sys as __rb_sys_interop;
 
 mod binding;
