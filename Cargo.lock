@@ -316,8 +316,7 @@ dependencies = [
  "bindgen 0.59.2",
  "magnus",
  "magnus-macros",
- "rb-sys 0.8.1",
- "rb-sys 0.9.7",
+ "rb-sys",
 ]
 
 [[package]]
@@ -366,12 +365,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "19b17cddbe7ec3f8bc800887bab5e717348c95ea2ca0b1bf0837fb964dc67099"
 
 [[package]]
-name = "pkg-config"
-version = "0.3.25"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1df8c4ec4b0627e53bdf214615ad287367e482558cf84b109250b37464dc03ae"
-
-[[package]]
 name = "proc-macro2"
 version = "1.0.37"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -391,20 +384,9 @@ dependencies = [
 
 [[package]]
 name = "rb-sys"
-version = "0.8.1"
+version = "0.9.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4db52af35291b64ce86f23f755b4576c20e3063b517269252b2f8cc883ca00e6"
-dependencies = [
- "bindgen 0.59.2",
- "libc",
- "pkg-config",
-]
-
-[[package]]
-name = "rb-sys"
-version = "0.9.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0799609267fee962588f93cfb7782e4039d49aada8a0a815b26ede224dc3e6c3"
+checksum = "c69a8b211d8009579980104b8728c932771986caf6f7ca779c9184be4a20e21a"
 dependencies = [
  "bindgen 0.60.1",
  "libc",
@@ -415,9 +397,9 @@ dependencies = [
 
 [[package]]
 name = "rb-sys-build"
-version = "0.9.7"
+version = "0.9.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bbc886a7d5c800bb6e1920ddb381fb6423389c1fdb5327761ce42cf6a3fdd821"
+checksum = "6fb0aba2346c91f6f898187c9d74d5f4ff307d5f7ee8bf6e90fdfa6e46e88dbd"
 dependencies = [
  "regex",
  "serde_json",

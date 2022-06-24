@@ -1802,6 +1802,10 @@
 #![cfg_attr(docsrs, feature(doc_cfg))]
 #![warn(missing_docs)]
 
+// Needed for linking
+#[cfg(feature = "rb-sys-interop")]
+extern crate rb_sys as __rb_sys_interop;
+
 mod binding;
 pub mod block;
 pub mod class;

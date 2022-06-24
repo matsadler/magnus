@@ -1,0 +1,5 @@
+[build]
+# Without this flag, when linking static libruby, the linker removes symbols
+# (such as `_rb_ext_ractor_safe`) which it thinks are dead code... but they are
+# not, and they need to be included for the `embed` feature to work.
+rustflags = ["-C", "link-dead-code=on"]

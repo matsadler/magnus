@@ -33,7 +33,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
-    if std::env::var_os("CARGO_FEATURE_EMBED").is_some() || cfg!(windows) {
+    if !using_rb_sys() && std::env::var_os("CARGO_FEATURE_EMBED").is_some() || cfg!(windows) {
         match (rbconfig.get("RUBY_SO_NAME"), rbconfig.get("LIBRUBY_A")) {
             (Ok(_), Ok(_)) if env::var_os("RUBY_STATIC").is_some() => use_static(&rbconfig)?,
             (Ok(libruby_so), _) => println!("cargo:rustc-link-lib=dylib={}", libruby_so),
@@ -43,7 +43,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("cargo:rustc-link-search={}", rbconfig.get("libdir")?);
     }
 
-    if std::env::var_os("CARGO_FEATURE_RBSYS").is_none() {
+    if !using_rb_sys() {
         let out_path = PathBuf::from(env::var("OUT_DIR")?).join("ruby_sys.rs");
 
         // see if a pre-build ruby_sys exists
@@ -146,6 +146,10 @@ impl RbConfig {
             .map(|v| v.as_str())
             .ok_or_else(|| RbConfigMissing(key.to_owned()))
     }
+}
+
+fn using_rb_sys() -> bool {
+    std::env::var_os("CARGO_FEATURE_RB_SYS").is_some()
 }
 
 #[derive(Debug)]
