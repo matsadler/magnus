@@ -384,9 +384,9 @@ dependencies = [
 
 [[package]]
 name = "rb-sys"
-version = "0.9.9"
+version = "0.9.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c69a8b211d8009579980104b8728c932771986caf6f7ca779c9184be4a20e21a"
+checksum = "918c1640dd6bf1ae8dd3e183a38bf07123b74d615d23c063d4a5dd69cdc1ad8a"
 dependencies = [
  "bindgen 0.60.1",
  "libc",
@@ -397,9 +397,9 @@ dependencies = [
 
 [[package]]
 name = "rb-sys-build"
-version = "0.9.9"
+version = "0.9.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6fb0aba2346c91f6f898187c9d74d5f4ff307d5f7ee8bf6e90fdfa6e46e88dbd"
+checksum = "93b582badce5b17cb4dd916d848270af188a7a164035451a8f9a7738dc2ee318"
 dependencies = [
  "regex",
  "serde_json",
