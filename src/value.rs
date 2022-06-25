@@ -5,6 +5,7 @@ use std::{
     convert::TryFrom,
     ffi::CStr,
     fmt,
+    marker::PhantomData,
     mem::transmute,
     num::NonZeroUsize,
     ops::{Deref, DerefMut},
@@ -78,12 +79,12 @@ macro_rules! debug_assert_value {
 /// Ruby's `VALUE` type, which can represent any Ruby object.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
-pub struct Value(VALUE);
+pub struct Value(VALUE, PhantomData<*mut RBasic>);
 
 impl Value {
     #[inline]
     pub(crate) const fn new(val: VALUE) -> Self {
-        Self(val)
+        Self(val, PhantomData)
     }
 
     #[inline]
@@ -1056,12 +1057,15 @@ impl ReprValue for Value {}
 
 #[derive(Clone, Copy)]
 #[repr(transparent)]
-pub(crate) struct NonZeroValue(NonZeroUsize);
+pub(crate) struct NonZeroValue(NonZeroUsize, PhantomData<ptr::NonNull<RBasic>>);
 
 impl NonZeroValue {
     #[inline]
     pub(crate) const unsafe fn new_unchecked(val: Value) -> Self {
-        Self(NonZeroUsize::new_unchecked(val.as_rb_value() as usize))
+        Self(
+            NonZeroUsize::new_unchecked(val.as_rb_value() as usize),
+            PhantomData,
+        )
     }
 
     pub(crate) const fn get(self) -> Value {
@@ -2136,11 +2140,11 @@ impl TryConvertOwned for StaticSymbol {}
 /// The internal value of a Ruby symbol.
 #[derive(Clone, Copy, Debug)]
 #[repr(transparent)]
-pub struct Id(ID);
+pub struct Id(ID, PhantomData<*mut u8>);
 
 impl Id {
     pub(crate) fn new(id: ID) -> Self {
-        Self(id)
+        Self(id, PhantomData)
     }
 
     pub(crate) fn as_rb_id(self) -> ID {
@@ -2196,7 +2200,7 @@ impl Id {
 
 impl From<&str> for Id {
     fn from(s: &str) -> Self {
-        Self(unsafe {
+        Self::new(unsafe {
             rb_intern3(
                 s.as_ptr() as *const c_char,
                 s.len() as c_long,
@@ -2214,13 +2218,13 @@ impl From<String> for Id {
 
 impl From<StaticSymbol> for Id {
     fn from(sym: StaticSymbol) -> Self {
-        Self(unsafe { rb_sym2id(sym.as_rb_value()) })
+        Self::new(unsafe { rb_sym2id(sym.as_rb_value()) })
     }
 }
 
 impl From<Symbol> for Id {
     fn from(sym: Symbol) -> Self {
-        Self(unsafe { rb_sym2id(sym.as_rb_value()) })
+        Self::new(unsafe { rb_sym2id(sym.as_rb_value()) })
     }
 }
 

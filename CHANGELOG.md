@@ -11,6 +11,7 @@
   types in Ruby objects.
 
 ### Changed
+- Ruby types are no longer `Send` or `Sync`.
 - Only function pointers (fn or non-capturing closure) are accepted as argument
   for `Value::block_call`. Use `Proc::from_fn` + `Value::funcall_with_block`
   for closures that capture variables.
