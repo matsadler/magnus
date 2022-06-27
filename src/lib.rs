@@ -1803,7 +1803,7 @@
 #![warn(missing_docs)]
 
 // Needed for linking
-#[cfg(all(feature = "embed"))]
+#[cfg(all(feature = "embed", feature = "ruby-static"))]
 extern crate rb_sys as __rb_sys_interop;
 
 mod binding;
