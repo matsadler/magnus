@@ -341,6 +341,24 @@ fn main() {
 }
 ```
 
+### Issues with static linking
+
+If you encounter an error such as `symbol not found in flat namespace
+'_rb_ext_ractor_safe'` when embedding static Ruby, you will need to instruct
+Cargo not to strip code that it thinks is dead.
+
+In you the same directory as your `Cargo.toml` file, create a
+`.cargo/config.toml` file with the following contents:
+
+```toml
+[build]
+# Without this flag, when linking static libruby, the linker removes symbols
+# (such as `_rb_ext_ractor_safe`) which it thinks are dead code... but they are
+# not, and they need to be included for the `embed` feature to work with static
+# Ruby.
+rustflags = ["-C", "link-dead-code=on"]
+```
+
 ## Compatibility
 
 Magnus contains pre-built bindings for Ruby 2.6 through 3.1 on Linux x86_64,
