@@ -38,7 +38,8 @@ impl Binding {
     #[deprecated(since = "0.2.0", note = "this will no longer function as of Ruby 3.2")]
     #[allow(clippy::new_without_default)]
     pub fn new() -> Self {
-        crate::error::protect(|| unsafe { Self::from_rb_value_unchecked(rb_binding_new()) }).unwrap()
+        crate::error::protect(|| unsafe { Self::from_rb_value_unchecked(rb_binding_new()) })
+            .unwrap()
     }
 
     #[cfg(any(ruby_lte_3_1, docsrs))]
