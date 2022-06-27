@@ -9,6 +9,18 @@ from a Rust binary.
 [GitHub]: https://github.com/matsadler/magnus
 [crates.io]: https://crates.io/crates/magnus
 
+## Writing Ruby Gem in Rust
+
+If you writing a gem in Rust, enable to `gem` feature.
+
+```toml
+
+**`Cargo.toml`**
+```toml
+[dependencies]
+magnus = { version = "0.3", features = ["gem"] }
+```
+
 ## Defining Methods
 
 Using Magnus, regular Rust functions can be bound to Ruby as methods with

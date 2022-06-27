@@ -26,7 +26,7 @@ global-allocator = ["rb-sys/global-allocator"]
 
 [dependencies]
 magnus-macros = { version = "0.1.0", path = "magnus-macros" }
-rb-sys = { version = "0.9.10", default-features = false, features = ["bindgen-rbimpls", "bindgen-deprecated-types"] }
+rb-sys = { version = "0.9.13", default-features = false, features = ["bindgen-rbimpls", "bindgen-deprecated-types"] }
 
 [build-dependencies]
 bindgen = "0.59"
