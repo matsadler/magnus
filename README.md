@@ -372,26 +372,6 @@ Support for statically linking Ruby is provided, but not tested.
 
 Support for 32 bit systems is almost certainly broken, patches are welcome.
 
-### rb-sys
-
-Magnus can use [rb-sys] to provide the low-level bindings to Ruby through the
-`rb-sys-interop` feature. This also enables the
-[`rb_sys`](https://docs.rs/magnus/latest/magnus/rb_sys/index.html) module for
-interoperability with rb-sys.
-
-[rb-sys]: https://github.com/oxidize-rb/rb-sys
-
-This can be enabled with:
-
-**`Cargo.toml`**
-```toml
-[dependencies]
-magnus = { version = "0.3", features = ["rb-sys-interop"] }
-```
-
-This feature should be considered a preview and will be reworked/expanded in
-future versions.
-
 ## Alternatives
 
 * [rutie](https://github.com/danielpclark/rutie)

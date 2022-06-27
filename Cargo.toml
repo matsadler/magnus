@@ -18,16 +18,15 @@ members = ["magnus-macros"]
 exclude = ["examples/rust_blank/ext/rust_blank", "examples/custom_exception_ruby/ext/ahriman", "examples/custom_exception_rust/ext/ahriman"]
 
 [features]
-embed = ["rb-sys?/link-ruby"]
-gem = ["rb-sys?/no-link-ruby", "rb-sys?/ruby-abi-version"]
-rb-sys-interop = ["rb-sys"]
-ruby-static = ["rb-sys-interop", "rb-sys?/ruby-static"]
-ruby-abi-version = ["rb-sys-interop", "rb-sys?/ruby-abi-version"]
-global-allocator = ["rb-sys-interop", "rb-sys/global-allocator"]
+embed = ["rb-sys/link-ruby"]
+gem = ["rb-sys/no-link-ruby", "rb-sys/ruby-abi-version"]
+ruby-static = ["rb-sys/ruby-static"]
+ruby-abi-version = ["rb-sys/ruby-abi-version"]
+global-allocator = ["rb-sys/global-allocator"]
 
 [dependencies]
 magnus-macros = { version = "0.1.0", path = "magnus-macros" }
-rb-sys = { version = "0.9.10", default-features = false, features = ["bindgen-rbimpls", "bindgen-deprecated-types"], optional = true }
+rb-sys = { version = "0.9.10", default-features = false, features = ["bindgen-rbimpls", "bindgen-deprecated-types"] }
 
 [build-dependencies]
 bindgen = "0.59"
