@@ -1,5 +1,5 @@
-/target
 tmp/
 *.bundle
 *.so
 Gemfile.lock
+target/

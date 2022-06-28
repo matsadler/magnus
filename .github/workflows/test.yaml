@@ -50,7 +50,10 @@ jobs:
           ~/.cargo/registry/cache/
           ~/.cargo/git/db/
           target/
-        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          examples/rust_blank/tmp/
+          examples/custom_exception_ruby/tmp/
+          examples/custom_exception_rust/tmp/
+        key: ${{ runner.os }}-${{ matrix.ruby_version }}-${{ hashFiles('Gemfile') }}-cargo-${{ hashFiles('**/Cargo.lock') }}
     - name: Set up build cache
       uses: actions/cache@v3
       with:
