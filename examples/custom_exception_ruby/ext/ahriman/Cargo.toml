@@ -8,4 +8,4 @@ edition = "2018"
 crate-type = ["cdylib"]
 
 [dependencies]
-magnus = { path = "../../../.." }
+magnus = { path = "../../../..", features = ["gem"] }
