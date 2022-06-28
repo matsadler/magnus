@@ -19,7 +19,7 @@ exclude = ["examples/rust_blank/ext/rust_blank", "examples/custom_exception_ruby
 
 [features]
 embed = ["rb-sys/link-ruby"]
-gem = ["rb-sys/no-link-ruby", "rb-sys/ruby-abi-version"]
+gem = ["rb-sys/ruby-abi-version"]
 ruby-static = ["rb-sys/ruby-static"]
 ruby-abi-version = ["rb-sys/ruby-abi-version"]
 global-allocator = ["rb-sys/global-allocator"]
