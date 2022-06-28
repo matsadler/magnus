@@ -11,7 +11,7 @@ repository = "https://github.com/matsadler/magnus"
 homepage = "https://github.com/matsadler/magnus"
 documentation = "https://docs.rs/magnus/"
 license = "MIT"
-exclude = [".github", ".gitignore", "build-sys/"]
+exclude = [".github", ".gitignore"]
 
 [workspace]
 members = ["magnus-macros"]
@@ -27,9 +27,6 @@ global-allocator = ["rb-sys/global-allocator"]
 [dependencies]
 magnus-macros = { version = "0.1.0", path = "magnus-macros" }
 rb-sys = { version = "0.9.13", default-features = false, features = ["bindgen-rbimpls", "bindgen-deprecated-types"] }
-
-[build-dependencies]
-bindgen = "0.59"
 
 [dev-dependencies]
 magnus = { path = ".", features = ["embed"] }
