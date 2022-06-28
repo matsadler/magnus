@@ -5,7 +5,9 @@ require "rake/extensiontask"
 
 task default: :test
 
-Rake::ExtensionTask.new("rust_blank")
+Rake::ExtensionTask.new("rust_blank") do |c|
+  c.lib_dir = "lib/rust_blank"
+end
 
 task :dev do
   ENV['RB_SYS_CARGO_PROFILE'] = 'dev'
