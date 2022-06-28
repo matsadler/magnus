@@ -62,12 +62,12 @@ jobs:
       run: cargo test
     - name: Example gem tests (blank?)
       working-directory: examples/rust_blank
-      run: rake test
+      run: bundle exec rake test
     - name: Example gem tests (custom exception defined in Ruby)
       if: matrix.ruby-version != 'head'
       working-directory: examples/custom_exception_ruby
-      run: rake test
+      run: bundle exec rake test
     - name: Example gem tests (custom exception defined in Rust)
       if: matrix.ruby-version != 'head'
       working-directory: examples/custom_exception_rust
-      run: rake test
+      run: bundle exec rake test
