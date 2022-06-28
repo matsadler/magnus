@@ -26,6 +26,7 @@ jobs:
       uses: ruby/setup-ruby@v1
       with:
         ruby-version: ${{ matrix.ruby-version }}
+        bundler-cache: true
     - name: Set up Rust
       if: contains(matrix.os, 'windows')
       uses: actions-rs/toolchain@v1
