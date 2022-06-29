@@ -373,21 +373,21 @@ rustflags = ["-C", "link-dead-code=on"]
 
 ## Compatibility
 
-Magnus contains pre-built bindings for Ruby 2.6 through 3.1 on Linux x86_64,
-macOS x86_64, macOS aarch64, and Windows x86_64.
-For other Ruby version/platform combinations bindings will be generated at
-compile time, this may require libclang to be installed.
+Ruby bindings will be generated at compile time, this may require libclang to be installed.
 
 The Minimum supported Rust version is currently Rust 1.51.
 
-Support for statically linking Ruby is provided, but not tested.
+Support for statically linking Ruby is provided.
+
+Cross-compilation is supported by rb-sys [for the platforms listed here].
 
 Support for 32 bit systems is almost certainly broken, patches are welcome.
+
+[for the platforms listed here]: https://github.com/oxidize-rb/rb-sys#supported-platforms
 
 ## Alternatives
 
 * [rutie](https://github.com/danielpclark/rutie)
-* [rb-sys]
 * [rosy](https://github.com/nvzqz/rosy)
 * [ruby-sys](https://github.com/steveklabnik/ruby-sys)
 * [ruru](https://github.com/d-unseductable/ruru)
