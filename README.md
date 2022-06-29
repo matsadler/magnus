@@ -353,6 +353,10 @@ fn main() {
 }
 ```
 
+### rb-sys
+
+Magnus uses [rb-sys](https://github.com/oxidize-rb/rb-sys/tree/main/crates/rb-sys) to provide the low-level bindings to Ruby. The `rb-sys-interop` feature enables the [`rb_sys`](https://docs.rs/magnus/latest/magnus/rb_sys/index.html) module for advanced interoperability with rb-sys,  allows you to access low-level Ruby APIs which Magnus does not expose.
+
 ### Issues with static linking
 
 If you encounter an error such as `symbol not found in flat namespace

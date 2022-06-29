@@ -23,6 +23,7 @@ gem = ["rb-sys/gem"]
 ruby-static = ["rb-sys/ruby-static"]
 ruby-abi-version = ["rb-sys/ruby-abi-version"]
 global-allocator = ["rb-sys/global-allocator"]
+rb-sys-interop = []
 
 [dependencies]
 magnus-macros = { version = "0.1.0", path = "magnus-macros" }
