@@ -9,18 +9,6 @@ from a Rust binary.
 [GitHub]: https://github.com/matsadler/magnus
 [crates.io]: https://crates.io/crates/magnus
 
-## Writing Ruby Gem in Rust
-
-If you writing a gem in Rust, enable to `gem` feature.
-
-```toml
-
-**`Cargo.toml`**
-```toml
-[dependencies]
-magnus = { version = "0.3", features = ["gem"] }
-```
-
 ## Defining Methods
 
 Using Magnus, regular Rust functions can be bound to Ruby as methods with
@@ -283,47 +271,55 @@ fn init() {
 }
 ```
 
-If you wish to package your extension as a Gem, Rubygems currently does not
-support Rust extensions directly, but a Rakefile can be used to compile your
-Rust extension when the gem is installed.
+If you wish to package your extension as a Gem, we recommend using [the `rb_sys`
+gem] to build along with `rake-compiler`. These tools will automatically build
+your Rust extension as a dynamic library, and then package it as a gem. 
+
+*Note*: The newest version of rubygems does have beta support for compiling
+Rust, so in the future the `rb_sys` gem won't be necessary.
 
 **`my_example_gem.gemspec`**
 ```ruby
-spec.extensions = ["ext/my_example_gem/Rakefile"]
+spec.extensions = ["ext/my_example_gem/extconf.rb"]
 
 # actually a build time dependency, but that's not an option.
 spec.add_runtime_dependency "rake", "> 1"
+
+# needed until rubygems supports Rust support is out of beta
+spec.add_dependency "rb_sys", "~> 0.9.14"
+
+# only needed when developing or packaging your gem
+spec.add_development_dependency "rake-compiler", "~> 1.2.0"
 ```
 
-See the [`rust_blank`] example for an example Rakefile that can be copied into
-your project without changes. This Rakefile will place the extension at
-`lib/my_example_gem/my_example_gem.so` (or `.bundle` on macOS), which you'd
-load from Ruby like so:
+Then, we add an `extconf.rb` file to the `ext` directory. Ruby will execute this file during the compilation process, and it will generate a `Makefile` in the `ext` directory. See the [`rb_sys` gem] for more information.
+
+**`ext/my_example_gem/extconf.rb`**
+```ruby
+require "mkmf"
+require "rb_sys/mkmf"
+
+create_rust_makefile("my_example_gem/my_example_gem")
+```
+
+See the [`rust_blank`] example for an example `extconf.rb` and `Rakefile` that
+can be copied into your project without changes. Running `rake compile` will
+place the extension at `lib/my_example_gem/my_example_gem.so` (or `.bundle` on
+macOS), which you'd load from Ruby like so:
 
 **`lib/my_example_gem.rb`**
 ```ruby
 require_relative "my_example_gem/my_example_gem"
 ```
 
+For a more detailed example (including cross-compilation and more), see the
+[`rb-sys` example project]. Although the code in `lib.rs` does not feature
+magnus, but it will compile and run properly.
+
+[`rb-sys` gem]: https://github.com/oxidize-rb/rb-sys/tree/main/gem
+[`rake-compiler`]: https://github.com/rake-compiler/rake-compiler
 [`rust_blank`]: https://github.com/matsadler/magnus/tree/main/examples/rust_blank/ext/rust_blank
-
-### Compiling Extensions
-
-If you are compiling your extension yourself outside of Rubygems you will need
-to pass a number of compiler flags as specified by `ruby -e'p
-RbConfig::CONFIG["DLDFLAGS"]'`. These may need translating from C compiler args
-to rustc args. At a minimum the following should work most of the time:
-
-```shell
-cargo rustc --release -- -C link-arg=-Wl,-undefined,dynamic_lookup
-```
-
-The compiled library will need to be moved from Cargo's target directory into
-Ruby's load path. On Linux and macOS the library will have the prefix `lib`
-added to the extension name, typically you'd want to rename the file to remove
-this prefix so that you do not need to include it in your Ruby `require`s.
-Additionally on macOS the file extension will need to be changed from `.dylib`
-to `.bundle`.
+[`rb-sys` example project]: https://github.com/oxidize-rb/rb-sys/tree/main/examples/rust_reverse
 
 ## Embedding Ruby in Rust
 
