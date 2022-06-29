@@ -9,7 +9,9 @@ from a Rust binary.
 [GitHub]: https://github.com/matsadler/magnus
 [crates.io]: https://crates.io/crates/magnus
 
-## Writing an extension gem (calling Rust from Ruby)
+## Getting started
+
+### Writing an extension gem (calling Rust from Ruby)
 
 Ruby extensions must be built as dynamic system libraries, this can be done by
 setting the `crate-type` attribute in your `Cargo.toml`.
@@ -92,7 +94,7 @@ magnus, but it will compile and run properly.
 [`rust_blank`]: https://github.com/matsadler/magnus/tree/main/examples/rust_blank/ext/rust_blank
 [`rb-sys` example project]: https://github.com/oxidize-rb/rb-sys/tree/main/examples/rust_reverse
 
-## Embedding Ruby in Rust
+### Embedding Ruby in Rust
 
 To call Ruby from a Rust program, enable the `embed` feature:
 
