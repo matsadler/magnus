@@ -2101,3 +2101,7 @@ where
         other => Err(Error::Jump(unsafe { transmute(other) })),
     }
 }
+
+#[cfg(not(feature = "embed"))]
+#[cfg_attr(docsrs, doc(cfg(feature = "embed")))]
+rb_sys::ruby_abi_version!();

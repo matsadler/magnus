@@ -1,6 +1,6 @@
 source "https://rubygems.org"
 
-gem "rb_sys", "0.9.14"
+gem "rb_sys", "0.9.16"
 gem "rake"
 gem "rake-compiler", "1.2.0"
 gem "test-unit"
