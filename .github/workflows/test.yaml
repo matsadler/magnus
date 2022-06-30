@@ -61,8 +61,6 @@ jobs:
           target/
           examples/rust_blank/ext/rust_blank/target/
         key: ${{ runner.os }}-ruby-${{ matrix.ruby-version }}-build-${{ hashFiles('**/Cargo.lock') }}
-    - name: Run tests
-      run: cargo test
     - name: Example gem tests (blank?)
       working-directory: examples/rust_blank
       run: bundle exec rake test
@@ -74,3 +72,5 @@ jobs:
       if: matrix.ruby-version != 'head'
       working-directory: examples/custom_exception_rust
       run: bundle exec rake test
+    - name: Run tests
+      run: cargo test

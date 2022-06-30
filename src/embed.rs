@@ -1,7 +1,5 @@
 //! Helpers for use when embedding Ruby in a Rust project.
 
-extern crate rb_sys as __link_rb_sys;
-
 use std::{
     ffi::CString,
     sync::atomic::{AtomicBool, Ordering},
