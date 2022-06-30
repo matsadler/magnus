@@ -1802,10 +1802,6 @@
 #![cfg_attr(docsrs, feature(doc_cfg))]
 #![warn(missing_docs)]
 
-// Needed to ensure proper linking on Windows, for reasons unknown.
-#[cfg(windows)]
-extern crate rb_sys as __link_rb_sys;
-
 mod binding;
 pub mod block;
 pub mod class;

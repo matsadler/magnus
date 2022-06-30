@@ -25,7 +25,12 @@ experimental-global-allocator = ["rb-sys/global-allocator"]
 
 [dependencies]
 magnus-macros = { version = "0.1.0", path = "magnus-macros" }
-rb-sys = { version = "0.9.16", default-features = false, features = ["bindgen-rbimpls", "bindgen-deprecated-types"] }
+
+[target.'cfg(unix)'.dependencies]
+rb-sys = { version = "0.9.17", default-features = false, features = ["bindgen-rbimpls", "bindgen-deprecated-types"] }
+
+[target.'cfg(windows)'.dependencies]
+rb-sys = { version = "0.9.17", default-features = false, features = ["link-ruby", "bindgen-rbimpls", "bindgen-deprecated-types"] }
 
 [dev-dependencies]
 magnus = { path = ".", features = ["embed"] }
