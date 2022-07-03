@@ -229,7 +229,7 @@ impl Drop for DataType {
 /// A helper trait used to define functions associated with a [`DataType`].
 pub trait DataTypeFunctions
 where
-    Self: Sized,
+    Self: Send + Sized,
 {
     /// Called when the Ruby wrapper object is garbage collected.
     ///
@@ -462,7 +462,7 @@ where
 /// help implementing this trait more safely.
 pub unsafe trait TypedData
 where
-    Self: Sized,
+    Self: Send + Sized,
 {
     /// Should return the class for the Ruby object wrapping the Rust type.
     ///

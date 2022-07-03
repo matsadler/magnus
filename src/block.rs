@@ -123,7 +123,7 @@ impl Proc {
     /// ```
     pub fn from_fn<F, R>(block: F) -> Self
     where
-        F: 'static + FnMut(&[Value], Option<Proc>) -> R,
+        F: 'static + Send + FnMut(&[Value], Option<Proc>) -> R,
         R: BlockReturn,
     {
         unsafe extern "C" fn call<F, R>(
