@@ -269,9 +269,8 @@ unsafe impl private::ReprValue for Proc {
 impl ReprValue for Proc {}
 
 impl TryConvert for Proc {
-    #[inline]
-    fn try_convert(val: &Value) -> Result<Self, Error> {
-        if let Some(p) = Proc::from_value(*val) {
+    fn try_convert(val: Value) -> Result<Self, Error> {
+        if let Some(p) = Proc::from_value(val) {
             return Ok(p);
         }
         let p_val: Value = match val.funcall("to_proc", ()) {
@@ -285,7 +284,7 @@ impl TryConvert for Proc {
                 ))
             }
         };
-        Proc::from_value(*val).ok_or_else(|| {
+        Proc::from_value(val).ok_or_else(|| {
             Error::new(
                 exception::type_error(),
                 format!(

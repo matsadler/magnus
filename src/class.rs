@@ -189,9 +189,8 @@ unsafe impl private::ReprValue for RClass {
 impl ReprValue for RClass {}
 
 impl TryConvert for RClass {
-    #[inline]
-    fn try_convert(val: &Value) -> Result<Self, Error> {
-        match Self::from_value(*val) {
+    fn try_convert(val: Value) -> Result<Self, Error> {
+        match Self::from_value(val) {
             Some(v) => Ok(v),
             None => Err(Error::new(
                 exception::type_error(),

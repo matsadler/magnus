@@ -1316,9 +1316,8 @@ unsafe impl private::ReprValue for RArray {
 impl ReprValue for RArray {}
 
 impl TryConvert for RArray {
-    #[inline]
-    fn try_convert(val: &Value) -> Result<Self, Error> {
-        match Self::from_value(*val) {
+    fn try_convert(val: Value) -> Result<Self, Error> {
+        match Self::from_value(val) {
             Some(i) => Ok(i),
             None => protect(|| {
                 debug_assert_value!(val);

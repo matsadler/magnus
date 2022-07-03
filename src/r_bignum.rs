@@ -314,8 +314,7 @@ unsafe impl private::ReprValue for RBignum {
 impl ReprValue for RBignum {}
 
 impl TryConvert for RBignum {
-    #[inline]
-    fn try_convert(val: &Value) -> Result<Self, Error> {
+    fn try_convert(val: Value) -> Result<Self, Error> {
         match val.try_convert::<Integer>()?.integer_type() {
             IntegerType::Fixnum(_) => Err(Error::new(
                 exception::range_error(),

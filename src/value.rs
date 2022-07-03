@@ -901,7 +901,7 @@ impl Value {
     /// assert_eq!(eval::<Value>("42").unwrap().try_convert::<Option<i64>>().unwrap(), Some(42));
     /// ```
     #[inline]
-    pub fn try_convert<T>(&self) -> Result<T, Error>
+    pub fn try_convert<T>(self) -> Result<T, Error>
     where
         T: TryConvert,
     {
@@ -1000,9 +1000,8 @@ impl From<f64> for Value {
 }
 
 impl TryConvert for Value {
-    #[inline]
-    fn try_convert(val: &Value) -> Result<Self, Error> {
-        Ok(*val)
+    fn try_convert(val: Value) -> Result<Self, Error> {
+        Ok(val)
     }
 }
 
@@ -1267,9 +1266,8 @@ unsafe impl private::ReprValue for Qfalse {
 impl ReprValue for Qfalse {}
 
 impl TryConvert for Qfalse {
-    #[inline]
-    fn try_convert(val: &Value) -> Result<Self, Error> {
-        Self::from_value(*val).ok_or_else(|| {
+    fn try_convert(val: Value) -> Result<Self, Error> {
+        Self::from_value(val).ok_or_else(|| {
             Error::new(
                 exception::type_error(),
                 format!("no implicit conversion of {} into FalseClass", unsafe {
@@ -1379,9 +1377,8 @@ unsafe impl private::ReprValue for Qnil {
 impl ReprValue for Qnil {}
 
 impl TryConvert for Qnil {
-    #[inline]
-    fn try_convert(val: &Value) -> Result<Self, Error> {
-        Self::from_value(*val).ok_or_else(|| {
+    fn try_convert(val: Value) -> Result<Self, Error> {
+        Self::from_value(val).ok_or_else(|| {
             Error::new(
                 exception::type_error(),
                 format!("no implicit conversion of {} into NilClass", unsafe {
@@ -1483,9 +1480,8 @@ unsafe impl private::ReprValue for Qtrue {
 impl ReprValue for Qtrue {}
 
 impl TryConvert for Qtrue {
-    #[inline]
-    fn try_convert(val: &Value) -> Result<Self, Error> {
-        Self::from_value(*val).ok_or_else(|| {
+    fn try_convert(val: Value) -> Result<Self, Error> {
+        Self::from_value(val).ok_or_else(|| {
             Error::new(
                 exception::type_error(),
                 format!("no implicit conversion of {} into TrueClass", unsafe {
@@ -1953,8 +1949,7 @@ unsafe impl private::ReprValue for Fixnum {
 impl ReprValue for Fixnum {}
 
 impl TryConvert for Fixnum {
-    #[inline]
-    fn try_convert(val: &Value) -> Result<Self, Error> {
+    fn try_convert(val: Value) -> Result<Self, Error> {
         match val.try_convert::<Integer>()?.integer_type() {
             IntegerType::Fixnum(fix) => Ok(fix),
             IntegerType::Bignum(_) => Err(Error::new(
@@ -2130,8 +2125,7 @@ unsafe impl private::ReprValue for StaticSymbol {
 impl ReprValue for StaticSymbol {}
 
 impl TryConvert for StaticSymbol {
-    #[inline]
-    fn try_convert(val: &Value) -> Result<Self, Error> {
+    fn try_convert(val: Value) -> Result<Self, Error> {
         val.try_convert::<Symbol>().map(|s| s.to_static())
     }
 }
@@ -2359,8 +2353,7 @@ unsafe impl private::ReprValue for Flonum {
 impl ReprValue for Flonum {}
 
 impl TryConvert for Flonum {
-    #[inline]
-    fn try_convert(val: &Value) -> Result<Self, Error> {
+    fn try_convert(val: Value) -> Result<Self, Error> {
         let float = val.try_convert::<Float>()?;
         if let Some(flonum) = Flonum::from_value(*float) {
             Ok(flonum)

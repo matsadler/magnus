@@ -164,9 +164,8 @@ unsafe impl private::ReprValue for Binding {
 impl ReprValue for Binding {}
 
 impl TryConvert for Binding {
-    #[inline]
-    fn try_convert(val: &Value) -> Result<Self, Error> {
-        Self::from_value(*val).ok_or_else(|| {
+    fn try_convert(val: Value) -> Result<Self, Error> {
+        Self::from_value(val).ok_or_else(|| {
             Error::new(
                 exception::type_error(),
                 format!("no implicit conversion of {} into Binding", unsafe {

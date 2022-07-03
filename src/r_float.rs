@@ -92,8 +92,7 @@ unsafe impl private::ReprValue for RFloat {
 impl ReprValue for RFloat {}
 
 impl TryConvert for RFloat {
-    #[inline]
-    fn try_convert(val: &Value) -> Result<Self, Error> {
+    fn try_convert(val: Value) -> Result<Self, Error> {
         let float = val.try_convert::<Float>()?;
         if let Some(rfloat) = RFloat::from_value(*float) {
             Ok(rfloat)

@@ -120,9 +120,8 @@ unsafe impl private::ReprValue for Exception {
 impl ReprValue for Exception {}
 
 impl TryConvert for Exception {
-    #[inline]
-    fn try_convert(val: &Value) -> Result<Self, Error> {
-        if let Some(e) = Self::from_value(*val) {
+    fn try_convert(val: Value) -> Result<Self, Error> {
+        if let Some(e) = Self::from_value(val) {
             return Ok(e);
         }
         if let Some(Ok(val)) = val.check_funcall::<_, _, Value>("exception", ()) {
@@ -238,9 +237,8 @@ unsafe impl private::ReprValue for ExceptionClass {
 impl ReprValue for ExceptionClass {}
 
 impl TryConvert for ExceptionClass {
-    #[inline]
-    fn try_convert(val: &Value) -> Result<Self, Error> {
-        Self::from_value(*val).ok_or_else(|| {
+    fn try_convert(val: Value) -> Result<Self, Error> {
+        Self::from_value(val).ok_or_else(|| {
             Error::new(
                 exception::type_error(),
                 format!(

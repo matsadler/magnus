@@ -588,10 +588,9 @@ unsafe impl private::ReprValue for RHash {
 impl ReprValue for RHash {}
 
 impl TryConvert for RHash {
-    #[inline]
-    fn try_convert(val: &Value) -> Result<Self, Error> {
+    fn try_convert(val: Value) -> Result<Self, Error> {
         debug_assert_value!(val);
-        if let Some(v) = Self::from_value(*val) {
+        if let Some(v) = Self::from_value(val) {
             return Ok(v);
         }
         unsafe {

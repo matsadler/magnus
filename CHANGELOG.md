@@ -19,6 +19,7 @@
   that capture variables.
 - `ExceptionClass::default()` now returns `StandardError` rather than
   `RuntimeError`.
+- `TryConvert` now takes `Value` by value (rather than a reference).
 
 ### Deprecated
 

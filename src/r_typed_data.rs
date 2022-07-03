@@ -499,10 +499,9 @@ impl<T> TryConvert for &T
 where
     T: TypedData,
 {
-    #[inline]
-    fn try_convert(val: &Value) -> Result<Self, Error> {
+    fn try_convert(val: Value) -> Result<Self, Error> {
         unsafe {
-            RTypedData::from_value(*val)
+            RTypedData::from_value(val)
                 .ok_or_else(|| {
                     Error::new(
                         exception::type_error(),

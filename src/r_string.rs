@@ -1122,9 +1122,8 @@ unsafe impl private::ReprValue for RString {
 impl ReprValue for RString {}
 
 impl TryConvert for RString {
-    #[inline]
-    fn try_convert(val: &Value) -> Result<Self, Error> {
-        match Self::from_value(*val) {
+    fn try_convert(val: Value) -> Result<Self, Error> {
+        match Self::from_value(val) {
             Some(i) => Ok(i),
             None => protect(|| {
                 debug_assert_value!(val);

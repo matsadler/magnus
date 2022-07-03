@@ -16,7 +16,7 @@ use crate::{
 /// Conversions from [`Value`] to Rust types.
 pub trait TryConvert: Sized {
     /// Convert `val` into `Self`.
-    fn try_convert(val: &Value) -> Result<Self, Error>;
+    fn try_convert(val: Value) -> Result<Self, Error>;
 }
 
 /// Only implemented on Rust types. TryConvert may convert from a
@@ -24,18 +24,21 @@ pub trait TryConvert: Sized {
 /// divorced from the Ruby runtime, safe to put on the heap, etc.
 pub trait TryConvertOwned: TryConvert {
     /// Convert `val` into `Self`.
-    #[inline]
     fn try_convert_owned(val: Value) -> Result<Self, Error> {
-        Self::try_convert(&val)
+        Self::try_convert(val)
     }
+}
+
+pub trait TryConvertForArg: Sized {
+    /// Convert `val` into `Self`.
+    fn try_convert_for_arg(val: Value) -> Result<Self, Error>;
 }
 
 impl<T> TryConvert for Option<T>
 where
     T: TryConvert,
 {
-    #[inline]
-    fn try_convert(val: &Value) -> Result<Self, Error> {
+    fn try_convert(val: Value) -> Result<Self, Error> {
         (!val.is_nil()).then(|| T::try_convert(val)).transpose()
     }
 }
@@ -44,7 +47,6 @@ impl<T> TryConvertOwned for Option<T>
 where
     T: TryConvertOwned,
 {
-    #[inline]
     fn try_convert_owned(val: Value) -> Result<Self, Error> {
         (!val.is_nil())
             .then(|| T::try_convert_owned(val))
@@ -53,108 +55,95 @@ where
 }
 
 impl TryConvert for bool {
-    #[inline]
-    fn try_convert(val: &Value) -> Result<Self, Error> {
+    fn try_convert(val: Value) -> Result<Self, Error> {
         Ok(val.to_bool())
     }
 }
 impl TryConvertOwned for bool {}
 
 impl TryConvert for i8 {
-    #[inline]
-    fn try_convert(val: &Value) -> Result<Self, Error> {
+    fn try_convert(val: Value) -> Result<Self, Error> {
         Integer::try_convert(val)?.to_i8()
     }
 }
 impl TryConvertOwned for i8 {}
 
 impl TryConvert for i16 {
-    #[inline]
-    fn try_convert(val: &Value) -> Result<Self, Error> {
+    fn try_convert(val: Value) -> Result<Self, Error> {
         Integer::try_convert(val)?.to_i16()
     }
 }
 impl TryConvertOwned for i16 {}
 
 impl TryConvert for i32 {
-    #[inline]
-    fn try_convert(val: &Value) -> Result<Self, Error> {
+    fn try_convert(val: Value) -> Result<Self, Error> {
         Integer::try_convert(val)?.to_i32()
     }
 }
 impl TryConvertOwned for i32 {}
 
 impl TryConvert for i64 {
-    #[inline]
-    fn try_convert(val: &Value) -> Result<Self, Error> {
+    fn try_convert(val: Value) -> Result<Self, Error> {
         Integer::try_convert(val)?.to_i64()
     }
 }
 impl TryConvertOwned for i64 {}
 
 impl TryConvert for isize {
-    #[inline]
-    fn try_convert(val: &Value) -> Result<Self, Error> {
+    fn try_convert(val: Value) -> Result<Self, Error> {
         Integer::try_convert(val)?.to_isize()
     }
 }
 impl TryConvertOwned for isize {}
 
 impl TryConvert for u8 {
-    #[inline]
-    fn try_convert(val: &Value) -> Result<Self, Error> {
+    fn try_convert(val: Value) -> Result<Self, Error> {
         Integer::try_convert(val)?.to_u8()
     }
 }
 impl TryConvertOwned for u8 {}
 
 impl TryConvert for u16 {
-    #[inline]
-    fn try_convert(val: &Value) -> Result<Self, Error> {
+    fn try_convert(val: Value) -> Result<Self, Error> {
         Integer::try_convert(val)?.to_u16()
     }
 }
 impl TryConvertOwned for u16 {}
 
 impl TryConvert for u32 {
-    #[inline]
-    fn try_convert(val: &Value) -> Result<Self, Error> {
+    fn try_convert(val: Value) -> Result<Self, Error> {
         Integer::try_convert(val)?.to_u32()
     }
 }
 impl TryConvertOwned for u32 {}
 
 impl TryConvert for u64 {
-    #[inline]
-    fn try_convert(val: &Value) -> Result<Self, Error> {
+    fn try_convert(val: Value) -> Result<Self, Error> {
         Integer::try_convert(val)?.to_u64()
     }
 }
 impl TryConvertOwned for u64 {}
 
 impl TryConvert for usize {
-    #[inline]
-    fn try_convert(val: &Value) -> Result<Self, Error> {
+    fn try_convert(val: Value) -> Result<Self, Error> {
         Integer::try_convert(val)?.to_usize()
     }
 }
 impl TryConvertOwned for usize {}
 
 impl TryConvert for f32 {
-    #[inline]
-    fn try_convert(val: &Value) -> Result<Self, Error> {
+    fn try_convert(val: Value) -> Result<Self, Error> {
         f64::try_convert(val).map(|f| f as f32)
     }
 }
 impl TryConvertOwned for f32 {}
 
 impl TryConvert for f64 {
-    #[inline]
-    fn try_convert(val: &Value) -> Result<Self, Error> {
-        if let Some(fixnum) = Fixnum::from_value(*val) {
+    fn try_convert(val: Value) -> Result<Self, Error> {
+        if let Some(fixnum) = Fixnum::from_value(val) {
             return Ok(fixnum.to_isize() as f64);
         }
-        if let Some(flonum) = Flonum::from_value(*val) {
+        if let Some(flonum) = Flonum::from_value(val) {
             return Ok(flonum.to_f64());
         }
         debug_assert_value!(val);
@@ -169,8 +158,7 @@ impl TryConvert for f64 {
 impl TryConvertOwned for f64 {}
 
 impl TryConvert for String {
-    #[inline]
-    fn try_convert(val: &Value) -> Result<Self, Error> {
+    fn try_convert(val: Value) -> Result<Self, Error> {
         debug_assert_value!(val);
         RString::try_convert(val)?.to_string()
     }
@@ -178,8 +166,7 @@ impl TryConvert for String {
 impl TryConvertOwned for String {}
 
 impl TryConvert for char {
-    #[inline]
-    fn try_convert(val: &Value) -> Result<Self, Error> {
+    fn try_convert(val: Value) -> Result<Self, Error> {
         debug_assert_value!(val);
         RString::try_convert(val)?.to_char()
     }
@@ -190,8 +177,7 @@ impl<T> TryConvert for Vec<T>
 where
     T: TryConvertOwned,
 {
-    #[inline]
-    fn try_convert(val: &Value) -> Result<Self, Error> {
+    fn try_convert(val: Value) -> Result<Self, Error> {
         debug_assert_value!(val);
         RArray::try_convert(val)?.to_vec()
     }
@@ -202,8 +188,7 @@ impl<T, const N: usize> TryConvert for [T; N]
 where
     T: TryConvert,
 {
-    #[inline]
-    fn try_convert(val: &Value) -> Result<Self, Error> {
+    fn try_convert(val: Value) -> Result<Self, Error> {
         debug_assert_value!(val);
         RArray::try_convert(val)?.to_array()
     }
@@ -214,8 +199,7 @@ impl<T0> TryConvert for (T0,)
 where
     T0: TryConvert,
 {
-    #[inline]
-    fn try_convert(val: &Value) -> Result<Self, Error> {
+    fn try_convert(val: Value) -> Result<Self, Error> {
         debug_assert_value!(val);
         let array = RArray::try_convert(val)?;
         let slice = unsafe { array.as_slice() };
@@ -235,8 +219,7 @@ where
     T0: TryConvert,
     T1: TryConvert,
 {
-    #[inline]
-    fn try_convert(val: &Value) -> Result<Self, Error> {
+    fn try_convert(val: Value) -> Result<Self, Error> {
         debug_assert_value!(val);
         let array = RArray::try_convert(val)?;
         let slice = unsafe { array.as_slice() };
@@ -262,8 +245,7 @@ where
     T1: TryConvert,
     T2: TryConvert,
 {
-    #[inline]
-    fn try_convert(val: &Value) -> Result<Self, Error> {
+    fn try_convert(val: Value) -> Result<Self, Error> {
         debug_assert_value!(val);
         let array = RArray::try_convert(val)?;
         let slice = unsafe { array.as_slice() };
@@ -295,8 +277,7 @@ where
     T2: TryConvert,
     T3: TryConvert,
 {
-    #[inline]
-    fn try_convert(val: &Value) -> Result<Self, Error> {
+    fn try_convert(val: Value) -> Result<Self, Error> {
         debug_assert_value!(val);
         let array = RArray::try_convert(val)?;
         let slice = unsafe { array.as_slice() };
@@ -331,8 +312,7 @@ where
     T3: TryConvert,
     T4: TryConvert,
 {
-    #[inline]
-    fn try_convert(val: &Value) -> Result<Self, Error> {
+    fn try_convert(val: Value) -> Result<Self, Error> {
         debug_assert_value!(val);
         let array = RArray::try_convert(val)?;
         let slice = unsafe { array.as_slice() };
@@ -370,8 +350,7 @@ where
     T4: TryConvert,
     T5: TryConvert,
 {
-    #[inline]
-    fn try_convert(val: &Value) -> Result<Self, Error> {
+    fn try_convert(val: Value) -> Result<Self, Error> {
         debug_assert_value!(val);
         let array = RArray::try_convert(val)?;
         let slice = unsafe { array.as_slice() };
@@ -412,8 +391,7 @@ where
     T5: TryConvert,
     T6: TryConvert,
 {
-    #[inline]
-    fn try_convert(val: &Value) -> Result<Self, Error> {
+    fn try_convert(val: Value) -> Result<Self, Error> {
         debug_assert_value!(val);
         let array = RArray::try_convert(val)?;
         let slice = unsafe { array.as_slice() };
@@ -457,8 +435,7 @@ where
     T6: TryConvert,
     T7: TryConvert,
 {
-    #[inline]
-    fn try_convert(val: &Value) -> Result<Self, Error> {
+    fn try_convert(val: Value) -> Result<Self, Error> {
         debug_assert_value!(val);
         let array = RArray::try_convert(val)?;
         let slice = unsafe { array.as_slice() };
@@ -505,8 +482,7 @@ where
     T7: TryConvert,
     T8: TryConvert,
 {
-    #[inline]
-    fn try_convert(val: &Value) -> Result<Self, Error> {
+    fn try_convert(val: Value) -> Result<Self, Error> {
         debug_assert_value!(val);
         let array = RArray::try_convert(val)?;
         let slice = unsafe { array.as_slice() };
@@ -556,8 +532,7 @@ where
     T8: TryConvert,
     T9: TryConvert,
 {
-    #[inline]
-    fn try_convert(val: &Value) -> Result<Self, Error> {
+    fn try_convert(val: Value) -> Result<Self, Error> {
         debug_assert_value!(val);
         let array = RArray::try_convert(val)?;
         let slice = unsafe { array.as_slice() };
@@ -612,8 +587,7 @@ where
     T9: TryConvert,
     T10: TryConvert,
 {
-    #[inline]
-    fn try_convert(val: &Value) -> Result<Self, Error> {
+    fn try_convert(val: Value) -> Result<Self, Error> {
         debug_assert_value!(val);
         let array = RArray::try_convert(val)?;
         let slice = unsafe { array.as_slice() };
@@ -671,8 +645,7 @@ where
     T10: TryConvert,
     T11: TryConvert,
 {
-    #[inline]
-    fn try_convert(val: &Value) -> Result<Self, Error> {
+    fn try_convert(val: Value) -> Result<Self, Error> {
         debug_assert_value!(val);
         let array = RArray::try_convert(val)?;
         let slice = unsafe { array.as_slice() };
@@ -721,8 +694,7 @@ where
     K: TryConvertOwned + Eq + std::hash::Hash,
     V: TryConvertOwned,
 {
-    #[inline]
-    fn try_convert(val: &Value) -> Result<Self, Error> {
+    fn try_convert(val: Value) -> Result<Self, Error> {
         debug_assert_value!(val);
         RHash::try_convert(val)?.to_hash_map()
     }
@@ -736,8 +708,7 @@ where
 
 #[cfg(unix)]
 impl TryConvert for PathBuf {
-    #[inline]
-    fn try_convert(val: &Value) -> Result<Self, Error> {
+    fn try_convert(val: Value) -> Result<Self, Error> {
         use std::os::unix::ffi::OsStringExt;
 
         let bytes = unsafe {
@@ -751,8 +722,7 @@ impl TryConvert for PathBuf {
 
 #[cfg(not(unix))]
 impl TryConvert for PathBuf {
-    #[inline]
-    fn try_convert(val: &Value) -> Result<Self, Error> {
+    fn try_convert(val: Value) -> Result<Self, Error> {
         protect(|| unsafe { RString::from_rb_value_unchecked(rb_get_path(val.as_rb_value())) })?
             .to_string()
             .map(Into::into)
