@@ -20,13 +20,10 @@ use darling::{util::Flag, FromMeta};
 use proc_macro::TokenStream;
 use proc_macro2::{Ident, Span};
 use quote::{quote, ToTokens};
-use syn::{parse_macro_input, spanned::Spanned, AttributeArgs, DeriveInput, Error, ItemFn};
-
-#[derive(FromMeta)]
-struct InitAttributes {
-    #[darling(default)]
-    name: Option<String>,
-}
+use syn::{
+    parse_macro_input, spanned::Spanned, AttributeArgs, DeriveInput, Error, ItemFn, Lit, Meta,
+    MetaNameValue, NestedMeta,
+};
 
 /// Mark a function as the 'init' function to be run for a library when it is
 /// `require`d by Ruby code.
@@ -102,19 +99,36 @@ pub fn init(attrs: TokenStream, item: TokenStream) -> TokenStream {
 
     let attrs2 = attrs.clone();
     let attr_args = parse_macro_input!(attrs2 as AttributeArgs);
-    let crate_name = match InitAttributes::from_list(&attr_args) {
-        Ok(v) => v.name,
-        Err(e) => return TokenStream::from(e.write_errors()),
-    };
+    let mut crate_name = None;
+    for attr in attr_args {
+        if let NestedMeta::Meta(Meta::NameValue(MetaNameValue {
+            path,
+            eq_token: _,
+            lit,
+        })) = attr
+        {
+            if path.is_ident("name") {
+                if crate_name.is_some() {
+                    return error(path, "duplicate field");
+                } else if let Lit::Str(lit_str) = lit {
+                    crate_name = Some(lit_str.value());
+                } else {
+                    return error(lit, "expected string");
+                }
+            } else {
+                return error(path, "unknown field");
+            }
+        } else {
+            return error(attr, "unknown field");
+        }
+    }
     let crate_name = match crate_name.or_else(|| std::env::var("CARGO_PKG_NAME").ok()) {
         Some(v) => v,
         None => {
-            return Error::new(
-                proc_macro2::TokenStream::from(attrs).span(),
+            return error(
+                proc_macro2::TokenStream::from(attrs),
                 "missing #[magnus] attribute",
             )
-            .into_compile_error()
-            .into()
         }
     };
     let extern_init_name = Ident::new(
@@ -132,6 +146,10 @@ pub fn init(attrs: TokenStream, item: TokenStream) -> TokenStream {
         }
     };
     tokens.into()
+}
+
+fn error<T: Spanned>(item: T, msg: &str) -> TokenStream {
+    Error::new(item.span(), msg).into_compile_error().into()
 }
 
 /// Allow a Rust type to be passed to Ruby, automatically wrapped as a Ruby
