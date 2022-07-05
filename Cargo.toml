@@ -21,7 +21,6 @@ exclude = ["examples/rust_blank/ext/rust_blank", "examples/custom_exception_ruby
 embed = ["rb-sys/link-ruby"]
 rb-sys-interop = []
 ruby-static = ["rb-sys/ruby-static"]
-experimental-global-allocator = ["rb-sys/global-allocator"]
 
 [dependencies]
 magnus-macros = { version = "0.1.0", path = "magnus-macros" }
