@@ -16,14 +16,11 @@
 
 #![warn(missing_docs)]
 
-use darling::{util::Flag, FromMeta};
 use proc_macro::TokenStream;
-use proc_macro2::{Ident, Span};
-use quote::{quote, ToTokens};
-use syn::{
-    parse_macro_input, spanned::Spanned, AttributeArgs, DeriveInput, Error, ItemFn, Lit, Meta,
-    MetaNameValue, NestedMeta,
-};
+use syn::parse_macro_input;
+
+mod init;
+mod typed_data;
 
 /// Mark a function as the 'init' function to be run for a library when it is
 /// `require`d by Ruby code.
@@ -94,62 +91,7 @@ use syn::{
 /// ```
 #[proc_macro_attribute]
 pub fn init(attrs: TokenStream, item: TokenStream) -> TokenStream {
-    let init = parse_macro_input!(item as ItemFn);
-    let init_name = init.sig.ident.clone();
-
-    let attrs2 = attrs.clone();
-    let attr_args = parse_macro_input!(attrs2 as AttributeArgs);
-    let mut crate_name = None;
-    for attr in attr_args {
-        if let NestedMeta::Meta(Meta::NameValue(MetaNameValue {
-            path,
-            eq_token: _,
-            lit,
-        })) = attr
-        {
-            if path.is_ident("name") {
-                if crate_name.is_some() {
-                    return error(path, "duplicate field");
-                } else if let Lit::Str(lit_str) = lit {
-                    crate_name = Some(lit_str.value());
-                } else {
-                    return error(lit, "expected string");
-                }
-            } else {
-                return error(path, "unknown field");
-            }
-        } else {
-            return error(attr, "unknown field");
-        }
-    }
-    let crate_name = match crate_name.or_else(|| std::env::var("CARGO_PKG_NAME").ok()) {
-        Some(v) => v,
-        None => {
-            return error(
-                proc_macro2::TokenStream::from(attrs),
-                "missing #[magnus] attribute",
-            )
-        }
-    };
-    let extern_init_name = Ident::new(
-        &format!("Init_{}", crate_name.replace('-', "_")),
-        Span::call_site(),
-    );
-
-    let tokens = quote! {
-        #init
-
-        #[allow(non_snake_case)]
-        #[no_mangle]
-        pub extern "C" fn #extern_init_name() {
-            unsafe { magnus::method::Init::new(#init_name).call_handle_error() }
-        }
-    };
-    tokens.into()
-}
-
-fn error<T: Spanned>(item: T, msg: &str) -> TokenStream {
-    Error::new(item.span(), msg).into_compile_error().into()
+    init::expand(parse_macro_input!(attrs), parse_macro_input!(item)).into()
 }
 
 /// Allow a Rust type to be passed to Ruby, automatically wrapped as a Ruby
@@ -198,14 +140,7 @@ fn error<T: Spanned>(item: T, msg: &str) -> TokenStream {
 /// ```
 #[proc_macro_attribute]
 pub fn wrap(attrs: TokenStream, item: TokenStream) -> TokenStream {
-    let attrs = proc_macro2::TokenStream::from(attrs);
-    let item = proc_macro2::TokenStream::from(item);
-    let tokens = quote! {
-        #[derive(magnus::DataTypeFunctions, magnus::TypedData)]
-        #[magnus(#attrs)]
-        #item
-    };
-    tokens.into()
+    typed_data::expand(parse_macro_input!(attrs), parse_macro_input!(item)).into()
 }
 
 /// Derives `DataTypeFunctions` with default implementations, for simple uses
@@ -216,32 +151,7 @@ pub fn wrap(attrs: TokenStream, item: TokenStream) -> TokenStream {
 /// alternative in this use case.
 #[proc_macro_derive(DataTypeFunctions)]
 pub fn derive_data_type_functions(input: TokenStream) -> TokenStream {
-    let input = parse_macro_input!(input as DeriveInput);
-    let ident = input.ident;
-    let generics = input.generics;
-    let tokens = quote! {
-        impl #generics magnus::DataTypeFunctions for #ident #generics {}
-    };
-    tokens.into()
-}
-
-#[derive(FromMeta)]
-struct TypedDataAttributes {
-    class: String,
-    #[darling(default)]
-    name: Option<String>,
-    #[darling(default)]
-    mark: Flag,
-    #[darling(default)]
-    size: Flag,
-    #[darling(default)]
-    compact: Flag,
-    #[darling(default)]
-    free_immediatly: Flag,
-    #[darling(default)]
-    wb_protected: Flag,
-    #[darling(default)]
-    frozen_shareable: Flag,
+    typed_data::expand_derive_data_type_functions(parse_macro_input!(input)).into()
 }
 
 /// Derives `TypedData`, allowing the type to be passed to Ruby automatically
@@ -316,84 +226,5 @@ struct TypedDataAttributes {
 /// ```
 #[proc_macro_derive(TypedData, attributes(magnus))]
 pub fn derive_typed_data(input: TokenStream) -> TokenStream {
-    let input = parse_macro_input!(input as DeriveInput);
-    if !input.generics.to_token_stream().is_empty() {
-        return Error::new(
-            input.generics.span(),
-            "TypedData can't be derived for generic types",
-        )
-        .into_compile_error()
-        .into();
-    }
-    let mut attrs = input
-        .attrs
-        .clone()
-        .into_iter()
-        .filter(|attr| attr.path.is_ident("magnus"))
-        .collect::<Vec<_>>();
-    if attrs.len() > 1 {
-        return attrs
-            .into_iter()
-            .map(|a| Error::new(a.span(), "duplicate attribute"))
-            .reduce(|mut a, b| {
-                a.combine(b);
-                a
-            })
-            .unwrap()
-            .into_compile_error()
-            .into();
-    }
-    if attrs.is_empty() {
-        return Error::new(input.span(), "missing #[magnus] attribute")
-            .into_compile_error()
-            .into();
-    }
-    let attrs = match attrs.remove(0).parse_meta() {
-        Ok(v) => v,
-        Err(e) => return e.into_compile_error().into(),
-    };
-    let attrs = match TypedDataAttributes::from_meta(&attrs) {
-        Ok(v) => v,
-        Err(e) => return TokenStream::from(e.write_errors()),
-    };
-    let ident = input.ident;
-    let class = attrs.class;
-    let name = attrs.name.unwrap_or_else(|| class.clone());
-    let mut builder = Vec::new();
-    builder.push(quote! { let mut builder = magnus::DataType::builder::<Self>(#name); });
-    if attrs.mark.is_some() {
-        builder.push(quote! { builder.mark(); });
-    }
-    if attrs.size.is_some() {
-        builder.push(quote! { builder.size(); });
-    }
-    if attrs.compact.is_some() {
-        builder.push(quote! { builder.compact(); });
-    }
-    if attrs.free_immediatly.is_some() {
-        builder.push(quote! { builder.free_immediatly(); });
-    }
-    if attrs.wb_protected.is_some() {
-        builder.push(quote! { builder.wb_protected(); });
-    }
-    if attrs.frozen_shareable.is_some() {
-        builder.push(quote! { builder.frozen_shareable(); });
-    }
-    builder.push(quote! { builder.build() });
-    let builder = builder.into_iter().collect::<proc_macro2::TokenStream>();
-    let tokens = quote! {
-        unsafe impl magnus::TypedData for #ident {
-            fn class() -> magnus::RClass {
-                use magnus::Module;
-                *magnus::memoize!(magnus::RClass: magnus::RClass::default().funcall("const_get", (#class,)).unwrap())
-            }
-
-            fn data_type() -> &'static magnus::DataType {
-                magnus::memoize!(magnus::DataType: {
-                    #builder
-                })
-            }
-        }
-    };
-    tokens.into()
+    typed_data::expand_derive_typed_data(parse_macro_input!(input)).into()
 }
