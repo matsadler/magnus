@@ -9,6 +9,119 @@ from a Rust binary.
 [GitHub]: https://github.com/matsadler/magnus
 [crates.io]: https://crates.io/crates/magnus
 
+## Getting started
+
+### Writing an extension gem (calling Rust from Ruby)
+
+Ruby extensions must be built as dynamic system libraries, this can be done by
+setting the `crate-type` attribute in your `Cargo.toml`.
+
+**`Cargo.toml`**
+```toml
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+magnus = "0.3"
+```
+
+When Ruby loads your extension it calls an 'init' function defined in your
+extension. In this function you will need to define your Ruby classes and bind
+Rust functions to Ruby methods. Use the `#[magnus::init]` attribute to mark
+your init function so it can be correctly exposed to Ruby.
+
+**`src/lib.rs`**
+```rust
+use magnus::{define_global_function, function};
+
+fn distance(a: (f64, f64), b: (f64, f64)) -> f64 {
+    ((b.0 - a.0).powi(2) + (b.1 - a.1).powi(2)).sqrt()
+}
+
+#[magnus::init]
+fn init() {
+    define_global_function("distance", function!(distance, 2));
+}
+```
+
+If you wish to package your extension as a Gem, we recommend using [the `rb_sys`
+gem] to build along with `rake-compiler`. These tools will automatically build
+your Rust extension as a dynamic library, and then package it as a gem. 
+
+*Note*: The newest version of rubygems does have beta support for compiling
+Rust, so in the future the `rb_sys` gem won't be necessary.
+
+**`my_example_gem.gemspec`**
+```ruby
+spec.extensions = ["ext/my_example_gem/extconf.rb"]
+
+# actually a build time dependency, but that's not an option.
+spec.add_runtime_dependency "rake", "> 1"
+
+# needed until rubygems supports Rust support is out of beta
+spec.add_dependency "rb_sys", "~> 0.9.18"
+
+# only needed when developing or packaging your gem
+spec.add_development_dependency "rake-compiler", "~> 1.2.0"
+```
+
+Then, we add an `extconf.rb` file to the `ext` directory. Ruby will execute this file during the compilation process, and it will generate a `Makefile` in the `ext` directory. See the [`rb_sys` gem] for more information.
+
+**`ext/my_example_gem/extconf.rb`**
+```ruby
+require "mkmf"
+require "rb_sys/mkmf"
+
+create_rust_makefile("my_example_gem/my_example_gem")
+```
+
+See the [`rust_blank`] example for an example `extconf.rb` and `Rakefile` that
+can be copied into your project without changes. Running `rake compile` will
+place the extension at `lib/my_example_gem/my_example_gem.so` (or `.bundle` on
+macOS), which you'd load from Ruby like so:
+
+**`lib/my_example_gem.rb`**
+```ruby
+require_relative "my_example_gem/my_example_gem"
+```
+
+For a more detailed example (including cross-compilation and more), see the
+[`rb-sys` example project]. Although the code in `lib.rs` does not feature
+magnus, but it will compile and run properly.
+
+[`rb-sys` gem]: https://github.com/oxidize-rb/rb-sys/tree/main/gem
+[`rake-compiler`]: https://github.com/rake-compiler/rake-compiler
+[`rust_blank`]: https://github.com/matsadler/magnus/tree/main/examples/rust_blank/ext/rust_blank
+[`rb-sys` example project]: https://github.com/oxidize-rb/rb-sys/tree/main/examples/rust_reverse
+
+### Embedding Ruby in Rust
+
+To call Ruby from a Rust program, enable the `embed` feature:
+
+**`Cargo.toml`**
+```toml
+[dependencies]
+magnus = { version = "0.3", features = ["embed"] }
+```
+
+This enables linking to Ruby and gives access to the `embed` module.
+`magnus::embed::init` must be called before calling Ruby and the value it
+returns must not be dropped until you are done with Ruby. `init` can not be
+called more than once.
+
+**`src/main.rs`**
+```rust
+use magnus::{embed, eval};
+
+fn main() {
+    let _cleanup = unsafe { embed::init() };
+
+    let val: f64 = eval!("a + rand", a = 1).unwrap();
+
+    println!("{}", val);
+}
+```
+
 ## Defining Methods
 
 Using Magnus, regular Rust functions can be bound to Ruby as methods with
@@ -238,146 +351,45 @@ the `unsafe` keyword, it is impossible to interact with Ruby's C-api without
 this, but users of Magnus should be able to do most things without needing to
 use `unsafe`.
 
-## Writing an extension gem (calling Rust from Ruby)
+### rb-sys
 
-Ruby extensions must be built as dynamic system libraries, this can be done by
-setting the `crate-type` attribute in your `Cargo.toml`.
+Magnus uses [rb-sys](https://github.com/oxidize-rb/rb-sys/tree/main/crates/rb-sys) to provide the low-level bindings to Ruby. The `rb-sys-interop` feature enables the [`rb_sys`](https://docs.rs/magnus/latest/magnus/rb_sys/index.html) module for advanced interoperability with rb-sys,  allows you to access low-level Ruby APIs which Magnus does not expose.
 
-**`Cargo.toml`**
+### Issues with static linking
+
+If you encounter an error such as `symbol not found in flat namespace
+'_rb_ext_ractor_safe'` when embedding static Ruby, you will need to instruct
+Cargo not to strip code that it thinks is dead.
+
+In you the same directory as your `Cargo.toml` file, create a
+`.cargo/config.toml` file with the following contents:
+
 ```toml
-[lib]
-crate-type = ["cdylib"]
-
-[dependencies]
-magnus = "0.3"
-```
-
-When Ruby loads your extension it calls an 'init' function defined in your
-extension. In this function you will need to define your Ruby classes and bind
-Rust functions to Ruby methods. Use the `#[magnus::init]` attribute to mark
-your init function so it can be correctly exposed to Ruby.
-
-**`src/lib.rs`**
-```rust
-use magnus::{define_global_function, function};
-
-fn distance(a: (f64, f64), b: (f64, f64)) -> f64 {
-    ((b.0 - a.0).powi(2) + (b.1 - a.1).powi(2)).sqrt()
-}
-
-#[magnus::init]
-fn init() {
-    define_global_function("distance", function!(distance, 2));
-}
-```
-
-If you wish to package your extension as a Gem, Rubygems currently does not
-support Rust extensions directly, but a Rakefile can be used to compile your
-Rust extension when the gem is installed.
-
-**`my_example_gem.gemspec`**
-```ruby
-spec.extensions = ["ext/my_example_gem/Rakefile"]
-
-# actually a build time dependency, but that's not an option.
-spec.add_runtime_dependency "rake", "> 1"
-```
-
-See the [`rust_blank`] example for an example Rakefile that can be copied into
-your project without changes. This Rakefile will place the extension at
-`lib/my_example_gem/my_example_gem.so` (or `.bundle` on macOS), which you'd
-load from Ruby like so:
-
-**`lib/my_example_gem.rb`**
-```ruby
-require_relative "my_example_gem/my_example_gem"
-```
-
-[`rust_blank`]: https://github.com/matsadler/magnus/tree/main/examples/rust_blank/ext/rust_blank
-
-### Compiling Extensions
-
-If you are compiling your extension yourself outside of Rubygems you will need
-to pass a number of compiler flags as specified by `ruby -e'p
-RbConfig::CONFIG["DLDFLAGS"]'`. These may need translating from C compiler args
-to rustc args. At a minimum the following should work most of the time:
-
-```shell
-cargo rustc --release -- -C link-arg=-Wl,-undefined,dynamic_lookup
-```
-
-The compiled library will need to be moved from Cargo's target directory into
-Ruby's load path. On Linux and macOS the library will have the prefix `lib`
-added to the extension name, typically you'd want to rename the file to remove
-this prefix so that you do not need to include it in your Ruby `require`s.
-Additionally on macOS the file extension will need to be changed from `.dylib`
-to `.bundle`.
-
-## Embedding Ruby in Rust
-
-To call Ruby from a Rust program, enable the `embed` feature:
-
-**`Cargo.toml`**
-```toml
-[dependencies]
-magnus = { version = "0.3", features = ["embed"] }
-```
-
-This enables linking to Ruby and gives access to the `embed` module.
-`magnus::embed::init` must be called before calling Ruby and the value it
-returns must not be dropped until you are done with Ruby. `init` can not be
-called more than once.
-
-**`src/main.rs`**
-```rust
-use magnus::{embed, eval};
-
-fn main() {
-    let _cleanup = unsafe { embed::init() };
-
-    let val: f64 = eval!("a + rand", a = 1).unwrap();
-
-    println!("{}", val);
-}
+[build]
+# Without this flag, when linking static libruby, the linker removes symbols
+# (such as `_rb_ext_ractor_safe`) which it thinks are dead code... but they are
+# not, and they need to be included for the `embed` feature to work with static
+# Ruby.
+rustflags = ["-C", "link-dead-code=on"]
 ```
 
 ## Compatibility
 
-Magnus contains pre-built bindings for Ruby 2.6 through 3.1 on Linux x86_64,
-macOS x86_64, macOS aarch64, and Windows x86_64.
-For other Ruby version/platform combinations bindings will be generated at
-compile time, this may require libclang to be installed.
+Ruby bindings will be generated at compile time, this may require libclang to be installed.
 
 The Minimum supported Rust version is currently Rust 1.51.
 
-Support for statically linking Ruby is provided, but not tested.
+Support for statically linking Ruby is provided.
+
+Cross-compilation is supported by rb-sys [for the platforms listed here].
 
 Support for 32 bit systems is almost certainly broken, patches are welcome.
 
-### rb-sys
-
-Magnus can use [rb-sys] to provide the low-level bindings to Ruby through the
-`rb-sys-interop` feature. This also enables the
-[`rb_sys`](https://docs.rs/magnus/latest/magnus/rb_sys/index.html) module for
-interoperability with rb-sys.
-
-[rb-sys]: https://github.com/oxidize-rb/rb-sys
-
-This can be enabled with:
-
-**`Cargo.toml`**
-```toml
-[dependencies]
-magnus = { version = "0.3", features = ["rb-sys-interop"] }
-```
-
-This feature should be considered a preview and will be reworked/expanded in
-future versions.
+[for the platforms listed here]: https://github.com/oxidize-rb/rb-sys#supported-platforms
 
 ## Alternatives
 
 * [rutie](https://github.com/danielpclark/rutie)
-* [rb-sys]
 * [rosy](https://github.com/nvzqz/rosy)
 * [ruby-sys](https://github.com/steveklabnik/ruby-sys)
 * [ruru](https://github.com/d-unseductable/ruru)

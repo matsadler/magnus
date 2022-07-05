@@ -26,6 +26,7 @@ jobs:
       uses: ruby/setup-ruby@v1
       with:
         ruby-version: ${{ matrix.ruby-version }}
+        bundler-cache: true
     - name: Set up Rust
       if: contains(matrix.os, 'windows')
       uses: actions-rs/toolchain@v1
@@ -49,7 +50,10 @@ jobs:
           ~/.cargo/registry/cache/
           ~/.cargo/git/db/
           target/
-        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          examples/rust_blank/tmp/
+          examples/custom_exception_ruby/tmp/
+          examples/custom_exception_rust/tmp/
+        key: ${{ runner.os }}-${{ matrix.ruby-version }}-${{ hashFiles('Gemfile') }}-cargo-${{ hashFiles('**/Cargo.lock') }}
     - name: Set up build cache
       uses: actions/cache@v3
       with:
@@ -57,16 +61,16 @@ jobs:
           target/
           examples/rust_blank/ext/rust_blank/target/
         key: ${{ runner.os }}-ruby-${{ matrix.ruby-version }}-build-${{ hashFiles('**/Cargo.lock') }}
-    - name: Run tests
-      run: cargo test
     - name: Example gem tests (blank?)
       working-directory: examples/rust_blank
-      run: rake test
+      run: bundle exec rake test
     - name: Example gem tests (custom exception defined in Ruby)
       if: matrix.ruby-version != 'head'
       working-directory: examples/custom_exception_ruby
-      run: rake test
+      run: bundle exec rake test
     - name: Example gem tests (custom exception defined in Rust)
       if: matrix.ruby-version != 'head'
       working-directory: examples/custom_exception_rust
-      run: rake test
+      run: bundle exec rake test
+    - name: Run tests
+      run: cargo test

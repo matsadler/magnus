@@ -8,5 +8,4 @@ edition = "2018"
 crate-type = ["cdylib"]
 
 [dependencies]
-magnus = { path = "../../../..", features = ["rb-sys-interop"] }
-rb-sys = { version = "0.9.9", features = ["gem"] }
+magnus = { path = "../../../.." }
