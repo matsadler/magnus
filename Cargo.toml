@@ -24,7 +24,7 @@ ruby-static = ["rb-sys/ruby-static"]
 
 [dependencies]
 magnus-macros = { version = "0.1.0", path = "magnus-macros" }
-rb-sys = { version = "0.9.18", default-features = false, features = ["bindgen-rbimpls", "bindgen-deprecated-types"] }
+rb-sys = { version = "0.9.19", default-features = false, features = ["bindgen-rbimpls", "bindgen-deprecated-types"] }
 
 [dev-dependencies]
 magnus = { path = ".", features = ["embed"] }
