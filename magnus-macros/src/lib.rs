@@ -21,6 +21,7 @@ use syn::parse_macro_input;
 
 mod init;
 mod typed_data;
+mod util;
 
 /// Mark a function as the 'init' function to be run for a library when it is
 /// `require`d by Ruby code.
