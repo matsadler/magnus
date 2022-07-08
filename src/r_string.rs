@@ -14,8 +14,8 @@ use std::{
 
 use crate::ruby_sys::{
     self, rb_enc_str_coderange, rb_enc_str_new, rb_str_buf_append, rb_str_buf_new, rb_str_cat,
-    rb_str_conv_enc, rb_str_new, rb_str_new_frozen, rb_str_new_shared, rb_str_strlen,
-    rb_str_to_str, rb_utf8_str_new, rb_utf8_str_new_static, ruby_coderange_type,
+    rb_str_conv_enc, rb_str_new, rb_str_new_frozen, rb_str_new_shared, rb_str_resize,
+    rb_str_strlen, rb_str_to_str, rb_utf8_str_new, rb_utf8_str_new_static, ruby_coderange_type,
     ruby_rstring_flags, ruby_value_type, VALUE,
 };
 
@@ -1001,6 +1001,24 @@ impl RString {
     /// ```
     pub fn is_empty(self) -> bool {
         self.len() == 0
+    }
+
+    /// Resize RString to length
+    /// Can be used to clear string
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RString};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let s: RString = eval!(r#""example""#).unwrap();
+    /// assert_eq!(s.to_string().unwrap(), "example");
+    /// s.resize(0).unwrap();
+    /// assert_eq!(s.to_string().unwrap(), "");
+    /// ```
+    pub fn resize(self, len: usize) -> Result<(), Error> {
+        protect(|| Value::new(unsafe { rb_str_resize(self.as_rb_value(), len as c_long) }))?;
+        Ok(())
     }
 }
 

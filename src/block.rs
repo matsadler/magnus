@@ -301,11 +301,7 @@ impl TryConvert for Proc {
 ///
 /// This effectivly makes the closure's lifetime managed by Ruby. It will be
 /// dropped when the returned `Value` is garbage collected.
-fn wrap_closure<F, R>(func: F) -> (*mut F, Value)
-where
-    F: FnMut(&[Value], Option<Proc>) -> R,
-    R: BlockReturn,
-{
+pub(crate) fn wrap_closure<F>(func: F) -> (*mut F, Value) {
     struct Closure();
     impl DataTypeFunctions for Closure {}
     let data_type = memoize!(DataType: {

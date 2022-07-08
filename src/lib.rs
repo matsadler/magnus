@@ -679,32 +679,17 @@
 //!
 // * `rb_fatal`:
 // * `rb_fdopen`:
-// * `rb_fd_clr`:
 // * `rb_fd_copy`:
-// * `rb_fd_dup`:
 // * `rb_fd_fix_cloexec`:
-// * `rb_fd_init`:
-// * `rb_fd_isset`:
 // * `rb_fd_max`:
 // * `rb_fd_ptr`:
 // * `rb_fd_resize`:
 // * `rb_fd_select`:
-// * `rb_fd_set`:
-// * `rb_fd_term`:
-// * `rb_fd_zero`:
 // * `rb_feature_provided`:
-// * `rb_fiber_alive_p`:
-// * `rb_fiber_current`:
-// * `rb_fiber_new`:
-// * `rb_fiber_raise`:
-// * `rb_fiber_resume`:
 // * `rb_fiber_resume_kw`:
-// * `rb_fiber_scheduler_address_resolve`:
-// * `rb_fiber_scheduler_block`:
-// * `rb_fiber_scheduler_close`:
+// * `rb_fiber_transfer_kw`:
+// * `rb_fiber_yield_kw`:
 // * `rb_fiber_scheduler_current`:
-// * `rb_fiber_scheduler_current_for_thread`:
-// * `rb_fiber_scheduler_get`:
 // * `rb_fiber_scheduler_io_close`:
 // * `rb_fiber_scheduler_io_pread`:
 // * `rb_fiber_scheduler_io_pwrite`:
@@ -712,21 +697,9 @@
 // * `rb_fiber_scheduler_io_read_memory`:
 // * `rb_fiber_scheduler_io_result`:
 // * `rb_fiber_scheduler_io_result_apply`:
-// * `rb_fiber_scheduler_io_wait`:
-// * `rb_fiber_scheduler_io_wait_readable`:
-// * `rb_fiber_scheduler_io_wait_writable`:
 // * `rb_fiber_scheduler_io_write`:
 // * `rb_fiber_scheduler_io_write_memory`:
-// * `rb_fiber_scheduler_kernel_sleep`:
 // * `rb_fiber_scheduler_kernel_sleepv`:
-// * `rb_fiber_scheduler_make_timeout`:
-// * `rb_fiber_scheduler_process_wait`:
-// * `rb_fiber_scheduler_set`:
-// * `rb_fiber_scheduler_unblock`:
-// * `rb_fiber_transfer`:
-// * `rb_fiber_transfer_kw`:
-// * `rb_fiber_yield`:
-// * `rb_fiber_yield_kw`:
 //! * `rb_filesystem_encindex`: [`encoding::Index::filesystem`].
 //! * `rb_filesystem_encoding`:
 //!   [`RbEncoding::filesystem`](encoding::RbEncoding::filesystem).
@@ -796,7 +769,6 @@
 // * `rb_funcall_passing_block`:
 // * `rb_funcall_passing_block_kw`:
 //! * `rb_funcall_with_block`: [`Value::funcall_with_block`].
-// * `rb_funcall_with_block_kw`:
 // * `rb_f_abort`:
 // * `rb_f_exec`:
 // * `rb_f_exit`:
@@ -855,7 +827,6 @@
 //! # `rb_h`
 //!
 // * `rb_Hash`:
-// * `rb_hash`:
 //! * `rb_hash_aref`: [`RHash::aref`].
 //! * `rb_hash_aset`: [`RHash::aset`].
 // * `rb_hash_bulk_insert`:
@@ -917,9 +888,8 @@
 //! ## `rb_io`
 //!
 // * `rb_io_addstr`:
-// * `rb_io_ascii8bit_binmode`:
 // * `rb_io_binmode`:
-// * `rb_io_bufwrite`:
+// * `rb_io_write`:
 // * `rb_io_check_byte_readable`:
 // * `rb_io_check_char_readable`:
 // * `rb_io_check_closed`:
@@ -927,16 +897,11 @@
 // * `rb_io_check_io`:
 // * `rb_io_check_readable`:
 // * `rb_io_check_writable`:
-// * `rb_io_close`:
-// * `rb_io_descriptor`:
-// * `rb_io_eof`:
 // * `rb_io_extract_encoding_option`:
 // * `rb_io_extract_modeenc`:
 // * `rb_io_fdopen`:
-// * `rb_io_flush`:
 // * `rb_io_fptr_finalize`:
 // * `rb_io_getbyte`:
-// * `rb_io_gets`:
 // * `rb_io_get_io`:
 // * `rb_io_get_write_io`:
 // * `rb_io_make_open_file`:
@@ -1004,8 +969,6 @@
 //!
 // * `rb_lastline_get`:
 // * `rb_lastline_set`:
-// * `rb_last_status_get`:
-// * `rb_last_status_set`:
 // * `RB_LIKELY`:
 // * `rb_ll2inum`:
 // * `RB_LL2NUM`:
@@ -1087,13 +1050,8 @@
 // * `rb_mod_sys_fail`:
 // * `rb_mod_sys_fail_str`:
 // * `rb_must_asciicompat`:
-// * `rb_mutex_lock`:
-// * `rb_mutex_locked_p`:
-// * `rb_mutex_new`:
 // * `rb_mutex_sleep`:
 // * `rb_mutex_synchronize`:
-// * `rb_mutex_trylock`:
-// * `rb_mutex_unlock`:
 //!
 //! ## `rb_n`
 //!
@@ -1183,9 +1141,7 @@
 // * `rb_obj_instance_eval`:
 // * `rb_obj_instance_exec`:
 // * `rb_obj_instance_variables`:
-// * `rb_obj_is_fiber`:
 // * `rb_obj_is_instance_of`:
-//! * `rb_obj_is_kind_of`: [`Value::is_kind_of`].
 // * `rb_obj_is_method`:
 //! * `rb_obj_is_proc`: [`Proc::from_value`](block::Proc::from_value).
 // * `rb_obj_method`:
@@ -1211,7 +1167,6 @@
 // * `rb_path2class`:
 // * `rb_path_check`:
 // * `rb_path_to_class`:
-// * `rb_pipe`:
 // * `RB_POSFIXABLE`:
 // * `rb_postponed_job_register`:
 // * `rb_postponed_job_register_one`:
@@ -1322,7 +1277,6 @@
 // * `rb_rescue`:
 // * `rb_rescue2`:
 // * `RB_RESERVED_FD_P`:
-// * `rb_reserved_fd_p`:
 // * `rb_reset_random_seed`:
 // * `rb_respond_to`:
 // * `rb_ruby_debug_ptr`:
@@ -1431,7 +1385,6 @@
 // * `rb_str_offset`:
 // * `rb_str_plus`:
 // * `rb_str_replace`:
-// * `rb_str_resize`:
 // * `rb_str_resurrect`:
 // * `rb_str_scrub`:
 // * `rb_str_setter`:
@@ -1508,58 +1461,33 @@
 // * `rb_syserr_fail`:
 // * `rb_syserr_fail_str`:
 // * `rb_syserr_new`:
-// * `rb_syserr_new_str`:
 // * `rb_syswait`:
-// * `rb_sys_fail`:
 // * `rb_sys_fail_str`:
 // * `rb_sys_warning`:
 //!
 //! ## `rb_t`
 //!
 //! * `RB_TEST`: [`Value::to_bool`] / [`TryConvert`] / [`Value::try_convert`].
-// * `rb_thread_add_event_hook`:
 // * `rb_thread_add_event_hook2`:
 // * `rb_thread_alone`:
 // * `rb_thread_atfork`:
 // * `rb_thread_atfork_before_exec`:
-// * `rb_thread_call_without_gvl`:
 // * `rb_thread_call_without_gvl2`:
-// * `rb_thread_call_with_gvl`:
-// * `rb_thread_check_ints`:
-// * `rb_thread_create`:
-// * `rb_thread_current`:
-// * `rb_thread_fd_close`:
-// * `rb_thread_fd_select`:
-// * `rb_thread_fd_writable`:
-// * `rb_thread_interrupted`:
-// * `rb_thread_kill`:
-// * `rb_thread_local_aref`:
-// * `rb_thread_local_aset`:
-// * `rb_thread_main`:
-// * `rb_thread_remove_event_hook`:
 // * `rb_thread_remove_event_hook_with_data`:
-// * `rb_thread_run`:
-// * `rb_thread_schedule`:
 // * `rb_thread_sleep`:
 // * `rb_thread_sleep_deadly`:
 // * `rb_thread_sleep_forever`:
 // * `rb_thread_stop`:
-// * `rb_thread_wait_fd`:
-// * `rb_thread_wait_for`:
-// * `rb_thread_wakeup`:
 // * `rb_thread_wakeup_alive`:
 // * `rb_throw`:
 // * `rb_throw_obj`:
 // * `rb_timespec_now`:
 // * `rb_time_interval`:
-// * `rb_time_nano_new`:
 // * `rb_time_new`:
 // * `rb_time_num_new`:
 // * `rb_time_timespec`:
 // * `rb_time_timespec_interval`:
-// * `rb_time_timespec_new`:
-// * `rb_time_timeval`:
-// * `rb_time_utc_offset`:
+// * `rb_time_nano_new`
 // * `rb_tolower`:
 // * `rb_toupper`:
 //! * `rb_to_encoding`: [`TryConvert`] or [`Value::try_convert`].
@@ -1633,8 +1561,6 @@
 // * `rb_vrescue2`:
 // * `rb_vsprintf`:
 // * `rb_w32_fd_copy`:
-// * `rb_w32_fd_dup`:
-// * `rb_waitpid`:
 // * `rb_warn`:
 //! * `rb_warning`: [`error::warning`].
 // * `rb_write_error`:
@@ -1814,6 +1740,7 @@ pub mod error;
 pub mod exception;
 mod float;
 pub mod gc;
+pub mod gvl;
 mod integer;
 pub mod method;
 pub mod module;
@@ -1821,15 +1748,22 @@ mod object;
 mod r_array;
 mod r_bignum;
 mod r_complex;
+#[cfg(ruby_gt_3_0)]
+pub mod r_fiber;
 mod r_file;
 mod r_float;
 pub mod r_hash;
+pub mod r_io;
 mod r_match;
+pub mod r_mutex;
 mod r_object;
+pub mod r_process;
 mod r_rational;
 mod r_regexp;
 pub mod r_string;
 pub mod r_struct;
+pub mod r_thread;
+pub mod r_time;
 pub mod r_typed_data;
 mod range;
 #[cfg(feature = "rb-sys-interop")]

@@ -22,6 +22,9 @@ use crate::ruby_sys::{
     rb_sym2id, rb_ull2inum, ruby_fl_type, ruby_special_consts, ruby_value_type, RBasic, ID, VALUE,
 };
 
+#[cfg(ruby_gte_2_7)]
+use crate::ruby_sys::rb_funcall_with_block_kw;
+
 // These don't seem to appear consistently in bindgen output, not sure if they
 // aren't consistently defined in the headers or what. Lets just do it
 // ourselves.
@@ -41,9 +44,10 @@ use crate::{
     module::Module,
     r_bignum::RBignum,
     r_float::RFloat,
+    r_hash::RHash,
     r_string::RString,
     symbol::Symbol,
-    try_convert::{ArgList, TryConvert, TryConvertOwned},
+    try_convert::{ArgList, KwArgList, TryConvert, TryConvertOwned},
 };
 
 /// Debug assertation that the Value hasn't been garbage collected.
@@ -583,6 +587,50 @@ impl Value {
                 ))
             })
             .and_then(|v| v.try_convert())
+        }
+    }
+
+    #[cfg(ruby_gte_2_7)]
+    /// Call the method named `method` on `self` with `args`, `kwargs` and `block`.
+    ///
+    /// Similar to [`funcall_with_block`](Value::funcall_with_block), but passes `kwargs` as a Ruby
+    pub fn funcall_with_block_kw<M, A, K, R>(
+        self,
+        method: M,
+        args: A,
+        kwargs: K,
+        block: Proc,
+    ) -> Result<R, Error>
+    where
+        M: Into<Id>,
+        A: ArgList,
+        K: KwArgList,
+        R: TryConvert,
+    {
+        unsafe {
+            let id = method.into();
+            let args = args.into_arg_list();
+            let args = args.as_ref();
+            let argc = args.len() as c_int;
+            let mut slice = args.to_vec();
+            let kwargs = kwargs
+                .into_kwarg_list()
+                .as_ref()
+                .into_iter()
+                .copied()
+                .collect::<RHash>();
+            slice.push(kwargs.into());
+            protect(move || {
+                Value::new(rb_funcall_with_block_kw(
+                    self.as_rb_value(),
+                    id.as_rb_id(),
+                    argc,
+                    slice.as_ptr() as *const VALUE,
+                    block.as_rb_value(),
+                    true.into(),
+                ))
+            })
+            .and_then(R::try_convert)
         }
     }
 
@@ -1163,6 +1211,17 @@ impl<T> DerefMut for BoxValue<T> {
     }
 }
 
+impl<T> Clone for BoxValue<T>
+where
+    T: Clone,
+{
+    fn clone(&self) -> Self {
+        let mut boxed = self.0.clone();
+        unsafe { rb_gc_register_address(boxed.as_mut() as *mut _ as *mut VALUE) };
+        Self(boxed)
+    }
+}
+
 impl<T> fmt::Display for BoxValue<T>
 where
     T: ReprValue,
@@ -1178,6 +1237,15 @@ where
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.to_value().inspect())
+    }
+}
+
+impl<T> Default for BoxValue<T>
+where
+    T: ReprValue + Default,
+{
+    fn default() -> Self {
+        Self::new(T::default())
     }
 }
 

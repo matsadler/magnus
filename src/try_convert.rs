@@ -5,11 +5,12 @@ use crate::ruby_sys::{rb_get_path, rb_num2dbl};
 use crate::{
     debug_assert_value,
     error::{protect, Error},
-    exception,
+    exception::{self, type_error},
     integer::Integer,
     r_array::RArray,
     r_hash::RHash,
     r_string::RString,
+    symbol::Symbol,
     value::{Fixnum, Flonum, Value, QNIL},
 };
 
@@ -32,6 +33,27 @@ pub trait TryConvertOwned: TryConvert {
 pub trait TryConvertForArg: Sized {
     /// Convert `val` into `Self`.
     fn try_convert_for_arg(val: Value) -> Result<Self, Error>;
+}
+
+impl TryConvert for () {
+    fn try_convert(val: Value) -> Result<Self, Error> {
+        if val.is_nil() {
+            Ok(())
+        } else {
+            Err(Error::new(
+                type_error(),
+                format!("no implicit conversion of {} into Unit", unsafe {
+                    val.classname()
+                }),
+            ))
+        }
+    }
+}
+
+impl TryConvertOwned for () {
+    fn try_convert_owned(val: Value) -> Result<Self, Error> {
+        Self::try_convert(val)
+    }
 }
 
 impl<T> TryConvert for Option<T>
@@ -1037,6 +1059,494 @@ impl<const N: usize> ArgList for [Value; N] {
 
     fn into_arg_list(self) -> Self::Output {
         self
+    }
+}
+
+/// Trait for types that can be used as keyword arguments when calling Ruby
+/// methods.
+pub trait KwArgList {
+    /// The type of the arguments list. Must convert to `&[Value]` with
+    /// [`AsRef`].
+    type Output: AsRef<[(Symbol, Value)]>;
+
+    /// Convert `self` into a type that can be used as Ruby keyword arguments.
+    fn into_kwarg_list(self) -> Self::Output;
+}
+
+impl<'a> KwArgList for &'a [(Symbol, Value)] {
+    type Output = &'a [(Symbol, Value)];
+
+    fn into_kwarg_list(self) -> Self::Output {
+        self
+    }
+}
+
+impl KwArgList for () {
+    type Output = [(Symbol, Value); 0];
+
+    fn into_kwarg_list(self) -> Self::Output {
+        []
+    }
+}
+
+impl<A1, A2> KwArgList for ((A1, A2),)
+where
+    A1: Into<Symbol>,
+    A2: Into<Value>,
+{
+    type Output = [(Symbol, Value); 1];
+
+    fn into_kwarg_list(self) -> Self::Output {
+        [(self.0 .0.into(), self.0 .1.into())]
+    }
+}
+
+impl<A1, A2, B1, B2> KwArgList for ((A1, A2), (B1, B2))
+where
+    A1: Into<Symbol>,
+    A2: Into<Value>,
+    B1: Into<Symbol>,
+    B2: Into<Value>,
+{
+    type Output = [(Symbol, Value); 2];
+
+    fn into_kwarg_list(self) -> Self::Output {
+        [
+            (self.0 .0.into(), self.0 .1.into()),
+            (self.1 .0.into(), self.1 .1.into()),
+        ]
+    }
+}
+
+impl<A1, A2, B1, B2, C1, C2> KwArgList for ((A1, A2), (B1, B2), (C1, C2))
+where
+    A1: Into<Symbol>,
+    A2: Into<Value>,
+    B1: Into<Symbol>,
+    B2: Into<Value>,
+    C1: Into<Symbol>,
+    C2: Into<Value>,
+{
+    type Output = [(Symbol, Value); 3];
+
+    fn into_kwarg_list(self) -> Self::Output {
+        [
+            (self.0 .0.into(), self.0 .1.into()),
+            (self.1 .0.into(), self.1 .1.into()),
+            (self.2 .0.into(), self.2 .1.into()),
+        ]
+    }
+}
+
+impl<A1, A2, B1, B2, C1, C2, D1, D2> KwArgList for ((A1, A2), (B1, B2), (C1, C2), (D1, D2))
+where
+    A1: Into<Symbol>,
+    A2: Into<Value>,
+    B1: Into<Symbol>,
+    B2: Into<Value>,
+    C1: Into<Symbol>,
+    C2: Into<Value>,
+    D1: Into<Symbol>,
+    D2: Into<Value>,
+{
+    type Output = [(Symbol, Value); 4];
+
+    fn into_kwarg_list(self) -> Self::Output {
+        [
+            (self.0 .0.into(), self.0 .1.into()),
+            (self.1 .0.into(), self.1 .1.into()),
+            (self.2 .0.into(), self.2 .1.into()),
+            (self.3 .0.into(), self.3 .1.into()),
+        ]
+    }
+}
+
+impl<A1, A2, B1, B2, C1, C2, D1, D2, E1, E2> KwArgList
+    for ((A1, A2), (B1, B2), (C1, C2), (D1, D2), (E1, E2))
+where
+    A1: Into<Symbol>,
+    A2: Into<Value>,
+    B1: Into<Symbol>,
+    B2: Into<Value>,
+    C1: Into<Symbol>,
+    C2: Into<Value>,
+    D1: Into<Symbol>,
+    D2: Into<Value>,
+    E1: Into<Symbol>,
+    E2: Into<Value>,
+{
+    type Output = [(Symbol, Value); 5];
+
+    fn into_kwarg_list(self) -> Self::Output {
+        [
+            (self.0 .0.into(), self.0 .1.into()),
+            (self.1 .0.into(), self.1 .1.into()),
+            (self.2 .0.into(), self.2 .1.into()),
+            (self.3 .0.into(), self.3 .1.into()),
+            (self.4 .0.into(), self.4 .1.into()),
+        ]
+    }
+}
+
+impl<A1, A2, B1, B2, C1, C2, D1, D2, E1, E2, F1, F2> KwArgList
+    for ((A1, A2), (B1, B2), (C1, C2), (D1, D2), (E1, E2), (F1, F2))
+where
+    A1: Into<Symbol>,
+    A2: Into<Value>,
+    B1: Into<Symbol>,
+    B2: Into<Value>,
+    C1: Into<Symbol>,
+    C2: Into<Value>,
+    D1: Into<Symbol>,
+    D2: Into<Value>,
+    E1: Into<Symbol>,
+    E2: Into<Value>,
+    F1: Into<Symbol>,
+    F2: Into<Value>,
+{
+    type Output = [(Symbol, Value); 6];
+
+    fn into_kwarg_list(self) -> Self::Output {
+        [
+            (self.0 .0.into(), self.0 .1.into()),
+            (self.1 .0.into(), self.1 .1.into()),
+            (self.2 .0.into(), self.2 .1.into()),
+            (self.3 .0.into(), self.3 .1.into()),
+            (self.4 .0.into(), self.4 .1.into()),
+            (self.5 .0.into(), self.5 .1.into()),
+        ]
+    }
+}
+
+impl<A1, A2, B1, B2, C1, C2, D1, D2, E1, E2, F1, F2, G1, G2> KwArgList
+    for (
+        (A1, A2),
+        (B1, B2),
+        (C1, C2),
+        (D1, D2),
+        (E1, E2),
+        (F1, F2),
+        (G1, G2),
+    )
+where
+    A1: Into<Symbol>,
+    A2: Into<Value>,
+    B1: Into<Symbol>,
+    B2: Into<Value>,
+    C1: Into<Symbol>,
+    C2: Into<Value>,
+    D1: Into<Symbol>,
+    D2: Into<Value>,
+    E1: Into<Symbol>,
+    E2: Into<Value>,
+    F1: Into<Symbol>,
+    F2: Into<Value>,
+    G1: Into<Symbol>,
+    G2: Into<Value>,
+{
+    type Output = [(Symbol, Value); 7];
+
+    fn into_kwarg_list(self) -> Self::Output {
+        [
+            (self.0 .0.into(), self.0 .1.into()),
+            (self.1 .0.into(), self.1 .1.into()),
+            (self.2 .0.into(), self.2 .1.into()),
+            (self.3 .0.into(), self.3 .1.into()),
+            (self.4 .0.into(), self.4 .1.into()),
+            (self.5 .0.into(), self.5 .1.into()),
+            (self.6 .0.into(), self.6 .1.into()),
+        ]
+    }
+}
+
+impl<A1, A2, B1, B2, C1, C2, D1, D2, E1, E2, F1, F2, G1, G2, H1, H2> KwArgList
+    for (
+        (A1, A2),
+        (B1, B2),
+        (C1, C2),
+        (D1, D2),
+        (E1, E2),
+        (F1, F2),
+        (G1, G2),
+        (H1, H2),
+    )
+where
+    A1: Into<Symbol>,
+    A2: Into<Value>,
+    B1: Into<Symbol>,
+    B2: Into<Value>,
+    C1: Into<Symbol>,
+    C2: Into<Value>,
+    D1: Into<Symbol>,
+    D2: Into<Value>,
+    E1: Into<Symbol>,
+    E2: Into<Value>,
+    F1: Into<Symbol>,
+    F2: Into<Value>,
+    G1: Into<Symbol>,
+    G2: Into<Value>,
+    H1: Into<Symbol>,
+    H2: Into<Value>,
+{
+    type Output = [(Symbol, Value); 8];
+
+    fn into_kwarg_list(self) -> Self::Output {
+        [
+            (self.0 .0.into(), self.0 .1.into()),
+            (self.1 .0.into(), self.1 .1.into()),
+            (self.2 .0.into(), self.2 .1.into()),
+            (self.3 .0.into(), self.3 .1.into()),
+            (self.4 .0.into(), self.4 .1.into()),
+            (self.5 .0.into(), self.5 .1.into()),
+            (self.6 .0.into(), self.6 .1.into()),
+            (self.7 .0.into(), self.7 .1.into()),
+        ]
+    }
+}
+
+impl<A1, A2, B1, B2, C1, C2, D1, D2, E1, E2, F1, F2, G1, G2, H1, H2, I1, I2> KwArgList
+    for (
+        (A1, A2),
+        (B1, B2),
+        (C1, C2),
+        (D1, D2),
+        (E1, E2),
+        (F1, F2),
+        (G1, G2),
+        (H1, H2),
+        (I1, I2),
+    )
+where
+    A1: Into<Symbol>,
+    A2: Into<Value>,
+    B1: Into<Symbol>,
+    B2: Into<Value>,
+    C1: Into<Symbol>,
+    C2: Into<Value>,
+    D1: Into<Symbol>,
+    D2: Into<Value>,
+    E1: Into<Symbol>,
+    E2: Into<Value>,
+    F1: Into<Symbol>,
+    F2: Into<Value>,
+    G1: Into<Symbol>,
+    G2: Into<Value>,
+    H1: Into<Symbol>,
+    H2: Into<Value>,
+    I1: Into<Symbol>,
+    I2: Into<Value>,
+{
+    type Output = [(Symbol, Value); 9];
+
+    fn into_kwarg_list(self) -> Self::Output {
+        [
+            (self.0 .0.into(), self.0 .1.into()),
+            (self.1 .0.into(), self.1 .1.into()),
+            (self.2 .0.into(), self.2 .1.into()),
+            (self.3 .0.into(), self.3 .1.into()),
+            (self.4 .0.into(), self.4 .1.into()),
+            (self.5 .0.into(), self.5 .1.into()),
+            (self.6 .0.into(), self.6 .1.into()),
+            (self.7 .0.into(), self.7 .1.into()),
+            (self.8 .0.into(), self.8 .1.into()),
+        ]
+    }
+}
+
+impl<A1, A2, B1, B2, C1, C2, D1, D2, E1, E2, F1, F2, G1, G2, H1, H2, I1, I2, J1, J2> KwArgList
+    for (
+        (A1, A2),
+        (B1, B2),
+        (C1, C2),
+        (D1, D2),
+        (E1, E2),
+        (F1, F2),
+        (G1, G2),
+        (H1, H2),
+        (I1, I2),
+        (J1, J2),
+    )
+where
+    A1: Into<Symbol>,
+    A2: Into<Value>,
+    B1: Into<Symbol>,
+    B2: Into<Value>,
+    C1: Into<Symbol>,
+    C2: Into<Value>,
+    D1: Into<Symbol>,
+    D2: Into<Value>,
+    E1: Into<Symbol>,
+    E2: Into<Value>,
+    F1: Into<Symbol>,
+    F2: Into<Value>,
+    G1: Into<Symbol>,
+    G2: Into<Value>,
+    H1: Into<Symbol>,
+    H2: Into<Value>,
+    I1: Into<Symbol>,
+    I2: Into<Value>,
+    J1: Into<Symbol>,
+    J2: Into<Value>,
+{
+    type Output = [(Symbol, Value); 10];
+
+    fn into_kwarg_list(self) -> Self::Output {
+        [
+            (self.0 .0.into(), self.0 .1.into()),
+            (self.1 .0.into(), self.1 .1.into()),
+            (self.2 .0.into(), self.2 .1.into()),
+            (self.3 .0.into(), self.3 .1.into()),
+            (self.4 .0.into(), self.4 .1.into()),
+            (self.5 .0.into(), self.5 .1.into()),
+            (self.6 .0.into(), self.6 .1.into()),
+            (self.7 .0.into(), self.7 .1.into()),
+            (self.8 .0.into(), self.8 .1.into()),
+            (self.9 .0.into(), self.9 .1.into()),
+        ]
+    }
+}
+
+impl<A1, A2, B1, B2, C1, C2, D1, D2, E1, E2, F1, F2, G1, G2, H1, H2, I1, I2, J1, J2, K1, K2>
+    KwArgList
+    for (
+        (A1, A2),
+        (B1, B2),
+        (C1, C2),
+        (D1, D2),
+        (E1, E2),
+        (F1, F2),
+        (G1, G2),
+        (H1, H2),
+        (I1, I2),
+        (J1, J2),
+        (K1, K2),
+    )
+where
+    A1: Into<Symbol>,
+    A2: Into<Value>,
+    B1: Into<Symbol>,
+    B2: Into<Value>,
+    C1: Into<Symbol>,
+    C2: Into<Value>,
+    D1: Into<Symbol>,
+    D2: Into<Value>,
+    E1: Into<Symbol>,
+    E2: Into<Value>,
+    F1: Into<Symbol>,
+    F2: Into<Value>,
+    G1: Into<Symbol>,
+    G2: Into<Value>,
+    H1: Into<Symbol>,
+    H2: Into<Value>,
+    I1: Into<Symbol>,
+    I2: Into<Value>,
+    J1: Into<Symbol>,
+    J2: Into<Value>,
+    K1: Into<Symbol>,
+    K2: Into<Value>,
+{
+    type Output = [(Symbol, Value); 11];
+
+    fn into_kwarg_list(self) -> Self::Output {
+        [
+            (self.0 .0.into(), self.0 .1.into()),
+            (self.1 .0.into(), self.1 .1.into()),
+            (self.2 .0.into(), self.2 .1.into()),
+            (self.3 .0.into(), self.3 .1.into()),
+            (self.4 .0.into(), self.4 .1.into()),
+            (self.5 .0.into(), self.5 .1.into()),
+            (self.6 .0.into(), self.6 .1.into()),
+            (self.7 .0.into(), self.7 .1.into()),
+            (self.8 .0.into(), self.8 .1.into()),
+            (self.9 .0.into(), self.9 .1.into()),
+            (self.10 .0.into(), self.10 .1.into()),
+        ]
+    }
+}
+
+impl<
+        A1,
+        A2,
+        B1,
+        B2,
+        C1,
+        C2,
+        D1,
+        D2,
+        E1,
+        E2,
+        F1,
+        F2,
+        G1,
+        G2,
+        H1,
+        H2,
+        I1,
+        I2,
+        J1,
+        J2,
+        K1,
+        K2,
+        L1,
+        L2,
+    > KwArgList
+    for (
+        (A1, A2),
+        (B1, B2),
+        (C1, C2),
+        (D1, D2),
+        (E1, E2),
+        (F1, F2),
+        (G1, G2),
+        (H1, H2),
+        (I1, I2),
+        (J1, J2),
+        (K1, K2),
+        (L1, L2),
+    )
+where
+    A1: Into<Symbol>,
+    A2: Into<Value>,
+    B1: Into<Symbol>,
+    B2: Into<Value>,
+    C1: Into<Symbol>,
+    C2: Into<Value>,
+    D1: Into<Symbol>,
+    D2: Into<Value>,
+    E1: Into<Symbol>,
+    E2: Into<Value>,
+    F1: Into<Symbol>,
+    F2: Into<Value>,
+    G1: Into<Symbol>,
+    G2: Into<Value>,
+    H1: Into<Symbol>,
+    H2: Into<Value>,
+    I1: Into<Symbol>,
+    I2: Into<Value>,
+    J1: Into<Symbol>,
+    J2: Into<Value>,
+    K1: Into<Symbol>,
+    K2: Into<Value>,
+    L1: Into<Symbol>,
+    L2: Into<Value>,
+{
+    type Output = [(Symbol, Value); 12];
+
+    fn into_kwarg_list(self) -> Self::Output {
+        [
+            (self.0 .0.into(), self.0 .1.into()),
+            (self.1 .0.into(), self.1 .1.into()),
+            (self.2 .0.into(), self.2 .1.into()),
+            (self.3 .0.into(), self.3 .1.into()),
+            (self.4 .0.into(), self.4 .1.into()),
+            (self.5 .0.into(), self.5 .1.into()),
+            (self.6 .0.into(), self.6 .1.into()),
+            (self.7 .0.into(), self.7 .1.into()),
+            (self.8 .0.into(), self.8 .1.into()),
+            (self.9 .0.into(), self.9 .1.into()),
+            (self.10 .0.into(), self.10 .1.into()),
+            (self.11 .0.into(), self.11 .1.into()),
+        ]
     }
 }
 

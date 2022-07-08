@@ -1,10 +1,12 @@
 //! Rust types for working with Ruby Exceptions and other interrupts.
 
-use std::{any::Any, borrow::Cow, ffi::CString, fmt, mem::transmute, ops::Deref, os::raw::c_int};
+use std::{
+    any::Any, borrow::Cow, ffi::CString, fmt, mem::transmute, ops::Deref, os::raw::c_int, ptr::null,
+};
 
 use crate::ruby_sys::{
     rb_bug, rb_ensure, rb_errinfo, rb_exc_raise, rb_iter_break, rb_iter_break_value, rb_jump_tag,
-    rb_protect, rb_raise, rb_set_errinfo, rb_warning, ruby_special_consts, VALUE,
+    rb_protect, rb_raise, rb_set_errinfo, rb_sys_fail, rb_warning, ruby_special_consts, VALUE,
 };
 
 use crate::{
@@ -91,6 +93,15 @@ impl Error {
             "panic".into()
         };
         Self::Error(exception::fatal(), msg)
+    }
+
+    /// Akin to io::Error::last_os_error()
+    pub(crate) fn last_os_error() -> Self {
+        protect(|| {
+            unsafe { rb_sys_fail(null()) };
+            Value::default()
+        })
+        .unwrap_err()
     }
 }
 
