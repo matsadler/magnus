@@ -2,8 +2,10 @@ use proc_macro2::{Ident, Span, TokenStream};
 use quote::quote;
 use syn::{AttributeArgs, Error, ItemFn};
 
+use crate::util;
+
 pub fn expand(args: AttributeArgs, input: ItemFn) -> TokenStream {
-    let mut args = match crate::util::Args::new(args, &["name"]) {
+    let mut args = match util::Args::new(args, &["name"]) {
         Ok(v) => v,
         Err(e) => return e.into_compile_error(),
     };

@@ -1,7 +1,8 @@
-use darling::{util::Flag, FromMeta};
 use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
-use syn::{spanned::Spanned, DeriveInput, Error};
+use syn::{spanned::Spanned, DeriveInput, Error, Meta};
+
+use crate::util;
 
 pub fn expand(attrs: TokenStream, item: TokenStream) -> TokenStream {
     quote! {
@@ -17,25 +18,6 @@ pub fn expand_derive_data_type_functions(input: DeriveInput) -> TokenStream {
     quote! {
         impl #generics magnus::DataTypeFunctions for #ident #generics {}
     }
-}
-
-#[derive(FromMeta)]
-struct TypedDataAttributes {
-    class: String,
-    #[darling(default)]
-    name: Option<String>,
-    #[darling(default)]
-    mark: Flag,
-    #[darling(default)]
-    size: Flag,
-    #[darling(default)]
-    compact: Flag,
-    #[darling(default)]
-    free_immediatly: Flag,
-    #[darling(default)]
-    wb_protected: Flag,
-    #[darling(default)]
-    frozen_shareable: Flag,
 }
 
 pub fn expand_derive_typed_data(input: DeriveInput) -> TokenStream {
@@ -67,34 +49,79 @@ pub fn expand_derive_typed_data(input: DeriveInput) -> TokenStream {
         return Error::new(input.span(), "missing #[magnus] attribute").into_compile_error();
     }
     let attrs = match attrs.remove(0).parse_meta() {
+        Ok(Meta::List(v)) => v.nested.into_iter().collect(),
+        Ok(v) => return Error::new_spanned(v, "Expected meta list").into_compile_error(),
+        Err(e) => return e.into_compile_error(),
+    };
+    let mut args = match util::Args::new(
+        attrs,
+        &[
+            "class",
+            "name",
+            "mark",
+            "size",
+            "compact",
+            "free_immediatly",
+            "wb_protected",
+            "frozen_shareable",
+        ],
+    ) {
         Ok(v) => v,
         Err(e) => return e.into_compile_error(),
     };
-    let attrs = match TypedDataAttributes::from_meta(&attrs) {
+
+    let class = match args.extract::<String>("class") {
         Ok(v) => v,
-        Err(e) => return e.write_errors(),
+        Err(e) => return e.into_compile_error(),
     };
+    let name = match args.extract::<Option<String>>("name") {
+        Ok(v) => v.unwrap_or_else(|| class.clone()),
+        Err(e) => return e.into_compile_error(),
+    };
+    let mark = match args.extract::<Option<()>>("mark") {
+        Ok(v) => v.is_some(),
+        Err(e) => return e.into_compile_error(),
+    };
+    let size = match args.extract::<Option<()>>("size") {
+        Ok(v) => v.is_some(),
+        Err(e) => return e.into_compile_error(),
+    };
+    let compact = match args.extract::<Option<()>>("compact") {
+        Ok(v) => v.is_some(),
+        Err(e) => return e.into_compile_error(),
+    };
+    let free_immediatly = match args.extract::<Option<()>>("free_immediatly") {
+        Ok(v) => v.is_some(),
+        Err(e) => return e.into_compile_error(),
+    };
+    let wb_protected = match args.extract::<Option<()>>("wb_protected") {
+        Ok(v) => v.is_some(),
+        Err(e) => return e.into_compile_error(),
+    };
+    let frozen_shareable = match args.extract::<Option<()>>("frozen_shareable") {
+        Ok(v) => v.is_some(),
+        Err(e) => return e.into_compile_error(),
+    };
+
     let ident = input.ident;
-    let class = attrs.class;
-    let name = attrs.name.unwrap_or_else(|| class.clone());
     let mut builder = Vec::new();
     builder.push(quote! { let mut builder = magnus::DataType::builder::<Self>(#name); });
-    if attrs.mark.is_some() {
+    if mark {
         builder.push(quote! { builder.mark(); });
     }
-    if attrs.size.is_some() {
+    if size {
         builder.push(quote! { builder.size(); });
     }
-    if attrs.compact.is_some() {
+    if compact {
         builder.push(quote! { builder.compact(); });
     }
-    if attrs.free_immediatly.is_some() {
+    if free_immediatly {
         builder.push(quote! { builder.free_immediatly(); });
     }
-    if attrs.wb_protected.is_some() {
+    if wb_protected {
         builder.push(quote! { builder.wb_protected(); });
     }
-    if attrs.frozen_shareable.is_some() {
+    if frozen_shareable {
         builder.push(quote! { builder.frozen_shareable(); });
     }
     builder.push(quote! { builder.build() });

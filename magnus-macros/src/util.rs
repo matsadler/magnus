@@ -1,17 +1,28 @@
 use std::collections::HashMap;
 
 use proc_macro2::Span;
-use syn::{spanned::Spanned, AttributeArgs, Error, Lit, LitBool, Meta, MetaNameValue, NestedMeta};
+use syn::{AttributeArgs, Error, Lit, Meta, MetaNameValue, NestedMeta, Path};
+
+pub struct Value {
+    path: Path,
+    value: Option<Lit>,
+}
 
 pub trait Extract: Sized {
-    fn extract(name: &str, map: &mut HashMap<String, Lit>) -> Result<Self, Error>;
+    fn extract(name: &str, map: &mut HashMap<String, Value>) -> Result<Self, Error>;
 }
 
 impl Extract for String {
-    fn extract(name: &str, map: &mut HashMap<String, Lit>) -> Result<Self, Error> {
+    fn extract(name: &str, map: &mut HashMap<String, Value>) -> Result<Self, Error> {
         match map.remove(name) {
-            Some(Lit::Str(lit_str)) => Ok(lit_str.value()),
-            Some(lit) => Err(Error::new_spanned(lit, "Expected string")),
+            Some(Value {
+                value: Some(Lit::Str(lit_str)),
+                ..
+            }) => Ok(lit_str.value()),
+            Some(Value {
+                value: Some(lit), ..
+            }) => Err(Error::new_spanned(lit, "Expected string")),
+            Some(Value { path, .. }) => Err(Error::new_spanned(path, "Expected string")),
             None => Err(Error::new(
                 Span::call_site(),
                 format!("Missing field `{}`", name),
@@ -21,26 +32,34 @@ impl Extract for String {
 }
 
 impl Extract for Option<String> {
-    fn extract(name: &str, map: &mut HashMap<String, Lit>) -> Result<Self, Error> {
+    fn extract(name: &str, map: &mut HashMap<String, Value>) -> Result<Self, Error> {
         match map.remove(name) {
-            Some(Lit::Str(lit_str)) => Ok(Some(lit_str.value())),
-            Some(lit) => Err(Error::new_spanned(lit, "Expected string")),
+            Some(Value {
+                value: Some(Lit::Str(lit_str)),
+                ..
+            }) => Ok(Some(lit_str.value())),
+            Some(Value {
+                value: Some(lit), ..
+            }) => Err(Error::new_spanned(lit, "Expected string")),
+            Some(Value { path, .. }) => Err(Error::new_spanned(path, "Expected string")),
             None => Ok(None),
         }
     }
 }
 
-impl Extract for Option<bool> {
-    fn extract(name: &str, map: &mut HashMap<String, Lit>) -> Result<Self, Error> {
+impl Extract for Option<()> {
+    fn extract(name: &str, map: &mut HashMap<String, Value>) -> Result<Self, Error> {
         match map.remove(name) {
-            Some(Lit::Bool(lit_bool)) => Ok(Some(lit_bool.value())),
-            Some(lit) => Err(Error::new_spanned(lit, "Expected bool")),
+            Some(Value {
+                value: Some(lit), ..
+            }) => Err(Error::new_spanned(lit, "Unexpected value")),
+            Some(Value { value: None, .. }) => Ok(Some(())),
             None => Ok(None),
         }
     }
 }
 
-pub struct Args(HashMap<String, Lit>);
+pub struct Args(HashMap<String, Value>);
 
 impl Args {
     pub fn new(args: AttributeArgs, known: &[&str]) -> Result<Self, Error> {
@@ -54,13 +73,10 @@ impl Args {
                 }
             };
 
-            let (path, lit) = match meta {
-                Meta::Path(v) => {
-                    let lit = Lit::Bool(LitBool::new(true, v.span()));
-                    (v, lit)
-                }
+            let (path, value) = match meta {
+                Meta::Path(v) => (v, None),
                 Meta::List(_) => return Err(Error::new_spanned(meta, "Unexpected meta list")),
-                Meta::NameValue(MetaNameValue { path, lit, .. }) => (path, lit),
+                Meta::NameValue(MetaNameValue { path, lit, .. }) => (path, Some(lit)),
             };
 
             if let Some(ident) = path.get_ident() {
@@ -68,7 +84,11 @@ impl Args {
                 if !known.contains(&s.as_str()) {
                     return Err(Error::new_spanned(ident, "Unknown field"));
                 }
-                if map.insert(s, lit).is_some() {
+                let val = Value {
+                    path: path.clone(),
+                    value,
+                };
+                if map.insert(s, val).is_some() {
                     return Err(Error::new_spanned(path, "Duplicate field"));
                 }
             } else {
