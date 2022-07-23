@@ -103,7 +103,7 @@ impl Value {
     /// non-immediate values are pointers to other memory holding the data for
     /// the object.
     #[inline]
-    fn is_immediate(self) -> bool {
+    pub(crate) fn is_immediate(self) -> bool {
         let value_p = self.as_rb_value();
         let immediate_p = value_p & ruby_special_consts::RUBY_IMMEDIATE_MASK as VALUE != 0;
         let test = value_p & !(ruby_special_consts::RUBY_Qnil as VALUE) != 0;
