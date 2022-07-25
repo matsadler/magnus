@@ -26,31 +26,32 @@
 //! them with care.
 use crate::{
     error::{self, raise, Error},
-    exception::arg_error,
     value::{Id, Value},
 };
 use rb_sys::{ID, VALUE};
 use std::{intrinsics::transmute, panic::UnwindSafe};
 
-impl Value {
+/// Converts from a [`Value`] to a raw [`VALUE`].
+pub trait AsRawValue {
     /// Convert [`magnus::Value`](Value) to [`rb_sys::VALUE`](VALUE).
     ///
     /// ```
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// use magnus::{RString};
+    /// use magnus::{RString, rb_sys::AsRawValue};
     ///
     /// let foo = RString::new("foo");
     /// let bar = RString::new("bar");
     ///
-    /// unsafe { rb_sys::rb_str_buf_append(foo.into_raw(), bar.into_raw()) };
+    /// unsafe { rb_sys::rb_str_buf_append(foo.as_raw(), bar.as_raw()) };
     ///
     /// assert_eq!(foo.to_string().unwrap(), "foobar");
     /// ```
-    pub fn into_raw(self) -> VALUE {
-        self.as_rb_value()
-    }
+    fn as_raw(self) -> VALUE;
+}
 
+/// Converts from a raw [`VALUE`] to a [`Value`].
+pub trait FromRawValue {
     /// Convert [`rb_sys::VALUE`](VALUE) to [`magnus::Value`](Value).
     /// # Safety
     ///
@@ -61,35 +62,47 @@ impl Value {
     /// ```
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// use magnus::{RString, Value};
+    /// use magnus::{RString, Value, rb_sys::FromRawValue};
     ///
     /// let raw_value = unsafe { rb_sys::rb_str_new("foo".as_ptr() as *mut _, 3) };
     ///
-    /// assert_eq!(unsafe { Value::from_raw(raw_value).unwrap().to_string() }, "foo");
+    /// assert_eq!(unsafe { Value::from_raw(raw_value) }.to_string(), "foo");
     /// ```
-    pub unsafe fn from_raw(val: VALUE) -> Result<Value, Error> {
-        Ok(Value::new(val.into()))
+    unsafe fn from_raw(value: VALUE) -> Self;
+}
+
+impl AsRawValue for Value {
+    fn as_raw(self) -> VALUE {
+        self.as_rb_value()
     }
 }
 
-impl Id {
+impl FromRawValue for Value {
+    unsafe fn from_raw(val: VALUE) -> Value {
+        Value::new(val.into())
+    }
+}
+
+/// Trait to convert a [`Id`] to a raw [`ID`].
+pub trait AsRawId {
     /// Convert [`magnus::value::Id`](Id) to [`rb_sys::ID`](ID).
     ///
     /// ```
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// use magnus::{Symbol, value::Id};
+    /// use magnus::{Symbol, value::Id, rb_sys::{AsRawId, FromRawId}};
     ///
     /// let foo: Id = Symbol::new("foo").into();
-    /// let raw = foo.into_raw();
-    /// let from_raw_val: Symbol = unsafe { Id::from_raw(raw).unwrap() }.into();
+    /// let raw = foo.as_raw();
+    /// let from_raw_val: Symbol = unsafe { Id::from_raw(raw) }.into();
     ///
     /// assert_eq!(from_raw_val.inspect(), ":foo");
     /// ```
-    pub fn into_raw(self) -> ID {
-        self.as_rb_id()
-    }
+    fn as_raw(self) -> ID;
+}
 
+/// Trait to convert from a raw [`ID`] to an [`Id`].
+pub trait FromRawId {
     /// Convert [`rb_sys::ID`](ID) to [`magnus::value::Id`](ID).
     ///
     /// # Safety
@@ -101,25 +114,28 @@ impl Id {
     /// ```
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// use magnus::{Symbol, value::Id};
+    /// use magnus::{Symbol, value::Id, rb_sys::{FromRawId, AsRawId}};
     /// use std::convert::TryInto;
     ///
     /// let foo: Id = Symbol::new("foo").into();
-    /// let from_raw_val: Symbol = unsafe { Id::from_raw(foo.into_raw()).unwrap() }.into();
+    /// let from_raw_val: Symbol = unsafe { Id::from_raw(foo.as_raw()) }.into();
     ///
     /// assert_eq!(from_raw_val.inspect(), ":foo");
-    /// assert!(unsafe { Id::from_raw(0) }.is_err());
     /// ```
-    pub unsafe fn from_raw(id: ID) -> Result<Id, Error> {
-        // Be nice and try to prevent some obvious seg-faults
-        if Value::is_immediate(transmute::<ID, Value>(id)) {
-            return Err(Error::new(
-                arg_error(),
-                "cannot convert special_const_p to Id",
-            ));
-        }
+    unsafe fn from_raw(id: ID) -> Self;
+}
 
-        Ok(Id::new(id.into()))
+impl AsRawId for Id {
+    fn as_raw(self) -> ID {
+        self.as_rb_id()
+    }
+}
+
+impl FromRawId for Id {
+    unsafe fn from_raw(id: ID) -> Id {
+        debug_assert!(!Value::is_immediate(transmute::<ID, Value>(id)));
+
+        Id::new(id.into())
     }
 }
 
@@ -179,9 +195,9 @@ pub unsafe fn resume_error(e: Error) -> ! {
 }
 
 /// Convert [`magnus::Value`](Value) to [`rb_sys::VALUE`].
-#[deprecated(since = "0.3.3", note = "please use `Value::into_raw` instead")]
+#[deprecated(since = "0.3.3", note = "please use `Value::as_raw` instead")]
 pub fn raw_value(val: Value) -> VALUE {
-    val.into_raw()
+    val.as_raw()
 }
 
 /// Convert [`rb_sys::VALUE`] to [`magnus::Value`](Value).
@@ -193,13 +209,13 @@ pub fn raw_value(val: Value) -> VALUE {
 /// void all saftey guarantees provided by Magnus.
 #[deprecated(since = "0.3.3", note = "please use `Value::from_raw` instead")]
 pub unsafe fn value_from_raw(val: VALUE) -> Value {
-    Value::from_raw(val).unwrap()
+    Value::from_raw(val)
 }
 
 /// Convert [`magnus::value::Id`](Id) to [`rb_sys::ID`].
-#[deprecated(since = "0.3.3", note = "please use `Id::into_raw` instead")]
+#[deprecated(since = "0.3.3", note = "please use `Id::as_raw` instead")]
 pub fn raw_id(id: Id) -> ID {
-    id.into_raw()
+    id.as_raw()
 }
 
 /// Convert [`rb_sys::ID`] to [`magnus::value::Id`](Id).
@@ -211,5 +227,5 @@ pub fn raw_id(id: Id) -> ID {
 /// saftey guarantees provided by Magnus.
 #[deprecated(since = "0.3.3", note = "please use `Id::from_raw` instead")]
 pub unsafe fn id_from_raw(id: ID) -> Id {
-    Id::from_raw(id).unwrap()
+    Id::from_raw(id)
 }
