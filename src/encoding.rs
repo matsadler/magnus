@@ -152,9 +152,8 @@ unsafe impl private::ReprValue for Encoding {
 impl ReprValue for Encoding {}
 
 impl TryConvert for Encoding {
-    #[inline]
-    fn try_convert(val: &Value) -> Result<Self, Error> {
-        if let Some(enc) = Self::from_value(*val) {
+    fn try_convert(val: Value) -> Result<Self, Error> {
+        if let Some(enc) = Self::from_value(val) {
             return Ok(enc);
         }
         RbEncoding::try_convert(val).map(Into::into)
@@ -673,8 +672,7 @@ impl From<RbEncoding> for Value {
 }
 
 impl TryConvert for RbEncoding {
-    #[inline]
-    fn try_convert(val: &Value) -> Result<Self, Error> {
+    fn try_convert(val: Value) -> Result<Self, Error> {
         let mut ptr = ptr::null_mut();
         protect(|| {
             ptr = unsafe { rb_to_encoding(val.as_rb_value()) };
@@ -764,10 +762,9 @@ impl From<Index> for RbEncoding {
 }
 
 impl TryConvert for Index {
-    #[inline]
-    fn try_convert(val: &Value) -> Result<Self, Error> {
+    fn try_convert(val: Value) -> Result<Self, Error> {
         let i = unsafe { rb_to_encoding_index(val.as_rb_value()) };
-        if i == -1 && RString::from_value(*val).is_some() {
+        if i == -1 && RString::from_value(val).is_some() {
             return Err(Error::new(
                 exception::runtime_error(),
                 format!("ArgumentError: unknown encoding name - {}", val),

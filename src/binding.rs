@@ -1,10 +1,11 @@
 use std::{fmt, ops::Deref};
 
+#[cfg(any(ruby_lte_3_1, docsrs))]
 use crate::ruby_sys::{rb_binding_new, VALUE};
 
 use crate::{
     class,
-    error::{protect, Error},
+    error::Error,
     exception,
     object::Object,
     r_string::RString,
@@ -37,9 +38,11 @@ impl Binding {
     #[deprecated(since = "0.2.0", note = "this will no longer function as of Ruby 3.2")]
     #[allow(clippy::new_without_default)]
     pub fn new() -> Self {
-        protect(|| unsafe { Self::from_rb_value_unchecked(rb_binding_new()) }).unwrap()
+        crate::error::protect(|| unsafe { Self::from_rb_value_unchecked(rb_binding_new()) })
+            .unwrap()
     }
 
+    #[cfg(any(ruby_lte_3_1, docsrs))]
     #[inline]
     pub(crate) unsafe fn from_rb_value_unchecked(val: VALUE) -> Self {
         Self(NonZeroValue::new_unchecked(Value::new(val)))
@@ -161,9 +164,8 @@ unsafe impl private::ReprValue for Binding {
 impl ReprValue for Binding {}
 
 impl TryConvert for Binding {
-    #[inline]
-    fn try_convert(val: &Value) -> Result<Self, Error> {
-        Self::from_value(*val).ok_or_else(|| {
+    fn try_convert(val: Value) -> Result<Self, Error> {
+        Self::from_value(val).ok_or_else(|| {
             Error::new(
                 exception::type_error(),
                 format!("no implicit conversion of {} into Binding", unsafe {

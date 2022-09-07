@@ -34,6 +34,14 @@ struct InitAttributes {
 /// The init function is used to define your Ruby modules & classes, bind
 /// functions as Ruby methods, etc.
 ///
+/// # Attributes
+///
+/// * `name = "..."` - sets the name of the init function exported for Ruby.
+///   This default's to the current crate's name.
+///   The name will be prepended with `Init_` and `-` will be replaced with `_`.
+///   This (minus the `Init_` prefix) must match the name of the final
+///   `.so`/`.bundle` file.
+///
 /// # Examples
 ///
 /// ```
@@ -78,6 +86,13 @@ struct InitAttributes {
 ///     class.define_method("x", method!(Point::x, 0))?;
 ///     class.define_method("y", method!(Point::y, 0))?;
 ///     Ok(())
+/// }
+/// ```
+/// Setting the name.
+/// ```
+/// #[magnus::init(name = "example")]
+/// fn init() {
+///     ()
 /// }
 /// ```
 #[proc_macro_attribute]

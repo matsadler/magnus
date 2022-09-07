@@ -133,9 +133,8 @@ unsafe impl private::ReprValue for Float {
 impl ReprValue for Float {}
 
 impl TryConvert for Float {
-    #[inline]
-    fn try_convert(val: &Value) -> Result<Self, Error> {
-        match Self::from_value(*val) {
+    fn try_convert(val: Value) -> Result<Self, Error> {
+        match Self::from_value(val) {
             Some(i) => Ok(i),
             None => protect(|| {
                 debug_assert_value!(val);

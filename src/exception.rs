@@ -19,13 +19,18 @@ use crate::ruby_sys::rb_eNoMatchingPatternError;
 use crate::ruby_sys::rb_eNoMatchingPatternKeyError;
 
 use crate::{
-    class::RClass,
+    class::{Class, RClass},
     debug_assert_value,
     error::Error,
+    exception,
     module::Module,
     object::Object,
     r_array::RArray,
-    value::{private, NonZeroValue, ReprValue, Value},
+    try_convert::{ArgList, TryConvert},
+    value::{
+        private::{self, ReprValue as _},
+        NonZeroValue, ReprValue, Value,
+    },
 };
 
 /// Wrapper type for a Value known to be an instance of Ruby's Exception class.
@@ -114,6 +119,25 @@ unsafe impl private::ReprValue for Exception {
 
 impl ReprValue for Exception {}
 
+impl TryConvert for Exception {
+    fn try_convert(val: Value) -> Result<Self, Error> {
+        if let Some(e) = Self::from_value(val) {
+            return Ok(e);
+        }
+        if let Some(Ok(val)) = val.check_funcall::<_, _, Value>("exception", ()) {
+            if let Some(e) = Self::from_value(val) {
+                return Ok(e);
+            }
+        }
+        Err(Error::new(
+            exception::type_error(),
+            format!("no implicit conversion of {} into Exception", unsafe {
+                val.classname()
+            },),
+        ))
+    }
+}
+
 /// A Value known to be an instance of Class and subclass of Exception.
 ///
 /// All [`Value`] methods should be available on this type through [`Deref`],
@@ -143,17 +167,17 @@ impl ExceptionClass {
     }
 }
 
+impl Default for ExceptionClass {
+    fn default() -> Self {
+        standard_error()
+    }
+}
+
 impl Deref for ExceptionClass {
     type Target = Value;
 
     fn deref(&self) -> &Self::Target {
         self.0.get_ref()
-    }
-}
-
-impl Default for ExceptionClass {
-    fn default() -> Self {
-        unsafe { Self::from_rb_value_unchecked(rb_eRuntimeError) }
     }
 }
 
@@ -178,6 +202,28 @@ impl From<ExceptionClass> for Value {
 impl Object for ExceptionClass {}
 impl Module for ExceptionClass {}
 
+impl Class for ExceptionClass {
+    type Instance = Exception;
+
+    fn new(superclass: Self) -> Result<Self, Error> {
+        RClass::new(superclass.as_r_class())
+            .map(|class| unsafe { ExceptionClass::from_value_unchecked(*class) })
+    }
+
+    fn new_instance<T>(self, args: T) -> Result<Self::Instance, Error>
+    where
+        T: ArgList,
+    {
+        self.as_r_class()
+            .new_instance(args)
+            .map(|ins| unsafe { Exception::from_value_unchecked(ins) })
+    }
+
+    fn as_r_class(self) -> RClass {
+        unsafe { RClass::from_value_unchecked(*self) }
+    }
+}
+
 unsafe impl private::ReprValue for ExceptionClass {
     fn to_value(self) -> Value {
         *self
@@ -189,6 +235,20 @@ unsafe impl private::ReprValue for ExceptionClass {
 }
 
 impl ReprValue for ExceptionClass {}
+
+impl TryConvert for ExceptionClass {
+    fn try_convert(val: Value) -> Result<Self, Error> {
+        Self::from_value(val).ok_or_else(|| {
+            Error::new(
+                exception::type_error(),
+                format!(
+                    "no implicit conversion of {} into Class inheriting Exception",
+                    unsafe { val.classname() },
+                ),
+            )
+        })
+    }
+}
 
 /// Return Ruby's `ArgumentError` class.
 #[inline]

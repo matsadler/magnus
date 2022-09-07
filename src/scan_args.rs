@@ -1,7 +1,7 @@
 //! Types and functions for complex method arguments.
 //!
 //! Ruby's APIs to define methods, exposed in magnus through functions such as
-//! [`define_method`](crate::module::Module::define_method) and the 
+//! [`define_method`](crate::module::Module::define_method) and the
 //! [`method`](crate::method!) macro, allow defining methods with a fixed
 //! number of positional arguments, or an unbounded collection of arguments as
 //! a slice or Ruby array. The functions in this module allow for more complex

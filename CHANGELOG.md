@@ -2,8 +2,25 @@
 
 ## [Unreleased]
 ### Added
+- `Value::funcall_with_block`.
+- impl `TryConvert` for `Exception` and `ExceptionClass`.
+- `Class` trait (implemented for `RClass` and `ExceptionClass`).
+- `define_error` and `Module::define_error` helpers for defining an Exception
+  Class.
+- `RTypedData::wrap` and `RTypedData::get` inherent methods for wrapping Rust
+  types in Ruby objects.
 
 ### Changed
+- Ruby types are no longer `Send` or `Sync`.
+- Rust types wrapped in Ruby objects must be `Send`.
+- Only function pointers (fn or non-capturing closure) are accepted as argument
+  for `Value::block_call`. Use `Proc::from_fn` + `Value::funcall_with_block`
+  for closures that capture variables.
+- `Proc::new` only accepts a function pointer, use `Proc::from_fn` for closures
+  that capture variables.
+- `ExceptionClass::default()` now returns `StandardError` rather than
+  `RuntimeError`.
+- `TryConvert` now takes `Value` by value (rather than a reference).
 
 ### Deprecated
 
@@ -12,6 +29,13 @@
 ### Fixed
 
 ### Security
+
+## [0.3.2] - 2022-05-29
+
+### Fixed
+- Better error output from build script when `ruby` can't be found or errors.
+- Fixed crash in `Proc::new` and `Value::block_call` when the proc was stored
+  and called later.
 
 ## [0.3.1] - 2022-05-21
 
@@ -144,7 +168,8 @@
 - Pre-built bindings for Ruby 2.6 - 3.1 on common platforms, build-time
   generated bindings otherwise.
 
-[Unreleased]: https://github.com/matsadler/magnus/compare/0.3.1...HEAD
+[Unreleased]: https://github.com/matsadler/magnus/compare/0.3.2...HEAD
+[0.3.2]: https://github.com/matsadler/magnus/compare/0.3.1...0.3.2
 [0.3.1]: https://github.com/matsadler/magnus/compare/0.3.0...0.3.1
 [0.3.0]: https://github.com/matsadler/magnus/compare/0.2.1...0.3.0
 [0.2.1]: https://github.com/matsadler/magnus/compare/0.2.0...0.2.1

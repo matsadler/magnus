@@ -1,6 +1,6 @@
 [package]
 name = "magnus"
-version = "0.3.1"
+version = "0.3.2"
 authors = ["Mat Sadler <mat@sourcetagsandcodes.com>"]
 edition = "2018"
 resolver = "2"
@@ -11,31 +11,24 @@ repository = "https://github.com/matsadler/magnus"
 homepage = "https://github.com/matsadler/magnus"
 documentation = "https://docs.rs/magnus/"
 license = "MIT"
-exclude = [".github", ".gitignore", "build-sys/"]
+exclude = [".github", ".gitignore"]
 
 [workspace]
 members = ["magnus-macros"]
-exclude = ["examples/rust_blank/ext/rust_blank"]
+exclude = ["examples/rust_blank/ext/rust_blank", "examples/custom_exception_ruby/ext/ahriman", "examples/custom_exception_rust/ext/ahriman"]
 
 [features]
-embed = []
-rb-sys-interop = ["rb-sys"]
+embed = ["rb-sys/link-ruby"]
+rb-sys-interop = []
+ruby-static = ["rb-sys/ruby-static"]
 
 [dependencies]
 magnus-macros = { version = "0.1.0", path = "magnus-macros" }
-
-[target.'cfg(unix)'.dependencies]
-rb-sys = { version = "0.8.1", optional = true }
-
-[target.'cfg(windows)'.dependencies]
-rb-sys = { version = "0.8.1", features = ["link-ruby"], optional = true }
-
-[build-dependencies]
-bindgen = "0.59"
+rb-sys = { version = "0.9.18", default-features = false, features = ["bindgen-rbimpls", "bindgen-deprecated-types"] }
 
 [dev-dependencies]
 magnus = { path = ".", features = ["embed", "rb-sys-interop"] }
 
 [package.metadata.docs.rs]
 all-features = true
-rustc-args = ["--cfg", "docsrs"]
+rustdoc-args = ["--cfg", "docsrs"]

@@ -901,7 +901,7 @@ impl RArray {
     /// use magnus::{eval, RArray, Value};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// let ary = RArray::from_vec(vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+    /// let ary = RArray::from_vec((0..256).collect());
     /// let copy = RArray::new();
     /// copy.replace(ary);
     /// assert!(ary.is_shared(copy));
@@ -937,7 +937,7 @@ impl RArray {
     /// use magnus::{eval, RArray};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// let ary = RArray::from_vec(vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+    /// let ary = RArray::from_vec((0..256).collect());
     /// let copy = RArray::new();
     /// copy.replace(ary);
     /// assert!(copy.is_shared(ary));
@@ -965,9 +965,6 @@ impl RArray {
     /// let b = ary.subseq(5, 5).unwrap();
     /// assert_eq!(a.to_vec::<i64>().unwrap(), vec![1, 2, 3, 4, 5]);
     /// assert_eq!(b.to_vec::<i64>().unwrap(), vec![6, 7, 8, 9, 10]);
-    /// # // is_shared() only returns true when lengths match
-    /// # assert_eq!(a.len(), b.len());
-    /// # assert!(a.is_shared(b));
     /// ```
     // TODO maybe take a range instead of offset and length
     pub fn subseq(self, offset: usize, length: usize) -> Option<Self> {
@@ -1319,9 +1316,8 @@ unsafe impl private::ReprValue for RArray {
 impl ReprValue for RArray {}
 
 impl TryConvert for RArray {
-    #[inline]
-    fn try_convert(val: &Value) -> Result<Self, Error> {
-        match Self::from_value(*val) {
+    fn try_convert(val: Value) -> Result<Self, Error> {
+        match Self::from_value(val) {
             Some(i) => Ok(i),
             None => protect(|| {
                 debug_assert_value!(val);

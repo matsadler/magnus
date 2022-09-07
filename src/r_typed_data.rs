@@ -61,6 +61,99 @@ impl RTypedData {
                 })
         }
     }
+
+    /// Wrap the Rust type `T` in a Ruby object.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{define_class, RTypedData};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// #[magnus::wrap(class = "Point")]
+    /// struct Point {
+    ///     x: isize,
+    ///     y: isize,
+    /// }
+    ///
+    /// let point_class = define_class("Point", Default::default()).unwrap();
+    ///
+    /// let value = RTypedData::wrap(Point { x: 4, y: 2 });
+    /// assert!(value.is_kind_of(point_class));
+    /// ```
+    pub fn wrap<T>(data: T) -> Self
+    where
+        T: TypedData,
+    {
+        let boxed = Box::new(data);
+        unsafe {
+            let value_ptr = rb_data_typed_object_wrap(
+                T::class().as_rb_value(),
+                Box::into_raw(boxed) as *mut _,
+                T::data_type().as_rb_data_type() as *const _,
+            );
+            Self(NonZeroValue::new_unchecked(Value::new(value_ptr)))
+        }
+    }
+
+    /// Get a reference to the Rust type wrapped in the Ruby object `self`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{define_class, RTypedData};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// #[magnus::wrap(class = "Point")]
+    /// #[derive(Debug, PartialEq, Eq)]
+    /// struct Point {
+    ///     x: isize,
+    ///     y: isize,
+    /// }
+    ///
+    /// let point_class = define_class("Point", Default::default()).unwrap();
+    /// let value = RTypedData::wrap(Point { x: 4, y: 2 });
+    ///
+    /// assert_eq!(value.get::<Point>().unwrap(), &Point { x: 4, y: 2 });
+    /// ```
+    pub fn get<T>(&self) -> Result<&T, Error>
+    where
+        T: TypedData,
+    {
+        unsafe { self.get_unconstrained() }
+    }
+
+    /// Get a reference to the Rust type wrapped in the Ruby object `self`.
+    ///
+    /// # Safety
+    ///
+    /// This method can magic any lifetime needed out of thin air, even
+    /// `'static`.
+    unsafe fn get_unconstrained<'a, T>(self) -> Result<&'a T, Error>
+    where
+        T: TypedData,
+    {
+        debug_assert_value!(self);
+        let mut res = None;
+        let _ = protect(|| {
+            res = (rb_check_typeddata(
+                self.as_rb_value(),
+                T::data_type().as_rb_data_type() as *const _,
+            ) as *const T)
+                .as_ref();
+            QNIL
+        });
+        res.ok_or_else(|| {
+            Error::new(
+                exception::type_error(),
+                format!(
+                    "no implicit conversion of {} into {}",
+                    self.classname(),
+                    T::class()
+                ),
+            )
+        })
+    }
 }
 
 impl Deref for RTypedData {
@@ -120,7 +213,7 @@ impl DataType {
         DataTypeBuilder::new(name)
     }
 
-    fn as_rb_data_type(&self) -> &rb_data_type_t {
+    pub(crate) fn as_rb_data_type(&self) -> &rb_data_type_t {
         &self.0
     }
 }
@@ -136,7 +229,7 @@ impl Drop for DataType {
 /// A helper trait used to define functions associated with a [`DataType`].
 pub trait DataTypeFunctions
 where
-    Self: Sized,
+    Self: Send + Sized,
 {
     /// Called when the Ruby wrapper object is garbage collected.
     ///
@@ -369,7 +462,7 @@ where
 /// help implementing this trait more safely.
 pub unsafe trait TypedData
 where
-    Self: Sized,
+    Self: Send + Sized,
 {
     /// Should return the class for the Ruby object wrapping the Rust type.
     ///
@@ -406,29 +499,20 @@ impl<T> TryConvert for &T
 where
     T: TypedData,
 {
-    #[inline]
-    fn try_convert(val: &Value) -> Result<Self, Error> {
-        debug_assert_value!(val);
+    fn try_convert(val: Value) -> Result<Self, Error> {
         unsafe {
-            let mut res = None;
-            let _ = protect(|| {
-                res = (rb_check_typeddata(
-                    val.as_rb_value(),
-                    T::data_type().as_rb_data_type() as *const _,
-                ) as *const T)
-                    .as_ref();
-                QNIL
-            });
-            res.ok_or_else(|| {
-                Error::new(
-                    exception::type_error(),
-                    format!(
-                        "no implicit conversion of {} into {}",
-                        val.classname(),
-                        T::class()
-                    ),
-                )
-            })
+            RTypedData::from_value(val)
+                .ok_or_else(|| {
+                    Error::new(
+                        exception::type_error(),
+                        format!(
+                            "no implicit conversion of {} into {}",
+                            val.classname(),
+                            T::class()
+                        ),
+                    )
+                })?
+                .get_unconstrained()
         }
     }
 }
@@ -438,14 +522,6 @@ where
     T: TypedData,
 {
     fn from(data: T) -> Self {
-        let boxed = Box::new(data);
-        let value_ptr = unsafe {
-            rb_data_typed_object_wrap(
-                T::class().as_rb_value(),
-                Box::into_raw(boxed) as *mut _,
-                T::data_type().as_rb_data_type() as *const _,
-            )
-        };
-        Value::new(value_ptr)
+        RTypedData::wrap(data).into()
     }
 }

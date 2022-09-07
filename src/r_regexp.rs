@@ -71,9 +71,8 @@ unsafe impl private::ReprValue for RRegexp {
 impl ReprValue for RRegexp {}
 
 impl TryConvert for RRegexp {
-    #[inline]
-    fn try_convert(val: &Value) -> Result<Self, Error> {
-        Self::from_value(*val).ok_or_else(|| {
+    fn try_convert(val: Value) -> Result<Self, Error> {
+        Self::from_value(val).ok_or_else(|| {
             Error::new(
                 exception::type_error(),
                 format!("no implicit conversion of {} into Regexp", unsafe {

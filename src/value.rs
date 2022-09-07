@@ -5,6 +5,7 @@ use std::{
     convert::TryFrom,
     ffi::CStr,
     fmt,
+    marker::PhantomData,
     mem::transmute,
     num::NonZeroUsize,
     ops::{Deref, DerefMut},
@@ -15,10 +16,10 @@ use std::{
 use crate::ruby_sys::{
     rb_any_to_s, rb_block_call, rb_check_funcall, rb_check_id, rb_check_id_cstr,
     rb_check_symbol_cstr, rb_enumeratorize_with_size, rb_eql, rb_equal, rb_float_new_in_heap,
-    rb_funcallv, rb_gc_register_address, rb_gc_register_mark_object, rb_gc_unregister_address,
-    rb_id2name, rb_id2sym, rb_inspect, rb_intern3, rb_ll2inum, rb_obj_as_string, rb_obj_classname,
-    rb_obj_freeze, rb_obj_is_kind_of, rb_obj_respond_to, rb_sym2id, rb_ull2inum, ruby_fl_type,
-    ruby_special_consts, ruby_value_type, RBasic, ID, VALUE,
+    rb_funcall_with_block, rb_funcallv, rb_gc_register_address, rb_gc_register_mark_object,
+    rb_gc_unregister_address, rb_id2name, rb_id2sym, rb_inspect, rb_intern3, rb_ll2inum,
+    rb_obj_as_string, rb_obj_classname, rb_obj_freeze, rb_obj_is_kind_of, rb_obj_respond_to,
+    rb_sym2id, rb_ull2inum, ruby_fl_type, ruby_special_consts, ruby_value_type, RBasic, ID, VALUE,
 };
 
 // These don't seem to appear consistently in bindgen output, not sure if they
@@ -78,12 +79,12 @@ macro_rules! debug_assert_value {
 /// Ruby's `VALUE` type, which can represent any Ruby object.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
-pub struct Value(VALUE);
+pub struct Value(VALUE, PhantomData<*mut RBasic>);
 
 impl Value {
     #[inline]
     pub(crate) const fn new(val: VALUE) -> Self {
-        Self(val)
+        Self(val, PhantomData)
     }
 
     #[inline]
@@ -546,8 +547,54 @@ impl Value {
 
     /// Call the method named `method` on `self` with `args` and `block`.
     ///
-    /// Simmilar to [`funcall`][Value::funcall], but passes `block` as a Ruby
+    /// Similar to [`funcall`](Value::funcall), but passes `block` as a Ruby
     /// block to the method.
+    ///
+    /// See also [`block_call`](Value::block_call).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, block::Proc, RArray, Value};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let values = eval::<RArray>(r#"["foo", 1, :bar]"#).unwrap();
+    /// let block = Proc::new(|args, _block| args.first().unwrap().to_r_string());
+    /// let _: Value = values.funcall_with_block("map!", (), block).unwrap();
+    /// assert_eq!(values.to_vec::<String>().unwrap(), vec!["foo", "1", "bar"]);
+    /// ```
+    pub fn funcall_with_block<M, A, T>(self, method: M, args: A, block: Proc) -> Result<T, Error>
+    where
+        M: Into<Id>,
+        A: ArgList,
+        T: TryConvert,
+    {
+        unsafe {
+            let id = method.into();
+            let args = args.into_arg_list();
+            let slice = args.as_ref();
+            protect(|| {
+                Value::new(rb_funcall_with_block(
+                    self.as_rb_value(),
+                    id.as_rb_id(),
+                    slice.len() as c_int,
+                    slice.as_ptr() as *const VALUE,
+                    block.as_rb_value(),
+                ))
+            })
+            .and_then(|v| v.try_convert())
+        }
+    }
+
+    /// Call the method named `method` on `self` with `args` and `block`.
+    ///
+    /// Similar to [`funcall`](Value::funcall), but passes `block` as a Ruby
+    /// block to the method.
+    ///
+    /// As `block` is a function pointer, only functions and closures that do
+    /// not capture any variables are permitted. For more flexibility (at the
+    /// cost of allocating) see [`Proc::from_fn`] and
+    /// [`funcall_with_block`](Value::funcall_with_block).
     ///
     /// The function passed as `block` will receive values yielded to the block
     /// as a slice of [`Value`]s, plus `Some(Proc)` if the block itself was
@@ -567,15 +614,19 @@ impl Value {
     /// let _: Value = values.block_call("map!", (), |args, _block| args.first().unwrap().to_r_string()).unwrap();
     /// assert_eq!(values.to_vec::<String>().unwrap(), vec!["foo", "1", "bar"]);
     /// ```
-    pub fn block_call<M, A, F, R, T>(self, method: M, args: A, block: F) -> Result<T, Error>
+    pub fn block_call<M, A, R, T>(
+        self,
+        method: M,
+        args: A,
+        block: fn(&[Value], Option<Proc>) -> R,
+    ) -> Result<T, Error>
     where
         M: Into<Id>,
         A: ArgList,
-        F: FnMut(&[Value], Option<Proc>) -> R,
         R: BlockReturn,
         T: TryConvert,
     {
-        unsafe extern "C" fn call<F, R>(
+        unsafe extern "C" fn call<R>(
             _yielded_arg: VALUE,
             callback_arg: VALUE,
             argc: c_int,
@@ -583,11 +634,10 @@ impl Value {
             blockarg: VALUE,
         ) -> VALUE
         where
-            F: FnMut(&[Value], Option<Proc>) -> R,
             R: BlockReturn,
         {
-            let closure = (&mut *(callback_arg as *mut Option<F>)).as_mut().unwrap();
-            Block::new(closure)
+            let func = std::mem::transmute::<VALUE, fn(&[Value], Option<Proc>) -> R>(callback_arg);
+            Block::new(func)
                 .call_handle_error(argc, argv as *const Value, Value::new(blockarg))
                 .as_rb_value()
         }
@@ -595,21 +645,20 @@ impl Value {
         let id = method.into();
         let args = args.into_arg_list();
         let slice = args.as_ref();
-        let mut some_block = Some(block);
-        let closure = &mut some_block as *mut Option<F> as VALUE;
         let call_func =
-            call::<F, R> as unsafe extern "C" fn(VALUE, VALUE, c_int, *const VALUE, VALUE) -> VALUE;
+            call::<R> as unsafe extern "C" fn(VALUE, VALUE, c_int, *const VALUE, VALUE) -> VALUE;
         #[cfg(ruby_lt_2_7)]
         let call_func: unsafe extern "C" fn() -> VALUE = unsafe { std::mem::transmute(call_func) };
 
         protect(|| unsafe {
+            #[allow(clippy::fn_to_numeric_cast)]
             Value::new(rb_block_call(
                 self.as_rb_value(),
                 id.as_rb_id(),
                 slice.len() as c_int,
                 slice.as_ptr() as *const VALUE,
                 Some(call_func),
-                closure,
+                block as VALUE,
             ))
         })
         .and_then(|v| v.try_convert())
@@ -852,7 +901,7 @@ impl Value {
     /// assert_eq!(eval::<Value>("42").unwrap().try_convert::<Option<i64>>().unwrap(), Some(42));
     /// ```
     #[inline]
-    pub fn try_convert<T>(&self) -> Result<T, Error>
+    pub fn try_convert<T>(self) -> Result<T, Error>
     where
         T: TryConvert,
     {
@@ -951,9 +1000,8 @@ impl From<f64> for Value {
 }
 
 impl TryConvert for Value {
-    #[inline]
-    fn try_convert(val: &Value) -> Result<Self, Error> {
-        Ok(*val)
+    fn try_convert(val: Value) -> Result<Self, Error> {
+        Ok(val)
     }
 }
 
@@ -1008,12 +1056,15 @@ impl ReprValue for Value {}
 
 #[derive(Clone, Copy)]
 #[repr(transparent)]
-pub(crate) struct NonZeroValue(NonZeroUsize);
+pub(crate) struct NonZeroValue(NonZeroUsize, PhantomData<ptr::NonNull<RBasic>>);
 
 impl NonZeroValue {
     #[inline]
     pub(crate) const unsafe fn new_unchecked(val: Value) -> Self {
-        Self(NonZeroUsize::new_unchecked(val.as_rb_value() as usize))
+        Self(
+            NonZeroUsize::new_unchecked(val.as_rb_value() as usize),
+            PhantomData,
+        )
     }
 
     pub(crate) const fn get(self) -> Value {
@@ -1215,9 +1266,8 @@ unsafe impl private::ReprValue for Qfalse {
 impl ReprValue for Qfalse {}
 
 impl TryConvert for Qfalse {
-    #[inline]
-    fn try_convert(val: &Value) -> Result<Self, Error> {
-        Self::from_value(*val).ok_or_else(|| {
+    fn try_convert(val: Value) -> Result<Self, Error> {
+        Self::from_value(val).ok_or_else(|| {
             Error::new(
                 exception::type_error(),
                 format!("no implicit conversion of {} into FalseClass", unsafe {
@@ -1327,9 +1377,8 @@ unsafe impl private::ReprValue for Qnil {
 impl ReprValue for Qnil {}
 
 impl TryConvert for Qnil {
-    #[inline]
-    fn try_convert(val: &Value) -> Result<Self, Error> {
-        Self::from_value(*val).ok_or_else(|| {
+    fn try_convert(val: Value) -> Result<Self, Error> {
+        Self::from_value(val).ok_or_else(|| {
             Error::new(
                 exception::type_error(),
                 format!("no implicit conversion of {} into NilClass", unsafe {
@@ -1431,9 +1480,8 @@ unsafe impl private::ReprValue for Qtrue {
 impl ReprValue for Qtrue {}
 
 impl TryConvert for Qtrue {
-    #[inline]
-    fn try_convert(val: &Value) -> Result<Self, Error> {
-        Self::from_value(*val).ok_or_else(|| {
+    fn try_convert(val: Value) -> Result<Self, Error> {
+        Self::from_value(val).ok_or_else(|| {
             Error::new(
                 exception::type_error(),
                 format!("no implicit conversion of {} into TrueClass", unsafe {
@@ -1901,8 +1949,7 @@ unsafe impl private::ReprValue for Fixnum {
 impl ReprValue for Fixnum {}
 
 impl TryConvert for Fixnum {
-    #[inline]
-    fn try_convert(val: &Value) -> Result<Self, Error> {
+    fn try_convert(val: Value) -> Result<Self, Error> {
         match val.try_convert::<Integer>()?.integer_type() {
             IntegerType::Fixnum(fix) => Ok(fix),
             IntegerType::Bignum(_) => Err(Error::new(
@@ -2078,8 +2125,7 @@ unsafe impl private::ReprValue for StaticSymbol {
 impl ReprValue for StaticSymbol {}
 
 impl TryConvert for StaticSymbol {
-    #[inline]
-    fn try_convert(val: &Value) -> Result<Self, Error> {
+    fn try_convert(val: Value) -> Result<Self, Error> {
         val.try_convert::<Symbol>().map(|s| s.to_static())
     }
 }
@@ -2088,11 +2134,11 @@ impl TryConvertOwned for StaticSymbol {}
 /// The internal value of a Ruby symbol.
 #[derive(Clone, Copy, Debug)]
 #[repr(transparent)]
-pub struct Id(ID);
+pub struct Id(ID, PhantomData<*mut u8>);
 
 impl Id {
     pub(crate) fn new(id: ID) -> Self {
-        Self(id)
+        Self(id, PhantomData)
     }
 
     pub(crate) fn as_rb_id(self) -> ID {
@@ -2148,7 +2194,7 @@ impl Id {
 
 impl From<&str> for Id {
     fn from(s: &str) -> Self {
-        Self(unsafe {
+        Self::new(unsafe {
             rb_intern3(
                 s.as_ptr() as *const c_char,
                 s.len() as c_long,
@@ -2166,13 +2212,13 @@ impl From<String> for Id {
 
 impl From<StaticSymbol> for Id {
     fn from(sym: StaticSymbol) -> Self {
-        Self(unsafe { rb_sym2id(sym.as_rb_value()) })
+        Self::new(unsafe { rb_sym2id(sym.as_rb_value()) })
     }
 }
 
 impl From<Symbol> for Id {
     fn from(sym: Symbol) -> Self {
-        Self(unsafe { rb_sym2id(sym.as_rb_value()) })
+        Self::new(unsafe { rb_sym2id(sym.as_rb_value()) })
     }
 }
 
@@ -2307,8 +2353,7 @@ unsafe impl private::ReprValue for Flonum {
 impl ReprValue for Flonum {}
 
 impl TryConvert for Flonum {
-    #[inline]
-    fn try_convert(val: &Value) -> Result<Self, Error> {
+    fn try_convert(val: Value) -> Result<Self, Error> {
         let float = val.try_convert::<Float>()?;
         if let Some(flonum) = Flonum::from_value(*float) {
             Ok(flonum)
