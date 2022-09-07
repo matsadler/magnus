@@ -29,7 +29,7 @@ use crate::{
     value::{Id, Value},
 };
 use rb_sys::{ID, VALUE};
-use std::{intrinsics::transmute, panic::UnwindSafe};
+use std::panic::UnwindSafe;
 
 /// Converts from a [`Value`] to a raw [`VALUE`].
 pub trait AsRawValue {
@@ -133,8 +133,6 @@ impl AsRawId for Id {
 
 impl FromRawId for Id {
     unsafe fn from_raw(id: ID) -> Id {
-        debug_assert!(!Value::is_immediate(transmute::<ID, Value>(id)));
-
         Id::new(id.into())
     }
 }
@@ -228,4 +226,29 @@ pub fn raw_id(id: Id) -> ID {
 #[deprecated(since = "0.3.3", note = "please use `Id::from_raw` instead")]
 pub unsafe fn id_from_raw(id: ID) -> Id {
     Id::from_raw(id)
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{
+        class,
+        rb_sys::{AsRawId, FromRawId},
+        value::Id,
+        Module, RArray, RClass, Symbol,
+    };
+
+    #[test]
+    fn roundtrip_all_symbols() {
+        let _cleanup = unsafe { magnus::embed::init() };
+
+        let sym_class: RClass = class::object().const_get("Symbol").unwrap();
+        let symbols: RArray = sym_class.funcall("all_symbols", ()).unwrap();
+
+        for sym in symbols.each() {
+            let sym: Symbol = sym.unwrap().try_convert().unwrap();
+            let id: Id = sym.into();
+
+            assert_eq!(id, unsafe { Id::from_raw(id.as_raw()) });
+        }
+    }
 }

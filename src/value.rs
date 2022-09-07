@@ -2132,7 +2132,7 @@ impl TryConvert for StaticSymbol {
 impl TryConvertOwned for StaticSymbol {}
 
 /// The internal value of a Ruby symbol.
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 #[repr(transparent)]
 pub struct Id(ID, PhantomData<*mut u8>);
 
