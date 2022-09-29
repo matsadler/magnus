@@ -267,8 +267,9 @@ pub(crate) fn raise(e: Error) -> ! {
         Error::Jump(tag) => tag.resume(),
         Error::Error(class, msg) => {
             debug_assert_value!(class);
+            const FMT_S: &'static str = "%s\0";
             let msg = CString::new(msg.into_owned()).unwrap();
-            unsafe { rb_raise(class.as_rb_value(), msg.as_ptr()) }
+            unsafe { rb_raise(class.as_rb_value(), FMT_S.as_ptr() as *const i8, msg.as_ptr()) }
             unreachable!()
         }
         Error::Exception(e) => {
