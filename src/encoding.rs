@@ -250,6 +250,7 @@ impl RbEncoding {
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// assert_eq!(RbEncoding::utf8().name(), "UTF-8");
+    /// assert_eq!(RbEncoding::find("UTF-16").unwrap().name(), "UTF-16");
     /// ```
     ///
     /// # Panics
@@ -269,8 +270,8 @@ impl RbEncoding {
     /// use magnus::{eval, encoding::RbEncoding};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
+    /// assert_eq!(RbEncoding::usascii().mbminlen(), 1);
     /// assert_eq!(RbEncoding::utf8().mbminlen(), 1);
-    /// assert_eq!(RbEncoding::find("UTF-16").unwrap().mbminlen(), 2);
     /// ```
     pub fn mbminlen(&self) -> usize {
         unsafe { self.0.as_ref().min_enc_len as usize }
