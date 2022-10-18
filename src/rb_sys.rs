@@ -8,7 +8,7 @@
 //! 2. Magnus exposed the API in a way that does not work for your use case.
 //! 3. The API just hasn't been implemented yet.
 //!
-//! Even if your are not in a position to contribute code to Magnus, please
+//! Even if you are not in a position to contribute code to Magnus, please
 //! [open an issue](https://github.com/matsadler/magnus/issues) outlining your
 //! use case and the APIs you need whenever you find yourself reaching for this
 //! module.
@@ -24,45 +24,117 @@
 //! The unsafe functions in this module are capable of producing values that
 //! break the saftey guarantees of almost every other function in Magnus. Use
 //! them with care.
-use std::panic::UnwindSafe;
-
-use rb_sys::{ID, VALUE};
-
 use crate::{
     error::{self, raise, Error},
     value::{Id, Value},
 };
+use rb_sys::{ID, VALUE};
+use std::panic::UnwindSafe;
 
-/// Convert [`magnus::Value`](Value) to [`rb_sys::VALUE`].
-pub fn raw_value(val: Value) -> VALUE {
-    val.as_rb_value()
+/// Converts from a [`Value`] to a raw [`VALUE`].
+pub trait AsRawValue {
+    /// Convert [`magnus::Value`](Value) to [`rb_sys::VALUE`](VALUE).
+    ///
+    /// ```
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// use magnus::{RString, rb_sys::AsRawValue};
+    ///
+    /// let foo = RString::new("foo");
+    /// let bar = RString::new("bar");
+    ///
+    /// unsafe { rb_sys::rb_str_buf_append(foo.as_raw(), bar.as_raw()) };
+    ///
+    /// assert_eq!(foo.to_string().unwrap(), "foobar");
+    /// ```
+    fn as_raw(self) -> VALUE;
 }
 
-/// Convert [`magnus::value::Id`](Id) to [`rb_sys::ID`].
-pub fn raw_id(id: Id) -> ID {
-    id.as_rb_id()
+/// Converts from a raw [`VALUE`] to a [`Value`].
+pub trait FromRawValue {
+    /// Convert [`rb_sys::VALUE`](VALUE) to [`magnus::Value`](Value).
+    /// # Safety
+    ///
+    /// You must only supply a valid [`VALUE`] obtained from [rb-sys](rb_sys) to
+    /// this function. Using a invalid [`Value`] produced from this function will
+    /// void all saftey guarantees provided by Magnus.
+    ///
+    /// ```
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// use magnus::{RString, Value, rb_sys::FromRawValue};
+    ///
+    /// let raw_value = unsafe { rb_sys::rb_str_new("foo".as_ptr() as *mut _, 3) };
+    ///
+    /// assert_eq!(unsafe { Value::from_raw(raw_value) }.to_string(), "foo");
+    /// ```
+    unsafe fn from_raw(value: VALUE) -> Self;
 }
 
-/// Convert [`rb_sys::VALUE`] to [`magnus::Value`](Value).
-///
-/// # Safety
-///
-/// You must only supply a valid [`VALUE`] obtained from [rb-sys](rb_sys) to
-/// this function. Using a invalid [`Value`] produced from this function will
-/// void all saftey guarantees provided by Magnus.
-pub unsafe fn value_from_raw(val: VALUE) -> Value {
-    Value::new(val)
+impl AsRawValue for Value {
+    fn as_raw(self) -> VALUE {
+        self.as_rb_value()
+    }
 }
 
-/// Convert [`rb_sys::ID`] to [`magnus::value::Id`](Id).
-///
-/// # Safety
-///
-/// You must only supply a valid [`ID`] obtained from [rb-sys](rb_sys) to this
-/// function. Using a invalid [`Id`] produced from this function will void all
-/// saftey guarantees provided by Magnus.
-pub unsafe fn id_from_raw(id: ID) -> Id {
-    Id::new(id)
+impl FromRawValue for Value {
+    unsafe fn from_raw(val: VALUE) -> Value {
+        Value::new(val.into())
+    }
+}
+
+/// Trait to convert a [`Id`] to a raw [`ID`].
+pub trait AsRawId {
+    /// Convert [`magnus::value::Id`](Id) to [`rb_sys::ID`](ID).
+    ///
+    /// ```
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// use magnus::{Symbol, value::Id, rb_sys::{AsRawId, FromRawId}};
+    ///
+    /// let foo: Id = Symbol::new("foo").into();
+    /// let raw = foo.as_raw();
+    /// let from_raw_val: Symbol = unsafe { Id::from_raw(raw) }.into();
+    ///
+    /// assert_eq!(from_raw_val.inspect(), ":foo");
+    /// ```
+    fn as_raw(self) -> ID;
+}
+
+/// Trait to convert from a raw [`ID`] to an [`Id`].
+pub trait FromRawId {
+    /// Convert [`rb_sys::ID`](ID) to [`magnus::value::Id`](ID).
+    ///
+    /// # Safety
+    ///
+    /// You must only supply a valid, non-zero [`ID`] obtained from [rb-sys](rb_sys) to this
+    /// function. Using a invalid [`Id`] produced from this function will void all
+    /// saftey guarantees provided by Magnus.
+    ///
+    /// ```
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// use magnus::{Symbol, value::Id, rb_sys::{FromRawId, AsRawId}};
+    /// use std::convert::TryInto;
+    ///
+    /// let foo: Id = Symbol::new("foo").into();
+    /// let from_raw_val: Symbol = unsafe { Id::from_raw(foo.as_raw()) }.into();
+    ///
+    /// assert_eq!(from_raw_val.inspect(), ":foo");
+    /// ```
+    unsafe fn from_raw(id: ID) -> Self;
+}
+
+impl AsRawId for Id {
+    fn as_raw(self) -> ID {
+        self.as_rb_id()
+    }
+}
+
+impl FromRawId for Id {
+    unsafe fn from_raw(id: ID) -> Id {
+        Id::new(id.into())
+    }
 }
 
 /// Calls the given closure, catching all cases of unwinding from Ruby
@@ -118,4 +190,65 @@ where
 /// in scope have been dropped before calling this function.
 pub unsafe fn resume_error(e: Error) -> ! {
     raise(e)
+}
+
+/// Convert [`magnus::Value`](Value) to [`rb_sys::VALUE`].
+#[deprecated(since = "0.3.3", note = "please use `Value::as_raw` instead")]
+pub fn raw_value(val: Value) -> VALUE {
+    val.as_raw()
+}
+
+/// Convert [`rb_sys::VALUE`] to [`magnus::Value`](Value).
+///
+/// # Safety
+///
+/// You must only supply a valid [`VALUE`] obtained from [rb-sys](rb_sys) to
+/// this function. Using a invalid [`Value`] produced from this function will
+/// void all saftey guarantees provided by Magnus.
+#[deprecated(since = "0.3.3", note = "please use `Value::from_raw` instead")]
+pub unsafe fn value_from_raw(val: VALUE) -> Value {
+    Value::from_raw(val)
+}
+
+/// Convert [`magnus::value::Id`](Id) to [`rb_sys::ID`].
+#[deprecated(since = "0.3.3", note = "please use `Id::as_raw` instead")]
+pub fn raw_id(id: Id) -> ID {
+    id.as_raw()
+}
+
+/// Convert [`rb_sys::ID`] to [`magnus::value::Id`](Id).
+///
+/// # Safety
+///
+/// You must only supply a valid [`ID`] obtained from [rb-sys](rb_sys) to this
+/// function. Using a invalid [`Id`] produced from this function will void all
+/// saftey guarantees provided by Magnus.
+#[deprecated(since = "0.3.3", note = "please use `Id::from_raw` instead")]
+pub unsafe fn id_from_raw(id: ID) -> Id {
+    Id::from_raw(id)
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{
+        class,
+        rb_sys::{AsRawId, FromRawId},
+        value::Id,
+        Module, RArray, RClass, Symbol,
+    };
+
+    #[test]
+    fn roundtrip_all_symbols() {
+        let _cleanup = unsafe { magnus::embed::init() };
+
+        let sym_class: RClass = class::object().const_get("Symbol").unwrap();
+        let symbols: RArray = sym_class.funcall("all_symbols", ()).unwrap();
+
+        for sym in symbols.each() {
+            let sym: Symbol = sym.unwrap().try_convert().unwrap();
+            let id: Id = sym.into();
+
+            assert_eq!(id, unsafe { Id::from_raw(id.as_raw()) });
+        }
+    }
 }
