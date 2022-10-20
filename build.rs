@@ -6,8 +6,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("cargo:rerun-if-env-changed=RUBY");
     println!("cargo:rerun-if-env-changed=RUBY_VERSION");
 
-    let major = dep_rb_value("DEP_RB_MAJOR").parse::<u8>()?;
-    let minor = dep_rb_value("DEP_RB_MINOR").parse::<u8>()?;
+    configure_libruby();
+
+    let major = dep_rb_value("MAJOR").parse::<u8>()?;
+    let minor = dep_rb_value("MINOR").parse::<u8>()?;
+
     let version = (major, minor);
 
     for &v in &RUBY_VERSIONS {
@@ -31,6 +34,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+/// Setup libruby. Ideally, `rb-sys` linker flags could be inherited but that's
+/// not currently possible with Cargo.
+fn configure_libruby() {
+    println!("cargo:rustc-link-search=native={}", dep_rb_value("LIBDIR"));
+}
+
+/// Gets a value from the rb-sys build output.
 fn dep_rb_value(key: &str) -> String {
-    env::var_os(key).unwrap().to_string_lossy().to_string()
+    let key = format!("DEP_RB_{}", key);
+    println!("cargo:rerun-if-env-changed={}", key);
+    env::var(key).unwrap().to_string()
 }
