@@ -11,6 +11,7 @@
   types in Ruby objects.
 
 ### Changed
+- Switched to rb-sys for low level bindings.
 - Ruby types are no longer `Send` or `Sync`.
 - Rust types wrapped in Ruby objects must be `Send`.
 - Only function pointers (fn or non-capturing closure) are accepted as argument
@@ -29,6 +30,8 @@
 ### Fixed
 
 ### Security
+- `printf`-style format strings no longer interpreted in error messages when
+  automatically raised as Ruby exceptions.
 
 ## [0.3.2] - 2022-05-29
 
