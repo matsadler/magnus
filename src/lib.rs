@@ -1850,8 +1850,8 @@ pub use magnus_macros::{init, wrap, DataTypeFunctions, TypedData};
 #[cfg(ruby_lt_2_7)]
 use rb_sys::rb_require;
 #[cfg(ruby_gte_2_7)]
-use rb_sys::rb_require_string;
-use rb_sys::{
+use ::rb_sys::rb_require_string;
+use ::rb_sys::{
     rb_call_super, rb_current_receiver, rb_define_class, rb_define_global_const,
     rb_define_global_function, rb_define_module, rb_define_variable, rb_errinfo,
     rb_eval_string_protect, rb_set_errinfo, VALUE,

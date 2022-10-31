@@ -1,5 +1,6 @@
-use magnus::eval;
 use std::collections::HashMap;
+
+use magnus::eval;
 
 macro_rules! rb_assert {
     ($s:literal) => {
