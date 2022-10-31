@@ -1,8 +1,6 @@
 use std::{convert::TryFrom, fmt, ops::Deref};
 
-use rb_sys::{
-    rb_ll2inum, rb_to_int, rb_ull2inum, ruby_special_consts, ruby_value_type, VALUE,
-};
+use rb_sys::{rb_ll2inum, rb_to_int, rb_ull2inum, ruby_special_consts, ruby_value_type, VALUE};
 
 use crate::{
     debug_assert_value,

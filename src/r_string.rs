@@ -12,21 +12,18 @@ use std::{
     slice, str,
 };
 
+#[cfg(ruby_gte_3_0)]
+use rb_sys::rb_str_to_interned_str;
+#[cfg(all(ruby_gte_3_0, ruby_lt_3_2))]
+use rb_sys::ruby_rstring_consts::RSTRING_EMBED_LEN_SHIFT;
+#[cfg(ruby_lt_3_0)]
+use rb_sys::ruby_rstring_flags::RSTRING_EMBED_LEN_SHIFT;
 use rb_sys::{
     self, rb_enc_str_coderange, rb_enc_str_new, rb_str_buf_append, rb_str_buf_new, rb_str_cat,
     rb_str_conv_enc, rb_str_new, rb_str_new_frozen, rb_str_new_shared, rb_str_strlen,
     rb_str_to_str, rb_utf8_str_new, rb_utf8_str_new_static, ruby_coderange_type,
     ruby_rstring_flags, ruby_value_type, VALUE,
 };
-
-#[cfg(ruby_gte_3_0)]
-use rb_sys::rb_str_to_interned_str;
-
-#[cfg(all(ruby_gte_3_0, ruby_lt_3_2))]
-use rb_sys::ruby_rstring_consts::RSTRING_EMBED_LEN_SHIFT;
-
-#[cfg(ruby_lt_3_0)]
-use rb_sys::ruby_rstring_flags::RSTRING_EMBED_LEN_SHIFT;
 
 use crate::{
     debug_assert_value,

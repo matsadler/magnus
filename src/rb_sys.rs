@@ -24,12 +24,14 @@
 //! The unsafe functions in this module are capable of producing values that
 //! break the saftey guarantees of almost every other function in Magnus. Use
 //! them with care.
+use std::panic::UnwindSafe;
+
+use rb_sys::{ID, VALUE};
+
 use crate::{
     error::{self, raise, Error},
     value::{Id, Value},
 };
-use rb_sys::{ID, VALUE};
-use std::panic::UnwindSafe;
 
 /// Converts from a [`Value`] to a raw [`VALUE`].
 pub trait AsRawValue {

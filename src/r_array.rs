@@ -2,6 +2,10 @@ use std::{
     convert::TryInto, fmt, iter::FromIterator, ops::Deref, os::raw::c_long, ptr::NonNull, slice,
 };
 
+#[cfg(ruby_gte_3_0)]
+use rb_sys::ruby_rarray_consts::RARRAY_EMBED_LEN_SHIFT;
+#[cfg(ruby_lt_3_0)]
+use rb_sys::ruby_rarray_flags::RARRAY_EMBED_LEN_SHIFT;
 use rb_sys::{
     self, rb_ary_cat, rb_ary_clear, rb_ary_concat, rb_ary_delete, rb_ary_delete_at, rb_ary_entry,
     rb_ary_includes, rb_ary_join, rb_ary_new, rb_ary_new_capa, rb_ary_new_from_values, rb_ary_plus,
@@ -9,12 +13,6 @@ use rb_sys::{
     rb_ary_shared_with_p, rb_ary_shift, rb_ary_sort_bang, rb_ary_store, rb_ary_subseq,
     rb_ary_to_ary, rb_ary_unshift, ruby_rarray_flags, ruby_value_type, VALUE,
 };
-
-#[cfg(ruby_gte_3_0)]
-use rb_sys::ruby_rarray_consts::RARRAY_EMBED_LEN_SHIFT;
-
-#[cfg(ruby_lt_3_0)]
-use rb_sys::ruby_rarray_flags::RARRAY_EMBED_LEN_SHIFT;
 
 use crate::{
     debug_assert_value,

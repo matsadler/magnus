@@ -7,6 +7,8 @@ use rb_sys::{
     rb_gc_mark_locations, rb_gc_register_address, rb_gc_register_mark_object, rb_gc_start,
     rb_gc_stat, rb_gc_unregister_address, ssize_t, VALUE,
 };
+#[cfg(ruby_gte_2_7)]
+use rb_sys::{rb_gc_location, rb_gc_mark_movable};
 
 use crate::{
     error::{protect, Error},
@@ -14,9 +16,6 @@ use crate::{
     symbol::Symbol,
     value::{ReprValue, Value, QNIL},
 };
-
-#[cfg(ruby_gte_2_7)]
-use rb_sys::{rb_gc_location, rb_gc_mark_movable};
 
 /// Mark an Object.
 ///

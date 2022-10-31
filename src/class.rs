@@ -2,6 +2,8 @@
 
 use std::{borrow::Cow, ffi::CStr, fmt, ops::Deref, os::raw::c_int};
 
+#[cfg(ruby_gte_3_1)]
+use rb_sys::rb_cRefinement;
 use rb_sys::{
     self, rb_cArray, rb_cBasicObject, rb_cBinding, rb_cClass, rb_cComplex, rb_cDir, rb_cEncoding,
     rb_cEnumerator, rb_cFalseClass, rb_cFile, rb_cFloat, rb_cHash, rb_cIO, rb_cInteger, rb_cMatch,
@@ -10,9 +12,6 @@ use rb_sys::{
     rb_cThread, rb_cTime, rb_cTrueClass, rb_cUnboundMethod, rb_class2name, rb_class_new,
     rb_class_new_instance, rb_class_superclass, ruby_value_type, VALUE,
 };
-
-#[cfg(ruby_gte_3_1)]
-use rb_sys::rb_cRefinement;
 
 use crate::{
     debug_assert_value,

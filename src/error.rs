@@ -1,6 +1,14 @@
 //! Rust types for working with Ruby Exceptions and other interrupts.
 
-use std::{any::Any, borrow::Cow, ffi::CString, fmt, mem::transmute, ops::Deref, os::raw::{c_int, c_char}};
+use std::{
+    any::Any,
+    borrow::Cow,
+    ffi::CString,
+    fmt,
+    mem::transmute,
+    ops::Deref,
+    os::raw::{c_char, c_int},
+};
 
 use rb_sys::{
     rb_bug, rb_ensure, rb_errinfo, rb_exc_raise, rb_iter_break, rb_iter_break_value, rb_jump_tag,
@@ -269,7 +277,13 @@ pub(crate) fn raise(e: Error) -> ! {
             debug_assert_value!(class);
             const FMT_S: &'static str = "%s\0";
             let msg = CString::new(msg.into_owned()).unwrap();
-            unsafe { rb_raise(class.as_rb_value(), FMT_S.as_ptr() as *const c_char, msg.as_ptr()) }
+            unsafe {
+                rb_raise(
+                    class.as_rb_value(),
+                    FMT_S.as_ptr() as *const c_char,
+                    msg.as_ptr(),
+                )
+            }
             unreachable!()
         }
         Error::Exception(e) => {

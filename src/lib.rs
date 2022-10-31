@@ -1818,6 +1818,10 @@ mod integer;
 pub mod method;
 pub mod module;
 mod object;
+/// Traits that commonly should be in scope.
+pub mod prelude {
+    pub use crate::{class::Class, module::Module, object::Object};
+}
 mod r_array;
 mod r_bignum;
 mod r_complex;
@@ -1842,26 +1846,18 @@ pub mod value;
 
 use std::{ffi::CString, mem::transmute, os::raw::c_int};
 
+pub use magnus_macros::{init, wrap, DataTypeFunctions, TypedData};
+#[cfg(ruby_lt_2_7)]
+use rb_sys::rb_require;
+#[cfg(ruby_gte_2_7)]
+use rb_sys::rb_require_string;
 use rb_sys::{
     rb_call_super, rb_current_receiver, rb_define_class, rb_define_global_const,
     rb_define_global_function, rb_define_module, rb_define_variable, rb_errinfo,
     rb_eval_string_protect, rb_set_errinfo, VALUE,
 };
 
-#[cfg(ruby_lt_2_7)]
-use rb_sys::rb_require;
-
-#[cfg(ruby_gte_2_7)]
-use rb_sys::rb_require_string;
-
-pub use magnus_macros::{init, wrap, DataTypeFunctions, TypedData};
-
-use error::protect;
-use method::Method;
-use value::private::ReprValue as _;
-
-pub use value::{Fixnum, Flonum, StaticSymbol, Value, QFALSE, QNIL, QTRUE};
-pub use {
+pub use crate::{
     binding::Binding,
     class::{Class, RClass},
     enumerator::Enumerator,
@@ -1887,12 +1883,9 @@ pub use {
     range::Range,
     symbol::Symbol,
     try_convert::{ArgList, TryConvert},
+    value::{Fixnum, Flonum, StaticSymbol, Value, QFALSE, QNIL, QTRUE},
 };
-
-/// Traits that commonly should be in scope.
-pub mod prelude {
-    pub use crate::{class::Class, module::Module, object::Object};
-}
+use crate::{error::protect, method::Method, value::private::ReprValue as _};
 
 /// Utility to simplify initialising a static with [`std::sync::Once`].
 ///

@@ -13,14 +13,11 @@ use std::{
     ptr::{self, NonNull},
 };
 
+#[cfg(ruby_gte_3_0)]
+use rb_sys::rbimpl_typeddata_flags::{self, RUBY_TYPED_FREE_IMMEDIATELY, RUBY_TYPED_WB_PROTECTED};
 use rb_sys::{
     self, rb_check_typeddata, rb_data_type_struct__bindgen_ty_1, rb_data_type_t,
     rb_data_typed_object_wrap, ruby_value_type, size_t, VALUE,
-};
-
-#[cfg(ruby_gte_3_0)]
-use rb_sys::rbimpl_typeddata_flags::{
-    self, RUBY_TYPED_FREE_IMMEDIATELY, RUBY_TYPED_WB_PROTECTED,
 };
 
 #[cfg(ruby_lt_3_0)]
