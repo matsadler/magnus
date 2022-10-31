@@ -1835,7 +1835,6 @@ mod range;
 #[cfg(feature = "rb-sys-interop")]
 #[cfg_attr(docsrs, doc(cfg(feature = "rb-sys-interop")))]
 pub mod rb_sys;
-mod ruby_sys;
 pub mod scan_args;
 mod symbol;
 mod try_convert;
@@ -1843,17 +1842,17 @@ pub mod value;
 
 use std::{ffi::CString, mem::transmute, os::raw::c_int};
 
-use crate::ruby_sys::{
+use rb_sys::{
     rb_call_super, rb_current_receiver, rb_define_class, rb_define_global_const,
     rb_define_global_function, rb_define_module, rb_define_variable, rb_errinfo,
     rb_eval_string_protect, rb_set_errinfo, VALUE,
 };
 
 #[cfg(ruby_lt_2_7)]
-use crate::ruby_sys::rb_require;
+use rb_sys::rb_require;
 
 #[cfg(ruby_gte_2_7)]
-use crate::ruby_sys::rb_require_string;
+use rb_sys::rb_require_string;
 
 pub use magnus_macros::{init, wrap, DataTypeFunctions, TypedData};
 
@@ -2104,4 +2103,4 @@ where
 
 #[cfg(not(feature = "embed"))]
 #[cfg_attr(docsrs, doc(cfg(feature = "embed")))]
-ruby_sys::ruby_abi_version!();
+rb_sys::ruby_abi_version!();

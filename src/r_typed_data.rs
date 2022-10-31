@@ -13,13 +13,13 @@ use std::{
     ptr::{self, NonNull},
 };
 
-use crate::ruby_sys::{
+use rb_sys::{
     self, rb_check_typeddata, rb_data_type_struct__bindgen_ty_1, rb_data_type_t,
     rb_data_typed_object_wrap, ruby_value_type, size_t, VALUE,
 };
 
 #[cfg(ruby_gte_3_0)]
-use crate::ruby_sys::rbimpl_typeddata_flags::{
+use rb_sys::rbimpl_typeddata_flags::{
     self, RUBY_TYPED_FREE_IMMEDIATELY, RUBY_TYPED_WB_PROTECTED,
 };
 
@@ -27,7 +27,7 @@ use crate::ruby_sys::rbimpl_typeddata_flags::{
 const RUBY_TYPED_FREE_IMMEDIATELY: u32 = 1;
 
 #[cfg(ruby_lt_3_0)]
-const RUBY_TYPED_WB_PROTECTED: u32 = crate::ruby_sys::ruby_fl_type::RUBY_FL_WB_PROTECTED as u32;
+const RUBY_TYPED_WB_PROTECTED: u32 = rb_sys::ruby_fl_type::RUBY_FL_WB_PROTECTED as u32;
 
 use crate::{
     class::RClass,
@@ -54,7 +54,7 @@ impl RTypedData {
     pub fn from_value(val: Value) -> Option<Self> {
         unsafe {
             (val.rb_type() == ruby_value_type::RUBY_T_DATA)
-                .then(|| NonNull::new_unchecked(val.as_rb_value() as *mut ruby_sys::RTypedData))
+                .then(|| NonNull::new_unchecked(val.as_rb_value() as *mut rb_sys::RTypedData))
                 .and_then(|typed_data| {
                     (typed_data.as_ref().typed_flag == 1)
                         .then(|| Self(NonZeroValue::new_unchecked(val)))

@@ -5,13 +5,13 @@ use std::{
     sync::atomic::{AtomicBool, Ordering},
 };
 
-use crate::ruby_sys::{
+use rb_sys::{
     ruby_cleanup, ruby_exec_node, ruby_executable_node, ruby_options, ruby_set_script_name,
     ruby_setup,
 };
 
 #[cfg(windows)]
-use crate::ruby_sys::rb_w32_sysinit;
+use rb_sys::rb_w32_sysinit;
 
 use crate::r_string::RString;
 

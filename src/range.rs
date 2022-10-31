@@ -8,7 +8,7 @@ use std::{
     os::raw::{c_int, c_long},
 };
 
-use crate::ruby_sys::{rb_range_beg_len, rb_range_new};
+use rb_sys::{rb_range_beg_len, rb_range_new};
 
 use crate::{
     class,

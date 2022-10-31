@@ -1,6 +1,6 @@
 use std::{borrow::Cow, fmt, ops::Deref};
 
-use crate::ruby_sys::{
+use rb_sys::{
     rb_check_id, rb_id2sym, rb_intern_str, rb_sym2str, rb_to_symbol, ruby_value_type, VALUE,
 };
 

@@ -10,7 +10,7 @@ use std::{
     slice,
 };
 
-use crate::ruby_sys::{
+use rb_sys::{
     rb_struct_aref, rb_struct_aset, rb_struct_define, rb_struct_getmember, rb_struct_members,
     rb_struct_size, ruby_value_type, VALUE,
 };
@@ -32,16 +32,16 @@ use crate::{
 // the definition of RStruct, but that isn't public, so we have to duplicate it
 // here.
 mod sys {
-    use crate::ruby_sys::{ruby_fl_type, RBasic, VALUE};
+    use rb_sys::{ruby_fl_type, RBasic, VALUE};
 
     #[cfg(ruby_gte_3_0)]
-    use crate::ruby_sys::ruby_fl_ushift::RUBY_FL_USHIFT;
+    use rb_sys::ruby_fl_ushift::RUBY_FL_USHIFT;
 
     #[cfg(ruby_lt_3_0)]
-    use crate::ruby_sys::ruby_fl_type::RUBY_FL_USHIFT;
+    use rb_sys::ruby_fl_type::RUBY_FL_USHIFT;
 
     #[cfg(ruby_gte_2_7)]
-    pub const EMBED_LEN_MAX: u32 = crate::ruby_sys::ruby_rvalue_flags::RVALUE_EMBED_LEN_MAX as u32;
+    pub const EMBED_LEN_MAX: u32 = rb_sys::ruby_rvalue_flags::RVALUE_EMBED_LEN_MAX as u32;
 
     #[cfg(ruby_lt_2_7)]
     pub const EMBED_LEN_MAX: u32 = 3;

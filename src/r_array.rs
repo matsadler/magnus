@@ -2,7 +2,7 @@ use std::{
     convert::TryInto, fmt, iter::FromIterator, ops::Deref, os::raw::c_long, ptr::NonNull, slice,
 };
 
-use crate::ruby_sys::{
+use rb_sys::{
     self, rb_ary_cat, rb_ary_clear, rb_ary_concat, rb_ary_delete, rb_ary_delete_at, rb_ary_entry,
     rb_ary_includes, rb_ary_join, rb_ary_new, rb_ary_new_capa, rb_ary_new_from_values, rb_ary_plus,
     rb_ary_pop, rb_ary_push, rb_ary_replace, rb_ary_resize, rb_ary_reverse, rb_ary_rotate,
@@ -11,10 +11,10 @@ use crate::ruby_sys::{
 };
 
 #[cfg(ruby_gte_3_0)]
-use crate::ruby_sys::ruby_rarray_consts::RARRAY_EMBED_LEN_SHIFT;
+use rb_sys::ruby_rarray_consts::RARRAY_EMBED_LEN_SHIFT;
 
 #[cfg(ruby_lt_3_0)]
-use crate::ruby_sys::ruby_rarray_flags::RARRAY_EMBED_LEN_SHIFT;
+use rb_sys::ruby_rarray_flags::RARRAY_EMBED_LEN_SHIFT;
 
 use crate::{
     debug_assert_value,
@@ -62,7 +62,7 @@ impl RArray {
         Self(NonZeroValue::new_unchecked(Value::new(val)))
     }
 
-    fn as_internal(self) -> NonNull<ruby_sys::RArray> {
+    fn as_internal(self) -> NonNull<rb_sys::RArray> {
         // safe as inner value is NonZero
         unsafe { NonNull::new_unchecked(self.0.get().as_rb_value() as *mut _) }
     }

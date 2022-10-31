@@ -1,7 +1,7 @@
 use std::{fmt, ops::Deref};
 
 #[cfg(any(ruby_lte_3_1, docsrs))]
-use crate::ruby_sys::{rb_binding_new, VALUE};
+use rb_sys::{rb_binding_new, VALUE};
 
 use crate::{
     class,

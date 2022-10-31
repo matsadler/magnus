@@ -1,6 +1,6 @@
 use std::{fmt, ops::Deref};
 
-use crate::ruby_sys::ruby_value_type;
+use rb_sys::ruby_value_type;
 
 use crate::{
     encoding::EncodingCapable,

@@ -2,7 +2,7 @@
 
 use std::{borrow::Cow, ffi::CStr, fmt, ops::Deref, os::raw::c_int};
 
-use crate::ruby_sys::{
+use rb_sys::{
     self, rb_cArray, rb_cBasicObject, rb_cBinding, rb_cClass, rb_cComplex, rb_cDir, rb_cEncoding,
     rb_cEnumerator, rb_cFalseClass, rb_cFile, rb_cFloat, rb_cHash, rb_cIO, rb_cInteger, rb_cMatch,
     rb_cMethod, rb_cModule, rb_cNameErrorMesg, rb_cNilClass, rb_cNumeric, rb_cObject, rb_cProc,
@@ -12,7 +12,7 @@ use crate::ruby_sys::{
 };
 
 #[cfg(ruby_gte_3_1)]
-use crate::ruby_sys::rb_cRefinement;
+use rb_sys::rb_cRefinement;
 
 use crate::{
     debug_assert_value,
@@ -143,7 +143,7 @@ impl RClass {
 
 impl Default for RClass {
     fn default() -> Self {
-        unsafe { RClass::from_rb_value_unchecked(ruby_sys::rb_cObject) }
+        unsafe { RClass::from_rb_value_unchecked(rb_sys::rb_cObject) }
     }
 }
 

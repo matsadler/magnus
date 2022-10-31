@@ -4,7 +4,7 @@ use std::{
     os::raw::{c_long, c_longlong, c_ulong, c_ulonglong},
 };
 
-use crate::ruby_sys::{
+use rb_sys::{
     rb_ll2inum, rb_num2ll, rb_num2long, rb_num2ull, rb_num2ulong, rb_ull2inum, ruby_fl_type,
     ruby_value_type, VALUE,
 };

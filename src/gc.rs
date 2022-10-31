@@ -2,7 +2,7 @@
 
 use std::ops::Deref;
 
-use crate::ruby_sys::{
+use rb_sys::{
     rb_gc_adjust_memory_usage, rb_gc_count, rb_gc_disable, rb_gc_enable, rb_gc_mark,
     rb_gc_mark_locations, rb_gc_register_address, rb_gc_register_mark_object, rb_gc_start,
     rb_gc_stat, rb_gc_unregister_address, ssize_t, VALUE,
@@ -16,7 +16,7 @@ use crate::{
 };
 
 #[cfg(ruby_gte_2_7)]
-use crate::ruby_sys::{rb_gc_location, rb_gc_mark_movable};
+use rb_sys::{rb_gc_location, rb_gc_mark_movable};
 
 /// Mark an Object.
 ///

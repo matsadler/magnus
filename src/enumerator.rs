@@ -1,6 +1,6 @@
 use std::{fmt, ops::Deref};
 
-use crate::ruby_sys::VALUE;
+use rb_sys::VALUE;
 
 use crate::{
     class,

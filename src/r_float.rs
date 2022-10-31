@@ -1,6 +1,6 @@
 use std::{fmt, ops::Deref};
 
-use crate::ruby_sys::{rb_float_new, rb_float_value, ruby_value_type, VALUE};
+use rb_sys::{rb_float_new, rb_float_value, ruby_value_type, VALUE};
 
 use crate::{
     debug_assert_value,

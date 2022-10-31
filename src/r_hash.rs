@@ -5,7 +5,7 @@ use std::{
     os::raw::c_int, panic::AssertUnwindSafe,
 };
 
-use crate::ruby_sys::{
+use rb_sys::{
     rb_check_hash_type, rb_hash_aref, rb_hash_aset, rb_hash_clear, rb_hash_delete, rb_hash_fetch,
     rb_hash_foreach, rb_hash_lookup, rb_hash_lookup2, rb_hash_new, rb_hash_size, ruby_value_type,
     VALUE,

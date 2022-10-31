@@ -1,6 +1,6 @@
 use std::{ffi::CString, mem::transmute, ops::Deref};
 
-use crate::ruby_sys::{
+use rb_sys::{
     rb_define_singleton_method, rb_extend_object, rb_ivar_get, rb_ivar_set, rb_singleton_class,
 };
 

@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use crate::ruby_sys::{rb_get_path, rb_num2dbl};
+use rb_sys::{rb_get_path, rb_num2dbl};
 
 use crate::{
     debug_assert_value,

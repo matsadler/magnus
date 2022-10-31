@@ -2,7 +2,7 @@
 
 use std::{fmt, mem::forget, ops::Deref, os::raw::c_int};
 
-use crate::ruby_sys::{
+use rb_sys::{
     rb_block_given_p, rb_block_proc, rb_data_typed_object_wrap, rb_obj_is_proc, rb_proc_arity,
     rb_proc_call, rb_proc_lambda_p, rb_proc_new, rb_yield, rb_yield_splat, rb_yield_values2, VALUE,
 };

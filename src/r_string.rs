@@ -12,7 +12,7 @@ use std::{
     slice, str,
 };
 
-use crate::ruby_sys::{
+use rb_sys::{
     self, rb_enc_str_coderange, rb_enc_str_new, rb_str_buf_append, rb_str_buf_new, rb_str_cat,
     rb_str_conv_enc, rb_str_new, rb_str_new_frozen, rb_str_new_shared, rb_str_strlen,
     rb_str_to_str, rb_utf8_str_new, rb_utf8_str_new_static, ruby_coderange_type,
@@ -20,13 +20,13 @@ use crate::ruby_sys::{
 };
 
 #[cfg(ruby_gte_3_0)]
-use crate::ruby_sys::rb_str_to_interned_str;
+use rb_sys::rb_str_to_interned_str;
 
 #[cfg(all(ruby_gte_3_0, ruby_lt_3_2))]
-use crate::ruby_sys::ruby_rstring_consts::RSTRING_EMBED_LEN_SHIFT;
+use rb_sys::ruby_rstring_consts::RSTRING_EMBED_LEN_SHIFT;
 
 #[cfg(ruby_lt_3_0)]
-use crate::ruby_sys::ruby_rstring_flags::RSTRING_EMBED_LEN_SHIFT;
+use rb_sys::ruby_rstring_flags::RSTRING_EMBED_LEN_SHIFT;
 
 use crate::{
     debug_assert_value,
@@ -79,7 +79,7 @@ impl RString {
         Self(NonZeroValue::new_unchecked(Value::new(val)))
     }
 
-    fn as_internal(self) -> NonNull<ruby_sys::RString> {
+    fn as_internal(self) -> NonNull<rb_sys::RString> {
         // safe as inner value is NonZero
         unsafe { NonNull::new_unchecked(self.0.get().as_rb_value() as *mut _) }
     }

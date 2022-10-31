@@ -2,7 +2,7 @@
 
 use std::{fmt, ops::Deref};
 
-use crate::ruby_sys::{
+use rb_sys::{
     rb_eArgError, rb_eEOFError, rb_eEncCompatError, rb_eEncodingError, rb_eException, rb_eFatal,
     rb_eFloatDomainError, rb_eFrozenError, rb_eIOError, rb_eIndexError, rb_eInterrupt,
     rb_eKeyError, rb_eLoadError, rb_eLocalJumpError, rb_eMathDomainError, rb_eNameError,
@@ -13,10 +13,10 @@ use crate::ruby_sys::{
 };
 
 #[cfg(ruby_gte_2_7)]
-use crate::ruby_sys::rb_eNoMatchingPatternError;
+use rb_sys::rb_eNoMatchingPatternError;
 
 #[cfg(ruby_gte_3_1)]
-use crate::ruby_sys::rb_eNoMatchingPatternKeyError;
+use rb_sys::rb_eNoMatchingPatternKeyError;
 
 use crate::{
     class::{Class, RClass},

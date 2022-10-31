@@ -25,7 +25,7 @@ use std::{
     ptr::{self, NonNull},
 };
 
-use crate::ruby_sys::{
+use rb_sys::{
     rb_ascii8bit_encindex, rb_ascii8bit_encoding, rb_default_external_encoding,
     rb_default_internal_encoding, rb_enc_ascget, rb_enc_associate_index, rb_enc_check,
     rb_enc_codelen, rb_enc_codepoint_len, rb_enc_compatible, rb_enc_copy, rb_enc_default_external,

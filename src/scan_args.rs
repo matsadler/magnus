@@ -35,7 +35,7 @@ use std::{
     os::raw::c_int,
 };
 
-use crate::ruby_sys::{rb_error_arity, rb_get_kwargs, rb_scan_args, ID, VALUE};
+use rb_sys::{rb_error_arity, rb_get_kwargs, rb_scan_args, ID, VALUE};
 
 use crate::{
     block::Proc,

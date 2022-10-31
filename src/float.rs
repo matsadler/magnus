@@ -1,6 +1,6 @@
 use std::{fmt, ops::Deref};
 
-use crate::ruby_sys::{
+use rb_sys::{
     rb_float_new_in_heap, rb_float_value, rb_to_float, ruby_special_consts, ruby_value_type, VALUE,
 };
 
