@@ -12,7 +12,6 @@
 
 ### Changed
 - Switched to rb-sys for low level bindings.
-- Ruby types are no longer `Send` or `Sync`.
 - Rust types wrapped in Ruby objects must be `Send`.
 - Only function pointers (fn or non-capturing closure) are accepted as argument
   for `Value::block_call`. Use `Proc::from_fn` + `Value::funcall_with_block`

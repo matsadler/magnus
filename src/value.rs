@@ -5,7 +5,6 @@ use std::{
     convert::TryFrom,
     ffi::CStr,
     fmt,
-    marker::PhantomData,
     mem::transmute,
     num::NonZeroUsize,
     ops::{Deref, DerefMut},
@@ -79,12 +78,12 @@ macro_rules! debug_assert_value {
 /// Ruby's `VALUE` type, which can represent any Ruby object.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
-pub struct Value(VALUE, PhantomData<*mut RBasic>);
+pub struct Value(VALUE);
 
 impl Value {
     #[inline]
     pub(crate) const fn new(val: VALUE) -> Self {
-        Self(val, PhantomData)
+        Self(val)
     }
 
     #[inline]
@@ -1056,15 +1055,12 @@ impl ReprValue for Value {}
 
 #[derive(Clone, Copy)]
 #[repr(transparent)]
-pub(crate) struct NonZeroValue(NonZeroUsize, PhantomData<ptr::NonNull<RBasic>>);
+pub(crate) struct NonZeroValue(NonZeroUsize);
 
 impl NonZeroValue {
     #[inline]
     pub(crate) const unsafe fn new_unchecked(val: Value) -> Self {
-        Self(
-            NonZeroUsize::new_unchecked(val.as_rb_value() as usize),
-            PhantomData,
-        )
+        Self(NonZeroUsize::new_unchecked(val.as_rb_value() as usize))
     }
 
     pub(crate) const fn get(self) -> Value {
@@ -2134,11 +2130,11 @@ impl TryConvertOwned for StaticSymbol {}
 /// The internal value of a Ruby symbol.
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[repr(transparent)]
-pub struct Id(ID, PhantomData<*mut u8>);
+pub struct Id(ID);
 
 impl Id {
     pub(crate) fn new(id: ID) -> Self {
-        Self(id, PhantomData)
+        Self(id)
     }
 
     pub(crate) fn as_rb_id(self) -> ID {
