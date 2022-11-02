@@ -1848,7 +1848,7 @@ use std::{ffi::CString, mem::transmute, os::raw::c_int};
 
 pub use magnus_macros::{init, wrap, DataTypeFunctions, TypedData};
 #[cfg(ruby_lt_2_7)]
-use rb_sys::rb_require;
+use ::rb_sys::rb_require;
 #[cfg(ruby_gte_2_7)]
 use ::rb_sys::rb_require_string;
 use ::rb_sys::{
