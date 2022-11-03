@@ -1846,7 +1846,6 @@ pub mod value;
 
 use std::{ffi::CString, mem::transmute, os::raw::c_int};
 
-pub use magnus_macros::{init, wrap, DataTypeFunctions, TypedData};
 #[cfg(ruby_lt_2_7)]
 use ::rb_sys::rb_require;
 #[cfg(ruby_gte_2_7)]
@@ -1856,6 +1855,7 @@ use ::rb_sys::{
     rb_define_global_function, rb_define_module, rb_define_variable, rb_errinfo,
     rb_eval_string_protect, rb_set_errinfo, VALUE,
 };
+pub use magnus_macros::{init, wrap, DataTypeFunctions, TypedData};
 
 pub use crate::{
     binding::Binding,
@@ -2093,7 +2093,3 @@ where
         other => Err(Error::Jump(unsafe { transmute(other) })),
     }
 }
-
-#[cfg(not(feature = "embed"))]
-#[cfg_attr(docsrs, doc(cfg(feature = "embed")))]
-rb_sys::ruby_abi_version!();
