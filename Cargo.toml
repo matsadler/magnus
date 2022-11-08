@@ -30,6 +30,5 @@ rb-sys = { version = "~0.9.37", default-features = false, features = ["bindgen-r
 magnus = { path = ".", features = ["embed", "rb-sys-interop"] }
 
 [package.metadata.docs.rs]
-no-default-features = true
-features = ["embed", "rb-sys-interop"]
+all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
