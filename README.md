@@ -59,7 +59,7 @@ spec.extensions = ["ext/my_example_gem/extconf.rb"]
 spec.add_runtime_dependency "rake", "> 1"
 
 # needed until rubygems supports Rust support is out of beta
-spec.add_dependency "rb_sys", "~> 0.9.18"
+spec.add_dependency "rb_sys", "~> 0.9.37"
 
 # only needed when developing or packaging your gem
 spec.add_development_dependency "rake-compiler", "~> 1.2.0"
