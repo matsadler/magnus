@@ -5,7 +5,7 @@ use std::ops::Deref;
 use rb_sys::{
     rb_gc_adjust_memory_usage, rb_gc_count, rb_gc_disable, rb_gc_enable, rb_gc_mark,
     rb_gc_mark_locations, rb_gc_register_address, rb_gc_register_mark_object, rb_gc_start,
-    rb_gc_stat, rb_gc_unregister_address, ssize_t, VALUE,
+    rb_gc_stat, rb_gc_unregister_address, VALUE,
 };
 #[cfg(ruby_gte_2_7)]
 use rb_sys::{rb_gc_location, rb_gc_mark_movable};
@@ -16,6 +16,12 @@ use crate::{
     symbol::Symbol,
     value::{ReprValue, Value, QNIL},
 };
+
+#[cfg(target_pointer_width = "64")]
+type DiffSize = i64;
+
+#[cfg(target_pointer_width = "32")]
+type DiffSize = i32;
 
 /// Mark an Object.
 ///
@@ -164,8 +170,8 @@ pub fn start() {
 /// the process is using.
 ///
 /// Pass negative numbers to indicate memory has been freed.
-pub fn adjust_memory_usage(diff: i32) {
-    unsafe { rb_gc_adjust_memory_usage(diff as ssize_t) };
+pub fn adjust_memory_usage(diff: DiffSize) {
+    unsafe { rb_gc_adjust_memory_usage(diff) };
 }
 
 /// Returns the number of garbage collections that have been run since the

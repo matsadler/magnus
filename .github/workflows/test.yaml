@@ -8,7 +8,7 @@ jobs:
   test:
     runs-on: ${{ matrix.os }}
     strategy:
-      fail-fast: false
+      fail-fast: true
       matrix:
         os:
           - ubuntu-latest
@@ -22,6 +22,11 @@ jobs:
           - head
         rustup-toolchain:
           - "1.51"
+          - "stable"
+        include:
+          - os: windows-latest
+            ruby-version: mswin
+            rustup-toolchain: stable
 
     steps:
       - uses: actions/checkout@v3
