@@ -1883,9 +1883,12 @@ pub use crate::{
     range::Range,
     symbol::Symbol,
     try_convert::{ArgList, TryConvert},
-    value::{Fixnum, Flonum, StaticSymbol, Value, QFALSE, QNIL, QTRUE},
+    value::{Fixnum, StaticSymbol, Value, QFALSE, QNIL, QTRUE},
 };
 use crate::{error::protect, method::Method, value::private::ReprValue as _};
+
+#[cfg(ruby_use_flonum)]
+pub use crate::value::Flonum;
 
 /// Utility to simplify initialising a static with [`std::sync::Once`].
 ///

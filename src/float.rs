@@ -8,8 +8,11 @@ use crate::{
     debug_assert_value,
     error::{protect, Error},
     try_convert::TryConvert,
-    value::{private, Flonum, NonZeroValue, ReprValue, Value},
+    value::{private, NonZeroValue, ReprValue, Value},
 };
+
+#[cfg(ruby_use_flonum)]
+use crate::value::Flonum;
 
 /// A type wrapping either a [`Flonum`](`crate::value::Flonum`) value or a
 /// Value known to be an instance of Float.
@@ -67,11 +70,15 @@ impl Float {
     #[inline]
     pub fn from_f64(n: f64) -> Self {
         unsafe {
-            Self::from_rb_value_unchecked(
-                Flonum::from_f64_impl(n)
-                    .map(|f| f.as_rb_value())
-                    .unwrap_or_else(|| rb_float_new_in_heap(n)),
-            )
+            #[cfg(ruby_use_flonum)]
+            let val = Flonum::from_f64_impl(n)
+                .map(|f| f.as_rb_value())
+                .unwrap_or_else(|| rb_float_new_in_heap(n));
+
+            #[cfg(not(ruby_use_flonum))]
+            let val = rb_float_new_in_heap(n);
+
+            Self::from_rb_value_unchecked(val)
         }
     }
 
@@ -87,6 +94,7 @@ impl Float {
     /// ```
     #[inline]
     pub fn to_f64(self) -> f64 {
+        #[cfg(ruby_use_flonum)]
         if let Some(flonum) = Flonum::from_value(*self) {
             return flonum.to_f64();
         }

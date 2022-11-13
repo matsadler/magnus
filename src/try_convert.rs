@@ -10,8 +10,11 @@ use crate::{
     r_array::RArray,
     r_hash::RHash,
     r_string::RString,
-    value::{Fixnum, Flonum, Value, QNIL},
+    value::{Fixnum, Value, QNIL},
 };
+
+#[cfg(ruby_use_flonum)]
+use crate::value::Flonum;
 
 /// Conversions from [`Value`] to Rust types.
 pub trait TryConvert: Sized {
@@ -143,6 +146,7 @@ impl TryConvert for f64 {
         if let Some(fixnum) = Fixnum::from_value(val) {
             return Ok(fixnum.to_isize() as f64);
         }
+        #[cfg(ruby_use_flonum)]
         if let Some(flonum) = Flonum::from_value(val) {
             return Ok(flonum.to_f64());
         }

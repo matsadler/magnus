@@ -8,8 +8,11 @@ use crate::{
     exception,
     float::Float,
     try_convert::TryConvert,
-    value::{private, Flonum, NonZeroValue, ReprValue, Value},
+    value::{private, NonZeroValue, ReprValue, Value},
 };
+
+#[cfg(ruby_use_flonum)]
+use crate::value::Flonum;
 
 /// A Value pointer to a RFloat struct, Ruby's internal representation of
 /// high precision floating point numbers.
@@ -39,11 +42,18 @@ impl RFloat {
     ///
     /// Returns `Ok(RFloat)` if `n` requires a high precision float, otherwise
     /// returns `Err(Fixnum)`.
+    #[cfg(ruby_use_flonum)]
     pub fn from_f64(n: f64) -> Result<Self, Flonum> {
         unsafe {
             let val = Value::new(rb_float_new(n));
             Self::from_value(val).ok_or_else(|| Flonum::from_rb_value_unchecked(val.as_rb_value()))
         }
+    }
+
+    /// Create a new `RFloat` from an `f64.`
+    #[cfg(not(ruby_use_flonum))]
+    pub fn from_f64(n: f64) -> Result<Self, Self> {
+        unsafe { Ok(Self::from_rb_value_unchecked(rb_float_new(n))) }
     }
 
     /// Convert `self` to a `f64`.
