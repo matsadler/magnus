@@ -657,7 +657,7 @@
 //! * `rb_eval_string_protect`: [`eval()`] or [`eval!`].
 // * `rb_eval_string_wrap`:
 // * `rb_exc_fatal`:
-// * `rb_exc_new`:
+//! * `rb_exc_new`: See [`error::raise`].
 // * `rb_exc_new_cstr`:
 // * `rb_exc_new_str`:
 //! * `rb_exc_raise`: Return [`Error`].
@@ -1259,7 +1259,7 @@
 // * `rb_ractor_stdin_set`:
 // * `rb_ractor_stdout`:
 // * `rb_ractor_stdout_set`:
-//! * `rb_raise`: Return [`Error`].
+// * `rb_raise`:
 // * `rb_random_base_init`:
 // * `rb_random_bytes`:
 // * `RB_RANDOM_DATA_INIT_PARENT`:

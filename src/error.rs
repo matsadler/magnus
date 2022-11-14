@@ -1,18 +1,11 @@
 //! Rust types for working with Ruby Exceptions and other interrupts.
 
-use std::{
-    any::Any,
-    borrow::Cow,
-    ffi::CString,
-    fmt,
-    mem::transmute,
-    ops::Deref,
-    os::raw::{c_char, c_int},
-};
+use std::{any::Any, borrow::Cow, ffi::CString, fmt, mem::transmute, ops::Deref, os::raw::c_int};
 
 use rb_sys::{
-    rb_bug, rb_ensure, rb_errinfo, rb_exc_raise, rb_iter_break, rb_iter_break_value, rb_jump_tag,
-    rb_protect, rb_raise, rb_set_errinfo, rb_warning, ruby_special_consts, VALUE,
+    rb_bug, rb_ensure, rb_errinfo, rb_exc_new_str, rb_exc_raise, rb_iter_break,
+    rb_iter_break_value, rb_jump_tag, rb_protect, rb_set_errinfo, rb_warning, ruby_special_consts,
+    VALUE,
 };
 
 use crate::{
@@ -20,6 +13,7 @@ use crate::{
     exception::{self, Exception, ExceptionClass},
     module::Module,
     value::{ReprValue, Value, QNIL},
+    RString,
 };
 
 /// A Rust representation of a Ruby `Exception` or other interrupt.
@@ -275,15 +269,14 @@ pub(crate) fn raise(e: Error) -> ! {
         Error::Jump(tag) => tag.resume(),
         Error::Error(class, msg) => {
             debug_assert_value!(class);
-            const FMT_S: &'static str = "%s\0";
-            let msg = CString::new(msg.into_owned()).unwrap();
-            unsafe {
-                rb_raise(
-                    class.as_rb_value(),
-                    FMT_S.as_ptr() as *const c_char,
-                    msg.as_ptr(),
-                )
-            }
+
+            // We use `rb_exc_new_str` here because `rb_raise` nevers frees the
+            // string buffer, and causes memory leaks. Using `rb_exc_new_str`
+            // allows the GC deallocate the message later.
+            let msg = RString::from(msg.as_ref()).as_rb_value();
+            let exc = unsafe { rb_exc_new_str(class.as_rb_value(), msg) };
+            unsafe { rb_exc_raise(exc) };
+
             unreachable!()
         }
         Error::Exception(e) => {
