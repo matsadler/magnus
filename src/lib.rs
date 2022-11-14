@@ -1259,7 +1259,7 @@
 // * `rb_ractor_stdin_set`:
 // * `rb_ractor_stdout`:
 // * `rb_ractor_stdout_set`:
-//! * `rb_raise`: Return [`Error`].
+//! * `rb_raise`: Simmilar to returning [`Error`].
 // * `rb_random_base_init`:
 // * `rb_random_bytes`:
 // * `RB_RANDOM_DATA_INIT_PARENT`:

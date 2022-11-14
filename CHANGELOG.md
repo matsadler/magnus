@@ -27,6 +27,7 @@
 ### Removed
 
 ### Fixed
+- Memory leak of the message when returning an `Error` to raise an exception.
 
 ### Security
 - `printf`-style format strings no longer interpreted in error messages when

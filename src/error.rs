@@ -1,24 +1,17 @@
 //! Rust types for working with Ruby Exceptions and other interrupts.
 
-use std::{
-    any::Any,
-    borrow::Cow,
-    ffi::CString,
-    fmt,
-    mem::transmute,
-    ops::Deref,
-    os::raw::{c_char, c_int},
-};
+use std::{any::Any, borrow::Cow, ffi::CString, fmt, mem::transmute, ops::Deref, os::raw::c_int};
 
 use rb_sys::{
     rb_bug, rb_ensure, rb_errinfo, rb_exc_raise, rb_iter_break, rb_iter_break_value, rb_jump_tag,
-    rb_protect, rb_raise, rb_set_errinfo, rb_warning, ruby_special_consts, VALUE,
+    rb_protect, rb_set_errinfo, rb_warning, ruby_special_consts, VALUE,
 };
 
 use crate::{
-    debug_assert_value,
+    class::Class,
     exception::{self, Exception, ExceptionClass},
     module::Module,
+    r_string::RString,
     value::{ReprValue, Value, QNIL},
 };
 
@@ -83,6 +76,22 @@ impl Error {
             Error::Jump(_) => false,
             Error::Error(c, _) => c.is_inherited(class),
             Error::Exception(e) => e.is_kind_of(class),
+        }
+    }
+
+    /// Consumes `self`, returning an `Exception`.
+    ///
+    /// # Panics
+    ///
+    /// Panics if called on an `Error::Jump`.
+    fn exception(self) -> Exception {
+        match self {
+            Error::Jump(_) => panic!("Error::exception() called on {}", self),
+            Error::Error(class, msg) => match class.new_instance((RString::new(msg.as_ref()),)) {
+                Ok(e) | Err(Error::Exception(e)) => e,
+                Err(err) => unreachable!("*very* unexpected error: {}", err),
+            },
+            Error::Exception(e) => e,
         }
     }
 
@@ -273,25 +282,14 @@ where
 pub(crate) fn raise(e: Error) -> ! {
     match e {
         Error::Jump(tag) => tag.resume(),
-        Error::Error(class, msg) => {
-            debug_assert_value!(class);
-            const FMT_S: &'static str = "%s\0";
-            let msg = CString::new(msg.into_owned()).unwrap();
-            unsafe {
-                rb_raise(
-                    class.as_rb_value(),
-                    FMT_S.as_ptr() as *const c_char,
-                    msg.as_ptr(),
-                )
-            }
+        err => {
+            unsafe { rb_exc_raise(err.exception().as_rb_value()) }
+            // friendly reminder: we really never get here, and as such won't
+            // drop any values still in scope, make sure everything has been
+            // consumed/dropped
             unreachable!()
         }
-        Error::Exception(e) => {
-            debug_assert_value!(e);
-            unsafe { rb_exc_raise(e.as_rb_value()) }
-            unreachable!()
-        }
-    }
+    };
 }
 
 pub(crate) fn bug_from_panic(e: Box<dyn Any + Send + 'static>, or: &str) -> ! {
@@ -310,6 +308,8 @@ pub(crate) fn bug_from_panic(e: Box<dyn Any + Send + 'static>, or: &str) -> ! {
 pub fn bug(s: &str) -> ! {
     let s = CString::new(s).unwrap_or_else(|_| CString::new("panic").unwrap());
     unsafe { rb_bug(s.as_ptr()) };
+    // as we never get here `s` isn't dropped, technically this is a memory
+    // leak, in practice we don't care because we just hard crashed
     unreachable!()
 }
 
