@@ -273,8 +273,9 @@ pub(crate) fn raise(e: Error) -> ! {
             // We use `rb_exc_new_str` here because `rb_raise` nevers frees the
             // string buffer, and causes memory leaks. Using `rb_exc_new_str`
             // allows the GC deallocate the message later.
-            let msg = RString::from(msg.as_ref()).as_rb_value();
-            let exc = unsafe { rb_exc_new_str(class.as_rb_value(), msg) };
+            let rmsg = RString::from(msg.as_ref()).as_rb_value();
+            drop(msg);
+            let exc = unsafe { rb_exc_new_str(class.as_rb_value(), rmsg) };
             unsafe { rb_exc_raise(exc) };
 
             unreachable!()
