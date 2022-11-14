@@ -9,6 +9,9 @@
   Class.
 - `RTypedData::wrap` and `RTypedData::get` inherent methods for wrapping Rust
   types in Ruby objects.
+- Support for Ruby 3.2 preview.
+- Support for mswin platform (msvc) on Windows with Ruby 3.2 (in addition to
+  the mingw support previously available for all Ruby versions on Windows).
 
 ### Changed
 - Switched to rb-sys for low level bindings.
@@ -28,6 +31,8 @@
 
 ### Fixed
 - Memory leak of the message when returning an `Error` to raise an exception.
+- `Flonum` support disabled for Ruby built with USE_FLONUM=0 (e.g. 32 bit
+  systems).
 
 ### Security
 - `printf`-style format strings no longer interpreted in error messages when
