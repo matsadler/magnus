@@ -2,6 +2,8 @@ use std::path::PathBuf;
 
 use rb_sys::{rb_get_path, rb_num2dbl};
 
+#[cfg(ruby_use_flonum)]
+use crate::value::Flonum;
 use crate::{
     debug_assert_value,
     error::{protect, Error},
@@ -12,9 +14,6 @@ use crate::{
     r_string::RString,
     value::{Fixnum, Value, QNIL},
 };
-
-#[cfg(ruby_use_flonum)]
-use crate::value::Flonum;
 
 /// Conversions from [`Value`] to Rust types.
 pub trait TryConvert: Sized {

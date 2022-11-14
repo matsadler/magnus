@@ -15,6 +15,8 @@ use std::{
     ptr,
 };
 
+#[cfg(ruby_use_flonum)]
+pub use flonum::Flonum;
 use rb_sys::{
     rb_any_to_s, rb_block_call, rb_check_funcall, rb_check_id, rb_check_id_cstr,
     rb_check_symbol_cstr, rb_enumeratorize_with_size, rb_eql, rb_equal, rb_funcall_with_block,
@@ -23,9 +25,6 @@ use rb_sys::{
     rb_obj_freeze, rb_obj_is_kind_of, rb_obj_respond_to, rb_sym2id, rb_ull2inum, ruby_fl_type,
     ruby_special_consts, ruby_value_type, RBasic, ID, VALUE,
 };
-
-#[cfg(ruby_use_flonum)]
-pub use flonum::Flonum;
 
 // These don't seem to appear consistently in bindgen output, not sure if they
 // aren't consistently defined in the headers or what. Lets just do it

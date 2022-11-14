@@ -2,6 +2,8 @@ use std::{fmt, ops::Deref};
 
 use rb_sys::{rb_float_new, rb_float_value, ruby_value_type, VALUE};
 
+#[cfg(ruby_use_flonum)]
+use crate::value::Flonum;
 use crate::{
     debug_assert_value,
     error::Error,
@@ -10,9 +12,6 @@ use crate::{
     try_convert::TryConvert,
     value::{private, NonZeroValue, ReprValue, Value},
 };
-
-#[cfg(ruby_use_flonum)]
-use crate::value::Flonum;
 
 /// A Value pointer to a RFloat struct, Ruby's internal representation of
 /// high precision floating point numbers.

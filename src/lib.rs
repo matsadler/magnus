@@ -1857,6 +1857,8 @@ use ::rb_sys::{
 };
 pub use magnus_macros::{init, wrap, DataTypeFunctions, TypedData};
 
+#[cfg(ruby_use_flonum)]
+pub use crate::value::Flonum;
 pub use crate::{
     binding::Binding,
     class::{Class, RClass},
@@ -1886,9 +1888,6 @@ pub use crate::{
     value::{Fixnum, StaticSymbol, Value, QFALSE, QNIL, QTRUE},
 };
 use crate::{error::protect, method::Method, value::private::ReprValue as _};
-
-#[cfg(ruby_use_flonum)]
-pub use crate::value::Flonum;
 
 /// Utility to simplify initialising a static with [`std::sync::Once`].
 ///

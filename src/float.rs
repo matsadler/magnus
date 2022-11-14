@@ -4,15 +4,14 @@ use rb_sys::{
     rb_float_new_in_heap, rb_float_value, rb_to_float, ruby_special_consts, ruby_value_type, VALUE,
 };
 
+#[cfg(ruby_use_flonum)]
+use crate::value::Flonum;
 use crate::{
     debug_assert_value,
     error::{protect, Error},
     try_convert::TryConvert,
     value::{private, NonZeroValue, ReprValue, Value},
 };
-
-#[cfg(ruby_use_flonum)]
-use crate::value::Flonum;
 
 /// A type wrapping either a [`Flonum`](`crate::value::Flonum`) value or a
 /// Value known to be an instance of Float.
