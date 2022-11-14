@@ -24,6 +24,7 @@ use rb_sys::{
     ruby_special_consts, ruby_value_type, RBasic, ID, VALUE,
 };
 
+#[cfg(ruby_use_flonum)]
 pub use flonum::Flonum;
 
 // These don't seem to appear consistently in bindgen output, not sure if they
