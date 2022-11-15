@@ -55,7 +55,7 @@
 //! ```
 //! use magnus::{define_module, function, method, prelude::*, Error};
 //!
-//! #[magnus::wrap(class = "Euclid::Point", free_immediatly, size)]
+//! #[magnus::wrap(class = "Euclid::Point", free_immediately, size)]
 //! struct Point {
 //!     x: isize,
 //!     y: isize,
