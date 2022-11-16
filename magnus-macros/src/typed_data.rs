@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
 use syn::{spanned::Spanned, DeriveInput, Error, Meta};
@@ -67,9 +65,9 @@ pub fn expand_derive_typed_data(input: DeriveInput) -> TokenStream {
             "wb_protected",
             "frozen_shareable",
         ],
-        &HashMap::from([
+        &vec![
             ("free_immediatly", "free_immediately"),
-        ]),
+        ].into_iter().collect(),
     ) {
         Ok(v) => v,
         Err(e) => return e.into_compile_error(),
