@@ -338,7 +338,7 @@ pub struct DataTypeBuilder<T> {
     mark: bool,
     size: bool,
     compact: bool,
-    free_immediatly: bool,
+    free_immediately: bool,
     wb_protected: bool,
     frozen_shareable: bool,
     phantom: PhantomData<T>,
@@ -358,7 +358,7 @@ where
             mark: false,
             size: false,
             compact: false,
-            free_immediatly: false,
+            free_immediately: false,
             wb_protected: false,
             frozen_shareable: false,
             phantom: Default::default(),
@@ -380,15 +380,21 @@ where
         self.compact = true;
     }
 
-    /// Enable the 'free_immediatly' flag.
+    /// Enable the 'free_immediately' flag.
     ///
     /// This is safe to do as long as the `<T as DataTypeFunctions>::free`
     /// function or `T`'s drop function don't call Ruby in any way.
     ///
     /// If safe this should be enabled as this performs better and is more
     /// memory efficient.
+    pub fn free_immediately(&mut self) {
+        self.free_immediately = true;
+    }
+
+    #[doc(hidden)]
+    #[deprecated(since = "0.4.0", note = "please use use `free_immediately` instead")]
     pub fn free_immediatly(&mut self) {
-        self.free_immediatly = true;
+        self.free_immediately = true;
     }
 
     /// Enable the 'write barrier protected' flag.
@@ -409,7 +415,7 @@ where
     /// Consume the builder and create a DataType.
     pub fn build(self) -> DataType {
         let mut flags = 0_usize as VALUE;
-        if self.free_immediatly {
+        if self.free_immediately {
             flags |= RUBY_TYPED_FREE_IMMEDIATELY as VALUE;
         }
         if self.wb_protected {

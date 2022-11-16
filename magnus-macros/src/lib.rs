@@ -1,7 +1,7 @@
 //! Derive and proc macros for magnus.
 //!
 //! ```
-//! #[magnus::wrap(class = "RbPoint", free_immediatly, size)]
+//! #[magnus::wrap(class = "RbPoint", free_immediately, size)]
 //! struct Point {
 //!     x: isize,
 //!     y: isize,
@@ -53,7 +53,7 @@ mod util;
 /// ```
 /// use magnus::{define_module, function, method, prelude::*, Error};
 ///
-/// #[magnus::wrap(class = "Euclid::Point", free_immediatly, size)]
+/// #[magnus::wrap(class = "Euclid::Point", free_immediately, size)]
 /// struct Point {
 ///     x: isize,
 ///     y: isize,
@@ -106,7 +106,7 @@ pub fn init(attrs: TokenStream, item: TokenStream) -> TokenStream {
 ///    Supports module paths, e.g. `Foo::Bar::Baz`.
 /// * `name = "..."` - debug name for the type, must be unique. Defaults to the
 ///   class name.
-/// * `free_immediatly` - Drop the Rust type as soon as the Ruby object has
+/// * `free_immediately` - Drop the Rust type as soon as the Ruby object has
 ///   been garbage collected. This is only safe to set if the type's [`Drop`]
 ///   implmentation does not call Ruby.
 /// * `size` - Report the [`std::mem::size_of_val`] of the type to Ruby, used
@@ -115,7 +115,7 @@ pub fn init(attrs: TokenStream, item: TokenStream) -> TokenStream {
 /// # Examples
 ///
 /// ```
-/// #[magnus::wrap(class = "RbPoint", free_immediatly, size)]
+/// #[magnus::wrap(class = "RbPoint", free_immediately, size)]
 /// struct Point {
 ///     x: isize,
 ///     y: isize,
@@ -168,7 +168,7 @@ pub fn derive_data_type_functions(input: TokenStream) -> TokenStream {
 ///    Supports module paths, e.g. `Foo::Bar::Baz`.
 /// * `name = "..."` - debug name for the type, must be unique. Defaults to the
 ///   class name.
-/// * `free_immediatly` - Drop the Rust type as soon as the Ruby object has
+/// * `free_immediately` - Drop the Rust type as soon as the Ruby object has
 ///   been garbage collected. This is only safe to set if the type's [`Drop`]
 ///   and `DataTypeFunctions::free` implementations do not call Ruby.
 /// * `mark` - Enable Ruby calling the `DataTypeFunctions::mark` function.
@@ -183,7 +183,7 @@ pub fn derive_data_type_functions(input: TokenStream) -> TokenStream {
 /// use magnus::{DataTypeFunctions, TypedData};
 ///
 /// #[derive(DataTypeFunctions, TypedData)]
-/// #[magnus(class = "RbPoint", size, free_immediatly)]
+/// #[magnus(class = "RbPoint", size, free_immediately)]
 /// struct Point {
 ///     x: isize,
 ///     y: isize,
@@ -213,7 +213,7 @@ pub fn derive_data_type_functions(input: TokenStream) -> TokenStream {
 /// use magnus::{DataTypeFunctions, TypedData};
 ///
 /// #[derive(TypedData)]
-/// #[magnus(class = "Name", size, free_immediatly)]
+/// #[magnus(class = "Name", size, free_immediately)]
 /// struct Name {
 ///     first: String,
 ///     last: String,

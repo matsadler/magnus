@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
 use syn::{spanned::Spanned, DeriveInput, Error, Meta};
@@ -53,7 +55,7 @@ pub fn expand_derive_typed_data(input: DeriveInput) -> TokenStream {
         Ok(v) => return Error::new_spanned(v, "Expected meta list").into_compile_error(),
         Err(e) => return e.into_compile_error(),
     };
-    let mut args = match util::Args::new(
+    let mut args = match util::Args::new_with_aliases(
         attrs,
         &[
             "class",
@@ -61,10 +63,13 @@ pub fn expand_derive_typed_data(input: DeriveInput) -> TokenStream {
             "mark",
             "size",
             "compact",
-            "free_immediatly",
+            "free_immediately",
             "wb_protected",
             "frozen_shareable",
         ],
+        &HashMap::from([
+            ("free_immediatly", "free_immediately"),
+        ]),
     ) {
         Ok(v) => v,
         Err(e) => return e.into_compile_error(),
@@ -90,7 +95,7 @@ pub fn expand_derive_typed_data(input: DeriveInput) -> TokenStream {
         Ok(v) => v.is_some(),
         Err(e) => return e.into_compile_error(),
     };
-    let free_immediatly = match args.extract::<Option<()>>("free_immediatly") {
+    let free_immediately = match args.extract::<Option<()>>("free_immediately") {
         Ok(v) => v.is_some(),
         Err(e) => return e.into_compile_error(),
     };
@@ -115,8 +120,8 @@ pub fn expand_derive_typed_data(input: DeriveInput) -> TokenStream {
     if compact {
         builder.push(quote! { builder.compact(); });
     }
-    if free_immediatly {
-        builder.push(quote! { builder.free_immediatly(); });
+    if free_immediately {
+        builder.push(quote! { builder.free_immediately(); });
     }
     if wb_protected {
         builder.push(quote! { builder.wb_protected(); });

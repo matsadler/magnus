@@ -10,7 +10,7 @@ macro_rules! rb_assert {
     };
 }
 
-#[magnus::wrap(class = "Example", free_immediatly)]
+#[magnus::wrap(class = "Example", free_immediately)]
 struct Example {
     value: String,
 }

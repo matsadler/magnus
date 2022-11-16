@@ -63,6 +63,10 @@ pub struct Args(HashMap<String, Value>);
 
 impl Args {
     pub fn new(args: AttributeArgs, known: &[&str]) -> Result<Self, Error> {
+        Self::new_with_aliases(args, known, &HashMap::new())
+    }
+
+    pub fn new_with_aliases(args: AttributeArgs, known: &[&str], aliases: &HashMap<&str, &str>) -> Result<Self, Error> {
         let mut map = HashMap::new();
 
         for nested_meta in args {
@@ -81,6 +85,7 @@ impl Args {
 
             if let Some(ident) = path.get_ident() {
                 let s = ident.to_string();
+                let s = aliases.get(&s.as_str()).map(|&s| s.to_owned()).unwrap_or(s);
                 if !known.contains(&s.as_str()) {
                     return Err(Error::new_spanned(ident, "Unknown field"));
                 }

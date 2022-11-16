@@ -26,6 +26,10 @@
 - `TryConvert` now takes `Value` by value (rather than a reference).
 
 ### Deprecated
+- `DataTypeBuilder::free_immediatly` (use `free_immediately`).
+- `free_immediatly` attribute in `wrap` macro (use `free_immediately`).
+- `free_immediatly` in `magnus` attribute of `derive(TypedData)` macro
+  (use `free_immediately`).
 
 ### Removed
 
@@ -33,6 +37,8 @@
 - Memory leak of the message when returning an `Error` to raise an exception.
 - `Flonum` support disabled for Ruby built with USE_FLONUM=0 (e.g. 32 bit
   systems).
+- Correct spelling of `free_immediatly` (to `free_immediately`) in the
+  `DataTypeBuilder` struct, and `wrap` and `derive(TypedData)` macros.
 
 ### Security
 - `printf`-style format strings no longer interpreted in error messages when
