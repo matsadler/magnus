@@ -29,7 +29,7 @@ jobs:
             rustup-toolchain: stable
         exclude:
           - os: macos-latest
-          - rustup-toolchain: "1.51"
+            rustup-toolchain: "1.51"
 
     steps:
       - uses: actions/checkout@v3
