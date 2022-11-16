@@ -65,7 +65,9 @@ spec.add_dependency "rb_sys", "~> 0.9.39"
 spec.add_development_dependency "rake-compiler", "~> 1.2.0"
 ```
 
-Then, we add an `extconf.rb` file to the `ext` directory. Ruby will execute this file during the compilation process, and it will generate a `Makefile` in the `ext` directory. See the [`rb_sys` gem] for more information.
+Then, we add an `extconf.rb` file to the `ext` directory. Ruby will execute
+this file during the compilation process, and it will generate a `Makefile` in
+the `ext` directory. See the [`rb_sys` gem] for more information.
 
 **`ext/my_example_gem/extconf.rb`**
 ```ruby
@@ -353,7 +355,13 @@ use `unsafe`.
 
 ### rb-sys
 
-Magnus uses [rb-sys](https://github.com/oxidize-rb/rb-sys/tree/main/crates/rb-sys) to provide the low-level bindings to Ruby. The `rb-sys-interop` feature enables the [`rb_sys`](https://docs.rs/magnus/latest/magnus/rb_sys/index.html) module for advanced interoperability with rb-sys,  allows you to access low-level Ruby APIs which Magnus does not expose.
+Magnus uses [rb-sys] to provide the low-level bindings to Ruby. The
+`rb-sys-interop` feature enables the
+[`rb_sys`](https://docs.rs/magnus/latest/magnus/rb_sys/index.html) module for
+advanced interoperability with rb-sys, allows you to access low-level Ruby APIs
+which Magnus does not expose.
+
+[rb-sys]: https://github.com/oxidize-rb/rb-sys/tree/main/crates/rb-sys)
 
 ### Issues with static linking
 
@@ -375,17 +383,19 @@ rustflags = ["-C", "link-dead-code=on"]
 
 ## Compatibility
 
-Ruby bindings will be generated at compile time, this may require libclang to be installed.
+Ruby bindings will be generated at compile time, this may require libclang to
+be installed.
 
-The Minimum supported Rust version is currently Rust 1.51.
+The Minimum supported Rust version is currently Rust 1.51 (Rust 1.54 on macOS
+with Xcode 14).
 
 Support for statically linking Ruby is provided.
 
-Cross-compilation is supported by rb-sys [for the platforms listed here].
+Cross-compilation is supported by rb-sys [for the platforms listed here][plat].
 
 Support for 32 bit systems is almost certainly broken, patches are welcome.
 
-[for the platforms listed here]: https://github.com/oxidize-rb/rb-sys#supported-platforms
+[plat]: https://github.com/oxidize-rb/rb-sys#supported-platforms
 
 ## Alternatives
 

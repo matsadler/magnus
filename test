@@ -7,7 +7,7 @@ for VERSION in $RUBY_VERSIONS; do
   eval "$(rbenv init - sh)"
   rbenv shell $VERSION
   printf "testing Ruby $VERSION..."
-  if OUTPUT=$(env RUBY="$(rbenv which ruby)" cargo +1.51 test 2>&1); then
+  if OUTPUT=$(env RUBY="$(rbenv which ruby)" cargo +1.54 test 2>&1); then
     echo ✅
   else
     ERRORS="$ERRORS\n\n\n$VERSION\n\n$OUTPUT"
