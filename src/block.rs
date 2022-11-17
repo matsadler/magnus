@@ -310,7 +310,7 @@ where
     impl DataTypeFunctions for Closure {}
     let data_type = memoize!(DataType: {
         let mut builder = DataType::builder::<Closure>("rust closure");
-        builder.free_immediatly();
+        builder.free_immediately();
         builder.build()
     });
     let boxed = Box::new(func);
