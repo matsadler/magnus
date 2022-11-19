@@ -65,9 +65,9 @@ pub fn expand_derive_typed_data(input: DeriveInput) -> TokenStream {
             "wb_protected",
             "frozen_shareable",
         ],
-        &vec![
-            ("free_immediatly", "free_immediately"),
-        ].into_iter().collect(),
+        &vec![("free_immediatly", "free_immediately")]
+            .into_iter()
+            .collect(),
     ) {
         Ok(v) => v,
         Err(e) => return e.into_compile_error(),

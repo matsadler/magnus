@@ -66,7 +66,11 @@ impl Args {
         Self::new_with_aliases(args, known, &HashMap::new())
     }
 
-    pub fn new_with_aliases(args: AttributeArgs, known: &[&str], aliases: &HashMap<&str, &str>) -> Result<Self, Error> {
+    pub fn new_with_aliases(
+        args: AttributeArgs,
+        known: &[&str],
+        aliases: &HashMap<&str, &str>,
+    ) -> Result<Self, Error> {
         let mut map = HashMap::new();
 
         for nested_meta in args {
