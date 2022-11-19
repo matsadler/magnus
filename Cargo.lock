@@ -98,7 +98,7 @@ dependencies = [
 
 [[package]]
 name = "magnus"
-version = "0.3.2"
+version = "0.4.0"
 dependencies = [
  "magnus",
  "magnus-macros",
@@ -108,7 +108,7 @@ dependencies = [
 
 [[package]]
 name = "magnus-macros"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "magnus",
  "proc-macro2",

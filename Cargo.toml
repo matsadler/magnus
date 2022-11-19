@@ -1,6 +1,6 @@
 [package]
 name = "magnus"
-version = "0.3.2"
+version = "0.4.0"
 authors = ["Mat Sadler <mat@sourcetagsandcodes.com>"]
 edition = "2018"
 resolver = "2"
@@ -23,8 +23,8 @@ rb-sys-interop = []
 ruby-static = ["rb-sys/ruby-static"]
 
 [dependencies]
-magnus-macros = { version = "0.1.0", path = "magnus-macros" }
-rb-sys = { version = "~0.9.44", default-features = false, features = ["bindgen-rbimpls", "bindgen-deprecated-types"] }
+magnus-macros = { version = "0.2.0", path = "magnus-macros" }
+rb-sys = { version = "0.9.44", default-features = false, features = ["bindgen-rbimpls", "bindgen-deprecated-types"] }
 
 [dev-dependencies]
 magnus = { path = ".", features = ["embed", "rb-sys-interop"] }
