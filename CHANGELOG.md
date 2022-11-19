@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 ### Added
+
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Security
+
+## [0.4.0] - 2022-11-19
+### Added
 - `Value::funcall_with_block`.
 - impl `TryConvert` for `Exception` and `ExceptionClass`.
 - `Class` trait (implemented for `RClass` and `ExceptionClass`).
@@ -185,7 +198,8 @@
 - Pre-built bindings for Ruby 2.6 - 3.1 on common platforms, build-time
   generated bindings otherwise.
 
-[Unreleased]: https://github.com/matsadler/magnus/compare/0.3.2...HEAD
+[Unreleased]: https://github.com/matsadler/magnus/compare/0.4.0...HEAD
+[0.4.0]: https://github.com/matsadler/magnus/compare/0.3.2...0.4.0
 [0.3.2]: https://github.com/matsadler/magnus/compare/0.3.1...0.3.2
 [0.3.1]: https://github.com/matsadler/magnus/compare/0.3.0...0.3.1
 [0.3.0]: https://github.com/matsadler/magnus/compare/0.2.1...0.3.0
