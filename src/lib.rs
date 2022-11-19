@@ -1952,12 +1952,6 @@ pub fn define_variable<T: Into<Value>>(name: &str, initial: T) -> Result<*mut Va
     Ok(ptr)
 }
 
-/// Define a global variable.
-#[deprecated(since = "0.3.0", note = "please use `define_variable` instead")]
-pub fn define_global_variable<T: Into<Value>>(name: &str, initial: T) -> Result<*mut Value, Error> {
-    define_variable(name, initial)
-}
-
 /// Define a global constant.
 pub fn define_global_const<T>(name: &str, value: T) -> Result<(), Error>
 where

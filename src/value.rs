@@ -20,9 +20,9 @@ pub use flonum::Flonum;
 use rb_sys::{
     rb_any_to_s, rb_block_call, rb_check_funcall, rb_check_id, rb_check_id_cstr,
     rb_check_symbol_cstr, rb_enumeratorize_with_size, rb_eql, rb_equal, rb_funcall_with_block,
-    rb_funcallv, rb_gc_register_address, rb_gc_register_mark_object, rb_gc_unregister_address,
-    rb_id2name, rb_id2sym, rb_inspect, rb_intern3, rb_ll2inum, rb_obj_as_string, rb_obj_classname,
-    rb_obj_freeze, rb_obj_is_kind_of, rb_obj_respond_to, rb_sym2id, rb_ull2inum, ruby_fl_type,
+    rb_funcallv, rb_gc_register_address, rb_gc_unregister_address, rb_id2name, rb_id2sym,
+    rb_inspect, rb_intern3, rb_ll2inum, rb_obj_as_string, rb_obj_classname, rb_obj_freeze,
+    rb_obj_is_kind_of, rb_obj_respond_to, rb_sym2id, rb_ull2inum, ruby_fl_type,
     ruby_special_consts, ruby_value_type, RBasic, ID, VALUE,
 };
 
@@ -346,27 +346,6 @@ impl Value {
     #[inline]
     pub(crate) const fn as_rb_value(self) -> VALUE {
         self.0
-    }
-
-    /// Registers `self` as to never be garbage collected.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use magnus::{eval, RArray};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
-    ///
-    /// let ary = eval::<RArray>("[1, 2, 3]").unwrap();
-    /// ary.leak();
-    /// ```
-    #[deprecated(
-        since = "0.3.0",
-        note = "please use `gc::register_mark_object` instead"
-    )]
-    pub fn leak(self) {
-        debug_assert_value!(self);
-        // safe ffi to Ruby, call doesn't raise
-        unsafe { rb_gc_register_mark_object(self.as_rb_value()) }
     }
 
     /// Returns whether `self` is 'frozen'.

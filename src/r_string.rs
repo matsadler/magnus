@@ -463,16 +463,6 @@ impl RString {
     }
 
     /// Returns a new string by reencoding `self` from its current encoding to
-    /// UTF-8.
-    #[deprecated(
-        since = "0.3.0",
-        note = "please use `r_string.conv_enc(RbEncoding::utf8())` instead"
-    )]
-    pub fn encode_utf8(self) -> Result<Self, Error> {
-        self.conv_enc(RbEncoding::utf8())
-    }
-
-    /// Returns a new string by reencoding `self` from its current encoding to
     /// the given `enc`.
     ///
     /// # Examples

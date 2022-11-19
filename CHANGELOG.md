@@ -32,6 +32,9 @@
   (use `free_immediately`).
 
 ### Removed
+- `String::encode_utf8`, use `r_string.conv_enc(RbEncoding::utf8())` instead.
+- `Value::leak`, use `gc::register_mark_object` instead.
+- `define_global_variable` (use `define_variable`).
 
 ### Fixed
 - Memory leak of the message when returning an `Error` to raise an exception.
