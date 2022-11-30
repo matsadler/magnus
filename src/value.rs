@@ -801,7 +801,7 @@ impl Value {
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let value = RHash::new();
-    /// // safe as we neve give Ruby a chance to free the string.
+    /// // safe as we never give Ruby a chance to free the string.
     /// let s = unsafe { value.classname() }.into_owned();
     /// assert_eq!(s, "Hash");
     /// ```
