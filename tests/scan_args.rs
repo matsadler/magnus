@@ -14,9 +14,9 @@ fn example(_rb_self: Value, args: &[Value]) -> Result<RArray, Error> {
     let (b,): (Option<String>,) = args.optional;
     let splat: RArray = args.splat;
     let (c,): (Symbol,) = args.trailing;
-    let kw = get_kwargs::<_, (usize,), (Option<usize>,), RHash>(args.keywords, &["d"], &["e"])?;
+    let kw = get_kwargs::<_, (usize,), (Option<usize>, Option<usize>, Option<usize>), RHash>(args.keywords, &["d"], &["e", "f", "g"])?;
     let (d,) = kw.required;
-    let (e,) = kw.optional;
+    let (e, f, g) = kw.optional;
     let kw_splat = kw.splat;
     let _: Option<Proc> = args.block;
 
@@ -26,7 +26,13 @@ fn example(_rb_self: Value, args: &[Value]) -> Result<RArray, Error> {
     res.push(splat)?;
     res.push(c)?;
     res.push(d)?;
-    res.push(e)?;
+    if let Some(e) = e {
+        res.push(e)?;
+    }
+    res.push(f)?;
+    if let Some(g) = g {
+        res.push(g)?;
+    }
     res.push(kw_splat)?;
     Ok(res)
 }
@@ -38,7 +44,7 @@ fn it_scans_args() {
     define_global_function("example", method!(example, -1));
 
     let res = eval::<bool>(r#"
-        example("a", "b", "splat1", "splat2", :c, d: 1, e: 2, f: 3) == ["a", "b", ["splat1", "splat2"], :c, 1, 2, {f: 3}]
+        example("a", "b", "splat1", "splat2", :c, d: 1, f: 2, h: 3) == ["a", "b", ["splat1", "splat2"], :c, 1, 2, {h: 3}]
     "#).unwrap();
     assert!(res);
 
