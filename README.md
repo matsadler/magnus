@@ -172,7 +172,7 @@ fn init() {
 
 If you wish to package your extension as a Gem, we recommend using [the `rb_sys`
 gem] to build along with `rake-compiler`. These tools will automatically build
-your Rust extension as a dynamic library, and then package it as a gem. 
+your Rust extension as a dynamic library, and then package it as a gem.
 
 *Note*: The newest version of rubygems does have beta support for compiling
 Rust, so in the future the `rb_sys` gem won't be necessary.
@@ -361,7 +361,7 @@ use `unsafe`.
 
 ## Compatibility
 
-Ruby versions 2.7, 3.0, and 3.1 are fully supported. 
+Ruby versions 2.7, 3.0, and 3.1 are fully supported.
 
 Ruby 3.2 is (as of writing) in preview and support is provided, but not
 guaranteed.
@@ -392,7 +392,7 @@ Magnus uses [rb-sys] to provide the low-level bindings to Ruby. The
 advanced interoperability with rb-sys, allows you to access low-level Ruby APIs
 which Magnus does not expose.
 
-[rb-sys]: https://github.com/oxidize-rb/rb-sys/tree/main/crates/rb-sys)
+[rb-sys]: https://github.com/oxidize-rb/rb-sys/tree/main/crates/rb-sys
 
 ### Issues with static linking
 
