@@ -13,6 +13,10 @@
 
 ### Security
 
+## [0.4.2] - 2022-11-30
+### Fixed
+- Removed errant `dbg!()`.
+
 ## [0.4.1] - 2022-11-29
 ### Fixed
 - `scan_args::get_kwargs` error/segfault when leading optional args were not
@@ -203,7 +207,8 @@
 - Pre-built bindings for Ruby 2.6 - 3.1 on common platforms, build-time
   generated bindings otherwise.
 
-[Unreleased]: https://github.com/matsadler/magnus/compare/0.4.1...HEAD
+[Unreleased]: https://github.com/matsadler/magnus/compare/0.4.2...HEAD
+[0.4.2]: https://github.com/matsadler/magnus/compare/0.4.1...0.4.2
 [0.4.1]: https://github.com/matsadler/magnus/compare/0.4.0...0.4.1
 [0.4.0]: https://github.com/matsadler/magnus/compare/0.3.2...0.4.0
 [0.3.2]: https://github.com/matsadler/magnus/compare/0.3.1...0.3.2

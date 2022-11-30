@@ -521,7 +521,6 @@ mod private {
         const LEN: usize = 2;
 
         fn from_slice(vals: &[Value]) -> Result<Self, Error> {
-            dbg!(vals.len());
             if vals.len() <= <Self as ScanArgsOpt>::LEN {
                 Ok((
                     vals.get(0)
