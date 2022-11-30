@@ -10,6 +10,8 @@
 ### Removed
 
 ### Fixed
+- `scan_args::get_kwargs` error/segfault when leading optional args were not
+  provided, due to trying to convert the type of the missing value.
 
 ### Security
 

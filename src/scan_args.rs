@@ -498,7 +498,11 @@ mod private {
 
         fn from_slice(vals: &[Value]) -> Result<Self, Error> {
             if vals.len() <= <Self as ScanArgsOpt>::LEN {
-                Ok((vals.get(0).map(|v| v.try_convert()).transpose()?,))
+                Ok((vals
+                    .get(0)
+                    .filter(|v| !v.is_undef())
+                    .map(|v| v.try_convert())
+                    .transpose()?,))
             } else {
                 panic!(
                     "unexpected arguments, expected {} got {}",
@@ -517,10 +521,17 @@ mod private {
         const LEN: usize = 2;
 
         fn from_slice(vals: &[Value]) -> Result<Self, Error> {
+            dbg!(vals.len());
             if vals.len() <= <Self as ScanArgsOpt>::LEN {
                 Ok((
-                    vals.get(0).map(|v| v.try_convert()).transpose()?,
-                    vals.get(1).map(|v| v.try_convert()).transpose()?,
+                    vals.get(0)
+                        .filter(|v| !v.is_undef())
+                        .map(|v| v.try_convert())
+                        .transpose()?,
+                    vals.get(1)
+                        .filter(|v| !v.is_undef())
+                        .map(|v| v.try_convert())
+                        .transpose()?,
                 ))
             } else {
                 panic!(
@@ -543,9 +554,18 @@ mod private {
         fn from_slice(vals: &[Value]) -> Result<Self, Error> {
             if vals.len() <= <Self as ScanArgsOpt>::LEN {
                 Ok((
-                    vals.get(0).map(|v| v.try_convert()).transpose()?,
-                    vals.get(1).map(|v| v.try_convert()).transpose()?,
-                    vals.get(2).map(|v| v.try_convert()).transpose()?,
+                    vals.get(0)
+                        .filter(|v| !v.is_undef())
+                        .map(|v| v.try_convert())
+                        .transpose()?,
+                    vals.get(1)
+                        .filter(|v| !v.is_undef())
+                        .map(|v| v.try_convert())
+                        .transpose()?,
+                    vals.get(2)
+                        .filter(|v| !v.is_undef())
+                        .map(|v| v.try_convert())
+                        .transpose()?,
                 ))
             } else {
                 panic!(
@@ -569,10 +589,22 @@ mod private {
         fn from_slice(vals: &[Value]) -> Result<Self, Error> {
             if vals.len() <= <Self as ScanArgsOpt>::LEN {
                 Ok((
-                    vals.get(0).map(|v| v.try_convert()).transpose()?,
-                    vals.get(1).map(|v| v.try_convert()).transpose()?,
-                    vals.get(2).map(|v| v.try_convert()).transpose()?,
-                    vals.get(3).map(|v| v.try_convert()).transpose()?,
+                    vals.get(0)
+                        .filter(|v| !v.is_undef())
+                        .map(|v| v.try_convert())
+                        .transpose()?,
+                    vals.get(1)
+                        .filter(|v| !v.is_undef())
+                        .map(|v| v.try_convert())
+                        .transpose()?,
+                    vals.get(2)
+                        .filter(|v| !v.is_undef())
+                        .map(|v| v.try_convert())
+                        .transpose()?,
+                    vals.get(3)
+                        .filter(|v| !v.is_undef())
+                        .map(|v| v.try_convert())
+                        .transpose()?,
                 ))
             } else {
                 panic!(
@@ -598,11 +630,26 @@ mod private {
         fn from_slice(vals: &[Value]) -> Result<Self, Error> {
             if vals.len() <= <Self as ScanArgsOpt>::LEN {
                 Ok((
-                    vals.get(0).map(|v| v.try_convert()).transpose()?,
-                    vals.get(1).map(|v| v.try_convert()).transpose()?,
-                    vals.get(2).map(|v| v.try_convert()).transpose()?,
-                    vals.get(3).map(|v| v.try_convert()).transpose()?,
-                    vals.get(4).map(|v| v.try_convert()).transpose()?,
+                    vals.get(0)
+                        .filter(|v| !v.is_undef())
+                        .map(|v| v.try_convert())
+                        .transpose()?,
+                    vals.get(1)
+                        .filter(|v| !v.is_undef())
+                        .map(|v| v.try_convert())
+                        .transpose()?,
+                    vals.get(2)
+                        .filter(|v| !v.is_undef())
+                        .map(|v| v.try_convert())
+                        .transpose()?,
+                    vals.get(3)
+                        .filter(|v| !v.is_undef())
+                        .map(|v| v.try_convert())
+                        .transpose()?,
+                    vals.get(4)
+                        .filter(|v| !v.is_undef())
+                        .map(|v| v.try_convert())
+                        .transpose()?,
                 ))
             } else {
                 panic!(
@@ -636,12 +683,30 @@ mod private {
         fn from_slice(vals: &[Value]) -> Result<Self, Error> {
             if vals.len() <= <Self as ScanArgsOpt>::LEN {
                 Ok((
-                    vals.get(0).map(|v| v.try_convert()).transpose()?,
-                    vals.get(1).map(|v| v.try_convert()).transpose()?,
-                    vals.get(2).map(|v| v.try_convert()).transpose()?,
-                    vals.get(3).map(|v| v.try_convert()).transpose()?,
-                    vals.get(4).map(|v| v.try_convert()).transpose()?,
-                    vals.get(5).map(|v| v.try_convert()).transpose()?,
+                    vals.get(0)
+                        .filter(|v| !v.is_undef())
+                        .map(|v| v.try_convert())
+                        .transpose()?,
+                    vals.get(1)
+                        .filter(|v| !v.is_undef())
+                        .map(|v| v.try_convert())
+                        .transpose()?,
+                    vals.get(2)
+                        .filter(|v| !v.is_undef())
+                        .map(|v| v.try_convert())
+                        .transpose()?,
+                    vals.get(3)
+                        .filter(|v| !v.is_undef())
+                        .map(|v| v.try_convert())
+                        .transpose()?,
+                    vals.get(4)
+                        .filter(|v| !v.is_undef())
+                        .map(|v| v.try_convert())
+                        .transpose()?,
+                    vals.get(5)
+                        .filter(|v| !v.is_undef())
+                        .map(|v| v.try_convert())
+                        .transpose()?,
                 ))
             } else {
                 panic!(
@@ -677,13 +742,34 @@ mod private {
         fn from_slice(vals: &[Value]) -> Result<Self, Error> {
             if vals.len() <= <Self as ScanArgsOpt>::LEN {
                 Ok((
-                    vals.get(0).map(|v| v.try_convert()).transpose()?,
-                    vals.get(1).map(|v| v.try_convert()).transpose()?,
-                    vals.get(2).map(|v| v.try_convert()).transpose()?,
-                    vals.get(3).map(|v| v.try_convert()).transpose()?,
-                    vals.get(4).map(|v| v.try_convert()).transpose()?,
-                    vals.get(5).map(|v| v.try_convert()).transpose()?,
-                    vals.get(6).map(|v| v.try_convert()).transpose()?,
+                    vals.get(0)
+                        .filter(|v| !v.is_undef())
+                        .map(|v| v.try_convert())
+                        .transpose()?,
+                    vals.get(1)
+                        .filter(|v| !v.is_undef())
+                        .map(|v| v.try_convert())
+                        .transpose()?,
+                    vals.get(2)
+                        .filter(|v| !v.is_undef())
+                        .map(|v| v.try_convert())
+                        .transpose()?,
+                    vals.get(3)
+                        .filter(|v| !v.is_undef())
+                        .map(|v| v.try_convert())
+                        .transpose()?,
+                    vals.get(4)
+                        .filter(|v| !v.is_undef())
+                        .map(|v| v.try_convert())
+                        .transpose()?,
+                    vals.get(5)
+                        .filter(|v| !v.is_undef())
+                        .map(|v| v.try_convert())
+                        .transpose()?,
+                    vals.get(6)
+                        .filter(|v| !v.is_undef())
+                        .map(|v| v.try_convert())
+                        .transpose()?,
                 ))
             } else {
                 panic!(
@@ -721,14 +807,38 @@ mod private {
         fn from_slice(vals: &[Value]) -> Result<Self, Error> {
             if vals.len() <= <Self as ScanArgsOpt>::LEN {
                 Ok((
-                    vals.get(0).map(|v| v.try_convert()).transpose()?,
-                    vals.get(1).map(|v| v.try_convert()).transpose()?,
-                    vals.get(2).map(|v| v.try_convert()).transpose()?,
-                    vals.get(3).map(|v| v.try_convert()).transpose()?,
-                    vals.get(4).map(|v| v.try_convert()).transpose()?,
-                    vals.get(5).map(|v| v.try_convert()).transpose()?,
-                    vals.get(6).map(|v| v.try_convert()).transpose()?,
-                    vals.get(7).map(|v| v.try_convert()).transpose()?,
+                    vals.get(0)
+                        .filter(|v| !v.is_undef())
+                        .map(|v| v.try_convert())
+                        .transpose()?,
+                    vals.get(1)
+                        .filter(|v| !v.is_undef())
+                        .map(|v| v.try_convert())
+                        .transpose()?,
+                    vals.get(2)
+                        .filter(|v| !v.is_undef())
+                        .map(|v| v.try_convert())
+                        .transpose()?,
+                    vals.get(3)
+                        .filter(|v| !v.is_undef())
+                        .map(|v| v.try_convert())
+                        .transpose()?,
+                    vals.get(4)
+                        .filter(|v| !v.is_undef())
+                        .map(|v| v.try_convert())
+                        .transpose()?,
+                    vals.get(5)
+                        .filter(|v| !v.is_undef())
+                        .map(|v| v.try_convert())
+                        .transpose()?,
+                    vals.get(6)
+                        .filter(|v| !v.is_undef())
+                        .map(|v| v.try_convert())
+                        .transpose()?,
+                    vals.get(7)
+                        .filter(|v| !v.is_undef())
+                        .map(|v| v.try_convert())
+                        .transpose()?,
                 ))
             } else {
                 panic!(
@@ -768,15 +878,42 @@ mod private {
         fn from_slice(vals: &[Value]) -> Result<Self, Error> {
             if vals.len() <= <Self as ScanArgsOpt>::LEN {
                 Ok((
-                    vals.get(0).map(|v| v.try_convert()).transpose()?,
-                    vals.get(1).map(|v| v.try_convert()).transpose()?,
-                    vals.get(2).map(|v| v.try_convert()).transpose()?,
-                    vals.get(3).map(|v| v.try_convert()).transpose()?,
-                    vals.get(4).map(|v| v.try_convert()).transpose()?,
-                    vals.get(5).map(|v| v.try_convert()).transpose()?,
-                    vals.get(6).map(|v| v.try_convert()).transpose()?,
-                    vals.get(7).map(|v| v.try_convert()).transpose()?,
-                    vals.get(8).map(|v| v.try_convert()).transpose()?,
+                    vals.get(0)
+                        .filter(|v| !v.is_undef())
+                        .map(|v| v.try_convert())
+                        .transpose()?,
+                    vals.get(1)
+                        .filter(|v| !v.is_undef())
+                        .map(|v| v.try_convert())
+                        .transpose()?,
+                    vals.get(2)
+                        .filter(|v| !v.is_undef())
+                        .map(|v| v.try_convert())
+                        .transpose()?,
+                    vals.get(3)
+                        .filter(|v| !v.is_undef())
+                        .map(|v| v.try_convert())
+                        .transpose()?,
+                    vals.get(4)
+                        .filter(|v| !v.is_undef())
+                        .map(|v| v.try_convert())
+                        .transpose()?,
+                    vals.get(5)
+                        .filter(|v| !v.is_undef())
+                        .map(|v| v.try_convert())
+                        .transpose()?,
+                    vals.get(6)
+                        .filter(|v| !v.is_undef())
+                        .map(|v| v.try_convert())
+                        .transpose()?,
+                    vals.get(7)
+                        .filter(|v| !v.is_undef())
+                        .map(|v| v.try_convert())
+                        .transpose()?,
+                    vals.get(8)
+                        .filter(|v| !v.is_undef())
+                        .map(|v| v.try_convert())
+                        .transpose()?,
                 ))
             } else {
                 panic!(
@@ -1954,7 +2091,7 @@ where
         })?;
     };
 
-    let opt_end = Req::LEN + Opt::LEN.min(parsed - Req::LEN);
+    let opt_end = Req::LEN + Opt::LEN;
     Ok(KwArgs {
         required: Req::from_slice(&out[..Req::LEN])?,
         optional: Opt::from_slice(&out[Req::LEN..opt_end])?,
