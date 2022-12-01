@@ -4,6 +4,9 @@
 ### Added
 
 ### Changed
+- When converting Ruby values to `RArray` (or `Vec<T>`, `[T; 1]`, or `(T,)`),
+  an error will be returned if given a non-`Array` (or non-`to_ary`-able) value,
+  rather than wrapping it in an array.
 
 ### Deprecated
 

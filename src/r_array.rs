@@ -11,7 +11,7 @@ use rb_sys::{
     rb_ary_includes, rb_ary_join, rb_ary_new, rb_ary_new_capa, rb_ary_new_from_values, rb_ary_plus,
     rb_ary_pop, rb_ary_push, rb_ary_replace, rb_ary_resize, rb_ary_reverse, rb_ary_rotate,
     rb_ary_shared_with_p, rb_ary_shift, rb_ary_sort_bang, rb_ary_store, rb_ary_subseq,
-    rb_ary_to_ary, rb_ary_unshift, ruby_rarray_flags, ruby_value_type, VALUE,
+    rb_ary_unshift, rb_check_array_type, ruby_rarray_flags, ruby_value_type, VALUE,
 };
 
 use crate::{
@@ -1315,12 +1315,18 @@ impl ReprValue for RArray {}
 
 impl TryConvert for RArray {
     fn try_convert(val: Value) -> Result<Self, Error> {
-        match Self::from_value(val) {
-            Some(i) => Ok(i),
-            None => protect(|| {
-                debug_assert_value!(val);
-                unsafe { Self::from_rb_value_unchecked(rb_ary_to_ary(val.as_rb_value())) }
-            }),
+        if let Some(v) = Self::from_value(val) {
+            return Ok(v);
+        }
+        unsafe {
+            protect(|| Value::new(rb_check_array_type(val.as_rb_value()))).and_then(|res| {
+                Self::from_value(res).ok_or_else(|| {
+                    Error::new(
+                        exception::type_error(),
+                        format!("no implicit conversion of {} into Array", val.class()),
+                    )
+                })
+            })
         }
     }
 }

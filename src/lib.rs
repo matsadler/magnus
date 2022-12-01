@@ -274,7 +274,7 @@
 //! * `rb_ary_store`: [`RArray::store`].
 //! * `rb_ary_subseq`: [`RArray::subseq`].
 // * `rb_ary_tmp_new`:
-//! * `rb_ary_to_ary`: See [`TryConvert`] and [`Value::try_convert`].
+// * `rb_ary_to_ary`:
 //! * `rb_ary_to_s`: Not implemented directly, see [`Value::to_r_string`].
 //! * `rb_ary_unshift`: [`RArray::unshift`].
 //!
@@ -350,7 +350,7 @@
 // * `rb_category_warning`:
 // * `rb_char_to_option_kcode`:
 //! * `rb_check_arity`: [`scan_args::check_arity`].
-// * `rb_check_array_type`:
+//! * `rb_check_array_type`:  See [`TryConvert`] and [`Value::try_convert`].
 // * `rb_check_convert_type`:
 // * `rb_check_copyable`:
 // * `rb_check_frozen`:
