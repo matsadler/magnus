@@ -14,7 +14,11 @@ fn example(_rb_self: Value, args: &[Value]) -> Result<RArray, Error> {
     let (b,): (Option<String>,) = args.optional;
     let splat: RArray = args.splat;
     let (c,): (Symbol,) = args.trailing;
-    let kw = get_kwargs::<_, (usize,), (Option<usize>, Option<usize>, Option<usize>), RHash>(args.keywords, &["d"], &["e", "f", "g"])?;
+    let kw = get_kwargs::<_, (usize,), (Option<usize>, Option<usize>, Option<usize>), RHash>(
+        args.keywords,
+        &["d"],
+        &["e", "f", "g"],
+    )?;
     let (d,) = kw.required;
     let (e, f, g) = kw.optional;
     let kw_splat = kw.splat;
