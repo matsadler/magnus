@@ -23,10 +23,10 @@ jobs:
         rustup-toolchain:
           - "1.51"
           - stable
-        # include:
-        #   - os: windows-latest
-        #     ruby-version: mswin
-        #     rustup-toolchain: stable
+        include:
+          - os: windows-latest
+            ruby-version: mswin
+            rustup-toolchain: stable
         exclude:
           - os: macos-latest
             rustup-toolchain: "1.51"
