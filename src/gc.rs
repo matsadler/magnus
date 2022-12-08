@@ -46,8 +46,8 @@ where
 
     unsafe {
         rb_gc_mark_locations(
-            start as *const _ as *const VALUE,
-            end as *const _ as *const VALUE,
+            start as *const VALUE,
+            end as *const VALUE,
         )
     }
 }
