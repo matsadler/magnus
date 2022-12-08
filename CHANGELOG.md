@@ -10,9 +10,12 @@
 ### Removed
 
 ### Fixed
-- `gc::mark_slice` was skipping the last element of the slice.
 
 ### Security
+
+## [0.4.3] - 2022-12-07
+### Fixed
+- `gc::mark_slice` was skipping the last element of the slice.
 
 ## [0.4.2] - 2022-11-30
 ### Fixed
@@ -208,7 +211,8 @@
 - Pre-built bindings for Ruby 2.6 - 3.1 on common platforms, build-time
   generated bindings otherwise.
 
-[Unreleased]: https://github.com/matsadler/magnus/compare/0.4.2...HEAD
+[Unreleased]: https://github.com/matsadler/magnus/compare/0.4.3...HEAD
+[0.4.3]: https://github.com/matsadler/magnus/compare/0.4.2...0.4.3
 [0.4.2]: https://github.com/matsadler/magnus/compare/0.4.1...0.4.2
 [0.4.1]: https://github.com/matsadler/magnus/compare/0.4.0...0.4.1
 [0.4.0]: https://github.com/matsadler/magnus/compare/0.3.2...0.4.0
