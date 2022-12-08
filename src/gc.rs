@@ -1,6 +1,6 @@
 //! Functions for working with Ruby's Garbage Collector.
 
-use std::ops::Deref;
+use std::ops::{Deref, Range};
 
 use rb_sys::{
     rb_gc_adjust_memory_usage, rb_gc_count, rb_gc_disable, rb_gc_enable, rb_gc_mark,
@@ -42,14 +42,14 @@ pub fn mark_slice<T>(values: &[T])
 where
     T: ReprValue,
 {
-    if let (Some(start), Some(end)) = (values.first(), values.last()) {
-        unsafe {
-            rb_gc_mark_locations(
-                start as *const _ as *const VALUE,
-                end as *const _ as *const VALUE,
-            )
-        }
-    };
+    let Range { start, end } = values.as_ptr_range();
+
+    unsafe {
+        rb_gc_mark_locations(
+            start as *const _ as *const VALUE,
+            end as *const _ as *const VALUE,
+        )
+    }
 }
 
 /// Mark an Object and let Ruby know it is moveable.
