@@ -13,6 +13,7 @@
 ### Removed
 
 ### Fixed
+- `gc::mark_slice` was skipping the last element of the slice.
 
 ### Security
 
