@@ -43,13 +43,7 @@ where
     T: ReprValue,
 {
     let Range { start, end } = values.as_ptr_range();
-
-    unsafe {
-        rb_gc_mark_locations(
-            start as *const VALUE,
-            end as *const VALUE,
-        )
-    }
+    unsafe { rb_gc_mark_locations(start as *const VALUE, end as *const VALUE) }
 }
 
 /// Mark an Object and let Ruby know it is moveable.
