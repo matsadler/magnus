@@ -281,7 +281,7 @@ See `magnus::TryConvert` for more details.
 | `magnus::Value`                                   | any object                              |
 | `Vec<T>`*                                         | `[T]`, `#to_ary`                        |
 | `HashMap<K, V>`*                                  | `{K => V}`, `#to_hash`                  |
-| `&T where T: TypedData`**                         | instance of `<T as TypedData>::class()` |
+| `&T`, `typed_data::Obj<T>` where `T: TypedData`** | instance of `<T as TypedData>::class()` |
 
 \* when converting to `Vec` and `HashMap` the types of `T`/`K`,`V` must be native Rust types.
 
@@ -305,7 +305,7 @@ See the `magnus::Value` type, for all types implementing `Into<Value>`, plus
 | `Result<T, magnus::Error>` (return only)          | `T` or raises error                     |
 | `(T, U)`, `(T, U, V)`, etc, `[T; N]`, `Vec<T>`    | `Array`                                 |
 | `HashMap<K, V>`                                   | `Hash`                                  |
-| `T where T: TypedData`**                          | instance of `<T as TypedData>::class()` |
+| `T`, `typed_data::Obj<T>` where `T: TypedData`**  | instance of `<T as TypedData>::class()` |
 
 \** see the `wrap` macro.
 

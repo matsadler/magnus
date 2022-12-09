@@ -26,7 +26,7 @@ type DiffSize = i32;
 /// Mark an Object.
 ///
 /// Used to mark any stored Ruby objects when implementing
-/// [`DataTypeFunctions::mark`](`crate::r_typed_data::DataTypeFunctions::mark`).
+/// [`DataTypeFunctions::mark`](`crate::typed_data::DataTypeFunctions::mark`).
 pub fn mark<T>(value: T)
 where
     T: Deref<Target = Value>,
@@ -37,7 +37,7 @@ where
 /// Mark multiple Objects.
 ///
 /// Used to mark any stored Ruby objects when implementing
-/// [`DataTypeFunctions::mark`](`crate::r_typed_data::DataTypeFunctions::mark`).
+/// [`DataTypeFunctions::mark`](`crate::typed_data::DataTypeFunctions::mark`).
 pub fn mark_slice<T>(values: &[T])
 where
     T: ReprValue,
@@ -53,14 +53,14 @@ where
 /// this function to mark them during the GC marking phase.
 ///
 /// Used to mark any stored Ruby objects when implementing
-/// [`DataTypeFunctions::mark`](`crate::r_typed_data::DataTypeFunctions::mark`)
+/// [`DataTypeFunctions::mark`](`crate::typed_data::DataTypeFunctions::mark`)
 /// and you have also implemented
-/// [`DataTypeFunctions::compact`](`crate::r_typed_data::DataTypeFunctions::compact`).
+/// [`DataTypeFunctions::compact`](`crate::typed_data::DataTypeFunctions::compact`).
 ///
 /// Beware that any Ruby object passed to this function may later become
 /// invalid to use from Rust when GC is run, you must update any stored objects
 /// with [`location`] inside your implementation of
-/// [`DataTypeFunctions::compact`](`crate::r_typed_data::DataTypeFunctions::compact`).
+/// [`DataTypeFunctions::compact`](`crate::typed_data::DataTypeFunctions::compact`).
 #[cfg(any(ruby_gte_2_7, docsrs))]
 #[cfg_attr(docsrs, doc(cfg(ruby_gte_2_7)))]
 pub fn mark_movable<T>(value: T)
@@ -75,7 +75,7 @@ where
 /// The [`Value`] type is effectly a pointer to a Ruby object. Ruby's garbage
 /// collector will avoid moving objects exposed to extensions, unless the
 /// object has been marked with [`mark_movable`]. When implementing
-/// [`DataTypeFunctions::compact`](`crate::r_typed_data::DataTypeFunctions::compact`)
+/// [`DataTypeFunctions::compact`](`crate::typed_data::DataTypeFunctions::compact`)
 /// you will need to update any Ruby objects you are storing.
 ///
 /// Returns a new `Value` that is pointing to the object that `value` used to

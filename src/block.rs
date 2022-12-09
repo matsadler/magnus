@@ -14,8 +14,8 @@ use crate::{
     method::{Block, BlockReturn},
     object::Object,
     r_array::RArray,
-    r_typed_data::{DataType, DataTypeFunctions},
     try_convert::{ArgList, RArrayArgList, TryConvert},
+    typed_data::{DataType, DataTypeFunctions},
     value::{private, NonZeroValue, ReprValue, Value},
 };
 

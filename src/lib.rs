@@ -1834,7 +1834,7 @@ mod r_rational;
 mod r_regexp;
 pub mod r_string;
 pub mod r_struct;
-pub mod r_typed_data;
+mod r_typed_data;
 mod range;
 #[cfg(feature = "rb-sys-interop")]
 #[cfg_attr(docsrs, doc(cfg(feature = "rb-sys-interop")))]
@@ -1842,6 +1842,7 @@ pub mod rb_sys;
 pub mod scan_args;
 mod symbol;
 mod try_convert;
+pub mod typed_data;
 pub mod value;
 
 use std::{ffi::CString, mem::transmute, os::raw::c_int};
@@ -1881,10 +1882,11 @@ pub use crate::{
     r_regexp::RRegexp,
     r_string::RString,
     r_struct::RStruct,
-    r_typed_data::{DataType, DataTypeFunctions, RTypedData, TypedData},
+    r_typed_data::RTypedData,
     range::Range,
     symbol::Symbol,
     try_convert::{ArgList, TryConvert},
+    typed_data::{DataType, DataTypeFunctions, TypedData},
     value::{Fixnum, StaticSymbol, Value, QFALSE, QNIL, QTRUE},
 };
 use crate::{error::protect, method::Method, value::private::ReprValue as _};
