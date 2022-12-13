@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 ### Added
+- `Class::undef_alloc_func`, a function to remove a class' allocator function.
 
 ### Changed
 

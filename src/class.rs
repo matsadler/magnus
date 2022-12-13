@@ -10,7 +10,7 @@ use rb_sys::{
     rb_cMethod, rb_cModule, rb_cNameErrorMesg, rb_cNilClass, rb_cNumeric, rb_cObject, rb_cProc,
     rb_cRandom, rb_cRange, rb_cRational, rb_cRegexp, rb_cStat, rb_cString, rb_cStruct, rb_cSymbol,
     rb_cThread, rb_cTime, rb_cTrueClass, rb_cUnboundMethod, rb_class2name, rb_class_new,
-    rb_class_new_instance, rb_class_superclass, ruby_value_type, VALUE,
+    rb_class_new_instance, rb_class_superclass, rb_undef_alloc_func, ruby_value_type, VALUE,
 };
 
 use crate::{
@@ -283,6 +283,29 @@ pub trait Class: Module {
     /// Return `self` as an [`RClass`].
     fn as_r_class(self) -> RClass {
         RClass::from_value(*self).unwrap()
+    }
+
+    /// Remove the allocator function of a class.
+    ///
+    /// Useful for RTypedData, where instances should not be allocated by
+    /// the default allocate function. `#[derive(TypedData)]` and `#[wrap]`
+    /// take care of undefining the allocator function, you do not need
+    /// to use `undef_alloc_func` if you're using one of those.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{class, eval, Class};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// let class = magnus::define_class("Point", Default::default()).unwrap();
+    ///
+    /// class.undef_alloc_func();
+    ///
+    /// let instance = class.new_instance(());
+    /// assert_eq!("allocator undefined for Point", instance.err().unwrap().to_string());
+    /// ```
+    fn undef_alloc_func(self) {
+        unsafe { rb_undef_alloc_func(self.as_rb_value()) }
     }
 }
 

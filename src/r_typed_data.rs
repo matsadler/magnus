@@ -472,10 +472,14 @@ where
     /// # Examples
     ///
     /// ```
-    /// use magnus::{define_class, memoize, RClass};
+    /// use magnus::{define_class, memoize, RClass, Class};
     ///
     /// fn class() -> RClass {
-    ///     *memoize!(RClass: define_class("Foo", Default::default()).unwrap())
+    ///     *memoize!(RClass: {
+    ///       let class = define_class("Foo", Default::default()).unwrap();
+    ///       class.undef_alloc_func();
+    ///       class
+    ///     })
     /// }
     /// ```
     fn class() -> RClass;
