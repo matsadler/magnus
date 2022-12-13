@@ -312,18 +312,6 @@ impl Class for RClass {
         }
     }
 
-    fn superclass(self) -> Result<RClass, Error> {
-        protect(|| unsafe {
-            RClass::from_rb_value_unchecked(rb_class_superclass(self.as_rb_value()))
-        })
-    }
-
-    unsafe fn name(&self) -> Cow<str> {
-        let ptr = rb_class2name(self.as_rb_value());
-        let cstr = CStr::from_ptr(ptr);
-        cstr.to_string_lossy()
-    }
-
     fn as_r_class(self) -> RClass {
         self
     }
