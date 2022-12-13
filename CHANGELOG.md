@@ -3,7 +3,7 @@
 ## [Unreleased]
 ### Added
 - `typed_data::Obj<T>`, a Ruby object wrapping a Rust type known to be `T`.
-- `Class::undef_alloc_foc`, a function to remove a class' allocator function.
+- `Class::undef_alloc_func`, a function to remove a class' allocator function.
 
 ### Changed
 - When converting Ruby values to `RArray` (or `Vec<T>`, `[T; 1]`, or `(T,)`),

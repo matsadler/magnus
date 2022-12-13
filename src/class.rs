@@ -288,7 +288,9 @@ pub trait Class: Module {
     /// Remove the allocator function of a class.
     ///
     /// Useful for RTypedData, where instances should not be allocated by
-    /// the default allocate function.
+    /// the default allocate function. `#[derive(TypedData)]` and `#[wrap]`
+    /// take care of undefining the allocator function, you do not need
+    /// to use `undef_alloc_func` if you're using one of those.
     ///
     /// # Examples
     ///
@@ -302,9 +304,8 @@ pub trait Class: Module {
     /// let instance = class.new_instance(());
     /// assert_eq!("allocator undefined for Point", instance.err().unwrap().to_string());
     /// ```
-    fn undef_alloc_func(self) -> Self {
-        unsafe { rb_undef_alloc_func(self.as_rb_value()) };
-        self
+    fn undef_alloc_func(self) {
+        unsafe { rb_undef_alloc_func(self.as_rb_value()) }
     }
 }
 
