@@ -4,11 +4,13 @@
 ### Added
 - `typed_data::Obj<T>`, a Ruby object wrapping a Rust type known to be `T`.
 - `Class::undef_alloc_func`, a function to remove a class' allocator function.
+- `RArray::to_ary`, `RArray::assoc`, `RArray::rassoc`, and `RArray::cmp`.
 
 ### Changed
 - When converting Ruby values to `RArray` (or `Vec<T>`, `[T; 1]`, or `(T,)`),
   an error will be returned if given a non-`Array` (or non-`to_ary`-able) value,
-  rather than wrapping it in an array.
+  rather than wrapping it in an array (see `RArray::to_ary` for the old
+  behaviour).
 - `r_typed_data::{DataType, DataTypeFunctions, DataTypeBuilder, TypedData}` all
   moved to `typed_data` module, `r_typed_data` module removed. This should only
   affect `DataTypeBuilder` as it was the only one not exported at the crate

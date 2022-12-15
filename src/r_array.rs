@@ -1,5 +1,6 @@
 use std::{
-    convert::TryInto, fmt, iter::FromIterator, ops::Deref, os::raw::c_long, ptr::NonNull, slice,
+    cmp::Ordering, convert::TryInto, fmt, iter::FromIterator, ops::Deref, os::raw::c_long,
+    ptr::NonNull, slice,
 };
 
 #[cfg(ruby_gte_3_0)]
@@ -7,11 +8,12 @@ use rb_sys::ruby_rarray_consts::RARRAY_EMBED_LEN_SHIFT;
 #[cfg(ruby_lt_3_0)]
 use rb_sys::ruby_rarray_flags::RARRAY_EMBED_LEN_SHIFT;
 use rb_sys::{
-    self, rb_ary_cat, rb_ary_clear, rb_ary_concat, rb_ary_delete, rb_ary_delete_at, rb_ary_entry,
-    rb_ary_includes, rb_ary_join, rb_ary_new, rb_ary_new_capa, rb_ary_new_from_values, rb_ary_plus,
-    rb_ary_pop, rb_ary_push, rb_ary_replace, rb_ary_resize, rb_ary_reverse, rb_ary_rotate,
-    rb_ary_shared_with_p, rb_ary_shift, rb_ary_sort_bang, rb_ary_store, rb_ary_subseq,
-    rb_ary_unshift, rb_check_array_type, ruby_rarray_flags, ruby_value_type, VALUE,
+    self, rb_ary_assoc, rb_ary_cat, rb_ary_clear, rb_ary_cmp, rb_ary_concat, rb_ary_delete,
+    rb_ary_delete_at, rb_ary_entry, rb_ary_includes, rb_ary_join, rb_ary_new, rb_ary_new_capa,
+    rb_ary_new_from_values, rb_ary_plus, rb_ary_pop, rb_ary_push, rb_ary_rassoc, rb_ary_replace,
+    rb_ary_resize, rb_ary_reverse, rb_ary_rotate, rb_ary_shared_with_p, rb_ary_shift,
+    rb_ary_sort_bang, rb_ary_store, rb_ary_subseq, rb_ary_to_ary, rb_ary_unshift,
+    rb_check_array_type, ruby_rarray_flags, ruby_value_type, VALUE,
 };
 
 use crate::{
@@ -94,6 +96,45 @@ impl RArray {
     /// ```
     pub fn with_capacity(n: usize) -> Self {
         unsafe { Self::from_rb_value_unchecked(rb_ary_new_capa(n as c_long)) }
+    }
+
+    /// Convert or wrap a Ruby [`Value`] to a `RArray`.
+    ///
+    /// If `val` responds to `#to_ary` calls that and passes on the returned
+    /// array, otherwise returns a single element array containing `val`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RArray, Value};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let ary = RArray::to_ary(Value::from(1)).unwrap();
+    /// let res: bool = eval!("[1] == ary", ary).unwrap();
+    /// assert!(res);
+    ///
+    /// let ary = RArray::to_ary(Value::from(vec![1, 2, 3])).unwrap();
+    /// let res: bool = eval!("[1, 2, 3] == ary", ary).unwrap();
+    /// assert!(res);
+    /// ```
+    ///
+    /// This can fail in the case of a misbehaving `#to_ary` method:
+    ///
+    /// ```
+    /// use magnus::{eval, RArray};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let val = eval(r#"
+    /// o = Object.new
+    /// def o.to_ary
+    ///   "not an array"
+    /// end
+    /// o
+    /// "#).unwrap();
+    /// assert!(RArray::to_ary(val).is_err());
+    /// ```
+    pub fn to_ary(val: Value) -> Result<Self, Error> {
+        protect(|| unsafe { Self::from_rb_value_unchecked(rb_ary_to_ary(val.as_rb_value())) })
     }
 
     /// Create a new `RArray` that is a duplicate of `self`.
@@ -974,6 +1015,107 @@ impl RArray {
             ));
             (!val.is_nil()).then(|| Self::from_rb_value_unchecked(val.as_rb_value()))
         }
+    }
+
+    /// Search `self` as an 'associative array' for `key`.
+    ///
+    /// Assumes `self` is an array of arrays, searching from the start of the
+    /// outer array, returns the first inner array where the first element
+    /// matches `key`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RArray};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let ary = RArray::from_vec(vec![("foo", 1), ("bar", 2), ("baz", 3), ("baz", 4)]);
+    /// assert_eq!(ary.assoc::<_, (String, i64)>("baz").unwrap(), (String::from("baz"), 3));
+    /// assert_eq!(ary.assoc::<_, Option<(String, i64)>>("quz").unwrap(), None);
+    /// ```
+    pub fn assoc<K, T>(self, key: K) -> Result<T, Error>
+    where
+        K: Into<Value>,
+        T: TryConvert,
+    {
+        protect(|| unsafe {
+            Value::new(rb_ary_assoc(self.as_rb_value(), key.into().as_rb_value()))
+        })
+        .and_then(|val| val.try_convert())
+    }
+
+    /// Search `self` as an 'associative array' for `value`.
+    ///
+    /// Assumes `self` is an array of arrays, searching from the start of the
+    /// outer array, returns the first inner array where the second element
+    /// matches `value`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RArray};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let ary = RArray::from_vec(vec![("foo", 1), ("bar", 2), ("baz", 3), ("qux", 3)]);
+    /// assert_eq!(ary.rassoc::<_, (String, i64)>(3).unwrap(), (String::from("baz"), 3));
+    /// assert_eq!(ary.rassoc::<_, Option<(String, i64)>>(4).unwrap(), None);
+    /// ```
+    pub fn rassoc<K, T>(self, value: K) -> Result<T, Error>
+    where
+        K: Into<Value>,
+        T: TryConvert,
+    {
+        protect(|| unsafe {
+            Value::new(rb_ary_rassoc(
+                self.as_rb_value(),
+                value.into().as_rb_value(),
+            ))
+        })
+        .and_then(|val| val.try_convert())
+    }
+
+    /// Recursively compares elements of the two arrays using Ruby's `<=>`.
+    ///
+    /// Returns `Some(Ordering::Equal)` if `self` and `other` are equal.
+    /// Returns `Some(Ordering::Less)` if `self` if less than `other`.
+    /// Returns `Some(Ordering::Greater)` if `self` if greater than `other`.
+    /// Returns `None` if `self` and `other` are not comparable.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use std::cmp::Ordering;
+    /// use magnus::{eval, RArray, QNIL};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let a = RArray::from_vec(vec![1, 2, 3]);
+    /// let b = RArray::from_vec(vec![1, 2, 3]);
+    /// assert_eq!(a.cmp(b).unwrap(), Some(Ordering::Equal));
+    ///
+    /// let c = RArray::from_vec(vec![1, 2, 0]);
+    /// assert_eq!(a.cmp(c).unwrap(), Some(Ordering::Greater));
+    ///
+    /// let d = RArray::from_vec(vec![1, 2, 4]);
+    /// assert_eq!(a.cmp(d).unwrap(), Some(Ordering::Less));
+    ///
+    /// let e = RArray::from_vec(vec![1, 2]);
+    /// e.push(QNIL);
+    /// assert_eq!(a.cmp(e).unwrap(), None);
+    /// ```
+    ///
+    /// Note that `std::cmp::Ordering` can be cast to `i{8,16,32,64,size}` to
+    /// get the Ruby standard `-1`/`0`/`+1` for comparison results.
+    ///
+    /// ```
+    /// assert_eq!(std::cmp::Ordering::Less as i64, -1);
+    /// assert_eq!(std::cmp::Ordering::Equal as i64, 0);
+    /// assert_eq!(std::cmp::Ordering::Greater as i64, 1);
+    /// ```
+    #[allow(clippy::should_implement_trait)]
+    pub fn cmp(self, other: Self) -> Result<Option<Ordering>, Error> {
+        protect(|| unsafe { Value::new(rb_ary_cmp(self.as_rb_value(), other.as_rb_value())) })
+            .and_then(|val| val.try_convert::<Option<i64>>())
+            .map(|opt| opt.map(|i| i.cmp(&0)))
     }
 }
 

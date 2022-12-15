@@ -236,32 +236,32 @@
 //! ## `rb_ary`
 //!
 // * `rb_ary_aref`:
-// * `rb_ary_assoc`:
+//! * `rb_ary_assoc`: [`RArray::assoc`].
 //! * `rb_ary_cat`: [`RArray::cat`].
 //! * `rb_ary_clear`: [`RArray::clear`].
-// * `rb_ary_cmp`:
+//! * `rb_ary_cmp`: [`RArray::cmp`].
 //! * `rb_ary_concat`: [`RArray::concat`].
 //! * `rb_ary_delete`: [`RArray::delete`].
 //! * `rb_ary_delete_at`: [`RArray::delete_at`].
 // * `rb_ary_detransient`:
-// * `rb_ary_dup`: See [`RArray::dup`].
+//! * `rb_ary_dup`: Similar to [`RArray::dup`].
 //! * `rb_ary_each`: See [`RArray::each`].
 //! * `rb_ary_entry`: [`RArray::entry`].
 // * `rb_ary_free`:
-// * `rb_ary_freeze`:
+//! * `rb_ary_freeze`: See [`Value::freeze`].
 //! * `rb_ary_includes`: [`RArray::includes`].
 // * `rb_ary_join`: [`RArray::join`].
 // * `rb_ary_modify`:
 //! * `rb_ary_new`: [`RArray::new`].
 //! * `rb_ary_new_capa`: [`RArray::with_capacity`].
-// * `rb_ary_new_from_args`:
+//! * `rb_ary_new_from_args`: Not implemented, see [`RArray::from_slice`].
 //! * `rb_ary_new_from_values`: [`RArray::from_slice`].
 //! * `rb_ary_plus`: [`RArray::plus`].
 //! * `rb_ary_pop`: [`RArray::pop`].
 // * `rb_ary_ptr_use_end`:
 // * `rb_ary_ptr_use_start`:
 //! * `rb_ary_push`: [`RArray::push`].
-// * `rb_ary_rassoc`:
+//! * `rb_ary_rassoc`: [`RArray::rassoc`].
 //! * `rb_ary_replace`: [`RArray::replace`].
 //! * `rb_ary_resize`: [`RArray::resize`].
 // * `rb_ary_resurrect`:
@@ -274,7 +274,7 @@
 //! * `rb_ary_store`: [`RArray::store`].
 //! * `rb_ary_subseq`: [`RArray::subseq`].
 // * `rb_ary_tmp_new`:
-// * `rb_ary_to_ary`:
+//! * `rb_ary_to_ary`: [`RArray::to_ary`].
 //! * `rb_ary_to_s`: Not implemented directly, see [`Value::to_r_string`].
 //! * `rb_ary_unshift`: [`RArray::unshift`].
 //!
