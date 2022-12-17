@@ -5,6 +5,8 @@ use std::{
     os::raw::c_int, panic::AssertUnwindSafe,
 };
 
+#[cfg(ruby_gte_3_2)]
+use rb_sys::rb_hash_new_capa;
 use rb_sys::{
     rb_check_hash_type, rb_hash_aref, rb_hash_aset, rb_hash_clear, rb_hash_delete, rb_hash_fetch,
     rb_hash_foreach, rb_hash_lookup, rb_hash_lookup2, rb_hash_new, rb_hash_size, ruby_value_type,
@@ -125,6 +127,24 @@ impl RHash {
     /// ```
     pub fn new() -> RHash {
         unsafe { Self::from_rb_value_unchecked(rb_hash_new()) }
+    }
+
+    /// Create a new empty `RHash` with capacity for `n` elements
+    /// pre-allocated.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RHash};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let ary = RHash::with_capacity(16);
+    /// assert!(ary.is_empty());
+    /// ```
+    #[cfg(any(ruby_gte_3_2, docsrs))]
+    #[cfg_attr(docsrs, doc(cfg(ruby_gte_3_2)))]
+    pub fn with_capacity(n: usize) -> Self {
+        unsafe { Self::from_rb_value_unchecked(rb_hash_new_capa(n as _)) }
     }
 
     /// Set the value `val` for the key `key`.

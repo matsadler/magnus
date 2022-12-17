@@ -873,6 +873,7 @@
 //! * `rb_hash_lookup`: [`RHash::lookup`].
 //! * `rb_hash_lookup2`: [`RHash::get`].
 //! * `rb_hash_new`: [`RHash::new`].
+//! * `rb_hash_new_capa`: [`RHash::with_capacity`].
 // * `rb_hash_set_ifnone`:
 //! * `rb_hash_size`: [`RHash::size`].
 // * `rb_hash_size_num`:
