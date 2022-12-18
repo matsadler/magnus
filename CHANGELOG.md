@@ -6,6 +6,7 @@
 - `Class::undef_alloc_func`, a function to remove a class' allocator function.
 - `RArray::to_ary`, `RArray::assoc`, `RArray::rassoc`, and `RArray::cmp`.
 - `RHash::with_capacity` new for Ruby 3.2.
+- `RHash::bulk_insert`.
 
 ### Changed
 - When converting Ruby values to `RArray` (or `Vec<T>`, `[T; 1]`, or `(T,)`),

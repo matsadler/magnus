@@ -1,16 +1,22 @@
 //! Types and functions for working with Ruby’s Hash class.
 
 use std::{
-    collections::HashMap, fmt, hash::Hash, iter::FromIterator, marker::PhantomData, ops::Deref,
-    os::raw::c_int, panic::AssertUnwindSafe,
+    collections::HashMap,
+    fmt,
+    hash::Hash,
+    iter::FromIterator,
+    marker::PhantomData,
+    ops::Deref,
+    os::raw::{c_int, c_long},
+    panic::AssertUnwindSafe,
 };
 
 #[cfg(ruby_gte_3_2)]
 use rb_sys::rb_hash_new_capa;
 use rb_sys::{
-    rb_check_hash_type, rb_hash_aref, rb_hash_aset, rb_hash_clear, rb_hash_delete, rb_hash_fetch,
-    rb_hash_foreach, rb_hash_lookup, rb_hash_lookup2, rb_hash_new, rb_hash_size, ruby_value_type,
-    VALUE,
+    rb_check_hash_type, rb_hash_aref, rb_hash_aset, rb_hash_bulk_insert, rb_hash_clear,
+    rb_hash_delete, rb_hash_fetch, rb_hash_foreach, rb_hash_lookup, rb_hash_lookup2, rb_hash_new,
+    rb_hash_size, rb_hash_size_num, rb_hash_update_by, ruby_value_type, VALUE,
 };
 
 use crate::{
@@ -33,17 +39,14 @@ pub enum ForEach {
     Delete,
 }
 
-/// Helper type for wrapping a function with type conversions and error
-/// handling for `RHash::foreach`.
-#[doc(hidden)]
-pub struct ForEachCallback<Func, K, V> {
+// Helper type for wrapping a function with type conversions and error
+// handling for `RHash::foreach`.
+struct ForEachCallback<Func, K, V> {
     func: Func,
     key: PhantomData<K>,
     value: PhantomData<V>,
 }
 
-#[allow(missing_docs)]
-#[allow(clippy::missing_safety_doc)]
 impl<Func, K, V> ForEachCallback<Func, K, V>
 where
     Func: FnMut(K, V) -> Result<ForEach, Error>,
@@ -51,7 +54,7 @@ where
     V: TryConvert,
 {
     #[inline]
-    pub fn new(func: Func) -> Self {
+    fn new(func: Func) -> Self {
         Self {
             func,
             key: Default::default(),
@@ -60,7 +63,12 @@ where
     }
 
     #[inline]
-    pub unsafe fn call_handle_error(self, key: Value, value: Value) -> ForEach {
+    unsafe fn call_convert_value(mut self, key: Value, value: Value) -> Result<ForEach, Error> {
+        (self.func)(key.try_convert()?, value.try_convert()?)
+    }
+
+    #[inline]
+    unsafe fn call_handle_error(self, key: Value, value: Value) -> ForEach {
         let res = match std::panic::catch_unwind(AssertUnwindSafe(|| {
             self.call_convert_value(key, value)
         })) {
@@ -71,11 +79,6 @@ where
             Ok(v) => v,
             Err(e) => raise(e),
         }
-    }
-
-    #[inline]
-    unsafe fn call_convert_value(mut self, key: Value, value: Value) -> Result<ForEach, Error> {
-        (self.func)(key.try_convert()?, value.try_convert()?)
     }
 }
 
@@ -144,7 +147,7 @@ impl RHash {
     #[cfg(any(ruby_gte_3_2, docsrs))]
     #[cfg_attr(docsrs, doc(cfg(ruby_gte_3_2)))]
     pub fn with_capacity(n: usize) -> Self {
-        unsafe { Self::from_rb_value_unchecked(rb_hash_new_capa(n as _)) }
+        unsafe { Self::from_rb_value_unchecked(rb_hash_new_capa(n as c_long)) }
     }
 
     /// Set the value `val` for the key `key`.
@@ -178,6 +181,64 @@ impl RHash {
                 ))
             })?;
         }
+        Ok(())
+    }
+
+    /// Insert a list of key-value pairs into a hash at once.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RHash, RString, Symbol};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let hash = RHash::new();
+    /// hash.bulk_insert(&[*Symbol::new("given_name"), *RString::new("Arthur"), *Symbol::new("family_name"), *RString::new("Dent")]);
+    /// let res: bool = eval!(r#"hash == {given_name: "Arthur", family_name: "Dent"}"#, hash).unwrap();
+    /// assert!(res);
+    /// ```
+    pub fn bulk_insert<T>(self, slice: &[T]) -> Result<(), Error>
+    where
+        T: ReprValue,
+    {
+        let ptr = slice.as_ptr() as *const VALUE;
+        protect(|| unsafe {
+            rb_hash_bulk_insert(slice.len() as c_long, ptr, self.as_rb_value());
+            QNIL
+        })?;
+        Ok(())
+    }
+
+    /// Merges two hashes into one.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RHash, RString, Symbol};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let a: RHash = eval("{a: 1, b: 2}").unwrap();
+    /// let b: RHash = eval("{b: 3, c: 4}").unwrap();
+    /// a.update(b);
+    ///
+    /// // a is mutated, in case of conflicts b wins
+    /// let res: bool = eval!("a == {a: 1, b: 3, c: 4}", a).unwrap();
+    /// assert!(res);
+    ///
+    /// // b is unmodified
+    /// let res: bool = eval!("b == {b: 3, c: 4}", b).unwrap();
+    /// assert!(res);
+    /// ```
+    //
+    // Implementation note: `rb_hash_update_by` takes a third optional argument,
+    // a function pointer, the function being called to resolve conflicts.
+    // Unfortunately there's no way to wrap this in a easy to use and safe Rust
+    // api, so it has been omitted.
+    pub fn update(self, other: RHash) -> Result<(), Error> {
+        protect(|| unsafe {
+            rb_hash_update_by(self.as_rb_value(), other.as_rb_value(), None);
+            QNIL
+        })?;
         Ok(())
     }
 
@@ -519,7 +580,7 @@ impl RHash {
     /// assert_eq!(hash.len(), 3);
     /// ```
     pub fn len(self) -> usize {
-        self.size().to_usize().unwrap()
+        unsafe { rb_hash_size_num(self.as_rb_value()) as usize }
     }
 
     /// Return whether self contains any entries or not.

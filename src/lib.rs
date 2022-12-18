@@ -858,7 +858,7 @@
 // * `rb_hash`:
 //! * `rb_hash_aref`: [`RHash::aref`].
 //! * `rb_hash_aset`: [`RHash::aset`].
-// * `rb_hash_bulk_insert`:
+//! * `rb_hash_bulk_insert`: [`RHash::bulk_insert`].
 // * `rb_hash_bulk_insert_into_st_table`:
 //! * `rb_hash_clear`: [`RHash::clear`].
 //! * `rb_hash_delete`: [`RHash::delete`].
@@ -867,7 +867,7 @@
 // * `rb_hash_end`:
 //! * `rb_hash_fetch`: [`RHash::fetch`].
 //! * `rb_hash_foreach`: [`RHash::foreach`].
-// * `rb_hash_freeze`:
+// * `rb_hash_freeze`: See [`Value::freeze`].
 // * `rb_hash_ifnone`:
 // * `rb_hash_iter_lev`:
 //! * `rb_hash_lookup`: [`RHash::lookup`].
@@ -876,12 +876,12 @@
 //! * `rb_hash_new_capa`: [`RHash::with_capacity`].
 // * `rb_hash_set_ifnone`:
 //! * `rb_hash_size`: [`RHash::size`].
-// * `rb_hash_size_num`:
+//! * `rb_hash_size_num`: [`RHash::len`].
 // * `rb_hash_start`:
 // * `rb_hash_tbl`:
 // * `rb_hash_uint`:
 // * `rb_hash_uint32`:
-// * `rb_hash_update_by`:
+//! * `rb_hash_update_by`: [`RHash::update`] (`update_func` arg not implemented).
 //!
 //! ## `rb_i`-`rb_in`
 //!
