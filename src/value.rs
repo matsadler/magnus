@@ -20,7 +20,7 @@ pub use flonum::Flonum;
 use rb_sys::{
     rb_any_to_s, rb_block_call, rb_check_funcall, rb_check_id, rb_check_id_cstr,
     rb_check_symbol_cstr, rb_enumeratorize_with_size, rb_eql, rb_equal, rb_funcall_with_block,
-    rb_funcallv, rb_gc_register_address, rb_gc_unregister_address, rb_id2name, rb_id2sym,
+    rb_funcallv, rb_gc_register_address, rb_gc_unregister_address, rb_hash, rb_id2name, rb_id2sym,
     rb_inspect, rb_intern3, rb_ll2inum, rb_obj_as_string, rb_obj_classname, rb_obj_freeze,
     rb_obj_is_kind_of, rb_obj_respond_to, rb_sym2id, rb_ull2inum, ruby_fl_type,
     ruby_special_consts, ruby_value_type, RBasic, ID, VALUE,
@@ -299,6 +299,31 @@ impl Value {
             protect(|| Value::new(rb_eql(self.as_rb_value(), other.as_rb_value()) as VALUE))
                 .map(Value::to_bool)
         }
+    }
+
+    /// Returns an integer non-uniquely identifying `self`.
+    ///
+    /// The return value is not stable between different Ruby processes.
+    ///
+    /// Ruby guarantees the return value will be in the range of a C `long`,
+    /// this is usually equivalent to a `i64`, though will be `i32` on Windows.
+    ///
+    /// Ruby built-in classes will not error, but it is possible for badly
+    /// behaving 3rd party classes (or collections such as `Array` containing
+    /// them) to error in this function.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::RString;
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// assert!(RString::new("test").hash().unwrap()
+    ///     .equal(RString::new("test").hash().unwrap())
+    ///     .unwrap());
+    /// ```
+    pub fn hash(self) -> Result<Integer, Error> {
+        unsafe { protect(|| Integer::from_rb_value_unchecked(rb_hash(self.as_rb_value()))) }
     }
 
     /// Returns the class that `self` is an instance of.

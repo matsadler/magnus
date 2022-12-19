@@ -4,8 +4,10 @@
 //! `rb_data_typed_object_wrap` function from Ruby's C API.
 
 use std::{
+    collections::hash_map::DefaultHasher,
     ffi::{c_void, CString},
     fmt,
+    hash::Hasher,
     marker::PhantomData,
     mem::size_of_val,
     ops::Deref,
@@ -545,5 +547,216 @@ where
             inner,
             phantom: PhantomData,
         })
+    }
+}
+
+/// Trait for a Ruby-compatible `#hash` method.
+///
+/// Automatically implemented for any type implementing [`std::hash::Hash`].
+///
+/// See also [`IsEql`].
+///
+/// # Examples
+///
+/// ```
+/// use std::hash::Hasher;
+///
+/// use magnus::{
+///     define_class, embed::init, function, gc, method, typed_data, DataTypeFunctions, Error, Module,
+///     Object, RHash, TypedData, Value,
+/// };
+///
+/// #[derive(TypedData)]
+/// #[magnus(class = "Pair", free_immediatly, mark)]
+/// struct Pair {
+///     a: Value,
+///     b: Value,
+/// }
+///
+/// impl Pair {
+///     fn new(a: Value, b: Value) -> Self {
+///         Self { a, b }
+///     }
+/// }
+///
+/// impl DataTypeFunctions for Pair {
+///     fn mark(&self) {
+///         gc::mark(&self.a);
+///         gc::mark(&self.b);
+///     }
+/// }
+///
+/// impl std::hash::Hash for Pair {
+///     fn hash<H: Hasher>(&self, state: &mut H) {
+///         state.write_i64(
+///             self.a
+///                 .hash()
+///                 .expect("#hash should not fail")
+///                 .to_i64()
+///                 .expect("#hash result guaranteed to be <= i64"),
+///         );
+///         state.write_i64(
+///             self.b
+///                 .hash()
+///                 .expect("#hash should not fail")
+///                 .to_i64()
+///                 .expect("#hash result guaranteed to be <= i64"),
+///         );
+///     }
+/// }
+///
+/// impl PartialEq for Pair {
+///     fn eq(&self, other: &Self) -> bool {
+///         self.a.eql(&other.a).unwrap_or(false) && self.b.eql(&other.b).unwrap_or(false)
+///     }
+/// }
+///
+/// impl Eq for Pair {}
+///
+/// let _cleanup = unsafe { init() };
+///
+/// let class = define_class("Pair", Default::default()).unwrap();
+/// class
+///     .define_singleton_method("new", function!(Pair::new, 2))
+///     .unwrap();
+/// class
+///     .define_method("hash", method!(<Pair as typed_data::Hash>::hash, 0))
+///     .unwrap();
+/// class
+///     .define_method("eql?", method!(<Pair as typed_data::IsEql>::is_eql, 1))
+///     .unwrap();
+///
+/// let a = Pair::new(Value::from("foo"), Value::from(1));
+/// let hash = RHash::new();
+/// hash.aset(a, "test value").unwrap();
+///
+/// let b = Pair::new(Value::from("foo"), Value::from(1));
+/// assert_eq!("test value", hash.fetch::<_, String>(b).unwrap());
+///
+/// let c = Pair::new(Value::from("bar"), Value::from(2));
+/// assert!(hash.get(c).is_none());
+/// ```
+pub trait Hash {
+    // Docs at trait level.
+    #![allow(missing_docs)]
+    fn hash(&self) -> i64;
+}
+
+impl<T> Hash for T
+where
+    T: std::hash::Hash,
+{
+    fn hash(&self) -> i64 {
+        let mut hasher = DefaultHasher::new();
+        std::hash::Hash::hash(self, &mut hasher);
+        // Ensure the Rust usize hash converts nicely to Ruby's expected range
+        // if we return usize it'd truncate to 0 for anything negative.
+        hasher.finish() as i64
+    }
+}
+
+/// Trait for a Ruby-compatible `#eql?` method.
+///
+/// Automatically implemented for any type implementing [`Eq`] and
+/// [`TryConvert`].
+///
+/// See also [`typed_data::Hash`](Hash).
+///
+/// # Examples
+///
+/// ```
+/// use std::hash::Hasher;
+///
+/// use magnus::{
+///     define_class, embed::init, function, gc, method, typed_data, DataTypeFunctions, Error, Module,
+///     Object, RHash, TypedData, Value,
+/// };
+///
+/// #[derive(TypedData)]
+/// #[magnus(class = "Pair", free_immediatly, mark)]
+/// struct Pair {
+///     a: Value,
+///     b: Value,
+/// }
+///
+/// impl Pair {
+///     fn new(a: Value, b: Value) -> Self {
+///         Self { a, b }
+///     }
+/// }
+///
+/// impl DataTypeFunctions for Pair {
+///     fn mark(&self) {
+///         gc::mark(&self.a);
+///         gc::mark(&self.b);
+///     }
+/// }
+///
+/// impl std::hash::Hash for Pair {
+///     fn hash<H: Hasher>(&self, state: &mut H) {
+///         state.write_i64(
+///             self.a
+///                 .hash()
+///                 .expect("#hash should not fail")
+///                 .to_i64()
+///                 .expect("#hash result guaranteed to be <= i64"),
+///         );
+///         state.write_i64(
+///             self.b
+///                 .hash()
+///                 .expect("#hash should not fail")
+///                 .to_i64()
+///                 .expect("#hash result guaranteed to be <= i64"),
+///         );
+///     }
+/// }
+///
+/// impl PartialEq for Pair {
+///     fn eq(&self, other: &Self) -> bool {
+///         self.a.eql(&other.a).unwrap_or(false) && self.b.eql(&other.b).unwrap_or(false)
+///     }
+/// }
+///
+/// impl Eq for Pair {}
+///
+/// let _cleanup = unsafe { init() };
+///
+/// let class = define_class("Pair", Default::default()).unwrap();
+/// class
+///     .define_singleton_method("new", function!(Pair::new, 2))
+///     .unwrap();
+/// class
+///     .define_method("hash", method!(<Pair as typed_data::Hash>::hash, 0))
+///     .unwrap();
+/// class
+///     .define_method("eql?", method!(<Pair as typed_data::IsEql>::is_eql, 1))
+///     .unwrap();
+///
+/// let a = Pair::new(Value::from("foo"), Value::from(1));
+/// let hash = RHash::new();
+/// hash.aset(a, "test value").unwrap();
+///
+/// let b = Pair::new(Value::from("foo"), Value::from(1));
+/// assert_eq!("test value", hash.fetch::<_, String>(b).unwrap());
+///
+/// let c = Pair::new(Value::from("bar"), Value::from(2));
+/// assert!(hash.get(c).is_none());
+/// ```
+pub trait IsEql {
+    // Docs at trait level.
+    #![allow(missing_docs)]
+    fn is_eql(&self, other: Value) -> bool;
+}
+
+impl<'a, T> IsEql for T
+where
+    T: Eq + 'a,
+    &'a T: TryConvert,
+{
+    fn is_eql(&self, other: Value) -> bool {
+        other
+            .try_convert::<&'a T>()
+            .map(|o| self == o)
+            .unwrap_or(false)
     }
 }

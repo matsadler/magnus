@@ -7,6 +7,9 @@
 - `RArray::to_ary`, `RArray::assoc`, `RArray::rassoc`, and `RArray::cmp`.
 - `RHash::with_capacity` new for Ruby 3.2.
 - `RHash::bulk_insert`.
+- `Value::hash` to generate a hash key for a Ruby object.
+- `typed_data::Hash` and `typed_data::IsEql` traits to help with implementing
+  `#hash` and `#eql?` methods for wrapped structs.
 
 ### Changed
 - When converting Ruby values to `RArray` (or `Vec<T>`, `[T; 1]`, or `(T,)`),

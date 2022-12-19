@@ -855,7 +855,7 @@
 //! # `rb_h`
 //!
 // * `rb_Hash`:
-// * `rb_hash`:
+//! * `rb_hash`: [`Value::hash`].
 //! * `rb_hash_aref`: [`RHash::aref`].
 //! * `rb_hash_aset`: [`RHash::aset`].
 //! * `rb_hash_bulk_insert`: [`RHash::bulk_insert`].
