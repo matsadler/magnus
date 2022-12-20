@@ -1382,20 +1382,18 @@
 //! ## `rb_str`
 //!
 // * `rb_str_append`:
-// * `rb_str_associate`:
-// * `rb_str_associated`:
-//! * `rb_str_buf_append`: [`RString::append`].
-// * `rb_str_buf_cat`:
-// * `rb_str_buf_cat_ascii`:
+//! * `rb_str_buf_append`: [`RString::buf_append`].
+//! * `rb_str_buf_cat`: [`RString::cat`].
+//! * `rb_str_buf_cat_ascii`: See [`RString::cat`].
 //! * `rb_str_buf_new`: [`RString::buf_new`].
-// * `rb_str_buf_new_cstr`:
-// * `rb_str_capacity`:
+//! * `rb_str_buf_new_cstr`: See [`RString::buf_new`] + [`RString::cat`].
+//! * `rb_str_capacity`: [`RString::capacity`].
 //! * `rb_str_cat`: [`RString::cat`].
 // * `rb_str_catf`:
-// * `rb_str_cat_cstr`:
-// * `rb_str_cmp`:
+//! * `rb_str_cat_cstr`: See [`RString::cat`].
+//! * `rb_str_cmp`: [`RString::cmp`].
 // * `rb_str_coderange_scan_restartable`:
-// * `rb_str_comparable`:
+// * `rb_str_comparable`: [`RString::comparable`].
 // * `rb_str_concat`:
 //! * `rb_str_conv_enc`: [`RString::conv_enc`].
 // * `rb_str_conv_enc_opts`:

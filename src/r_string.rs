@@ -2,6 +2,7 @@
 
 use std::{
     borrow::Cow,
+    cmp::Ordering,
     fmt, io,
     iter::Iterator,
     mem::transmute,
@@ -19,10 +20,10 @@ use rb_sys::ruby_rstring_consts::RSTRING_EMBED_LEN_SHIFT;
 #[cfg(ruby_lt_3_0)]
 use rb_sys::ruby_rstring_flags::RSTRING_EMBED_LEN_SHIFT;
 use rb_sys::{
-    self, rb_enc_str_coderange, rb_enc_str_new, rb_str_buf_append, rb_str_buf_new, rb_str_cat,
-    rb_str_conv_enc, rb_str_new, rb_str_new_frozen, rb_str_new_shared, rb_str_strlen,
-    rb_str_to_str, rb_utf8_str_new, rb_utf8_str_new_static, ruby_coderange_type,
-    ruby_rstring_flags, ruby_value_type, VALUE,
+    self, rb_enc_str_coderange, rb_enc_str_new, rb_str_buf_append, rb_str_buf_new, rb_str_capacity,
+    rb_str_cat, rb_str_cmp, rb_str_comparable, rb_str_conv_enc, rb_str_new, rb_str_new_frozen,
+    rb_str_new_shared, rb_str_strlen, rb_str_to_str, rb_utf8_str_new, rb_utf8_str_new_static,
+    ruby_coderange_type, ruby_rstring_flags, ruby_value_type, VALUE,
 };
 
 use crate::{
@@ -897,11 +898,17 @@ impl RString {
     /// a.append(b).unwrap();
     /// assert_eq!(a.to_string().unwrap(), "foobar");
     /// ```
-    pub fn append(self, other: Self) -> Result<(), Error> {
+    pub fn buf_append(self, other: Self) -> Result<(), Error> {
         protect(|| unsafe {
             Value::new(rb_str_buf_append(self.as_rb_value(), other.as_rb_value()))
         })?;
         Ok(())
+    }
+
+    #[doc(hidden)]
+    #[deprecated(since = "0.5.0", note = "please use use `buf_append` instead")]
+    pub fn append(self, other: Self) -> Result<(), Error> {
+        self.buf_append(other)
     }
 
     /// Mutate `self`, adding `buf` to the end.
@@ -975,6 +982,23 @@ impl RString {
         unsafe { rb_str_strlen(self.as_rb_value()) as usize }
     }
 
+    /// Returns the capacity of `self`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RString};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let s = RString::with_capacity(9);
+    /// s.cat("foo");
+    /// assert_eq!(3, s.len());
+    /// assert!(s.capacity() >= 9);
+    /// ```
+    pub fn capacity(self) -> usize {
+        unsafe { rb_str_capacity(self.as_rb_value()) as usize }
+    }
+
     /// Return whether self contains any characters or not.
     ///
     /// # Examples
@@ -988,6 +1012,43 @@ impl RString {
     /// ```
     pub fn is_empty(self) -> bool {
         self.len() == 0
+    }
+
+    /// Compares `self` with `other` to establish an ordering.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use std::cmp::Ordering;
+    /// use magnus::RString;
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let a = RString::new("a");
+    /// let b = RString::new("b");
+    /// assert_eq!(Ordering::Less, a.cmp(b));
+    /// ```
+    ///
+    /// Note that `std::cmp::Ordering` can be cast to `i{8,16,32,64,size}` to
+    /// get the Ruby standard `-1`/`0`/`+1` for comparison results.
+    ///
+    /// ```
+    /// assert_eq!(std::cmp::Ordering::Less as i64, -1);
+    /// assert_eq!(std::cmp::Ordering::Equal as i64, 0);
+    /// assert_eq!(std::cmp::Ordering::Greater as i64, 1);
+    /// ```
+    pub fn cmp(self, other: Self) -> Ordering {
+        unsafe { rb_str_cmp(self.as_rb_value(), other.as_rb_value()) }.cmp(&0)
+    }
+
+    /// Returns whether there is a total order of strings in the encodings of
+    /// `self` and `other`.
+    ///
+    /// If this function returns `true` for `self` and `other` then the
+    /// ordering returned from [`cmp`](RString::cmp) for those strings is
+    /// 'correct'. If `false`, while stable, the ordering may not follow
+    /// established rules.
+    pub fn comparable(self, other: Self) -> bool {
+        unsafe { rb_str_comparable(self.as_rb_value(), other.as_rb_value()) != 0 }
     }
 }
 
