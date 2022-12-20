@@ -26,6 +26,7 @@
 - `RString::append` (use `RString::buf_append`).
 
 ### Removed
+- `DataTypeBuilder::free_immediatly` (use `free_immediately`).
 
 ### Fixed
 - `gc::mark_slice` was skipping the last element of the slice.

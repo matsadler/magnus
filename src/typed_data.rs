@@ -233,12 +233,6 @@ where
         self.free_immediately = true;
     }
 
-    #[doc(hidden)]
-    #[deprecated(since = "0.4.0", note = "please use use `free_immediately` instead")]
-    pub fn free_immediatly(&mut self) {
-        self.free_immediately = true;
-    }
-
     /// Enable the 'write barrier protected' flag.
     ///
     /// You almost certainly don't want to enable this.

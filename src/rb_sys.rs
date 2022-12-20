@@ -194,42 +194,6 @@ pub unsafe fn resume_error(e: Error) -> ! {
     raise(e)
 }
 
-/// Convert [`magnus::Value`](Value) to [`rb_sys::VALUE`].
-#[deprecated(since = "0.4.0", note = "please use `Value::as_raw` instead")]
-pub fn raw_value(val: Value) -> VALUE {
-    val.as_raw()
-}
-
-/// Convert [`rb_sys::VALUE`] to [`magnus::Value`](Value).
-///
-/// # Safety
-///
-/// You must only supply a valid [`VALUE`] obtained from [rb-sys](rb_sys) to
-/// this function. Using a invalid [`Value`] produced from this function will
-/// void all saftey guarantees provided by Magnus.
-#[deprecated(since = "0.4.0", note = "please use `Value::from_raw` instead")]
-pub unsafe fn value_from_raw(val: VALUE) -> Value {
-    Value::from_raw(val)
-}
-
-/// Convert [`magnus::value::Id`](Id) to [`rb_sys::ID`].
-#[deprecated(since = "0.4.0", note = "please use `Id::as_raw` instead")]
-pub fn raw_id(id: Id) -> ID {
-    id.as_raw()
-}
-
-/// Convert [`rb_sys::ID`] to [`magnus::value::Id`](Id).
-///
-/// # Safety
-///
-/// You must only supply a valid [`ID`] obtained from [rb-sys](rb_sys) to this
-/// function. Using a invalid [`Id`] produced from this function will void all
-/// saftey guarantees provided by Magnus.
-#[deprecated(since = "0.4.0", note = "please use `Id::from_raw` instead")]
-pub unsafe fn id_from_raw(id: ID) -> Id {
-    Id::from_raw(id)
-}
-
 #[cfg(test)]
 mod tests {
     use crate::{
