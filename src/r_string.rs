@@ -21,8 +21,9 @@ use rb_sys::ruby_rstring_consts::RSTRING_EMBED_LEN_SHIFT;
 use rb_sys::ruby_rstring_flags::RSTRING_EMBED_LEN_SHIFT;
 use rb_sys::{
     self, rb_enc_str_coderange, rb_enc_str_new, rb_str_buf_append, rb_str_buf_new, rb_str_capacity,
-    rb_str_cat, rb_str_cmp, rb_str_comparable, rb_str_conv_enc, rb_str_new, rb_str_new_frozen,
-    rb_str_new_shared, rb_str_strlen, rb_str_to_str, rb_utf8_str_new, rb_utf8_str_new_static,
+    rb_str_cat, rb_str_cmp, rb_str_comparable, rb_str_conv_enc, rb_str_drop_bytes, rb_str_dump,
+    rb_str_ellipsize, rb_str_new, rb_str_new_frozen, rb_str_new_shared, rb_str_offset,
+    rb_str_strlen, rb_str_sublen, rb_str_to_str, rb_utf8_str_new, rb_utf8_str_new_static,
     ruby_coderange_type, ruby_rstring_flags, ruby_value_type, VALUE,
 };
 
@@ -33,7 +34,7 @@ use crate::{
     exception,
     object::Object,
     try_convert::TryConvert,
-    value::{private, NonZeroValue, ReprValue, Value},
+    value::{private, NonZeroValue, ReprValue, Value, QNIL},
 };
 
 /// A Value pointer to a RString struct, Ruby's internal representation of
@@ -434,6 +435,22 @@ impl RString {
         }
     }
 
+    /// Converts a character offset to a byte offset.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::RString;
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let s = RString::new("🌊🦀🏝️");
+    /// assert_eq!(s.offset(1), 4);
+    /// assert_eq!(s.offset(2), 8);
+    /// ```
+    pub fn offset(self, pos: usize) -> usize {
+        unsafe { rb_str_offset(self.as_rb_value(), pos as c_long) as usize }
+    }
+
     /// Returns true if the encoding for this string is UTF-8 or US-ASCII,
     /// false otherwise.
     ///
@@ -794,6 +811,25 @@ impl RString {
         }
     }
 
+    /// Returns a quoted version of the `self`.
+    ///
+    /// This can be thought of as the opposite of `eval`. A string returned
+    /// from `dump` can be safely passed to `eval` and will result in a string
+    /// with the exact same contents as the original.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::RString;
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let s = RString::new("🦀 café");
+    /// assert_eq!(s.dump().unwrap().to_string().unwrap(), r#""\u{1F980} caf\u00E9""#);
+    /// ```
+    pub fn dump(self) -> Result<Self, Error> {
+        protect(|| unsafe { RString::from_rb_value_unchecked(rb_str_dump(self.as_rb_value())) })
+    }
+
     /// Returns whether `self` is a frozen interned string. Interned strings
     /// are usually string literals with the in files with the
     /// `# frozen_string_literal: true` 'magic comment'.
@@ -938,6 +974,28 @@ impl RString {
         }
     }
 
+    /// Shrink `self` by `len` bytes.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RString};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let s = RString::new("foobar");
+    /// s.drop_bytes(3);
+    /// assert_eq!(s.to_string().unwrap(), "bar");
+    /// ```
+    pub fn drop_bytes(self, len: usize) -> Result<(), Error> {
+        protect(|| {
+            unsafe {
+                rb_str_drop_bytes(self.as_rb_value(), len as c_long);
+            }
+            QNIL
+        })?;
+        Ok(())
+    }
+
     /// Returns the number of bytes in `self`.
     ///
     /// See also [`length`](RString::length).
@@ -1049,6 +1107,25 @@ impl RString {
     /// established rules.
     pub fn comparable(self, other: Self) -> bool {
         unsafe { rb_str_comparable(self.as_rb_value(), other.as_rb_value()) != 0 }
+    }
+
+    /// Shorten `self` to `len`, adding "...".
+    ///
+    /// If `self` is shorter than `len` the returned value will be `self`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::RString;
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let s = RString::new("foobarbaz");
+    /// assert_eq!(s.ellipsize(6).to_string().unwrap(), "foo...");
+    /// ```
+    pub fn ellipsize(self, len: usize) -> Self {
+        unsafe {
+            RString::from_rb_value_unchecked(rb_str_ellipsize(self.as_rb_value(), len as c_long))
+        }
     }
 }
 

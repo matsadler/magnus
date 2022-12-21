@@ -1397,11 +1397,11 @@
 // * `rb_str_concat`:
 //! * `rb_str_conv_enc`: [`RString::conv_enc`].
 // * `rb_str_conv_enc_opts`:
-// * `rb_str_drop_bytes`:
-// * `rb_str_dump`:
+//! * `rb_str_drop_bytes`: [`RString::drop_bytes`].
+//! * `rb_str_dump`: [`RString::dump`].
 // * `rb_str_dup`:
-// * `rb_str_dup_frozen`:
-// * `rb_str_ellipsize`:
+//! * `rb_str_dup_frozen`: See [`RString::new_frozen`].
+//! * `rb_str_ellipsize`: [`RString::ellipsize`].
 // * `rb_str_encode`:
 // * `rb_str_encode_ospath`:
 // * `rb_str_equal`:
@@ -1427,7 +1427,7 @@
 //! * `rb_str_new_shared`: [`RString::new_shared`].
 // * `rb_str_new_static`: Simmilar to [`r_string!`].
 // * `rb_str_new_with_class`:
-// * `rb_str_offset`:
+//! * `rb_str_offset`: [`RString::offset`].
 // * `rb_str_plus`:
 // * `rb_str_replace`:
 // * `rb_str_resize`:

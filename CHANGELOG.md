@@ -10,7 +10,8 @@
 - `Value::hash` to generate a hash key for a Ruby object.
 - `typed_data::Hash` and `typed_data::IsEql` traits to help with implementing
   `#hash` and `#eql?` methods for wrapped structs.
-- `RString::capacity`, `RString::cmp`, `RString::comparable`.
+- Lots of `RString` methods: `capacity`, `cmp`, `comparable`, `drop_bytes`,
+  `dump`, `ellipsize`, `offset`.
 
 ### Changed
 - When converting Ruby values to `RArray` (or `Vec<T>`, `[T; 1]`, or `(T,)`),
