@@ -1428,29 +1428,29 @@
 // * `rb_str_new_static`: Simmilar to [`r_string!`].
 // * `rb_str_new_with_class`:
 //! * `rb_str_offset`: [`RString::offset`].
-// * `rb_str_plus`:
-// * `rb_str_replace`:
+//! * `rb_str_plus`: [`RString::plus`].
+//! * `rb_str_replace`: [`RString::replace`].
 // * `rb_str_resize`:
 // * `rb_str_resurrect`:
-// * `rb_str_scrub`:
+//! * `rb_str_scrub`: [`RString::scrub`].
 // * `rb_str_setter`:
 // * `rb_str_set_len`:
-// * `rb_str_shared_replace`:
-// * `rb_str_split`:
+//! * `rb_str_shared_replace`: [`RString::shared_replace`].
+//! * `rb_str_split`: [`RString::split`].
 //! * `rb_str_strlen`: [`RString::length`].
 // * `rb_str_sublen`:
 // * `rb_str_subpos`:
 // * `rb_str_subseq`:
 // * `rb_str_substr`:
 // * `rb_str_succ`:
-// * `rb_str_times`:
+//! * `rb_str_times`: [`RString::times`].
 // * `rb_str_tmp_new`:
 // * `rb_str_to_dbl`:
 //! * `rb_str_to_interned_str`: [`RString::to_interned_str`].
 // * `rb_str_to_inum`:
 //! * `rb_str_to_str`: [`TryConvert`] or [`Value::try_convert`].
 // * `rb_str_unlocktmp`:
-// * `rb_str_update`:
+//! * `rb_str_update`: [`RString::update`].
 // * `rb_str_vcatf`:
 //!
 //! # `rb_st_`

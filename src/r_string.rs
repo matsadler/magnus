@@ -3,6 +3,7 @@
 use std::{
     borrow::Cow,
     cmp::Ordering,
+    ffi::CString,
     fmt, io,
     iter::Iterator,
     mem::transmute,
@@ -22,9 +23,10 @@ use rb_sys::ruby_rstring_flags::RSTRING_EMBED_LEN_SHIFT;
 use rb_sys::{
     self, rb_enc_str_coderange, rb_enc_str_new, rb_str_buf_append, rb_str_buf_new, rb_str_capacity,
     rb_str_cat, rb_str_cmp, rb_str_comparable, rb_str_conv_enc, rb_str_drop_bytes, rb_str_dump,
-    rb_str_ellipsize, rb_str_new, rb_str_new_frozen, rb_str_new_shared, rb_str_offset,
-    rb_str_strlen, rb_str_sublen, rb_str_to_str, rb_utf8_str_new, rb_utf8_str_new_static,
-    ruby_coderange_type, ruby_rstring_flags, ruby_value_type, VALUE,
+    rb_str_ellipsize, rb_str_new, rb_str_new_frozen, rb_str_new_shared, rb_str_offset, rb_str_plus,
+    rb_str_replace, rb_str_scrub, rb_str_shared_replace, rb_str_split, rb_str_strlen, rb_str_times,
+    rb_str_to_str, rb_str_update, rb_utf8_str_new, rb_utf8_str_new_static, ruby_coderange_type,
+    ruby_rstring_flags, ruby_value_type, VALUE,
 };
 
 use crate::{
@@ -33,6 +35,7 @@ use crate::{
     error::{protect, Error},
     exception,
     object::Object,
+    r_array::RArray,
     try_convert::TryConvert,
     value::{private, NonZeroValue, ReprValue, Value, QNIL},
 };
@@ -509,6 +512,43 @@ impl RString {
         })
     }
 
+    /// Returns a string omitting 'broken' parts of the string according to its
+    /// encoding.
+    ///
+    /// If `replacement` is `Some(RString)` and 'broken' portion will be
+    /// replaced with that string. When `replacement` is `None` an encoding
+    /// specific default will be used.
+    ///
+    /// If `self` is not 'broken' and no replacement was made, returns
+    /// `Ok(None)`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, encoding::RbEncoding, RString};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// // 156 is invalid for utf-8
+    /// let s = RString::enc_new([156, 57, 57], RbEncoding::utf8());
+    /// assert_eq!(s.scrub(None).unwrap().unwrap().to_string().unwrap(), "�99");
+    /// assert_eq!(s.scrub(Some(RString::new("?"))).unwrap().unwrap().to_string().unwrap(), "?99");
+    /// assert_eq!(s.scrub(Some(RString::new(""))).unwrap().unwrap().to_string().unwrap(), "99");
+    pub fn scrub(self, replacement: Option<Self>) -> Result<Option<Self>, Error> {
+        let val = protect(|| unsafe {
+            Value::new(rb_str_scrub(
+                self.as_rb_value(),
+                replacement
+                    .map(|r| r.as_rb_value())
+                    .unwrap_or_else(|| QNIL.as_rb_value()),
+            ))
+        })?;
+        if val.is_nil() {
+            Ok(None)
+        } else {
+            unsafe { Ok(Some(Self(NonZeroValue::new_unchecked(val)))) }
+        }
+    }
+
     /// Returns the cached coderange value that describes how `self` relates to
     /// its encoding.
     ///
@@ -974,6 +1014,135 @@ impl RString {
         }
     }
 
+    /// Replace the contents and encoding of `self` with those of `other`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::RString;
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let a = RString::new("foo");
+    /// let b = RString::new("bar");
+    /// a.replace(b).unwrap();
+    /// assert_eq!(a.to_string().unwrap(), "bar");
+    /// ```
+    pub fn replace(self, other: Self) -> Result<(), Error> {
+        protect(|| unsafe {
+            rb_str_replace(self.as_rb_value(), other.as_rb_value());
+            QNIL
+        })?;
+        Ok(())
+    }
+
+    /// Modify `self` to share the same backing data as `other`.
+    ///
+    /// Both string objects will point at the same underlying data until one is
+    /// modified, and only then will the data be duplicated.
+    ///
+    /// See also [`replace`](RString::replace) and
+    /// [`new_shared`](RString::new_shared).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::RString;
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let a = RString::new("foo");
+    /// let b = RString::new("bar");
+    /// a.shared_replace(b).unwrap();
+    /// assert_eq!(a.to_string().unwrap(), "bar");
+    /// // mutating one doesn't mutate both
+    /// b.cat("foo");
+    /// assert_eq!(a.to_string().unwrap(), "bar");
+    /// ```
+    pub fn shared_replace(self, other: Self) -> Result<(), Error> {
+        protect(|| unsafe {
+            rb_str_shared_replace(self.as_rb_value(), other.as_rb_value());
+            QNIL
+        })?;
+        Ok(())
+    }
+
+    /// Replace a portion of `self` with `other`.
+    ///
+    /// `beg` is the offset of the portion of `self` to replace. Negative
+    /// values offset from the end of the string.
+    /// `len` is the length of the portion of `self` to replace. It does not
+    /// need to match the length of `other`, `self` will be expanded or
+    /// contracted as needed to accomdate `other`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::RString;
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let s = RString::new("foo");
+    /// s.update(-1, 1, RString::new("x")).unwrap();
+    /// assert_eq!(s.to_string().unwrap(), "fox");
+    ///
+    /// let s = RString::new("splat");
+    /// s.update(0, 3, RString::new("b")).unwrap();
+    /// assert_eq!(s.to_string().unwrap(), "bat");
+    ///
+    /// let s = RString::new("corncob");
+    /// s.update(1, 5, RString::new("ra")).unwrap();
+    /// assert_eq!(s.to_string().unwrap(), "crab");
+    /// ```
+    pub fn update(self, beg: isize, len: usize, other: Self) -> Result<(), Error> {
+        protect(|| unsafe {
+            rb_str_update(
+                self.as_rb_value(),
+                beg as c_long,
+                len as c_long,
+                other.as_rb_value(),
+            );
+            QNIL
+        })?;
+        Ok(())
+    }
+
+    /// Create a new string by appending `other` to `self`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::RString;
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let a = RString::new("foo");
+    /// let b = RString::new("bar");
+    /// assert_eq!(a.plus(b).unwrap().to_string().unwrap(), "foobar");
+    /// assert_eq!(a.to_string().unwrap(), "foo");
+    /// assert_eq!(b.to_string().unwrap(), "bar");
+    /// ```
+    pub fn plus(self, other: Self) -> Result<Self, Error> {
+        protect(|| unsafe {
+            Self::from_rb_value_unchecked(rb_str_plus(self.as_rb_value(), other.as_rb_value()))
+        })
+    }
+
+    /// Create a new string by repeating `self` `num` times.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::RString;
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// assert_eq!(RString::new("foo").times(3).to_string().unwrap(), "foofoofoo");
+    /// ```
+    pub fn times(self, num: usize) -> Self {
+        unsafe {
+            Self::from_rb_value_unchecked(rb_str_times(
+                self.as_rb_value(),
+                Value::from(num).as_rb_value(),
+            ))
+        }
+    }
+
     /// Shrink `self` by `len` bytes.
     ///
     /// # Examples
@@ -1126,6 +1295,29 @@ impl RString {
         unsafe {
             RString::from_rb_value_unchecked(rb_str_ellipsize(self.as_rb_value(), len as c_long))
         }
+    }
+
+    /// Split `self` around the given delimiter.
+    ///
+    /// If `delim` is an empty string then `self` is split into characters.
+    /// If `delim` is solely whitespace then `self` is split around whitespace,
+    /// with leading, trailing, and runs of contiguous whitespace ignored.
+    /// Otherwise, `self` is split around `delim`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::RString;
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let s = RString::new(" foo  bar  baz ");
+    /// assert_eq!(s.split("").try_convert::<Vec<String>>().unwrap(), vec![" ", "f", "o", "o", " ", " ", "b", "a", "r", " ", " ", "b", "a", "z", " "]);
+    /// assert_eq!(s.split(" ").try_convert::<Vec<String>>().unwrap(), vec!["foo", "bar", "baz"]);
+    /// assert_eq!(s.split(" bar ").try_convert::<Vec<String>>().unwrap(), vec![" foo ", " baz "]);
+    /// ```
+    pub fn split(self, delim: &str) -> RArray {
+        let delim = CString::new(delim).unwrap();
+        unsafe { RArray::from_rb_value_unchecked(rb_str_split(self.as_rb_value(), delim.as_ptr())) }
     }
 }
 

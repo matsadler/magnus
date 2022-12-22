@@ -11,7 +11,8 @@
 - `typed_data::Hash` and `typed_data::IsEql` traits to help with implementing
   `#hash` and `#eql?` methods for wrapped structs.
 - Lots of `RString` methods: `capacity`, `cmp`, `comparable`, `drop_bytes`,
-  `dump`, `ellipsize`, `offset`.
+  `dump`, `ellipsize`, `offset`, `plus`, `times`, `replace`, `scrub`,
+  `shared_replace`, `split`, `update`.
 
 ### Changed
 - When converting Ruby values to `RArray` (or `Vec<T>`, `[T; 1]`, or `(T,)`),
