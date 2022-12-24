@@ -3,7 +3,6 @@
 ## [Unreleased]
 ### Added
 - `typed_data::Obj<T>`, a Ruby object wrapping a Rust type known to be `T`.
-- `Class::undef_alloc_func`, a function to remove a class' allocator function.
 - `RArray::to_ary`, `RArray::assoc`, `RArray::rassoc`, and `RArray::cmp`.
 - `RHash::with_capacity` new for Ruby 3.2.
 - `RHash::bulk_insert`.
@@ -31,9 +30,20 @@
 - `DataTypeBuilder::free_immediatly` (use `free_immediately`).
 
 ### Fixed
-- `gc::mark_slice` was skipping the last element of the slice.
 
 ### Security
+
+## [0.4.4] - 2022-12-24
+### Added
+- `Class::undef_alloc_func`, a function to remove a class' allocator function.
+
+### Fixed
+- 'wrapped' structs from `#[wrap]` and `#[derive(TypedData)]` macros will not
+  generate `warning: undefining the allocator of T_DATA class` under Ruby 3.2
+
+## [0.4.3] - 2022-12-07
+### Fixed
+- `gc::mark_slice` was skipping the last element of the slice.
 
 ## [0.4.2] - 2022-11-30
 ### Fixed
@@ -230,6 +240,8 @@
   generated bindings otherwise.
 
 [Unreleased]: https://github.com/matsadler/magnus/compare/0.4.2...HEAD
+[0.4.4]: https://github.com/matsadler/magnus/compare/0.4.3...0.4.4
+[0.4.3]: https://github.com/matsadler/magnus/compare/0.4.2...0.4.3
 [0.4.2]: https://github.com/matsadler/magnus/compare/0.4.1...0.4.2
 [0.4.1]: https://github.com/matsadler/magnus/compare/0.4.0...0.4.1
 [0.4.0]: https://github.com/matsadler/magnus/compare/0.3.2...0.4.0
