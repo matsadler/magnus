@@ -8,7 +8,7 @@ jobs:
   test:
     runs-on: ${{ matrix.os }}
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix:
         os:
           - ubuntu-latest
@@ -23,10 +23,10 @@ jobs:
         rustup-toolchain:
           - "1.51"
           - stable
-        # include:
-        #   - os: windows-latest
-        #     ruby-version: mswin
-        #     rustup-toolchain: stable
+        include:
+          - os: windows-latest
+            ruby-version: mswin
+            rustup-toolchain: stable
         exclude:
           - os: macos-latest
             rustup-toolchain: "1.51"
@@ -34,7 +34,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - uses: oxidize-rb/actions/setup-ruby-and-rust@main
+      - uses: oxidize-rb/actions/setup-ruby-and-rust@54cd25fbb69a70a5e80a016e6f6dce4c5f3bf7be
         with:
           rustup-toolchain: ${{ matrix.rustup-toolchain }}
           ruby-version: ${{ matrix.ruby-version }}
