@@ -2,7 +2,6 @@
 
 ## [Unreleased]
 ### Added
-- `Class::undef_alloc_func`, a function to remove a class' allocator function.
 
 ### Changed
 
@@ -13,6 +12,14 @@
 ### Fixed
 
 ### Security
+
+## [0.4.4] - 2022-12-24
+### Added
+- `Class::undef_alloc_func`, a function to remove a class' allocator function.
+
+### Fixed
+- 'wrapped' structs from `#[wrap]` and `#[derive(TypedData)]` macros will not
+  generate `warning: undefining the allocator of T_DATA class` under Ruby 3.2
 
 ## [0.4.3] - 2022-12-07
 ### Fixed
@@ -212,7 +219,8 @@
 - Pre-built bindings for Ruby 2.6 - 3.1 on common platforms, build-time
   generated bindings otherwise.
 
-[Unreleased]: https://github.com/matsadler/magnus/compare/0.4.3...HEAD
+[Unreleased]: https://github.com/matsadler/magnus/compare/0.4.2...HEAD
+[0.4.4]: https://github.com/matsadler/magnus/compare/0.4.3...0.4.4
 [0.4.3]: https://github.com/matsadler/magnus/compare/0.4.2...0.4.3
 [0.4.2]: https://github.com/matsadler/magnus/compare/0.4.1...0.4.2
 [0.4.1]: https://github.com/matsadler/magnus/compare/0.4.0...0.4.1
