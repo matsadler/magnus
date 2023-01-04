@@ -6,7 +6,7 @@ use std::{
     os::raw::{c_char, c_int, c_long, c_uint},
 };
 
-use rb_sys::{rb_enc_reg_new, rb_reg_new_str, ruby_value_type, VALUE};
+use rb_sys::{rb_enc_reg_new, rb_reg_match, rb_reg_new_str, ruby_value_type, VALUE};
 
 use crate::{
     encoding::{EncodingCapable, RbEncoding},
@@ -82,6 +82,27 @@ impl RRegexp {
         protect(|| unsafe {
             Self::from_rb_value_unchecked(rb_reg_new_str(pattern.as_rb_value(), opts.0 as c_int))
         })
+    }
+
+    /// Returns the index (in characters) of the first match in `s`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::RRegexp;
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let regexp = RRegexp::new("x", Default::default()).unwrap();
+    /// assert_eq!(regexp.reg_match("text").unwrap(), Some(2));
+    /// assert_eq!(regexp.reg_match("test").unwrap(), None);
+    /// ```
+    pub fn reg_match<T>(self, s: T) -> Result<Option<usize>, Error>
+    where
+        T: Into<RString>,
+    {
+        let s = s.into();
+        protect(|| unsafe { Value::new(rb_reg_match(self.as_rb_value(), s.as_rb_value())) })
+            .and_then(|v| v.try_convert())
     }
 }
 

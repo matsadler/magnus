@@ -1298,7 +1298,7 @@
 // * `rb_reg_backref_number`:
 // * `rb_reg_init_str`:
 // * `rb_reg_last_match`:
-// * `rb_reg_match`:
+//! * `rb_reg_match`: [`RRegexp::reg_match`].
 // * `rb_reg_match2`:
 // * `rb_reg_match_last`:
 // * `rb_reg_match_post`:
