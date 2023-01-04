@@ -609,7 +609,7 @@
 //!   [`RbEncoding::precise_mbclen`](encoding::RbEncoding::precise_mbclen).
 // * `rb_enc_prev_char`:
 // * `rb_enc_raise`:
-// * `rb_enc_reg_new`:
+//! * `rb_enc_reg_new`: [`RRegexp::new`].
 // * `rb_enc_replicate`:
 // * `rb_enc_right_char_head`:
 // * `rb_enc_set_default_external`:
@@ -1303,8 +1303,8 @@
 // * `rb_reg_match_last`:
 // * `rb_reg_match_post`:
 // * `rb_reg_match_pre`:
-// * `rb_reg_new`:
-// * `rb_reg_new_str`:
+//! * `rb_reg_new`: See [`RRegexp::new`].
+//! * `rb_reg_new_str`: [`RRegexp::new_str`].
 // * `rb_reg_nth_defined`:
 // * `rb_reg_nth_match`:
 // * `rb_reg_options`:
@@ -1830,7 +1830,7 @@ pub mod r_hash;
 mod r_match;
 mod r_object;
 mod r_rational;
-mod r_regexp;
+pub mod r_regexp;
 pub mod r_string;
 pub mod r_struct;
 mod r_typed_data;
