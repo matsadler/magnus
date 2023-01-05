@@ -12,7 +12,7 @@
 - Lots of `RString` methods: `capacity`, `cmp`, `comparable`, `drop_bytes`,
   `dump`, `ellipsize`, `offset`, `plus`, `times`, `replace`, `scrub`,
   `shared_replace`, `split`, `update`.
-- `RRegexp::new`/`new_str`, and `RRegexp::reg_match`.
+- `RRegexp::new`/`new_str`, `RRegexp::reg_match`, and `RRegexp::options`.
 
 ### Changed
 - When converting Ruby values to `RArray` (or `Vec<T>`, `[T; 1]`, or `(T,)`),

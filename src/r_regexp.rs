@@ -6,7 +6,9 @@ use std::{
     os::raw::{c_char, c_int, c_long, c_uint},
 };
 
-use rb_sys::{rb_enc_reg_new, rb_reg_match, rb_reg_new_str, ruby_value_type, VALUE};
+use rb_sys::{
+    rb_enc_reg_new, rb_reg_match, rb_reg_new_str, rb_reg_options, ruby_value_type, VALUE,
+};
 
 use crate::{
     encoding::{EncodingCapable, RbEncoding},
@@ -103,6 +105,26 @@ impl RRegexp {
         let s = s.into();
         protect(|| unsafe { Value::new(rb_reg_match(self.as_rb_value(), s.as_rb_value())) })
             .and_then(|v| v.try_convert())
+    }
+
+    /// Returns the options set for `self`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RRegexp};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let regexp: RRegexp = eval("/x/i").unwrap();
+    /// assert!(regexp.options().is_ignorecase());
+    /// assert!(!regexp.options().is_multiline());
+    ///
+    /// let regexp: RRegexp = eval("/x/m").unwrap();
+    /// assert!(!regexp.options().is_ignorecase());
+    /// assert!(regexp.options().is_multiline());
+    /// ```
+    pub fn options(self) -> Opts {
+        unsafe { Opts(rb_reg_options(self.as_rb_value()) as c_uint) }
     }
 }
 
@@ -286,10 +308,110 @@ impl Opts {
     pub const fn newline_crlf(self) -> Self {
         Self(self.0 | rb_sys::ONIG_OPTION_NEWLINE_CRLF)
     }
+
+    /// Return `true` if the `ignorecase` option is set, `false` otherwise.
+    pub const fn is_ignorecase(self) -> bool {
+        self.0 & rb_sys::ONIG_OPTION_IGNORECASE != 0
+    }
+
+    /// Return `true` if the `extend` option is set, `false` otherwise.
+    pub const fn is_extend(self) -> bool {
+        self.0 & rb_sys::ONIG_OPTION_EXTEND != 0
+    }
+
+    /// Return `true` if the `multiline` option is set, `false` otherwise.
+    pub const fn is_multiline(self) -> bool {
+        self.0 & rb_sys::ONIG_OPTION_MULTILINE != 0
+    }
+
+    /// Return `true` if the `dotall` option is set, `false` otherwise.
+    pub const fn is_dotall(self) -> bool {
+        self.0 & rb_sys::ONIG_OPTION_DOTALL != 0
+    }
+
+    /// Return `true` if the `singleline` option is set, `false` otherwise.
+    pub const fn is_singleline(self) -> bool {
+        self.0 & rb_sys::ONIG_OPTION_SINGLELINE != 0
+    }
+
+    /// Return `true` if the `find_longest` option is set, `false` otherwise.
+    pub const fn is_find_longest(self) -> bool {
+        self.0 & rb_sys::ONIG_OPTION_FIND_LONGEST != 0
+    }
+
+    /// Return `true` if the `find_not_empty` option is set, `false` otherwise.
+    pub const fn is_find_not_empty(self) -> bool {
+        self.0 & rb_sys::ONIG_OPTION_FIND_NOT_EMPTY != 0
+    }
+
+    /// Return `true` if the `negate_singleline` option is set, `false`
+    /// otherwise.
+    pub const fn is_negate_singleline(self) -> bool {
+        self.0 & rb_sys::ONIG_OPTION_NEGATE_SINGLELINE != 0
+    }
+
+    /// Return `true` if the `dont_capture_group` option is set, `false`
+    /// otherwise.
+    pub const fn is_dont_capture_group(self) -> bool {
+        self.0 & rb_sys::ONIG_OPTION_DONT_CAPTURE_GROUP != 0
+    }
+
+    /// Return `true` if the `capture_group` option is set, `false` otherwise.
+    pub const fn is_capture_group(self) -> bool {
+        self.0 & rb_sys::ONIG_OPTION_CAPTURE_GROUP != 0
+    }
+
+    /// Return `true` if the `notbol` option is set, `false` otherwise.
+    pub const fn is_notbol(self) -> bool {
+        self.0 & rb_sys::ONIG_OPTION_NOTBOL != 0
+    }
+
+    /// Return `true` if the `noteol` option is set, `false` otherwise.
+    pub const fn is_noteol(self) -> bool {
+        self.0 & rb_sys::ONIG_OPTION_NOTEOL != 0
+    }
+
+    /// Return `true` if the `notbos` option is set, `false` otherwise.
+    pub const fn is_notbos(self) -> bool {
+        self.0 & rb_sys::ONIG_OPTION_NOTBOS != 0
+    }
+
+    /// Return `true` if the `noteos` option is set, `false` otherwise.
+    pub const fn is_noteos(self) -> bool {
+        self.0 & rb_sys::ONIG_OPTION_NOTEOS != 0
+    }
+
+    /// Return `true` if the `ascii_range` option is set, `false` otherwise.
+    pub const fn is_ascii_range(self) -> bool {
+        self.0 & rb_sys::ONIG_OPTION_ASCII_RANGE != 0
+    }
+
+    /// Return `true` if the `posix_bracket_all_range` option is set, `false`
+    /// otherwise.
+    pub const fn is_posix_bracket_all_range(self) -> bool {
+        self.0 & rb_sys::ONIG_OPTION_POSIX_BRACKET_ALL_RANGE != 0
+    }
+
+    /// Return `true` if the `word_bound_all_range` option is set, `false`
+    /// otherwise.
+    pub const fn is_word_bound_all_range(self) -> bool {
+        self.0 & rb_sys::ONIG_OPTION_WORD_BOUND_ALL_RANGE != 0
+    }
+
+    /// Return `true` if the `newline_crlf` option is set, `false` otherwise.
+    pub const fn is_newline_crlf(self) -> bool {
+        self.0 & rb_sys::ONIG_OPTION_NEWLINE_CRLF != 0
+    }
 }
 
 impl Default for Opts {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+impl Into<i32> for Opts {
+    fn into(self) -> i32 {
+        self.0 as i32
     }
 }

@@ -1307,7 +1307,7 @@
 //! * `rb_reg_new_str`: [`RRegexp::new_str`].
 // * `rb_reg_nth_defined`:
 // * `rb_reg_nth_match`:
-// * `rb_reg_options`:
+//! * `rb_reg_options`: [`RRegexp::options`].
 // * `rb_reg_prepare_re`:
 // * `rb_reg_quote`:
 // * `rb_reg_regcomp`:
