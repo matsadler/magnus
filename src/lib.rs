@@ -1801,6 +1801,9 @@
 #![cfg_attr(docsrs, feature(doc_cfg))]
 #![warn(missing_docs)]
 
+#[macro_use]
+mod ruby_handle;
+
 mod binding;
 pub mod block;
 pub mod class;
@@ -1888,7 +1891,9 @@ pub use crate::{
     typed_data::{DataType, DataTypeFunctions, TypedData},
     value::{Fixnum, StaticSymbol, Value, QFALSE, QNIL, QTRUE},
 };
-use crate::{error::protect, method::Method, value::private::ReprValue as _};
+use crate::{
+    error::protect, method::Method, ruby_handle::RubyHandle, value::private::ReprValue as _,
+};
 
 /// Utility to simplify initialising a static with [`std::sync::Once`].
 ///
@@ -1919,75 +1924,210 @@ macro_rules! memoize {
     }};
 }
 
+impl RubyHandle {
+    pub fn define_class(&self, name: &str, superclass: RClass) -> Result<RClass, Error> {
+        debug_assert_value!(superclass);
+        let name = CString::new(name).unwrap();
+        let superclass = superclass.as_rb_value();
+        protect(|| unsafe {
+            RClass::from_rb_value_unchecked(rb_define_class(name.as_ptr(), superclass))
+        })
+    }
+
+    pub fn define_module(&self, name: &str) -> Result<RModule, Error> {
+        let name = CString::new(name).unwrap();
+        protect(|| unsafe { RModule::from_rb_value_unchecked(rb_define_module(name.as_ptr())) })
+    }
+
+    pub fn define_error(
+        &self,
+        name: &str,
+        superclass: ExceptionClass,
+    ) -> Result<ExceptionClass, Error> {
+        define_class(name, superclass.as_r_class())
+            .map(|c| unsafe { ExceptionClass::from_value_unchecked(*c) })
+    }
+
+    pub fn define_variable<T: Into<Value>>(
+        &self,
+        name: &str,
+        initial: T,
+    ) -> Result<*mut Value, Error> {
+        let initial = initial.into();
+        debug_assert_value!(initial);
+        let name = CString::new(name).unwrap();
+        let ptr = Box::into_raw(Box::new(initial));
+        unsafe {
+            rb_define_variable(name.as_ptr(), ptr as *mut VALUE);
+        }
+        Ok(ptr)
+    }
+
+    pub fn define_global_const<T>(&self, name: &str, value: T) -> Result<(), Error>
+    where
+        T: Into<Value>,
+    {
+        let value = value.into();
+        let name = CString::new(name).unwrap();
+        protect(|| {
+            unsafe {
+                rb_define_global_const(name.as_ptr(), value.as_rb_value());
+            }
+            QNIL
+        })?;
+        Ok(())
+    }
+
+    pub fn define_global_function<M>(&self, name: &str, func: M)
+    where
+        M: Method,
+    {
+        let name = CString::new(name).unwrap();
+        unsafe {
+            rb_define_global_function(name.as_ptr(), transmute(func.as_ptr()), M::arity().into());
+        }
+    }
+
+    pub fn current_receiver<T>(&self) -> Result<T, Error>
+    where
+        T: TryConvert,
+    {
+        protect(|| unsafe { Value::new(rb_current_receiver()) }).and_then(|v| v.try_convert())
+    }
+
+    pub fn call_super<A, T>(&self, args: A) -> Result<T, Error>
+    where
+        A: ArgList,
+        T: TryConvert,
+    {
+        unsafe {
+            let args = args.into_arg_list();
+            let slice = args.as_ref();
+            protect(|| {
+                Value::new(rb_call_super(
+                    slice.len() as c_int,
+                    slice.as_ptr() as *const VALUE,
+                ))
+            })
+            .and_then(|v| v.try_convert())
+        }
+    }
+
+    #[cfg(ruby_gte_2_7)]
+    pub fn require<T>(&self, feature: T) -> Result<bool, Error>
+    where
+        T: Into<RString>,
+    {
+        let feature = feature.into();
+        protect(|| unsafe { Value::new(rb_require_string(feature.as_rb_value())) })
+            .and_then(|v| v.try_convert())
+    }
+
+    #[cfg(ruby_lt_2_7)]
+    pub fn require(&self, feature: &str) -> Result<bool, Error> {
+        let feature = CString::new(feature).unwrap();
+        protect(|| unsafe { Value::new(rb_require(feature.as_ptr())) })
+            .and_then(|v| v.try_convert())
+    }
+
+    pub fn eval<T>(&self, s: &str) -> Result<T, Error>
+    where
+        T: TryConvert,
+    {
+        let mut state = 0;
+        // safe ffi to Ruby, captures raised errors (+ brake, throw, etc) as state
+        let result = unsafe {
+            let s = CString::new(s)
+                .map_err(|e| Error::new(exception::script_error(), e.to_string()))?;
+            rb_eval_string_protect(s.as_c_str().as_ptr(), &mut state as *mut _)
+        };
+
+        match state {
+            // Tag::None
+            0 => Value::new(result).try_convert(),
+            // Tag::Raise
+            6 => unsafe {
+                let ex = Exception::from_rb_value_unchecked(rb_errinfo());
+                rb_set_errinfo(QNIL.as_rb_value());
+                Err(Error::Exception(ex))
+            },
+            other => Err(Error::Jump(unsafe { transmute(other) })),
+        }
+    }
+}
+
 /// Define a class in the root scope.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 pub fn define_class(name: &str, superclass: RClass) -> Result<RClass, Error> {
-    debug_assert_value!(superclass);
-    let name = CString::new(name).unwrap();
-    let superclass = superclass.as_rb_value();
-    protect(|| unsafe {
-        RClass::from_rb_value_unchecked(rb_define_class(name.as_ptr(), superclass))
-    })
+    get_ruby!().define_class(name, superclass)
 }
 
 /// Define a module in the root scope.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 pub fn define_module(name: &str) -> Result<RModule, Error> {
-    let name = CString::new(name).unwrap();
-    protect(|| unsafe { RModule::from_rb_value_unchecked(rb_define_module(name.as_ptr())) })
+    get_ruby!().define_module(name)
 }
 
 /// Define an exception class in the root scope.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 pub fn define_error(name: &str, superclass: ExceptionClass) -> Result<ExceptionClass, Error> {
-    define_class(name, superclass.as_r_class())
-        .map(|c| unsafe { ExceptionClass::from_value_unchecked(*c) })
+    get_ruby!().define_error(name, superclass)
 }
 
 /// Define a global variable.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 pub fn define_variable<T: Into<Value>>(name: &str, initial: T) -> Result<*mut Value, Error> {
-    let initial = initial.into();
-    debug_assert_value!(initial);
-    let name = CString::new(name).unwrap();
-    let ptr = Box::into_raw(Box::new(initial));
-    unsafe {
-        rb_define_variable(name.as_ptr(), ptr as *mut VALUE);
-    }
-    Ok(ptr)
+    get_ruby!().define_variable(name, initial)
 }
 
 /// Define a global constant.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 pub fn define_global_const<T>(name: &str, value: T) -> Result<(), Error>
 where
     T: Into<Value>,
 {
-    let value = value.into();
-    let name = CString::new(name).unwrap();
-    protect(|| {
-        unsafe {
-            rb_define_global_const(name.as_ptr(), value.as_rb_value());
-        }
-        QNIL
-    })?;
-    Ok(())
+    get_ruby!().define_global_const(name, value)
 }
 
 /// Define a method in the root scope.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 pub fn define_global_function<M>(name: &str, func: M)
 where
     M: Method,
 {
-    let name = CString::new(name).unwrap();
-    unsafe {
-        rb_define_global_function(name.as_ptr(), transmute(func.as_ptr()), M::arity().into());
-    }
+    get_ruby!().define_global_function(name, func)
 }
 
 /// Return the Ruby `self` of the current method context.
 ///
 /// Returns `Err` if called outside a method context or the conversion fails.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 pub fn current_receiver<T>() -> Result<T, Error>
 where
     T: TryConvert,
 {
-    protect(|| unsafe { Value::new(rb_current_receiver()) }).and_then(|v| v.try_convert())
+    get_ruby!().current_receiver()
 }
 
 /// Call the super method of the current method context.
@@ -1995,25 +2135,23 @@ where
 /// Returns `Ok(T)` if the super method exists and returns without error, and
 /// the return value converts to a `T`, or returns `Err` if there is no super
 /// method, the super method raises or the conversion fails.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 pub fn call_super<A, T>(args: A) -> Result<T, Error>
 where
     A: ArgList,
     T: TryConvert,
 {
-    unsafe {
-        let args = args.into_arg_list();
-        let slice = args.as_ref();
-        protect(|| {
-            Value::new(rb_call_super(
-                slice.len() as c_int,
-                slice.as_ptr() as *const VALUE,
-            ))
-        })
-        .and_then(|v| v.try_convert())
-    }
+    get_ruby!().call_super(args)
 }
 
 /// Finds and loads the given feature if not already loaded.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 ///
 /// # Examples
 ///
@@ -2028,12 +2166,14 @@ pub fn require<T>(feature: T) -> Result<bool, Error>
 where
     T: Into<RString>,
 {
-    let feature = feature.into();
-    protect(|| unsafe { Value::new(rb_require_string(feature.as_rb_value())) })
-        .and_then(|v| v.try_convert())
+    get_ruby!().require(feature)
 }
 
 /// Finds and loads the given feature if not already loaded.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 ///
 /// # Examples
 ///
@@ -2045,8 +2185,7 @@ where
 /// ```
 #[cfg(ruby_lt_2_7)]
 pub fn require(feature: &str) -> Result<bool, Error> {
-    let feature = CString::new(feature).unwrap();
-    protect(|| unsafe { Value::new(rb_require(feature.as_ptr())) }).and_then(|v| v.try_convert())
+    get_ruby!().require(feature)
 }
 
 /// Evaluate a string of Ruby code, converting the result to a `T`.
@@ -2059,6 +2198,10 @@ pub fn require(feature: &str) -> Result<bool, Error> {
 /// Errors if `s` contains a null byte, the conversion fails, or on an uncaught
 /// Ruby exception.
 ///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
+///
 /// # Examples
 ///
 /// ```
@@ -2070,23 +2213,5 @@ pub fn eval<T>(s: &str) -> Result<T, Error>
 where
     T: TryConvert,
 {
-    let mut state = 0;
-    // safe ffi to Ruby, captures raised errors (+ brake, throw, etc) as state
-    let result = unsafe {
-        let s =
-            CString::new(s).map_err(|e| Error::new(exception::script_error(), e.to_string()))?;
-        rb_eval_string_protect(s.as_c_str().as_ptr(), &mut state as *mut _)
-    };
-
-    match state {
-        // Tag::None
-        0 => Value::new(result).try_convert(),
-        // Tag::Raise
-        6 => unsafe {
-            let ex = Exception::from_rb_value_unchecked(rb_errinfo());
-            rb_set_errinfo(QNIL.as_rb_value());
-            Err(Error::Exception(ex))
-        },
-        other => Err(Error::Jump(unsafe { transmute(other) })),
-    }
+    get_ruby!().eval(s)
 }
