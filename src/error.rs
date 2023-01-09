@@ -12,6 +12,7 @@ use crate::{
     exception::{self, Exception, ExceptionClass},
     module::Module,
     r_string::RString,
+    ruby_handle::RubyHandle,
     value::{ReprValue, Value, QNIL},
 };
 
@@ -37,6 +38,10 @@ impl Error {
     }
 
     /// Create a new `RuntimeError` with `msg`.
+    #[deprecated(
+        since = "0.5.0",
+        note = "Please use `Error::new(exception::runtime_error(), msg)` instead"
+    )]
     pub fn runtime_error<T>(msg: T) -> Self
     where
         T: Into<Cow<'static, str>>,
@@ -313,10 +318,20 @@ pub fn bug(s: &str) -> ! {
     unreachable!()
 }
 
+impl RubyHandle {
+    pub fn warning(&self, s: &str) {
+        let s = CString::new(s).unwrap();
+        unsafe { rb_warning(s.as_ptr()) };
+    }
+}
+
 /// Outputs `s` to Ruby's stderr if Ruby is configured to output warnings.
 ///
 /// Otherwise does nothing.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 pub fn warning(s: &str) {
-    let s = CString::new(s).unwrap();
-    unsafe { rb_warning(s.as_ptr()) };
+    get_ruby!().warning(s)
 }

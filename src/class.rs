@@ -19,6 +19,7 @@ use crate::{
     exception,
     module::Module,
     object::Object,
+    ruby_handle::RubyHandle,
     try_convert::{ArgList, TryConvert},
     value::{private, NonZeroValue, ReprValue, Value},
 };
@@ -340,214 +341,533 @@ impl Class for RClass {
     }
 }
 
+impl RubyHandle {
+    #[inline]
+    pub fn class_array(&self) -> RClass {
+        unsafe { RClass::from_rb_value_unchecked(rb_cArray) }
+    }
+
+    #[inline]
+    pub fn class_basic_object(&self) -> RClass {
+        unsafe { RClass::from_rb_value_unchecked(rb_cBasicObject) }
+    }
+
+    #[inline]
+    pub fn class_binding(&self) -> RClass {
+        unsafe { RClass::from_rb_value_unchecked(rb_cBinding) }
+    }
+
+    #[inline]
+    pub fn class_class(&self) -> RClass {
+        unsafe { RClass::from_rb_value_unchecked(rb_cClass) }
+    }
+
+    #[inline]
+    pub fn class_complex(&self) -> RClass {
+        unsafe { RClass::from_rb_value_unchecked(rb_cComplex) }
+    }
+
+    #[inline]
+    pub fn class_dir(&self) -> RClass {
+        unsafe { RClass::from_rb_value_unchecked(rb_cDir) }
+    }
+
+    #[inline]
+    pub fn class_encoding(&self) -> RClass {
+        unsafe { RClass::from_rb_value_unchecked(rb_cEncoding) }
+    }
+
+    #[inline]
+    pub fn class_enumerator(&self) -> RClass {
+        unsafe { RClass::from_rb_value_unchecked(rb_cEnumerator) }
+    }
+
+    #[inline]
+    pub fn class_false_class(&self) -> RClass {
+        unsafe { RClass::from_rb_value_unchecked(rb_cFalseClass) }
+    }
+
+    #[inline]
+    pub fn class_file(&self) -> RClass {
+        unsafe { RClass::from_rb_value_unchecked(rb_cFile) }
+    }
+
+    #[inline]
+    pub fn class_float(&self) -> RClass {
+        unsafe { RClass::from_rb_value_unchecked(rb_cFloat) }
+    }
+
+    #[inline]
+    pub fn class_hash(&self) -> RClass {
+        unsafe { RClass::from_rb_value_unchecked(rb_cHash) }
+    }
+
+    #[inline]
+    pub fn class_io(&self) -> RClass {
+        unsafe { RClass::from_rb_value_unchecked(rb_cIO) }
+    }
+
+    #[inline]
+    pub fn class_integer(&self) -> RClass {
+        unsafe { RClass::from_rb_value_unchecked(rb_cInteger) }
+    }
+
+    #[inline]
+    pub fn class_match_class(&self) -> RClass {
+        unsafe { RClass::from_rb_value_unchecked(rb_cMatch) }
+    }
+
+    #[inline]
+    pub fn class_method(&self) -> RClass {
+        unsafe { RClass::from_rb_value_unchecked(rb_cMethod) }
+    }
+
+    #[inline]
+    pub fn class_module(&self) -> RClass {
+        unsafe { RClass::from_rb_value_unchecked(rb_cModule) }
+    }
+
+    #[inline]
+    pub fn class_name_error_mesg(&self) -> RClass {
+        unsafe { RClass::from_rb_value_unchecked(rb_cNameErrorMesg) }
+    }
+
+    #[inline]
+    pub fn class_nil_class(&self) -> RClass {
+        unsafe { RClass::from_rb_value_unchecked(rb_cNilClass) }
+    }
+
+    #[inline]
+    pub fn class_numeric(&self) -> RClass {
+        unsafe { RClass::from_rb_value_unchecked(rb_cNumeric) }
+    }
+
+    #[inline]
+    pub fn class_object(&self) -> RClass {
+        unsafe { RClass::from_rb_value_unchecked(rb_cObject) }
+    }
+
+    #[inline]
+    pub fn class_proc(&self) -> RClass {
+        unsafe { RClass::from_rb_value_unchecked(rb_cProc) }
+    }
+
+    #[inline]
+    pub fn class_random(&self) -> RClass {
+        unsafe { RClass::from_rb_value_unchecked(rb_cRandom) }
+    }
+
+    #[inline]
+    pub fn class_range(&self) -> RClass {
+        unsafe { RClass::from_rb_value_unchecked(rb_cRange) }
+    }
+
+    #[inline]
+    pub fn class_rational(&self) -> RClass {
+        unsafe { RClass::from_rb_value_unchecked(rb_cRational) }
+    }
+
+    #[cfg(any(ruby_gte_3_1, docsrs))]
+    #[cfg_attr(docsrs, doc(cfg(ruby_gte_3_1)))]
+    #[inline]
+    pub fn class_refinement(&self) -> RClass {
+        unsafe { RClass::from_rb_value_unchecked(rb_cRefinement) }
+    }
+
+    #[inline]
+    pub fn class_regexp(&self) -> RClass {
+        unsafe { RClass::from_rb_value_unchecked(rb_cRegexp) }
+    }
+
+    #[inline]
+    pub fn class_stat(&self) -> RClass {
+        unsafe { RClass::from_rb_value_unchecked(rb_cStat) }
+    }
+
+    #[inline]
+    pub fn class_string(&self) -> RClass {
+        unsafe { RClass::from_rb_value_unchecked(rb_cString) }
+    }
+
+    #[inline]
+    pub fn class_struct_class(&self) -> RClass {
+        unsafe { RClass::from_rb_value_unchecked(rb_cStruct) }
+    }
+
+    #[inline]
+    pub fn class_symbol(&self) -> RClass {
+        unsafe { RClass::from_rb_value_unchecked(rb_cSymbol) }
+    }
+
+    #[inline]
+    pub fn class_thread(&self) -> RClass {
+        unsafe { RClass::from_rb_value_unchecked(rb_cThread) }
+    }
+
+    #[inline]
+    pub fn class_time(&self) -> RClass {
+        unsafe { RClass::from_rb_value_unchecked(rb_cTime) }
+    }
+
+    #[inline]
+    pub fn class_true_class(&self) -> RClass {
+        unsafe { RClass::from_rb_value_unchecked(rb_cTrueClass) }
+    }
+
+    #[inline]
+    pub fn class_unbound_method(&self) -> RClass {
+        unsafe { RClass::from_rb_value_unchecked(rb_cUnboundMethod) }
+    }
+}
+
 /// Return Ruby's `Array` class.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn array() -> RClass {
-    unsafe { RClass::from_rb_value_unchecked(rb_cArray) }
+    get_ruby!().class_array()
 }
 
 /// Return Ruby's `BasicObject` class.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn basic_object() -> RClass {
-    unsafe { RClass::from_rb_value_unchecked(rb_cBasicObject) }
+    get_ruby!().class_basic_object()
 }
 
 /// Return Ruby's `Binding` class.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn binding() -> RClass {
-    unsafe { RClass::from_rb_value_unchecked(rb_cBinding) }
+    get_ruby!().class_binding()
 }
 
 /// Return Ruby's `Class` class.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn class() -> RClass {
-    unsafe { RClass::from_rb_value_unchecked(rb_cClass) }
+    get_ruby!().class_class()
 }
 
 /// Return Ruby's `Complex` class.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn complex() -> RClass {
-    unsafe { RClass::from_rb_value_unchecked(rb_cComplex) }
+    get_ruby!().class_complex()
 }
 
 /// Return Ruby's `Dir` class.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn dir() -> RClass {
-    unsafe { RClass::from_rb_value_unchecked(rb_cDir) }
+    get_ruby!().class_dir()
 }
 
 /// Return Ruby's `Encoding` class.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn encoding() -> RClass {
-    unsafe { RClass::from_rb_value_unchecked(rb_cEncoding) }
+    get_ruby!().class_encoding()
 }
 
 /// Return Ruby's `Enumerator` class.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn enumerator() -> RClass {
-    unsafe { RClass::from_rb_value_unchecked(rb_cEnumerator) }
+    get_ruby!().class_enumerator()
 }
 
 /// Return Ruby's `FalseClass` class.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn false_class() -> RClass {
-    unsafe { RClass::from_rb_value_unchecked(rb_cFalseClass) }
+    get_ruby!().class_false_class()
 }
 
 /// Return Ruby's `File` class.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn file() -> RClass {
-    unsafe { RClass::from_rb_value_unchecked(rb_cFile) }
+    get_ruby!().class_file()
 }
 
 /// Return Ruby's `Float` class.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn float() -> RClass {
-    unsafe { RClass::from_rb_value_unchecked(rb_cFloat) }
+    get_ruby!().class_float()
 }
 
 /// Return Ruby's `Hash` class.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn hash() -> RClass {
-    unsafe { RClass::from_rb_value_unchecked(rb_cHash) }
+    get_ruby!().class_hash()
 }
 
 /// Return Ruby's `IO` class.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn io() -> RClass {
-    unsafe { RClass::from_rb_value_unchecked(rb_cIO) }
+    get_ruby!().class_io()
 }
 
 /// Return Ruby's `Integer` class.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn integer() -> RClass {
-    unsafe { RClass::from_rb_value_unchecked(rb_cInteger) }
+    get_ruby!().class_integer()
 }
 
 /// Return Ruby's `MatchData` class.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn match_class() -> RClass {
-    unsafe { RClass::from_rb_value_unchecked(rb_cMatch) }
+    get_ruby!().class_match_class()
 }
 
 /// Return Ruby's `Method` class.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn method() -> RClass {
-    unsafe { RClass::from_rb_value_unchecked(rb_cMethod) }
+    get_ruby!().class_method()
 }
 
 /// Return Ruby's `Module` class.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn module() -> RClass {
-    unsafe { RClass::from_rb_value_unchecked(rb_cModule) }
+    get_ruby!().class_module()
 }
 
 /// Return Ruby's `NameError::Message` class.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn name_error_mesg() -> RClass {
-    unsafe { RClass::from_rb_value_unchecked(rb_cNameErrorMesg) }
+    get_ruby!().class_name_error_mesg()
 }
 
 /// Return Ruby's `NilClass` class.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn nil_class() -> RClass {
-    unsafe { RClass::from_rb_value_unchecked(rb_cNilClass) }
+    get_ruby!().class_nil_class()
 }
 
 /// Return Ruby's `Numeric` class.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn numeric() -> RClass {
-    unsafe { RClass::from_rb_value_unchecked(rb_cNumeric) }
+    get_ruby!().class_numeric()
 }
 
 /// Return Ruby's `Object` class.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn object() -> RClass {
-    unsafe { RClass::from_rb_value_unchecked(rb_cObject) }
+    get_ruby!().class_object()
 }
 
 /// Return Ruby's `Proc` class.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn proc() -> RClass {
-    unsafe { RClass::from_rb_value_unchecked(rb_cProc) }
+    get_ruby!().class_proc()
 }
 
 /// Return Ruby's `Random` class.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn random() -> RClass {
-    unsafe { RClass::from_rb_value_unchecked(rb_cRandom) }
+    get_ruby!().class_random()
 }
 
 /// Return Ruby's `Range` class.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn range() -> RClass {
-    unsafe { RClass::from_rb_value_unchecked(rb_cRange) }
+    get_ruby!().class_range()
 }
 
 /// Return Ruby's `Rational` class.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn rational() -> RClass {
-    unsafe { RClass::from_rb_value_unchecked(rb_cRational) }
+    get_ruby!().class_rational()
 }
 
 /// Return Ruby's `Refinement` class.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[cfg(any(ruby_gte_3_1, docsrs))]
 #[cfg_attr(docsrs, doc(cfg(ruby_gte_3_1)))]
 #[inline]
 pub fn refinement() -> RClass {
-    unsafe { RClass::from_rb_value_unchecked(rb_cRefinement) }
+    get_ruby!().class_refinement()
 }
 
 /// Return Ruby's `Regexp` class.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn regexp() -> RClass {
-    unsafe { RClass::from_rb_value_unchecked(rb_cRegexp) }
+    get_ruby!().class_regexp()
 }
 
 /// Return Ruby's `File::Stat` class.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn stat() -> RClass {
-    unsafe { RClass::from_rb_value_unchecked(rb_cStat) }
+    get_ruby!().class_stat()
 }
 
 /// Return Ruby's `String` class.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn string() -> RClass {
-    unsafe { RClass::from_rb_value_unchecked(rb_cString) }
+    get_ruby!().class_string()
 }
 
 /// Return Ruby's `Struct` class.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn struct_class() -> RClass {
-    unsafe { RClass::from_rb_value_unchecked(rb_cStruct) }
+    get_ruby!().class_struct_class()
 }
 
 /// Return Ruby's `Symbol` class.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn symbol() -> RClass {
-    unsafe { RClass::from_rb_value_unchecked(rb_cSymbol) }
+    get_ruby!().class_symbol()
 }
 
 /// Return Ruby's `Thread` class.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn thread() -> RClass {
-    unsafe { RClass::from_rb_value_unchecked(rb_cThread) }
+    get_ruby!().class_thread()
 }
 
 /// Return Ruby's `Time` class.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn time() -> RClass {
-    unsafe { RClass::from_rb_value_unchecked(rb_cTime) }
+    get_ruby!().class_time()
 }
 
 /// Return Ruby's `TrueClass` class.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn true_class() -> RClass {
-    unsafe { RClass::from_rb_value_unchecked(rb_cTrueClass) }
+    get_ruby!().class_true_class()
 }
 
 /// Return Ruby's `UnboundMethod` class.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn unbound_method() -> RClass {
-    unsafe { RClass::from_rb_value_unchecked(rb_cUnboundMethod) }
+    get_ruby!().class_unbound_method()
 }

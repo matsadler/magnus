@@ -14,60 +14,14 @@ use crate::{
     method::{Block, BlockReturn},
     object::Object,
     r_array::RArray,
+    ruby_handle::RubyHandle,
     try_convert::{ArgList, RArrayArgList, TryConvert},
     typed_data::{DataType, DataTypeFunctions},
     value::{private, NonZeroValue, ReprValue, Value},
 };
 
-/// Wrapper type for a Value known to be an instance of Ruby’s Proc class.
-///
-/// All [`Value`] methods should be available on this type through [`Deref`],
-/// but some may be missed by this documentation.
-#[derive(Clone, Copy)]
-#[repr(transparent)]
-pub struct Proc(NonZeroValue);
-
-impl Proc {
-    /// Return `Some(Proc)` if `val` is a `Proc`, `None` otherwise.
-    #[inline]
-    pub fn from_value(val: Value) -> Option<Self> {
-        unsafe {
-            Value::new(rb_obj_is_proc(val.as_rb_value()))
-                .to_bool()
-                .then(|| Self(NonZeroValue::new_unchecked(val)))
-        }
-    }
-
-    #[inline]
-    pub(crate) unsafe fn from_rb_value_unchecked(val: VALUE) -> Self {
-        Self(NonZeroValue::new_unchecked(Value::new(val)))
-    }
-
-    /// Create a new `Proc`.
-    ///
-    /// As `block` is a function pointer, only functions and closures that do
-    /// not capture any variables are permitted. For more flexibility (at the
-    /// cost of allocating) see [`from_fn`](Proc::from_fn).
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use magnus::{block::Proc, eval};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
-    ///
-    /// let proc = Proc::new(|args, _block| {
-    ///     let acc = args.get(0).unwrap().try_convert::<i64>()?;
-    ///     let i = args.get(1).unwrap().try_convert::<i64>()?;
-    ///     Ok(acc + i)
-    /// });
-    ///
-    /// let res: bool = eval!("proc.call(1, 2) == 3", proc).unwrap();
-    /// assert!(res);
-    ///
-    /// let res: bool = eval!("[1, 2, 3, 4, 5].inject(&proc) == 15", proc).unwrap();
-    /// assert!(res);
-    /// ```
-    pub fn new<R>(block: fn(&[Value], Option<Proc>) -> R) -> Self
+impl RubyHandle {
+    pub fn proc_new<R>(&self, block: fn(&[Value], Option<Proc>) -> R) -> Proc
     where
         R: BlockReturn,
     {
@@ -98,30 +52,7 @@ impl Proc {
         }
     }
 
-    /// Create a new `Proc`.
-    ///
-    /// See also [`Proc::new`], which is more efficient when `block` is a
-    /// function or closure that does not capture any variables.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use magnus::{block::Proc, eval};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
-    ///
-    /// let proc = Proc::from_fn(|args, _block| {
-    ///     let acc = args.get(0).unwrap().try_convert::<i64>()?;
-    ///     let i = args.get(1).unwrap().try_convert::<i64>()?;
-    ///     Ok(acc + i)
-    /// });
-    ///
-    /// let res: bool = eval!("proc.call(1, 2) == 3", proc).unwrap();
-    /// assert!(res);
-    ///
-    /// let res: bool = eval!("[1, 2, 3, 4, 5].inject(&proc) == 15", proc).unwrap();
-    /// assert!(res);
-    /// ```
-    pub fn from_fn<F, R>(block: F) -> Self
+    pub fn proc_from_fn<F, R>(&self, block: F) -> Proc
     where
         F: 'static + Send + FnMut(&[Value], Option<Proc>) -> R,
         R: BlockReturn,
@@ -155,6 +86,101 @@ impl Proc {
         // ivar without @ prefix is invisible from Ruby
         proc.ivar_set("__rust_closure", keepalive).unwrap();
         proc
+    }
+}
+
+/// Wrapper type for a Value known to be an instance of Ruby’s Proc class.
+///
+/// All [`Value`] methods should be available on this type through [`Deref`],
+/// but some may be missed by this documentation.
+#[derive(Clone, Copy)]
+#[repr(transparent)]
+pub struct Proc(NonZeroValue);
+
+impl Proc {
+    /// Return `Some(Proc)` if `val` is a `Proc`, `None` otherwise.
+    #[inline]
+    pub fn from_value(val: Value) -> Option<Self> {
+        unsafe {
+            Value::new(rb_obj_is_proc(val.as_rb_value()))
+                .to_bool()
+                .then(|| Self(NonZeroValue::new_unchecked(val)))
+        }
+    }
+
+    #[inline]
+    pub(crate) unsafe fn from_rb_value_unchecked(val: VALUE) -> Self {
+        Self(NonZeroValue::new_unchecked(Value::new(val)))
+    }
+
+    /// Create a new `Proc`.
+    ///
+    /// As `block` is a function pointer, only functions and closures that do
+    /// not capture any variables are permitted. For more flexibility (at the
+    /// cost of allocating) see [`from_fn`](Proc::from_fn).
+    ///
+    /// # Panics
+    ///
+    /// Panics if called from a non-Ruby thread.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{block::Proc, eval};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let proc = Proc::new(|args, _block| {
+    ///     let acc = args.get(0).unwrap().try_convert::<i64>()?;
+    ///     let i = args.get(1).unwrap().try_convert::<i64>()?;
+    ///     Ok(acc + i)
+    /// });
+    ///
+    /// let res: bool = eval!("proc.call(1, 2) == 3", proc).unwrap();
+    /// assert!(res);
+    ///
+    /// let res: bool = eval!("[1, 2, 3, 4, 5].inject(&proc) == 15", proc).unwrap();
+    /// assert!(res);
+    /// ```
+    pub fn new<R>(block: fn(&[Value], Option<Proc>) -> R) -> Self
+    where
+        R: BlockReturn,
+    {
+        get_ruby!().proc_new(block)
+    }
+
+    /// Create a new `Proc`.
+    ///
+    /// See also [`Proc::new`], which is more efficient when `block` is a
+    /// function or closure that does not capture any variables.
+    ///
+    /// # Panics
+    ///
+    /// Panics if called from a non-Ruby thread.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{block::Proc, eval};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let proc = Proc::from_fn(|args, _block| {
+    ///     let acc = args.get(0).unwrap().try_convert::<i64>()?;
+    ///     let i = args.get(1).unwrap().try_convert::<i64>()?;
+    ///     Ok(acc + i)
+    /// });
+    ///
+    /// let res: bool = eval!("proc.call(1, 2) == 3", proc).unwrap();
+    /// assert!(res);
+    ///
+    /// let res: bool = eval!("[1, 2, 3, 4, 5].inject(&proc) == 15", proc).unwrap();
+    /// assert!(res);
+    /// ```
+    pub fn from_fn<F, R>(block: F) -> Self
+    where
+        F: 'static + Send + FnMut(&[Value], Option<Proc>) -> R,
+        R: BlockReturn,
+    {
+        get_ruby!().proc_from_fn(block)
     }
 
     /// Call the proc with `args`.
@@ -325,15 +351,69 @@ where
     (ptr, value)
 }
 
+impl RubyHandle {
+    pub fn block_given(&self) -> bool {
+        unsafe { rb_block_given_p() != 0 }
+    }
+
+    pub fn block_proc(&self) -> Result<Proc, Error> {
+        let val = unsafe { protect(|| Value::new(rb_block_proc()))? };
+        Ok(Proc::from_value(val).unwrap())
+    }
+
+    pub fn yield_value<T, U>(&self, val: T) -> Result<U, Error>
+    where
+        T: Into<Value>,
+        U: TryConvert,
+    {
+        let val = val.into();
+        unsafe { protect(|| Value::new(rb_yield(val.as_rb_value()))).and_then(|v| v.try_convert()) }
+    }
+
+    pub fn yield_values<T, U>(&self, vals: T) -> Result<U, Error>
+    where
+        T: ArgList,
+        U: TryConvert,
+    {
+        let vals = vals.into_arg_list();
+        let slice = vals.as_ref();
+        unsafe {
+            protect(|| {
+                Value::new(rb_yield_values2(
+                    slice.len() as c_int,
+                    slice.as_ptr() as *const VALUE,
+                ))
+            })
+            .and_then(|v| v.try_convert())
+        }
+    }
+
+    pub fn yield_splat<T>(&self, vals: RArray) -> Result<T, Error>
+    where
+        T: TryConvert,
+    {
+        unsafe {
+            protect(|| Value::new(rb_yield_splat(vals.as_rb_value()))).and_then(|v| v.try_convert())
+        }
+    }
+}
+
 /// Returns whether a Ruby block has been supplied to the current method.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 pub fn block_given() -> bool {
-    unsafe { rb_block_given_p() != 0 }
+    get_ruby!().block_given()
 }
 
 /// Returns the block given to the current method as a [`Proc`] instance.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 pub fn block_proc() -> Result<Proc, Error> {
-    let val = unsafe { protect(|| Value::new(rb_block_proc()))? };
-    Ok(Proc::from_value(val).unwrap())
+    get_ruby!().block_proc()
 }
 
 /// Yields a value to the block given to the current method.
@@ -341,13 +421,16 @@ pub fn block_proc() -> Result<Proc, Error> {
 /// **Note:** A method using `yield_value` converted to an Enumerator with
 /// `to_enum`/[`Value::enumeratorize`] will result in a non-functional
 /// Enumerator. See [`Yield`] for an alternative.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 pub fn yield_value<T, U>(val: T) -> Result<U, Error>
 where
     T: Into<Value>,
     U: TryConvert,
 {
-    let val = val.into();
-    unsafe { protect(|| Value::new(rb_yield(val.as_rb_value()))).and_then(|v| v.try_convert()) }
+    get_ruby!().yield_value(val)
 }
 
 /// Yields multiple values to the block given to the current method.
@@ -355,22 +438,16 @@ where
 /// **Note:** A method using `yield_values` converted to an Enumerator with
 /// `to_enum`/[`Value::enumeratorize`] will result in a non-functional
 /// Enumerator. See [`YieldValues`] for an alternative.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 pub fn yield_values<T, U>(vals: T) -> Result<U, Error>
 where
     T: ArgList,
     U: TryConvert,
 {
-    let vals = vals.into_arg_list();
-    let slice = vals.as_ref();
-    unsafe {
-        protect(|| {
-            Value::new(rb_yield_values2(
-                slice.len() as c_int,
-                slice.as_ptr() as *const VALUE,
-            ))
-        })
-        .and_then(|v| v.try_convert())
-    }
+    get_ruby!().yield_values(vals)
 }
 
 /// Yields a Ruby Array to the block given to the current method.
@@ -378,13 +455,15 @@ where
 /// **Note:** A method using `yield_splat` converted to an Enumerator with
 /// `to_enum`/[`Value::enumeratorize`] will result in a non-functional
 /// Enumerator. See [`YieldSplat`] for an alternative.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 pub fn yield_splat<T>(vals: RArray) -> Result<T, Error>
 where
     T: TryConvert,
 {
-    unsafe {
-        protect(|| Value::new(rb_yield_splat(vals.as_rb_value()))).and_then(|v| v.try_convert())
-    }
+    get_ruby!().yield_splat(vals)
 }
 
 // Our regular implementation of `yield` breaks yielding methods being

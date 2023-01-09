@@ -23,9 +23,31 @@ use crate::{
     exception,
     object::Object,
     r_string::RString,
+    ruby_handle::RubyHandle,
     try_convert::{TryConvert, TryConvertOwned},
     value::{private, NonZeroValue, ReprValue, Value, QNIL},
 };
+
+impl RubyHandle {
+    pub fn ary_new(&self) -> RArray {
+        unsafe { RArray::from_rb_value_unchecked(rb_ary_new()) }
+    }
+
+    pub fn ary_new_capa(&self, n: usize) -> RArray {
+        unsafe { RArray::from_rb_value_unchecked(rb_ary_new_capa(n as c_long)) }
+    }
+
+    pub fn ary_from_vec<T>(&self, vec: Vec<T>) -> RArray
+    where
+        T: Into<Value>,
+    {
+        let ary = self.ary_new_capa(vec.len());
+        for v in vec {
+            ary.push(v).unwrap();
+        }
+        ary
+    }
+}
 
 /// A Value pointer to a RArray struct, Ruby's internal representation of an
 /// Array.
@@ -69,6 +91,10 @@ impl RArray {
 
     /// Create a new empty `RArray`.
     ///
+    /// # Panics
+    ///
+    /// Panics if called from a non-Ruby thread.
+    ///
     /// # Examples
     ///
     /// ```
@@ -79,11 +105,15 @@ impl RArray {
     /// assert!(ary.is_empty());
     /// ```
     pub fn new() -> Self {
-        unsafe { Self::from_rb_value_unchecked(rb_ary_new()) }
+        get_ruby!().ary_new()
     }
 
     /// Create a new empty `RArray` with capacity for `n` elements
     /// pre-allocated.
+    ///
+    /// # Panics
+    ///
+    /// Panics if called from a non-Ruby thread.
     ///
     /// # Examples
     ///
@@ -95,7 +125,7 @@ impl RArray {
     /// assert!(ary.is_empty());
     /// ```
     pub fn with_capacity(n: usize) -> Self {
-        unsafe { Self::from_rb_value_unchecked(rb_ary_new_capa(n as c_long)) }
+        get_ruby!().ary_new_capa(n)
     }
 
     /// Convert or wrap a Ruby [`Value`] to a `RArray`.
@@ -654,6 +684,10 @@ impl RArray {
 
     /// Create a new `RArray` from a Rust vector.
     ///
+    /// # Panics
+    ///
+    /// Panics if called from a non-Ruby thread.
+    ///
     /// # Examples
     ///
     /// ```
@@ -668,11 +702,7 @@ impl RArray {
     where
         T: Into<Value>,
     {
-        let ary = Self::with_capacity(vec.len());
-        for v in vec {
-            ary.push(v).unwrap();
-        }
-        ary
+        get_ruby!().ary_from_vec(vec)
     }
 
     /// Return `self` as a slice of [`Value`]s.

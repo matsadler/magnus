@@ -9,10 +9,21 @@ use crate::{
     exception,
     object::Object,
     r_string::RString,
+    ruby_handle::RubyHandle,
     symbol::Symbol,
     try_convert::TryConvert,
     value::{private, NonZeroValue, ReprValue, Value},
 };
+
+impl RubyHandle {
+    #[cfg(any(ruby_lte_3_1, docsrs))]
+    #[cfg_attr(docsrs, doc(cfg(ruby_lte_3_1)))]
+    #[deprecated(since = "0.2.0", note = "this will no longer function as of Ruby 3.2")]
+    pub fn binding_new(&self) -> Binding {
+        crate::error::protect(|| unsafe { Binding::from_rb_value_unchecked(rb_binding_new()) })
+            .unwrap()
+    }
+}
 
 /// A Value known to be an instance of Binding.
 ///
@@ -24,6 +35,10 @@ pub struct Binding(NonZeroValue);
 
 impl Binding {
     /// Create a new `Binding` from the current Ruby execution context.
+    ///
+    /// # Panics
+    ///
+    /// Panics if called from a non-Ruby thread.
     ///
     /// # Examples
     ///
@@ -38,8 +53,8 @@ impl Binding {
     #[deprecated(since = "0.2.0", note = "this will no longer function as of Ruby 3.2")]
     #[allow(clippy::new_without_default)]
     pub fn new() -> Self {
-        crate::error::protect(|| unsafe { Self::from_rb_value_unchecked(rb_binding_new()) })
-            .unwrap()
+        #[allow(deprecated)]
+        get_ruby!().binding_new()
     }
 
     #[cfg(any(ruby_lte_3_1, docsrs))]

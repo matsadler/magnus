@@ -23,9 +23,12 @@
   moved to `typed_data` module, `r_typed_data` module removed. This should only
   affect `DataTypeBuilder` as it was the only one not exported at the crate
   root.
+- `gc::adjust_memory_usage`'s argument changed to `isize`, rather than `i32` or
+  `i64` depending on pointer width.
 
 ### Deprecated
 - `RString::append` (use `RString::buf_append`).
+- `Error::runtime_error` (use `Error::new(exception::runtime_error(), msg)`).
 
 ### Removed
 - `DataTypeBuilder::free_immediatly` (use `free_immediately`).

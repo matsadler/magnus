@@ -13,15 +13,12 @@ use rb_sys::{rb_gc_location, rb_gc_mark_movable};
 use crate::{
     error::{protect, Error},
     r_hash::RHash,
+    ruby_handle::RubyHandle,
     symbol::Symbol,
     value::{ReprValue, Value, QNIL},
 };
 
-#[cfg(target_pointer_width = "64")]
-type DiffSize = i64;
-
-#[cfg(target_pointer_width = "32")]
-type DiffSize = i32;
+impl RubyHandle {}
 
 /// Mark an Object.
 ///
@@ -123,14 +120,59 @@ where
     unsafe { rb_gc_unregister_address(valref as *const _ as *mut VALUE) }
 }
 
+impl RubyHandle {
+    pub fn gc_disable(&self) -> bool {
+        unsafe { Value::new(rb_gc_disable()).to_bool() }
+    }
+
+    pub fn gc_enable(&self) -> bool {
+        unsafe { Value::new(rb_gc_enable()).to_bool() }
+    }
+
+    pub fn gc_start(&self) {
+        unsafe { rb_gc_start() };
+    }
+
+    pub fn gc_adjust_memory_usage(&self, diff: isize) {
+        unsafe { rb_gc_adjust_memory_usage(diff as _) };
+    }
+
+    pub fn gc_count(&self) -> usize {
+        unsafe { rb_gc_count() as usize }
+    }
+
+    pub fn gc_stat<T>(&self, key: T) -> Result<usize, Error>
+    where
+        T: Into<Symbol>,
+    {
+        let sym = key.into();
+        let mut res = 0;
+        protect(|| {
+            res = unsafe { rb_gc_stat(sym.as_rb_value()) as usize };
+            QNIL
+        })?;
+        Ok(res)
+    }
+
+    pub fn gc_all_stats(&self) -> RHash {
+        let res = RHash::new();
+        unsafe { rb_gc_stat(res.as_rb_value()) };
+        res
+    }
+}
+
 /// Disable automatic GC runs.
 ///
 /// This could result in other Ruby api functions unexpectedly raising
 /// `NoMemError`.
 ///
 /// Returns `true` if GC was already disabled, `false` otherwise.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 pub fn disable() -> bool {
-    unsafe { Value::new(rb_gc_disable()).to_bool() }
+    get_ruby!().gc_disable()
 }
 
 /// Enable automatic GC run.
@@ -139,8 +181,12 @@ pub fn disable() -> bool {
 /// sense if [`disable`] was previously called.
 ///
 /// Returns `true` if GC was previously disabled, `false` otherwise.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 pub fn enable() -> bool {
-    unsafe { Value::new(rb_gc_enable()).to_bool() }
+    get_ruby!().gc_enable()
 }
 
 /// Trigger a "full" GC run.
@@ -152,8 +198,12 @@ pub fn enable() -> bool {
 ///
 /// Currently (with versions of Ruby that support compaction) it will not
 /// trigger compaction.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 pub fn start() {
-    unsafe { rb_gc_start() };
+    get_ruby!().gc_start()
 }
 
 /// Inform Ruby of external memory usage.
@@ -164,33 +214,41 @@ pub fn start() {
 /// the process is using.
 ///
 /// Pass negative numbers to indicate memory has been freed.
-pub fn adjust_memory_usage(diff: DiffSize) {
-    unsafe { rb_gc_adjust_memory_usage(diff) };
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
+pub fn adjust_memory_usage(diff: isize) {
+    get_ruby!().gc_adjust_memory_usage(diff)
 }
 
 /// Returns the number of garbage collections that have been run since the
 /// start of the process.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 pub fn count() -> usize {
-    unsafe { rb_gc_count() as usize }
+    get_ruby!().gc_count()
 }
 
 /// Returns the GC profiling value for `key`.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 pub fn stat<T>(key: T) -> Result<usize, Error>
 where
     T: Into<Symbol>,
 {
-    let sym = key.into();
-    let mut res = 0;
-    protect(|| {
-        res = unsafe { rb_gc_stat(sym.as_rb_value()) as usize };
-        QNIL
-    })?;
-    Ok(res)
+    get_ruby!().gc_stat(key)
 }
 
 /// Returns all possible key/value pairs for [`stat`] as a Ruby Hash.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 pub fn all_stats() -> RHash {
-    let res = RHash::new();
-    unsafe { rb_gc_stat(res.as_rb_value()) };
-    res
+    get_ruby!().gc_all_stats()
 }

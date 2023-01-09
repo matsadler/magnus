@@ -19,12 +19,19 @@ use crate::{
     method::Method,
     object::Object,
     r_array::RArray,
+    ruby_handle::RubyHandle,
     try_convert::TryConvert,
     value::{
         private::{self, ReprValue as _},
         Id, NonZeroValue, ReprValue, Value, QNIL,
     },
 };
+
+impl RubyHandle {
+    pub fn module_new(&self) -> RModule {
+        unsafe { RModule::from_rb_value_unchecked(rb_module_new()) }
+    }
+}
 
 /// A Value pointer to a RModule struct, Ruby's internal representation of
 /// modules.
@@ -67,6 +74,10 @@ impl RModule {
 
     /// Create a new anonymous module.
     ///
+    /// # Panics
+    ///
+    /// Panics if called from a non-Ruby thread.
+    ///
     /// # Examples
     ///
     /// ```
@@ -77,7 +88,7 @@ impl RModule {
     /// assert!(module.is_kind_of(class::module()));
     /// ```
     pub fn new() -> Self {
-        unsafe { Self::from_rb_value_unchecked(rb_module_new()) }
+        get_ruby!().module_new()
     }
 
     /// Define a method in `self`'s scope as a 'module function'. This method
@@ -666,62 +677,154 @@ impl Attr {
     }
 }
 
+impl RubyHandle {
+    #[inline]
+    pub fn module_comparable(&self) -> RModule {
+        unsafe { RModule::from_rb_value_unchecked(rb_mComparable) }
+    }
+
+    #[inline]
+    pub fn module_enumerable(&self) -> RModule {
+        unsafe { RModule::from_rb_value_unchecked(rb_mEnumerable) }
+    }
+
+    #[inline]
+    pub fn module_errno(&self) -> RModule {
+        unsafe { RModule::from_rb_value_unchecked(rb_mErrno) }
+    }
+
+    #[inline]
+    pub fn module_file_test(&self) -> RModule {
+        unsafe { RModule::from_rb_value_unchecked(rb_mFileTest) }
+    }
+
+    #[inline]
+    pub fn module_gc(&self) -> RModule {
+        unsafe { RModule::from_rb_value_unchecked(rb_mGC) }
+    }
+
+    #[inline]
+    pub fn module_kernel(&self) -> RModule {
+        unsafe { RModule::from_rb_value_unchecked(rb_mKernel) }
+    }
+
+    #[inline]
+    pub fn module_math(&self) -> RModule {
+        unsafe { RModule::from_rb_value_unchecked(rb_mMath) }
+    }
+
+    #[inline]
+    pub fn module_process(&self) -> RModule {
+        unsafe { RModule::from_rb_value_unchecked(rb_mProcess) }
+    }
+
+    #[inline]
+    pub fn module_wait_readable(&self) -> RModule {
+        unsafe { RModule::from_rb_value_unchecked(rb_mWaitReadable) }
+    }
+
+    #[inline]
+    pub fn module_wait_writable(&self) -> RModule {
+        unsafe { RModule::from_rb_value_unchecked(rb_mWaitWritable) }
+    }
+}
+
 /// Return Ruby's `Comparable` module.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn comparable() -> RModule {
-    unsafe { RModule::from_rb_value_unchecked(rb_mComparable) }
+    get_ruby!().module_comparable()
 }
 
 /// Return Ruby's `Enumerable` module.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn enumerable() -> RModule {
-    unsafe { RModule::from_rb_value_unchecked(rb_mEnumerable) }
+    get_ruby!().module_enumerable()
 }
 
 /// Return Ruby's `Errno` module.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn errno() -> RModule {
-    unsafe { RModule::from_rb_value_unchecked(rb_mErrno) }
+    get_ruby!().module_errno()
 }
 
 /// Return Ruby's `FileTest` module.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn file_test() -> RModule {
-    unsafe { RModule::from_rb_value_unchecked(rb_mFileTest) }
+    get_ruby!().module_file_test()
 }
 
 /// Return Ruby's `GC` module.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn gc() -> RModule {
-    unsafe { RModule::from_rb_value_unchecked(rb_mGC) }
+    get_ruby!().module_gc()
 }
 
 /// Return Ruby's `Kernel` module.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn kernel() -> RModule {
-    unsafe { RModule::from_rb_value_unchecked(rb_mKernel) }
+    get_ruby!().module_kernel()
 }
 
 /// Return Ruby's `Math` module.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn math() -> RModule {
-    unsafe { RModule::from_rb_value_unchecked(rb_mMath) }
+    get_ruby!().module_math()
 }
 
 /// Return Ruby's `Process` module.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn process() -> RModule {
-    unsafe { RModule::from_rb_value_unchecked(rb_mProcess) }
+    get_ruby!().module_process()
 }
 
 /// Return Ruby's `IO::WaitReadable` module.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn wait_readable() -> RModule {
-    unsafe { RModule::from_rb_value_unchecked(rb_mWaitReadable) }
+    get_ruby!().module_wait_readable()
 }
 
 /// Return Ruby's `IO::WaitWritable` module.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn wait_writable() -> RModule {
-    unsafe { RModule::from_rb_value_unchecked(rb_mWaitWritable) }
+    get_ruby!().module_wait_writable()
 }

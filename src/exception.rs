@@ -24,6 +24,7 @@ use crate::{
     module::Module,
     object::Object,
     r_array::RArray,
+    ruby_handle::RubyHandle,
     try_convert::{ArgList, TryConvert},
     value::{
         private::{self, ReprValue as _},
@@ -248,222 +249,552 @@ impl TryConvert for ExceptionClass {
     }
 }
 
+impl RubyHandle {
+    #[inline]
+    pub fn exception_arg_error(&self) -> ExceptionClass {
+        unsafe { ExceptionClass::from_rb_value_unchecked(rb_eArgError) }
+    }
+
+    #[inline]
+    pub fn exception_eof_error(&self) -> ExceptionClass {
+        unsafe { ExceptionClass::from_rb_value_unchecked(rb_eEOFError) }
+    }
+
+    #[inline]
+    pub fn exception_enc_compat_error(&self) -> ExceptionClass {
+        unsafe { ExceptionClass::from_rb_value_unchecked(rb_eEncCompatError) }
+    }
+
+    #[inline]
+    pub fn exception_encoding_error(&self) -> ExceptionClass {
+        unsafe { ExceptionClass::from_rb_value_unchecked(rb_eEncodingError) }
+    }
+
+    #[inline]
+    pub fn exception_exception(&self) -> ExceptionClass {
+        unsafe { ExceptionClass::from_rb_value_unchecked(rb_eException) }
+    }
+
+    #[inline]
+    pub fn exception_fatal(&self) -> ExceptionClass {
+        unsafe { ExceptionClass::from_rb_value_unchecked(rb_eFatal) }
+    }
+
+    #[inline]
+    pub fn exception_float_domain_error(&self) -> ExceptionClass {
+        unsafe { ExceptionClass::from_rb_value_unchecked(rb_eFloatDomainError) }
+    }
+
+    #[inline]
+    pub fn exception_frozen_error(&self) -> ExceptionClass {
+        unsafe { ExceptionClass::from_rb_value_unchecked(rb_eFrozenError) }
+    }
+
+    #[inline]
+    pub fn exception_io_error(&self) -> ExceptionClass {
+        unsafe { ExceptionClass::from_rb_value_unchecked(rb_eIOError) }
+    }
+
+    #[inline]
+    pub fn exception_index_error(&self) -> ExceptionClass {
+        unsafe { ExceptionClass::from_rb_value_unchecked(rb_eIndexError) }
+    }
+
+    #[inline]
+    pub fn exception_interrupt(&self) -> ExceptionClass {
+        unsafe { ExceptionClass::from_rb_value_unchecked(rb_eInterrupt) }
+    }
+
+    #[inline]
+    pub fn exception_key_error(&self) -> ExceptionClass {
+        unsafe { ExceptionClass::from_rb_value_unchecked(rb_eKeyError) }
+    }
+
+    #[inline]
+    pub fn exception_load_error(&self) -> ExceptionClass {
+        unsafe { ExceptionClass::from_rb_value_unchecked(rb_eLoadError) }
+    }
+
+    #[inline]
+    pub fn exception_local_jump_error(&self) -> ExceptionClass {
+        unsafe { ExceptionClass::from_rb_value_unchecked(rb_eLocalJumpError) }
+    }
+
+    #[inline]
+    pub fn exception_math_domain_error(&self) -> ExceptionClass {
+        unsafe { ExceptionClass::from_rb_value_unchecked(rb_eMathDomainError) }
+    }
+
+    #[inline]
+    pub fn exception_name_error(&self) -> ExceptionClass {
+        unsafe { ExceptionClass::from_rb_value_unchecked(rb_eNameError) }
+    }
+
+    #[cfg(any(ruby_gte_2_7, docsrs))]
+    #[cfg_attr(docsrs, doc(cfg(ruby_gte_2_7)))]
+    #[inline]
+    pub fn exception_no_matching_pattern_error(&self) -> ExceptionClass {
+        unsafe { ExceptionClass::from_rb_value_unchecked(rb_eNoMatchingPatternError) }
+    }
+
+    #[cfg(any(ruby_gte_3_1, docsrs))]
+    #[cfg_attr(docsrs, doc(cfg(ruby_gte_3_1)))]
+    #[inline]
+    pub fn exception_no_matching_pattern_key_error(&self) -> ExceptionClass {
+        unsafe { ExceptionClass::from_rb_value_unchecked(rb_eNoMatchingPatternKeyError) }
+    }
+
+    #[inline]
+    pub fn exception_no_mem_error(&self) -> ExceptionClass {
+        unsafe { ExceptionClass::from_rb_value_unchecked(rb_eNoMemError) }
+    }
+
+    #[inline]
+    pub fn exception_no_method_error(&self) -> ExceptionClass {
+        unsafe { ExceptionClass::from_rb_value_unchecked(rb_eNoMethodError) }
+    }
+
+    #[inline]
+    pub fn exception_not_imp_error(&self) -> ExceptionClass {
+        unsafe { ExceptionClass::from_rb_value_unchecked(rb_eNotImpError) }
+    }
+
+    #[inline]
+    pub fn exception_range_error(&self) -> ExceptionClass {
+        unsafe { ExceptionClass::from_rb_value_unchecked(rb_eRangeError) }
+    }
+
+    #[inline]
+    pub fn exception_regexp_error(&self) -> ExceptionClass {
+        unsafe { ExceptionClass::from_rb_value_unchecked(rb_eRegexpError) }
+    }
+
+    #[inline]
+    pub fn exception_runtime_error(&self) -> ExceptionClass {
+        unsafe { ExceptionClass::from_rb_value_unchecked(rb_eRuntimeError) }
+    }
+
+    #[inline]
+    pub fn exception_script_error(&self) -> ExceptionClass {
+        unsafe { ExceptionClass::from_rb_value_unchecked(rb_eScriptError) }
+    }
+
+    #[inline]
+    pub fn exception_security_error(&self) -> ExceptionClass {
+        unsafe { ExceptionClass::from_rb_value_unchecked(rb_eSecurityError) }
+    }
+
+    #[inline]
+    pub fn exception_signal(&self) -> ExceptionClass {
+        unsafe { ExceptionClass::from_rb_value_unchecked(rb_eSignal) }
+    }
+
+    #[inline]
+    pub fn exception_standard_error(&self) -> ExceptionClass {
+        unsafe { ExceptionClass::from_rb_value_unchecked(rb_eStandardError) }
+    }
+
+    #[inline]
+    pub fn exception_stop_iteration(&self) -> ExceptionClass {
+        unsafe { ExceptionClass::from_rb_value_unchecked(rb_eStopIteration) }
+    }
+
+    #[inline]
+    pub fn exception_syntax_error(&self) -> ExceptionClass {
+        unsafe { ExceptionClass::from_rb_value_unchecked(rb_eSyntaxError) }
+    }
+
+    #[inline]
+    pub fn exception_sys_stack_error(&self) -> ExceptionClass {
+        unsafe { ExceptionClass::from_rb_value_unchecked(rb_eSysStackError) }
+    }
+
+    #[inline]
+    pub fn exception_system_call_error(&self) -> ExceptionClass {
+        unsafe { ExceptionClass::from_rb_value_unchecked(rb_eSystemCallError) }
+    }
+
+    #[inline]
+    pub fn exception_system_exit(&self) -> ExceptionClass {
+        unsafe { ExceptionClass::from_rb_value_unchecked(rb_eSystemExit) }
+    }
+
+    #[inline]
+    pub fn exception_thread_error(&self) -> ExceptionClass {
+        unsafe { ExceptionClass::from_rb_value_unchecked(rb_eThreadError) }
+    }
+
+    #[inline]
+    pub fn exception_type_error(&self) -> ExceptionClass {
+        unsafe { ExceptionClass::from_rb_value_unchecked(rb_eTypeError) }
+    }
+
+    #[inline]
+    pub fn exception_zero_div_error(&self) -> ExceptionClass {
+        unsafe { ExceptionClass::from_rb_value_unchecked(rb_eZeroDivError) }
+    }
+}
+
 /// Return Ruby's `ArgumentError` class.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn arg_error() -> ExceptionClass {
-    unsafe { ExceptionClass::from_rb_value_unchecked(rb_eArgError) }
+    get_ruby!().exception_arg_error()
 }
 
 /// Return Ruby's `EOFError` class.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn eof_error() -> ExceptionClass {
-    unsafe { ExceptionClass::from_rb_value_unchecked(rb_eEOFError) }
+    get_ruby!().exception_eof_error()
 }
 
 /// Return Ruby's `Encoding::CompatibilityError` class.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn enc_compat_error() -> ExceptionClass {
-    unsafe { ExceptionClass::from_rb_value_unchecked(rb_eEncCompatError) }
+    get_ruby!().exception_enc_compat_error()
 }
 
 /// Return Ruby's `EncodingError` class.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn encoding_error() -> ExceptionClass {
-    unsafe { ExceptionClass::from_rb_value_unchecked(rb_eEncodingError) }
+    get_ruby!().exception_encoding_error()
 }
 
 /// Return Ruby's `Exception` class.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn exception() -> ExceptionClass {
-    unsafe { ExceptionClass::from_rb_value_unchecked(rb_eException) }
+    get_ruby!().exception_exception()
 }
 
 /// Return Ruby's `fatal` class.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn fatal() -> ExceptionClass {
-    unsafe { ExceptionClass::from_rb_value_unchecked(rb_eFatal) }
+    get_ruby!().exception_fatal()
 }
 
 /// Return Ruby's `FloatDomainError` class.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn float_domain_error() -> ExceptionClass {
-    unsafe { ExceptionClass::from_rb_value_unchecked(rb_eFloatDomainError) }
+    get_ruby!().exception_float_domain_error()
 }
 
 /// Return Ruby's `FrozenError` class.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn frozen_error() -> ExceptionClass {
-    unsafe { ExceptionClass::from_rb_value_unchecked(rb_eFrozenError) }
+    get_ruby!().exception_frozen_error()
 }
 
 /// Return Ruby's `IOError` class.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn io_error() -> ExceptionClass {
-    unsafe { ExceptionClass::from_rb_value_unchecked(rb_eIOError) }
+    get_ruby!().exception_io_error()
 }
 
 /// Return Ruby's `IndexError` class.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn index_error() -> ExceptionClass {
-    unsafe { ExceptionClass::from_rb_value_unchecked(rb_eIndexError) }
+    get_ruby!().exception_index_error()
 }
 
 /// Return Ruby's `Interrupt` class.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn interrupt() -> ExceptionClass {
-    unsafe { ExceptionClass::from_rb_value_unchecked(rb_eInterrupt) }
+    get_ruby!().exception_interrupt()
 }
 
 /// Return Ruby's `KeyError` class.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn key_error() -> ExceptionClass {
-    unsafe { ExceptionClass::from_rb_value_unchecked(rb_eKeyError) }
+    get_ruby!().exception_key_error()
 }
 
 /// Return Ruby's `LoadError` class.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn load_error() -> ExceptionClass {
-    unsafe { ExceptionClass::from_rb_value_unchecked(rb_eLoadError) }
+    get_ruby!().exception_load_error()
 }
 
 /// Return Ruby's `LocalJumpError` class.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn local_jump_error() -> ExceptionClass {
-    unsafe { ExceptionClass::from_rb_value_unchecked(rb_eLocalJumpError) }
+    get_ruby!().exception_local_jump_error()
 }
 
 /// Return Ruby's `Math::DomainError` class.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn math_domain_error() -> ExceptionClass {
-    unsafe { ExceptionClass::from_rb_value_unchecked(rb_eMathDomainError) }
+    get_ruby!().exception_math_domain_error()
 }
 
 /// Return Ruby's `NameError` class.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn name_error() -> ExceptionClass {
-    unsafe { ExceptionClass::from_rb_value_unchecked(rb_eNameError) }
+    get_ruby!().exception_name_error()
 }
 
 /// Return Ruby's `NoMatchingPatternError` class.
 #[cfg(any(ruby_gte_2_7, docsrs))]
 #[cfg_attr(docsrs, doc(cfg(ruby_gte_2_7)))]
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn no_matching_pattern_error() -> ExceptionClass {
-    unsafe { ExceptionClass::from_rb_value_unchecked(rb_eNoMatchingPatternError) }
+    get_ruby!().exception_no_matching_pattern_error()
 }
 
 /// Return Ruby's `NoMatchingPatternKeyError` class.
 #[cfg(any(ruby_gte_3_1, docsrs))]
 #[cfg_attr(docsrs, doc(cfg(ruby_gte_3_1)))]
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn no_matching_pattern_key_error() -> ExceptionClass {
-    unsafe { ExceptionClass::from_rb_value_unchecked(rb_eNoMatchingPatternKeyError) }
+    get_ruby!().exception_no_matching_pattern_key_error()
 }
 
 /// Return Ruby's `NoMemoryError` class.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn no_mem_error() -> ExceptionClass {
-    unsafe { ExceptionClass::from_rb_value_unchecked(rb_eNoMemError) }
+    get_ruby!().exception_no_mem_error()
 }
 
 /// Return Ruby's `NoMethodError` class.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn no_method_error() -> ExceptionClass {
-    unsafe { ExceptionClass::from_rb_value_unchecked(rb_eNoMethodError) }
+    get_ruby!().exception_no_method_error()
 }
 
 /// Return Ruby's `NotImpError` class.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn not_imp_error() -> ExceptionClass {
-    unsafe { ExceptionClass::from_rb_value_unchecked(rb_eNotImpError) }
+    get_ruby!().exception_not_imp_error()
 }
 
 /// Return Ruby's `RangeError` class.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn range_error() -> ExceptionClass {
-    unsafe { ExceptionClass::from_rb_value_unchecked(rb_eRangeError) }
+    get_ruby!().exception_range_error()
 }
 
 /// Return Ruby's `RegexpError` class.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn regexp_error() -> ExceptionClass {
-    unsafe { ExceptionClass::from_rb_value_unchecked(rb_eRegexpError) }
+    get_ruby!().exception_regexp_error()
 }
 
 /// Return Ruby's `RuntimeError` class.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn runtime_error() -> ExceptionClass {
-    unsafe { ExceptionClass::from_rb_value_unchecked(rb_eRuntimeError) }
+    get_ruby!().exception_runtime_error()
 }
 
 /// Return Ruby's `ScriptError` class.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn script_error() -> ExceptionClass {
-    unsafe { ExceptionClass::from_rb_value_unchecked(rb_eScriptError) }
+    get_ruby!().exception_script_error()
 }
 
 /// Return Ruby's `SecurityError` class.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn security_error() -> ExceptionClass {
-    unsafe { ExceptionClass::from_rb_value_unchecked(rb_eSecurityError) }
+    get_ruby!().exception_security_error()
 }
 
 /// Return Ruby's `SignalException` class.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn signal() -> ExceptionClass {
-    unsafe { ExceptionClass::from_rb_value_unchecked(rb_eSignal) }
+    get_ruby!().exception_signal()
 }
 
 /// Return Ruby's `StandardError` class.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn standard_error() -> ExceptionClass {
-    unsafe { ExceptionClass::from_rb_value_unchecked(rb_eStandardError) }
+    get_ruby!().exception_standard_error()
 }
 
 /// Return Ruby's `StopIteration` class.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn stop_iteration() -> ExceptionClass {
-    unsafe { ExceptionClass::from_rb_value_unchecked(rb_eStopIteration) }
+    get_ruby!().exception_stop_iteration()
 }
 
 /// Return Ruby's `SyntaxError` class.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn syntax_error() -> ExceptionClass {
-    unsafe { ExceptionClass::from_rb_value_unchecked(rb_eSyntaxError) }
+    get_ruby!().exception_syntax_error()
 }
 
 /// Return Ruby's `SystemStackError` class.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn sys_stack_error() -> ExceptionClass {
-    unsafe { ExceptionClass::from_rb_value_unchecked(rb_eSysStackError) }
+    get_ruby!().exception_sys_stack_error()
 }
 
 /// Return Ruby's `SystemCallError` class.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn system_call_error() -> ExceptionClass {
-    unsafe { ExceptionClass::from_rb_value_unchecked(rb_eSystemCallError) }
+    get_ruby!().exception_system_call_error()
 }
 
 /// Return Ruby's `SystemExit` class.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn system_exit() -> ExceptionClass {
-    unsafe { ExceptionClass::from_rb_value_unchecked(rb_eSystemExit) }
+    get_ruby!().exception_system_exit()
 }
 
 /// Return Ruby's `ThreadError` class.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn thread_error() -> ExceptionClass {
-    unsafe { ExceptionClass::from_rb_value_unchecked(rb_eThreadError) }
+    get_ruby!().exception_thread_error()
 }
 
 /// Return Ruby's `TypeError` class.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn type_error() -> ExceptionClass {
-    unsafe { ExceptionClass::from_rb_value_unchecked(rb_eTypeError) }
+    get_ruby!().exception_type_error()
 }
 
 /// Return Ruby's `ZeroDivisionError` class.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn zero_div_error() -> ExceptionClass {
-    unsafe { ExceptionClass::from_rb_value_unchecked(rb_eZeroDivError) }
+    get_ruby!().exception_zero_div_error()
 }
