@@ -14,10 +14,24 @@ use crate::{
     encoding::{EncodingCapable, RbEncoding},
     error::{protect, Error},
     exception,
+    ruby_handle::RubyHandle,
     try_convert::TryConvert,
     value::{private, NonZeroValue, ReprValue, Value},
     RString,
 };
+
+impl RubyHandle {
+    pub fn reg_new(&self, pattern: &str, opts: Opts) -> Result<RRegexp, Error> {
+        protect(|| unsafe {
+            RRegexp::from_rb_value_unchecked(rb_enc_reg_new(
+                pattern.as_ptr() as *const c_char,
+                pattern.len() as c_long,
+                RbEncoding::utf8().as_ptr(),
+                opts.0 as c_int,
+            ))
+        })
+    }
+}
 
 /// A Value pointer to a RRegexp struct, Ruby's internal representation of
 /// regular expressions.
@@ -47,6 +61,10 @@ impl RRegexp {
     ///
     /// The encoding of the Ruby regexp will be UTF-8.
     ///
+    /// # Panics
+    ///
+    /// Panics if called from a non-Ruby thread.
+    ///
     /// # Examples
     ///
     /// ```
@@ -58,14 +76,7 @@ impl RRegexp {
     /// assert!(res);
     /// ```
     pub fn new(pattern: &str, opts: Opts) -> Result<Self, Error> {
-        protect(|| unsafe {
-            Self::from_rb_value_unchecked(rb_enc_reg_new(
-                pattern.as_ptr() as *const c_char,
-                pattern.len() as c_long,
-                RbEncoding::utf8().as_ptr(),
-                opts.0 as c_int,
-            ))
-        })
+        get_ruby!().reg_new(pattern, opts)
     }
 
     /// Create a new `Regexp` from the Ruby string `pattern`.

@@ -10,9 +10,17 @@ use crate::{
     error::{protect, Error},
     exception,
     r_string::RString,
+    ruby_handle::RubyHandle,
     try_convert::TryConvert,
     value::{private, Id, NonZeroValue, ReprValue, StaticSymbol, Value},
 };
+
+impl RubyHandle {
+    #[inline]
+    pub fn to_symbol<T: AsRef<str>>(&self, name: T) -> Symbol {
+        name.as_ref().into()
+    }
+}
 
 /// A type wrapping either a [`StaticSymbol`] or a Value pointer to a RSymbol
 /// struct.
@@ -55,6 +63,10 @@ impl Symbol {
 
     /// Create a new `Symbol` from `name`.
     ///
+    /// # Panics
+    ///
+    /// Panics if called from a non-Ruby thread.
+    ///
     /// # Examples
     ///
     /// ```
@@ -67,7 +79,7 @@ impl Symbol {
     /// ```
     #[inline]
     pub fn new<T: AsRef<str>>(name: T) -> Self {
-        name.as_ref().into()
+        get_ruby!().to_symbol(name)
     }
 
     /// Returns whether `self` is static or not.

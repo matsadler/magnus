@@ -22,6 +22,7 @@ use crate::{
     exception,
     object::Object,
     r_array::RArray,
+    ruby_handle::RubyHandle,
     symbol::Symbol,
     try_convert::TryConvert,
     value::{self, Id, NonZeroValue, Value},
@@ -267,12 +268,25 @@ impl TryConvert for RStruct {
     }
 }
 
+impl RubyHandle {
+    pub fn define_struct<T>(&self, name: Option<&str>, members: T) -> Result<RClass, Error>
+    where
+        T: StructMembers,
+    {
+        members.define(name)
+    }
+}
+
 /// Define a Ruby Struct class.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 pub fn define_struct<T>(name: Option<&str>, members: T) -> Result<RClass, Error>
 where
     T: StructMembers,
 {
-    members.define(name)
+    get_ruby!().define_struct(name, members)
 }
 
 mod private {

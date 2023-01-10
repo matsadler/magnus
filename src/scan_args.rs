@@ -43,6 +43,7 @@ use crate::{
     exception,
     r_array::RArray,
     r_hash::RHash,
+    ruby_handle::RubyHandle,
     try_convert::{TryConvert, TryConvertOwned},
     value::{Id, Value, QNIL},
 };
@@ -2098,8 +2099,38 @@ where
     })
 }
 
+impl RubyHandle {
+    pub fn check_arity<T>(&self, len: usize, bounds: T) -> Result<(), Error>
+    where
+        T: RangeBounds<usize>,
+    {
+        if !bounds.contains(&len) {
+            let min = match bounds.start_bound() {
+                Bound::Included(v) => *v as c_int,
+                Bound::Excluded(_) => unreachable!(),
+                Bound::Unbounded => 0,
+            };
+            let max = match bounds.end_bound() {
+                Bound::Included(v) => *v as c_int,
+                Bound::Excluded(v) if *v == 0 => 0,
+                Bound::Excluded(v) => (v - 1) as c_int,
+                Bound::Unbounded => -1,
+            };
+            protect(|| {
+                unsafe { rb_error_arity(len as c_int, min, max) };
+                QNIL
+            })?;
+        }
+        Ok(())
+    }
+}
+
 /// Returns `Err` containing a Ruby `ArgumentError` if `len` is not within
 /// `bounds`.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 ///
 /// # Examples
 ///
@@ -2121,22 +2152,5 @@ pub fn check_arity<T>(len: usize, bounds: T) -> Result<(), Error>
 where
     T: RangeBounds<usize>,
 {
-    if !bounds.contains(&len) {
-        let min = match bounds.start_bound() {
-            Bound::Included(v) => *v as c_int,
-            Bound::Excluded(_) => unreachable!(),
-            Bound::Unbounded => 0,
-        };
-        let max = match bounds.end_bound() {
-            Bound::Included(v) => *v as c_int,
-            Bound::Excluded(v) if *v == 0 => 0,
-            Bound::Excluded(v) => (v - 1) as c_int,
-            Bound::Unbounded => -1,
-        };
-        protect(|| {
-            unsafe { rb_error_arity(len as c_int, min, max) };
-            QNIL
-        })?;
-    }
-    Ok(())
+    get_ruby!().check_arity(len, bounds)
 }

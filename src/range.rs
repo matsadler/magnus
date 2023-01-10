@@ -16,9 +16,26 @@ use crate::{
     exception,
     object::Object,
     r_struct::RStruct,
+    ruby_handle::RubyHandle,
     try_convert::TryConvert,
     value::{private, ReprValue, Value, QNIL},
 };
+
+impl RubyHandle {
+    pub fn range_new<T, U>(&self, beg: T, end: U, excl: bool) -> Result<Range, Error>
+    where
+        T: Into<Value>,
+        U: Into<Value>,
+    {
+        protect(|| unsafe {
+            Range(RStruct::from_rb_value_unchecked(rb_range_new(
+                beg.into().as_rb_value(),
+                end.into().as_rb_value(),
+                excl as c_int,
+            )))
+        })
+    }
+}
 
 /// Wrapper type for a Value known to be an instance of Ruby's Range class.
 ///
@@ -51,6 +68,10 @@ impl Range {
     ///
     /// Returns `Err` if `beg` and `end` are not comparable.
     ///
+    /// # Panics
+    ///
+    /// Panics if called from a non-Ruby thread.
+    ///
     /// # Examples
     ///
     /// ```
@@ -75,13 +96,7 @@ impl Range {
         T: Into<Value>,
         U: Into<Value>,
     {
-        protect(|| unsafe {
-            Self(RStruct::from_rb_value_unchecked(rb_range_new(
-                beg.into().as_rb_value(),
-                end.into().as_rb_value(),
-                excl as c_int,
-            )))
-        })
+        get_ruby!().range_new(beg, end, excl)
     }
 
     /// Return the value that defines the beginning of the range, converting it

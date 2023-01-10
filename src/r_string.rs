@@ -36,9 +36,72 @@ use crate::{
     exception,
     object::Object,
     r_array::RArray,
+    ruby_handle::RubyHandle,
     try_convert::TryConvert,
     value::{private, NonZeroValue, ReprValue, Value, QNIL},
 };
+
+impl RubyHandle {
+    pub fn str_new(&self, s: &str) -> RString {
+        let len = s.len();
+        let ptr = s.as_ptr();
+        unsafe {
+            RString::from_rb_value_unchecked(rb_utf8_str_new(ptr as *const c_char, len as c_long))
+        }
+    }
+
+    /// Implementation detail of [`r_string`].
+    #[doc(hidden)]
+    #[inline]
+    pub unsafe fn str_new_lit(&self, ptr: *const c_char, len: c_long) -> RString {
+        RString::from_rb_value_unchecked(rb_utf8_str_new_static(ptr, len))
+    }
+
+    pub fn str_buf_new(&self, n: usize) -> RString {
+        unsafe { RString::from_rb_value_unchecked(rb_str_buf_new(n as c_long)) }
+    }
+
+    pub fn str_with_capacity(&self, n: usize) -> RString {
+        let s = self.str_buf_new(n);
+        s.enc_associate(encoding::Index::utf8()).unwrap();
+        s
+    }
+
+    pub fn str_from_slice(&self, s: &[u8]) -> RString {
+        let len = s.len();
+        let ptr = s.as_ptr();
+        unsafe { RString::from_rb_value_unchecked(rb_str_new(ptr as *const c_char, len as c_long)) }
+    }
+
+    pub fn enc_str_new<T, E>(&self, s: T, enc: E) -> RString
+    where
+        T: AsRef<[u8]>,
+        E: Into<RbEncoding>,
+    {
+        let s = s.as_ref();
+        let len = s.len();
+        let ptr = s.as_ptr();
+        unsafe {
+            RString::from_rb_value_unchecked(rb_enc_str_new(
+                ptr as *const c_char,
+                len as c_long,
+                enc.into().as_ptr(),
+            ))
+        }
+    }
+
+    pub fn str_from_char(&self, c: char) -> RString {
+        let mut buf = [0; 4];
+        self.str_new(c.encode_utf8(&mut buf[..]))
+    }
+
+    pub fn chr<T>(&self, code: u32, enc: T) -> Result<RString, Error>
+    where
+        T: Into<RbEncoding>,
+    {
+        enc.into().chr(code)
+    }
+}
 
 /// A Value pointer to a RString struct, Ruby's internal representation of
 /// strings.
@@ -90,6 +153,10 @@ impl RString {
     ///
     /// The encoding of the Ruby string will be UTF-8.
     ///
+    /// # Panics
+    ///
+    /// Panics if called from a non-Ruby thread.
+    ///
     /// # Examples
     ///
     /// ```
@@ -101,24 +168,24 @@ impl RString {
     /// assert!(res);
     /// ```
     pub fn new(s: &str) -> Self {
-        let len = s.len();
-        let ptr = s.as_ptr();
-        unsafe {
-            Self::from_rb_value_unchecked(rb_utf8_str_new(ptr as *const c_char, len as c_long))
-        }
+        get_ruby!().str_new(s)
     }
 
     /// Implementation detail of [`r_string`].
     #[doc(hidden)]
     #[inline]
     pub unsafe fn new_lit(ptr: *const c_char, len: c_long) -> Self {
-        Self::from_rb_value_unchecked(rb_utf8_str_new_static(ptr, len))
+        get_ruby!().str_new_lit(ptr, len)
     }
 
     /// Create a new Ruby string with capacity `n`.
     ///
     /// The encoding will be set to ASCII-8BIT (aka BINARY). See also
     /// [`with_capacity`](RString::with_capacity).
+    ///
+    /// # Panics
+    ///
+    /// Panics if called from a non-Ruby thread.
     ///
     /// # Examples
     ///
@@ -132,13 +199,17 @@ impl RString {
     /// assert!(res);
     /// ```
     pub fn buf_new(n: usize) -> Self {
-        unsafe { Self::from_rb_value_unchecked(rb_str_buf_new(n as c_long)) }
+        get_ruby!().str_buf_new(n)
     }
 
     /// Create a new Ruby string with capacity `n`.
     ///
     /// The encoding will be set to UTF-8. See also
     /// [`buf_new`](RString::buf_new).
+    ///
+    /// # Panics
+    ///
+    /// Panics if called from a non-Ruby thread.
     ///
     /// # Examples
     ///
@@ -154,14 +225,16 @@ impl RString {
     /// assert!(res);
     /// ```
     pub fn with_capacity(n: usize) -> Self {
-        let s = Self::buf_new(n);
-        s.enc_associate(encoding::Index::utf8()).unwrap();
-        s
+        get_ruby!().str_with_capacity(n)
     }
 
     /// Create a new Ruby string from the Rust slice `s`.
     ///
     /// The encoding of the Ruby string will be set to ASCII-8BIT (aka BINARY).
+    ///
+    /// # Panics
+    ///
+    /// Panics if called from a non-Ruby thread.
     ///
     /// # Examples
     ///
@@ -174,12 +247,14 @@ impl RString {
     /// assert!(res);
     /// ```
     pub fn from_slice(s: &[u8]) -> Self {
-        let len = s.len();
-        let ptr = s.as_ptr();
-        unsafe { Self::from_rb_value_unchecked(rb_str_new(ptr as *const c_char, len as c_long)) }
+        get_ruby!().str_from_slice(s)
     }
 
     /// Create a new Ruby string from the value `s` with the encoding `enc`.
+    ///
+    /// # Panics
+    ///
+    /// Panics if called from a non-Ruby thread.
     ///
     /// # Examples
     ///
@@ -205,21 +280,16 @@ impl RString {
         T: AsRef<[u8]>,
         E: Into<RbEncoding>,
     {
-        let s = s.as_ref();
-        let len = s.len();
-        let ptr = s.as_ptr();
-        unsafe {
-            Self::from_rb_value_unchecked(rb_enc_str_new(
-                ptr as *const c_char,
-                len as c_long,
-                enc.into().as_ptr(),
-            ))
-        }
+        get_ruby!().enc_str_new(s, enc)
     }
 
     /// Create a new Ruby string from the Rust char `c`.
     ///
     /// The encoding of the Ruby string will be UTF-8.
+    ///
+    /// # Panics
+    ///
+    /// Panics if called from a non-Ruby thread.
     ///
     /// # Examples
     ///
@@ -241,14 +311,17 @@ impl RString {
     /// assert!(res);
     /// ```
     pub fn from_char(c: char) -> Self {
-        let mut buf = [0; 4];
-        Self::new(c.encode_utf8(&mut buf[..]))
+        get_ruby!().str_from_char(c)
     }
 
     /// Create a new Ruby string containing the codepoint `code` in the
     /// encoding `enc`.
     ///
     /// The encoding of the Ruby string will be the passed encoding `enc`.
+    ///
+    /// # Panics
+    ///
+    /// Panics if called from a non-Ruby thread.
     ///
     /// # Examples
     ///
@@ -273,7 +346,7 @@ impl RString {
     where
         T: Into<RbEncoding>,
     {
-        enc.into().chr(code)
+        get_ruby!().chr(code, enc)
     }
 
     /// Create a new Ruby string that shares the same backing data as `s`.
@@ -1632,6 +1705,10 @@ impl<'a> Iterator for CharBytes<'a> {
 }
 
 /// Create a [`RString`] from a Rust str literal.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 ///
 /// # Examples
 ///

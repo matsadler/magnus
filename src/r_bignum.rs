@@ -14,9 +14,28 @@ use crate::{
     error::{protect, Error},
     exception,
     integer::{Integer, IntegerType},
+    ruby_handle::RubyHandle,
     try_convert::TryConvert,
     value::{private, Fixnum, NonZeroValue, ReprValue, Value, QNIL},
 };
+
+impl RubyHandle {
+    pub fn bignum_from_i64(&self, n: i64) -> Result<RBignum, Fixnum> {
+        unsafe {
+            let val = Value::new(rb_ll2inum(n));
+            RBignum::from_value(val)
+                .ok_or_else(|| Fixnum::from_rb_value_unchecked(val.as_rb_value()))
+        }
+    }
+
+    pub fn bignum_from_u64(&self, n: u64) -> Result<RBignum, Fixnum> {
+        unsafe {
+            let val = Value::new(rb_ull2inum(n));
+            RBignum::from_value(val)
+                .ok_or_else(|| Fixnum::from_rb_value_unchecked(val.as_rb_value()))
+        }
+    }
+}
 
 /// A Value pointer to a RBignum struct, Ruby's internal representation of
 /// large integers.
@@ -62,6 +81,10 @@ impl RBignum {
     /// Returns `Ok(RBignum)` if `n` is large enough to require a bignum,
     /// otherwise returns `Err(Fixnum)`.
     ///
+    /// # Panics
+    ///
+    /// Panics if called from a non-Ruby thread.
+    ///
     /// # Examples
     ///
     /// ```
@@ -74,17 +97,17 @@ impl RBignum {
     /// assert!(RBignum::from_i64(0).is_err());
     /// ```
     pub fn from_i64(n: i64) -> Result<Self, Fixnum> {
-        unsafe {
-            let val = Value::new(rb_ll2inum(n));
-            RBignum::from_value(val)
-                .ok_or_else(|| Fixnum::from_rb_value_unchecked(val.as_rb_value()))
-        }
+        get_ruby!().bignum_from_i64(n)
     }
 
     /// Create a new `RBignum` from an `u64.`
     ///
     /// Returns `Ok(RBignum)` if `n` is large enough to require a bignum,
     /// otherwise returns `Err(Fixnum)`.
+    ///
+    /// # Panics
+    ///
+    /// Panics if called from a non-Ruby thread.
     ///
     /// # Examples
     ///
@@ -97,11 +120,7 @@ impl RBignum {
     /// assert!(RBignum::from_u64(0).is_err());
     /// ```
     pub fn from_u64(n: u64) -> Result<Self, Fixnum> {
-        unsafe {
-            let val = Value::new(rb_ull2inum(n));
-            RBignum::from_value(val)
-                .ok_or_else(|| Fixnum::from_rb_value_unchecked(val.as_rb_value()))
-        }
+        get_ruby!().bignum_from_u64(n)
     }
 
     fn is_negative(self) -> bool {

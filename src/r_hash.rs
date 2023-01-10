@@ -26,6 +26,7 @@ use crate::{
     error::{protect, raise, Error},
     exception,
     object::Object,
+    ruby_handle::RubyHandle,
     try_convert::{TryConvert, TryConvertOwned},
     value::{private, Fixnum, NonZeroValue, ReprValue, Value, QNIL, QUNDEF},
 };
@@ -84,6 +85,18 @@ where
     }
 }
 
+impl RubyHandle {
+    pub fn new(&self) -> RHash {
+        unsafe { RHash::from_rb_value_unchecked(rb_hash_new()) }
+    }
+
+    #[cfg(any(ruby_gte_3_2, docsrs))]
+    #[cfg_attr(docsrs, doc(cfg(ruby_gte_3_2)))]
+    pub fn with_capacity(&self, n: usize) -> RHash {
+        unsafe { RHash::from_rb_value_unchecked(rb_hash_new_capa(n as c_long)) }
+    }
+}
+
 /// A Value pointer to a RHash struct, Ruby's internal representation of Hash
 /// objects.
 ///
@@ -121,6 +134,10 @@ impl RHash {
 
     /// Create a new empty `RHash`.
     ///
+    /// # Panics
+    ///
+    /// Panics if called from a non-Ruby thread.
+    ///
     /// # Examples
     ///
     /// ```
@@ -131,11 +148,15 @@ impl RHash {
     /// assert!(hash.is_empty());
     /// ```
     pub fn new() -> RHash {
-        unsafe { Self::from_rb_value_unchecked(rb_hash_new()) }
+        get_ruby!().new()
     }
 
     /// Create a new empty `RHash` with capacity for `n` elements
     /// pre-allocated.
+    ///
+    /// # Panics
+    ///
+    /// Panics if called from a non-Ruby thread.
     ///
     /// # Examples
     ///
@@ -149,7 +170,7 @@ impl RHash {
     #[cfg(any(ruby_gte_3_2, docsrs))]
     #[cfg_attr(docsrs, doc(cfg(ruby_gte_3_2)))]
     pub fn with_capacity(n: usize) -> Self {
-        unsafe { Self::from_rb_value_unchecked(rb_hash_new_capa(n as c_long)) }
+        get_ruby!().with_capacity(n)
     }
 
     /// Set the value `val` for the key `key`.

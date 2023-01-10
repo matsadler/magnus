@@ -7,9 +7,27 @@ use crate::{
     error::{protect, Error},
     exception,
     object::Object,
+    ruby_handle::RubyHandle,
     typed_data::TypedData,
     value::{private, NonZeroValue, ReprValue, Value, QNIL},
 };
+
+impl RubyHandle {
+    pub fn wrap<T>(&self, data: T) -> RTypedData
+    where
+        T: TypedData,
+    {
+        let boxed = Box::new(data);
+        unsafe {
+            let value_ptr = rb_data_typed_object_wrap(
+                T::class().as_rb_value(),
+                Box::into_raw(boxed) as *mut _,
+                T::data_type().as_rb_data_type() as *const _,
+            );
+            RTypedData(NonZeroValue::new_unchecked(Value::new(value_ptr)))
+        }
+    }
+}
 
 /// A Value pointer to a RTypedData struct, Ruby’s internal representation of
 /// objects that wrap foreign types.
@@ -38,6 +56,10 @@ impl RTypedData {
 
     /// Wrap the Rust type `T` in a Ruby object.
     ///
+    /// # Panics
+    ///
+    /// Panics if called from a non-Ruby thread.
+    ///
     /// # Examples
     ///
     /// ```
@@ -59,15 +81,7 @@ impl RTypedData {
     where
         T: TypedData,
     {
-        let boxed = Box::new(data);
-        unsafe {
-            let value_ptr = rb_data_typed_object_wrap(
-                T::class().as_rb_value(),
-                Box::into_raw(boxed) as *mut _,
-                T::data_type().as_rb_data_type() as *const _,
-            );
-            Self(NonZeroValue::new_unchecked(Value::new(value_ptr)))
-        }
+        get_ruby!().wrap(data)
     }
 
     /// Get a reference to the Rust type wrapped in the Ruby object `self`.

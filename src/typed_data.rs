@@ -31,6 +31,7 @@ use crate::{
     exception,
     object::Object,
     r_typed_data::RTypedData,
+    ruby_handle::RubyHandle,
     try_convert::TryConvert,
     value::{private, ReprValue, Value},
 };
@@ -395,11 +396,28 @@ where
     }
 }
 
+impl RubyHandle {
+    pub fn obj_wrap<T>(&self, data: T) -> Obj<T>
+    where
+        T: TypedData,
+    {
+        let inner = RTypedData::wrap(data);
+        Obj {
+            inner,
+            phantom: PhantomData,
+        }
+    }
+}
+
 impl<T> Obj<T>
 where
     T: TypedData,
 {
     /// Wrap the Rust type `T` in a Ruby object.
+    ///
+    /// # Panics
+    ///
+    /// Panics if called from a non-Ruby thread.
     ///
     /// # Examples
     ///
@@ -419,11 +437,7 @@ where
     /// assert!(value.is_kind_of(point_class));
     /// ```
     pub fn wrap(data: T) -> Self {
-        let inner = RTypedData::wrap(data);
-        Self {
-            inner,
-            phantom: PhantomData,
-        }
+        get_ruby!().obj_wrap(data)
     }
 
     /// Get a reference to the Rust type wrapped in the Ruby object `self`.
