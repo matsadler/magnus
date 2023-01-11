@@ -7,6 +7,7 @@ use crate::{
     class,
     error::Error,
     exception,
+    into_value::IntoValue,
     object::Object,
     r_string::RString,
     ruby_handle::RubyHandle,
@@ -155,6 +156,12 @@ impl fmt::Display for Binding {
 impl fmt::Debug for Binding {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.deref().inspect())
+    }
+}
+
+impl IntoValue for Binding {
+    fn into_value(self, _: &RubyHandle) -> Value {
+        *self
     }
 }
 

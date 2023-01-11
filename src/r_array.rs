@@ -21,6 +21,7 @@ use crate::{
     enumerator::Enumerator,
     error::{protect, Error},
     exception,
+    into_value::IntoValue,
     object::Object,
     r_string::RString,
     ruby_handle::RubyHandle,
@@ -46,6 +47,16 @@ impl RubyHandle {
             ary.push(v).unwrap();
         }
         ary
+    }
+
+    pub fn ary_new_from_values<T>(&self, slice: &[T]) -> RArray
+    where
+        T: ReprValue,
+    {
+        let ptr = slice.as_ptr() as *const VALUE;
+        unsafe {
+            RArray::from_rb_value_unchecked(rb_ary_new_from_values(slice.len() as c_long, ptr))
+        }
     }
 }
 
@@ -352,6 +363,10 @@ impl RArray {
 
     /// Create a new `RArray` containing the elements in `slice`.
     ///
+    /// # Panics
+    ///
+    /// Panics if called from a non-Ruby thread.
+    ///
     /// # Examples
     ///
     /// ```
@@ -375,8 +390,7 @@ impl RArray {
     where
         T: ReprValue,
     {
-        let ptr = slice.as_ptr() as *const VALUE;
-        unsafe { Self::from_rb_value_unchecked(rb_ary_new_from_values(slice.len() as c_long, ptr)) }
+        get_ruby!().ary_new_from_values(slice)
     }
 
     /// Add `item` to the end of `self`.
@@ -1169,9 +1183,25 @@ impl fmt::Debug for RArray {
     }
 }
 
+impl IntoValue for RArray {
+    fn into_value(self, _: &RubyHandle) -> Value {
+        *self
+    }
+}
+
 impl From<RArray> for Value {
     fn from(val: RArray) -> Self {
         *val
+    }
+}
+
+impl<T0> IntoValue for (T0,)
+where
+    T0: Into<Value>,
+{
+    fn into_value(self, handle: &RubyHandle) -> Value {
+        let ary = [self.0.into()];
+        handle.ary_new_from_values(&ary).into()
     }
 }
 
@@ -1180,8 +1210,18 @@ where
     T0: Into<Value>,
 {
     fn from(val: (T0,)) -> Self {
-        let ary = [val.0.into()];
-        RArray::from_slice(&ary).into()
+        get_ruby!().into_value(val)
+    }
+}
+
+impl<T0, T1> IntoValue for (T0, T1)
+where
+    T0: Into<Value>,
+    T1: Into<Value>,
+{
+    fn into_value(self, handle: &RubyHandle) -> Value {
+        let ary = [self.0.into(), self.1.into()];
+        handle.ary_new_from_values(&ary).into()
     }
 }
 
@@ -1191,8 +1231,19 @@ where
     T1: Into<Value>,
 {
     fn from(val: (T0, T1)) -> Self {
-        let ary = [val.0.into(), val.1.into()];
-        RArray::from_slice(&ary).into()
+        get_ruby!().into_value(val)
+    }
+}
+
+impl<T0, T1, T2> IntoValue for (T0, T1, T2)
+where
+    T0: Into<Value>,
+    T1: Into<Value>,
+    T2: Into<Value>,
+{
+    fn into_value(self, handle: &RubyHandle) -> Value {
+        let ary = [self.0.into(), self.1.into(), self.2.into()];
+        handle.ary_new_from_values(&ary).into()
     }
 }
 
@@ -1203,8 +1254,20 @@ where
     T2: Into<Value>,
 {
     fn from(val: (T0, T1, T2)) -> Self {
-        let ary = [val.0.into(), val.1.into(), val.2.into()];
-        RArray::from_slice(&ary).into()
+        get_ruby!().into_value(val)
+    }
+}
+
+impl<T0, T1, T2, T3> IntoValue for (T0, T1, T2, T3)
+where
+    T0: Into<Value>,
+    T1: Into<Value>,
+    T2: Into<Value>,
+    T3: Into<Value>,
+{
+    fn into_value(self, handle: &RubyHandle) -> Value {
+        let ary = [self.0.into(), self.1.into(), self.2.into(), self.3.into()];
+        handle.ary_new_from_values(&ary).into()
     }
 }
 
@@ -1216,8 +1279,27 @@ where
     T3: Into<Value>,
 {
     fn from(val: (T0, T1, T2, T3)) -> Self {
-        let ary = [val.0.into(), val.1.into(), val.2.into(), val.3.into()];
-        RArray::from_slice(&ary).into()
+        get_ruby!().into_value(val)
+    }
+}
+
+impl<T0, T1, T2, T3, T4> IntoValue for (T0, T1, T2, T3, T4)
+where
+    T0: Into<Value>,
+    T1: Into<Value>,
+    T2: Into<Value>,
+    T3: Into<Value>,
+    T4: Into<Value>,
+{
+    fn into_value(self, handle: &RubyHandle) -> Value {
+        let ary = [
+            self.0.into(),
+            self.1.into(),
+            self.2.into(),
+            self.3.into(),
+            self.4.into(),
+        ];
+        handle.ary_new_from_values(&ary).into()
     }
 }
 
@@ -1230,14 +1312,29 @@ where
     T4: Into<Value>,
 {
     fn from(val: (T0, T1, T2, T3, T4)) -> Self {
+        get_ruby!().into_value(val)
+    }
+}
+
+impl<T0, T1, T2, T3, T4, T5> IntoValue for (T0, T1, T2, T3, T4, T5)
+where
+    T0: Into<Value>,
+    T1: Into<Value>,
+    T2: Into<Value>,
+    T3: Into<Value>,
+    T4: Into<Value>,
+    T5: Into<Value>,
+{
+    fn into_value(self, handle: &RubyHandle) -> Value {
         let ary = [
-            val.0.into(),
-            val.1.into(),
-            val.2.into(),
-            val.3.into(),
-            val.4.into(),
+            self.0.into(),
+            self.1.into(),
+            self.2.into(),
+            self.3.into(),
+            self.4.into(),
+            self.5.into(),
         ];
-        RArray::from_slice(&ary).into()
+        handle.ary_new_from_values(&ary).into()
     }
 }
 
@@ -1251,15 +1348,31 @@ where
     T5: Into<Value>,
 {
     fn from(val: (T0, T1, T2, T3, T4, T5)) -> Self {
+        get_ruby!().into_value(val)
+    }
+}
+
+impl<T0, T1, T2, T3, T4, T5, T6> IntoValue for (T0, T1, T2, T3, T4, T5, T6)
+where
+    T0: Into<Value>,
+    T1: Into<Value>,
+    T2: Into<Value>,
+    T3: Into<Value>,
+    T4: Into<Value>,
+    T5: Into<Value>,
+    T6: Into<Value>,
+{
+    fn into_value(self, handle: &RubyHandle) -> Value {
         let ary = [
-            val.0.into(),
-            val.1.into(),
-            val.2.into(),
-            val.3.into(),
-            val.4.into(),
-            val.5.into(),
+            self.0.into(),
+            self.1.into(),
+            self.2.into(),
+            self.3.into(),
+            self.4.into(),
+            self.5.into(),
+            self.6.into(),
         ];
-        RArray::from_slice(&ary).into()
+        handle.ary_new_from_values(&ary).into()
     }
 }
 
@@ -1274,16 +1387,33 @@ where
     T6: Into<Value>,
 {
     fn from(val: (T0, T1, T2, T3, T4, T5, T6)) -> Self {
+        get_ruby!().into_value(val)
+    }
+}
+
+impl<T0, T1, T2, T3, T4, T5, T6, T7> IntoValue for (T0, T1, T2, T3, T4, T5, T6, T7)
+where
+    T0: Into<Value>,
+    T1: Into<Value>,
+    T2: Into<Value>,
+    T3: Into<Value>,
+    T4: Into<Value>,
+    T5: Into<Value>,
+    T6: Into<Value>,
+    T7: Into<Value>,
+{
+    fn into_value(self, handle: &RubyHandle) -> Value {
         let ary = [
-            val.0.into(),
-            val.1.into(),
-            val.2.into(),
-            val.3.into(),
-            val.4.into(),
-            val.5.into(),
-            val.6.into(),
+            self.0.into(),
+            self.1.into(),
+            self.2.into(),
+            self.3.into(),
+            self.4.into(),
+            self.5.into(),
+            self.6.into(),
+            self.7.into(),
         ];
-        RArray::from_slice(&ary).into()
+        handle.ary_new_from_values(&ary).into()
     }
 }
 
@@ -1299,17 +1429,35 @@ where
     T7: Into<Value>,
 {
     fn from(val: (T0, T1, T2, T3, T4, T5, T6, T7)) -> Self {
+        get_ruby!().into_value(val)
+    }
+}
+
+impl<T0, T1, T2, T3, T4, T5, T6, T7, T8> IntoValue for (T0, T1, T2, T3, T4, T5, T6, T7, T8)
+where
+    T0: Into<Value>,
+    T1: Into<Value>,
+    T2: Into<Value>,
+    T3: Into<Value>,
+    T4: Into<Value>,
+    T5: Into<Value>,
+    T6: Into<Value>,
+    T7: Into<Value>,
+    T8: Into<Value>,
+{
+    fn into_value(self, handle: &RubyHandle) -> Value {
         let ary = [
-            val.0.into(),
-            val.1.into(),
-            val.2.into(),
-            val.3.into(),
-            val.4.into(),
-            val.5.into(),
-            val.6.into(),
-            val.7.into(),
+            self.0.into(),
+            self.1.into(),
+            self.2.into(),
+            self.3.into(),
+            self.4.into(),
+            self.5.into(),
+            self.6.into(),
+            self.7.into(),
+            self.8.into(),
         ];
-        RArray::from_slice(&ary).into()
+        handle.ary_new_from_values(&ary).into()
     }
 }
 
@@ -1326,18 +1474,37 @@ where
     T8: Into<Value>,
 {
     fn from(val: (T0, T1, T2, T3, T4, T5, T6, T7, T8)) -> Self {
+        get_ruby!().into_value(val)
+    }
+}
+
+impl<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9> IntoValue for (T0, T1, T2, T3, T4, T5, T6, T7, T8, T9)
+where
+    T0: Into<Value>,
+    T1: Into<Value>,
+    T2: Into<Value>,
+    T3: Into<Value>,
+    T4: Into<Value>,
+    T5: Into<Value>,
+    T6: Into<Value>,
+    T7: Into<Value>,
+    T8: Into<Value>,
+    T9: Into<Value>,
+{
+    fn into_value(self, handle: &RubyHandle) -> Value {
         let ary = [
-            val.0.into(),
-            val.1.into(),
-            val.2.into(),
-            val.3.into(),
-            val.4.into(),
-            val.5.into(),
-            val.6.into(),
-            val.7.into(),
-            val.8.into(),
+            self.0.into(),
+            self.1.into(),
+            self.2.into(),
+            self.3.into(),
+            self.4.into(),
+            self.5.into(),
+            self.6.into(),
+            self.7.into(),
+            self.8.into(),
+            self.9.into(),
         ];
-        RArray::from_slice(&ary).into()
+        handle.ary_new_from_values(&ary).into()
     }
 }
 
@@ -1356,19 +1523,40 @@ where
     T9: Into<Value>,
 {
     fn from(val: (T0, T1, T2, T3, T4, T5, T6, T7, T8, T9)) -> Self {
+        get_ruby!().into_value(val)
+    }
+}
+
+impl<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> IntoValue
+    for (T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10)
+where
+    T0: Into<Value>,
+    T1: Into<Value>,
+    T2: Into<Value>,
+    T3: Into<Value>,
+    T4: Into<Value>,
+    T5: Into<Value>,
+    T6: Into<Value>,
+    T7: Into<Value>,
+    T8: Into<Value>,
+    T9: Into<Value>,
+    T10: Into<Value>,
+{
+    fn into_value(self, handle: &RubyHandle) -> Value {
         let ary = [
-            val.0.into(),
-            val.1.into(),
-            val.2.into(),
-            val.3.into(),
-            val.4.into(),
-            val.5.into(),
-            val.6.into(),
-            val.7.into(),
-            val.8.into(),
-            val.9.into(),
+            self.0.into(),
+            self.1.into(),
+            self.2.into(),
+            self.3.into(),
+            self.4.into(),
+            self.5.into(),
+            self.6.into(),
+            self.7.into(),
+            self.8.into(),
+            self.9.into(),
+            self.10.into(),
         ];
-        RArray::from_slice(&ary).into()
+        handle.ary_new_from_values(&ary).into()
     }
 }
 
@@ -1388,20 +1576,42 @@ where
     T10: Into<Value>,
 {
     fn from(val: (T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10)) -> Self {
+        get_ruby!().into_value(val)
+    }
+}
+
+impl<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> IntoValue
+    for (T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11)
+where
+    T0: Into<Value>,
+    T1: Into<Value>,
+    T2: Into<Value>,
+    T3: Into<Value>,
+    T4: Into<Value>,
+    T5: Into<Value>,
+    T6: Into<Value>,
+    T7: Into<Value>,
+    T8: Into<Value>,
+    T9: Into<Value>,
+    T10: Into<Value>,
+    T11: Into<Value>,
+{
+    fn into_value(self, handle: &RubyHandle) -> Value {
         let ary = [
-            val.0.into(),
-            val.1.into(),
-            val.2.into(),
-            val.3.into(),
-            val.4.into(),
-            val.5.into(),
-            val.6.into(),
-            val.7.into(),
-            val.8.into(),
-            val.9.into(),
-            val.10.into(),
+            self.0.into(),
+            self.1.into(),
+            self.2.into(),
+            self.3.into(),
+            self.4.into(),
+            self.5.into(),
+            self.6.into(),
+            self.7.into(),
+            self.8.into(),
+            self.9.into(),
+            self.10.into(),
+            self.11.into(),
         ];
-        RArray::from_slice(&ary).into()
+        handle.ary_new_from_values(&ary).into()
     }
 }
 
@@ -1422,21 +1632,16 @@ where
     T11: Into<Value>,
 {
     fn from(val: (T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11)) -> Self {
-        let ary = [
-            val.0.into(),
-            val.1.into(),
-            val.2.into(),
-            val.3.into(),
-            val.4.into(),
-            val.5.into(),
-            val.6.into(),
-            val.7.into(),
-            val.8.into(),
-            val.9.into(),
-            val.10.into(),
-            val.11.into(),
-        ];
-        RArray::from_slice(&ary).into()
+        get_ruby!().into_value(val)
+    }
+}
+
+impl<T> IntoValue for Vec<T>
+where
+    T: Into<Value>,
+{
+    fn into_value(self, handle: &RubyHandle) -> Value {
+        handle.ary_from_vec(self).into()
     }
 }
 
@@ -1445,7 +1650,7 @@ where
     T: Into<Value>,
 {
     fn from(val: Vec<T>) -> Self {
-        RArray::from_vec(val).into()
+        get_ruby!().into_value(val)
     }
 }
 

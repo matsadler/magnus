@@ -6,6 +6,7 @@ use crate::{
     debug_assert_value,
     error::{protect, Error},
     exception,
+    into_value::IntoValue,
     r_bignum::RBignum,
     ruby_handle::RubyHandle,
     try_convert::TryConvert,
@@ -378,6 +379,12 @@ impl fmt::Display for Integer {
 impl fmt::Debug for Integer {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.inspect())
+    }
+}
+
+impl IntoValue for Integer {
+    fn into_value(self, _: &RubyHandle) -> Value {
+        *self
     }
 }
 

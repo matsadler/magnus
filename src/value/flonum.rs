@@ -4,6 +4,7 @@ use rb_sys::{rb_float_new_in_heap, VALUE};
 
 use crate::{
     exception,
+    into_value::IntoValue,
     ruby_handle::RubyHandle,
     try_convert::TryConvertOwned,
     value::{private, NonZeroValue, ReprValue},
@@ -130,6 +131,12 @@ impl fmt::Display for Flonum {
 impl fmt::Debug for Flonum {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.inspect())
+    }
+}
+
+impl IntoValue for Flonum {
+    fn into_value(self, _: &RubyHandle) -> Value {
+        *self
     }
 }
 

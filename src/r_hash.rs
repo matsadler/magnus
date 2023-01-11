@@ -25,6 +25,7 @@ use crate::{
     debug_assert_value,
     error::{protect, raise, Error},
     exception,
+    into_value::IntoValue,
     object::Object,
     ruby_handle::RubyHandle,
     try_convert::{TryConvert, TryConvertOwned},
@@ -86,7 +87,7 @@ where
 }
 
 impl RubyHandle {
-    pub fn new(&self) -> RHash {
+    pub fn hash_new(&self) -> RHash {
         unsafe { RHash::from_rb_value_unchecked(rb_hash_new()) }
     }
 
@@ -148,7 +149,7 @@ impl RHash {
     /// assert!(hash.is_empty());
     /// ```
     pub fn new() -> RHash {
-        get_ruby!().new()
+        get_ruby!().hash_new()
     }
 
     /// Create a new empty `RHash` with capacity for `n` elements
@@ -646,9 +647,29 @@ impl fmt::Debug for RHash {
     }
 }
 
+impl IntoValue for RHash {
+    fn into_value(self, _: &RubyHandle) -> Value {
+        *self
+    }
+}
+
 impl From<RHash> for Value {
     fn from(val: RHash) -> Self {
         *val
+    }
+}
+
+impl<K, V> IntoValue for HashMap<K, V>
+where
+    K: Into<Value>,
+    V: Into<Value>,
+{
+    fn into_value(self, handle: &RubyHandle) -> Value {
+        let hash = handle.hash_new();
+        for (k, v) in self {
+            let _ = hash.aset(k, v);
+        }
+        *hash
     }
 }
 

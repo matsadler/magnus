@@ -21,6 +21,7 @@ use crate::{
     debug_assert_value,
     error::Error,
     exception,
+    into_value::IntoValue,
     module::Module,
     object::Object,
     r_array::RArray,
@@ -97,6 +98,12 @@ impl fmt::Debug for Exception {
         } else {
             write!(f, "{}", self.inspect())
         }
+    }
+}
+
+impl IntoValue for Exception {
+    fn into_value(self, _: &RubyHandle) -> Value {
+        *self
     }
 }
 
@@ -189,6 +196,12 @@ impl fmt::Display for ExceptionClass {
 impl fmt::Debug for ExceptionClass {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.inspect())
+    }
+}
+
+impl IntoValue for ExceptionClass {
+    fn into_value(self, _: &RubyHandle) -> Value {
+        *self
     }
 }
 

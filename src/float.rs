@@ -9,6 +9,7 @@ use crate::value::Flonum;
 use crate::{
     debug_assert_value,
     error::{protect, Error},
+    into_value::IntoValue,
     ruby_handle::RubyHandle,
     try_convert::TryConvert,
     value::{private, NonZeroValue, ReprValue, Value},
@@ -130,6 +131,12 @@ impl fmt::Display for Float {
 impl fmt::Debug for Float {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.inspect())
+    }
+}
+
+impl IntoValue for Float {
+    fn into_value(self, _: &RubyHandle) -> Value {
+        *self
     }
 }
 

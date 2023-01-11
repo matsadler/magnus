@@ -14,6 +14,7 @@ use crate::{
     class,
     error::{protect, Error},
     exception,
+    into_value::IntoValue,
     object::Object,
     r_struct::RStruct,
     ruby_handle::RubyHandle,
@@ -277,9 +278,24 @@ impl fmt::Debug for Range {
     }
 }
 
+impl IntoValue for Range {
+    fn into_value(self, _: &RubyHandle) -> Value {
+        *self
+    }
+}
+
 impl From<Range> for Value {
     fn from(val: Range) -> Self {
         *val
+    }
+}
+
+impl<T> IntoValue for StdRange<T>
+where
+    T: Into<Value>,
+{
+    fn into_value(self, handle: &RubyHandle) -> Value {
+        *handle.range_new(self.start, self.end, true).unwrap()
     }
 }
 
@@ -288,7 +304,16 @@ where
     T: Into<Value>,
 {
     fn from(value: StdRange<T>) -> Self {
-        *Range::new(value.start, value.end, true).unwrap()
+        get_ruby!().into_value(value)
+    }
+}
+
+impl<T> IntoValue for RangeFrom<T>
+where
+    T: Into<Value>,
+{
+    fn into_value(self, handle: &RubyHandle) -> Value {
+        *handle.range_new(self.start, QNIL, false).unwrap()
     }
 }
 
@@ -297,13 +322,29 @@ where
     T: Into<Value>,
 {
     fn from(value: RangeFrom<T>) -> Self {
-        *Range::new(value.start, QNIL, false).unwrap()
+        get_ruby!().into_value(value)
+    }
+}
+
+impl IntoValue for RangeFull {
+    fn into_value(self, handle: &RubyHandle) -> Value {
+        *handle.range_new(QNIL, QNIL, false).unwrap()
     }
 }
 
 impl From<RangeFull> for Value {
-    fn from(_: RangeFull) -> Self {
-        *Range::new(QNIL, QNIL, false).unwrap()
+    fn from(value: RangeFull) -> Self {
+        get_ruby!().into_value(value)
+    }
+}
+
+impl<T> IntoValue for RangeInclusive<T>
+where
+    T: Into<Value>,
+{
+    fn into_value(self, handle: &RubyHandle) -> Value {
+        let (start, end) = self.into_inner();
+        *handle.range_new(start, end, false).unwrap()
     }
 }
 
@@ -312,8 +353,16 @@ where
     T: Into<Value>,
 {
     fn from(value: RangeInclusive<T>) -> Self {
-        let (start, end) = value.into_inner();
-        *Range::new(start, end, false).unwrap()
+        get_ruby!().into_value(value)
+    }
+}
+
+impl<T> IntoValue for RangeTo<T>
+where
+    T: Into<Value>,
+{
+    fn into_value(self, handle: &RubyHandle) -> Value {
+        *handle.range_new(QNIL, self.end, true).unwrap()
     }
 }
 
@@ -322,7 +371,16 @@ where
     T: Into<Value>,
 {
     fn from(value: RangeTo<T>) -> Self {
-        *Range::new(QNIL, value.end, true).unwrap()
+        get_ruby!().into_value(value)
+    }
+}
+
+impl<T> IntoValue for RangeToInclusive<T>
+where
+    T: Into<Value>,
+{
+    fn into_value(self, handle: &RubyHandle) -> Value {
+        *handle.range_new(QNIL, self.end, false).unwrap()
     }
 }
 
@@ -331,7 +389,7 @@ where
     T: Into<Value>,
 {
     fn from(value: RangeToInclusive<T>) -> Self {
-        *Range::new(QNIL, value.end, false).unwrap()
+        get_ruby!().into_value(value)
     }
 }
 

@@ -5,6 +5,8 @@ use rb_sys::ruby_value_type;
 use crate::{
     error::Error,
     exception,
+    into_value::IntoValue,
+    ruby_handle::RubyHandle,
     try_convert::TryConvert,
     value::{private, NonZeroValue, ReprValue, Value},
 };
@@ -46,6 +48,12 @@ impl fmt::Display for RComplex {
 impl fmt::Debug for RComplex {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.inspect())
+    }
+}
+
+impl IntoValue for RComplex {
+    fn into_value(self, _: &RubyHandle) -> Value {
+        *self
     }
 }
 

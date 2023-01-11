@@ -20,6 +20,7 @@ use crate::{
     debug_assert_value,
     error::{protect, Error},
     exception,
+    into_value::IntoValue,
     object::Object,
     r_array::RArray,
     ruby_handle::RubyHandle,
@@ -234,6 +235,12 @@ impl fmt::Display for RStruct {
 impl fmt::Debug for RStruct {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.inspect())
+    }
+}
+
+impl IntoValue for RStruct {
+    fn into_value(self, _: &RubyHandle) -> Value {
+        *self
     }
 }
 

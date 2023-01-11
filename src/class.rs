@@ -17,6 +17,7 @@ use crate::{
     debug_assert_value,
     error::{protect, Error},
     exception,
+    into_value::IntoValue,
     module::Module,
     object::Object,
     ruby_handle::RubyHandle,
@@ -164,6 +165,12 @@ impl fmt::Display for RClass {
 impl fmt::Debug for RClass {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.inspect())
+    }
+}
+
+impl IntoValue for RClass {
+    fn into_value(self, _: &RubyHandle) -> Value {
+        *self
     }
 }
 

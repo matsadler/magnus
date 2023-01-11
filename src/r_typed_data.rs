@@ -6,6 +6,7 @@ use crate::{
     debug_assert_value,
     error::{protect, Error},
     exception,
+    into_value::IntoValue,
     object::Object,
     ruby_handle::RubyHandle,
     typed_data::TypedData,
@@ -161,6 +162,12 @@ impl fmt::Display for RTypedData {
 impl fmt::Debug for RTypedData {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.inspect())
+    }
+}
+
+impl IntoValue for RTypedData {
+    fn into_value(self, _: &RubyHandle) -> Value {
+        *self
     }
 }
 

@@ -9,6 +9,7 @@ use crate::{
     error::Error,
     exception,
     float::Float,
+    into_value::IntoValue,
     ruby_handle::RubyHandle,
     try_convert::TryConvert,
     value::{private, NonZeroValue, ReprValue, Value},
@@ -101,6 +102,12 @@ impl fmt::Display for RFloat {
 impl fmt::Debug for RFloat {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.inspect())
+    }
+}
+
+impl IntoValue for RFloat {
+    fn into_value(self, _: &RubyHandle) -> Value {
+        *self
     }
 }
 

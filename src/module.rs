@@ -16,6 +16,7 @@ use crate::{
     debug_assert_value,
     error::{protect, Error},
     exception::{self, ExceptionClass},
+    into_value::IntoValue,
     method::Method,
     object::Object,
     r_array::RArray,
@@ -155,6 +156,12 @@ impl fmt::Display for RModule {
 impl fmt::Debug for RModule {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.inspect())
+    }
+}
+
+impl IntoValue for RModule {
+    fn into_value(self, _: &RubyHandle) -> Value {
+        *self
     }
 }
 

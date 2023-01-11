@@ -5,7 +5,9 @@ use rb_sys::ruby_value_type;
 use crate::{
     error::Error,
     exception,
+    into_value::IntoValue,
     object::Object,
+    ruby_handle::RubyHandle,
     try_convert::TryConvert,
     value::{private, NonZeroValue, ReprValue, Value},
 };
@@ -46,6 +48,12 @@ impl fmt::Display for RFile {
 impl fmt::Debug for RFile {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.inspect())
+    }
+}
+
+impl IntoValue for RFile {
+    fn into_value(self, _: &RubyHandle) -> Value {
+        *self
     }
 }
 

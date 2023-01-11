@@ -14,6 +14,7 @@ use crate::{
     encoding::{EncodingCapable, RbEncoding},
     error::{protect, Error},
     exception,
+    into_value::IntoValue,
     ruby_handle::RubyHandle,
     try_convert::TryConvert,
     value::{private, NonZeroValue, ReprValue, Value},
@@ -160,6 +161,12 @@ impl fmt::Debug for RRegexp {
 }
 
 impl EncodingCapable for RRegexp {}
+
+impl IntoValue for RRegexp {
+    fn into_value(self, _: &RubyHandle) -> Value {
+        *self
+    }
+}
 
 impl From<RRegexp> for Value {
     fn from(val: RRegexp) -> Self {

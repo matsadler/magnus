@@ -14,6 +14,7 @@ use crate::{
     error::{protect, Error},
     exception,
     integer::{Integer, IntegerType},
+    into_value::IntoValue,
     ruby_handle::RubyHandle,
     try_convert::TryConvert,
     value::{private, Fixnum, NonZeroValue, ReprValue, Value, QNIL},
@@ -311,6 +312,12 @@ impl fmt::Display for RBignum {
 impl fmt::Debug for RBignum {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.inspect())
+    }
+}
+
+impl IntoValue for RBignum {
+    fn into_value(self, _: &RubyHandle) -> Value {
+        *self
     }
 }
 

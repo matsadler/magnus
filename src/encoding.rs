@@ -41,6 +41,7 @@ use crate::{
     class,
     error::{protect, Error},
     exception,
+    into_value::IntoValue,
     object::Object,
     r_string::RString,
     ruby_handle::RubyHandle,
@@ -147,6 +148,12 @@ impl From<Encoding> for RbEncoding {
     fn from(val: Encoding) -> Self {
         let ptr = unsafe { rb_find_encoding(val.as_rb_value()) };
         RbEncoding::new(ptr).expect("got NULL rb_encoding")
+    }
+}
+
+impl IntoValue for Encoding {
+    fn into_value(self, _: &RubyHandle) -> Value {
+        *self
     }
 }
 
@@ -748,6 +755,12 @@ impl From<RbEncoding> for Encoding {
 impl From<RbEncoding> for Index {
     fn from(val: RbEncoding) -> Self {
         Index(unsafe { rb_enc_to_index(val.as_ptr()) })
+    }
+}
+
+impl IntoValue for RbEncoding {
+    fn into_value(self, _: &RubyHandle) -> Value {
+        *Encoding::from(self)
     }
 }
 

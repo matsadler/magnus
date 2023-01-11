@@ -29,6 +29,7 @@ use crate::{
     class::RClass,
     error::{bug_from_panic, Error},
     exception,
+    into_value::IntoValue,
     object::Object,
     r_typed_data::RTypedData,
     ruby_handle::RubyHandle,
@@ -361,12 +362,21 @@ where
     }
 }
 
+impl<T> IntoValue for T
+where
+    T: TypedData,
+{
+    fn into_value(self, handle: &RubyHandle) -> Value {
+        handle.wrap(self).into()
+    }
+}
+
 impl<T> From<T> for Value
 where
     T: TypedData,
 {
     fn from(data: T) -> Self {
-        RTypedData::wrap(data).into()
+        get_ruby!().into_value(data)
     }
 }
 
@@ -491,6 +501,15 @@ where
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.inspect())
+    }
+}
+
+impl<T> IntoValue for Obj<T>
+where
+    T: TypedData,
+{
+    fn into_value(self, _: &RubyHandle) -> Value {
+        *self.inner
     }
 }
 

@@ -6,7 +6,9 @@ use crate::{
     class,
     error::Error,
     exception,
+    into_value::IntoValue,
     object::Object,
+    ruby_handle::RubyHandle,
     try_convert::TryConvert,
     value::{private, NonZeroValue, ReprValue, Value},
 };
@@ -64,6 +66,12 @@ impl fmt::Display for Enumerator {
 impl fmt::Debug for Enumerator {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.deref().inspect())
+    }
+}
+
+impl IntoValue for Enumerator {
+    fn into_value(self, _: &RubyHandle) -> Value {
+        *self
     }
 }
 

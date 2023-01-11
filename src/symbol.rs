@@ -9,6 +9,7 @@ use crate::{
     encoding::EncodingCapable,
     error::{protect, Error},
     exception,
+    into_value::IntoValue,
     r_string::RString,
     ruby_handle::RubyHandle,
     try_convert::TryConvert,
@@ -221,6 +222,12 @@ impl From<String> for Symbol {
 impl From<StaticSymbol> for Symbol {
     fn from(s: StaticSymbol) -> Self {
         unsafe { Self(NonZeroValue::new_unchecked(s.into())) }
+    }
+}
+
+impl IntoValue for Symbol {
+    fn into_value(self, _: &RubyHandle) -> Value {
+        *self
     }
 }
 

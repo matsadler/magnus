@@ -39,8 +39,8 @@ use crate::{
     enumerator::Enumerator,
     error::{protect, Error},
     exception,
-    float::Float,
     integer::{Integer, IntegerType},
+    into_value::IntoValue,
     method::{Block, BlockReturn},
     module::Module,
     r_bignum::RBignum,
@@ -934,75 +934,147 @@ impl fmt::Debug for Value {
     }
 }
 
+impl IntoValue for i8 {
+    fn into_value(self, handle: &RubyHandle) -> Value {
+        handle.integer_from_i64(self as i64).into()
+    }
+}
+
 impl From<i8> for Value {
     fn from(value: i8) -> Self {
-        Integer::from_i64(value as i64).into()
+        get_ruby!().into_value(value)
+    }
+}
+
+impl IntoValue for i16 {
+    fn into_value(self, handle: &RubyHandle) -> Value {
+        handle.integer_from_i64(self as i64).into()
     }
 }
 
 impl From<i16> for Value {
     fn from(value: i16) -> Self {
-        Integer::from_i64(value as i64).into()
+        get_ruby!().into_value(value)
+    }
+}
+
+impl IntoValue for i32 {
+    fn into_value(self, handle: &RubyHandle) -> Value {
+        handle.integer_from_i64(self as i64).into()
     }
 }
 
 impl From<i32> for Value {
     fn from(value: i32) -> Self {
-        Integer::from_i64(value as i64).into()
+        get_ruby!().into_value(value)
+    }
+}
+
+impl IntoValue for i64 {
+    fn into_value(self, handle: &RubyHandle) -> Value {
+        handle.integer_from_i64(self).into()
     }
 }
 
 impl From<i64> for Value {
     fn from(value: i64) -> Self {
-        Integer::from_i64(value).into()
+        get_ruby!().into_value(value)
+    }
+}
+
+impl IntoValue for isize {
+    fn into_value(self, handle: &RubyHandle) -> Value {
+        handle.integer_from_i64(self as i64).into()
     }
 }
 
 impl From<isize> for Value {
     fn from(value: isize) -> Self {
-        Integer::from_i64(value as i64).into()
+        get_ruby!().into_value(value)
+    }
+}
+
+impl IntoValue for u8 {
+    fn into_value(self, handle: &RubyHandle) -> Value {
+        handle.integer_from_u64(self as u64).into()
     }
 }
 
 impl From<u8> for Value {
     fn from(value: u8) -> Self {
-        Integer::from_u64(value as u64).into()
+        get_ruby!().into_value(value)
+    }
+}
+
+impl IntoValue for u16 {
+    fn into_value(self, handle: &RubyHandle) -> Value {
+        handle.integer_from_u64(self as u64).into()
     }
 }
 
 impl From<u16> for Value {
     fn from(value: u16) -> Self {
-        Integer::from_u64(value as u64).into()
+        get_ruby!().into_value(value)
+    }
+}
+
+impl IntoValue for u32 {
+    fn into_value(self, handle: &RubyHandle) -> Value {
+        handle.integer_from_u64(self as u64).into()
     }
 }
 
 impl From<u32> for Value {
     fn from(value: u32) -> Self {
-        Integer::from_u64(value as u64).into()
+        get_ruby!().into_value(value)
+    }
+}
+
+impl IntoValue for u64 {
+    fn into_value(self, handle: &RubyHandle) -> Value {
+        handle.integer_from_u64(self).into()
     }
 }
 
 impl From<u64> for Value {
     fn from(value: u64) -> Self {
-        Integer::from_u64(value).into()
+        get_ruby!().into_value(value)
+    }
+}
+
+impl IntoValue for usize {
+    fn into_value(self, handle: &RubyHandle) -> Value {
+        handle.integer_from_u64(self as u64).into()
     }
 }
 
 impl From<usize> for Value {
     fn from(value: usize) -> Self {
-        Integer::from_u64(value as u64).into()
+        get_ruby!().into_value(value)
+    }
+}
+
+impl IntoValue for f32 {
+    fn into_value(self, handle: &RubyHandle) -> Value {
+        handle.float_from_f64(self as f64).into()
     }
 }
 
 impl From<f32> for Value {
     fn from(value: f32) -> Self {
-        Float::from_f64(value as f64).into()
+        get_ruby!().into_value(value)
+    }
+}
+
+impl IntoValue for f64 {
+    fn into_value(self, handle: &RubyHandle) -> Value {
+        handle.float_from_f64(self).into()
     }
 }
 
 impl From<f64> for Value {
     fn from(value: f64) -> Self {
-        Float::from_f64(value).into()
+        get_ruby!().into_value(value)
     }
 }
 
@@ -1185,6 +1257,15 @@ where
     }
 }
 
+impl<T> IntoValue for BoxValue<T>
+where
+    T: ReprValue,
+{
+    fn into_value(self, _: &RubyHandle) -> Value {
+        self.to_value()
+    }
+}
+
 impl<T> From<BoxValue<T>> for Value
 where
     T: ReprValue,
@@ -1248,6 +1329,12 @@ impl fmt::Display for Qfalse {
 impl fmt::Debug for Qfalse {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.inspect())
+    }
+}
+
+impl IntoValue for Qfalse {
+    fn into_value(self, _: &RubyHandle) -> Value {
+        *self
     }
 }
 
@@ -1344,15 +1431,39 @@ impl fmt::Debug for Qnil {
     }
 }
 
+impl IntoValue for Qnil {
+    fn into_value(self, _: &RubyHandle) -> Value {
+        *self
+    }
+}
+
 impl From<Qnil> for Value {
     fn from(val: Qnil) -> Self {
         *val
     }
 }
 
-impl From<()> for Value {
-    fn from(_: ()) -> Self {
+impl IntoValue for () {
+    fn into_value(self, _: &RubyHandle) -> Value {
         QNIL.into()
+    }
+}
+
+impl From<()> for Value {
+    fn from(val: ()) -> Self {
+        get_ruby!().into_value(val)
+    }
+}
+
+impl<T> IntoValue for Option<T>
+where
+    T: Into<Value>,
+{
+    fn into_value(self, _: &RubyHandle) -> Value {
+        match self {
+            Some(t) => t.into(),
+            None => QNIL.into(),
+        }
     }
 }
 
@@ -1361,10 +1472,7 @@ where
     T: Into<Value>,
 {
     fn from(val: Option<T>) -> Self {
-        match val {
-            Some(t) => t.into(),
-            None => QNIL.into(),
-        }
+        get_ruby!().into_value(val)
     }
 }
 
@@ -1455,19 +1563,31 @@ impl fmt::Debug for Qtrue {
     }
 }
 
+impl IntoValue for Qtrue {
+    fn into_value(self, _: &RubyHandle) -> Value {
+        *self
+    }
+}
+
 impl From<Qtrue> for Value {
     fn from(val: Qtrue) -> Self {
         *val
     }
 }
 
-impl From<bool> for Value {
-    fn from(val: bool) -> Self {
-        if val {
+impl IntoValue for bool {
+    fn into_value(self, _: &RubyHandle) -> Value {
+        if self {
             QTRUE.into()
         } else {
             QFALSE.into()
         }
+    }
+}
+
+impl From<bool> for Value {
+    fn from(val: bool) -> Self {
+        get_ruby!().into_value(val)
     }
 }
 
@@ -1954,6 +2074,12 @@ impl fmt::Debug for Fixnum {
     }
 }
 
+impl IntoValue for Fixnum {
+    fn into_value(self, _: &RubyHandle) -> Value {
+        *self
+    }
+}
+
 impl From<Fixnum> for Value {
     fn from(val: Fixnum) -> Self {
         *val
@@ -2146,6 +2272,12 @@ impl From<&str> for StaticSymbol {
 impl From<String> for StaticSymbol {
     fn from(s: String) -> Self {
         Id::from(s).into()
+    }
+}
+
+impl IntoValue for StaticSymbol {
+    fn into_value(self, _: &RubyHandle) -> Value {
+        *self
     }
 }
 

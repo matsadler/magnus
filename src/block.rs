@@ -10,7 +10,9 @@ use rb_sys::{
 use crate::{
     enumerator::Enumerator,
     error::{ensure, protect, Error},
-    exception, memoize,
+    exception,
+    into_value::IntoValue,
+    memoize,
     method::{Block, BlockReturn},
     object::Object,
     r_array::RArray,
@@ -271,6 +273,12 @@ impl fmt::Display for Proc {
 impl fmt::Debug for Proc {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.inspect())
+    }
+}
+
+impl IntoValue for Proc {
+    fn into_value(self, _: &RubyHandle) -> Value {
+        *self
     }
 }
 
