@@ -428,8 +428,8 @@ impl Default for Opts {
     }
 }
 
-impl Into<i32> for Opts {
-    fn into(self) -> i32 {
-        self.0 as i32
+impl From<Opts> for i32 {
+    fn from(val: Opts) -> i32 {
+        val.0 as i32
     }
 }

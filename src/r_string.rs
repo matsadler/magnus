@@ -1337,6 +1337,7 @@ impl RString {
     /// assert_eq!(std::cmp::Ordering::Equal as i64, 0);
     /// assert_eq!(std::cmp::Ordering::Greater as i64, 1);
     /// ```
+    #[allow(clippy::should_implement_trait)]
     pub fn cmp(self, other: Self) -> Ordering {
         unsafe { rb_str_cmp(self.as_rb_value(), other.as_rb_value()) }.cmp(&0)
     }
@@ -1524,7 +1525,7 @@ impl From<&Path> for Value {
 
 impl IntoValue for PathBuf {
     fn into_value(self, handle: &RubyHandle) -> Value {
-        handle.into_value(self.as_path()).into()
+        handle.into_value(self.as_path())
     }
 }
 

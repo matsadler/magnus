@@ -602,7 +602,7 @@ impl RbEncoding {
             };
             QNIL
         })?;
-        Ok((c as u32, len as usize))
+        Ok((c, len as usize))
     }
 
     /// Returns the number of bytes required to represent the code point `code`

@@ -203,7 +203,7 @@ where
         F: FnOnce() -> T,
         T: ReprValue,
     {
-        let closure = (&mut *(arg as *mut Option<F>)).take().unwrap();
+        let closure = (*(arg as *mut Option<F>)).take().unwrap();
         (closure)().to_value().as_rb_value()
     }
 
@@ -249,7 +249,7 @@ where
     where
         F1: FnOnce() -> Value,
     {
-        let closure = (&mut *(arg as *mut Option<F1>)).take().unwrap();
+        let closure = (*(arg as *mut Option<F1>)).take().unwrap();
         (closure)().as_rb_value()
     }
 
@@ -257,7 +257,7 @@ where
     where
         F2: FnOnce(),
     {
-        let closure = (&mut *(arg as *mut Option<F2>)).take().unwrap();
+        let closure = (*(arg as *mut Option<F2>)).take().unwrap();
         (closure)();
         ruby_special_consts::RUBY_Qnil as VALUE
     }
