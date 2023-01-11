@@ -1034,7 +1034,7 @@ impl RString {
     }
 
     /// Mutate `self`, adding `other` to the end. Errors if `self` and
-    /// other`'s encodings are not compatible.
+    /// `other`'s encodings are not compatible.
     ///
     /// # Examples
     ///
