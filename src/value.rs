@@ -45,6 +45,7 @@ use crate::{
     module::Module,
     r_bignum::RBignum,
     r_string::RString,
+    ruby_handle::RubyHandle,
     symbol::Symbol,
     try_convert::{ArgList, TryConvert, TryConvertOwned},
 };
@@ -1549,6 +1550,20 @@ impl Qundef {
     }
 }
 
+impl RubyHandle {
+    #[inline]
+    pub fn fixnum_from_i64(&self, n: i64) -> Result<Fixnum, RBignum> {
+        Fixnum::from_i64_impl(n)
+            .ok_or_else(|| unsafe { RBignum::from_rb_value_unchecked(rb_ll2inum(n)) })
+    }
+
+    #[inline]
+    pub fn fixnum_from_u64(&self, n: u64) -> Result<Fixnum, RBignum> {
+        Fixnum::from_i64_impl(i64::try_from(n).unwrap_or(i64::MAX))
+            .ok_or_else(|| unsafe { RBignum::from_rb_value_unchecked(rb_ull2inum(n)) })
+    }
+}
+
 /// A Value known to be a fixnum, Ruby's internal representation of small
 /// integers.
 ///
@@ -1608,6 +1623,10 @@ impl Fixnum {
     /// Returns `Ok(Fixnum)` if `n` is in range for `Fixnum`, otherwise returns
     /// `Err(RBignum)`.
     ///
+    /// # Panics
+    ///
+    /// Panics if called from a non-Ruby thread.
+    ///
     /// # Examples
     ///
     /// ```
@@ -1621,14 +1640,17 @@ impl Fixnum {
     /// ```
     #[inline]
     pub fn from_i64(n: i64) -> Result<Self, RBignum> {
-        Self::from_i64_impl(n)
-            .ok_or_else(|| unsafe { RBignum::from_rb_value_unchecked(rb_ll2inum(n)) })
+        get_ruby!().fixnum_from_i64(n)
     }
 
     /// Create a new `Fixnum` from a `u64.`
     ///
     /// Returns `Ok(Fixnum)` if `n` is in range for `Fixnum`, otherwise returns
     /// `Err(RBignum)`.
+    ///
+    /// # Panics
+    ///
+    /// Panics if called from a non-Ruby thread.
     ///
     /// # Examples
     ///
@@ -1642,8 +1664,7 @@ impl Fixnum {
     /// ```
     #[inline]
     pub fn from_u64(n: u64) -> Result<Self, RBignum> {
-        Self::from_i64_impl(i64::try_from(n).unwrap_or(i64::MAX))
-            .ok_or_else(|| unsafe { RBignum::from_rb_value_unchecked(rb_ull2inum(n)) })
+        get_ruby!().fixnum_from_u64(n)
     }
 
     fn is_negative(self) -> bool {
@@ -1964,6 +1985,24 @@ impl TryConvert for Fixnum {
 }
 impl TryConvertOwned for Fixnum {}
 
+impl RubyHandle {
+    #[inline]
+    pub fn sym_new<T: Into<Id>>(&self, name: T) -> StaticSymbol {
+        name.into().into()
+    }
+
+    pub fn check_symbol(&self, name: &str) -> Option<StaticSymbol> {
+        unsafe {
+            let res = Value::new(rb_check_symbol_cstr(
+                name.as_ptr() as *mut c_char,
+                name.len() as c_long,
+                RbEncoding::utf8().as_ptr(),
+            ));
+            (!res.is_nil()).then(|| StaticSymbol::from_rb_value_unchecked(res.as_rb_value()))
+        }
+    }
+}
+
 /// A static Ruby symbol that will live for the life of the program and never
 /// be garbage collected.
 ///
@@ -2014,6 +2053,10 @@ impl StaticSymbol {
 
     /// Create a new StaticSymbol.
     ///
+    /// # Panics
+    ///
+    /// Panics if called from a non-Ruby thread.
+    ///
     /// # Examples
     /// ```
     /// use magnus::{eval, StaticSymbol};
@@ -2025,10 +2068,14 @@ impl StaticSymbol {
     /// ```
     #[inline]
     pub fn new<T: Into<Id>>(name: T) -> Self {
-        name.into().into()
+        get_ruby!().sym_new(name)
     }
 
     /// Return the `Id` for `name`, if one exists.
+    ///
+    /// # Panics
+    ///
+    /// Panics if called from a non-Ruby thread.
     ///
     /// # Examples
     ///
@@ -2041,14 +2088,7 @@ impl StaticSymbol {
     /// assert!(StaticSymbol::check("example").is_some());
     /// ```
     pub fn check(name: &str) -> Option<Self> {
-        unsafe {
-            let res = Value::new(rb_check_symbol_cstr(
-                name.as_ptr() as *mut c_char,
-                name.len() as c_long,
-                RbEncoding::utf8().as_ptr(),
-            ));
-            (!res.is_nil()).then(|| Self::from_rb_value_unchecked(res.as_rb_value()))
-        }
+        get_ruby!().check_symbol(name)
     }
 
     /// Return the symbol as a static string reference.
@@ -2134,6 +2174,19 @@ impl TryConvert for StaticSymbol {
 }
 impl TryConvertOwned for StaticSymbol {}
 
+impl RubyHandle {
+    pub fn check_id(&self, name: &str) -> Option<Id> {
+        let res = unsafe {
+            rb_check_id_cstr(
+                name.as_ptr() as *mut c_char,
+                name.len() as c_long,
+                RbEncoding::utf8().as_ptr(),
+            )
+        };
+        (res != 0).then(|| Id::new(res))
+    }
+}
+
 /// The internal value of a Ruby symbol.
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[repr(transparent)]
@@ -2150,6 +2203,10 @@ impl Id {
 
     /// Return the `Id` for `name`, if one exists.
     ///
+    /// # Panics
+    ///
+    /// Panics if called from a non-Ruby thread.
+    ///
     /// # Examples
     ///
     /// ```
@@ -2161,14 +2218,7 @@ impl Id {
     /// assert!(Id::check("example").is_some());
     /// ```
     pub fn check(name: &str) -> Option<Self> {
-        let res = unsafe {
-            rb_check_id_cstr(
-                name.as_ptr() as *mut c_char,
-                name.len() as c_long,
-                RbEncoding::utf8().as_ptr(),
-            )
-        };
-        (res != 0).then(|| Self::new(res))
+        get_ruby!().check_id(name)
     }
 
     /// Return the symbol name associated with this Id as a static string

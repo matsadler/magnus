@@ -9,9 +9,26 @@ use crate::{
     error::Error,
     exception,
     float::Float,
+    ruby_handle::RubyHandle,
     try_convert::TryConvert,
     value::{private, NonZeroValue, ReprValue, Value},
 };
+
+impl RubyHandle {
+    #[cfg(ruby_use_flonum)]
+    pub fn r_float_from_f64(&self, n: f64) -> Result<RFloat, Flonum> {
+        unsafe {
+            let val = Value::new(rb_float_new(n));
+            RFloat::from_value(val)
+                .ok_or_else(|| Flonum::from_rb_value_unchecked(val.as_rb_value()))
+        }
+    }
+
+    #[cfg(not(ruby_use_flonum))]
+    pub fn r_float_from_f64(&self, n: f64) -> Result<RFloat, RFloat> {
+        unsafe { Ok(RFloat::from_rb_value_unchecked(rb_float_new(n))) }
+    }
+}
 
 /// A Value pointer to a RFloat struct, Ruby's internal representation of
 /// high precision floating point numbers.
@@ -39,20 +56,25 @@ impl RFloat {
 
     /// Create a new `RFloat` from an `f64.`
     ///
+    /// # Panics
+    ///
+    /// Panics if called from a non-Ruby thread.
+    ///
     /// Returns `Ok(RFloat)` if `n` requires a high precision float, otherwise
     /// returns `Err(Fixnum)`.
     #[cfg(ruby_use_flonum)]
     pub fn from_f64(n: f64) -> Result<Self, Flonum> {
-        unsafe {
-            let val = Value::new(rb_float_new(n));
-            Self::from_value(val).ok_or_else(|| Flonum::from_rb_value_unchecked(val.as_rb_value()))
-        }
+        get_ruby!().r_float_from_f64(n)
     }
 
     /// Create a new `RFloat` from an `f64.`
+    ///
+    /// # Panics
+    ///
+    /// Panics if called from a non-Ruby thread.
     #[cfg(not(ruby_use_flonum))]
     pub fn from_f64(n: f64) -> Result<Self, Self> {
-        unsafe { Ok(Self::from_rb_value_unchecked(rb_float_new(n))) }
+        get_ruby!().r_float_from_f64(n)
     }
 
     /// Convert `self` to a `f64`.

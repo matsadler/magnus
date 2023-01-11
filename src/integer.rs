@@ -7,6 +7,7 @@ use crate::{
     error::{protect, Error},
     exception,
     r_bignum::RBignum,
+    ruby_handle::RubyHandle,
     try_convert::TryConvert,
     value::{private, Fixnum, NonZeroValue, ReprValue, Value},
 };
@@ -14,6 +15,30 @@ use crate::{
 pub(crate) enum IntegerType {
     Fixnum(Fixnum),
     Bignum(RBignum),
+}
+
+impl RubyHandle {
+    #[inline]
+    pub fn integer_from_i64(&self, n: i64) -> Integer {
+        unsafe {
+            Integer::from_rb_value_unchecked(
+                Fixnum::from_i64_impl(n)
+                    .map(|f| f.as_rb_value())
+                    .unwrap_or_else(|| rb_ll2inum(n)),
+            )
+        }
+    }
+
+    #[inline]
+    pub fn integer_from_u64(&self, n: u64) -> Integer {
+        unsafe {
+            Integer::from_rb_value_unchecked(
+                Fixnum::from_i64_impl(i64::try_from(n).unwrap_or(i64::MAX))
+                    .map(|f| f.as_rb_value())
+                    .unwrap_or_else(|| rb_ull2inum(n)),
+            )
+        }
+    }
 }
 
 /// A type wrapping either a [`Fixnum`] or a [`RBignum`].
@@ -67,6 +92,10 @@ impl Integer {
 
     /// Create a new `Integer` from an `i64.`
     ///
+    /// # Panics
+    ///
+    /// Panics if called from a non-Ruby thread.
+    ///
     /// # Examples
     ///
     /// ```
@@ -82,16 +111,14 @@ impl Integer {
     /// ```
     #[inline]
     pub fn from_i64(n: i64) -> Self {
-        unsafe {
-            Self::from_rb_value_unchecked(
-                Fixnum::from_i64_impl(n)
-                    .map(|f| f.as_rb_value())
-                    .unwrap_or_else(|| rb_ll2inum(n)),
-            )
-        }
+        get_ruby!().integer_from_i64(n)
     }
 
     /// Create a new `Integer` from a `u64.`
+    ///
+    /// # Panics
+    ///
+    /// Panics if called from a non-Ruby thread.
     ///
     /// # Examples
     ///
@@ -106,13 +133,7 @@ impl Integer {
     /// ```
     #[inline]
     pub fn from_u64(n: u64) -> Self {
-        unsafe {
-            Self::from_rb_value_unchecked(
-                Fixnum::from_i64_impl(i64::try_from(n).unwrap_or(i64::MAX))
-                    .map(|f| f.as_rb_value())
-                    .unwrap_or_else(|| rb_ull2inum(n)),
-            )
-        }
+        get_ruby!().integer_from_u64(n)
     }
 
     /// Convert `self` to an `i8`. Returns `Err` if `self` is out of range for

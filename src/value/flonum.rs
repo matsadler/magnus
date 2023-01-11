@@ -4,10 +4,19 @@ use rb_sys::{rb_float_new_in_heap, VALUE};
 
 use crate::{
     exception,
+    ruby_handle::RubyHandle,
     try_convert::TryConvertOwned,
     value::{private, NonZeroValue, ReprValue},
     Error, Float, RFloat, TryConvert, Value,
 };
+
+impl RubyHandle {
+    #[inline]
+    pub fn flonum_from_f64(&self, n: f64) -> Result<Flonum, RFloat> {
+        Flonum::from_f64_impl(n)
+            .ok_or_else(|| unsafe { RFloat::from_rb_value_unchecked(rb_float_new_in_heap(n)) })
+    }
+}
 
 /// A Value known to be a flonum, Ruby's internal representation of lower
 /// precision floating point numbers.
@@ -63,6 +72,10 @@ impl Flonum {
     /// Returns `Ok(Flonum)` if `n` can be represented as a `Flonum`, otherwise
     /// returns `Err(RFloat)`.
     ///
+    /// # Panics
+    ///
+    /// Panics if called from a non-Ruby thread.
+    ///
     /// # Examples
     ///
     /// ```
@@ -75,8 +88,7 @@ impl Flonum {
     /// ```
     #[inline]
     pub fn from_f64(n: f64) -> Result<Self, RFloat> {
-        Self::from_f64_impl(n)
-            .ok_or_else(|| unsafe { RFloat::from_rb_value_unchecked(rb_float_new_in_heap(n)) })
+        get_ruby!().flonum_from_f64(n)
     }
 
     /// Convert `self` to a `f64`.
@@ -89,7 +101,6 @@ impl Flonum {
     ///
     /// assert_eq!(eval::<Flonum>("2.0").unwrap().to_f64(), 2.0);
     /// ```
-    #[cfg(ruby_use_flonum)]
     #[inline]
     pub fn to_f64(self) -> f64 {
         let v = self.as_rb_value();

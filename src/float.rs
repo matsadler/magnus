@@ -9,9 +9,27 @@ use crate::value::Flonum;
 use crate::{
     debug_assert_value,
     error::{protect, Error},
+    ruby_handle::RubyHandle,
     try_convert::TryConvert,
     value::{private, NonZeroValue, ReprValue, Value},
 };
+
+impl RubyHandle {
+    #[inline]
+    pub fn float_from_f64(&self, n: f64) -> Float {
+        unsafe {
+            #[cfg(ruby_use_flonum)]
+            let val = Flonum::from_f64_impl(n)
+                .map(|f| f.as_rb_value())
+                .unwrap_or_else(|| rb_float_new_in_heap(n));
+
+            #[cfg(not(ruby_use_flonum))]
+            let val = rb_float_new_in_heap(n);
+
+            Float::from_rb_value_unchecked(val)
+        }
+    }
+}
 
 /// A type wrapping either a [`Flonum`](`crate::value::Flonum`) value or a
 /// Value known to be an instance of Float.
@@ -55,6 +73,10 @@ impl Float {
 
     /// Create a new `Float` from an `f64`.
     ///
+    /// # Panics
+    ///
+    /// Panics if called from a non-Ruby thread.
+    ///
     /// # Examples
     ///
     /// ```
@@ -68,17 +90,7 @@ impl Float {
     /// ```
     #[inline]
     pub fn from_f64(n: f64) -> Self {
-        unsafe {
-            #[cfg(ruby_use_flonum)]
-            let val = Flonum::from_f64_impl(n)
-                .map(|f| f.as_rb_value())
-                .unwrap_or_else(|| rb_float_new_in_heap(n));
-
-            #[cfg(not(ruby_use_flonum))]
-            let val = rb_float_new_in_heap(n);
-
-            Self::from_rb_value_unchecked(val)
-        }
+        get_ruby!().float_from_f64(n)
     }
 
     /// Convert `self` to a `f64`.
