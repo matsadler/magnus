@@ -745,14 +745,6 @@ pub trait ArgList {
     fn into_arg_list(self) -> Self::Output;
 }
 
-impl<'a> ArgList for &'a [Value] {
-    type Output = &'a [Value];
-
-    fn into_arg_list(self) -> Self::Output {
-        self
-    }
-}
-
 impl ArgList for () {
     type Output = [Value; 0];
 
