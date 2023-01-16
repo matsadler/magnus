@@ -27,6 +27,7 @@ use crate::{
     exception,
     into_value::IntoValue,
     object::Object,
+    r_array::RArray,
     ruby_handle::RubyHandle,
     try_convert::{TryConvert, TryConvertOwned},
     value::{private, Fixnum, NonZeroValue, ReprValue, Value, QNIL, QUNDEF},
@@ -172,6 +173,14 @@ impl RHash {
     #[cfg_attr(docsrs, doc(cfg(ruby_gte_3_2)))]
     pub fn with_capacity(n: usize) -> Self {
         get_ruby!().with_capacity(n)
+    }
+
+    /// Create a new empty `RHash`. The provided capacity is ignored.
+    ///
+    /// Allows Magnus internals to call `RHash::with_capacity` unconditionally.
+    #[cfg(not(any(ruby_gte_3_2, docsrs)))]
+    pub(crate) fn with_capacity(_: usize) -> Self {
+        get_ruby!().hash_new()
     }
 
     /// Set the value `val` for the key `key`.
@@ -624,6 +633,11 @@ impl RHash {
     /// ```
     pub fn is_empty(self) -> bool {
         self.len() == 0
+    }
+
+    #[cfg_attr(not(feature = "serde"), allow(unused))]
+    pub(crate) fn keys(self) -> Result<RArray, Error> {
+        self.funcall("keys", ())
     }
 }
 

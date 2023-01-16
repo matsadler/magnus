@@ -1,6 +1,8 @@
 //! Rust types for working with Ruby Exceptions and other interrupts.
 
-use std::{any::Any, borrow::Cow, ffi::CString, fmt, mem::transmute, ops::Deref, os::raw::c_int};
+use std::{
+    any::Any, borrow::Cow, error, ffi::CString, fmt, mem::transmute, ops::Deref, os::raw::c_int,
+};
 
 use rb_sys::{
     rb_bug, rb_ensure, rb_errinfo, rb_exc_raise, rb_iter_break, rb_iter_break_value, rb_jump_tag,
@@ -126,6 +128,8 @@ impl fmt::Display for Error {
     }
 }
 
+impl error::Error for Error {}
+
 impl From<Tag> for Error {
     fn from(val: Tag) -> Self {
         Self::Jump(val)
@@ -135,6 +139,20 @@ impl From<Tag> for Error {
 impl From<Exception> for Error {
     fn from(val: Exception) -> Self {
         Self::Exception(val)
+    }
+}
+
+#[cfg(feature = "serde")]
+impl serde::de::Error for Error {
+    fn custom<T: fmt::Display>(message: T) -> Self {
+        Error::new(crate::exception::runtime_error(), message.to_string())
+    }
+}
+
+#[cfg(feature = "serde")]
+impl serde::ser::Error for Error {
+    fn custom<T: fmt::Display>(message: T) -> Self {
+        Error::new(crate::exception::runtime_error(), message.to_string())
     }
 }
 

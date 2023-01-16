@@ -3,6 +3,11 @@
 #[cfg(ruby_use_flonum)]
 mod flonum;
 
+#[cfg(feature = "serde")]
+mod de;
+#[cfg(feature = "serde")]
+mod ser;
+
 use std::{
     borrow::Cow,
     convert::TryFrom,
@@ -17,6 +22,12 @@ use std::{
 
 #[cfg(ruby_use_flonum)]
 pub use flonum::Flonum;
+
+#[cfg(feature = "serde")]
+pub use de::deserialize;
+#[cfg(feature = "serde")]
+pub use ser::serialize;
+
 use rb_sys::{
     rb_any_to_s, rb_block_call, rb_check_funcall, rb_check_id, rb_check_id_cstr,
     rb_check_symbol_cstr, rb_enumeratorize_with_size, rb_eql, rb_equal, rb_funcall_with_block,

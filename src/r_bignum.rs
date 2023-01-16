@@ -124,7 +124,7 @@ impl RBignum {
         get_ruby!().bignum_from_u64(n)
     }
 
-    fn is_negative(self) -> bool {
+    pub(crate) fn is_negative(self) -> bool {
         debug_assert_value!(self);
         unsafe {
             let r_basic = self.r_basic_unchecked();

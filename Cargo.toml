@@ -25,9 +25,11 @@ ruby-static = ["rb-sys/ruby-static"]
 [dependencies]
 magnus-macros = { version = "0.3.0", path = "magnus-macros" }
 rb-sys = { version = "0.9.56", default-features = false, features = ["bindgen-rbimpls", "bindgen-deprecated-types"] }
+serde = { version = "1.0.152", optional = true }
 
 [dev-dependencies]
-magnus = { path = ".", features = ["embed", "rb-sys-interop"] }
+magnus = { path = ".", features = ["embed", "rb-sys-interop", "serde"] }
+serde = { version = "1.0.152", features = ["derive"] }
 
 [build-dependencies]
 rb-sys-env = "0.1.1"
