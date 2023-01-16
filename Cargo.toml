@@ -35,3 +35,9 @@ rb-sys-env = "0.1.1"
 [package.metadata.docs.rs]
 all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
+
+[profile.dev]
+# Will ensure that the compiler will optimize out any intermediate stack values
+# so they are promoted to the heap. This exposes GC bugs in when using
+# `GC.stress = true`.
+opt-level = 1

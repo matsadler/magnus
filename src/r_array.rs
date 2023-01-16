@@ -51,7 +51,7 @@ impl RubyHandle {
 
     pub fn ary_new_from_values<T>(&self, slice: &[T]) -> RArray
     where
-        T: ReprValue,
+        T: Into<Value>,
     {
         let ptr = slice.as_ptr() as *const VALUE;
         unsafe {
@@ -388,7 +388,7 @@ impl RArray {
     /// ```
     pub fn from_slice<T>(slice: &[T]) -> Self
     where
-        T: ReprValue,
+        T: Into<Value>,
     {
         get_ruby!().ary_new_from_values(slice)
     }
@@ -1650,6 +1650,24 @@ where
     T: Into<Value>,
 {
     fn from(val: Vec<T>) -> Self {
+        get_ruby!().into_value(val)
+    }
+}
+
+impl<T> IntoValue for &[T]
+where
+    T: Into<Value>,
+{
+    fn into_value(self, handle: &RubyHandle) -> Value {
+        handle.ary_new_from_values(self).into()
+    }
+}
+
+impl<T> From<&[T]> for Value
+where
+    T: Into<Value>,
+{
+    fn from(val: &[T]) -> Self {
         get_ruby!().into_value(val)
     }
 }
