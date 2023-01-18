@@ -204,8 +204,8 @@
 //!
 // * `RBASIC`:
 // * `RBASIC_CLASS`:
-// * `RBIGNUM_NEGATIVE_P`:
-// * `RBIGNUM_POSITIVE_P`:
+//! * `RBIGNUM_NEGATIVE_P`: See [`RBignum::is_negative`].
+//! * `RBIGNUM_POSITIVE_P`: See [`RBignum::is_positive`].
 // * `RBIGNUM_SIGN`:
 //!
 //! ## `rb_a`-`rb_arx`

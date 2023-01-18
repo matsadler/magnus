@@ -124,14 +124,6 @@ impl RBignum {
         get_ruby!().bignum_from_u64(n)
     }
 
-    fn is_negative(self) -> bool {
-        debug_assert_value!(self);
-        unsafe {
-            let r_basic = self.r_basic_unchecked();
-            r_basic.as_ref().flags & (ruby_fl_type::RUBY_FL_USER1 as VALUE) == 0
-        }
-    }
-
     /// Create a new `RBignum` from a `i32.`
     ///
     /// This will only succeed on a 32 bit system. On a 64 bit system bignum
@@ -292,6 +284,50 @@ impl RBignum {
             ));
         }
         Ok(res as usize)
+    }
+
+    fn sign(self) -> u64 {
+        debug_assert_value!(self);
+        unsafe {
+            let r_basic = self.r_basic_unchecked();
+            r_basic.as_ref().flags & (ruby_fl_type::RUBY_FL_USER1 as VALUE)
+        }
+    }
+
+    /// Check if `self` is positive.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::RBignum;
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let num = RBignum::from_u64(4611686018427387904).unwrap();
+    /// assert!(num.is_positive());
+    ///
+    /// let num = RBignum::from_i64(-4611686018427387905).unwrap();
+    /// assert!(!num.is_positive());
+    /// ```
+    pub fn is_positive(self) -> bool {
+        self.sign() != 0
+    }
+
+    /// Check if `self` is negative.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::RBignum;
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let num = RBignum::from_i64(-4611686018427387905).unwrap();
+    /// assert!(num.is_negative());
+    ///
+    /// let num = RBignum::from_u64(4611686018427387904).unwrap();
+    /// assert!(!num.is_negative());
+    /// ```
+    pub fn is_negative(self) -> bool {
+        !self.is_positive()
     }
 }
 

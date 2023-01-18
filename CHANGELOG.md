@@ -13,6 +13,7 @@
   `dump`, `ellipsize`, `offset`, `plus`, `times`, `replace`, `scrub`,
   `shared_replace`, `split`, `update`.
 - `RRegexp::new`/`new_str`, `RRegexp::reg_match`, and `RRegexp::options`.
+- `RBignum::is_positive`/`is_negative`.
 
 ### Changed
 - When converting Ruby values to `RArray` (or `Vec<T>`, `[T; 1]`, or `(T,)`),
