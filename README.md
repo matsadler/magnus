@@ -348,6 +348,10 @@ garbage collected. This could lead to memory safety issues.
 It is not possible to enforce this rule in Rust's type system or via the borrow
 checker, users of Magnus must maintain this rule manually.
 
+An example of something that breaks this rule would be storing a Ruby object in
+a Rust heap allocated data structure, such as `Vec`, `HashMap`, or `Box`. This
+must be avoided at all costs.
+
 While it would be possible to mark any functions that could expose this unsafty
 as `unsafe`, that would mean that almost every interaction with Ruby would
 be `unsafe`. This would leave no way to differentiate the *really* unsafe

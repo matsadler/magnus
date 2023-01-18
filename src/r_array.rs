@@ -698,6 +698,12 @@ impl RArray {
 
     /// Create a new `RArray` from a Rust vector.
     ///
+    /// # Safety
+    ///
+    /// Note that this function is intended to convert from a vector of Rust
+    /// values to a `RArray`.
+    /// [Ruby values should never be put into a `Vec`](crate#safety).
+    ///
     /// # Panics
     ///
     /// Panics if called from a non-Ruby thread.
