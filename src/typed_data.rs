@@ -366,7 +366,7 @@ impl<T> IntoValue for T
 where
     T: TypedData,
 {
-    fn into_value(self, handle: &RubyHandle) -> Value {
+    fn into_value_with(self, handle: &RubyHandle) -> Value {
         handle.wrap(self).into()
     }
 }
@@ -376,7 +376,7 @@ where
     T: TypedData,
 {
     fn from(data: T) -> Self {
-        get_ruby!().into_value(data)
+        data.into_value()
     }
 }
 
@@ -508,7 +508,7 @@ impl<T> IntoValue for Obj<T>
 where
     T: TypedData,
 {
-    fn into_value(self, _: &RubyHandle) -> Value {
+    fn into_value_with(self, _: &RubyHandle) -> Value {
         *self.inner
     }
 }

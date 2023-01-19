@@ -160,7 +160,7 @@ impl fmt::Debug for RModule {
 }
 
 impl IntoValue for RModule {
-    fn into_value(self, _: &RubyHandle) -> Value {
+    fn into_value_with(self, _: &RubyHandle) -> Value {
         *self
     }
 }
@@ -360,10 +360,10 @@ pub trait Module: Object + Deref<Target = Value> + Copy {
     fn const_set<T, U>(self, name: T, value: U) -> Result<(), Error>
     where
         T: Into<Id>,
-        U: Into<Value>,
+        U: IntoValue,
     {
         let id = name.into();
-        let val = value.into();
+        let val = unsafe { value.into_value_unchecked() };
         protect(|| unsafe {
             rb_const_set(self.as_rb_value(), id.as_rb_id(), val.as_rb_value());
             QNIL

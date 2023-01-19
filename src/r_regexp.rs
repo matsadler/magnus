@@ -163,7 +163,7 @@ impl fmt::Debug for RRegexp {
 impl EncodingCapable for RRegexp {}
 
 impl IntoValue for RRegexp {
-    fn into_value(self, _: &RubyHandle) -> Value {
+    fn into_value_with(self, _: &RubyHandle) -> Value {
         *self
     }
 }

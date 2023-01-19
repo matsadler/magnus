@@ -8,6 +8,7 @@ use crate::{
     class::RClass,
     debug_assert_value,
     error::{protect, Error},
+    into_value::IntoValue,
     method::Method,
     module::RModule,
     try_convert::TryConvert,
@@ -60,11 +61,11 @@ pub trait Object: Deref<Target = Value> + Copy {
     fn ivar_set<T, U>(self, name: T, value: U) -> Result<(), Error>
     where
         T: Into<Id>,
-        U: Into<Value>,
+        U: IntoValue,
     {
         debug_assert_value!(self);
         let id = name.into();
-        let value = value.into();
+        let value = unsafe { value.into_value_unchecked() };
         unsafe {
             protect(|| {
                 Value::new(rb_ivar_set(

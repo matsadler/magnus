@@ -12,7 +12,7 @@
 //! function nativly works with, and thus will avoid any conversion cost.
 //!
 //! [`Encoding`] and [`RbEncoding`] both implement [`TryConvert`] and
-//! `Into<Value>` so can be used as parameters and return values in functions
+//! [`IntoValue`] so can be used as parameters and return values in functions
 //! bound to Ruby. Both convert from either an instance of `Encoding` or a
 //! string of an encoding name, and convert to an instance of `Encoding`.
 
@@ -152,7 +152,7 @@ impl From<Encoding> for RbEncoding {
 }
 
 impl IntoValue for Encoding {
-    fn into_value(self, _: &RubyHandle) -> Value {
+    fn into_value_with(self, _: &RubyHandle) -> Value {
         *self
     }
 }
@@ -759,7 +759,7 @@ impl From<RbEncoding> for Index {
 }
 
 impl IntoValue for RbEncoding {
-    fn into_value(self, _: &RubyHandle) -> Value {
+    fn into_value_with(self, _: &RubyHandle) -> Value {
         *Encoding::from(self)
     }
 }

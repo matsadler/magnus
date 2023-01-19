@@ -40,7 +40,7 @@ use crate::{
     error::{protect, Error},
     exception,
     integer::{Integer, IntegerType},
-    into_value::IntoValue,
+    into_value::{IntoValue, IntoValueFromNative},
     method::{Block, BlockReturn},
     module::Module,
     r_bignum::RBignum,
@@ -608,7 +608,7 @@ impl Value {
     /// called with a block, or `None` otherwise.
     ///
     /// The `block` function may return any `R` or `Result<R, Error>` where `R`
-    /// implements `Into<Value>`. Returning `Err(Error)` will raise the error
+    /// implements [`IntoValue`]. Returning `Err(Error)` will raise the error
     /// as a Ruby exception.
     ///
     /// # Examples
@@ -934,147 +934,177 @@ impl fmt::Debug for Value {
     }
 }
 
+impl IntoValue for Value {
+    fn into_value_with(self, _: &RubyHandle) -> Value {
+        self
+    }
+}
+
 impl IntoValue for i8 {
-    fn into_value(self, handle: &RubyHandle) -> Value {
+    fn into_value_with(self, handle: &RubyHandle) -> Value {
         handle.integer_from_i64(self as i64).into()
     }
 }
 
+impl IntoValueFromNative for i8 {}
+
 impl From<i8> for Value {
     fn from(value: i8) -> Self {
-        get_ruby!().into_value(value)
+        value.into_value()
     }
 }
 
 impl IntoValue for i16 {
-    fn into_value(self, handle: &RubyHandle) -> Value {
+    fn into_value_with(self, handle: &RubyHandle) -> Value {
         handle.integer_from_i64(self as i64).into()
     }
 }
 
+impl IntoValueFromNative for i16 {}
+
 impl From<i16> for Value {
     fn from(value: i16) -> Self {
-        get_ruby!().into_value(value)
+        value.into_value()
     }
 }
 
 impl IntoValue for i32 {
-    fn into_value(self, handle: &RubyHandle) -> Value {
+    fn into_value_with(self, handle: &RubyHandle) -> Value {
         handle.integer_from_i64(self as i64).into()
     }
 }
 
+impl IntoValueFromNative for i32 {}
+
 impl From<i32> for Value {
     fn from(value: i32) -> Self {
-        get_ruby!().into_value(value)
+        value.into_value()
     }
 }
 
 impl IntoValue for i64 {
-    fn into_value(self, handle: &RubyHandle) -> Value {
+    fn into_value_with(self, handle: &RubyHandle) -> Value {
         handle.integer_from_i64(self).into()
     }
 }
 
+impl IntoValueFromNative for i64 {}
+
 impl From<i64> for Value {
     fn from(value: i64) -> Self {
-        get_ruby!().into_value(value)
+        value.into_value()
     }
 }
 
 impl IntoValue for isize {
-    fn into_value(self, handle: &RubyHandle) -> Value {
+    fn into_value_with(self, handle: &RubyHandle) -> Value {
         handle.integer_from_i64(self as i64).into()
     }
 }
 
+impl IntoValueFromNative for isize {}
+
 impl From<isize> for Value {
     fn from(value: isize) -> Self {
-        get_ruby!().into_value(value)
+        value.into_value()
     }
 }
 
 impl IntoValue for u8 {
-    fn into_value(self, handle: &RubyHandle) -> Value {
+    fn into_value_with(self, handle: &RubyHandle) -> Value {
         handle.integer_from_u64(self as u64).into()
     }
 }
 
+impl IntoValueFromNative for u8 {}
+
 impl From<u8> for Value {
     fn from(value: u8) -> Self {
-        get_ruby!().into_value(value)
+        value.into_value()
     }
 }
 
 impl IntoValue for u16 {
-    fn into_value(self, handle: &RubyHandle) -> Value {
+    fn into_value_with(self, handle: &RubyHandle) -> Value {
         handle.integer_from_u64(self as u64).into()
     }
 }
 
+impl IntoValueFromNative for u16 {}
+
 impl From<u16> for Value {
     fn from(value: u16) -> Self {
-        get_ruby!().into_value(value)
+        value.into_value()
     }
 }
 
 impl IntoValue for u32 {
-    fn into_value(self, handle: &RubyHandle) -> Value {
+    fn into_value_with(self, handle: &RubyHandle) -> Value {
         handle.integer_from_u64(self as u64).into()
     }
 }
 
+impl IntoValueFromNative for u32 {}
+
 impl From<u32> for Value {
     fn from(value: u32) -> Self {
-        get_ruby!().into_value(value)
+        value.into_value()
     }
 }
 
 impl IntoValue for u64 {
-    fn into_value(self, handle: &RubyHandle) -> Value {
+    fn into_value_with(self, handle: &RubyHandle) -> Value {
         handle.integer_from_u64(self).into()
     }
 }
 
+impl IntoValueFromNative for u64 {}
+
 impl From<u64> for Value {
     fn from(value: u64) -> Self {
-        get_ruby!().into_value(value)
+        value.into_value()
     }
 }
 
 impl IntoValue for usize {
-    fn into_value(self, handle: &RubyHandle) -> Value {
+    fn into_value_with(self, handle: &RubyHandle) -> Value {
         handle.integer_from_u64(self as u64).into()
     }
 }
 
+impl IntoValueFromNative for usize {}
+
 impl From<usize> for Value {
     fn from(value: usize) -> Self {
-        get_ruby!().into_value(value)
+        value.into_value()
     }
 }
 
 impl IntoValue for f32 {
-    fn into_value(self, handle: &RubyHandle) -> Value {
+    fn into_value_with(self, handle: &RubyHandle) -> Value {
         handle.float_from_f64(self as f64).into()
     }
 }
 
+impl IntoValueFromNative for f32 {}
+
 impl From<f32> for Value {
     fn from(value: f32) -> Self {
-        get_ruby!().into_value(value)
+        value.into_value()
     }
 }
 
 impl IntoValue for f64 {
-    fn into_value(self, handle: &RubyHandle) -> Value {
+    fn into_value_with(self, handle: &RubyHandle) -> Value {
         handle.float_from_f64(self).into()
     }
 }
 
+impl IntoValueFromNative for f64 {}
+
 impl From<f64> for Value {
     fn from(value: f64) -> Self {
-        get_ruby!().into_value(value)
+        value.into_value()
     }
 }
 
@@ -1261,10 +1291,12 @@ impl<T> IntoValue for BoxValue<T>
 where
     T: ReprValue,
 {
-    fn into_value(self, _: &RubyHandle) -> Value {
+    fn into_value_with(self, _: &RubyHandle) -> Value {
         self.to_value()
     }
 }
+
+impl<T> IntoValueFromNative for BoxValue<T> where T: ReprValue {}
 
 impl<T> From<BoxValue<T>> for Value
 where
@@ -1333,7 +1365,7 @@ impl fmt::Debug for Qfalse {
 }
 
 impl IntoValue for Qfalse {
-    fn into_value(self, _: &RubyHandle) -> Value {
+    fn into_value_with(self, _: &RubyHandle) -> Value {
         *self
     }
 }
@@ -1432,7 +1464,7 @@ impl fmt::Debug for Qnil {
 }
 
 impl IntoValue for Qnil {
-    fn into_value(self, _: &RubyHandle) -> Value {
+    fn into_value_with(self, _: &RubyHandle) -> Value {
         *self
     }
 }
@@ -1444,37 +1476,32 @@ impl From<Qnil> for Value {
 }
 
 impl IntoValue for () {
-    fn into_value(self, _: &RubyHandle) -> Value {
+    fn into_value_with(self, _: &RubyHandle) -> Value {
         QNIL.into()
     }
 }
 
+impl IntoValueFromNative for () {}
+
 impl From<()> for Value {
     fn from(val: ()) -> Self {
-        get_ruby!().into_value(val)
+        val.into_value()
     }
 }
 
 impl<T> IntoValue for Option<T>
 where
-    T: Into<Value>,
+    T: IntoValue,
 {
-    fn into_value(self, _: &RubyHandle) -> Value {
+    fn into_value_with(self, handle: &RubyHandle) -> Value {
         match self {
-            Some(t) => t.into(),
-            None => QNIL.into(),
+            Some(t) => handle.into_value(t),
+            None => handle.into_value(QNIL),
         }
     }
 }
 
-impl<T> From<Option<T>> for Value
-where
-    T: Into<Value>,
-{
-    fn from(val: Option<T>) -> Self {
-        get_ruby!().into_value(val)
-    }
-}
+impl<T> IntoValueFromNative for Option<T> where T: IntoValueFromNative {}
 
 unsafe impl private::ReprValue for Qnil {
     fn to_value(self) -> Value {
@@ -1564,7 +1591,7 @@ impl fmt::Debug for Qtrue {
 }
 
 impl IntoValue for Qtrue {
-    fn into_value(self, _: &RubyHandle) -> Value {
+    fn into_value_with(self, _: &RubyHandle) -> Value {
         *self
     }
 }
@@ -1576,7 +1603,7 @@ impl From<Qtrue> for Value {
 }
 
 impl IntoValue for bool {
-    fn into_value(self, _: &RubyHandle) -> Value {
+    fn into_value_with(self, _: &RubyHandle) -> Value {
         if self {
             QTRUE.into()
         } else {
@@ -1585,9 +1612,11 @@ impl IntoValue for bool {
     }
 }
 
+impl IntoValueFromNative for bool {}
+
 impl From<bool> for Value {
     fn from(val: bool) -> Self {
-        get_ruby!().into_value(val)
+        val.into_value()
     }
 }
 
@@ -1663,7 +1692,7 @@ impl Qundef {
     /// It is not a good idea to return this to Ruby code, bad things will
     /// happen. There are only a handful of places in Ruby's API where it is
     /// appropriate to pass a [`Value`] created from `Qundef` (hence this
-    /// method, rather than implimenting [`Into<Value>`]).
+    /// method, rather than implimenting [`IntoValue`]).
     #[inline]
     pub unsafe fn to_value(self) -> Value {
         self.0.get()
@@ -2075,7 +2104,7 @@ impl fmt::Debug for Fixnum {
 }
 
 impl IntoValue for Fixnum {
-    fn into_value(self, _: &RubyHandle) -> Value {
+    fn into_value_with(self, _: &RubyHandle) -> Value {
         *self
     }
 }
@@ -2276,7 +2305,7 @@ impl From<String> for StaticSymbol {
 }
 
 impl IntoValue for StaticSymbol {
-    fn into_value(self, _: &RubyHandle) -> Value {
+    fn into_value_with(self, _: &RubyHandle) -> Value {
         *self
     }
 }

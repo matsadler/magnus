@@ -106,7 +106,7 @@ impl fmt::Debug for RFloat {
 }
 
 impl IntoValue for RFloat {
-    fn into_value(self, _: &RubyHandle) -> Value {
+    fn into_value_with(self, _: &RubyHandle) -> Value {
         *self
     }
 }

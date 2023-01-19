@@ -9,6 +9,7 @@ use crate::{
     error::{protect, Error},
     exception,
     integer::Integer,
+    into_value::IntoValue,
     r_array::RArray,
     r_hash::RHash,
     r_string::RString,
@@ -768,274 +769,283 @@ impl ArgList for () {
 
 impl<A> ArgList for (A,)
 where
-    A: Into<Value>,
+    A: IntoValue,
 {
     type Output = [Value; 1];
 
     fn into_arg_list(self) -> Self::Output {
-        [self.0.into()]
+        [self.0.into_value()]
     }
 }
 
 impl<A, B> ArgList for (A, B)
 where
-    A: Into<Value>,
-    B: Into<Value>,
+    A: IntoValue,
+    B: IntoValue,
 {
     type Output = [Value; 2];
 
     fn into_arg_list(self) -> Self::Output {
-        [self.0.into(), self.1.into()]
+        [self.0.into_value(), self.1.into_value()]
     }
 }
 
 impl<A, B, C> ArgList for (A, B, C)
 where
-    A: Into<Value>,
-    B: Into<Value>,
-    C: Into<Value>,
+    A: IntoValue,
+    B: IntoValue,
+    C: IntoValue,
 {
     type Output = [Value; 3];
 
     fn into_arg_list(self) -> Self::Output {
-        [self.0.into(), self.1.into(), self.2.into()]
+        [
+            self.0.into_value(),
+            self.1.into_value(),
+            self.2.into_value(),
+        ]
     }
 }
 
 impl<A, B, C, D> ArgList for (A, B, C, D)
 where
-    A: Into<Value>,
-    B: Into<Value>,
-    C: Into<Value>,
-    D: Into<Value>,
+    A: IntoValue,
+    B: IntoValue,
+    C: IntoValue,
+    D: IntoValue,
 {
     type Output = [Value; 4];
 
     fn into_arg_list(self) -> Self::Output {
-        [self.0.into(), self.1.into(), self.2.into(), self.3.into()]
+        [
+            self.0.into_value(),
+            self.1.into_value(),
+            self.2.into_value(),
+            self.3.into_value(),
+        ]
     }
 }
 
 impl<A, B, C, D, E> ArgList for (A, B, C, D, E)
 where
-    A: Into<Value>,
-    B: Into<Value>,
-    C: Into<Value>,
-    D: Into<Value>,
-    E: Into<Value>,
+    A: IntoValue,
+    B: IntoValue,
+    C: IntoValue,
+    D: IntoValue,
+    E: IntoValue,
 {
     type Output = [Value; 5];
 
     fn into_arg_list(self) -> Self::Output {
         [
-            self.0.into(),
-            self.1.into(),
-            self.2.into(),
-            self.3.into(),
-            self.4.into(),
+            self.0.into_value(),
+            self.1.into_value(),
+            self.2.into_value(),
+            self.3.into_value(),
+            self.4.into_value(),
         ]
     }
 }
 
 impl<A, B, C, D, E, F> ArgList for (A, B, C, D, E, F)
 where
-    A: Into<Value>,
-    B: Into<Value>,
-    C: Into<Value>,
-    D: Into<Value>,
-    E: Into<Value>,
-    F: Into<Value>,
+    A: IntoValue,
+    B: IntoValue,
+    C: IntoValue,
+    D: IntoValue,
+    E: IntoValue,
+    F: IntoValue,
 {
     type Output = [Value; 6];
 
     fn into_arg_list(self) -> Self::Output {
         [
-            self.0.into(),
-            self.1.into(),
-            self.2.into(),
-            self.3.into(),
-            self.4.into(),
-            self.5.into(),
+            self.0.into_value(),
+            self.1.into_value(),
+            self.2.into_value(),
+            self.3.into_value(),
+            self.4.into_value(),
+            self.5.into_value(),
         ]
     }
 }
 
 impl<A, B, C, D, E, F, G> ArgList for (A, B, C, D, E, F, G)
 where
-    A: Into<Value>,
-    B: Into<Value>,
-    C: Into<Value>,
-    D: Into<Value>,
-    E: Into<Value>,
-    F: Into<Value>,
-    G: Into<Value>,
+    A: IntoValue,
+    B: IntoValue,
+    C: IntoValue,
+    D: IntoValue,
+    E: IntoValue,
+    F: IntoValue,
+    G: IntoValue,
 {
     type Output = [Value; 7];
 
     fn into_arg_list(self) -> Self::Output {
         [
-            self.0.into(),
-            self.1.into(),
-            self.2.into(),
-            self.3.into(),
-            self.4.into(),
-            self.5.into(),
-            self.6.into(),
+            self.0.into_value(),
+            self.1.into_value(),
+            self.2.into_value(),
+            self.3.into_value(),
+            self.4.into_value(),
+            self.5.into_value(),
+            self.6.into_value(),
         ]
     }
 }
 
 impl<A, B, C, D, E, F, G, H> ArgList for (A, B, C, D, E, F, G, H)
 where
-    A: Into<Value>,
-    B: Into<Value>,
-    C: Into<Value>,
-    D: Into<Value>,
-    E: Into<Value>,
-    F: Into<Value>,
-    G: Into<Value>,
-    H: Into<Value>,
+    A: IntoValue,
+    B: IntoValue,
+    C: IntoValue,
+    D: IntoValue,
+    E: IntoValue,
+    F: IntoValue,
+    G: IntoValue,
+    H: IntoValue,
 {
     type Output = [Value; 8];
 
     fn into_arg_list(self) -> Self::Output {
         [
-            self.0.into(),
-            self.1.into(),
-            self.2.into(),
-            self.3.into(),
-            self.4.into(),
-            self.5.into(),
-            self.6.into(),
-            self.7.into(),
+            self.0.into_value(),
+            self.1.into_value(),
+            self.2.into_value(),
+            self.3.into_value(),
+            self.4.into_value(),
+            self.5.into_value(),
+            self.6.into_value(),
+            self.7.into_value(),
         ]
     }
 }
 
 impl<A, B, C, D, E, F, G, H, I> ArgList for (A, B, C, D, E, F, G, H, I)
 where
-    A: Into<Value>,
-    B: Into<Value>,
-    C: Into<Value>,
-    D: Into<Value>,
-    E: Into<Value>,
-    F: Into<Value>,
-    G: Into<Value>,
-    H: Into<Value>,
-    I: Into<Value>,
+    A: IntoValue,
+    B: IntoValue,
+    C: IntoValue,
+    D: IntoValue,
+    E: IntoValue,
+    F: IntoValue,
+    G: IntoValue,
+    H: IntoValue,
+    I: IntoValue,
 {
     type Output = [Value; 9];
 
     fn into_arg_list(self) -> Self::Output {
         [
-            self.0.into(),
-            self.1.into(),
-            self.2.into(),
-            self.3.into(),
-            self.4.into(),
-            self.5.into(),
-            self.6.into(),
-            self.7.into(),
-            self.8.into(),
+            self.0.into_value(),
+            self.1.into_value(),
+            self.2.into_value(),
+            self.3.into_value(),
+            self.4.into_value(),
+            self.5.into_value(),
+            self.6.into_value(),
+            self.7.into_value(),
+            self.8.into_value(),
         ]
     }
 }
 
 impl<A, B, C, D, E, F, G, H, I, J> ArgList for (A, B, C, D, E, F, G, H, I, J)
 where
-    A: Into<Value>,
-    B: Into<Value>,
-    C: Into<Value>,
-    D: Into<Value>,
-    E: Into<Value>,
-    F: Into<Value>,
-    G: Into<Value>,
-    H: Into<Value>,
-    I: Into<Value>,
-    J: Into<Value>,
+    A: IntoValue,
+    B: IntoValue,
+    C: IntoValue,
+    D: IntoValue,
+    E: IntoValue,
+    F: IntoValue,
+    G: IntoValue,
+    H: IntoValue,
+    I: IntoValue,
+    J: IntoValue,
 {
     type Output = [Value; 10];
 
     fn into_arg_list(self) -> Self::Output {
         [
-            self.0.into(),
-            self.1.into(),
-            self.2.into(),
-            self.3.into(),
-            self.4.into(),
-            self.5.into(),
-            self.6.into(),
-            self.7.into(),
-            self.8.into(),
-            self.9.into(),
+            self.0.into_value(),
+            self.1.into_value(),
+            self.2.into_value(),
+            self.3.into_value(),
+            self.4.into_value(),
+            self.5.into_value(),
+            self.6.into_value(),
+            self.7.into_value(),
+            self.8.into_value(),
+            self.9.into_value(),
         ]
     }
 }
 
 impl<A, B, C, D, E, F, G, H, I, J, K> ArgList for (A, B, C, D, E, F, G, H, I, J, K)
 where
-    A: Into<Value>,
-    B: Into<Value>,
-    C: Into<Value>,
-    D: Into<Value>,
-    E: Into<Value>,
-    F: Into<Value>,
-    G: Into<Value>,
-    H: Into<Value>,
-    I: Into<Value>,
-    J: Into<Value>,
-    K: Into<Value>,
+    A: IntoValue,
+    B: IntoValue,
+    C: IntoValue,
+    D: IntoValue,
+    E: IntoValue,
+    F: IntoValue,
+    G: IntoValue,
+    H: IntoValue,
+    I: IntoValue,
+    J: IntoValue,
+    K: IntoValue,
 {
     type Output = [Value; 11];
 
     fn into_arg_list(self) -> Self::Output {
         [
-            self.0.into(),
-            self.1.into(),
-            self.2.into(),
-            self.3.into(),
-            self.4.into(),
-            self.5.into(),
-            self.6.into(),
-            self.7.into(),
-            self.8.into(),
-            self.9.into(),
-            self.10.into(),
+            self.0.into_value(),
+            self.1.into_value(),
+            self.2.into_value(),
+            self.3.into_value(),
+            self.4.into_value(),
+            self.5.into_value(),
+            self.6.into_value(),
+            self.7.into_value(),
+            self.8.into_value(),
+            self.9.into_value(),
+            self.10.into_value(),
         ]
     }
 }
 
 impl<A, B, C, D, E, F, G, H, I, J, K, L> ArgList for (A, B, C, D, E, F, G, H, I, J, K, L)
 where
-    A: Into<Value>,
-    B: Into<Value>,
-    C: Into<Value>,
-    D: Into<Value>,
-    E: Into<Value>,
-    F: Into<Value>,
-    G: Into<Value>,
-    H: Into<Value>,
-    I: Into<Value>,
-    J: Into<Value>,
-    K: Into<Value>,
-    L: Into<Value>,
+    A: IntoValue,
+    B: IntoValue,
+    C: IntoValue,
+    D: IntoValue,
+    E: IntoValue,
+    F: IntoValue,
+    G: IntoValue,
+    H: IntoValue,
+    I: IntoValue,
+    J: IntoValue,
+    K: IntoValue,
+    L: IntoValue,
 {
     type Output = [Value; 12];
 
     fn into_arg_list(self) -> Self::Output {
         [
-            self.0.into(),
-            self.1.into(),
-            self.2.into(),
-            self.3.into(),
-            self.4.into(),
-            self.5.into(),
-            self.6.into(),
-            self.7.into(),
-            self.8.into(),
-            self.9.into(),
-            self.10.into(),
-            self.11.into(),
+            self.0.into_value(),
+            self.1.into_value(),
+            self.2.into_value(),
+            self.3.into_value(),
+            self.4.into_value(),
+            self.5.into_value(),
+            self.6.into_value(),
+            self.7.into_value(),
+            self.8.into_value(),
+            self.9.into_value(),
+            self.10.into_value(),
+            self.11.into_value(),
         ]
     }
 }

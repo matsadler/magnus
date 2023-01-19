@@ -53,7 +53,7 @@ impl fmt::Debug for RObject {
 }
 
 impl IntoValue for RObject {
-    fn into_value(self, _: &RubyHandle) -> Value {
+    fn into_value_with(self, _: &RubyHandle) -> Value {
         *self
     }
 }

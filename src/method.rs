@@ -12,6 +12,7 @@ use crate::{
         YieldValues,
     },
     error::{raise, Error},
+    into_value::IntoValue,
     r_array::RArray,
     try_convert::{ArgList, TryConvert},
     value::Value,
@@ -370,16 +371,16 @@ mod private {
 
     impl<T> ReturnValue for Result<T, Error>
     where
-        T: Into<Value>,
+        T: IntoValue,
     {
         fn into_return_value(self) -> Result<Value, Error> {
-            self.map(Into::into)
+            self.map(|val| unsafe { val.into_value_unchecked() })
         }
     }
 
     impl<T> ReturnValue for T
     where
-        T: Into<Value>,
+        T: IntoValue,
     {
         fn into_return_value(self) -> Result<Value, Error> {
             Ok(self).into_return_value()
@@ -389,7 +390,7 @@ mod private {
     impl<I, T> ReturnValue for Yield<I>
     where
         I: Iterator<Item = T>,
-        T: Into<Value>,
+        T: IntoValue,
     {
         fn into_return_value(self) -> Result<Value, Error> {
             match self {
@@ -405,7 +406,7 @@ mod private {
     impl<I, T> ReturnValue for Result<Yield<I>, Error>
     where
         I: Iterator<Item = T>,
-        T: Into<Value>,
+        T: IntoValue,
     {
         fn into_return_value(self) -> Result<Value, Error> {
             self?.into_return_value()
@@ -484,16 +485,16 @@ mod private {
 
     impl<T> BlockReturn for Result<T, Error>
     where
-        T: Into<Value>,
+        T: IntoValue,
     {
         fn into_block_return(self) -> Result<Value, Error> {
-            self.map(Into::into)
+            self.map(|val| unsafe { val.into_value_unchecked() })
         }
     }
 
     impl<T> BlockReturn for T
     where
-        T: Into<Value>,
+        T: IntoValue,
     {
         fn into_block_return(self) -> Result<Value, Error> {
             Ok(self).into_block_return()
@@ -542,7 +543,7 @@ impl<T> Method for T where T: private::Method {}
 /// * `Result<YieldValues<I>, magnus::Error>`
 /// * `Result<YieldSplat<I>, magnus::Error>`
 ///
-/// where `I` implements `Iterator<Item = T>` and `T` implements `Into<Value>`.
+/// where `I` implements `Iterator<Item = T>` and `T` implements [`IntoValue`].
 ///
 /// When is `Err(magnus::Error)` returned to Ruby it will be conveted to and
 /// raised as a Ruby exception.
@@ -552,7 +553,7 @@ impl<T> Method for T where T: private::Method {}
 /// elements of that [`Iterator`].
 ///
 /// Note: functions without a specified return value will return `()`. `()`
-/// implements `Into<Value>` (converting to `nil`).
+/// implements [`IntoValue`] (converting to `nil`).
 pub trait ReturnValue: private::ReturnValue {}
 
 impl<T> ReturnValue for T where T: private::ReturnValue {}
@@ -569,7 +570,7 @@ impl<T> ReturnValue for T where T: private::ReturnValue {}
 /// raised as a Ruby exception.
 ///
 /// Note: functions without a specified return value will return `()`. `()`
-/// implements `Into<Value>` (converting to `nil`).
+/// implements [`IntoValue`] (converting to `nil`).
 pub trait InitReturn: private::InitReturn {}
 
 impl<T> InitReturn for T where T: private::InitReturn {}
@@ -581,13 +582,13 @@ impl<T> InitReturn for T where T: private::InitReturn {}
 /// * `T`
 /// * `Result<T, magnus::Error>`
 ///
-/// where `T` implements `Into<Value>`.
+/// where `T` implements [`IntoValue`].
 ///
 /// When is `Err(magnus::Error)` returned to Ruby it will be conveted to and
 /// raised as a Ruby exception.
 ///
 /// Note: functions without a specified return value will return `()`. `()`
-/// implements `Into<Value>` (converting to `nil`).
+/// implements [`IntoValue`] (converting to `nil`).
 pub trait BlockReturn: private::BlockReturn {}
 
 impl<T> BlockReturn for T where T: private::BlockReturn {}
@@ -2557,7 +2558,7 @@ where
 /// |    16 | ...                                                       |
 ///
 /// Where `T`, `U`, `V` and so on are any types that implement `TryConvert`,
-/// and `R` implements `Into<Value>`. It is also possible to return just `R`
+/// and `R` implements [`IntoValue`]. It is also possible to return just `R`
 /// rather than a `Result` for functions that will never error, and omit the
 /// return value (i.e. return `()`) for a function that returns `nil` to Ruby.
 /// See [`ReturnValue`] for more details on what can be returned.
@@ -4784,7 +4785,7 @@ where
 /// |    16 | ...                                           |
 ///
 /// Where `T`, `U`, and so on are any types that implement `TryConvert`,
-/// and `R` implements `Into<Value>`. It is also possible to return just `R`
+/// and `R` implements [`IntoValue`]. It is also possible to return just `R`
 /// rather than a `Result` for functions that will never error, and omit the
 /// return value (i.e. return `()`) for a function that returns `nil` to Ruby.
 /// See [`ReturnValue`] for more details on what can be returned.

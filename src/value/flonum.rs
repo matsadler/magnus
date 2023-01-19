@@ -135,7 +135,7 @@ impl fmt::Debug for Flonum {
 }
 
 impl IntoValue for Flonum {
-    fn into_value(self, _: &RubyHandle) -> Value {
+    fn into_value_with(self, _: &RubyHandle) -> Value {
         *self
     }
 }

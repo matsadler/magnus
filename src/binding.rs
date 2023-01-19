@@ -132,7 +132,7 @@ impl Binding {
     pub fn local_variable_set<N, T>(&self, name: N, val: T)
     where
         N: Into<Symbol>,
-        T: Into<Value>,
+        T: IntoValue,
     {
         self.funcall::<_, _, Value>("local_variable_set", (name.into(), val))
             .unwrap();
@@ -160,7 +160,7 @@ impl fmt::Debug for Binding {
 }
 
 impl IntoValue for Binding {
-    fn into_value(self, _: &RubyHandle) -> Value {
+    fn into_value_with(self, _: &RubyHandle) -> Value {
         *self
     }
 }
@@ -200,7 +200,7 @@ impl TryConvert for Binding {
 
 /// Evaluate a literal string of Ruby code with the given local variables.
 ///
-/// Any type that implements `Into<Value>` can be passed to Ruby.
+/// Any type that implements [`IntoValue`] can be passed to Ruby.
 ///
 /// See also the [`eval`](fn@crate::eval) function and [`Binding`].
 ///

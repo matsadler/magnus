@@ -25,7 +25,7 @@ use crate::{
     debug_assert_value,
     error::{protect, raise, Error},
     exception,
-    into_value::IntoValue,
+    into_value::{IntoValue, IntoValueFromNative},
     object::Object,
     ruby_handle::RubyHandle,
     try_convert::{TryConvert, TryConvertOwned},
@@ -191,11 +191,11 @@ impl RHash {
     /// ```
     pub fn aset<K, V>(self, key: K, val: V) -> Result<(), Error>
     where
-        K: Into<Value>,
-        V: Into<Value>,
+        K: IntoValue,
+        V: IntoValue,
     {
-        let key = key.into();
-        let val = val.into();
+        let key = unsafe { key.into_value_unchecked() };
+        let val = unsafe { val.into_value_unchecked() };
         unsafe {
             protect(|| {
                 Value::new(rb_hash_aset(
@@ -303,10 +303,10 @@ impl RHash {
     /// ```
     pub fn aref<T, U>(self, key: T) -> Result<U, Error>
     where
-        T: Into<Value>,
+        T: IntoValue,
         U: TryConvert,
     {
-        let key = key.into();
+        let key = unsafe { key.into_value_unchecked() };
         protect(|| unsafe { Value::new(rb_hash_aref(self.as_rb_value(), key.as_rb_value())) })
             .and_then(|v| v.try_convert())
     }
@@ -334,10 +334,10 @@ impl RHash {
     /// ```
     pub fn lookup<T, U>(self, key: T) -> Result<U, Error>
     where
-        T: Into<Value>,
+        T: IntoValue,
         U: TryConvert,
     {
-        let key = key.into();
+        let key = unsafe { key.into_value_unchecked() };
         protect(|| unsafe { Value::new(rb_hash_lookup(self.as_rb_value(), key.as_rb_value())) })
             .and_then(|v| v.try_convert())
     }
@@ -364,9 +364,9 @@ impl RHash {
     /// ```
     pub fn get<T>(self, key: T) -> Option<Value>
     where
-        T: Into<Value>,
+        T: IntoValue,
     {
-        let key = key.into();
+        let key = unsafe { key.into_value_unchecked() };
         protect(|| unsafe {
             Value::new(rb_hash_lookup2(
                 self.as_rb_value(),
@@ -401,10 +401,10 @@ impl RHash {
     /// ```
     pub fn fetch<T, U>(self, key: T) -> Result<U, Error>
     where
-        T: Into<Value>,
+        T: IntoValue,
         U: TryConvert,
     {
-        let key = key.into();
+        let key = unsafe { key.into_value_unchecked() };
         protect(|| unsafe { Value::new(rb_hash_fetch(self.as_rb_value(), key.as_rb_value())) })
             .and_then(|v| v.try_convert())
     }
@@ -426,10 +426,10 @@ impl RHash {
     /// ```
     pub fn delete<T, U>(self, key: T) -> Result<U, Error>
     where
-        T: Into<Value>,
+        T: IntoValue,
         U: TryConvert,
     {
-        let key = key.into();
+        let key = unsafe { key.into_value_unchecked() };
         protect(|| unsafe { Value::new(rb_hash_delete(self.as_rb_value(), key.as_rb_value())) })
             .and_then(|v| v.try_convert())
     }
@@ -648,7 +648,7 @@ impl fmt::Debug for RHash {
 }
 
 impl IntoValue for RHash {
-    fn into_value(self, _: &RubyHandle) -> Value {
+    fn into_value_with(self, _: &RubyHandle) -> Value {
         *self
     }
 }
@@ -661,10 +661,10 @@ impl From<RHash> for Value {
 
 impl<K, V> IntoValue for HashMap<K, V>
 where
-    K: Into<Value>,
-    V: Into<Value>,
+    K: IntoValueFromNative,
+    V: IntoValueFromNative,
 {
-    fn into_value(self, handle: &RubyHandle) -> Value {
+    fn into_value_with(self, handle: &RubyHandle) -> Value {
         let hash = handle.hash_new();
         for (k, v) in self {
             let _ = hash.aset(k, v);
@@ -675,8 +675,8 @@ where
 
 impl<K, V> From<HashMap<K, V>> for Value
 where
-    K: Into<Value>,
-    V: Into<Value>,
+    K: IntoValue,
+    V: IntoValue,
 {
     fn from(map: HashMap<K, V>) -> Self {
         map.into_iter().collect::<RHash>().into()
@@ -685,8 +685,8 @@ where
 
 impl<K, V> FromIterator<(K, V)> for RHash
 where
-    K: Into<Value>,
-    V: Into<Value>,
+    K: IntoValue,
+    V: IntoValue,
 {
     fn from_iter<I>(iter: I) -> Self
     where

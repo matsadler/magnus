@@ -6,10 +6,20 @@ impl RubyHandle {
     where
         T: IntoValue,
     {
-        val.into_value(self)
+        val.into_value_with(self)
     }
 }
 
-pub trait IntoValue {
-    fn into_value(self, handle: &RubyHandle) -> Value;
+pub trait IntoValue: Sized {
+    fn into_value(self) -> Value {
+        self.into_value_with(&get_ruby!())
+    }
+
+    unsafe fn into_value_unchecked(self) -> Value {
+        self.into_value_with(&RubyHandle::get_unchecked())
+    }
+
+    fn into_value_with(self, handle: &RubyHandle) -> Value;
 }
+
+pub trait IntoValueFromNative: IntoValue {}

@@ -29,7 +29,7 @@
 //! The [`method`](`macro@method`) macro can be used to wrap a Rust function
 //! with automatic type conversion and error handing so it can be exposed to
 //! Ruby. The [`TryConvert`] trait handles conversions from Ruby to Rust, and
-//! anything implementing `Into<Value>` can be returned to Ruby. See the
+//! anything implementing [`IntoValue`] can be returned to Ruby. See the
 //! [`Module`] and [`Object`] traits for defining methods.
 //!
 //! [`Value::funcall`] can be used to call Ruby methods from Rust.
@@ -1821,7 +1821,7 @@ pub mod exception;
 mod float;
 pub mod gc;
 mod integer;
-mod into_value;
+pub mod into_value;
 pub mod method;
 pub mod module;
 mod object;
@@ -1897,7 +1897,8 @@ pub use crate::{
     value::{Fixnum, StaticSymbol, Value, QFALSE, QNIL, QTRUE},
 };
 use crate::{
-    error::protect, method::Method, ruby_handle::RubyHandle, value::private::ReprValue as _,
+    error::protect, into_value::IntoValue, method::Method, ruby_handle::RubyHandle,
+    value::private::ReprValue as _,
 };
 
 /// Utility to simplify initialising a static with [`std::sync::Once`].
@@ -1953,12 +1954,11 @@ impl RubyHandle {
             .map(|c| unsafe { ExceptionClass::from_value_unchecked(*c) })
     }
 
-    pub fn define_variable<T: Into<Value>>(
-        &self,
-        name: &str,
-        initial: T,
-    ) -> Result<*mut Value, Error> {
-        let initial = initial.into();
+    pub fn define_variable<T>(&self, name: &str, initial: T) -> Result<*mut Value, Error>
+    where
+        T: IntoValue,
+    {
+        let initial = unsafe { initial.into_value_unchecked() };
         debug_assert_value!(initial);
         let name = CString::new(name).unwrap();
         let ptr = Box::into_raw(Box::new(initial));
@@ -1970,9 +1970,9 @@ impl RubyHandle {
 
     pub fn define_global_const<T>(&self, name: &str, value: T) -> Result<(), Error>
     where
-        T: Into<Value>,
+        T: IntoValue,
     {
-        let value = value.into();
+        let value = unsafe { value.into_value_unchecked() };
         let name = CString::new(name).unwrap();
         protect(|| {
             unsafe {
@@ -2093,7 +2093,10 @@ pub fn define_error(name: &str, superclass: ExceptionClass) -> Result<ExceptionC
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
-pub fn define_variable<T: Into<Value>>(name: &str, initial: T) -> Result<*mut Value, Error> {
+pub fn define_variable<T>(name: &str, initial: T) -> Result<*mut Value, Error>
+where
+    T: IntoValue,
+{
     get_ruby!().define_variable(name, initial)
 }
 
@@ -2104,7 +2107,7 @@ pub fn define_variable<T: Into<Value>>(name: &str, initial: T) -> Result<*mut Va
 /// Panics if called from a non-Ruby thread.
 pub fn define_global_const<T>(name: &str, value: T) -> Result<(), Error>
 where
-    T: Into<Value>,
+    T: IntoValue,
 {
     get_ruby!().define_global_const(name, value)
 }

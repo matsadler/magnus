@@ -102,7 +102,7 @@ impl fmt::Debug for Exception {
 }
 
 impl IntoValue for Exception {
-    fn into_value(self, _: &RubyHandle) -> Value {
+    fn into_value_with(self, _: &RubyHandle) -> Value {
         *self
     }
 }
@@ -200,7 +200,7 @@ impl fmt::Debug for ExceptionClass {
 }
 
 impl IntoValue for ExceptionClass {
-    fn into_value(self, _: &RubyHandle) -> Value {
+    fn into_value_with(self, _: &RubyHandle) -> Value {
         *self
     }
 }

@@ -277,7 +277,7 @@ impl fmt::Debug for Proc {
 }
 
 impl IntoValue for Proc {
-    fn into_value(self, _: &RubyHandle) -> Value {
+    fn into_value_with(self, _: &RubyHandle) -> Value {
         *self
     }
 }
@@ -371,10 +371,10 @@ impl RubyHandle {
 
     pub fn yield_value<T, U>(&self, val: T) -> Result<U, Error>
     where
-        T: Into<Value>,
+        T: IntoValue,
         U: TryConvert,
     {
-        let val = val.into();
+        let val = self.into_value(val);
         unsafe { protect(|| Value::new(rb_yield(val.as_rb_value()))).and_then(|v| v.try_convert()) }
     }
 
@@ -435,7 +435,7 @@ pub fn block_proc() -> Result<Proc, Error> {
 /// Panics if called from a non-Ruby thread.
 pub fn yield_value<T, U>(val: T) -> Result<U, Error>
 where
-    T: Into<Value>,
+    T: IntoValue,
     U: TryConvert,
 {
     get_ruby!().yield_value(val)
@@ -487,7 +487,7 @@ where
 pub(crate) unsafe fn do_yield_iter<I, T>(mut iter: I)
 where
     I: Iterator<Item = T>,
-    T: Into<Value>,
+    T: IntoValue,
 {
     let ptr = &mut iter as *mut I;
     forget(iter); // we're going to drop this ourself;
@@ -498,7 +498,7 @@ where
     ensure(
         || {
             for val in &mut *ptr {
-                rb_yield(val.into().as_rb_value());
+                rb_yield(val.into_value_unchecked().as_rb_value());
             }
             Value::default()
         },
@@ -554,7 +554,7 @@ where
 /// Helper type for functions that either yield a single value to a block or
 /// return an Enumerator.
 ///
-/// `I` must implement `Iterator<Item = T>`, where `T` implements `Into<Value>`.
+/// `I` must implement `Iterator<Item = T>`, where `T` implements [`IntoValue`].
 ///
 /// # Examples
 ///

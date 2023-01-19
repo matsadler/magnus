@@ -352,7 +352,7 @@ impl fmt::Debug for RBignum {
 }
 
 impl IntoValue for RBignum {
-    fn into_value(self, _: &RubyHandle) -> Value {
+    fn into_value_with(self, _: &RubyHandle) -> Value {
         *self
     }
 }

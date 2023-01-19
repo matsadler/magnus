@@ -169,7 +169,7 @@ impl fmt::Debug for RClass {
 }
 
 impl IntoValue for RClass {
-    fn into_value(self, _: &RubyHandle) -> Value {
+    fn into_value_with(self, _: &RubyHandle) -> Value {
         *self
     }
 }

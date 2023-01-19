@@ -155,10 +155,10 @@ impl RStruct {
     /// `index` may be an integer, string, or [`Symbol`].
     pub fn aref<T, U>(self, index: T) -> Result<U, Error>
     where
-        T: Into<Value>,
+        T: IntoValue,
         U: TryConvert,
     {
-        let index = index.into();
+        let index = unsafe { index.into_value_unchecked() };
         protect(|| unsafe { Value::new(rb_struct_aref(self.as_rb_value(), index.as_rb_value())) })
             .and_then(|v| v.try_convert())
     }
@@ -168,11 +168,11 @@ impl RStruct {
     /// `index` may be an integer, string, or [`Symbol`].
     pub fn aset<T, U>(self, index: T, val: U) -> Result<(), Error>
     where
-        T: Into<Value>,
-        U: Into<Value>,
+        T: IntoValue,
+        U: IntoValue,
     {
-        let index = index.into();
-        let val = val.into();
+        let index = unsafe { index.into_value_unchecked() };
+        let val = unsafe { val.into_value_unchecked() };
         unsafe {
             protect(|| {
                 Value::new(rb_struct_aset(
@@ -239,7 +239,7 @@ impl fmt::Debug for RStruct {
 }
 
 impl IntoValue for RStruct {
-    fn into_value(self, _: &RubyHandle) -> Value {
+    fn into_value_with(self, _: &RubyHandle) -> Value {
         *self
     }
 }

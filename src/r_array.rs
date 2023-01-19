@@ -21,7 +21,7 @@ use crate::{
     enumerator::Enumerator,
     error::{protect, Error},
     exception,
-    into_value::IntoValue,
+    into_value::{IntoValue, IntoValueFromNative},
     object::Object,
     r_string::RString,
     ruby_handle::RubyHandle,
@@ -40,7 +40,7 @@ impl RubyHandle {
 
     pub fn ary_from_vec<T>(&self, vec: Vec<T>) -> RArray
     where
-        T: Into<Value>,
+        T: IntoValueFromNative,
     {
         let ary = self.ary_new_capa(vec.len());
         for v in vec {
@@ -268,12 +268,12 @@ impl RArray {
     /// ```
     pub fn includes<T>(self, val: T) -> bool
     where
-        T: Into<Value>,
+        T: IntoValue,
     {
         unsafe {
             Value::new(rb_ary_includes(
                 self.as_rb_value(),
-                val.into().as_rb_value(),
+                val.into_value_unchecked().as_rb_value(),
             ))
             .to_bool()
         }
@@ -412,10 +412,13 @@ impl RArray {
     /// ```
     pub fn push<T>(self, item: T) -> Result<(), Error>
     where
-        T: Into<Value>,
+        T: IntoValue,
     {
         protect(|| unsafe {
-            Value::new(rb_ary_push(self.as_rb_value(), item.into().as_rb_value()))
+            Value::new(rb_ary_push(
+                self.as_rb_value(),
+                item.into_value_unchecked().as_rb_value(),
+            ))
         })?;
         Ok(())
     }
@@ -474,12 +477,12 @@ impl RArray {
     /// ```
     pub fn unshift<T>(self, item: T) -> Result<(), Error>
     where
-        T: Into<Value>,
+        T: IntoValue,
     {
         protect(|| unsafe {
             Value::new(rb_ary_unshift(
                 self.as_rb_value(),
-                item.into().as_rb_value(),
+                item.into_value_unchecked().as_rb_value(),
             ))
         })?;
         Ok(())
@@ -537,10 +540,13 @@ impl RArray {
     /// ```
     pub fn delete<T>(self, item: T) -> Result<(), Error>
     where
-        T: Into<Value>,
+        T: IntoValue,
     {
         protect(|| unsafe {
-            Value::new(rb_ary_delete(self.as_rb_value(), item.into().as_rb_value()))
+            Value::new(rb_ary_delete(
+                self.as_rb_value(),
+                item.into_value_unchecked().as_rb_value(),
+            ))
         })?;
         Ok(())
     }
@@ -720,7 +726,7 @@ impl RArray {
     /// ```
     pub fn from_vec<T>(vec: Vec<T>) -> Self
     where
-        T: Into<Value>,
+        T: IntoValueFromNative,
     {
         get_ruby!().ary_from_vec(vec)
     }
@@ -932,7 +938,7 @@ impl RArray {
     /// use magnus::{eval, RArray, Symbol};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// let ary = RArray::from_vec(vec![Symbol::new("a"), Symbol::new("b"), Symbol::new("c")]);
+    /// let ary = RArray::from_slice(&[Symbol::new("a"), Symbol::new("b"), Symbol::new("c")]);
     /// ary.store(0, Symbol::new("d"));
     /// ary.store(5, Symbol::new("e"));
     /// ary.store(6, Symbol::new("f"));
@@ -942,13 +948,13 @@ impl RArray {
     /// ```
     pub fn store<T>(self, offset: isize, val: T) -> Result<(), Error>
     where
-        T: Into<Value>,
+        T: IntoValue,
     {
         protect(|| unsafe {
             rb_ary_store(
                 self.as_rb_value(),
                 offset as c_long,
-                val.into().as_rb_value(),
+                val.into_value_unchecked().as_rb_value(),
             );
             QNIL
         })?;
@@ -1085,11 +1091,14 @@ impl RArray {
     /// ```
     pub fn assoc<K, T>(self, key: K) -> Result<T, Error>
     where
-        K: Into<Value>,
+        K: IntoValue,
         T: TryConvert,
     {
         protect(|| unsafe {
-            Value::new(rb_ary_assoc(self.as_rb_value(), key.into().as_rb_value()))
+            Value::new(rb_ary_assoc(
+                self.as_rb_value(),
+                key.into_value_unchecked().as_rb_value(),
+            ))
         })
         .and_then(|val| val.try_convert())
     }
@@ -1112,13 +1121,13 @@ impl RArray {
     /// ```
     pub fn rassoc<K, T>(self, value: K) -> Result<T, Error>
     where
-        K: Into<Value>,
+        K: IntoValue,
         T: TryConvert,
     {
         protect(|| unsafe {
             Value::new(rb_ary_rassoc(
                 self.as_rb_value(),
-                value.into().as_rb_value(),
+                value.into_value_unchecked().as_rb_value(),
             ))
         })
         .and_then(|val| val.try_convert())
@@ -1190,7 +1199,7 @@ impl fmt::Debug for RArray {
 }
 
 impl IntoValue for RArray {
-    fn into_value(self, _: &RubyHandle) -> Value {
+    fn into_value_with(self, _: &RubyHandle) -> Value {
         *self
     }
 }
@@ -1203,466 +1212,613 @@ impl From<RArray> for Value {
 
 impl<T0> IntoValue for (T0,)
 where
-    T0: Into<Value>,
+    T0: IntoValue,
 {
-    fn into_value(self, handle: &RubyHandle) -> Value {
-        let ary = [self.0.into()];
+    fn into_value_with(self, handle: &RubyHandle) -> Value {
+        let ary = [handle.into_value(self.0)];
         handle.ary_new_from_values(&ary).into()
     }
 }
 
+impl<T0> IntoValueFromNative for (T0,) where T0: IntoValueFromNative {}
+
 impl<T0> From<(T0,)> for Value
 where
-    T0: Into<Value>,
+    T0: IntoValue,
 {
     fn from(val: (T0,)) -> Self {
-        get_ruby!().into_value(val)
+        val.into_value()
     }
 }
 
 impl<T0, T1> IntoValue for (T0, T1)
 where
-    T0: Into<Value>,
-    T1: Into<Value>,
+    T0: IntoValue,
+    T1: IntoValue,
 {
-    fn into_value(self, handle: &RubyHandle) -> Value {
-        let ary = [self.0.into(), self.1.into()];
+    fn into_value_with(self, handle: &RubyHandle) -> Value {
+        let ary = [handle.into_value(self.0), handle.into_value(self.1)];
         handle.ary_new_from_values(&ary).into()
     }
 }
 
+impl<T0, T1> IntoValueFromNative for (T0, T1)
+where
+    T0: IntoValueFromNative,
+    T1: IntoValueFromNative,
+{
+}
+
 impl<T0, T1> From<(T0, T1)> for Value
 where
-    T0: Into<Value>,
-    T1: Into<Value>,
+    T0: IntoValue,
+    T1: IntoValue,
 {
     fn from(val: (T0, T1)) -> Self {
-        get_ruby!().into_value(val)
+        val.into_value()
     }
 }
 
 impl<T0, T1, T2> IntoValue for (T0, T1, T2)
 where
-    T0: Into<Value>,
-    T1: Into<Value>,
-    T2: Into<Value>,
+    T0: IntoValue,
+    T1: IntoValue,
+    T2: IntoValue,
 {
-    fn into_value(self, handle: &RubyHandle) -> Value {
-        let ary = [self.0.into(), self.1.into(), self.2.into()];
+    fn into_value_with(self, handle: &RubyHandle) -> Value {
+        let ary = [
+            handle.into_value(self.0),
+            handle.into_value(self.1),
+            handle.into_value(self.2),
+        ];
         handle.ary_new_from_values(&ary).into()
     }
 }
 
+impl<T0, T1, T2> IntoValueFromNative for (T0, T1, T2)
+where
+    T0: IntoValueFromNative,
+    T1: IntoValueFromNative,
+    T2: IntoValueFromNative,
+{
+}
+
 impl<T0, T1, T2> From<(T0, T1, T2)> for Value
 where
-    T0: Into<Value>,
-    T1: Into<Value>,
-    T2: Into<Value>,
+    T0: IntoValue,
+    T1: IntoValue,
+    T2: IntoValue,
 {
     fn from(val: (T0, T1, T2)) -> Self {
-        get_ruby!().into_value(val)
+        val.into_value()
     }
 }
 
 impl<T0, T1, T2, T3> IntoValue for (T0, T1, T2, T3)
 where
-    T0: Into<Value>,
-    T1: Into<Value>,
-    T2: Into<Value>,
-    T3: Into<Value>,
+    T0: IntoValue,
+    T1: IntoValue,
+    T2: IntoValue,
+    T3: IntoValue,
 {
-    fn into_value(self, handle: &RubyHandle) -> Value {
-        let ary = [self.0.into(), self.1.into(), self.2.into(), self.3.into()];
+    fn into_value_with(self, handle: &RubyHandle) -> Value {
+        let ary = [
+            handle.into_value(self.0),
+            handle.into_value(self.1),
+            handle.into_value(self.2),
+            handle.into_value(self.3),
+        ];
         handle.ary_new_from_values(&ary).into()
     }
 }
 
+impl<T0, T1, T2, T3> IntoValueFromNative for (T0, T1, T2, T3)
+where
+    T0: IntoValueFromNative,
+    T1: IntoValueFromNative,
+    T2: IntoValueFromNative,
+    T3: IntoValueFromNative,
+{
+}
+
 impl<T0, T1, T2, T3> From<(T0, T1, T2, T3)> for Value
 where
-    T0: Into<Value>,
-    T1: Into<Value>,
-    T2: Into<Value>,
-    T3: Into<Value>,
+    T0: IntoValue,
+    T1: IntoValue,
+    T2: IntoValue,
+    T3: IntoValue,
 {
     fn from(val: (T0, T1, T2, T3)) -> Self {
-        get_ruby!().into_value(val)
+        val.into_value()
     }
 }
 
 impl<T0, T1, T2, T3, T4> IntoValue for (T0, T1, T2, T3, T4)
 where
-    T0: Into<Value>,
-    T1: Into<Value>,
-    T2: Into<Value>,
-    T3: Into<Value>,
-    T4: Into<Value>,
+    T0: IntoValue,
+    T1: IntoValue,
+    T2: IntoValue,
+    T3: IntoValue,
+    T4: IntoValue,
 {
-    fn into_value(self, handle: &RubyHandle) -> Value {
+    fn into_value_with(self, handle: &RubyHandle) -> Value {
         let ary = [
-            self.0.into(),
-            self.1.into(),
-            self.2.into(),
-            self.3.into(),
-            self.4.into(),
+            handle.into_value(self.0),
+            handle.into_value(self.1),
+            handle.into_value(self.2),
+            handle.into_value(self.3),
+            handle.into_value(self.4),
         ];
         handle.ary_new_from_values(&ary).into()
     }
 }
 
+impl<T0, T1, T2, T3, T4> IntoValueFromNative for (T0, T1, T2, T3, T4)
+where
+    T0: IntoValueFromNative,
+    T1: IntoValueFromNative,
+    T2: IntoValueFromNative,
+    T3: IntoValueFromNative,
+    T4: IntoValueFromNative,
+{
+}
+
 impl<T0, T1, T2, T3, T4> From<(T0, T1, T2, T3, T4)> for Value
 where
-    T0: Into<Value>,
-    T1: Into<Value>,
-    T2: Into<Value>,
-    T3: Into<Value>,
-    T4: Into<Value>,
+    T0: IntoValue,
+    T1: IntoValue,
+    T2: IntoValue,
+    T3: IntoValue,
+    T4: IntoValue,
 {
     fn from(val: (T0, T1, T2, T3, T4)) -> Self {
-        get_ruby!().into_value(val)
+        val.into_value()
     }
 }
 
 impl<T0, T1, T2, T3, T4, T5> IntoValue for (T0, T1, T2, T3, T4, T5)
 where
-    T0: Into<Value>,
-    T1: Into<Value>,
-    T2: Into<Value>,
-    T3: Into<Value>,
-    T4: Into<Value>,
-    T5: Into<Value>,
+    T0: IntoValue,
+    T1: IntoValue,
+    T2: IntoValue,
+    T3: IntoValue,
+    T4: IntoValue,
+    T5: IntoValue,
 {
-    fn into_value(self, handle: &RubyHandle) -> Value {
+    fn into_value_with(self, handle: &RubyHandle) -> Value {
         let ary = [
-            self.0.into(),
-            self.1.into(),
-            self.2.into(),
-            self.3.into(),
-            self.4.into(),
-            self.5.into(),
+            handle.into_value(self.0),
+            handle.into_value(self.1),
+            handle.into_value(self.2),
+            handle.into_value(self.3),
+            handle.into_value(self.4),
+            handle.into_value(self.5),
         ];
         handle.ary_new_from_values(&ary).into()
     }
 }
 
+impl<T0, T1, T2, T3, T4, T5> IntoValueFromNative for (T0, T1, T2, T3, T4, T5)
+where
+    T0: IntoValueFromNative,
+    T1: IntoValueFromNative,
+    T2: IntoValueFromNative,
+    T3: IntoValueFromNative,
+    T4: IntoValueFromNative,
+    T5: IntoValueFromNative,
+{
+}
+
 impl<T0, T1, T2, T3, T4, T5> From<(T0, T1, T2, T3, T4, T5)> for Value
 where
-    T0: Into<Value>,
-    T1: Into<Value>,
-    T2: Into<Value>,
-    T3: Into<Value>,
-    T4: Into<Value>,
-    T5: Into<Value>,
+    T0: IntoValue,
+    T1: IntoValue,
+    T2: IntoValue,
+    T3: IntoValue,
+    T4: IntoValue,
+    T5: IntoValue,
 {
     fn from(val: (T0, T1, T2, T3, T4, T5)) -> Self {
-        get_ruby!().into_value(val)
+        val.into_value()
     }
 }
 
 impl<T0, T1, T2, T3, T4, T5, T6> IntoValue for (T0, T1, T2, T3, T4, T5, T6)
 where
-    T0: Into<Value>,
-    T1: Into<Value>,
-    T2: Into<Value>,
-    T3: Into<Value>,
-    T4: Into<Value>,
-    T5: Into<Value>,
-    T6: Into<Value>,
+    T0: IntoValue,
+    T1: IntoValue,
+    T2: IntoValue,
+    T3: IntoValue,
+    T4: IntoValue,
+    T5: IntoValue,
+    T6: IntoValue,
 {
-    fn into_value(self, handle: &RubyHandle) -> Value {
+    fn into_value_with(self, handle: &RubyHandle) -> Value {
         let ary = [
-            self.0.into(),
-            self.1.into(),
-            self.2.into(),
-            self.3.into(),
-            self.4.into(),
-            self.5.into(),
-            self.6.into(),
+            handle.into_value(self.0),
+            handle.into_value(self.1),
+            handle.into_value(self.2),
+            handle.into_value(self.3),
+            handle.into_value(self.4),
+            handle.into_value(self.5),
+            handle.into_value(self.6),
         ];
         handle.ary_new_from_values(&ary).into()
     }
 }
 
+impl<T0, T1, T2, T3, T4, T5, T6> IntoValueFromNative for (T0, T1, T2, T3, T4, T5, T6)
+where
+    T0: IntoValueFromNative,
+    T1: IntoValueFromNative,
+    T2: IntoValueFromNative,
+    T3: IntoValueFromNative,
+    T4: IntoValueFromNative,
+    T5: IntoValueFromNative,
+    T6: IntoValueFromNative,
+{
+}
+
 impl<T0, T1, T2, T3, T4, T5, T6> From<(T0, T1, T2, T3, T4, T5, T6)> for Value
 where
-    T0: Into<Value>,
-    T1: Into<Value>,
-    T2: Into<Value>,
-    T3: Into<Value>,
-    T4: Into<Value>,
-    T5: Into<Value>,
-    T6: Into<Value>,
+    T0: IntoValue,
+    T1: IntoValue,
+    T2: IntoValue,
+    T3: IntoValue,
+    T4: IntoValue,
+    T5: IntoValue,
+    T6: IntoValue,
 {
     fn from(val: (T0, T1, T2, T3, T4, T5, T6)) -> Self {
-        get_ruby!().into_value(val)
+        val.into_value()
     }
 }
 
 impl<T0, T1, T2, T3, T4, T5, T6, T7> IntoValue for (T0, T1, T2, T3, T4, T5, T6, T7)
 where
-    T0: Into<Value>,
-    T1: Into<Value>,
-    T2: Into<Value>,
-    T3: Into<Value>,
-    T4: Into<Value>,
-    T5: Into<Value>,
-    T6: Into<Value>,
-    T7: Into<Value>,
+    T0: IntoValue,
+    T1: IntoValue,
+    T2: IntoValue,
+    T3: IntoValue,
+    T4: IntoValue,
+    T5: IntoValue,
+    T6: IntoValue,
+    T7: IntoValue,
 {
-    fn into_value(self, handle: &RubyHandle) -> Value {
+    fn into_value_with(self, handle: &RubyHandle) -> Value {
         let ary = [
-            self.0.into(),
-            self.1.into(),
-            self.2.into(),
-            self.3.into(),
-            self.4.into(),
-            self.5.into(),
-            self.6.into(),
-            self.7.into(),
+            handle.into_value(self.0),
+            handle.into_value(self.1),
+            handle.into_value(self.2),
+            handle.into_value(self.3),
+            handle.into_value(self.4),
+            handle.into_value(self.5),
+            handle.into_value(self.6),
+            handle.into_value(self.7),
         ];
         handle.ary_new_from_values(&ary).into()
     }
 }
 
+impl<T0, T1, T2, T3, T4, T5, T6, T7> IntoValueFromNative for (T0, T1, T2, T3, T4, T5, T6, T7)
+where
+    T0: IntoValueFromNative,
+    T1: IntoValueFromNative,
+    T2: IntoValueFromNative,
+    T3: IntoValueFromNative,
+    T4: IntoValueFromNative,
+    T5: IntoValueFromNative,
+    T6: IntoValueFromNative,
+    T7: IntoValueFromNative,
+{
+}
+
 impl<T0, T1, T2, T3, T4, T5, T6, T7> From<(T0, T1, T2, T3, T4, T5, T6, T7)> for Value
 where
-    T0: Into<Value>,
-    T1: Into<Value>,
-    T2: Into<Value>,
-    T3: Into<Value>,
-    T4: Into<Value>,
-    T5: Into<Value>,
-    T6: Into<Value>,
-    T7: Into<Value>,
+    T0: IntoValue,
+    T1: IntoValue,
+    T2: IntoValue,
+    T3: IntoValue,
+    T4: IntoValue,
+    T5: IntoValue,
+    T6: IntoValue,
+    T7: IntoValue,
 {
     fn from(val: (T0, T1, T2, T3, T4, T5, T6, T7)) -> Self {
-        get_ruby!().into_value(val)
+        val.into_value()
     }
 }
 
 impl<T0, T1, T2, T3, T4, T5, T6, T7, T8> IntoValue for (T0, T1, T2, T3, T4, T5, T6, T7, T8)
 where
-    T0: Into<Value>,
-    T1: Into<Value>,
-    T2: Into<Value>,
-    T3: Into<Value>,
-    T4: Into<Value>,
-    T5: Into<Value>,
-    T6: Into<Value>,
-    T7: Into<Value>,
-    T8: Into<Value>,
+    T0: IntoValue,
+    T1: IntoValue,
+    T2: IntoValue,
+    T3: IntoValue,
+    T4: IntoValue,
+    T5: IntoValue,
+    T6: IntoValue,
+    T7: IntoValue,
+    T8: IntoValue,
 {
-    fn into_value(self, handle: &RubyHandle) -> Value {
+    fn into_value_with(self, handle: &RubyHandle) -> Value {
         let ary = [
-            self.0.into(),
-            self.1.into(),
-            self.2.into(),
-            self.3.into(),
-            self.4.into(),
-            self.5.into(),
-            self.6.into(),
-            self.7.into(),
-            self.8.into(),
+            handle.into_value(self.0),
+            handle.into_value(self.1),
+            handle.into_value(self.2),
+            handle.into_value(self.3),
+            handle.into_value(self.4),
+            handle.into_value(self.5),
+            handle.into_value(self.6),
+            handle.into_value(self.7),
+            handle.into_value(self.8),
         ];
         handle.ary_new_from_values(&ary).into()
     }
 }
 
+impl<T0, T1, T2, T3, T4, T5, T6, T7, T8> IntoValueFromNative
+    for (T0, T1, T2, T3, T4, T5, T6, T7, T8)
+where
+    T0: IntoValueFromNative,
+    T1: IntoValueFromNative,
+    T2: IntoValueFromNative,
+    T3: IntoValueFromNative,
+    T4: IntoValueFromNative,
+    T5: IntoValueFromNative,
+    T6: IntoValueFromNative,
+    T7: IntoValueFromNative,
+    T8: IntoValueFromNative,
+{
+}
+
 impl<T0, T1, T2, T3, T4, T5, T6, T7, T8> From<(T0, T1, T2, T3, T4, T5, T6, T7, T8)> for Value
 where
-    T0: Into<Value>,
-    T1: Into<Value>,
-    T2: Into<Value>,
-    T3: Into<Value>,
-    T4: Into<Value>,
-    T5: Into<Value>,
-    T6: Into<Value>,
-    T7: Into<Value>,
-    T8: Into<Value>,
+    T0: IntoValue,
+    T1: IntoValue,
+    T2: IntoValue,
+    T3: IntoValue,
+    T4: IntoValue,
+    T5: IntoValue,
+    T6: IntoValue,
+    T7: IntoValue,
+    T8: IntoValue,
 {
     fn from(val: (T0, T1, T2, T3, T4, T5, T6, T7, T8)) -> Self {
-        get_ruby!().into_value(val)
+        val.into_value()
     }
 }
 
 impl<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9> IntoValue for (T0, T1, T2, T3, T4, T5, T6, T7, T8, T9)
 where
-    T0: Into<Value>,
-    T1: Into<Value>,
-    T2: Into<Value>,
-    T3: Into<Value>,
-    T4: Into<Value>,
-    T5: Into<Value>,
-    T6: Into<Value>,
-    T7: Into<Value>,
-    T8: Into<Value>,
-    T9: Into<Value>,
+    T0: IntoValue,
+    T1: IntoValue,
+    T2: IntoValue,
+    T3: IntoValue,
+    T4: IntoValue,
+    T5: IntoValue,
+    T6: IntoValue,
+    T7: IntoValue,
+    T8: IntoValue,
+    T9: IntoValue,
 {
-    fn into_value(self, handle: &RubyHandle) -> Value {
+    fn into_value_with(self, handle: &RubyHandle) -> Value {
         let ary = [
-            self.0.into(),
-            self.1.into(),
-            self.2.into(),
-            self.3.into(),
-            self.4.into(),
-            self.5.into(),
-            self.6.into(),
-            self.7.into(),
-            self.8.into(),
-            self.9.into(),
+            handle.into_value(self.0),
+            handle.into_value(self.1),
+            handle.into_value(self.2),
+            handle.into_value(self.3),
+            handle.into_value(self.4),
+            handle.into_value(self.5),
+            handle.into_value(self.6),
+            handle.into_value(self.7),
+            handle.into_value(self.8),
+            handle.into_value(self.9),
         ];
         handle.ary_new_from_values(&ary).into()
     }
 }
 
+impl<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9> IntoValueFromNative
+    for (T0, T1, T2, T3, T4, T5, T6, T7, T8, T9)
+where
+    T0: IntoValueFromNative,
+    T1: IntoValueFromNative,
+    T2: IntoValueFromNative,
+    T3: IntoValueFromNative,
+    T4: IntoValueFromNative,
+    T5: IntoValueFromNative,
+    T6: IntoValueFromNative,
+    T7: IntoValueFromNative,
+    T8: IntoValueFromNative,
+    T9: IntoValueFromNative,
+{
+}
+
 impl<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9> From<(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9)>
     for Value
 where
-    T0: Into<Value>,
-    T1: Into<Value>,
-    T2: Into<Value>,
-    T3: Into<Value>,
-    T4: Into<Value>,
-    T5: Into<Value>,
-    T6: Into<Value>,
-    T7: Into<Value>,
-    T8: Into<Value>,
-    T9: Into<Value>,
+    T0: IntoValue,
+    T1: IntoValue,
+    T2: IntoValue,
+    T3: IntoValue,
+    T4: IntoValue,
+    T5: IntoValue,
+    T6: IntoValue,
+    T7: IntoValue,
+    T8: IntoValue,
+    T9: IntoValue,
 {
     fn from(val: (T0, T1, T2, T3, T4, T5, T6, T7, T8, T9)) -> Self {
-        get_ruby!().into_value(val)
+        val.into_value()
     }
 }
 
 impl<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> IntoValue
     for (T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10)
 where
-    T0: Into<Value>,
-    T1: Into<Value>,
-    T2: Into<Value>,
-    T3: Into<Value>,
-    T4: Into<Value>,
-    T5: Into<Value>,
-    T6: Into<Value>,
-    T7: Into<Value>,
-    T8: Into<Value>,
-    T9: Into<Value>,
-    T10: Into<Value>,
+    T0: IntoValue,
+    T1: IntoValue,
+    T2: IntoValue,
+    T3: IntoValue,
+    T4: IntoValue,
+    T5: IntoValue,
+    T6: IntoValue,
+    T7: IntoValue,
+    T8: IntoValue,
+    T9: IntoValue,
+    T10: IntoValue,
 {
-    fn into_value(self, handle: &RubyHandle) -> Value {
+    fn into_value_with(self, handle: &RubyHandle) -> Value {
         let ary = [
-            self.0.into(),
-            self.1.into(),
-            self.2.into(),
-            self.3.into(),
-            self.4.into(),
-            self.5.into(),
-            self.6.into(),
-            self.7.into(),
-            self.8.into(),
-            self.9.into(),
-            self.10.into(),
+            handle.into_value(self.0),
+            handle.into_value(self.1),
+            handle.into_value(self.2),
+            handle.into_value(self.3),
+            handle.into_value(self.4),
+            handle.into_value(self.5),
+            handle.into_value(self.6),
+            handle.into_value(self.7),
+            handle.into_value(self.8),
+            handle.into_value(self.9),
+            handle.into_value(self.10),
         ];
         handle.ary_new_from_values(&ary).into()
     }
 }
 
+impl<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> IntoValueFromNative
+    for (T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10)
+where
+    T0: IntoValueFromNative,
+    T1: IntoValueFromNative,
+    T2: IntoValueFromNative,
+    T3: IntoValueFromNative,
+    T4: IntoValueFromNative,
+    T5: IntoValueFromNative,
+    T6: IntoValueFromNative,
+    T7: IntoValueFromNative,
+    T8: IntoValueFromNative,
+    T9: IntoValueFromNative,
+    T10: IntoValueFromNative,
+{
+}
+
 impl<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>
     From<(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10)> for Value
 where
-    T0: Into<Value>,
-    T1: Into<Value>,
-    T2: Into<Value>,
-    T3: Into<Value>,
-    T4: Into<Value>,
-    T5: Into<Value>,
-    T6: Into<Value>,
-    T7: Into<Value>,
-    T8: Into<Value>,
-    T9: Into<Value>,
-    T10: Into<Value>,
+    T0: IntoValue,
+    T1: IntoValue,
+    T2: IntoValue,
+    T3: IntoValue,
+    T4: IntoValue,
+    T5: IntoValue,
+    T6: IntoValue,
+    T7: IntoValue,
+    T8: IntoValue,
+    T9: IntoValue,
+    T10: IntoValue,
 {
     fn from(val: (T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10)) -> Self {
-        get_ruby!().into_value(val)
+        val.into_value()
     }
 }
 
 impl<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> IntoValue
     for (T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11)
 where
-    T0: Into<Value>,
-    T1: Into<Value>,
-    T2: Into<Value>,
-    T3: Into<Value>,
-    T4: Into<Value>,
-    T5: Into<Value>,
-    T6: Into<Value>,
-    T7: Into<Value>,
-    T8: Into<Value>,
-    T9: Into<Value>,
-    T10: Into<Value>,
-    T11: Into<Value>,
+    T0: IntoValue,
+    T1: IntoValue,
+    T2: IntoValue,
+    T3: IntoValue,
+    T4: IntoValue,
+    T5: IntoValue,
+    T6: IntoValue,
+    T7: IntoValue,
+    T8: IntoValue,
+    T9: IntoValue,
+    T10: IntoValue,
+    T11: IntoValue,
 {
-    fn into_value(self, handle: &RubyHandle) -> Value {
+    fn into_value_with(self, handle: &RubyHandle) -> Value {
         let ary = [
-            self.0.into(),
-            self.1.into(),
-            self.2.into(),
-            self.3.into(),
-            self.4.into(),
-            self.5.into(),
-            self.6.into(),
-            self.7.into(),
-            self.8.into(),
-            self.9.into(),
-            self.10.into(),
-            self.11.into(),
+            handle.into_value(self.0),
+            handle.into_value(self.1),
+            handle.into_value(self.2),
+            handle.into_value(self.3),
+            handle.into_value(self.4),
+            handle.into_value(self.5),
+            handle.into_value(self.6),
+            handle.into_value(self.7),
+            handle.into_value(self.8),
+            handle.into_value(self.9),
+            handle.into_value(self.10),
+            handle.into_value(self.11),
         ];
         handle.ary_new_from_values(&ary).into()
     }
 }
 
+impl<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> IntoValueFromNative
+    for (T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11)
+where
+    T0: IntoValueFromNative,
+    T1: IntoValueFromNative,
+    T2: IntoValueFromNative,
+    T3: IntoValueFromNative,
+    T4: IntoValueFromNative,
+    T5: IntoValueFromNative,
+    T6: IntoValueFromNative,
+    T7: IntoValueFromNative,
+    T8: IntoValueFromNative,
+    T9: IntoValueFromNative,
+    T10: IntoValueFromNative,
+    T11: IntoValueFromNative,
+{
+}
+
 impl<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>
     From<(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11)> for Value
 where
-    T0: Into<Value>,
-    T1: Into<Value>,
-    T2: Into<Value>,
-    T3: Into<Value>,
-    T4: Into<Value>,
-    T5: Into<Value>,
-    T6: Into<Value>,
-    T7: Into<Value>,
-    T8: Into<Value>,
-    T9: Into<Value>,
-    T10: Into<Value>,
-    T11: Into<Value>,
+    T0: IntoValue,
+    T1: IntoValue,
+    T2: IntoValue,
+    T3: IntoValue,
+    T4: IntoValue,
+    T5: IntoValue,
+    T6: IntoValue,
+    T7: IntoValue,
+    T8: IntoValue,
+    T9: IntoValue,
+    T10: IntoValue,
+    T11: IntoValue,
 {
     fn from(val: (T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11)) -> Self {
-        get_ruby!().into_value(val)
+        val.into_value()
     }
 }
 
 impl<T> IntoValue for Vec<T>
 where
-    T: Into<Value>,
+    T: IntoValueFromNative,
 {
-    fn into_value(self, handle: &RubyHandle) -> Value {
+    fn into_value_with(self, handle: &RubyHandle) -> Value {
         handle.ary_from_vec(self).into()
     }
 }
 
 impl<T> From<Vec<T>> for Value
 where
-    T: Into<Value>,
+    T: IntoValueFromNative,
 {
     fn from(val: Vec<T>) -> Self {
-        get_ruby!().into_value(val)
+        val.into_value()
     }
 }
 
 impl<T> FromIterator<T> for RArray
 where
-    T: Into<Value>,
+    T: IntoValue,
 {
     fn from_iter<I>(iter: I) -> Self
     where

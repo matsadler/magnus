@@ -226,7 +226,7 @@ impl From<StaticSymbol> for Symbol {
 }
 
 impl IntoValue for Symbol {
-    fn into_value(self, _: &RubyHandle) -> Value {
+    fn into_value_with(self, _: &RubyHandle) -> Value {
         *self
     }
 }

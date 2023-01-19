@@ -90,6 +90,7 @@ impl RubyHandle {
     /// This must only be called from a Ruby thread - that is one created by
     /// Ruby, or the main thread after [`embed::init`](crate::embed::init) has
     /// been called - and without having released the GVL.
+    #[inline]
     pub unsafe fn get_unchecked() -> Self {
         Self(PhantomData)
     }

@@ -26,10 +26,13 @@
   root.
 - `gc::adjust_memory_usage`'s argument changed to `isize`, rather than `i32` or
   `i64` depending on pointer width.
+- The `IntoValue` trait is now used instead of `Into<Value>` for converting to
+  Ruby types.
 
 ### Deprecated
 - `RString::append` (use `RString::buf_append`).
 - `Error::runtime_error` (use `Error::new(exception::runtime_error(), msg)`).
+- Implementations of `Into<Value>` (use `IntoValue`).
 
 ### Removed
 - `DataTypeBuilder::free_immediatly` (use `free_immediately`).

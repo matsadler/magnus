@@ -34,7 +34,7 @@ use crate::{
     encoding::{self, Coderange, EncodingCapable, RbEncoding},
     error::{protect, Error},
     exception,
-    into_value::IntoValue,
+    into_value::{IntoValue, IntoValueFromNative},
     object::Object,
     r_array::RArray,
     ruby_handle::RubyHandle,
@@ -1455,7 +1455,7 @@ impl From<String> for RString {
 }
 
 impl IntoValue for RString {
-    fn into_value(self, _: &RubyHandle) -> Value {
+    fn into_value_with(self, _: &RubyHandle) -> Value {
         *self
     }
 }
@@ -1467,44 +1467,50 @@ impl From<RString> for Value {
 }
 
 impl IntoValue for &str {
-    fn into_value(self, handle: &RubyHandle) -> Value {
+    fn into_value_with(self, handle: &RubyHandle) -> Value {
         handle.str_new(self).into()
     }
 }
 
+impl IntoValueFromNative for &str {}
+
 impl From<&str> for Value {
     fn from(val: &str) -> Self {
-        get_ruby!().into_value(val)
+        val.into_value()
     }
 }
 
 impl IntoValue for String {
-    fn into_value(self, handle: &RubyHandle) -> Value {
+    fn into_value_with(self, handle: &RubyHandle) -> Value {
         handle.str_new(self.as_str()).into()
     }
 }
 
+impl IntoValueFromNative for String {}
+
 impl From<String> for Value {
     fn from(val: String) -> Self {
-        get_ruby!().into_value(val)
+        val.into_value()
     }
 }
 
 impl IntoValue for char {
-    fn into_value(self, handle: &RubyHandle) -> Value {
+    fn into_value_with(self, handle: &RubyHandle) -> Value {
         handle.str_from_char(self).into()
     }
 }
 
+impl IntoValueFromNative for char {}
+
 impl From<char> for Value {
     fn from(val: char) -> Self {
-        get_ruby!().into_value(val)
+        val.into_value()
     }
 }
 
 #[cfg(unix)]
 impl IntoValue for &Path {
-    fn into_value(self, handle: &RubyHandle) -> Value {
+    fn into_value_with(self, handle: &RubyHandle) -> Value {
         use std::os::unix::ffi::OsStrExt;
         handle.str_from_slice(self.as_os_str().as_bytes()).into()
     }
@@ -1512,26 +1518,30 @@ impl IntoValue for &Path {
 
 #[cfg(not(unix))]
 impl IntoValue for &Path {
-    fn into_value(self, handle: &RubyHandle) -> Value {
+    fn into_value_with(self, handle: &RubyHandle) -> Value {
         handle.str_new(self.to_string_lossy().as_ref()).into()
     }
 }
 
+impl IntoValueFromNative for &Path {}
+
 impl From<&Path> for Value {
     fn from(val: &Path) -> Self {
-        get_ruby!().into_value(val)
+        val.into_value()
     }
 }
 
 impl IntoValue for PathBuf {
-    fn into_value(self, handle: &RubyHandle) -> Value {
+    fn into_value_with(self, handle: &RubyHandle) -> Value {
         handle.into_value(self.as_path())
     }
 }
 
+impl IntoValueFromNative for PathBuf {}
+
 impl From<PathBuf> for Value {
     fn from(val: PathBuf) -> Self {
-        get_ruby!().into_value(val)
+        val.into_value()
     }
 }
 
@@ -1679,7 +1689,7 @@ impl fmt::Debug for FString {
 }
 
 impl IntoValue for FString {
-    fn into_value(self, _: &RubyHandle) -> Value {
+    fn into_value_with(self, _: &RubyHandle) -> Value {
         *self.as_r_string()
     }
 }

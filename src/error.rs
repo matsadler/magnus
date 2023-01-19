@@ -10,11 +10,35 @@ use rb_sys::{
 use crate::{
     class::Class,
     exception::{self, Exception, ExceptionClass},
+    into_value::IntoValue,
     module::Module,
     r_string::RString,
     ruby_handle::RubyHandle,
     value::{ReprValue, Value, QNIL},
 };
+
+impl RubyHandle {
+    pub fn iter_break_value<T>(&self, val: Option<T>) -> Error
+    where
+        T: IntoValue,
+    {
+        match val {
+            Some(val) => {
+                let val = self.into_value(val);
+                protect(|| {
+                    unsafe { rb_iter_break_value(val.as_rb_value()) };
+                    QNIL
+                })
+                .unwrap_err()
+            }
+            None => protect(|| {
+                unsafe { rb_iter_break() };
+                QNIL
+            })
+            .unwrap_err(),
+        }
+    }
+}
 
 /// A Rust representation of a Ruby `Exception` or other interrupt.
 #[derive(Debug)]
@@ -50,25 +74,15 @@ impl Error {
     }
 
     /// Create a new error that will break from a loop when returned to Ruby.
+    ///
+    /// # Panics
+    ///
+    /// Panics if called from a non-Ruby thread.
     pub fn iter_break<T>(val: Option<T>) -> Self
     where
-        T: Into<Value>,
+        T: IntoValue,
     {
-        match val {
-            Some(val) => {
-                let val = val.into();
-                protect(|| {
-                    unsafe { rb_iter_break_value(val.as_rb_value()) };
-                    QNIL
-                })
-                .unwrap_err()
-            }
-            None => protect(|| {
-                unsafe { rb_iter_break() };
-                QNIL
-            })
-            .unwrap_err(),
-        }
+        get_ruby!().iter_break_value(val)
     }
 
     /// Matches the internal `Exception` against `class` with same semantics as

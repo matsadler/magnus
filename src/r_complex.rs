@@ -52,7 +52,7 @@ impl fmt::Debug for RComplex {
 }
 
 impl IntoValue for RComplex {
-    fn into_value(self, _: &RubyHandle) -> Value {
+    fn into_value_with(self, _: &RubyHandle) -> Value {
         *self
     }
 }

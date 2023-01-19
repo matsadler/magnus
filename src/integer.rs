@@ -383,7 +383,7 @@ impl fmt::Debug for Integer {
 }
 
 impl IntoValue for Integer {
-    fn into_value(self, _: &RubyHandle) -> Value {
+    fn into_value_with(self, _: &RubyHandle) -> Value {
         *self
     }
 }

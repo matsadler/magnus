@@ -289,8 +289,8 @@ See `magnus::TryConvert` for more details.
 
 ### Rust returning / passing values to Ruby
 
-See the `magnus::Value` type, for all types implementing `Into<Value>`, plus
-`magnus::method::ReturnValue` and `magnus::ArgList` for some additional details.
+See `magnus::IntoValue` for more details, plus `magnus::method::ReturnValue`
+and `magnus::ArgList` for some additional details.
 
 | returned from Rust / calling Ruby from Rust       | received in Ruby                        |
 |---------------------------------------------------|-----------------------------------------|
