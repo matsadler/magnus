@@ -14,6 +14,7 @@
   `shared_replace`, `split`, `update`.
 - `RRegexp::new`/`new_str`, `RRegexp::reg_match`, and `RRegexp::options`.
 - `RBignum::is_positive`/`is_negative`.
+- `value::Id::new` added to replace `value::Id::from`.
 
 ### Changed
 - When converting Ruby values to `RArray` (or `Vec<T>`, `[T; 1]`, or `(T,)`),
@@ -28,6 +29,8 @@
   `i64` depending on pointer width.
 - The `IntoValue` trait is now used instead of `Into<Value>` for converting to
   Ruby types.
+- `IntoId`, `IntoRString`, and `IntoSymbol` are used instead of `Into<Id>`,
+  `Into<RString>`, and `Into<Symbol>`.
 
 ### Deprecated
 - `RString::append` (use `RString::buf_append`).
@@ -36,6 +39,14 @@
 
 ### Removed
 - `DataTypeBuilder::free_immediatly` (use `free_immediately`).
+- `From<&str> for RString` / `Into<RString> for &str`.
+- `From<String> for RString` / `Into<RString> for String`.
+- `From<&str> for Symbol` / `Into<Symbol> for &str`.
+- `From<String> for Symbol` / `Into<Symbol> for String`.
+- `From<&str> for StaticSymbol` / `Into<StaticSymbol> for &str`.
+- `From<String> for StaticSymbol` / `Into<StaticSymbol> for String`.
+- `From<&str> for Id` / `Into<Id> for &str`.
+- `From<String> for Id` / `Into<Id> for String`.
 
 ### Fixed
 

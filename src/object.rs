@@ -12,7 +12,7 @@ use crate::{
     method::Method,
     module::RModule,
     try_convert::TryConvert,
-    value::{Id, Value, QNIL},
+    value::{IntoId, Value, QNIL},
 };
 
 /// Functions available all non-immediate values.
@@ -46,11 +46,11 @@ pub trait Object: Deref<Target = Value> + Copy {
     /// Note, the `@` is part of the name.
     fn ivar_get<T, U>(self, name: T) -> Result<U, Error>
     where
-        T: Into<Id>,
+        T: IntoId,
         U: TryConvert,
     {
         debug_assert_value!(self);
-        let id = name.into();
+        let id = unsafe { name.into_id_unchecked() };
         let res = unsafe { protect(|| Value::new(rb_ivar_get(self.as_rb_value(), id.as_rb_id()))) };
         res.and_then(|v| v.try_convert())
     }
@@ -60,11 +60,11 @@ pub trait Object: Deref<Target = Value> + Copy {
     /// Note, the `@` is part of the name.
     fn ivar_set<T, U>(self, name: T, value: U) -> Result<(), Error>
     where
-        T: Into<Id>,
+        T: IntoId,
         U: IntoValue,
     {
         debug_assert_value!(self);
-        let id = name.into();
+        let id = unsafe { name.into_id_unchecked() };
         let value = unsafe { value.into_value_unchecked() };
         unsafe {
             protect(|| {

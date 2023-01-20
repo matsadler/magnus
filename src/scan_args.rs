@@ -45,7 +45,7 @@ use crate::{
     r_hash::RHash,
     ruby_handle::RubyHandle,
     try_convert::{TryConvert, TryConvertOwned},
-    value::{Id, Value, QNIL},
+    value::{Id, IntoId, Value, QNIL},
 };
 
 struct ArgSpec {
@@ -2055,7 +2055,7 @@ pub fn get_kwargs<T, Req, Opt, Splat>(
     optional: &[T],
 ) -> Result<KwArgs<Req, Opt, Splat>, Error>
 where
-    T: Into<Id> + Copy,
+    T: IntoId + Copy,
     Req: ScanArgsRequired,
     Opt: ScanArgsOpt,
     Splat: ScanArgsKw,
@@ -2066,8 +2066,13 @@ where
     let ids = required
         .iter()
         .copied()
-        .map(Into::into)
-        .chain(optional.iter().copied().map(Into::into))
+        .map(|id| unsafe { id.into_id_unchecked() })
+        .chain(
+            optional
+                .iter()
+                .copied()
+                .map(|id| unsafe { id.into_id_unchecked() }),
+        )
         .collect::<Vec<Id>>();
     let optional_len = if Splat::REQ {
         -(optional.len() as i8 + 1)

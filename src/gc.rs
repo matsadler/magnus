@@ -14,7 +14,7 @@ use crate::{
     error::{protect, Error},
     r_hash::RHash,
     ruby_handle::RubyHandle,
-    symbol::Symbol,
+    symbol::IntoSymbol,
     value::{ReprValue, Value, QNIL},
 };
 
@@ -143,9 +143,9 @@ impl RubyHandle {
 
     pub fn gc_stat<T>(&self, key: T) -> Result<usize, Error>
     where
-        T: Into<Symbol>,
+        T: IntoSymbol,
     {
-        let sym = key.into();
+        let sym = key.into_symbol_with(self);
         let mut res = 0;
         protect(|| {
             res = unsafe { rb_gc_stat(sym.as_rb_value()) as usize };
@@ -239,9 +239,10 @@ pub fn count() -> usize {
 /// Panics if called from a non-Ruby thread.
 pub fn stat<T>(key: T) -> Result<usize, Error>
 where
-    T: Into<Symbol>,
+    T: IntoSymbol,
 {
-    get_ruby!().gc_stat(key)
+    let handle = get_ruby!();
+    handle.gc_stat(key.into_symbol_with(&handle))
 }
 
 /// Returns all possible key/value pairs for [`stat`] as a Ruby Hash.

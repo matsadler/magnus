@@ -23,7 +23,7 @@ use crate::{
     exception,
     into_value::{IntoValue, IntoValueFromNative},
     object::Object,
-    r_string::RString,
+    r_string::{IntoRString, RString},
     ruby_handle::RubyHandle,
     try_convert::{TryConvert, TryConvertOwned},
     value::{private, NonZeroValue, ReprValue, Value, QNIL},
@@ -884,12 +884,12 @@ impl RArray {
     /// ```
     pub fn join<T>(self, sep: T) -> Result<RString, Error>
     where
-        T: Into<RString>,
+        T: IntoRString,
     {
         protect(|| unsafe {
             RString::from_rb_value_unchecked(rb_ary_join(
                 self.as_rb_value(),
-                sep.into().as_rb_value(),
+                sep.into_r_string_unchecked().as_rb_value(),
             ))
         })
     }

@@ -24,7 +24,7 @@ use crate::{
     try_convert::TryConvert,
     value::{
         private::{self, ReprValue as _},
-        Id, NonZeroValue, ReprValue, Value, QNIL,
+        IntoId, NonZeroValue, ReprValue, Value, QNIL,
     },
 };
 
@@ -213,10 +213,13 @@ pub trait Module: Object + Deref<Target = Value> + Copy {
     /// let inner = outer.define_class("Inner", Default::default()).unwrap();
     /// assert!(inner.is_kind_of(class::class()));
     /// ```
-    fn define_class<T: Into<Id>>(self, name: T, superclass: RClass) -> Result<RClass, Error> {
+    fn define_class<T>(self, name: T, superclass: RClass) -> Result<RClass, Error>
+    where
+        T: IntoId,
+    {
         debug_assert_value!(self);
         debug_assert_value!(superclass);
-        let id = name.into();
+        let id = unsafe { name.into_id_unchecked() };
         let superclass = superclass.as_rb_value();
         protect(|| unsafe {
             RClass::from_rb_value_unchecked(rb_define_class_id_under(
@@ -239,8 +242,11 @@ pub trait Module: Object + Deref<Target = Value> + Copy {
     /// let inner = outer.define_module("Inner").unwrap();
     /// assert!(inner.is_kind_of(class::module()));
     /// ```
-    fn define_module<T: Into<Id>>(self, name: T) -> Result<RModule, Error> {
-        let id = name.into();
+    fn define_module<T>(self, name: T) -> Result<RModule, Error>
+    where
+        T: IntoId,
+    {
+        let id = unsafe { name.into_id_unchecked() };
         protect(|| unsafe {
             RModule::from_rb_value_unchecked(rb_define_module_id_under(
                 self.as_rb_value(),
@@ -261,11 +267,10 @@ pub trait Module: Object + Deref<Target = Value> + Copy {
     /// let inner = outer.define_error("InnerError", Default::default()).unwrap();
     /// assert!(inner.is_inherited(exception::standard_error()));
     /// ```
-    fn define_error<T: Into<Id>>(
-        self,
-        name: T,
-        superclass: ExceptionClass,
-    ) -> Result<ExceptionClass, Error> {
+    fn define_error<T>(self, name: T, superclass: ExceptionClass) -> Result<ExceptionClass, Error>
+    where
+        T: IntoId,
+    {
         self.define_class(name, superclass.as_r_class())
             .map(|c| unsafe { ExceptionClass::from_value_unchecked(*c) })
     }
@@ -359,10 +364,10 @@ pub trait Module: Object + Deref<Target = Value> + Copy {
     /// ```
     fn const_set<T, U>(self, name: T, value: U) -> Result<(), Error>
     where
-        T: Into<Id>,
+        T: IntoId,
         U: IntoValue,
     {
-        let id = name.into();
+        let id = unsafe { name.into_id_unchecked() };
         let val = unsafe { value.into_value_unchecked() };
         protect(|| unsafe {
             rb_const_set(self.as_rb_value(), id.as_rb_id(), val.as_rb_value());
@@ -390,11 +395,11 @@ pub trait Module: Object + Deref<Target = Value> + Copy {
     /// ```
     fn const_get<T, U>(self, name: T) -> Result<U, Error>
     where
-        T: Into<Id>,
+        T: IntoId,
         U: TryConvert,
     {
         debug_assert_value!(self);
-        let id = name.into();
+        let id = unsafe { name.into_id_unchecked() };
         let res =
             unsafe { protect(|| Value::new(rb_const_get(self.as_rb_value(), id.as_rb_id()))) };
         res.and_then(|v| v.try_convert())
@@ -464,11 +469,11 @@ pub trait Module: Object + Deref<Target = Value> + Copy {
     /// ```
     fn define_method<T, M>(self, name: T, func: M) -> Result<(), Error>
     where
-        T: Into<Id>,
+        T: IntoId,
         M: Method,
     {
         debug_assert_value!(self);
-        let id = name.into();
+        let id = unsafe { name.into_id_unchecked() };
         protect(|| {
             unsafe {
                 rb_define_method_id(
@@ -607,9 +612,9 @@ pub trait Module: Object + Deref<Target = Value> + Copy {
     /// ```
     fn define_attr<T>(self, name: T, rw: Attr) -> Result<(), Error>
     where
-        T: Into<Id>,
+        T: IntoId,
     {
-        let id = name.into();
+        let id = unsafe { name.into_id_unchecked() };
         protect(|| unsafe {
             rb_attr(
                 self.as_rb_value(),
@@ -644,11 +649,11 @@ pub trait Module: Object + Deref<Target = Value> + Copy {
     /// ```
     fn define_alias<T, U>(self, dst: T, src: U) -> Result<(), Error>
     where
-        T: Into<Id>,
-        U: Into<Id>,
+        T: IntoId,
+        U: IntoId,
     {
-        let d_id = dst.into();
-        let s_id = src.into();
+        let d_id = unsafe { dst.into_id_unchecked() };
+        let s_id = unsafe { src.into_id_unchecked() };
         protect(|| unsafe {
             rb_alias(self.as_rb_value(), d_id.as_rb_id(), s_id.as_rb_id());
             QNIL

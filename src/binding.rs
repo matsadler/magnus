@@ -9,9 +9,9 @@ use crate::{
     exception,
     into_value::IntoValue,
     object::Object,
-    r_string::RString,
+    r_string::IntoRString,
     ruby_handle::RubyHandle,
-    symbol::Symbol,
+    symbol::IntoSymbol,
     try_convert::TryConvert,
     value::{private, NonZeroValue, ReprValue, Value},
 };
@@ -86,10 +86,10 @@ impl Binding {
     /// ```
     pub fn eval<T, U>(&self, s: T) -> Result<U, Error>
     where
-        T: Into<RString>,
+        T: IntoRString,
         U: TryConvert,
     {
-        self.funcall("eval", (s.into(),))
+        self.funcall("eval", (unsafe { s.into_r_string_unchecked() },))
     }
 
     /// Get the named local variable from the binding.
@@ -111,10 +111,13 @@ impl Binding {
     /// ```
     pub fn local_variable_get<N, T>(&self, name: N) -> Result<T, Error>
     where
-        N: Into<Symbol>,
+        N: IntoSymbol,
         T: TryConvert,
     {
-        self.funcall("local_variable_get", (name.into(),))
+        self.funcall(
+            "local_variable_get",
+            (unsafe { name.into_symbol_unchecked() },),
+        )
     }
 
     /// Set the named local variable in the binding.
@@ -131,11 +134,14 @@ impl Binding {
     /// ```
     pub fn local_variable_set<N, T>(&self, name: N, val: T)
     where
-        N: Into<Symbol>,
+        N: IntoSymbol,
         T: IntoValue,
     {
-        self.funcall::<_, _, Value>("local_variable_set", (name.into(), val))
-            .unwrap();
+        self.funcall::<_, _, Value>(
+            "local_variable_set",
+            (unsafe { name.into_symbol_unchecked() }, val),
+        )
+        .unwrap();
     }
 }
 

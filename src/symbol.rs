@@ -19,7 +19,7 @@ use crate::{
 impl RubyHandle {
     #[inline]
     pub fn to_symbol<T: AsRef<str>>(&self, name: T) -> Symbol {
-        name.as_ref().into()
+        name.as_ref().into_symbol_with(self)
     }
 }
 
@@ -198,30 +198,60 @@ impl fmt::Debug for Symbol {
 
 impl EncodingCapable for Symbol {}
 
-impl From<Id> for Symbol {
-    fn from(id: Id) -> Self {
-        unsafe { Self::from_rb_value_unchecked(rb_id2sym(id.as_rb_id())) }
+pub trait IntoSymbol: Sized {
+    fn into_symbol(self) -> Symbol {
+        self.into_symbol_with(&get_ruby!())
+    }
+
+    unsafe fn into_symbol_unchecked(self) -> Symbol {
+        self.into_symbol_with(&RubyHandle::get_unchecked())
+    }
+
+    fn into_symbol_with(self, handle: &RubyHandle) -> Symbol;
+}
+
+impl IntoSymbol for Symbol {
+    fn into_symbol_with(self, _: &RubyHandle) -> Symbol {
+        self
     }
 }
 
-impl From<&str> for Symbol {
-    fn from(s: &str) -> Self {
+impl IntoSymbol for Id {
+    fn into_symbol_with(self, _: &RubyHandle) -> Symbol {
+        unsafe { Symbol::from_rb_value_unchecked(rb_id2sym(self.as_rb_id())) }
+    }
+}
+
+impl From<Id> for Symbol {
+    fn from(id: Id) -> Self {
+        unsafe { id.into_symbol_unchecked() }
+    }
+}
+
+impl IntoSymbol for &str {
+    fn into_symbol_with(self, handle: &RubyHandle) -> Symbol {
         protect(|| unsafe {
-            Self::from_rb_value_unchecked(rb_to_symbol(RString::new(s).as_rb_value()))
+            Symbol::from_rb_value_unchecked(rb_to_symbol(handle.str_new(self).as_rb_value()))
         })
         .unwrap()
     }
 }
 
-impl From<String> for Symbol {
-    fn from(s: String) -> Self {
-        s.as_str().into()
+impl IntoSymbol for String {
+    fn into_symbol_with(self, handle: &RubyHandle) -> Symbol {
+        self.as_str().into_symbol_with(handle)
+    }
+}
+
+impl IntoSymbol for StaticSymbol {
+    fn into_symbol_with(self, _: &RubyHandle) -> Symbol {
+        unsafe { Symbol(NonZeroValue::new_unchecked(self.into())) }
     }
 }
 
 impl From<StaticSymbol> for Symbol {
     fn from(s: StaticSymbol) -> Self {
-        unsafe { Self(NonZeroValue::new_unchecked(s.into())) }
+        unsafe { s.into_symbol_unchecked() }
     }
 }
 

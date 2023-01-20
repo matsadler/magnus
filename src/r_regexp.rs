@@ -15,10 +15,10 @@ use crate::{
     error::{protect, Error},
     exception,
     into_value::IntoValue,
+    r_string::{IntoRString, RString},
     ruby_handle::RubyHandle,
     try_convert::TryConvert,
     value::{private, NonZeroValue, ReprValue, Value},
-    RString,
 };
 
 impl RubyHandle {
@@ -112,9 +112,9 @@ impl RRegexp {
     /// ```
     pub fn reg_match<T>(self, s: T) -> Result<Option<usize>, Error>
     where
-        T: Into<RString>,
+        T: IntoRString,
     {
-        let s = s.into();
+        let s = unsafe { s.into_r_string_unchecked() };
         protect(|| unsafe { Value::new(rb_reg_match(self.as_rb_value(), s.as_rb_value())) })
             .and_then(|v| v.try_convert())
     }

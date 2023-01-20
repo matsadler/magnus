@@ -1902,8 +1902,8 @@ pub use crate::{
     value::{Fixnum, StaticSymbol, Value, QFALSE, QNIL, QTRUE},
 };
 use crate::{
-    error::protect, into_value::IntoValue, method::Method, ruby_handle::RubyHandle,
-    value::private::ReprValue as _,
+    error::protect, into_value::IntoValue, method::Method, r_string::IntoRString,
+    ruby_handle::RubyHandle, value::private::ReprValue as _,
 };
 
 /// Utility to simplify initialising a static with [`std::sync::Once`].
@@ -2026,9 +2026,9 @@ impl RubyHandle {
     #[cfg(ruby_gte_2_7)]
     pub fn require<T>(&self, feature: T) -> Result<bool, Error>
     where
-        T: Into<RString>,
+        T: IntoRString,
     {
-        let feature = feature.into();
+        let feature = feature.into_r_string_with(self);
         protect(|| unsafe { Value::new(rb_require_string(feature.as_rb_value())) })
             .and_then(|v| v.try_convert())
     }
@@ -2177,7 +2177,7 @@ where
 #[cfg(ruby_gte_2_7)]
 pub fn require<T>(feature: T) -> Result<bool, Error>
 where
-    T: Into<RString>,
+    T: IntoRString,
 {
     get_ruby!().require(feature)
 }

@@ -26,7 +26,7 @@ use crate::{
     ruby_handle::RubyHandle,
     symbol::Symbol,
     try_convert::TryConvert,
-    value::{self, Id, NonZeroValue, Value},
+    value::{self, IntoId, NonZeroValue, Value},
 };
 
 // Ruby provides some inline functions to get a pointer to the struct's
@@ -209,10 +209,10 @@ impl RStruct {
     /// Return the value for the member named `id`.
     pub fn getmember<T, U>(self, id: T) -> Result<U, Error>
     where
-        T: Into<Id>,
+        T: IntoId,
         U: TryConvert,
     {
-        let id = id.into();
+        let id = unsafe { id.into_id_unchecked() };
         protect(|| unsafe { Value::new(rb_struct_getmember(self.as_rb_value(), id.as_rb_id())) })
             .and_then(|v| v.try_convert())
     }

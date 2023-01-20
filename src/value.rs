@@ -46,7 +46,7 @@ use crate::{
     r_bignum::RBignum,
     r_string::RString,
     ruby_handle::RubyHandle,
-    symbol::Symbol,
+    symbol::{IntoSymbol, Symbol},
     try_convert::{ArgList, TryConvert, TryConvertOwned},
 };
 
@@ -487,12 +487,12 @@ impl Value {
     /// ```
     pub fn funcall<M, A, T>(self, method: M, args: A) -> Result<T, Error>
     where
-        M: Into<Id>,
+        M: IntoId,
         A: ArgList,
         T: TryConvert,
     {
         unsafe {
-            let id = method.into();
+            let id = method.into_id_unchecked();
             let args = args.into_arg_list();
             let slice = args.as_ref();
             protect(|| {
@@ -528,11 +528,11 @@ impl Value {
     /// ```
     pub fn check_funcall<M, A, T>(self, method: M, args: A) -> Option<Result<T, Error>>
     where
-        M: Into<Id>,
+        M: IntoId,
         A: ArgList,
         T: TryConvert,
     {
-        let id = method.into();
+        let id = unsafe { method.into_id_unchecked() };
         let args = args.into_arg_list();
         let slice = args.as_ref();
         unsafe {
@@ -572,12 +572,12 @@ impl Value {
     /// ```
     pub fn funcall_with_block<M, A, T>(self, method: M, args: A, block: Proc) -> Result<T, Error>
     where
-        M: Into<Id>,
+        M: IntoId,
         A: ArgList,
         T: TryConvert,
     {
         unsafe {
-            let id = method.into();
+            let id = method.into_id_unchecked();
             let args = args.into_arg_list();
             let slice = args.as_ref();
             protect(|| {
@@ -628,7 +628,7 @@ impl Value {
         block: fn(&[Value], Option<Proc>) -> R,
     ) -> Result<T, Error>
     where
-        M: Into<Id>,
+        M: IntoId,
         A: ArgList,
         R: BlockReturn,
         T: TryConvert,
@@ -649,7 +649,7 @@ impl Value {
                 .as_rb_value()
         }
 
-        let id = method.into();
+        let id = unsafe { method.into_id_unchecked() };
         let args = args.into_arg_list();
         let slice = args.as_ref();
         let call_func =
@@ -693,9 +693,9 @@ impl Value {
     /// ```
     pub fn respond_to<M>(self, method: M, include_private: bool) -> Result<bool, Error>
     where
-        M: Into<Id>,
+        M: IntoId,
     {
-        let id = method.into();
+        let id = unsafe { method.into_id_unchecked() };
         let mut res = false;
         protect(|| {
             unsafe {
@@ -874,7 +874,7 @@ impl Value {
     /// ```
     pub fn enumeratorize<M, A>(self, method: M, args: A) -> Enumerator
     where
-        M: Into<Symbol>,
+        M: IntoSymbol,
         A: ArgList,
     {
         let args = args.into_arg_list();
@@ -882,7 +882,7 @@ impl Value {
         unsafe {
             Enumerator::from_rb_value_unchecked(rb_enumeratorize_with_size(
                 self.as_rb_value(),
-                method.into().as_rb_value(),
+                method.into_symbol_unchecked().as_rb_value(),
                 slice.len() as c_int,
                 slice.as_ptr() as *const VALUE,
                 None,
@@ -2142,8 +2142,11 @@ impl TryConvertOwned for Fixnum {}
 
 impl RubyHandle {
     #[inline]
-    pub fn sym_new<T: Into<Id>>(&self, name: T) -> StaticSymbol {
-        name.into().into()
+    pub fn sym_new<T>(&self, name: T) -> StaticSymbol
+    where
+        T: IntoId,
+    {
+        name.into_id_with(self).into()
     }
 
     pub fn check_symbol(&self, name: &str) -> Option<StaticSymbol> {
@@ -2222,7 +2225,10 @@ impl StaticSymbol {
     /// assert!(result);
     /// ```
     #[inline]
-    pub fn new<T: Into<Id>>(name: T) -> Self {
+    pub fn new<T>(name: T) -> Self
+    where
+        T: IntoId,
+    {
         get_ruby!().sym_new(name)
     }
 
@@ -2292,18 +2298,6 @@ impl From<Id> for StaticSymbol {
     }
 }
 
-impl From<&str> for StaticSymbol {
-    fn from(s: &str) -> Self {
-        Id::from(s).into()
-    }
-}
-
-impl From<String> for StaticSymbol {
-    fn from(s: String) -> Self {
-        Id::from(s).into()
-    }
-}
-
 impl IntoValue for StaticSymbol {
     fn into_value_with(self, _: &RubyHandle) -> Value {
         *self
@@ -2344,7 +2338,7 @@ impl RubyHandle {
                 RbEncoding::utf8().as_ptr(),
             )
         };
-        (res != 0).then(|| Id::new(res))
+        (res != 0).then(|| Id::from_rb_id(res))
     }
 }
 
@@ -2354,7 +2348,29 @@ impl RubyHandle {
 pub struct Id(ID);
 
 impl Id {
-    pub(crate) fn new(id: ID) -> Self {
+    /// Create a new `Id` for `name`.
+    ///
+    /// # Panics
+    ///
+    /// Panics if called from a non-Ruby thread.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::value::Id;
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let id = Id::new("example");
+    /// assert_eq!(id.name().unwrap(), "example");
+    /// ```
+    pub fn new<T>(name: T) -> Self
+    where
+        T: AsRef<str>,
+    {
+        name.as_ref().into_id()
+    }
+
+    pub(crate) fn from_rb_id(id: ID) -> Self {
         Self(id)
     }
 
@@ -2371,7 +2387,7 @@ impl Id {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{value::{Id}, StaticSymbol};
+    /// use magnus::{value::Id, StaticSymbol};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// assert!(Id::check("example").is_none());
@@ -2393,7 +2409,7 @@ impl Id {
     /// use magnus::value::Id;
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// let id = Id::from("example");
+    /// let id = Id::new("example");
     /// assert_eq!(id.name().unwrap(), "example");
     /// ```
     pub fn name(self) -> Result<&'static str, Error> {
@@ -2406,32 +2422,62 @@ impl Id {
     }
 }
 
-impl From<&str> for Id {
-    fn from(s: &str) -> Self {
-        Self::new(unsafe {
+pub trait IntoId: Sized {
+    fn into_id(self) -> Id {
+        self.into_id_with(&get_ruby!())
+    }
+
+    unsafe fn into_id_unchecked(self) -> Id {
+        self.into_id_with(&RubyHandle::get_unchecked())
+    }
+
+    fn into_id_with(self, handle: &RubyHandle) -> Id;
+}
+
+impl IntoId for Id {
+    fn into_id_with(self, _: &RubyHandle) -> Id {
+        self
+    }
+}
+
+impl IntoId for &str {
+    fn into_id_with(self, handle: &RubyHandle) -> Id {
+        Id::from_rb_id(unsafe {
             rb_intern3(
-                s.as_ptr() as *const c_char,
-                s.len() as c_long,
-                RbEncoding::utf8().as_ptr(),
+                self.as_ptr() as *const c_char,
+                self.len() as c_long,
+                handle.utf8_encoding().as_ptr(),
             )
         })
     }
 }
 
-impl From<String> for Id {
-    fn from(s: String) -> Self {
-        s.as_str().into()
+impl IntoId for String {
+    fn into_id_with(self, handle: &RubyHandle) -> Id {
+        self.as_str().into_id_with(handle)
+    }
+}
+
+impl IntoId for StaticSymbol {
+    fn into_id_with(self, _: &RubyHandle) -> Id {
+        Id::from_rb_id(unsafe { rb_sym2id(self.as_rb_value()) })
     }
 }
 
 impl From<StaticSymbol> for Id {
     fn from(sym: StaticSymbol) -> Self {
-        Self::new(unsafe { rb_sym2id(sym.as_rb_value()) })
+        unsafe { sym.into_id_unchecked() }
+    }
+}
+
+impl IntoId for Symbol {
+    fn into_id_with(self, _: &RubyHandle) -> Id {
+        Id::from_rb_id(unsafe { rb_sym2id(self.as_rb_value()) })
     }
 }
 
 impl From<Symbol> for Id {
     fn from(sym: Symbol) -> Self {
-        Self::new(unsafe { rb_sym2id(sym.as_rb_value()) })
+        unsafe { sym.into_id_unchecked() }
     }
 }

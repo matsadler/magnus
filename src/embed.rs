@@ -12,7 +12,7 @@ use rb_sys::{
     ruby_setup,
 };
 
-use crate::{r_string::RString, ruby_handle::RubyHandle};
+use crate::{r_string::IntoRString, ruby_handle::RubyHandle};
 
 /// A guard value that will run the cleanup function for the Ruby VM when
 /// dropped.
@@ -92,9 +92,9 @@ unsafe fn init_options(opts: &[&str]) -> Cleanup {
 impl RubyHandle {
     pub fn script<T>(&self, name: T)
     where
-        T: Into<RString>,
+        T: IntoRString,
     {
-        let name = name.into();
+        let name = name.into_r_string_with(self);
         unsafe { ruby_set_script_name(name.as_rb_value()) };
     }
 }
@@ -106,7 +106,7 @@ impl RubyHandle {
 /// Panics if called from a non-Ruby thread.
 pub fn ruby_script<T>(name: T)
 where
-    T: Into<RString>,
+    T: IntoRString,
 {
     get_ruby!().script(name)
 }

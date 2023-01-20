@@ -1442,15 +1442,33 @@ impl io::Write for RString {
     }
 }
 
-impl From<&str> for RString {
-    fn from(val: &str) -> Self {
-        RString::new(val)
+pub trait IntoRString: Sized {
+    fn into_r_string(self) -> RString {
+        self.into_r_string_with(&get_ruby!())
+    }
+
+    unsafe fn into_r_string_unchecked(self) -> RString {
+        self.into_r_string_with(&RubyHandle::get_unchecked())
+    }
+
+    fn into_r_string_with(self, handle: &RubyHandle) -> RString;
+}
+
+impl IntoRString for RString {
+    fn into_r_string_with(self, _: &RubyHandle) -> RString {
+        self
     }
 }
 
-impl From<String> for RString {
-    fn from(val: String) -> Self {
-        RString::new(&val)
+impl IntoRString for &str {
+    fn into_r_string_with(self, handle: &RubyHandle) -> RString {
+        handle.str_new(self)
+    }
+}
+
+impl IntoRString for String {
+    fn into_r_string_with(self, handle: &RubyHandle) -> RString {
+        handle.str_new(&self)
     }
 }
 

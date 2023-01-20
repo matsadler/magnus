@@ -135,7 +135,7 @@ impl AsRawId for Id {
 
 impl FromRawId for Id {
     unsafe fn from_raw(id: ID) -> Id {
-        Id::new(id.into())
+        Id::from_rb_id(id.into())
     }
 }
 
