@@ -95,6 +95,11 @@
 //! }
 //! ```
 //!
+//! # Crates that work with Magnus
+//!
+//! * [`rb-sys`](https://docs.rs/rb-sys) - low level bindings to Ruby.
+//! * [`serde_magnus`](https://docs.rs/serde_magnus) - Serde integration.
+//!
 //! # C Function Index
 //! <details>
 //! <summary>Click to show</summary>

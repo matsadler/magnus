@@ -250,7 +250,7 @@ fn main() {
 ## Type Conversions
 
 Magnus will automatically convert between Rust and Ruby types, including
-converting Ruby exceptions to Rust `Result`s and visa versa.
+converting Ruby exceptions to Rust `Result`s and vice versa.
 
 These conversions follow the pattern set by Ruby's core and standard libraries,
 where many conversions will delegate to a `#to_<type>` method if the object is
@@ -308,6 +308,14 @@ and `magnus::ArgList` for some additional details.
 | `T`, `typed_data::Obj<T>` where `T: TypedData`**  | instance of `<T as TypedData>::class()` |
 
 \** see the `wrap` macro.
+
+### Conversions via Serde
+
+Rust types can also be converted to Ruby, and vice versa, using [Serde] with
+the [`serde_magnus`] crate.
+
+[Serde]: https://github.com/serde-rs/serde
+[`serde_magnus`]: https://github.com/georgeclaghorn/serde-magnus
 
 ### Manual Conversions
 
@@ -385,15 +393,32 @@ Support for 32 bit systems is almost certainly broken, patches are welcome.
 
 [plat]: https://github.com/oxidize-rb/rb-sys#supported-platforms
 
+## Crates that work with Magnus
+
 ### rb-sys
 
 Magnus uses [rb-sys] to provide the low-level bindings to Ruby. The
-`rb-sys-interop` feature enables the
-[`rb_sys`](https://docs.rs/magnus/latest/magnus/rb_sys/index.html) module for
+`rb-sys-interop` feature enables the [`rb_sys`][rb_sys_module] module for
 advanced interoperability with rb-sys, allows you to access low-level Ruby APIs
 which Magnus does not expose.
 
 [rb-sys]: https://github.com/oxidize-rb/rb-sys/tree/main/crates/rb-sys
+[rb_sys_module](https://docs.rs/magnus/latest/magnus/rb_sys/index.html)
+
+### `serde_magnus`
+
+`serde_magnus` integrates [Serde] and Magnus for seamless serialisation and
+deserialisation of Rust to Ruby data structures and vice versa
+
+## Users
+
+* [`halton`](https://github.com/matsadler/halton-rb) a Ruby gem providing a
+  highly optimised method for generating Halton sequences.
+
+Please open a [pull request](https://github.com/matsadler/magnus/pulls) if
+you'd like your project listed here.
+
+## Troubleshooting
 
 ### Issues with static linking
 
