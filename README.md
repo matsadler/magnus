@@ -403,12 +403,12 @@ advanced interoperability with rb-sys, allows you to access low-level Ruby APIs
 which Magnus does not expose.
 
 [rb-sys]: https://github.com/oxidize-rb/rb-sys/tree/main/crates/rb-sys
-[rb_sys_module](https://docs.rs/magnus/latest/magnus/rb_sys/index.html)
+[rb_sys_module]: https://docs.rs/magnus/latest/magnus/rb_sys/index.html
 
 ### `serde_magnus`
 
 `serde_magnus` integrates [Serde] and Magnus for seamless serialisation and
-deserialisation of Rust to Ruby data structures and vice versa
+deserialisation of Rust to Ruby data structures and vice versa.
 
 ## Users
 
