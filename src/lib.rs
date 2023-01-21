@@ -1825,6 +1825,7 @@ pub mod error;
 pub mod exception;
 mod float;
 pub mod gc;
+pub mod gvl;
 mod integer;
 pub mod into_value;
 pub mod method;
