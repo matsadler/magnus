@@ -10,18 +10,41 @@ impl RubyHandle {
     }
 }
 
+/// Conversions from Rust types into [`Value`].
 pub trait IntoValue: Sized {
+    /// Convert `self` into [`Value`].
+    ///
+    /// # Panics
+    ///
+    /// Panics if called from a non-Ruby thread.
+    ///
     fn into_value(self) -> Value {
         self.into_value_with(&get_ruby!())
     }
 
+    /// Convert `self` into [`Value`].
+    ///
+    /// # Safety
+    ///
+    /// This method should only be called from a Ruby thread.
     unsafe fn into_value_unchecked(self) -> Value {
         self.into_value_with(&RubyHandle::get_unchecked())
     }
 
+    /// Convert `self` into [`Value`].
     fn into_value_with(self, handle: &RubyHandle) -> Value;
 }
 
+/// Conversions from Rust types that do not contain [`Value`] into [`Value`].
+///
+/// This trait is used as a bound in functions such as
+/// [`RArray::from_vec`](crate::r_array::RArray::from_vec) to prevent accepting
+/// heap allocated datastructures containing `Value`, as it is not safe to
+/// store a `Value` on the heap.
+///
+/// # Safety
+///
+/// This trait must not be implimented for types that contain `Value`.
 pub unsafe trait IntoValueFromNative: IntoValue {}
 
 /// Trait for types that can be used as an arguments list when calling Ruby

@@ -198,15 +198,28 @@ impl fmt::Debug for Symbol {
 
 impl EncodingCapable for Symbol {}
 
+/// Conversions from Rust types into [`Symbol`].
 pub trait IntoSymbol: Sized {
+    /// Convert `self` into [`Symbol`].
+    ///
+    /// # Panics
+    ///
+    /// Panics if called from a non-Ruby thread.
+    ///
     fn into_symbol(self) -> Symbol {
         self.into_symbol_with(&get_ruby!())
     }
 
+    /// Convert `self` into [`Symbol`].
+    ///
+    /// # Safety
+    ///
+    /// This method should only be called from a Ruby thread.
     unsafe fn into_symbol_unchecked(self) -> Symbol {
         self.into_symbol_with(&RubyHandle::get_unchecked())
     }
 
+    /// Convert `self` into [`Symbol`].
     fn into_symbol_with(self, handle: &RubyHandle) -> Symbol;
 }
 

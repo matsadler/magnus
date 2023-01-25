@@ -2422,15 +2422,28 @@ impl Id {
     }
 }
 
+/// Conversions from Rust types into [`Id`].
 pub trait IntoId: Sized {
+    /// Convert `self` into [`Id`].
+    ///
+    /// # Panics
+    ///
+    /// Panics if called from a non-Ruby thread.
+    ///
     fn into_id(self) -> Id {
         self.into_id_with(&get_ruby!())
     }
 
+    /// Convert `self` into [`Id`].
+    ///
+    /// # Safety
+    ///
+    /// This method should only be called from a Ruby thread.
     unsafe fn into_id_unchecked(self) -> Id {
         self.into_id_with(&RubyHandle::get_unchecked())
     }
 
+    /// Convert `self` into [`Id`].
     fn into_id_with(self, handle: &RubyHandle) -> Id;
 }
 

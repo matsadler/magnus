@@ -1442,15 +1442,28 @@ impl io::Write for RString {
     }
 }
 
+/// Conversions from Rust types into [`RString`].
 pub trait IntoRString: Sized {
+    /// Convert `self` into [`RString`].
+    ///
+    /// # Panics
+    ///
+    /// Panics if called from a non-Ruby thread.
+    ///
     fn into_r_string(self) -> RString {
         self.into_r_string_with(&get_ruby!())
     }
 
+    /// Convert `self` into [`RString`].
+    ///
+    /// # Safety
+    ///
+    /// This method should only be called from a Ruby thread.
     unsafe fn into_r_string_unchecked(self) -> RString {
         self.into_r_string_with(&RubyHandle::get_unchecked())
     }
 
+    /// Convert `self` into [`RString`].
     fn into_r_string_with(self, handle: &RubyHandle) -> RString;
 }
 
