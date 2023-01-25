@@ -17,11 +17,11 @@ use crate::{
     debug_assert_value,
     error::{protect, Error},
     exception,
-    into_value::IntoValue,
+    into_value::{ArgList, IntoValue},
     module::Module,
     object::Object,
     ruby_handle::RubyHandle,
-    try_convert::{ArgList, TryConvert},
+    try_convert::TryConvert,
     value::{private, NonZeroValue, ReprValue, Value},
 };
 

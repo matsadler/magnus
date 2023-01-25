@@ -1826,7 +1826,7 @@ pub mod exception;
 mod float;
 pub mod gc;
 mod integer;
-pub mod into_value;
+mod into_value;
 pub mod method;
 pub mod module;
 mod object;
@@ -1880,6 +1880,7 @@ pub use crate::{
     exception::{Exception, ExceptionClass},
     float::Float,
     integer::Integer,
+    into_value::{ArgList, IntoValue, IntoValueFromNative},
     module::{Attr, Module, RModule},
     object::Object,
     r_array::RArray,
@@ -1897,13 +1898,13 @@ pub use crate::{
     r_typed_data::RTypedData,
     range::Range,
     symbol::Symbol,
-    try_convert::{ArgList, TryConvert},
+    try_convert::TryConvert,
     typed_data::{DataType, DataTypeFunctions, TypedData},
     value::{Fixnum, StaticSymbol, Value, QFALSE, QNIL, QTRUE},
 };
 use crate::{
-    error::protect, into_value::IntoValue, method::Method, r_string::IntoRString,
-    ruby_handle::RubyHandle, value::private::ReprValue as _,
+    error::protect, method::Method, r_string::IntoRString, ruby_handle::RubyHandle,
+    value::private::ReprValue as _,
 };
 
 /// Utility to simplify initialising a static with [`std::sync::Once`].

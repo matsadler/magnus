@@ -40,14 +40,14 @@ use crate::{
     error::{protect, Error},
     exception,
     integer::{Integer, IntegerType},
-    into_value::{IntoValue, IntoValueFromNative},
+    into_value::{ArgList, IntoValue, IntoValueFromNative},
     method::{Block, BlockReturn},
     module::Module,
     r_bignum::RBignum,
     r_string::RString,
     ruby_handle::RubyHandle,
     symbol::{IntoSymbol, Symbol},
-    try_convert::{ArgList, TryConvert, TryConvertOwned},
+    try_convert::{TryConvert, TryConvertOwned},
 };
 
 /// Debug assertation that the Value hasn't been garbage collected.
