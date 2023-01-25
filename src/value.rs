@@ -946,7 +946,7 @@ impl IntoValue for i8 {
     }
 }
 
-impl IntoValueFromNative for i8 {}
+unsafe impl IntoValueFromNative for i8 {}
 
 impl From<i8> for Value {
     fn from(value: i8) -> Self {
@@ -960,7 +960,7 @@ impl IntoValue for i16 {
     }
 }
 
-impl IntoValueFromNative for i16 {}
+unsafe impl IntoValueFromNative for i16 {}
 
 impl From<i16> for Value {
     fn from(value: i16) -> Self {
@@ -974,7 +974,7 @@ impl IntoValue for i32 {
     }
 }
 
-impl IntoValueFromNative for i32 {}
+unsafe impl IntoValueFromNative for i32 {}
 
 impl From<i32> for Value {
     fn from(value: i32) -> Self {
@@ -988,7 +988,7 @@ impl IntoValue for i64 {
     }
 }
 
-impl IntoValueFromNative for i64 {}
+unsafe impl IntoValueFromNative for i64 {}
 
 impl From<i64> for Value {
     fn from(value: i64) -> Self {
@@ -1002,7 +1002,7 @@ impl IntoValue for isize {
     }
 }
 
-impl IntoValueFromNative for isize {}
+unsafe impl IntoValueFromNative for isize {}
 
 impl From<isize> for Value {
     fn from(value: isize) -> Self {
@@ -1016,7 +1016,7 @@ impl IntoValue for u8 {
     }
 }
 
-impl IntoValueFromNative for u8 {}
+unsafe impl IntoValueFromNative for u8 {}
 
 impl From<u8> for Value {
     fn from(value: u8) -> Self {
@@ -1030,7 +1030,7 @@ impl IntoValue for u16 {
     }
 }
 
-impl IntoValueFromNative for u16 {}
+unsafe impl IntoValueFromNative for u16 {}
 
 impl From<u16> for Value {
     fn from(value: u16) -> Self {
@@ -1044,7 +1044,7 @@ impl IntoValue for u32 {
     }
 }
 
-impl IntoValueFromNative for u32 {}
+unsafe impl IntoValueFromNative for u32 {}
 
 impl From<u32> for Value {
     fn from(value: u32) -> Self {
@@ -1058,7 +1058,7 @@ impl IntoValue for u64 {
     }
 }
 
-impl IntoValueFromNative for u64 {}
+unsafe impl IntoValueFromNative for u64 {}
 
 impl From<u64> for Value {
     fn from(value: u64) -> Self {
@@ -1072,7 +1072,7 @@ impl IntoValue for usize {
     }
 }
 
-impl IntoValueFromNative for usize {}
+unsafe impl IntoValueFromNative for usize {}
 
 impl From<usize> for Value {
     fn from(value: usize) -> Self {
@@ -1086,7 +1086,7 @@ impl IntoValue for f32 {
     }
 }
 
-impl IntoValueFromNative for f32 {}
+unsafe impl IntoValueFromNative for f32 {}
 
 impl From<f32> for Value {
     fn from(value: f32) -> Self {
@@ -1100,7 +1100,7 @@ impl IntoValue for f64 {
     }
 }
 
-impl IntoValueFromNative for f64 {}
+unsafe impl IntoValueFromNative for f64 {}
 
 impl From<f64> for Value {
     fn from(value: f64) -> Self {
@@ -1296,7 +1296,7 @@ where
     }
 }
 
-impl<T> IntoValueFromNative for BoxValue<T> where T: ReprValue {}
+unsafe impl<T> IntoValueFromNative for BoxValue<T> where T: ReprValue {}
 
 impl<T> From<BoxValue<T>> for Value
 where
@@ -1481,7 +1481,7 @@ impl IntoValue for () {
     }
 }
 
-impl IntoValueFromNative for () {}
+unsafe impl IntoValueFromNative for () {}
 
 impl From<()> for Value {
     fn from(val: ()) -> Self {
@@ -1501,7 +1501,7 @@ where
     }
 }
 
-impl<T> IntoValueFromNative for Option<T> where T: IntoValueFromNative {}
+unsafe impl<T> IntoValueFromNative for Option<T> where T: IntoValueFromNative {}
 
 unsafe impl private::ReprValue for Qnil {
     fn to_value(self) -> Value {
@@ -1612,7 +1612,7 @@ impl IntoValue for bool {
     }
 }
 
-impl IntoValueFromNative for bool {}
+unsafe impl IntoValueFromNative for bool {}
 
 impl From<bool> for Value {
     fn from(val: bool) -> Self {

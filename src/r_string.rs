@@ -1490,7 +1490,7 @@ impl IntoValue for &str {
     }
 }
 
-impl IntoValueFromNative for &str {}
+unsafe impl IntoValueFromNative for &str {}
 
 impl From<&str> for Value {
     fn from(val: &str) -> Self {
@@ -1504,7 +1504,7 @@ impl IntoValue for String {
     }
 }
 
-impl IntoValueFromNative for String {}
+unsafe impl IntoValueFromNative for String {}
 
 impl From<String> for Value {
     fn from(val: String) -> Self {
@@ -1518,7 +1518,7 @@ impl IntoValue for char {
     }
 }
 
-impl IntoValueFromNative for char {}
+unsafe impl IntoValueFromNative for char {}
 
 impl From<char> for Value {
     fn from(val: char) -> Self {
@@ -1541,7 +1541,7 @@ impl IntoValue for &Path {
     }
 }
 
-impl IntoValueFromNative for &Path {}
+unsafe impl IntoValueFromNative for &Path {}
 
 impl From<&Path> for Value {
     fn from(val: &Path) -> Self {
@@ -1555,7 +1555,7 @@ impl IntoValue for PathBuf {
     }
 }
 
-impl IntoValueFromNative for PathBuf {}
+unsafe impl IntoValueFromNative for PathBuf {}
 
 impl From<PathBuf> for Value {
     fn from(val: PathBuf) -> Self {

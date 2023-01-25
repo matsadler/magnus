@@ -299,7 +299,7 @@ where
     }
 }
 
-impl<T> IntoValueFromNative for StdRange<T> where T: IntoValueFromNative {}
+unsafe impl<T> IntoValueFromNative for StdRange<T> where T: IntoValueFromNative {}
 
 impl<T> From<StdRange<T>> for Value
 where
@@ -319,7 +319,7 @@ where
     }
 }
 
-impl<T> IntoValueFromNative for RangeFrom<T> where T: IntoValueFromNative {}
+unsafe impl<T> IntoValueFromNative for RangeFrom<T> where T: IntoValueFromNative {}
 
 impl<T> From<RangeFrom<T>> for Value
 where
@@ -336,7 +336,7 @@ impl IntoValue for RangeFull {
     }
 }
 
-impl IntoValueFromNative for RangeFull {}
+unsafe impl IntoValueFromNative for RangeFull {}
 
 impl From<RangeFull> for Value {
     fn from(value: RangeFull) -> Self {
@@ -354,7 +354,7 @@ where
     }
 }
 
-impl<T> IntoValueFromNative for RangeInclusive<T> where T: IntoValueFromNative {}
+unsafe impl<T> IntoValueFromNative for RangeInclusive<T> where T: IntoValueFromNative {}
 
 impl<T> From<RangeInclusive<T>> for Value
 where
@@ -374,7 +374,7 @@ where
     }
 }
 
-impl<T> IntoValueFromNative for RangeTo<T> where T: IntoValueFromNative {}
+unsafe impl<T> IntoValueFromNative for RangeTo<T> where T: IntoValueFromNative {}
 
 impl<T> From<RangeTo<T>> for Value
 where
@@ -394,7 +394,7 @@ where
     }
 }
 
-impl<T> IntoValueFromNative for RangeToInclusive<T> where T: IntoValueFromNative {}
+unsafe impl<T> IntoValueFromNative for RangeToInclusive<T> where T: IntoValueFromNative {}
 
 impl<T> From<RangeToInclusive<T>> for Value
 where

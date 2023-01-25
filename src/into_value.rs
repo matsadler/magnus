@@ -22,4 +22,4 @@ pub trait IntoValue: Sized {
     fn into_value_with(self, handle: &RubyHandle) -> Value;
 }
 
-pub trait IntoValueFromNative: IntoValue {}
+pub unsafe trait IntoValueFromNative: IntoValue {}

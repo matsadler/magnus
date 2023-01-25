@@ -1220,7 +1220,7 @@ where
     }
 }
 
-impl<T0> IntoValueFromNative for (T0,) where T0: IntoValueFromNative {}
+unsafe impl<T0> IntoValueFromNative for (T0,) where T0: IntoValueFromNative {}
 
 impl<T0> From<(T0,)> for Value
 where
@@ -1242,7 +1242,7 @@ where
     }
 }
 
-impl<T0, T1> IntoValueFromNative for (T0, T1)
+unsafe impl<T0, T1> IntoValueFromNative for (T0, T1)
 where
     T0: IntoValueFromNative,
     T1: IntoValueFromNative,
@@ -1275,7 +1275,7 @@ where
     }
 }
 
-impl<T0, T1, T2> IntoValueFromNative for (T0, T1, T2)
+unsafe impl<T0, T1, T2> IntoValueFromNative for (T0, T1, T2)
 where
     T0: IntoValueFromNative,
     T1: IntoValueFromNative,
@@ -1312,7 +1312,7 @@ where
     }
 }
 
-impl<T0, T1, T2, T3> IntoValueFromNative for (T0, T1, T2, T3)
+unsafe impl<T0, T1, T2, T3> IntoValueFromNative for (T0, T1, T2, T3)
 where
     T0: IntoValueFromNative,
     T1: IntoValueFromNative,
@@ -1353,7 +1353,7 @@ where
     }
 }
 
-impl<T0, T1, T2, T3, T4> IntoValueFromNative for (T0, T1, T2, T3, T4)
+unsafe impl<T0, T1, T2, T3, T4> IntoValueFromNative for (T0, T1, T2, T3, T4)
 where
     T0: IntoValueFromNative,
     T1: IntoValueFromNative,
@@ -1398,7 +1398,7 @@ where
     }
 }
 
-impl<T0, T1, T2, T3, T4, T5> IntoValueFromNative for (T0, T1, T2, T3, T4, T5)
+unsafe impl<T0, T1, T2, T3, T4, T5> IntoValueFromNative for (T0, T1, T2, T3, T4, T5)
 where
     T0: IntoValueFromNative,
     T1: IntoValueFromNative,
@@ -1447,7 +1447,7 @@ where
     }
 }
 
-impl<T0, T1, T2, T3, T4, T5, T6> IntoValueFromNative for (T0, T1, T2, T3, T4, T5, T6)
+unsafe impl<T0, T1, T2, T3, T4, T5, T6> IntoValueFromNative for (T0, T1, T2, T3, T4, T5, T6)
 where
     T0: IntoValueFromNative,
     T1: IntoValueFromNative,
@@ -1500,7 +1500,7 @@ where
     }
 }
 
-impl<T0, T1, T2, T3, T4, T5, T6, T7> IntoValueFromNative for (T0, T1, T2, T3, T4, T5, T6, T7)
+unsafe impl<T0, T1, T2, T3, T4, T5, T6, T7> IntoValueFromNative for (T0, T1, T2, T3, T4, T5, T6, T7)
 where
     T0: IntoValueFromNative,
     T1: IntoValueFromNative,
@@ -1557,7 +1557,7 @@ where
     }
 }
 
-impl<T0, T1, T2, T3, T4, T5, T6, T7, T8> IntoValueFromNative
+unsafe impl<T0, T1, T2, T3, T4, T5, T6, T7, T8> IntoValueFromNative
     for (T0, T1, T2, T3, T4, T5, T6, T7, T8)
 where
     T0: IntoValueFromNative,
@@ -1619,7 +1619,7 @@ where
     }
 }
 
-impl<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9> IntoValueFromNative
+unsafe impl<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9> IntoValueFromNative
     for (T0, T1, T2, T3, T4, T5, T6, T7, T8, T9)
 where
     T0: IntoValueFromNative,
@@ -1687,7 +1687,7 @@ where
     }
 }
 
-impl<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> IntoValueFromNative
+unsafe impl<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> IntoValueFromNative
     for (T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10)
 where
     T0: IntoValueFromNative,
@@ -1759,7 +1759,7 @@ where
     }
 }
 
-impl<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> IntoValueFromNative
+unsafe impl<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> IntoValueFromNative
     for (T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11)
 where
     T0: IntoValueFromNative,
