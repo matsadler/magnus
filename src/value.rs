@@ -20,9 +20,9 @@ pub use flonum::Flonum;
 use rb_sys::{
     rb_any_to_s, rb_block_call, rb_check_funcall, rb_check_id, rb_check_id_cstr,
     rb_check_symbol_cstr, rb_enumeratorize_with_size, rb_eql, rb_equal, rb_funcall_with_block,
-    rb_funcallv, rb_gc_register_address, rb_gc_unregister_address, rb_hash, rb_id2name, rb_id2sym,
-    rb_inspect, rb_intern3, rb_ll2inum, rb_obj_as_string, rb_obj_classname, rb_obj_freeze,
-    rb_obj_is_kind_of, rb_obj_respond_to, rb_sym2id, rb_ull2inum, ruby_fl_type,
+    rb_funcallv, rb_funcallv_public, rb_gc_register_address, rb_gc_unregister_address, rb_hash,
+    rb_id2name, rb_id2sym, rb_inspect, rb_intern3, rb_ll2inum, rb_obj_as_string, rb_obj_classname,
+    rb_obj_freeze, rb_obj_is_kind_of, rb_obj_respond_to, rb_sym2id, rb_ull2inum, ruby_fl_type,
     ruby_special_consts, ruby_value_type, RBasic, ID, VALUE,
 };
 
@@ -497,6 +497,62 @@ impl Value {
             let slice = args.as_ref();
             protect(|| {
                 Value::new(rb_funcallv(
+                    self.as_rb_value(),
+                    id.as_rb_id(),
+                    slice.len() as c_int,
+                    slice.as_ptr() as *const VALUE,
+                ))
+            })
+            .and_then(|v| v.try_convert())
+        }
+    }
+
+    /// Call the public method named `method` on `self` with `args`.
+    ///
+    /// Returns `Ok(T)` if the method returns without error and the return
+    /// value converts to a `T`, or returns `Err` if the method raises or the
+    /// conversion fails.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, Error, RObject, Symbol};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let object: RObject = eval!(r#"
+    ///     class Foo
+    ///       def bar
+    ///         :bar
+    ///       end
+    ///
+    ///       private
+    ///
+    ///       def baz
+    ///         :baz
+    ///       end
+    ///     end
+    ///
+    ///     Foo.new
+    /// "#).unwrap();
+    ///
+    /// let result: Symbol = object.funcall_public("bar", ()).unwrap();
+    /// assert_eq!(result.name().unwrap(), "bar");
+    ///
+    /// let result: Result<Symbol, Error> = object.funcall_public("baz", ());
+    /// assert!(result.is_err());
+    /// ```
+    pub fn funcall_public<M, A, T>(self, method: M, args: A) -> Result<T, Error>
+    where
+        M: IntoId,
+        A: ArgList,
+        T: TryConvert,
+    {
+        unsafe {
+            let id = method.into_id_unchecked();
+            let args = args.into_arg_list();
+            let slice = args.as_ref();
+            protect(|| {
+                Value::new(rb_funcallv_public(
                     self.as_rb_value(),
                     id.as_rb_id(),
                     slice.len() as c_int,
