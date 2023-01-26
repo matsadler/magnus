@@ -15,6 +15,8 @@
 - `RRegexp::new`/`new_str`, `RRegexp::reg_match`, and `RRegexp::options`.
 - `RBignum::is_positive`/`is_negative`.
 - `value::Id::new` added to replace `value::Id::from`.
+- `TypedData::class_for` can be implemented to customise the class on a case by
+  case basis when wrapping Rust data in a Ruby object.
 
 ### Changed
 - When converting Ruby values to `RArray` (or `Vec<T>`, `[T; 1]`, or `(T,)`),

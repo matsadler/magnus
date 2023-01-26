@@ -18,10 +18,11 @@ impl RubyHandle {
     where
         T: TypedData,
     {
+        let class = T::class_for(&data);
         let boxed = Box::new(data);
         unsafe {
             let value_ptr = rb_data_typed_object_wrap(
-                T::class().as_rb_value(),
+                class.as_rb_value(),
                 Box::into_raw(boxed) as *mut _,
                 T::data_type().as_rb_data_type() as *const _,
             );

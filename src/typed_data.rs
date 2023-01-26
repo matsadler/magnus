@@ -307,17 +307,32 @@ where
 {
     /// Should return the class for the Ruby object wrapping the Rust type.
     ///
+    /// This can be overridden on a case by case basis by implementing
+    /// [`TypedData::class_for`], but the result of this function will always
+    /// be used in error messages if a value fails to convert to `Self`.
+    ///
+    /// If using [`class_for`](Self::class_for) it is advised to have this
+    /// function return the superclass of those returned by `class_for`.
+    ///
     /// # Examples
     ///
     /// ```
-    /// use magnus::{define_class, memoize, RClass, Class};
+    /// use magnus::{define_class, memoize, Class, RClass, TypedData};
+    /// # use magnus::DataType;
     ///
-    /// fn class() -> RClass {
-    ///     *memoize!(RClass: {
-    ///       let class = define_class("Foo", Default::default()).unwrap();
-    ///       class.undef_alloc_func();
-    ///       class
-    ///     })
+    /// struct Example();
+    ///
+    /// unsafe impl TypedData for Example {
+    ///     fn class() -> RClass {
+    ///         *memoize!(RClass: {
+    ///           let class = define_class("Example", Default::default()).unwrap();
+    ///           class.undef_alloc_func();
+    ///           class
+    ///         })
+    ///     }
+    ///
+    ///     // ...
+    /// #   fn data_type() -> &'static DataType { unimplemented!() }
     /// }
     /// ```
     fn class() -> RClass;
@@ -328,16 +343,69 @@ where
     /// # Examples
     ///
     /// ```
-    /// use magnus::{memoize, typed_data::DataTypeBuilder, DataType, DataTypeFunctions};
+    /// use magnus::{memoize, typed_data::DataTypeBuilder, DataType, DataTypeFunctions, TypedData};
+    /// # use magnus::RClass;
     ///
     /// #[derive(DataTypeFunctions)]
-    /// struct Foo();
+    /// struct Example();
     ///
-    /// fn data_type() -> &'static DataType {
-    ///     memoize!(DataType: DataTypeBuilder::<Foo>::new("foo").build())
+    /// unsafe impl TypedData for Example {
+    /// #   fn class() -> RClass { unimplemented!() }
+    ///     // ...
+    ///
+    ///     fn data_type() -> &'static DataType {
+    ///         memoize!(DataType: DataTypeBuilder::<Example>::new("example").build())
+    ///     }
     /// }
     /// ```
     fn data_type() -> &'static DataType;
+
+    /// Used to customise the class wrapping a specific value of `Self`.
+    ///
+    /// The provided implementation simply returns the value of
+    /// [`TypedData::class`].
+    ///
+    /// Be aware [`TypedData::class`], will always be used in error messages if
+    /// a value fails to convert to `Self`. It is advised to have
+    /// [`TypedData::class`] return the superclass of those returned by this
+    /// function.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{define_class, memoize, Class, RClass, TypedData};
+    /// # use magnus::DataType;
+    ///
+    /// enum Example {
+    ///     A,
+    ///     B,
+    /// }
+    ///
+    /// unsafe impl TypedData for Example {
+    /// #   fn class() -> RClass { unimplemented!() }
+    /// #   fn data_type() -> &'static DataType { unimplemented!() }
+    ///     // ...
+    ///
+    ///     fn class_for(value: &Self) -> RClass {
+    ///         match value {
+    ///             Self::A => *memoize!(RClass: {
+    ///                 let class = define_class("A", <Self as TypedData>::class()).unwrap();
+    ///                 class.undef_alloc_func();
+    ///                 class
+    ///             }),
+    ///             Self::B => *memoize!(RClass: {
+    ///                 let class = define_class("B", <Self as TypedData>::class()).unwrap();
+    ///                 class.undef_alloc_func();
+    ///                 class
+    ///             }),
+    ///         }
+    ///     }
+    /// }
+    /// ```
+    #[allow(unused_variables)]
+    fn class_for(value: &Self) -> RClass {
+        Self::class()
+    }
 }
 
 impl<T> TryConvert for &T
