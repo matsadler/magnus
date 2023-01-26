@@ -17,6 +17,8 @@
 - `value::Id::new` added to replace `value::Id::from`.
 - `TypedData::class_for` can be implemented to customise the class on a case by
   case basis when wrapping Rust data in a Ruby object.
+- `Value::funcall_public` calls a public method, returning an error for a private
+  or protected method.
 
 ### Changed
 - When converting Ruby values to `RArray` (or `Vec<T>`, `[T; 1]`, or `(T,)`),
