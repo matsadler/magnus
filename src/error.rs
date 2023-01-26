@@ -40,6 +40,9 @@ impl RubyHandle {
     }
 }
 
+/// Shorthand for `std::result::Result<T, Error>`.
+pub type Result<T> = std::result::Result<T, Error>;
+
 /// A Rust representation of a Ruby `Exception` or other interrupt.
 #[derive(Debug)]
 pub enum Error {
@@ -206,7 +209,7 @@ impl fmt::Display for Tag {
 /// All functions exposed by magnus that call Ruby in a way that may raise
 /// already use this internally, but this is provided for anyone calling
 /// the Ruby C API directly.
-pub(crate) fn protect<F, T>(func: F) -> Result<T, Error>
+pub(crate) fn protect<F, T>(func: F) -> Result<T>
 where
     F: FnOnce() -> T,
     T: ReprValue,
