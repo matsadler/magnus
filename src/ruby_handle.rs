@@ -2,6 +2,14 @@ use std::{cell::RefCell, error::Error, fmt, marker::PhantomData};
 
 use rb_sys::ruby_native_thread_p;
 
+// Ruby does not expose this publicly, but it is used in the fiddle gem via
+// this kind of hack, and although the function is marked experimental in
+// Ruby's source, that comment and the code have been unchanged singe 1.9.2,
+// 14 years ago as of writing.
+extern "C" {
+    fn ruby_thread_has_gvl_p() -> ::std::os::raw::c_int;
+}
+
 macro_rules! get_ruby {
     () => {
         if cfg!(debug_assertions) {
@@ -16,11 +24,10 @@ macro_rules! get_ruby {
 /// a non-Ruby thread or without aquiring the GVL.
 #[derive(Debug)]
 pub enum RubyUnavailableError {
+    /// GVL is not locked.
+    GvlUnlocked,
     /// Current thread is not a Ruby thread.
     NonRubyThread,
-    /// GVL is not locked.
-    #[allow(dead_code)]
-    GvlUnlocked,
 }
 
 impl fmt::Display for RubyUnavailableError {
@@ -35,14 +42,54 @@ impl fmt::Display for RubyUnavailableError {
 impl Error for RubyUnavailableError {}
 
 #[derive(Clone, Copy)]
-enum IsRubyThread {
-    Yes,
-    No,
-    Unknown,
+enum RubyGvlState {
+    Locked,
+    Unlocked,
+    NonRubyThread,
 }
 
 thread_local! {
-    static IS_RUBY_THREAD: RefCell<IsRubyThread> = RefCell::new(IsRubyThread::Unknown);
+    static RUBY_GVL_STATE: RefCell<Option<RubyGvlState>> = RefCell::new(None);
+}
+
+impl RubyGvlState {
+    fn current() -> Self {
+        let current = if unsafe { ruby_thread_has_gvl_p() } != 0 {
+            Self::Locked
+        } else if unsafe { ruby_native_thread_p() != 0} {
+            Self::Unlocked
+        } else {
+            Self::NonRubyThread
+        };
+        RUBY_GVL_STATE.with(|ruby_gvl_state| {
+            *ruby_gvl_state.borrow_mut() = Some(current);
+        });
+        current
+    }
+
+    fn cached() -> Self {
+        RUBY_GVL_STATE.with(|ruby_gvl_state| {
+            let x = *ruby_gvl_state.borrow();
+            match x {
+                // assumed not to change because there's currently no api to
+                // unlock.
+                Some(Self::Locked) => Self::Locked,
+                None => Self::current(),
+                // Don't expect without an api to unlock, so skip cache
+                Some(Self::Unlocked) => Self::current(),
+                // assumed not to change
+                Some(Self::NonRubyThread) => Self::NonRubyThread,
+            }
+        })
+    }
+
+    fn ok<T>(self, value: T) -> Result<T, RubyUnavailableError> {
+        match self {
+            Self::Locked => Ok(value),
+            Self::Unlocked => Err(RubyUnavailableError::GvlUnlocked),
+            Self::NonRubyThread => Err(RubyUnavailableError::NonRubyThread),
+        }
+    }
 }
 
 /// A handle to access Ruby's API.
@@ -62,25 +109,8 @@ impl RubyHandle {
     /// thread is a Ruby thread.
     ///
     /// If the Ruby API is not useable, returns `Err(RubyUnavailableError)`.
-    //
-    // TODO This currently does not verify the GVL is held, so will erroneously
-    // return a handle when the GVL has been released.
     pub fn get() -> Result<Self, RubyUnavailableError> {
-        IS_RUBY_THREAD.with(|is_ruby_thread| {
-            let x = *is_ruby_thread.borrow();
-            match x {
-                IsRubyThread::Yes => Ok(Self(PhantomData)),
-                IsRubyThread::Unknown => {
-                    if unsafe { ruby_native_thread_p() } != 0 {
-                        *is_ruby_thread.borrow_mut() = IsRubyThread::Yes
-                    } else {
-                        *is_ruby_thread.borrow_mut() = IsRubyThread::No
-                    }
-                    Self::get()
-                }
-                IsRubyThread::No => Err(RubyUnavailableError::NonRubyThread),
-            }
-        })
+        RubyGvlState::cached().ok(Self(PhantomData))
     }
 
     /// Get a handle to Ruby's API.
