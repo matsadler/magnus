@@ -800,7 +800,7 @@
 //! * `rb_funcall`: See [`Value::funcall`].
 //! * `rb_funcallv`: [`Value::funcall`].
 // * `rb_funcallv_kw`:
-// * `rb_funcallv_public`:
+//! * `rb_funcallv_public`: [`Value::funcall_public`].
 // * `rb_funcallv_public_kw`:
 // * `rb_funcall_passing_block`:
 // * `rb_funcall_passing_block_kw`:
