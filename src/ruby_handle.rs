@@ -56,7 +56,7 @@ impl RubyGvlState {
     fn current() -> Self {
         let current = if unsafe { ruby_thread_has_gvl_p() } != 0 {
             Self::Locked
-        } else if unsafe { ruby_native_thread_p() != 0} {
+        } else if unsafe { ruby_native_thread_p() != 0 } {
             Self::Unlocked
         } else {
             Self::NonRubyThread

@@ -302,7 +302,7 @@
 //!
 //! ## `rb_b`
 //!
-// * `rb_backref_get`:
+//! * `rb_backref_get`: [`backref_get`].
 // * `rb_backref_set`:
 // * `rb_backtrace`:
 // * `rb_big2dbl`:
@@ -1304,18 +1304,18 @@
 // * `rb_refinement_new`:
 // * `rb_reg_adjust_startpos`:
 // * `rb_reg_alloc`:
-// * `rb_reg_backref_number`:
+//! * `rb_reg_backref_number`: [`RRegexp::backref_number`].
 // * `rb_reg_init_str`:
-// * `rb_reg_last_match`:
+//! * `rb_reg_last_match`: [`RMatch::matched`].
 //! * `rb_reg_match`: [`RRegexp::reg_match`].
 // * `rb_reg_match2`:
-// * `rb_reg_match_last`:
-// * `rb_reg_match_post`:
-// * `rb_reg_match_pre`:
+//! * `rb_reg_match_last`: [`RMatch::last`].
+//! * `rb_reg_match_post`: [`RMatch::post`].
+//! * `rb_reg_match_pre`: [`RMatch::pre`].
 //! * `rb_reg_new`: See [`RRegexp::new`].
 //! * `rb_reg_new_str`: [`RRegexp::new_str`].
-// * `rb_reg_nth_defined`:
-// * `rb_reg_nth_match`:
+//! * `rb_reg_nth_defined`: [`RMatch::nth_defined`].
+//! * `rb_reg_nth_match`: [`RMatch::nth_match`].
 //! * `rb_reg_options`: [`RRegexp::options`].
 // * `rb_reg_prepare_re`:
 // * `rb_reg_quote`:
@@ -1864,7 +1864,7 @@ use ::rb_sys::rb_require;
 #[cfg(ruby_gte_2_7)]
 use ::rb_sys::rb_require_string;
 use ::rb_sys::{
-    rb_call_super, rb_current_receiver, rb_define_class, rb_define_global_const,
+    rb_backref_get, rb_call_super, rb_current_receiver, rb_define_class, rb_define_global_const,
     rb_define_global_function, rb_define_module, rb_define_variable, rb_errinfo,
     rb_eval_string_protect, rb_set_errinfo, VALUE,
 };
@@ -1999,6 +1999,13 @@ impl RubyHandle {
         }
     }
 
+    pub fn backref_get(&self) -> Option<RMatch> {
+        unsafe {
+            let value = Value::new(rb_backref_get());
+            (!value.is_nil()).then(|| RMatch::from_rb_value_unchecked(value.as_rb_value()))
+        }
+    }
+
     pub fn current_receiver<T>(&self) -> Result<T, Error>
     where
         T: TryConvert,
@@ -2128,6 +2135,30 @@ where
     M: Method,
 {
     get_ruby!().define_global_function(name, func)
+}
+
+/// Returns the result of the most recent regexp match.
+///
+/// # Examples
+///
+/// ```
+/// use magnus::{backref_get, RRegexp};
+/// # let _cleanup = unsafe { magnus::embed::init() };
+///
+/// let regexp = RRegexp::new("b(.)r", Default::default()).unwrap();
+/// let result = regexp.reg_match("foo bar baz").unwrap();
+/// assert_eq!(result, Some(4));
+///
+/// let match_data = backref_get().unwrap();
+/// assert_eq!(match_data.matched().to_string().unwrap(), String::from("bar"));
+/// assert_eq!(match_data.nth_match(1).map(|v| v.to_string().unwrap()), Some(String::from("a")));
+/// ```
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
+pub fn backref_get() -> Option<RMatch> {
+    get_ruby!().backref_get()
 }
 
 /// Return the Ruby `self` of the current method context.

@@ -1,15 +1,19 @@
-use std::{fmt, ops::Deref};
+use std::{fmt, ops::Deref, os::raw::c_int};
 
-use rb_sys::ruby_value_type;
+use rb_sys::{
+    rb_reg_backref_number, rb_reg_last_match, rb_reg_match_last, rb_reg_match_post,
+    rb_reg_match_pre, rb_reg_nth_defined, rb_reg_nth_match, ruby_value_type, VALUE,
+};
 
 use crate::{
-    error::Error,
+    error::{protect, Error},
     exception,
     into_value::IntoValue,
     object::Object,
+    r_string::{IntoRString, RString},
     ruby_handle::RubyHandle,
     try_convert::TryConvert,
-    value::{private, NonZeroValue, ReprValue, Value},
+    value::{private, NonZeroValue, ReprValue, Value, QNIL},
 };
 
 /// A Value pointer to a RMatch struct, Ruby's internal representation of the
@@ -29,6 +33,50 @@ impl RMatch {
             (val.rb_type() == ruby_value_type::RUBY_T_MATCH)
                 .then(|| Self(NonZeroValue::new_unchecked(val)))
         }
+    }
+
+    #[inline]
+    pub(crate) unsafe fn from_rb_value_unchecked(val: VALUE) -> Self {
+        Self(NonZeroValue::new_unchecked(Value::new(val)))
+    }
+
+    pub fn nth_defined(self, n: isize) -> Option<bool> {
+        let value = unsafe { Value::new(rb_reg_nth_defined(n as c_int, self.as_rb_value())) };
+        value.try_convert().unwrap() // conversion to Option<bool> in infallible
+    }
+
+    pub fn nth_match(self, n: isize) -> Option<RString> {
+        let value = unsafe { Value::new(rb_reg_nth_match(n as c_int, self.as_rb_value())) };
+        (!value.is_nil()).then(|| unsafe { RString::from_rb_value_unchecked(value.as_rb_value()) })
+    }
+
+    pub fn backref_number<T>(self, name: T) -> Result<usize, Error>
+    where
+        T: IntoRString,
+    {
+        let name = name.into_r_string();
+        let mut n = 0;
+        protect(|| {
+            n = unsafe { rb_reg_backref_number(self.as_rb_value(), name.as_rb_value()) as usize };
+            QNIL
+        })?;
+        Ok(n)
+    }
+
+    pub fn matched(self) -> RString {
+        unsafe { RString::from_rb_value_unchecked(rb_reg_last_match(self.as_rb_value())) }
+    }
+
+    pub fn pre(self) -> RString {
+        unsafe { RString::from_rb_value_unchecked(rb_reg_match_pre(self.as_rb_value())) }
+    }
+
+    pub fn post(self) -> RString {
+        unsafe { RString::from_rb_value_unchecked(rb_reg_match_post(self.as_rb_value())) }
+    }
+
+    pub fn last(self) -> RString {
+        unsafe { RString::from_rb_value_unchecked(rb_reg_match_last(self.as_rb_value())) }
     }
 }
 

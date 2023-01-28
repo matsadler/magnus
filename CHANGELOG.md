@@ -13,12 +13,15 @@
   `dump`, `ellipsize`, `offset`, `plus`, `times`, `replace`, `scrub`,
   `shared_replace`, `split`, `update`.
 - `RRegexp::new`/`new_str`, `RRegexp::reg_match`, and `RRegexp::options`.
+- The `backref_get` function to get the `RMatch` for the last regexp match.
+- `RMatch::nth_defined`, `RMatch::nth_match`, `RMatch::backref_number`,
+  `RMatch::matched`, `RMatch::pre`, `RMatch::post`, and `RMatch::last`
 - `RBignum::is_positive`/`is_negative`.
 - `value::Id::new` added to replace `value::Id::from`.
 - `TypedData::class_for` can be implemented to customise the class on a case by
   case basis when wrapping Rust data in a Ruby object.
-- `Value::funcall_public` calls a public method, returning an error for a private
-  or protected method.
+- `Value::funcall_public` calls a public method, returning an error for a
+  private or protected method.
 
 ### Changed
 - When converting Ruby values to `RArray` (or `Vec<T>`, `[T; 1]`, or `(T,)`),
