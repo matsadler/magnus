@@ -97,6 +97,7 @@ impl Encoding {
     /// # Panics
     ///
     /// Panics if called from a non-Ruby thread.
+    #[inline]
     pub fn default_external() -> Self {
         get_ruby!().enc_default_external()
     }
@@ -109,6 +110,7 @@ impl Encoding {
     /// # Panics
     ///
     /// Panics if called from a non-Ruby thread.
+    #[inline]
     pub fn default_internal() -> Option<Self> {
         get_ruby!().enc_default_internal()
     }
@@ -240,6 +242,7 @@ impl RbEncoding {
     /// # Panics
     ///
     /// Panics if called from a non-Ruby thread.
+    #[inline]
     pub fn ascii8bit() -> Self {
         get_ruby!().ascii8bit_encoding()
     }
@@ -249,6 +252,7 @@ impl RbEncoding {
     /// # Panics
     ///
     /// Panics if called from a non-Ruby thread.
+    #[inline]
     pub fn utf8() -> Self {
         get_ruby!().utf8_encoding()
     }
@@ -258,6 +262,7 @@ impl RbEncoding {
     /// # Panics
     ///
     /// Panics if called from a non-Ruby thread.
+    #[inline]
     pub fn usascii() -> Self {
         get_ruby!().usascii_encoding()
     }
@@ -270,6 +275,7 @@ impl RbEncoding {
     /// # Panics
     ///
     /// Panics if called from a non-Ruby thread.
+    #[inline]
     pub fn locale() -> Self {
         get_ruby!().locale_encoding()
     }
@@ -282,6 +288,7 @@ impl RbEncoding {
     /// # Panics
     ///
     /// Panics if called from a non-Ruby thread.
+    #[inline]
     pub fn filesystem() -> Self {
         get_ruby!().filesystem_encoding()
     }
@@ -294,6 +301,7 @@ impl RbEncoding {
     /// # Panics
     ///
     /// Panics if called from a non-Ruby thread.
+    #[inline]
     pub fn default_external() -> Self {
         get_ruby!().default_external_encoding()
     }
@@ -306,6 +314,7 @@ impl RbEncoding {
     /// # Panics
     ///
     /// Panics if called from a non-Ruby thread.
+    #[inline]
     pub fn default_internal() -> Option<Self> {
         get_ruby!().default_internal_encoding()
     }
@@ -325,6 +334,7 @@ impl RbEncoding {
     /// assert_eq!(RbEncoding::find("UTF-8").unwrap().name(), "UTF-8");
     /// assert_eq!(RbEncoding::find("BINARY").unwrap().name(), "ASCII-8BIT");
     /// ```
+    #[inline]
     pub fn find(name: &str) -> Option<Self> {
         get_ruby!().find_encoding(name)
     }
@@ -833,6 +843,7 @@ impl Index {
     /// # Panics
     ///
     /// Panics if called from a non-Ruby thread.
+    #[inline]
     pub fn ascii8bit() -> Self {
         get_ruby!().ascii8bit_encindex()
     }
@@ -842,6 +853,7 @@ impl Index {
     /// # Panics
     ///
     /// Panics if called from a non-Ruby thread.
+    #[inline]
     pub fn utf8() -> Self {
         get_ruby!().utf8_encindex()
     }
@@ -851,6 +863,7 @@ impl Index {
     /// # Panics
     ///
     /// Panics if called from a non-Ruby thread.
+    #[inline]
     pub fn usascii() -> Self {
         get_ruby!().usascii_encindex()
     }
@@ -863,6 +876,7 @@ impl Index {
     /// # Panics
     ///
     /// Panics if called from a non-Ruby thread.
+    #[inline]
     pub fn locale() -> Self {
         get_ruby!().locale_encindex()
     }
@@ -875,6 +889,7 @@ impl Index {
     /// # Panics
     ///
     /// Panics if called from a non-Ruby thread.
+    #[inline]
     pub fn filesystem() -> Self {
         get_ruby!().filesystem_encindex()
     }
@@ -895,6 +910,7 @@ impl Index {
     /// assert!(encoding::Index::find("BINARY").is_ok());
     /// assert!(encoding::Index::find("none").is_err());
     /// ```
+    #[inline]
     pub fn find(name: &str) -> Result<Self, Error> {
         get_ruby!().find_encindex(name)
     }

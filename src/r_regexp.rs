@@ -76,6 +76,7 @@ impl RRegexp {
     /// let res: bool = eval!(r#"regexp == /foo/i"#, regexp).unwrap();
     /// assert!(res);
     /// ```
+    #[inline]
     pub fn new(pattern: &str, opts: Opts) -> Result<Self, Error> {
         get_ruby!().reg_new(pattern, opts)
     }

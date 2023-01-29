@@ -206,6 +206,7 @@ pub trait IntoSymbol: Sized {
     ///
     /// Panics if called from a non-Ruby thread.
     ///
+    #[inline]
     fn into_symbol(self) -> Symbol {
         self.into_symbol_with(&get_ruby!())
     }

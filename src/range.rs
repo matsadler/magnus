@@ -92,6 +92,7 @@ impl Range {
     /// let res: bool = eval!("range == (2...7)", range).unwrap();
     /// assert!(res);
     /// ```
+    #[inline]
     pub fn new<T, U>(beg: T, end: U, excl: bool) -> Result<Self, Error>
     where
         T: IntoValue,

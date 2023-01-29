@@ -289,6 +289,7 @@ impl RubyHandle {
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[inline]
 pub fn define_struct<T>(name: Option<&str>, members: T) -> Result<RClass, Error>
 where
     T: StructMembers,

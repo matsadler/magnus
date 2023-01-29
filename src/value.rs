@@ -2304,6 +2304,7 @@ impl StaticSymbol {
     /// eval::<StaticSymbol>(":example").unwrap();
     /// assert!(StaticSymbol::check("example").is_some());
     /// ```
+    #[inline]
     pub fn check(name: &str) -> Option<Self> {
         get_ruby!().check_symbol(name)
     }
@@ -2450,6 +2451,7 @@ impl Id {
     /// StaticSymbol::new("example");
     /// assert!(Id::check("example").is_some());
     /// ```
+    #[inline]
     pub fn check(name: &str) -> Option<Self> {
         get_ruby!().check_id(name)
     }
@@ -2486,6 +2488,7 @@ pub trait IntoId: Sized {
     ///
     /// Panics if called from a non-Ruby thread.
     ///
+    #[inline]
     fn into_id(self) -> Id {
         self.into_id_with(&get_ruby!())
     }

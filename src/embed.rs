@@ -104,6 +104,7 @@ impl RubyHandle {
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[inline]
 pub fn ruby_script<T>(name: T)
 where
     T: IntoRString,

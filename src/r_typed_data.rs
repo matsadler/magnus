@@ -79,6 +79,7 @@ impl RTypedData {
     /// let value = RTypedData::wrap(Point { x: 4, y: 2 });
     /// assert!(value.is_kind_of(point_class));
     /// ```
+    #[inline]
     pub fn wrap<T>(data: T) -> Self
     where
         T: TypedData,

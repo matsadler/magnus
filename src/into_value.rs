@@ -18,6 +18,7 @@ pub trait IntoValue: Sized {
     ///
     /// Panics if called from a non-Ruby thread.
     ///
+    #[inline]
     fn into_value(self) -> Value {
         self.into_value_with(&get_ruby!())
     }

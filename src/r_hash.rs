@@ -148,6 +148,7 @@ impl RHash {
     /// let hash = RHash::new();
     /// assert!(hash.is_empty());
     /// ```
+    #[inline]
     pub fn new() -> RHash {
         get_ruby!().hash_new()
     }
@@ -170,6 +171,7 @@ impl RHash {
     /// ```
     #[cfg(any(ruby_gte_3_2, docsrs))]
     #[cfg_attr(docsrs, doc(cfg(ruby_gte_3_2)))]
+    #[inline]
     pub fn with_capacity(n: usize) -> Self {
         get_ruby!().with_capacity(n)
     }

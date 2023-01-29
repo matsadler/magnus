@@ -168,6 +168,7 @@ impl RString {
     /// let res: bool = eval!(r#"val == "example""#, val).unwrap();
     /// assert!(res);
     /// ```
+    #[inline]
     pub fn new(s: &str) -> Self {
         get_ruby!().str_new(s)
     }
@@ -199,6 +200,7 @@ impl RString {
     /// let res: bool = eval!(r#"buf == "\r\x0E\n\r\v\x0E\x0E\x0F""#, buf).unwrap();
     /// assert!(res);
     /// ```
+    #[inline]
     pub fn buf_new(n: usize) -> Self {
         get_ruby!().str_buf_new(n)
     }
@@ -225,6 +227,7 @@ impl RString {
     /// let res: bool = eval!(r#"s == "foobarbaz""#, s).unwrap();
     /// assert!(res);
     /// ```
+    #[inline]
     pub fn with_capacity(n: usize) -> Self {
         get_ruby!().str_with_capacity(n)
     }
@@ -247,6 +250,7 @@ impl RString {
     /// let res: bool = eval!(r#"buf == "\r\x0E\n\r\v\x0E\x0E\x0F""#, buf).unwrap();
     /// assert!(res);
     /// ```
+    #[inline]
     pub fn from_slice(s: &[u8]) -> Self {
         get_ruby!().str_from_slice(s)
     }
@@ -276,6 +280,7 @@ impl RString {
     /// let res: bool = eval!(r#"val == "\xFF\x80\x80".force_encoding("BINARY")"#, val).unwrap();
     /// assert!(res);
     /// ```
+    #[inline]
     pub fn enc_new<T, E>(s: T, enc: E) -> Self
     where
         T: AsRef<[u8]>,
@@ -311,6 +316,7 @@ impl RString {
     /// let res: bool = eval!(r#"c == "🦀""#, c).unwrap();
     /// assert!(res);
     /// ```
+    #[inline]
     pub fn from_char(c: char) -> Self {
         get_ruby!().str_from_char(c)
     }
@@ -343,6 +349,7 @@ impl RString {
     /// let res: bool = eval!(r#"c == "🦀""#, c).unwrap();
     /// assert!(res);
     /// ```
+    #[inline]
     pub fn chr<T>(code: u32, enc: T) -> Result<Self, Error>
     where
         T: Into<RbEncoding>,
@@ -1450,6 +1457,7 @@ pub trait IntoRString: Sized {
     ///
     /// Panics if called from a non-Ruby thread.
     ///
+    #[inline]
     fn into_r_string(self) -> RString {
         self.into_r_string_with(&get_ruby!())
     }

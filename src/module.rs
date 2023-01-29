@@ -88,6 +88,7 @@ impl RModule {
     /// let module = RModule::new();
     /// assert!(module.is_kind_of(class::module()));
     /// ```
+    #[inline]
     pub fn new() -> Self {
         get_ruby!().module_new()
     }

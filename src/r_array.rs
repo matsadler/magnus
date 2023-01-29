@@ -115,6 +115,7 @@ impl RArray {
     /// let ary = RArray::new();
     /// assert!(ary.is_empty());
     /// ```
+    #[inline]
     pub fn new() -> Self {
         get_ruby!().ary_new()
     }
@@ -135,6 +136,7 @@ impl RArray {
     /// let ary = RArray::with_capacity(16);
     /// assert!(ary.is_empty());
     /// ```
+    #[inline]
     pub fn with_capacity(n: usize) -> Self {
         get_ruby!().ary_new_capa(n)
     }
@@ -386,6 +388,7 @@ impl RArray {
     /// let res: bool = eval!("ary == [:a, :b, :c]", ary).unwrap();
     /// assert!(res);
     /// ```
+    #[inline]
     pub fn from_slice<T>(slice: &[T]) -> Self
     where
         T: ReprValue,
@@ -724,6 +727,7 @@ impl RArray {
     /// let res: bool = eval!("ary == [1, 2, 3]", ary).unwrap();
     /// assert!(res);
     /// ```
+    #[inline]
     pub fn from_vec<T>(vec: Vec<T>) -> Self
     where
         T: IntoValueFromNative,

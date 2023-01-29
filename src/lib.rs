@@ -2079,6 +2079,7 @@ impl RubyHandle {
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[inline]
 pub fn define_class(name: &str, superclass: RClass) -> Result<RClass, Error> {
     get_ruby!().define_class(name, superclass)
 }
@@ -2088,6 +2089,7 @@ pub fn define_class(name: &str, superclass: RClass) -> Result<RClass, Error> {
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[inline]
 pub fn define_module(name: &str) -> Result<RModule, Error> {
     get_ruby!().define_module(name)
 }
@@ -2097,6 +2099,7 @@ pub fn define_module(name: &str) -> Result<RModule, Error> {
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[inline]
 pub fn define_error(name: &str, superclass: ExceptionClass) -> Result<ExceptionClass, Error> {
     get_ruby!().define_error(name, superclass)
 }
@@ -2106,6 +2109,7 @@ pub fn define_error(name: &str, superclass: ExceptionClass) -> Result<ExceptionC
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[inline]
 pub fn define_variable<T>(name: &str, initial: T) -> Result<*mut Value, Error>
 where
     T: IntoValue,
@@ -2118,6 +2122,7 @@ where
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[inline]
 pub fn define_global_const<T>(name: &str, value: T) -> Result<(), Error>
 where
     T: IntoValue,
@@ -2130,6 +2135,7 @@ where
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[inline]
 pub fn define_global_function<M>(name: &str, func: M)
 where
     M: Method,
@@ -2157,6 +2163,7 @@ where
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[inline]
 pub fn backref_get() -> Option<RMatch> {
     get_ruby!().backref_get()
 }
@@ -2168,6 +2175,7 @@ pub fn backref_get() -> Option<RMatch> {
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[inline]
 pub fn current_receiver<T>() -> Result<T, Error>
 where
     T: TryConvert,
@@ -2184,6 +2192,7 @@ where
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[inline]
 pub fn call_super<A, T>(args: A) -> Result<T, Error>
 where
     A: ArgList,
@@ -2207,6 +2216,7 @@ where
 /// assert!(require("net/http").unwrap());
 /// ```
 #[cfg(ruby_gte_2_7)]
+#[inline]
 pub fn require<T>(feature: T) -> Result<bool, Error>
 where
     T: IntoRString,
@@ -2229,6 +2239,7 @@ where
 /// assert!(require("net/http").unwrap());
 /// ```
 #[cfg(ruby_lt_2_7)]
+#[inline]
 pub fn require(feature: &str) -> Result<bool, Error> {
     get_ruby!().require(feature)
 }
@@ -2254,6 +2265,7 @@ pub fn require(feature: &str) -> Result<bool, Error> {
 ///
 /// assert_eq!(magnus::eval::<i64>("1 + 2").unwrap(), 3);
 /// ```
+#[inline]
 pub fn eval<T>(s: &str) -> Result<T, Error>
 where
     T: TryConvert,

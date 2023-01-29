@@ -514,6 +514,7 @@ where
     /// let value = typed_data::Obj::wrap(Point { x: 4, y: 2 });
     /// assert!(value.is_kind_of(point_class));
     /// ```
+    #[inline]
     pub fn wrap(data: T) -> Self {
         get_ruby!().obj_wrap(data)
     }

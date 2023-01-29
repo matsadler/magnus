@@ -78,6 +78,7 @@ impl Error {
     /// # Panics
     ///
     /// Panics if called from a non-Ruby thread.
+    #[inline]
     pub fn iter_break<T>(val: Option<T>) -> Self
     where
         T: IntoValue,
@@ -346,6 +347,7 @@ impl RubyHandle {
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[inline]
 pub fn warning(s: &str) {
     get_ruby!().warning(s)
 }

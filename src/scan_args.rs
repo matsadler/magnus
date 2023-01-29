@@ -2153,6 +2153,7 @@ impl RubyHandle {
 /// assert_eq!(eval::<String>("example(1)").unwrap_err().to_string(), "wrong number of arguments (given 1, expected 2..4)");
 /// assert_eq!(eval::<String>("example(1, 2, 3, 4, 5)").unwrap_err().to_string(), "wrong number of arguments (given 5, expected 2..4)");
 /// ```
+#[inline]
 pub fn check_arity<T>(len: usize, bounds: T) -> Result<(), Error>
 where
     T: RangeBounds<usize>,

@@ -171,6 +171,7 @@ impl RubyHandle {
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[inline]
 pub fn disable() -> bool {
     get_ruby!().gc_disable()
 }
@@ -185,6 +186,7 @@ pub fn disable() -> bool {
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[inline]
 pub fn enable() -> bool {
     get_ruby!().gc_enable()
 }
@@ -202,6 +204,7 @@ pub fn enable() -> bool {
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[inline]
 pub fn start() {
     get_ruby!().gc_start()
 }
@@ -218,6 +221,7 @@ pub fn start() {
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[inline]
 pub fn adjust_memory_usage(diff: isize) {
     get_ruby!().gc_adjust_memory_usage(diff)
 }
@@ -228,6 +232,7 @@ pub fn adjust_memory_usage(diff: isize) {
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[inline]
 pub fn count() -> usize {
     get_ruby!().gc_count()
 }
@@ -237,6 +242,7 @@ pub fn count() -> usize {
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[inline]
 pub fn stat<T>(key: T) -> Result<usize, Error>
 where
     T: IntoSymbol,
@@ -250,6 +256,7 @@ where
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[inline]
 pub fn all_stats() -> RHash {
     get_ruby!().gc_all_stats()
 }

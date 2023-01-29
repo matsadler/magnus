@@ -97,6 +97,7 @@ impl RBignum {
     /// // too small
     /// assert!(RBignum::from_i64(0).is_err());
     /// ```
+    #[inline]
     pub fn from_i64(n: i64) -> Result<Self, Fixnum> {
         get_ruby!().bignum_from_i64(n)
     }
@@ -120,6 +121,7 @@ impl RBignum {
     /// // too small
     /// assert!(RBignum::from_u64(0).is_err());
     /// ```
+    #[inline]
     pub fn from_u64(n: u64) -> Result<Self, Fixnum> {
         get_ruby!().bignum_from_u64(n)
     }
