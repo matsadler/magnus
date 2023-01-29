@@ -2145,6 +2145,10 @@ where
 
 /// Returns the result of the most recent regexp match.
 ///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
+///
 /// # Examples
 ///
 /// ```
@@ -2159,10 +2163,6 @@ where
 /// assert_eq!(match_data.matched().to_string().unwrap(), String::from("bar"));
 /// assert_eq!(match_data.nth_match(1).map(|v| v.to_string().unwrap()), Some(String::from("a")));
 /// ```
-///
-/// # Panics
-///
-/// Panics if called from a non-Ruby thread.
 #[inline]
 pub fn backref_get() -> Option<RMatch> {
     get_ruby!().backref_get()
