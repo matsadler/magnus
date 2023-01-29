@@ -1,7 +1,8 @@
 use std::{fmt, ops::Deref};
 
 use rb_sys::{
-    rb_float_new_in_heap, rb_float_value, rb_to_float, ruby_special_consts, ruby_value_type, VALUE,
+    rb_float_new_in_heap, rb_float_value, rb_flt_rationalize, rb_flt_rationalize_with_prec,
+    rb_to_float, ruby_special_consts, ruby_value_type, VALUE,
 };
 
 #[cfg(ruby_use_flonum)]
@@ -10,6 +11,7 @@ use crate::{
     debug_assert_value,
     error::{protect, Error},
     into_value::IntoValue,
+    r_rational::RRational,
     ruby_handle::RubyHandle,
     try_convert::TryConvert,
     value::{private, NonZeroValue, ReprValue, Value},
@@ -111,6 +113,44 @@ impl Float {
             return flonum.to_f64();
         }
         unsafe { rb_float_value(self.as_rb_value()) }
+    }
+
+    /// Returns a rational approximation of `self`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, Float};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let pi = Float::from_f64(3.141592);
+    /// assert_eq!(pi.rationalize_with_prec(Float::from_f64(0.001)).to_string(), "201/64");
+    /// assert_eq!(pi.rationalize_with_prec(Float::from_f64(0.01)).to_string(), "22/7");
+    /// assert_eq!(pi.rationalize_with_prec(Float::from_f64(0.1)).to_string(), "16/5");
+    /// assert_eq!(pi.rationalize_with_prec(Float::from_f64(1.)).to_string(), "3/1");
+    /// ```
+    pub fn rationalize_with_prec(self, prec: Self) -> RRational {
+        unsafe {
+            RRational::from_rb_value_unchecked(rb_flt_rationalize_with_prec(
+                self.as_rb_value(),
+                prec.as_rb_value(),
+            ))
+        }
+    }
+
+    /// Returns a rational approximation of `self`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, Float};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let pi = Float::from_f64(3.141592);
+    /// assert_eq!(pi.rationalize().to_string(), "392699/125000");
+    /// ```
+    pub fn rationalize(self) -> RRational {
+        unsafe { RRational::from_rb_value_unchecked(rb_flt_rationalize(self.as_rb_value())) }
     }
 }
 

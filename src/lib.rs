@@ -774,8 +774,8 @@
 // * `RB_FLOAT_TYPE_P`:
 // * `rb_float_value`: [`RFloat::to_f64`] or [`Float::to_f64`].
 // * `RB_FLONUM_P`:
-// * `rb_flt_rationalize`:
-// * `rb_flt_rationalize_with_prec`:
+//! * `rb_flt_rationalize`: [`Float::rationalize`].
+//! * `rb_flt_rationalize_with_prec`: [`Float::rationalize_with_prec`].
 // * `RB_FL_ABLE`:
 // * `RB_FL_ALL`:
 // * `RB_FL_ALL_RAW`:
@@ -1290,11 +1290,11 @@
 // * `rb_Rational`:
 // * `rb_Rational1`:
 // * `rb_Rational2`:
-// * `rb_rational_den`:
-// * `rb_rational_new`:
+//! * `rb_rational_den`: [`RRational::den`].
+//! * `rb_rational_new`: [`RRational::new`].
 // * `rb_rational_new1`:
 // * `rb_rational_new2`:
-// * `rb_rational_num`:
+//! * `rb_rational_num`: [`RRational::num`].
 // * `rb_rational_raw`:
 // * `rb_rational_raw1`:
 // * `rb_rational_raw2`:

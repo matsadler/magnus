@@ -17,6 +17,8 @@
 - `RMatch::nth_defined`, `RMatch::nth_match`, `RMatch::backref_number`,
   `RMatch::matched`, `RMatch::pre`, `RMatch::post`, and `RMatch::last`
 - `RBignum::is_positive`/`is_negative`.
+- `new`, `num`, and `den` for `RRational`, plus `rationalize` and 
+  `rationalize_with_prec` for `Float`.
 - `value::Id::new` added to replace `value::Id::from`.
 - `TypedData::class_for` can be implemented to customise the class on a case by
   case basis when wrapping Rust data in a Ruby object.

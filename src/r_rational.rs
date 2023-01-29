@@ -1,15 +1,29 @@
-use std::{fmt, ops::Deref};
+use std::{fmt, num::NonZeroI64, ops::Deref};
 
-use rb_sys::ruby_value_type;
+use rb_sys::{rb_rational_den, rb_rational_new, rb_rational_num, ruby_value_type, VALUE};
 
 use crate::{
     error::Error,
     exception,
+    integer::Integer,
     into_value::IntoValue,
     ruby_handle::RubyHandle,
     try_convert::TryConvert,
     value::{private, NonZeroValue, ReprValue, Value},
 };
+
+impl RubyHandle {
+    pub fn rational_new(&self, num: i64, den: NonZeroI64) -> RRational {
+        let num = self.into_value(num);
+        let den = self.into_value(den.get());
+        unsafe {
+            RRational::from_rb_value_unchecked(rb_rational_new(
+                num.as_rb_value(),
+                den.as_rb_value(),
+            ))
+        }
+    }
+}
 
 /// A Value pointer to a RRational struct, Ruby's internal representation of
 /// rational numbers.
@@ -28,6 +42,64 @@ impl RRational {
             (val.rb_type() == ruby_value_type::RUBY_T_RATIONAL)
                 .then(|| Self(NonZeroValue::new_unchecked(val)))
         }
+    }
+
+    #[inline]
+    pub(crate) unsafe fn from_rb_value_unchecked(val: VALUE) -> Self {
+        Self(NonZeroValue::new_unchecked(Value::new(val)))
+    }
+
+    /// Create a new `RRational`.
+    ///
+    /// # Panics
+    ///
+    /// Panics if called from a non-Ruby thread.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use std::num::NonZeroI64;
+    /// use magnus::{eval, RRational};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let rational = RRational::new(2, NonZeroI64::new(4).unwrap());
+    /// assert_eq!(rational.to_string(), "1/2");
+    /// ```
+    #[inline]
+    pub fn new(num: i64, den: NonZeroI64) -> Self {
+        get_ruby!().rational_new(num, den)
+    }
+
+    /// Returns `self`'s numerator.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use std::num::NonZeroI64;
+    /// use magnus::{eval, RRational};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let rational = RRational::new(6, NonZeroI64::new(9).unwrap());
+    /// assert_eq!(rational.num().to_i64().unwrap(), 2);
+    /// ```
+    pub fn num(self) -> Integer {
+        unsafe { Integer::from_rb_value_unchecked(rb_rational_num(self.as_rb_value())) }
+    }
+
+    /// Returns `self`'s denominator.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use std::num::NonZeroI64;
+    /// use magnus::{eval, RRational};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let rational = RRational::new(6, NonZeroI64::new(9).unwrap());
+    /// assert_eq!(rational.den().to_i64().unwrap(), 3);
+    /// ```
+    pub fn den(self) -> Integer {
+        unsafe { Integer::from_rb_value_unchecked(rb_rational_den(self.as_rb_value())) }
     }
 }
 
