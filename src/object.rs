@@ -12,11 +12,11 @@ use crate::{
     method::Method,
     module::RModule,
     try_convert::TryConvert,
-    value::{IntoId, Value, QNIL},
+    value::{IntoId, ReprValue, Value, QNIL},
 };
 
 /// Functions available all non-immediate values.
-pub trait Object: Deref<Target = Value> + Copy {
+pub trait Object: Deref<Target = Value> + ReprValue + Copy {
     /// Define a singleton method in `self`'s scope.
     ///
     /// Singleton methods defined on a class are Ruby's method for implementing

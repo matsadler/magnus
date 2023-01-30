@@ -44,6 +44,8 @@
 - `IntoId`, `IntoRString`, and `IntoSymbol` are used instead of `Into<Id>`,
   `Into<RString>`, and `Into<Symbol>`.
 - `use magnus::prelude::*` will now import traits anonymously.
+- `EncodingCapable`, `Module`, `Class`, and `Object` traits can no longer be
+  implemented by user code.
 
 ### Deprecated
 - `RString::append` (use `RString::buf_append`).
@@ -62,6 +64,7 @@
 - `From<String> for Id` / `Into<Id> for String`.
 
 ### Fixed
+- Missing `ReprValue` implementation for `RStruct`.
 
 ### Security
 

@@ -201,7 +201,7 @@ impl TryConvert for RModule {
 }
 
 /// Functions available on both classes and modules.
-pub trait Module: Object + Deref<Target = Value> + Copy {
+pub trait Module: Object + Deref<Target = Value> + ReprValue + Copy {
     /// Define a class in `self`'s scope.
     ///
     /// # Examples

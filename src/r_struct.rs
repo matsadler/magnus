@@ -26,7 +26,7 @@ use crate::{
     ruby_handle::RubyHandle,
     symbol::Symbol,
     try_convert::TryConvert,
-    value::{self, IntoId, NonZeroValue, Value},
+    value::{self, IntoId, NonZeroValue, ReprValue, Value},
 };
 
 // Ruby provides some inline functions to get a pointer to the struct's
@@ -261,6 +261,8 @@ unsafe impl value::private::ReprValue for RStruct {
         Self(NonZeroValue::new_unchecked(val))
     }
 }
+
+impl ReprValue for RStruct {}
 
 impl TryConvert for RStruct {
     fn try_convert(val: Value) -> Result<Self, Error> {

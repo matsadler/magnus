@@ -956,7 +956,7 @@ pub enum Coderange {
 }
 
 /// Trait that marks Ruby types cable of having an encoding.
-pub trait EncodingCapable: Deref<Target = Value> {
+pub trait EncodingCapable: Deref<Target = Value> + ReprValue + Copy {
     /// Get the encoding of `self`.
     ///
     /// # Examples
@@ -967,7 +967,7 @@ pub trait EncodingCapable: Deref<Target = Value> {
     ///
     /// assert!(RString::new("example").enc_get() == encoding::Index::utf8());
     /// ```
-    fn enc_get(&self) -> Index {
+    fn enc_get(self) -> Index {
         let i = unsafe { rb_enc_get_index(self.as_rb_value()) };
         if i == -1 {
             panic!("{} not encoding capable", self.deref());
@@ -992,7 +992,7 @@ pub trait EncodingCapable: Deref<Target = Value> {
     /// s.enc_set(encoding::Index::usascii());
     /// assert!(s.enc_get() == encoding::Index::usascii());
     /// ```
-    fn enc_set<T>(&self, enc: T) -> Result<(), Error>
+    fn enc_set<T>(self, enc: T) -> Result<(), Error>
     where
         T: Into<Index>,
     {
@@ -1024,7 +1024,7 @@ pub trait EncodingCapable: Deref<Target = Value> {
     /// s.enc_associate(encoding::Index::usascii());
     /// assert!(s.enc_get() == encoding::Index::usascii());
     /// ```
-    fn enc_associate<T>(&self, enc: T) -> Result<(), Error>
+    fn enc_associate<T>(self, enc: T) -> Result<(), Error>
     where
         T: Into<Index>,
     {
