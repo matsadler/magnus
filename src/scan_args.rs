@@ -1099,7 +1099,7 @@ impl<T> ScanArgsBlock for T where T: private::ScanArgsBlock {}
 /// `TCPServer::new`'s argument handling. This is roughly equivalent to
 /// `def new(hostname=nil, port)`.
 /// ```
-/// use magnus::{define_class, error::Error, function, scan_args::scan_args, Object, Value};
+/// use magnus::{prelude::*, define_class, error::Error, function, scan_args::scan_args, Value};
 /// # let _cleanup = unsafe { magnus::embed::init() };
 ///
 /// fn tcp_svr_init(args: &[Value]) -> Result<Value, Error> {
@@ -1128,7 +1128,7 @@ impl<T> ScanArgsBlock for T where T: private::ScanArgsBlock {}
 ///
 /// The same example as above, specifying the types slightly differently.
 /// ```
-/// use magnus::{define_class, error::Error, function, scan_args::scan_args, Object, Value};
+/// use magnus::{prelude::*, define_class, error::Error, function, scan_args::scan_args, Value};
 /// # let _cleanup = unsafe { magnus::embed::init() };
 ///
 /// fn tcp_svr_init(args: &[Value]) -> Result<Value, Error> {
@@ -1155,7 +1155,7 @@ impl<T> ScanArgsBlock for T where T: private::ScanArgsBlock {}
 /// `def getaddrinfo(nodename, service, family=nil, socktype=nil, protocol=nil, flags=nil, timeout: nil)`.
 /// ```
 /// use magnus::{
-///     define_class, error::Error, function, scan_args::{scan_args, get_kwargs}, Object, RHash, Symbol, Value,
+///     prelude::*, define_class, error::Error, function, scan_args::{scan_args, get_kwargs}, RHash, Symbol, Value,
 /// };
 /// # let _cleanup = unsafe { magnus::embed::init() };
 ///
@@ -1980,7 +1980,7 @@ pub struct KwArgs<Req, Opt, Splat> {
 ///
 /// The rough equivalent of `def example(a:, b:, c: nil, **rest)` would be:
 /// ```
-/// use magnus::{class, error::Error, method, scan_args::get_kwargs, Module, RHash, Value};
+/// use magnus::{prelude::*, class, error::Error, method, scan_args::get_kwargs, RHash, Value};
 /// # let _cleanup = unsafe { magnus::embed::init() };
 ///
 /// fn example(rb_self: Value, kw: RHash) -> Result<Value, Error> {
@@ -2006,7 +2006,7 @@ pub struct KwArgs<Req, Opt, Splat> {
 /// ```
 /// The rough equivalent of `def example(a: "foo")` would be:
 /// ```
-/// use magnus::{class, error::Error, method, scan_args::{get_kwargs, scan_args}, Module, RHash, Value};
+/// use magnus::{prelude::*, class, error::Error, method, scan_args::{get_kwargs, scan_args}, RHash, Value};
 /// # let _cleanup = unsafe { magnus::embed::init() };
 ///
 /// fn example(rb_self: Value, args: &[Value]) -> Result<Value, Error> {
@@ -2030,7 +2030,7 @@ pub struct KwArgs<Req, Opt, Splat> {
 /// ```
 /// or, specifying the types slightly differently:
 /// ```
-/// use magnus::{class, error::Error, method, scan_args::{get_kwargs, scan_args}, Module, RHash, Value};
+/// use magnus::{prelude::*, class, error::Error, method, scan_args::{get_kwargs, scan_args}, RHash, Value};
 /// # let _cleanup = unsafe { magnus::embed::init() };
 ///
 /// fn example(rb_self: Value, args: &[Value]) -> Result<Value, Error> {

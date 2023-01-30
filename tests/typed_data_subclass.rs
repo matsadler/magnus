@@ -1,4 +1,4 @@
-use magnus::{define_class, embed::init, method, Module};
+use magnus::{define_class, embed::init, method, prelude::*};
 
 macro_rules! rb_assert {
     ($s:literal) => {

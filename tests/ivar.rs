@@ -1,4 +1,4 @@
-use magnus::{eval, Object, RObject, Value};
+use magnus::{eval, prelude::*, RObject, Value};
 
 macro_rules! rb_assert {
     ($s:literal) => {

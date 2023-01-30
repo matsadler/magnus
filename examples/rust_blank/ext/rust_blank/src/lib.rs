@@ -1,6 +1,6 @@
 use magnus::{
     define_class,
-    encoding::{CType, EncodingCapable, RbEncoding},
+    encoding::{CType, RbEncoding},
     method,
     prelude::*,
     Error, RString,

@@ -317,7 +317,7 @@ where
     /// # Examples
     ///
     /// ```
-    /// use magnus::{define_class, memoize, Class, RClass, TypedData};
+    /// use magnus::{prelude::*, define_class, memoize, RClass, TypedData};
     /// # use magnus::DataType;
     ///
     /// struct Example();
@@ -373,7 +373,7 @@ where
     /// # Examples
     ///
     /// ```
-    /// use magnus::{define_class, memoize, Class, RClass, TypedData};
+    /// use magnus::{prelude::*, define_class, memoize, RClass, TypedData};
     /// # use magnus::DataType;
     ///
     /// enum Example {
@@ -658,8 +658,8 @@ where
 /// use std::hash::Hasher;
 ///
 /// use magnus::{
-///     define_class, embed::init, function, gc, method, typed_data, DataTypeFunctions, Error, Module,
-///     Object, RHash, TypedData, Value,
+///     prelude::*, define_class, embed::init, function, gc, method, typed_data, DataTypeFunctions, Error,
+///     RHash, TypedData, Value,
 /// };
 ///
 /// #[derive(TypedData)]
@@ -764,8 +764,8 @@ where
 /// use std::hash::Hasher;
 ///
 /// use magnus::{
-///     define_class, embed::init, function, gc, method, typed_data, DataTypeFunctions, Error, Module,
-///     Object, RHash, TypedData, Value,
+///     prelude::*, define_class, embed::init, function, gc, method, typed_data, DataTypeFunctions, Error,
+///     RHash, TypedData, Value,
 /// };
 ///
 /// #[derive(TypedData)]

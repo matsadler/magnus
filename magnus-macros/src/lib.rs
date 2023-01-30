@@ -153,7 +153,7 @@ pub fn init(attrs: TokenStream, item: TokenStream) -> TokenStream {
 /// ```
 /// use std::f64::consts::PI;
 ///
-/// use magnus::{define_class, function, method, Module, Object};
+/// use magnus::{prelude::*, define_class, function, method};
 ///
 /// #[magnus::wrap(class = "Shape")]
 /// enum Shape {

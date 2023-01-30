@@ -1044,7 +1044,7 @@ pub trait EncodingCapable: Deref<Target = Value> {
 /// # Examples
 ///
 /// ```
-/// use magnus::{encoding::{self, EncodingCapable}, RString};
+/// use magnus::{prelude::*, encoding, RString};
 /// # let _cleanup = unsafe { magnus::embed::init() };
 ///
 /// let a = RString::new("a");
@@ -1072,7 +1072,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use magnus::{encoding::{self, EncodingCapable}, RString};
+/// use magnus::{prelude::*, encoding, RString};
 /// # let _cleanup = unsafe { magnus::embed::init() };
 ///
 /// let a = RString::new("a");
@@ -1106,7 +1106,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use magnus::{encoding::{self, EncodingCapable}, RString};
+/// use magnus::{prelude::*, encoding, RString};
 /// # let _cleanup = unsafe { magnus::embed::init() };
 ///
 /// let a = RString::new("a");

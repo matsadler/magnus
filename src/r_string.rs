@@ -733,7 +733,7 @@ impl RString {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{encoding::{self, Coderange, EncodingCapable}, exception, Error, RString};
+    /// use magnus::{prelude::*, encoding::{self, Coderange}, exception, Error, RString};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// fn crabbify(s: RString) -> Result<(), Error> {
