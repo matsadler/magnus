@@ -22,6 +22,9 @@
 - `value::Id::new` added to replace `value::Id::from`.
 - `TypedData::class_for` can be implemented to customise the class on a case by
   case basis when wrapping Rust data in a Ruby object.
+- The `#[wrap]` and `#[derive(TypedData)]` macros now allow setting
+  `#[magnus(class = "...")]` on enum variants to customise the class per
+  variant when wrapping enums in a Ruby object.
 - `Value::funcall_public` calls a public method, returning an error for a
   private or protected method.
 

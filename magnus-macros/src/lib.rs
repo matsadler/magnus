@@ -112,6 +112,14 @@ pub fn init(attrs: TokenStream, item: TokenStream) -> TokenStream {
 /// * `size` - Report the [`std::mem::size_of_val`] of the type to Ruby, used
 ///   to aid in deciding when to run the garbage collector.
 ///
+/// # Variant Attributes
+///
+/// The `#[magnus(...)]` attribute can be set on enum variants with the
+/// following values:
+///
+/// * `class = "..."` - sets the Ruby class to wrap the variant. Supports
+///   module paths, e.g. `Foo::Bar::Baz`.
+///
 /// # Examples
 ///
 /// ```
@@ -139,6 +147,45 @@ pub fn init(attrs: TokenStream, item: TokenStream) -> TokenStream {
 ///     magnus::define_global_function("distance", magnus::function!(distance, 2));
 /// }
 /// ```
+///
+/// With subclasses for enum variants:
+///
+/// ```
+/// use std::f64::consts::PI;
+///
+/// use magnus::{define_class, function, method, Module, Object};
+///
+/// #[magnus::wrap(class = "Shape")]
+/// enum Shape {
+///     #[magnus(class = "Circle")]
+///     Circle { r: f64 },
+///     #[magnus(class = "Rectangle")]
+///     Rectangle { x: f64, y: f64 },
+/// }
+///
+/// impl Shape {
+///     fn area(&self) -> f64 {
+///         match self {
+///             Shape::Circle { r } => PI * r * r,
+///             Shape::Rectangle { x, y } => x * y,
+///         }
+///     }
+/// }
+///
+/// #[magnus::init]
+/// fn init() -> Result<(), magnus::Error> {
+///     let shape = define_class("Shape", Default::default())?;
+///     shape.define_method("area", method!(Shape::area, 0))?;
+///
+///     let circle = define_class("Circle", shape)?;
+///     circle.define_singleton_method("new", function!(|r| Shape::Circle { r }, 1))?;
+///
+///     let rectangle = define_class("Rectangle", shape)?;
+///     rectangle.define_singleton_method("new", function!(|x, y| Shape::Rectangle { x, y }, 2))?;
+///
+///     Ok(())
+/// }
+/// ```
 #[proc_macro_attribute]
 pub fn wrap(attrs: TokenStream, item: TokenStream) -> TokenStream {
     typed_data::expand(parse_macro_input!(attrs), parse_macro_input!(item)).into()
@@ -162,7 +209,7 @@ pub fn derive_data_type_functions(input: TokenStream) -> TokenStream {
 ///
 /// # Attributes
 ///
-/// The `#[magnus(...)]` attribute can be set with the following values.
+/// The `#[magnus(...)]` attribute can be set with the following values:
 ///
 /// * `class = "..."` - required, sets the Ruby class to wrap the Rust type.
 ///    Supports module paths, e.g. `Foo::Bar::Baz`.
@@ -176,6 +223,14 @@ pub fn derive_data_type_functions(input: TokenStream) -> TokenStream {
 /// * `compact` - Enable Ruby calling the `DataTypeFunctions::compact` function.
 /// * `wb_protected` - Enable the `wb_protected` flag.
 /// * `frozen_shareable` - Enable the `frozen_shareable` flag.
+///
+/// # Variant Attributes
+///
+/// The `#[magnus(...)]` attribute can be set on enum variants with the
+/// following values:
+///
+/// * `class = "..."` - sets the Ruby class to wrap the variant. Supports
+///   module paths, e.g. `Foo::Bar::Baz`.
 ///
 /// # Examples
 ///
@@ -207,7 +262,31 @@ pub fn derive_data_type_functions(input: TokenStream) -> TokenStream {
 ///     magnus::define_global_function("distance", magnus::function!(distance, 2));
 /// }
 /// ```
-/// Defining a custom `DataType` function.
+///
+/// With subclasses for enum variants:
+///
+/// ```
+/// use magnus::define_class;
+///
+/// #[magnus::wrap(class = "Shape")]
+/// enum Shape {
+///     #[magnus(class = "Circle")]
+///     Circle { r: f64 },
+///     #[magnus(class = "Rectangle")]
+///     Rectangle { x: f64, y: f64 },
+/// }
+///
+/// #[magnus::init]
+/// fn init() -> Result<(), magnus::Error> {
+///     let shape = define_class("Shape", Default::default())?;
+///     define_class("Circle", shape)?;
+///     define_class("Rectangle", shape)?;
+///     Ok(())
+/// }
+/// ```
+///
+/// Defining a custom `DataType` function:
+///
 /// ```
 /// use std::mem::size_of_val;
 /// use magnus::{DataTypeFunctions, TypedData};

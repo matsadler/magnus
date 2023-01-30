@@ -1,7 +1,4 @@
-use magnus::{
-    define_class, embed::init, memoize, method, typed_data::DataTypeBuilder, Class, DataType,
-    DataTypeFunctions, Module, RClass, TypedData,
-};
+use magnus::{define_class, embed::init, method, Module};
 
 macro_rules! rb_assert {
     ($s:literal) => {
@@ -13,9 +10,11 @@ macro_rules! rb_assert {
     };
 }
 
-#[derive(DataTypeFunctions)]
+#[magnus::wrap(class = "Pleasantry")]
 enum Pleasantry {
+    #[magnus(class = "Greeting")]
     Greeting(String),
+    #[magnus(class = "Farewell")]
     Farewell(String),
 }
 
@@ -28,40 +27,14 @@ impl Pleasantry {
     }
 }
 
-unsafe impl TypedData for Pleasantry {
-    fn class() -> RClass {
-        *memoize!(RClass: {
-          let class = define_class("Pleasantry", Default::default()).unwrap();
-          class.undef_alloc_func();
-          class
-        })
-    }
-
-    fn data_type() -> &'static DataType {
-        memoize!(DataType: DataTypeBuilder::<Pleasantry>::new("Pleasantry").build())
-    }
-
-    fn class_for(value: &Self) -> RClass {
-        match value {
-            Self::Greeting(_) => *memoize!(RClass: {
-                let class = define_class("Greeting", <Self as TypedData>::class()).unwrap();
-                class.undef_alloc_func();
-                class
-            }),
-            Self::Farewell(_) => *memoize!(RClass: {
-                let class = define_class("Farewell", <Self as TypedData>::class()).unwrap();
-                class.undef_alloc_func();
-                class
-            }),
-        }
-    }
-}
-
 #[test]
 fn it_wraps_rust_struct() {
     let _cleanup = unsafe { init() };
 
     let class = define_class("Pleasantry", Default::default()).unwrap();
+    define_class("Farewell", class).unwrap();
+    define_class("Greeting", class).unwrap();
+
     class
         .define_method("to_s", method!(Pleasantry::to_s, 0))
         .unwrap();
