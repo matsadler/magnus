@@ -43,6 +43,7 @@
   Ruby types.
 - `IntoId`, `IntoRString`, and `IntoSymbol` are used instead of `Into<Id>`,
   `Into<RString>`, and `Into<Symbol>`.
+- `use magnus::prelude::*` will now import traits anonymously.
 
 ### Deprecated
 - `RString::append` (use `RString::buf_append`).

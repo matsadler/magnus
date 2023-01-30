@@ -1832,7 +1832,9 @@ pub mod module;
 mod object;
 /// Traits that commonly should be in scope.
 pub mod prelude {
-    pub use crate::{class::Class, module::Module, object::Object};
+    pub use crate::{
+        class::Class as _, encoding::EncodingCapable as _, module::Module as _, object::Object as _,
+    };
 }
 mod r_array;
 mod r_bignum;
