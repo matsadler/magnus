@@ -330,10 +330,14 @@ following:
 ```rust
 fn example(val: magnus::Value) -> Result<(), magnus::Error> {
     // checks value is a String, does not call #to_str
-    let r_string = RString::from_value(val).ok_or_else(|| magnus::Error::type_error("expected string"))?;
+    let r_string = RString::from_value(val)
+        .ok_or_else(|| magnus::Error::new(magnus::exception::type_error(), "expected string"))?;
     // error on encodings that would otherwise need converting to utf-8
     if !r_string.is_utf8_compatible_encoding() {
-        return Err(magnus::Error::encoding_error("string must be utf-8"));
+        return Err(magnus::Error::new(
+            magnus::exception::encoding_error(),
+            "string must be utf-8",
+        ));
     }
     // RString::as_str is unsafe as it's possible for Ruby to invalidate the
     // str as we hold a reference to it. The easiest way to ensure the &str
