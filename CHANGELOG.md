@@ -17,7 +17,7 @@
 - `RMatch::nth_defined`, `RMatch::nth_match`, `RMatch::backref_number`,
   `RMatch::matched`, `RMatch::pre`, `RMatch::post`, and `RMatch::last`
 - `RBignum::is_positive`/`is_negative`.
-- `new`, `num`, and `den` for `RRational`, plus `rationalize` and 
+- `new`, `num`, and `den` for `RRational`, plus `rationalize` and
   `rationalize_with_prec` for `Float`.
 - `value::Id::new` added to replace `value::Id::from`.
 - `TypedData::class_for` can be implemented to customise the class on a case by
@@ -27,6 +27,7 @@
   variant when wrapping enums in a Ruby object.
 - `Value::funcall_public` calls a public method, returning an error for a
   private or protected method.
+- `error::Result<T>` is shorthand for `std::result::Result<T, Error>`.
 
 ### Changed
 - When converting Ruby values to `RArray` (or `Vec<T>`, `[T; 1]`, or `(T,)`),
