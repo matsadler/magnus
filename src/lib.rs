@@ -1304,7 +1304,7 @@
 // * `rb_refinement_new`:
 // * `rb_reg_adjust_startpos`:
 // * `rb_reg_alloc`:
-//! * `rb_reg_backref_number`: [`RRegexp::backref_number`].
+//! * `rb_reg_backref_number`: [`RMatch::backref_number`].
 // * `rb_reg_init_str`:
 //! * `rb_reg_last_match`: [`RMatch::matched`].
 //! * `rb_reg_match`: [`RRegexp::reg_match`].
