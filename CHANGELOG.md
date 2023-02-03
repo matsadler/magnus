@@ -19,6 +19,9 @@
 - `RBignum::is_positive`/`is_negative`.
 - `new`, `num`, and `den` for `RRational`, plus `rationalize` and
   `rationalize_with_prec` for `Float`.
+- New `Numeric` trait implemented for `Integer`, `Float`, `RRational`,
+  `RComplex`, etc. Exposes functions for applying operators to numeric types
+  following Ruby's coercion protocol.
 - `value::Id::new` added to replace `value::Id::from`.
 - `TypedData::class_for` can be implemented to customise the class on a case by
   case basis when wrapping Rust data in a Ruby object.

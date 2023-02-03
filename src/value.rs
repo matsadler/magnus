@@ -43,6 +43,7 @@ use crate::{
     into_value::{ArgList, IntoValue, IntoValueFromNative},
     method::{Block, BlockReturn},
     module::Module,
+    numeric::Numeric,
     r_bignum::RBignum,
     r_string::RString,
     ruby_handle::RubyHandle,
@@ -2180,6 +2181,8 @@ unsafe impl private::ReprValue for Fixnum {
         Self(NonZeroValue::new_unchecked(val))
     }
 }
+
+impl Numeric for Fixnum {}
 
 impl ReprValue for Fixnum {}
 

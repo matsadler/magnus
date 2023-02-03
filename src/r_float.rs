@@ -10,6 +10,7 @@ use crate::{
     exception,
     float::Float,
     into_value::IntoValue,
+    numeric::Numeric,
     ruby_handle::RubyHandle,
     try_convert::TryConvert,
     value::{private, NonZeroValue, ReprValue, Value},
@@ -118,6 +119,8 @@ impl From<RFloat> for Value {
         *val
     }
 }
+
+impl Numeric for RFloat {}
 
 unsafe impl private::ReprValue for RFloat {
     fn to_value(self) -> Value {

@@ -1162,10 +1162,10 @@
 // * `rb_num2ulong_inline`:
 // * `RB_NUM2USHORT`:
 // * `rb_num2ushort`:
-// * `rb_num_coerce_bin`:
-// * `rb_num_coerce_bit`:
-// * `rb_num_coerce_cmp`:
-// * `rb_num_coerce_relop`:
+//! * `rb_num_coerce_bin`: [`Numeric::coerce_bin`].
+//! * `rb_num_coerce_bit`: [`Numeric::coerce_bit`].
+//! * `rb_num_coerce_cmp`: [`Numeric::coerce_cmp`].
+//! * `rb_num_coerce_relop`: [`Numeric::coerce_relop`].
 // * `rb_num_zerodiv`:
 //!
 //! ## `rb_o`
@@ -1829,11 +1829,13 @@ mod integer;
 mod into_value;
 pub mod method;
 pub mod module;
+pub mod numeric;
 mod object;
 /// Traits that commonly should be in scope.
 pub mod prelude {
     pub use crate::{
-        class::Class as _, encoding::EncodingCapable as _, module::Module as _, object::Object as _,
+        class::Class as _, encoding::EncodingCapable as _, module::Module as _,
+        numeric::Numeric as _, object::Object as _,
     };
 }
 mod r_array;
@@ -1884,6 +1886,7 @@ pub use crate::{
     integer::Integer,
     into_value::{ArgList, IntoValue, IntoValueFromNative},
     module::{Attr, Module, RModule},
+    numeric::Numeric,
     object::Object,
     r_array::RArray,
     r_bignum::RBignum,

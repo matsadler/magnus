@@ -11,6 +11,7 @@ use crate::{
     debug_assert_value,
     error::{protect, Error},
     into_value::IntoValue,
+    numeric::Numeric,
     r_rational::RRational,
     ruby_handle::RubyHandle,
     try_convert::TryConvert,
@@ -195,6 +196,8 @@ unsafe impl private::ReprValue for Float {
         Self(NonZeroValue::new_unchecked(val))
     }
 }
+
+impl Numeric for Float {}
 
 impl ReprValue for Float {}
 

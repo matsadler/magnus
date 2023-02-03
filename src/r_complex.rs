@@ -6,6 +6,7 @@ use crate::{
     error::Error,
     exception,
     into_value::IntoValue,
+    numeric::Numeric,
     ruby_handle::RubyHandle,
     try_convert::TryConvert,
     value::{private, NonZeroValue, ReprValue, Value},
@@ -72,6 +73,8 @@ unsafe impl private::ReprValue for RComplex {
         Self(NonZeroValue::new_unchecked(val))
     }
 }
+
+impl Numeric for RComplex {}
 
 impl ReprValue for RComplex {}
 

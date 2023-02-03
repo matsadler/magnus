@@ -15,6 +15,7 @@ use crate::{
     exception,
     integer::{Integer, IntegerType},
     into_value::IntoValue,
+    numeric::Numeric,
     ruby_handle::RubyHandle,
     try_convert::TryConvert,
     value::{private, Fixnum, NonZeroValue, ReprValue, Value, QNIL},
@@ -374,6 +375,8 @@ unsafe impl private::ReprValue for RBignum {
         Self(NonZeroValue::new_unchecked(val))
     }
 }
+
+impl Numeric for RBignum {}
 
 impl ReprValue for RBignum {}
 

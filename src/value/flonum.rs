@@ -5,6 +5,7 @@ use rb_sys::{rb_float_new_in_heap, VALUE};
 use crate::{
     exception,
     into_value::IntoValue,
+    numeric::Numeric,
     ruby_handle::RubyHandle,
     try_convert::TryConvertOwned,
     value::{private, NonZeroValue, ReprValue},
@@ -145,6 +146,8 @@ impl From<Flonum> for Value {
         *val
     }
 }
+
+impl Numeric for Flonum {}
 
 unsafe impl private::ReprValue for Flonum {
     fn to_value(self) -> Value {

@@ -7,6 +7,7 @@ use crate::{
     error::{protect, Error},
     exception,
     into_value::IntoValue,
+    numeric::Numeric,
     r_bignum::RBignum,
     ruby_handle::RubyHandle,
     try_convert::TryConvert,
@@ -393,6 +394,8 @@ impl From<Integer> for Value {
         *val
     }
 }
+
+impl Numeric for Integer {}
 
 unsafe impl private::ReprValue for Integer {
     fn to_value(self) -> Value {
