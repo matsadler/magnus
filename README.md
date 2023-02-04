@@ -170,9 +170,10 @@ fn init() {
 }
 ```
 
-If you wish to package your extension as a Gem, we recommend using [the `rb_sys`
-gem] to build along with `rake-compiler`. These tools will automatically build
-your Rust extension as a dynamic library, and then package it as a gem.
+If you wish to package your extension as a Gem, we recommend using the
+[`rb_sys` gem] to build along with `rake-compiler`. These tools will
+automatically build your Rust extension as a dynamic library, and then package
+it as a gem.
 
 *Note*: The newest version of rubygems does have beta support for compiling
 Rust, so in the future the `rb_sys` gem won't be necessary.
@@ -214,7 +215,7 @@ For a more detailed example (including cross-compilation and more), see the
 [`rb-sys` example project]. Although the code in `lib.rs` does not feature
 magnus, but it will compile and run properly.
 
-[`rb-sys` gem]: https://github.com/oxidize-rb/rb-sys/tree/main/gem
+[`rb_sys` gem]: https://github.com/oxidize-rb/rb-sys/tree/main/gem
 [`rake-compiler`]: https://github.com/rake-compiler/rake-compiler
 [`rust_blank`]: https://github.com/matsadler/magnus/tree/main/examples/rust_blank/ext/rust_blank
 [`rb-sys` example project]: https://github.com/oxidize-rb/rb-sys/tree/main/examples/rust_reverse
