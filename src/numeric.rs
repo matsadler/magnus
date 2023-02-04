@@ -16,7 +16,6 @@ use crate::{
 
 /// Functions available for all of Ruby's Numeric types.
 pub trait Numeric: Deref<Target = Value> + ReprValue + Copy {
-
     /// Apply the operator `op` with coercion.
     ///
     /// As Ruby's operators are implimented as methods, this function can be
