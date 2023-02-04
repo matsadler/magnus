@@ -8,11 +8,10 @@ use std::{
 #[cfg(windows)]
 use rb_sys::rb_w32_sysinit;
 use rb_sys::{
-    ruby_cleanup, ruby_exec_node, ruby_executable_node, ruby_options, ruby_set_script_name,
-    ruby_setup,
+    ruby_cleanup, ruby_exec_node, ruby_process_options, ruby_set_script_name, ruby_setup,
 };
 
-use crate::{r_string::IntoRString, ruby_handle::RubyHandle};
+use crate::{error::protect, r_string::IntoRString, ruby_handle::RubyHandle, value::QNIL};
 
 /// A guard value that will run the cleanup function for the Ruby VM when
 /// dropped.
@@ -74,11 +73,12 @@ unsafe fn init_options(opts: &[&str]) -> Cleanup {
                 .iter()
                 .map(|cs| cs.as_ptr() as *mut _)
                 .collect::<Vec<_>>();
-            let node = ruby_options(argv.len() as i32, argv.as_mut_ptr());
-            let mut status = 0;
-            if ruby_executable_node(node, &mut status) == 0 {
-                panic!("Ruby init code not executable");
-            }
+            let mut node = 0 as _;
+            protect(|| {
+                node = ruby_process_options(argv.len() as i32, argv.as_mut_ptr());
+                QNIL
+            })
+            .unwrap();
             if ruby_exec_node(node) != 0 {
                 panic!("Ruby init code failed");
             };
