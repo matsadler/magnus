@@ -10,16 +10,6 @@ extern "C" {
     fn ruby_thread_has_gvl_p() -> ::std::os::raw::c_int;
 }
 
-macro_rules! get_ruby {
-    () => {
-        if cfg!(debug_assertions) {
-            $crate::ruby_handle::RubyHandle::get().unwrap()
-        } else {
-            unsafe { $crate::ruby_handle::RubyHandle::get_unchecked() }
-        }
-    };
-}
-
 /// An error returned to indicate an attempt to interact with the Ruby API from
 /// a non-Ruby thread or without aquiring the GVL.
 #[derive(Debug)]
@@ -100,6 +90,8 @@ impl RubyGvlState {
 /// This structure allows safe access to Ruby's API as it should only be
 /// possible to aquire an instance in situations where Ruby's API is known to
 /// be available.
+// Not quite ready to be public, but needed to implement IntoValue
+#[doc(hidden)]
 pub struct RubyHandle(PhantomData<*mut ()>);
 
 impl RubyHandle {

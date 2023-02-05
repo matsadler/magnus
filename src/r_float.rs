@@ -5,7 +5,6 @@ use rb_sys::{rb_float_new, rb_float_value, ruby_value_type, VALUE};
 #[cfg(ruby_use_flonum)]
 use crate::value::Flonum;
 use crate::{
-    debug_assert_value,
     error::Error,
     exception,
     float::Float,

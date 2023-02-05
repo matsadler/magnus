@@ -17,7 +17,6 @@ use rb_sys::{
 };
 
 use crate::{
-    debug_assert_value,
     enumerator::Enumerator,
     error::{protect, Error},
     exception,

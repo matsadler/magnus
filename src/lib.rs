@@ -1811,7 +1811,7 @@
 #![warn(missing_docs)]
 
 #[macro_use]
-mod ruby_handle;
+mod macros;
 
 mod binding;
 pub mod block;
@@ -1855,6 +1855,9 @@ mod range;
 #[cfg(feature = "rb-sys-interop")]
 #[cfg_attr(docsrs, doc(cfg(feature = "rb-sys-interop")))]
 pub mod rb_sys;
+// Not quite ready to be public, but needed to implement IntoValue
+#[doc(hidden)]
+pub mod ruby_handle;
 pub mod scan_args;
 mod symbol;
 mod try_convert;

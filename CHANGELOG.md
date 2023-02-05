@@ -67,6 +67,7 @@
 - `From<String> for StaticSymbol` / `Into<StaticSymbol> for String`.
 - `From<&str> for Id` / `Into<Id> for &str`.
 - `From<String> for Id` / `Into<Id> for String`.
+- Internal `debug_assert_value!()` macro no longer public.
 
 ### Fixed
 - Missing `ReprValue` implementation for `RStruct`.

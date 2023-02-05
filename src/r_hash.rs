@@ -22,7 +22,6 @@ use rb_sys::{
 };
 
 use crate::{
-    debug_assert_value,
     error::{protect, raise, Error},
     exception,
     into_value::{IntoValue, IntoValueFromNative},

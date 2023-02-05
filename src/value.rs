@@ -51,35 +51,6 @@ use crate::{
     try_convert::{TryConvert, TryConvertOwned},
 };
 
-/// Debug assertation that the Value hasn't been garbage collected.
-///
-// This isn't infallible, if the original object was gc'd and that slot
-// reused already this won't panic like it should, but we're trying our
-// best here.
-#[doc(hidden)]
-#[macro_export]
-macro_rules! debug_assert_value {
-    ($value:expr) => {
-        // The memory this points to is managed by Ruby's GC and we can't
-        // really know if it's safe to access as with GC compaction this may
-        // point to memory now outside that owned by the process. We will likly
-        // segfault in that case, which is kind of OK, as we're trying to panic
-        // anyway.
-        #[allow(unused_unsafe)]
-        #[cfg(debug_assertions)]
-        match unsafe { $value.rb_type() } {
-            ::rb_sys::ruby_value_type::RUBY_T_NONE | ::rb_sys::ruby_value_type::RUBY_T_ZOMBIE => {
-                panic!("Attempting to access garbage collected Object")
-            }
-            #[cfg(ruby_gte_2_7)]
-            ::rb_sys::ruby_value_type::RUBY_T_MOVED => {
-                panic!("Attempting to access garbage collected Object")
-            }
-            _ => (),
-        };
-    };
-}
-
 /// Ruby's `VALUE` type, which can represent any Ruby object.
 #[derive(Clone, Copy)]
 #[repr(transparent)]

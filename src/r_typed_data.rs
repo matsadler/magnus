@@ -3,7 +3,6 @@ use std::{fmt, ops::Deref, ptr::NonNull};
 use rb_sys::{self, rb_check_typeddata, rb_data_typed_object_wrap, ruby_value_type};
 
 use crate::{
-    debug_assert_value,
     error::{protect, Error},
     exception,
     into_value::IntoValue,

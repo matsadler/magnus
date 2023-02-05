@@ -6,7 +6,6 @@ use rb_sys::{
 
 use crate::{
     class::RClass,
-    debug_assert_value,
     error::{protect, Error},
     into_value::IntoValue,
     method::Method,

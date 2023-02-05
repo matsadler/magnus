@@ -8,7 +8,6 @@ use rb_sys::{
 #[cfg(ruby_use_flonum)]
 use crate::value::Flonum;
 use crate::{
-    debug_assert_value,
     error::{protect, Error},
     into_value::IntoValue,
     numeric::Numeric,

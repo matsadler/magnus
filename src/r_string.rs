@@ -30,7 +30,6 @@ use rb_sys::{
 };
 
 use crate::{
-    debug_assert_value,
     encoding::{self, Coderange, EncodingCapable, RbEncoding},
     error::{protect, Error},
     exception,

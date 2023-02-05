@@ -13,7 +13,6 @@ use rb_sys::{
 
 use crate::{
     class::{Class, RClass},
-    debug_assert_value,
     error::{protect, Error},
     exception::{self, ExceptionClass},
     into_value::IntoValue,

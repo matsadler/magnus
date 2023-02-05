@@ -18,7 +18,6 @@ use rb_sys::{
 
 use crate::{
     class::{Class, RClass},
-    debug_assert_value,
     error::Error,
     exception,
     into_value::{ArgList, IntoValue},
