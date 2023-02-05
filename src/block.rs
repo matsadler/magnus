@@ -432,7 +432,8 @@ pub fn block_proc() -> Result<Proc, Error> {
 ///
 /// **Note:** A method using `yield_value` converted to an Enumerator with
 /// `to_enum`/[`Value::enumeratorize`] will result in a non-functional
-/// Enumerator. See [`Yield`] for an alternative.
+/// Enumerator on versions of Ruby before 3.1. See [`Yield`] for an
+/// alternative.
 ///
 /// # Panics
 ///
@@ -450,7 +451,8 @@ where
 ///
 /// **Note:** A method using `yield_values` converted to an Enumerator with
 /// `to_enum`/[`Value::enumeratorize`] will result in a non-functional
-/// Enumerator. See [`YieldValues`] for an alternative.
+/// Enumerator on versions of Ruby before 3.1. See [`YieldValues`] for an
+/// alternative.
 ///
 /// # Panics
 ///
@@ -468,7 +470,8 @@ where
 ///
 /// **Note:** A method using `yield_splat` converted to an Enumerator with
 /// `to_enum`/[`Value::enumeratorize`] will result in a non-functional
-/// Enumerator. See [`YieldSplat`] for an alternative.
+/// Enumerator on versions of Ruby before 3.1. See [`YieldSplat`] for an
+/// alternative.
 ///
 /// # Panics
 ///
