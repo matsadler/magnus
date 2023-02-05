@@ -417,25 +417,25 @@
 // * `rb_Complex`:
 // * `rb_Complex1`:
 // * `rb_Complex2`:
-// * `rb_complex_abs`:
+//! * `rb_complex_abs`: [`RComplex::abs`].
 // * `rb_complex_add`:
-// * `rb_complex_arg`:
-// * `rb_complex_conjugate`:
+//! * `rb_complex_arg`: [`RComplex::arg`].
+//! * `rb_complex_conjugate`: [`RComplex::conjugate`].
 // * `rb_complex_div`:
-// * `rb_complex_imag`:
+//! * `rb_complex_imag`: [`RComplex::imag`].
 // * `rb_complex_minus`:
 // * `rb_complex_mul`:
 // * `rb_complex_nagate`:
-// * `rb_complex_new`:
+//! * `rb_complex_new`: [`RComplex::new`].
 // * `rb_complex_new1`:
 // * `rb_complex_new2`:
-// * `rb_complex_new_polar`:
+//! * `rb_complex_new_polar`: [`RComplex::polar`].
 // * `rb_complex_plus`:
 // * `rb_complex_pow`:
 // * `rb_complex_raw`:
 // * `rb_complex_raw1`:
 // * `rb_complex_raw2`:
-// * `rb_complex_real`:
+//! * `rb_complex_real`: [`RComplex::real`].
 // * `rb_complex_sub`:
 // * `rb_complex_uminus`:
 // * `rb_const_defined`:

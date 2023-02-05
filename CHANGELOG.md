@@ -19,6 +19,7 @@
 - `RBignum::is_positive`/`is_negative`.
 - `new`, `num`, and `den` for `RRational`, plus `rationalize` and
   `rationalize_with_prec` for `Float`.
+- `RComplex::new`, `polar`, `real`, `imag`, `conjugate`, `abs` & `arg`.
 - New `Numeric` trait implemented for `Integer`, `Float`, `RRational`,
   `RComplex`, etc. Exposes functions for applying operators to numeric types
   following Ruby's coercion protocol.

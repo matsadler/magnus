@@ -1,10 +1,14 @@
 use std::{fmt, ops::Deref};
 
-use rb_sys::ruby_value_type;
+use rb_sys::{
+    rb_complex_abs, rb_complex_arg, rb_complex_conjugate, rb_complex_imag, rb_complex_new,
+    rb_complex_new_polar, rb_complex_real, ruby_value_type, VALUE,
+};
 
 use crate::{
-    error::Error,
+    error::{protect, Error},
     exception,
+    float::Float,
     into_value::IntoValue,
     numeric::Numeric,
     ruby_handle::RubyHandle,
@@ -29,6 +33,143 @@ impl RComplex {
             (val.rb_type() == ruby_value_type::RUBY_T_COMPLEX)
                 .then(|| Self(NonZeroValue::new_unchecked(val)))
         }
+    }
+
+    #[inline]
+    pub(crate) unsafe fn from_rb_value_unchecked(val: VALUE) -> Self {
+        Self(NonZeroValue::new_unchecked(Value::new(val)))
+    }
+
+    /// Create a new `RComplex`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Integer, RComplex};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let complex = RComplex::new(Integer::from_i64(2), Integer::from_i64(1));
+    /// assert_eq!(complex.to_string(), "2+1i");
+    /// ```
+    pub fn new<T, U>(real: T, imag: U) -> RComplex
+    where
+        T: Numeric,
+        U: Numeric,
+    {
+        unsafe {
+            RComplex::from_rb_value_unchecked(rb_complex_new(
+                real.as_rb_value(),
+                imag.as_rb_value(),
+            ))
+        }
+    }
+
+    /// Create a new `RComplex` using polar representation.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Integer, RComplex};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let complex = RComplex::polar(Integer::from_i64(2), Integer::from_i64(3)).unwrap();
+    /// assert_eq!(complex.to_string(), "-1.9799849932008908+0.2822400161197344i");
+    /// ```
+    pub fn polar<T, U>(real: T, imag: U) -> Result<RComplex, Error>
+    where
+        T: Numeric,
+        U: Numeric,
+    {
+        protect(|| unsafe {
+            RComplex::from_rb_value_unchecked(rb_complex_new_polar(
+                real.as_rb_value(),
+                imag.as_rb_value(),
+            ))
+        })
+    }
+
+    /// Returns the real part of `self`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Integer, RComplex};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let complex = RComplex::new(Integer::from_i64(9), Integer::from_i64(-4));
+    /// assert_eq!(complex.real::<i64>().unwrap(), 9);
+    /// ```
+    pub fn real<T>(self) -> Result<T, Error>
+    where
+        T: TryConvert,
+    {
+        let val = unsafe { Value::new(rb_complex_real(self.as_rb_value())) };
+        val.try_convert()
+    }
+
+    /// Returns the imaginary part of `self`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Integer, RComplex};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let complex = RComplex::new(Integer::from_i64(9), Integer::from_i64(-4));
+    /// assert_eq!(complex.imag::<i64>().unwrap(), -4);
+    /// ```
+    pub fn imag<T>(self) -> Result<T, Error>
+    where
+        T: TryConvert,
+    {
+        let val = unsafe { Value::new(rb_complex_imag(self.as_rb_value())) };
+        val.try_convert()
+    }
+
+    /// Returns the complex conjugate.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Integer, RComplex};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let complex = RComplex::new(Integer::from_i64(1), Integer::from_i64(2));
+    /// assert_eq!(complex.conjugate().to_string(), "1-2i");
+    /// ```
+    pub fn conjugate(self) -> Self {
+        unsafe { Self::from_rb_value_unchecked(rb_complex_conjugate(self.as_rb_value())) }
+    }
+
+    /// Returns the absolute (or the magnitude) of `self`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Integer, RComplex};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let complex = RComplex::new(Integer::from_i64(3), Integer::from_i64(-4));
+    /// assert_eq!(complex.abs(), 5.0);
+    /// ```
+    pub fn abs(self) -> f64 {
+        unsafe { Float::from_rb_value_unchecked(rb_complex_abs(self.as_rb_value())).to_f64() }
+    }
+
+    /// Returns the argument (or the angle) of the polar form of `self`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use std::f64::consts::PI;
+    /// use magnus::{Integer, Float, RComplex};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let complex = RComplex::polar(Integer::from_i64(3), Float::from_f64(PI / 2.0)).unwrap();
+    /// assert_eq!(complex.arg(), 1.5707963267948966);
+    /// ```
+    pub fn arg(self) -> f64 {
+        unsafe { Float::from_rb_value_unchecked(rb_complex_arg(self.as_rb_value())).to_f64() }
     }
 }
 
