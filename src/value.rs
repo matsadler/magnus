@@ -229,7 +229,7 @@ impl Value {
     /// See [`Value::equal`] for the equivalent of the `#==` method.
     ///
     /// Ruby optimises this check if `self` and `other` are the same object
-    /// or some built-in types, then calling the `#==` method will be skipped.
+    /// for some built-in types, then calling the `#==` method will be skipped.
     ///
     /// Returns `Err` if `#eql?` raises.
     ///
