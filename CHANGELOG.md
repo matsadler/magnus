@@ -51,6 +51,8 @@
 - `use magnus::prelude::*` will now import traits anonymously.
 - `EncodingCapable`, `Module`, `Class`, and `Object` traits can no longer be
   implemented by user code.
+- The `wb_protected` flag is automatically set for data wrapped in a Ruby
+  object when `mark` is not set.
 
 ### Deprecated
 - `RString::append` (use `RString::buf_append`).
