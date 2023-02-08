@@ -256,7 +256,7 @@ where
         if self.free_immediately {
             flags |= RUBY_TYPED_FREE_IMMEDIATELY as VALUE;
         }
-        if self.wb_protected {
+        if self.wb_protected || !self.mark {
             flags |= RUBY_TYPED_WB_PROTECTED as VALUE;
         }
         #[cfg(ruby_gte_3_0)]
