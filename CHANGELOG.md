@@ -32,6 +32,8 @@
 - `Value::funcall_public` calls a public method, returning an error for a
   private or protected method.
 - `error::Result<T>` is shorthand for `std::result::Result<T, Error>`.
+- `embed::setup` to perform minimal initialisation of Ruby for environments
+  where `embed::init` doesn't work.
 
 ### Changed
 - When converting Ruby values to `RArray` (or `Vec<T>`, `[T; 1]`, or `(T,)`),

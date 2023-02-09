@@ -1765,7 +1765,7 @@
 // * `ruby_scan_oct`:
 //! * `ruby_script`: Similar to [`embed::ruby_script`].
 // * `ruby_setenv`:
-//! * `ruby_setup`: See [`embed::init`].
+//! * `ruby_setup`: [`embed::setup`].
 // * `ruby_set_argv`:
 //! * `ruby_set_script_name`: [`embed::ruby_script`].
 // * `ruby_show_copyright`:
