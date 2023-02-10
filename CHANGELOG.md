@@ -34,6 +34,8 @@
 - `error::Result<T>` is shorthand for `std::result::Result<T, Error>`.
 - `embed::setup` to perform minimal initialisation of Ruby for environments
   where `embed::init` doesn't work.
+- The `bytes-crate` feature can be enabled to allow automatic conversions
+  between `bytes::Bytes` and Ruby strings.
 
 ### Changed
 - When converting Ruby values to `RArray` (or `Vec<T>`, `[T; 1]`, or `(T,)`),
