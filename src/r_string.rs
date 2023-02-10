@@ -900,6 +900,25 @@ impl RString {
             .map_err(|e| Error::new(exception::encoding_error(), format!("{}", e)))
     }
 
+    /// Returns `self` as an owned Rust `Bytes`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::RString;
+    /// use bytes::Bytes;
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let s = RString::new("example");
+    /// assert_eq!(s.to_bytes(), Bytes::from("example"));
+    /// ```
+    #[cfg_attr(docsrs, doc(cfg(feature = "bytes-crate")))]
+    #[cfg(feature = "bytes-crate")]
+    pub fn to_bytes(self) -> bytes::Bytes {
+        let vec = unsafe { self.as_slice().to_vec() };
+        vec.into()
+    }
+
     /// Converts `self` to a [`char`]. Errors if the string is more than one
     /// character or can not be encoded as UTF-8.
     ///
@@ -1515,6 +1534,20 @@ unsafe impl IntoValueFromNative for &str {}
 impl From<&str> for Value {
     fn from(val: &str) -> Self {
         val.into_value()
+    }
+}
+
+#[cfg(feature = "bytes-crate")]
+impl From<bytes::Bytes> for Value {
+    fn from(val: bytes::Bytes) -> Self {
+        val.into_value()
+    }
+}
+
+#[cfg(feature = "bytes-crate")]
+impl IntoValue for bytes::Bytes {
+    fn into_value_with(self, handle: &RubyHandle) -> Value {
+        handle.str_from_slice(self.as_ref()).into()
     }
 }
 

@@ -26,6 +26,7 @@ types will get the same kind of `ArgumentError` or `TypeError` they are used to
 seeing from Ruby's built in methods.
 
 Defining a function (with no Ruby `self` argument):
+
 ```rust
 fn fib(n: usize) -> usize {
     match n {
@@ -39,6 +40,7 @@ magnus::define_global_function("fib", magnus::function!(fib, 1));
 ```
 
 Defining a method (with a Ruby `self` argument):
+
 ```rust
 fn is_blank(rb_self: String) -> bool {
     !rb_self.contains(|c: char| !c.is_whitespace())
@@ -143,6 +145,7 @@ Ruby extensions must be built as dynamic system libraries, this can be done by
 setting the `crate-type` attribute in your `Cargo.toml`.
 
 **`Cargo.toml`**
+
 ```toml
 [lib]
 crate-type = ["cdylib"]
@@ -157,6 +160,7 @@ Rust functions to Ruby methods. Use the `#[magnus::init]` attribute to mark
 your init function so it can be correctly exposed to Ruby.
 
 **`src/lib.rs`**
+
 ```rust
 use magnus::{define_global_function, function};
 
@@ -194,6 +198,7 @@ this file during the compilation process, and it will generate a `Makefile` in
 the `ext` directory. See the [`rb_sys` gem] for more information.
 
 **`ext/my_example_gem/extconf.rb`**
+
 ```ruby
 require "mkmf"
 require "rb_sys/mkmf"
@@ -207,6 +212,7 @@ Running `rake compile` will place the extension at
 load from Ruby like so:
 
 **`lib/my_example_gem.rb`**
+
 ```ruby
 require_relative "my_example_gem/my_example_gem"
 ```
@@ -225,6 +231,7 @@ magnus, but it will compile and run properly.
 To call Ruby from a Rust program, enable the `embed` feature:
 
 **`Cargo.toml`**
+
 ```toml
 [dependencies]
 magnus = { version = "0.4", features = ["embed"] }
@@ -236,6 +243,7 @@ returns must not be dropped until you are done with Ruby. `init` can not be
 called more than once.
 
 **`src/main.rs`**
+
 ```rust
 use magnus::{embed, eval};
 
@@ -264,51 +272,53 @@ documentation for the full list of types.
 
 See `magnus::TryConvert` for more details.
 
-| Rust function argument                            | accepted from Ruby                                    |
-|---------------------------------------------------|-----------------------------------------|
-| `i8`,`i16`,`i32`,`i64`,`isize`, `magnus::Integer` | `Integer`, `#to_int`                    |
-| `u8`,`u16`,`u32`,`u64`,`usize`                    | `Integer`, `#to_int`                    |
-| `f32`,`f64`, `magnus::Float`                      | `Float`, `Numeric`                      |
-| `String`, `PathBuf`, `char`, `magnus::RString`    | `String`, `#to_str`                     |
-| `magnus::Symbol`                                  | `Symbol`, `#to_sym`                     |
-| `bool`                                            | any object                              |
-| `magnus::Range`                                   | `Range`                                 |
-| `magnus::Encoding`, `magnus::RbEncoding`          | `Encoding`, encoding name as a string   |
-| `Option<T>`                                       | `T` or `nil`                            |
-| `(T, U)`, `(T, U, V)`, etc                        | `[T, U]`, `[T, U, V]`, etc, `#to_ary`   |
-| `[T; N]`                                          | `[T]`, `#to_ary`                        |
-| `magnus::RArray`                                  | `Array`, `#to_ary`                      |
-| `magnus::RHash`                                   | `Hash`, `#to_hash`                      |
-| `magnus::Value`                                   | any object                              |
-| `Vec<T>`*                                         | `[T]`, `#to_ary`                        |
-| `HashMap<K, V>`*                                  | `{K => V}`, `#to_hash`                  |
-| `&T`, `typed_data::Obj<T>` where `T: TypedData`** | instance of `<T as TypedData>::class()` |
+| Rust function argument                                               | accepted from Ruby                      |
+| -------------------------------------------------------------------- | --------------------------------------- |
+| `i8`,`i16`,`i32`,`i64`,`isize`, `magnus::Integer`                    | `Integer`, `#to_int`                    |
+| `u8`,`u16`,`u32`,`u64`,`usize`                                       | `Integer`, `#to_int`                    |
+| `f32`,`f64`, `magnus::Float`                                         | `Float`, `Numeric`                      |
+| `String`, `PathBuf`, `char`, `magnus::RString`, `bytes::Bytes`\*\*\* | `String`, `#to_str`                     |
+| `magnus::Symbol`                                                     | `Symbol`, `#to_sym`                     |
+| `bool`                                                               | any object                              |
+| `magnus::Range`                                                      | `Range`                                 |
+| `magnus::Encoding`, `magnus::RbEncoding`                             | `Encoding`, encoding name as a string   |
+| `Option<T>`                                                          | `T` or `nil`                            |
+| `(T, U)`, `(T, U, V)`, etc                                           | `[T, U]`, `[T, U, V]`, etc, `#to_ary`   |
+| `[T; N]`                                                             | `[T]`, `#to_ary`                        |
+| `magnus::RArray`                                                     | `Array`, `#to_ary`                      |
+| `magnus::RHash`                                                      | `Hash`, `#to_hash`                      |
+| `magnus::Value`                                                      | any object                              |
+| `Vec<T>`\*                                                           | `[T]`, `#to_ary`                        |
+| `HashMap<K, V>`\*                                                    | `{K => V}`, `#to_hash`                  |
+| `&T`, `typed_data::Obj<T>` where `T: TypedData`\*\*                  | instance of `<T as TypedData>::class()` |
 
 \* when converting to `Vec` and `HashMap` the types of `T`/`K`,`V` must be native Rust types.
 
-\** see the `wrap` macro.
+\*\* see the `wrap` macro.
+
+\*\*\* when the bytes-crate feature is enabled
 
 ### Rust returning / passing values to Ruby
 
 See `magnus::IntoValue` for more details, plus `magnus::method::ReturnValue`
 and `magnus::ArgList` for some additional details.
 
-| returned from Rust / calling Ruby from Rust       | received in Ruby                        |
-|---------------------------------------------------|-----------------------------------------|
-| `i8`,`i16`,`i32`,`i64`,`isize`                    | `Integer`                               |
-| `u8`,`u16`,`u32`,`u64`,`usize`                    | `Integer`                               |
-| `f32`, `f64`                                      | `Float`                                 |
-| `String`, `&str`, `char`, `&Path`, `PathBuf`      | `String`                                |
-| `bool`                                            | `true`/`false`                          |
-| `()`                                              | `nil`                                   |
-| `Range`, `RangeFrom`, `RangeTo`, `RangeInclusive` | `Range`                                 |
-| `Option<T>`                                       | `T` or `nil`                            |
-| `Result<T, magnus::Error>` (return only)          | `T` or raises error                     |
-| `(T, U)`, `(T, U, V)`, etc, `[T; N]`, `Vec<T>`    | `Array`                                 |
-| `HashMap<K, V>`                                   | `Hash`                                  |
-| `T`, `typed_data::Obj<T>` where `T: TypedData`**  | instance of `<T as TypedData>::class()` |
+| returned from Rust / calling Ruby from Rust        | received in Ruby                        |
+| -------------------------------------------------- | --------------------------------------- |
+| `i8`,`i16`,`i32`,`i64`,`isize`                     | `Integer`                               |
+| `u8`,`u16`,`u32`,`u64`,`usize`                     | `Integer`                               |
+| `f32`, `f64`                                       | `Float`                                 |
+| `String`, `&str`, `char`, `&Path`, `PathBuf`       | `String`                                |
+| `bool`                                             | `true`/`false`                          |
+| `()`                                               | `nil`                                   |
+| `Range`, `RangeFrom`, `RangeTo`, `RangeInclusive`  | `Range`                                 |
+| `Option<T>`                                        | `T` or `nil`                            |
+| `Result<T, magnus::Error>` (return only)           | `T` or raises error                     |
+| `(T, U)`, `(T, U, V)`, etc, `[T; N]`, `Vec<T>`     | `Array`                                 |
+| `HashMap<K, V>`                                    | `Hash`                                  |
+| `T`, `typed_data::Obj<T>` where `T: TypedData`\*\* | instance of `<T as TypedData>::class()` |
 
-\** see the `wrap` macro.
+\*\* see the `wrap` macro.
 
 ### Conversions via Serde
 

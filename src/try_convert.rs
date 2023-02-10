@@ -167,6 +167,17 @@ impl TryConvert for String {
 }
 impl TryConvertOwned for String {}
 
+#[cfg(feature = "bytes-crate")]
+impl TryConvert for bytes::Bytes {
+    fn try_convert(val: Value) -> Result<bytes::Bytes, Error> {
+        debug_assert_value!(val);
+        Ok(RString::try_convert(val)?.to_bytes())
+    }
+}
+
+#[cfg(feature = "bytes-crate")]
+impl TryConvertOwned for bytes::Bytes {}
+
 impl TryConvert for char {
     fn try_convert(val: Value) -> Result<Self, Error> {
         debug_assert_value!(val);
