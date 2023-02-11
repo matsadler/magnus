@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 ### Added
+
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Security
+
+## [0.5.0] - 2023-02-11
+### Added
 - `typed_data::Obj<T>`, a Ruby object wrapping a Rust type known to be `T`.
 - `RArray::to_ary`, `RArray::assoc`, `RArray::rassoc`, and `RArray::cmp`.
 - `RHash::with_capacity` new for Ruby 3.2.
@@ -77,8 +90,6 @@
 
 ### Fixed
 - Missing `ReprValue` implementation for `RStruct`.
-
-### Security
 
 ## [0.4.4] - 2022-12-24
 ### Added
@@ -286,7 +297,8 @@
 - Pre-built bindings for Ruby 2.6 - 3.1 on common platforms, build-time
   generated bindings otherwise.
 
-[Unreleased]: https://github.com/matsadler/magnus/compare/0.4.2...HEAD
+[Unreleased]: https://github.com/matsadler/magnus/compare/0.5.0...HEAD
+[0.5.0]: https://github.com/matsadler/magnus/compare/0.4.4...0.5.0
 [0.4.4]: https://github.com/matsadler/magnus/compare/0.4.3...0.4.4
 [0.4.3]: https://github.com/matsadler/magnus/compare/0.4.2...0.4.3
 [0.4.2]: https://github.com/matsadler/magnus/compare/0.4.1...0.4.2
