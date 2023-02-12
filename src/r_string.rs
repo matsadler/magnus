@@ -1081,7 +1081,7 @@ impl RString {
     }
 
     #[doc(hidden)]
-    #[deprecated(since = "0.5.0", note = "please use use `buf_append` instead")]
+    #[deprecated(since = "0.5.0", note = "please use `buf_append` instead")]
     pub fn append(self, other: Self) -> Result<(), Error> {
         self.buf_append(other)
     }
