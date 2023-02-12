@@ -654,7 +654,7 @@ impl RString {
     /// let t = RString::new("🦀");
     /// let _: usize = t.funcall("length", ()).unwrap();
     /// assert_eq!(t.enc_coderange(), Coderange::Valid);
-    /// s.append(t).unwrap();
+    /// s.buf_append(t).unwrap();
     /// assert_eq!(s.enc_coderange(), Coderange::Valid);
     ///
     /// // Operations that modify the string with an unknown coderange will
@@ -1070,7 +1070,7 @@ impl RString {
     ///
     /// let a = RString::new("foo");
     /// let b = RString::new("bar");
-    /// a.append(b).unwrap();
+    /// a.buf_append(b).unwrap();
     /// assert_eq!(a.to_string().unwrap(), "foobar");
     /// ```
     pub fn buf_append(self, other: Self) -> Result<(), Error> {
