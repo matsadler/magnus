@@ -1,4 +1,4 @@
-use std::{fmt, ops::Deref};
+use std::fmt;
 
 use rb_sys::ruby_value_type;
 
@@ -9,14 +9,17 @@ use crate::{
     object::Object,
     ruby_handle::RubyHandle,
     try_convert::TryConvert,
-    value::{private, NonZeroValue, ReprValue, Value},
+    value::{
+        private::{self, ReprValue as _},
+        NonZeroValue, ReprValue, Value,
+    },
 };
 
 /// A Value pointer to a RObject struct, Ruby's internal representation of
 /// generic objects, not covered by the other R* types.
 ///
-/// All [`Value`] methods should be available on this type through [`Deref`],
-/// but some may be missed by this documentation.
+/// See the [`ReprValue`] and [`Object`] traits for additional methods
+/// available on this type.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct RObject(NonZeroValue);
@@ -29,14 +32,6 @@ impl RObject {
             (val.rb_type() == ruby_value_type::RUBY_T_OBJECT)
                 .then(|| Self(NonZeroValue::new_unchecked(val)))
         }
-    }
-}
-
-impl Deref for RObject {
-    type Target = Value;
-
-    fn deref(&self) -> &Self::Target {
-        self.0.get_ref()
     }
 }
 
@@ -54,21 +49,15 @@ impl fmt::Debug for RObject {
 
 impl IntoValue for RObject {
     fn into_value_with(self, _: &RubyHandle) -> Value {
-        *self
-    }
-}
-
-impl From<RObject> for Value {
-    fn from(val: RObject) -> Self {
-        *val
+        self.0.get()
     }
 }
 
 impl Object for RObject {}
 
 unsafe impl private::ReprValue for RObject {
-    fn to_value(self) -> Value {
-        *self
+    fn as_value(self) -> Value {
+        self.0.get()
     }
 
     unsafe fn from_value_unchecked(val: Value) -> Self {

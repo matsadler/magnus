@@ -4,7 +4,6 @@ use std::{
     borrow::Cow,
     ffi::CString,
     fmt,
-    ops::Deref,
     os::raw::c_char,
     ptr::{null, NonNull},
     slice,
@@ -25,7 +24,7 @@ use crate::{
     ruby_handle::RubyHandle,
     symbol::Symbol,
     try_convert::TryConvert,
-    value::{self, IntoId, NonZeroValue, ReprValue, Value},
+    value::{self, private::ReprValue as _, IntoId, NonZeroValue, ReprValue, Value},
 };
 
 // Ruby provides some inline functions to get a pointer to the struct's
@@ -72,8 +71,8 @@ mod sys {
 /// A Value pointer to a RStruct struct, Ruby’s internal representation of
 /// 'Structs'.
 ///
-/// All [`Value`] methods should be available on this type through [`Deref`],
-/// but some may be missed by this documentation.
+/// See the [`ReprValue`] and [`Object`] traits for additional methods
+/// available on this type.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct RStruct(NonZeroValue);
@@ -217,14 +216,6 @@ impl RStruct {
     }
 }
 
-impl Deref for RStruct {
-    type Target = Value;
-
-    fn deref(&self) -> &Self::Target {
-        self.0.get_ref()
-    }
-}
-
 impl fmt::Display for RStruct {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", unsafe { self.to_s_infallible() })
@@ -239,21 +230,15 @@ impl fmt::Debug for RStruct {
 
 impl IntoValue for RStruct {
     fn into_value_with(self, _: &RubyHandle) -> Value {
-        *self
-    }
-}
-
-impl From<RStruct> for Value {
-    fn from(val: RStruct) -> Self {
-        *val
+        self.0.get()
     }
 }
 
 impl Object for RStruct {}
 
 unsafe impl value::private::ReprValue for RStruct {
-    fn to_value(self) -> Value {
-        *self
+    fn as_value(self) -> Value {
+        self.0.get()
     }
 
     unsafe fn from_value_unchecked(val: Value) -> Self {

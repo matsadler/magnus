@@ -1,4 +1,4 @@
-use std::{fmt, ops::Deref};
+use std::fmt;
 
 use rb_sys::ruby_value_type;
 
@@ -9,13 +9,16 @@ use crate::{
     object::Object,
     ruby_handle::RubyHandle,
     try_convert::TryConvert,
-    value::{private, NonZeroValue, ReprValue, Value},
+    value::{
+        private::{self, ReprValue as _},
+        NonZeroValue, ReprValue, Value,
+    },
 };
 
 /// A Value pointer to a RFile struct, Ruby's internal representation of files.
 ///
-/// All [`Value`] methods should be available on this type through [`Deref`],
-/// but some may be missed by this documentation.
+/// See the [`ReprValue`] and [`Object`] traits for additional methods
+/// available on this type.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct RFile(NonZeroValue);
@@ -28,14 +31,6 @@ impl RFile {
             (val.rb_type() == ruby_value_type::RUBY_T_FILE)
                 .then(|| Self(NonZeroValue::new_unchecked(val)))
         }
-    }
-}
-
-impl Deref for RFile {
-    type Target = Value;
-
-    fn deref(&self) -> &Self::Target {
-        self.0.get_ref()
     }
 }
 
@@ -53,21 +48,15 @@ impl fmt::Debug for RFile {
 
 impl IntoValue for RFile {
     fn into_value_with(self, _: &RubyHandle) -> Value {
-        *self
-    }
-}
-
-impl From<RFile> for Value {
-    fn from(val: RFile) -> Self {
-        *val
+        self.0.get()
     }
 }
 
 impl Object for RFile {}
 
 unsafe impl private::ReprValue for RFile {
-    fn to_value(self) -> Value {
-        *self
+    fn as_value(self) -> Value {
+        self.0.get()
     }
 
     unsafe fn from_value_unchecked(val: Value) -> Self {

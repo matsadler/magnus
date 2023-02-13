@@ -30,7 +30,7 @@ use rb_sys::{ID, VALUE};
 
 use crate::{
     error::{self, raise, Error},
-    value::{Id, Value},
+    value::{Id, ReprValue, Value},
 };
 
 /// Converts from a [`Value`] to a raw [`VALUE`].
@@ -73,7 +73,10 @@ pub trait FromRawValue {
     unsafe fn from_raw(value: VALUE) -> Self;
 }
 
-impl AsRawValue for Value {
+impl<T> AsRawValue for T
+where
+    T: ReprValue,
+{
     fn as_raw(self) -> VALUE {
         self.as_rb_value()
     }
@@ -81,7 +84,7 @@ impl AsRawValue for Value {
 
 impl FromRawValue for Value {
     unsafe fn from_raw(val: VALUE) -> Value {
-        Value::new(val.into())
+        Value::new(val)
     }
 }
 
@@ -90,9 +93,8 @@ pub trait AsRawId {
     /// Convert [`magnus::value::Id`](Id) to [`rb_sys::ID`](ID).
     ///
     /// ```
+    /// use magnus::{prelude::*, rb_sys::{AsRawId, FromRawId}, value::Id, Symbol};
     /// # let _cleanup = unsafe { magnus::embed::init() };
-    ///
-    /// use magnus::{Symbol, value::Id, rb_sys::{AsRawId, FromRawId}};
     ///
     /// let foo: Id = Symbol::new("foo").into();
     /// let raw = foo.as_raw();
@@ -114,10 +116,10 @@ pub trait FromRawId {
     /// saftey guarantees provided by Magnus.
     ///
     /// ```
-    /// # let _cleanup = unsafe { magnus::embed::init() };
-    ///
-    /// use magnus::{Symbol, value::Id, rb_sys::{FromRawId, AsRawId}};
     /// use std::convert::TryInto;
+    ///
+    /// use magnus::{prelude::*, rb_sys::{AsRawId, FromRawId}, value::Id, Symbol};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let foo: Id = Symbol::new("foo").into();
     /// let from_raw_val: Symbol = unsafe { Id::from_raw(foo.as_raw()) }.into();
@@ -198,6 +200,7 @@ pub unsafe fn resume_error(e: Error) -> ! {
 mod tests {
     use crate::{
         class,
+        prelude::*,
         rb_sys::{AsRawId, FromRawId},
         value::Id,
         Module, RArray, RClass, Symbol,

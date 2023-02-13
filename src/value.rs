@@ -52,6 +52,9 @@ use crate::{
 };
 
 /// Ruby's `VALUE` type, which can represent any Ruby object.
+///
+/// Methods for `Value` are implemented on the [`ReprValue`] trait, which is
+/// also implemented for all Ruby types.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct Value(VALUE);
@@ -63,45 +66,295 @@ impl Value {
     }
 
     #[inline]
-    pub(crate) unsafe fn r_basic_unchecked(self) -> ptr::NonNull<RBasic> {
-        #[cfg(debug_assertions)]
-        if self.is_immediate() {
-            panic!("attempting to access immediate value as pointer");
+    pub(crate) const fn as_rb_value(self) -> VALUE {
+        self.0
+    }
+}
+
+impl Default for Value {
+    fn default() -> Self {
+        Value::new(ruby_special_consts::RUBY_Qnil as VALUE)
+    }
+}
+
+impl fmt::Display for Value {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", unsafe { self.to_s_infallible() })
+    }
+}
+
+impl fmt::Debug for Value {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.inspect())
+    }
+}
+
+impl IntoValue for Value {
+    fn into_value_with(self, _: &RubyHandle) -> Value {
+        self
+    }
+}
+
+impl IntoValue for i8 {
+    fn into_value_with(self, handle: &RubyHandle) -> Value {
+        handle.integer_from_i64(self as i64).into_value_with(handle)
+    }
+}
+
+unsafe impl IntoValueFromNative for i8 {}
+
+impl IntoValue for i16 {
+    fn into_value_with(self, handle: &RubyHandle) -> Value {
+        handle.integer_from_i64(self as i64).into_value_with(handle)
+    }
+}
+
+unsafe impl IntoValueFromNative for i16 {}
+
+impl IntoValue for i32 {
+    fn into_value_with(self, handle: &RubyHandle) -> Value {
+        handle.integer_from_i64(self as i64).into_value_with(handle)
+    }
+}
+
+unsafe impl IntoValueFromNative for i32 {}
+
+impl IntoValue for i64 {
+    fn into_value_with(self, handle: &RubyHandle) -> Value {
+        handle.integer_from_i64(self).into_value_with(handle)
+    }
+}
+
+unsafe impl IntoValueFromNative for i64 {}
+
+impl IntoValue for isize {
+    fn into_value_with(self, handle: &RubyHandle) -> Value {
+        handle.integer_from_i64(self as i64).into_value_with(handle)
+    }
+}
+
+unsafe impl IntoValueFromNative for isize {}
+
+impl IntoValue for u8 {
+    fn into_value_with(self, handle: &RubyHandle) -> Value {
+        handle.integer_from_u64(self as u64).into_value_with(handle)
+    }
+}
+
+unsafe impl IntoValueFromNative for u8 {}
+
+impl IntoValue for u16 {
+    fn into_value_with(self, handle: &RubyHandle) -> Value {
+        handle.integer_from_u64(self as u64).into_value_with(handle)
+    }
+}
+
+unsafe impl IntoValueFromNative for u16 {}
+
+impl IntoValue for u32 {
+    fn into_value_with(self, handle: &RubyHandle) -> Value {
+        handle.integer_from_u64(self as u64).into_value_with(handle)
+    }
+}
+
+unsafe impl IntoValueFromNative for u32 {}
+
+impl IntoValue for u64 {
+    fn into_value_with(self, handle: &RubyHandle) -> Value {
+        handle.integer_from_u64(self).into_value_with(handle)
+    }
+}
+
+unsafe impl IntoValueFromNative for u64 {}
+
+impl IntoValue for usize {
+    fn into_value_with(self, handle: &RubyHandle) -> Value {
+        handle.integer_from_u64(self as u64).into_value_with(handle)
+    }
+}
+
+unsafe impl IntoValueFromNative for usize {}
+
+impl IntoValue for f32 {
+    fn into_value_with(self, handle: &RubyHandle) -> Value {
+        handle.float_from_f64(self as f64).into_value_with(handle)
+    }
+}
+
+unsafe impl IntoValueFromNative for f32 {}
+
+impl IntoValue for f64 {
+    fn into_value_with(self, handle: &RubyHandle) -> Value {
+        handle.float_from_f64(self).into_value_with(handle)
+    }
+}
+
+unsafe impl IntoValueFromNative for f64 {}
+
+impl TryConvert for Value {
+    fn try_convert(val: Value) -> Result<Self, Error> {
+        Ok(val)
+    }
+}
+
+pub(crate) mod private {
+    use super::*;
+    use crate::value::ReprValue as _;
+
+    /// Marker trait for types that have the same representation as [`Value`].
+    ///
+    /// Types that are `ReprValue` can be safely transmuted to Value.
+    ///
+    /// # Safety
+    ///
+    /// This trait should only be implemented for types that a guaranteed to
+    /// have the same layout as [`Value`] and have come from the Ruby VM.
+    pub unsafe trait ReprValue: Copy {
+        /// Convert `self` to a [`Value`].
+        ///
+        /// This method is for use cases where we effectively want
+        /// `transmute::<_, Value>(data)`.
+        fn as_value(self) -> Value;
+
+        /// Convert `val` to a `Self`.
+        ///
+        /// # Safety
+        ///
+        /// This should only be used when `val` is known to uphold all the
+        // invariants of `Self`. It is recommended not to use this method.
+        unsafe fn from_value_unchecked(val: Value) -> Self;
+
+        fn as_value_ref(&self) -> &Value {
+            // This trait is only ever implemented for things with the same
+            // representation as Value
+            unsafe { &*(self as *const Self as *const Value) }
         }
-        ptr::NonNull::new_unchecked(self.0 as *mut RBasic)
-    }
 
-    /// Returns whether `self` is an 'immediate' value.
-    ///
-    /// 'immediate' values are encoded directly into the `Value` and require
-    /// no additional lookup. They will never be garbage collected.
-    ///
-    /// non-immediate values are pointers to other memory holding the data for
-    /// the object.
-    #[inline]
-    pub(crate) fn is_immediate(self) -> bool {
-        let value_p = self.as_rb_value();
-        let immediate_p = value_p & ruby_special_consts::RUBY_IMMEDIATE_MASK as VALUE != 0;
-        let test = value_p & !(ruby_special_consts::RUBY_Qnil as VALUE) != 0;
-        immediate_p || !test // special_const_p
-    }
+        fn as_rb_value(self) -> VALUE {
+            self.as_value().0
+        }
 
-    #[inline]
-    pub(crate) fn r_basic(self) -> Option<ptr::NonNull<RBasic>> {
-        unsafe { (!self.is_immediate()).then(|| self.r_basic_unchecked()) }
-    }
+        unsafe fn r_basic_unchecked(self) -> ptr::NonNull<RBasic> {
+            #[cfg(debug_assertions)]
+            if self.is_immediate() {
+                panic!("attempting to access immediate value as pointer");
+            }
+            ptr::NonNull::new_unchecked(self.as_value().0 as *mut RBasic)
+        }
 
-    #[inline]
-    fn is_false(self) -> bool {
-        self.as_rb_value() == ruby_special_consts::RUBY_Qfalse as VALUE
-    }
+        /// Returns whether `self` is an 'immediate' value.
+        ///
+        /// 'immediate' values are encoded directly into the `Value` and require
+        /// no additional lookup. They will never be garbage collected.
+        ///
+        /// non-immediate values are pointers to other memory holding the data for
+        /// the object.
+        fn is_immediate(self) -> bool {
+            let value_p = self.as_rb_value();
+            let immediate_p = value_p & ruby_special_consts::RUBY_IMMEDIATE_MASK as VALUE != 0;
+            let test = value_p & !(ruby_special_consts::RUBY_Qnil as VALUE) != 0;
+            immediate_p || !test // special_const_p
+        }
 
+        fn r_basic(self) -> Option<ptr::NonNull<RBasic>> {
+            unsafe { (!self.is_immediate()).then(|| self.r_basic_unchecked()) }
+        }
+
+        fn is_false(self) -> bool {
+            self.as_rb_value() == ruby_special_consts::RUBY_Qfalse as VALUE
+        }
+
+        fn is_true(self) -> bool {
+            self.as_rb_value() == ruby_special_consts::RUBY_Qtrue as VALUE
+        }
+
+        fn is_undef(self) -> bool {
+            self.as_rb_value() == ruby_special_consts::RUBY_Qundef as VALUE
+        }
+
+        fn is_fixnum(self) -> bool {
+            self.as_rb_value() & ruby_special_consts::RUBY_FIXNUM_FLAG as VALUE != 0
+        }
+
+        fn is_static_symbol(self) -> bool {
+            const MASK: usize = !(usize::MAX << ruby_special_consts::RUBY_SPECIAL_SHIFT as usize);
+            self.as_rb_value() as usize & MASK == ruby_special_consts::RUBY_SYMBOL_FLAG as usize
+        }
+
+        fn is_flonum(self) -> bool {
+            self.as_rb_value() & ruby_special_consts::RUBY_FLONUM_MASK as VALUE
+                == ruby_special_consts::RUBY_FLONUM_FLAG as VALUE
+        }
+
+        // derefs a raw pointer that under GC compaction may be outside the
+        // process's memory space if the Value has been allowed to get GC'd
+        fn rb_type(self) -> ruby_value_type {
+            match self.r_basic() {
+                Some(r_basic) => {
+                    unsafe {
+                        let ret = r_basic.as_ref().flags & (ruby_value_type::RUBY_T_MASK as VALUE);
+                        // this bit is safe, ruby_value_type is #[repr(u32)], the flags
+                        // value set by Ruby, and Ruby promises that flags masked like
+                        // this will always be a valid entry in this enum
+                        std::mem::transmute(ret as u32)
+                    }
+                }
+                None => {
+                    if self.is_false() {
+                        ruby_value_type::RUBY_T_FALSE
+                    } else if self.as_value().is_nil() {
+                        ruby_value_type::RUBY_T_NIL
+                    } else if self.is_true() {
+                        ruby_value_type::RUBY_T_TRUE
+                    } else if self.is_undef() {
+                        ruby_value_type::RUBY_T_UNDEF
+                    } else if self.is_fixnum() {
+                        ruby_value_type::RUBY_T_FIXNUM
+                    } else if self.is_static_symbol() {
+                        ruby_value_type::RUBY_T_SYMBOL
+                    } else if self.is_flonum() {
+                        ruby_value_type::RUBY_T_FLOAT
+                    } else {
+                        unreachable!()
+                    }
+                }
+            }
+        }
+
+        /// Convert `self` to a string. If an error is encountered returns a
+        /// generic string (usually the object's class name).
+        ///
+        /// # Safety
+        ///
+        /// This may return a direct view of memory owned and managed by Ruby. Ruby
+        /// may modify or free the memory backing the returned str, the caller must
+        /// ensure this does not happen.
+        #[allow(clippy::wrong_self_convention)]
+        unsafe fn to_s_infallible(&self) -> Cow<str> {
+            match self.as_value_ref().to_s() {
+                Ok(v) => v,
+                Err(_) => Cow::Owned(
+                    RString::from_rb_value_unchecked(rb_any_to_s(self.as_rb_value()))
+                        .to_string_lossy()
+                        .into_owned(),
+                ),
+            }
+        }
+    }
+}
+
+use private::ReprValue as _;
+
+/// Marker trait for types that have the same representation as [`Value`].
+///
+/// Types that are `ReprValue` can be safely transmuted to Value.
+pub trait ReprValue: private::ReprValue {
     /// Returns whether `self` is Ruby's `nil` value.
     ///
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, Value};
+    /// use magnus::{eval, prelude::*, Value};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// assert!(eval::<Value>("nil").unwrap().is_nil());
@@ -109,71 +362,8 @@ impl Value {
     /// assert!(!eval::<Value>("0").unwrap().is_nil());
     /// assert!(!eval::<Value>("[]").unwrap().is_nil());
     /// ```
-    #[inline]
-    pub fn is_nil(self) -> bool {
+    fn is_nil(self) -> bool {
         self.as_rb_value() == ruby_special_consts::RUBY_Qnil as VALUE
-    }
-
-    #[inline]
-    fn is_true(self) -> bool {
-        self.as_rb_value() == ruby_special_consts::RUBY_Qtrue as VALUE
-    }
-
-    #[inline]
-    pub(crate) fn is_undef(self) -> bool {
-        self.as_rb_value() == ruby_special_consts::RUBY_Qundef as VALUE
-    }
-
-    #[inline]
-    fn is_fixnum(self) -> bool {
-        self.as_rb_value() & ruby_special_consts::RUBY_FIXNUM_FLAG as VALUE != 0
-    }
-
-    #[inline]
-    pub(crate) fn is_static_symbol(self) -> bool {
-        const MASK: usize = !(usize::MAX << ruby_special_consts::RUBY_SPECIAL_SHIFT as usize);
-        self.as_rb_value() as usize & MASK == ruby_special_consts::RUBY_SYMBOL_FLAG as usize
-    }
-
-    #[inline]
-    pub(crate) fn is_flonum(self) -> bool {
-        self.as_rb_value() & ruby_special_consts::RUBY_FLONUM_MASK as VALUE
-            == ruby_special_consts::RUBY_FLONUM_FLAG as VALUE
-    }
-
-    // derefs a raw pointer that under GC compaction may be outside the
-    // process's memory space if the Value has been allowed to get GC'd
-    pub(crate) fn rb_type(self) -> ruby_value_type {
-        match self.r_basic() {
-            Some(r_basic) => {
-                unsafe {
-                    let ret = r_basic.as_ref().flags & (ruby_value_type::RUBY_T_MASK as VALUE);
-                    // this bit is safe, ruby_value_type is #[repr(u32)], the flags
-                    // value set by Ruby, and Ruby promises that flags masked like
-                    // this will always be a valid entry in this enum
-                    std::mem::transmute(ret as u32)
-                }
-            }
-            None => {
-                if self.is_false() {
-                    ruby_value_type::RUBY_T_FALSE
-                } else if self.is_nil() {
-                    ruby_value_type::RUBY_T_NIL
-                } else if self.is_true() {
-                    ruby_value_type::RUBY_T_TRUE
-                } else if self.is_undef() {
-                    ruby_value_type::RUBY_T_UNDEF
-                } else if self.is_fixnum() {
-                    ruby_value_type::RUBY_T_FIXNUM
-                } else if self.is_static_symbol() {
-                    ruby_value_type::RUBY_T_SYMBOL
-                } else if self.is_flonum() {
-                    ruby_value_type::RUBY_T_FLOAT
-                } else {
-                    unreachable!()
-                }
-            }
-        }
     }
 
     /// Checks for equality, delegating to the Ruby method `#==`.
@@ -186,7 +376,7 @@ impl Value {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{Integer, RArray};
+    /// use magnus::{prelude::*, Integer, RArray};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let a = RArray::from_vec(vec![1, 2, 3]);
@@ -200,7 +390,7 @@ impl Value {
     /// ```
     ///
     /// ```
-    /// use magnus::{eval, Value};
+    /// use magnus::{eval, prelude::*, Value};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let (a, b): (Value, Value) = eval!("
@@ -212,11 +402,11 @@ impl Value {
     ///     [Example.new, Example.new]
     /// ").unwrap();
     ///
-    /// assert!(a.equal(&b).is_err());
+    /// assert!(a.equal(b).is_err());
     /// ```
-    pub fn equal<T>(self, other: T) -> Result<bool, Error>
+    fn equal<T>(self, other: T) -> Result<bool, Error>
     where
-        T: Deref<Target = Value>,
+        T: ReprValue,
     {
         unsafe {
             protect(|| Value::new(rb_equal(self.as_rb_value(), other.as_rb_value())))
@@ -236,7 +426,7 @@ impl Value {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{Integer, RArray};
+    /// use magnus::{prelude::*, Integer, RArray};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let a = RArray::from_vec(vec![1, 2, 3]);
@@ -250,7 +440,7 @@ impl Value {
     /// ```
     ///
     /// ```
-    /// use magnus::{eval, Value};
+    /// use magnus::{eval, prelude::*, Value};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let (a, b): (Value, Value) = eval!("
@@ -262,11 +452,11 @@ impl Value {
     ///     [Example.new, Example.new]
     /// ").unwrap();
     ///
-    /// assert!(a.eql(&b).is_err());
+    /// assert!(a.eql(b).is_err());
     /// ```
-    pub fn eql<T>(self, other: T) -> Result<bool, Error>
+    fn eql<T>(self, other: T) -> Result<bool, Error>
     where
-        T: Deref<Target = Value>,
+        T: ReprValue,
     {
         unsafe {
             protect(|| Value::new(rb_eql(self.as_rb_value(), other.as_rb_value()) as VALUE))
@@ -288,14 +478,14 @@ impl Value {
     /// # Examples
     ///
     /// ```
-    /// use magnus::RString;
+    /// use magnus::{prelude::*, RString};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// assert!(RString::new("test").hash().unwrap()
     ///     .equal(RString::new("test").hash().unwrap())
     ///     .unwrap());
     /// ```
-    pub fn hash(self) -> Result<Integer, Error> {
+    fn hash(self) -> Result<Integer, Error> {
         unsafe { protect(|| Integer::from_rb_value_unchecked(rb_hash(self.as_rb_value()))) }
     }
 
@@ -308,13 +498,13 @@ impl Value {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, Value};
+    /// use magnus::{eval, prelude::*, Value};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// assert_eq!(eval::<Value>("true").unwrap().class().inspect(), "TrueClass");
     /// assert_eq!(eval::<Value>("[1,2,3]").unwrap().class().inspect(), "Array");
     /// ```
-    pub fn class(self) -> RClass {
+    fn class(self) -> RClass {
         unsafe {
             match self.r_basic() {
                 Some(r_basic) => RClass::from_rb_value_unchecked(r_basic.as_ref().klass),
@@ -341,11 +531,6 @@ impl Value {
         }
     }
 
-    #[inline]
-    pub(crate) const fn as_rb_value(self) -> VALUE {
-        self.0
-    }
-
     /// Returns whether `self` is 'frozen'.
     ///
     /// Ruby prevents modifying frozen objects.
@@ -353,14 +538,14 @@ impl Value {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, Value};
+    /// use magnus::{eval, prelude::*, Value};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// assert!(eval::<Value>(":foo").unwrap().is_frozen());
     /// assert!(eval::<Value>("42").unwrap().is_frozen());
     /// assert!(!eval::<Value>("[]").unwrap().is_frozen());
     /// ```
-    pub fn is_frozen(self) -> bool {
+    fn is_frozen(self) -> bool {
         match self.r_basic() {
             None => true,
             Some(r_basic) => unsafe {
@@ -376,7 +561,7 @@ impl Value {
     ///
     /// # Examples
     /// ```
-    /// use magnus::{eval, Error, Value};
+    /// use magnus::{eval, prelude::*, Error, Value};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// fn mutate(val: Value) -> Result<(), Error> {
@@ -390,7 +575,7 @@ impl Value {
     /// assert!(mutate(eval("Object.new").unwrap()).is_ok());
     /// assert!(mutate(eval(":foo").unwrap()).is_err());
     /// ```
-    pub fn check_frozen(self) -> Result<(), Error> {
+    fn check_frozen(self) -> Result<(), Error> {
         if self.is_frozen() {
             Err(Error::new(
                 exception::frozen_error(),
@@ -406,7 +591,7 @@ impl Value {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, RArray};
+    /// use magnus::{eval, prelude::*, RArray};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let ary = RArray::new();
@@ -414,7 +599,7 @@ impl Value {
     /// ary.freeze();
     /// assert!(ary.is_frozen());
     /// ```
-    pub fn freeze(self) {
+    fn freeze(self) {
         unsafe { rb_obj_freeze(self.as_rb_value()) };
     }
 
@@ -424,7 +609,7 @@ impl Value {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, Value};
+    /// use magnus::{eval, prelude::*, Value};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// assert!(!eval::<Value>("false").unwrap().to_bool());
@@ -436,8 +621,7 @@ impl Value {
     /// assert!(eval::<Value>(":foo").unwrap().to_bool());
     /// assert!(eval::<Value>("Object.new").unwrap().to_bool());
     /// ```
-    #[inline]
-    pub fn to_bool(self) -> bool {
+    fn to_bool(self) -> bool {
         self.as_rb_value() & !(ruby_special_consts::RUBY_Qnil as VALUE) != 0
     }
 
@@ -450,14 +634,14 @@ impl Value {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, RArray};
+    /// use magnus::{eval, prelude::*, RArray};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let values = eval::<RArray>(r#"["foo", 1, :bar]"#).unwrap();
     /// let result: String = values.funcall("join", (" & ",)).unwrap();
     /// assert_eq!(result, "foo & 1 & bar");
     /// ```
-    pub fn funcall<M, A, T>(self, method: M, args: A) -> Result<T, Error>
+    fn funcall<M, A, T>(self, method: M, args: A) -> Result<T, Error>
     where
         M: IntoId,
         A: ArgList,
@@ -479,7 +663,7 @@ impl Value {
         }
     }
 
-    /// Call the public method named `method` on `self` with `args`.
+    /// Call the ic method named `method` on `self` with `args`.
     ///
     /// Returns `Ok(T)` if the method returns without error and the return
     /// value converts to a `T`, or returns `Err` if the method raises or the
@@ -488,7 +672,7 @@ impl Value {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, Error, RObject, Symbol};
+    /// use magnus::{eval, prelude::*, Error, RObject, Symbol};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let object: RObject = eval!(r#"
@@ -513,7 +697,7 @@ impl Value {
     /// let result: Result<Symbol, Error> = object.funcall_public("baz", ());
     /// assert!(result.is_err());
     /// ```
-    pub fn funcall_public<M, A, T>(self, method: M, args: A) -> Result<T, Error>
+    fn funcall_public<M, A, T>(self, method: M, args: A) -> Result<T, Error>
     where
         M: IntoId,
         A: ArgList,
@@ -543,7 +727,7 @@ impl Value {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{Float, Integer, RString};
+    /// use magnus::{prelude::*, Float, Integer, RString};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let val = Float::from_f64(1.23);
@@ -554,7 +738,7 @@ impl Value {
     /// let res: Option<Result<Integer, _>> = val.check_funcall("to_int", ());
     /// assert!(res.is_none());
     /// ```
-    pub fn check_funcall<M, A, T>(self, method: M, args: A) -> Option<Result<T, Error>>
+    fn check_funcall<M, A, T>(self, method: M, args: A) -> Option<Result<T, Error>>
     where
         M: IntoId,
         A: ArgList,
@@ -590,7 +774,7 @@ impl Value {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, block::Proc, RArray, Value};
+    /// use magnus::{eval, block::Proc, prelude::*, RArray, Value};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let values = eval::<RArray>(r#"["foo", 1, :bar]"#).unwrap();
@@ -598,7 +782,7 @@ impl Value {
     /// let _: Value = values.funcall_with_block("map!", (), block).unwrap();
     /// assert_eq!(values.to_vec::<String>().unwrap(), vec!["foo", "1", "bar"]);
     /// ```
-    pub fn funcall_with_block<M, A, T>(self, method: M, args: A, block: Proc) -> Result<T, Error>
+    fn funcall_with_block<M, A, T>(self, method: M, args: A, block: Proc) -> Result<T, Error>
     where
         M: IntoId,
         A: ArgList,
@@ -642,14 +826,14 @@ impl Value {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, RArray, Value};
+    /// use magnus::{eval, prelude::*, RArray, Value};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let values = eval::<RArray>(r#"["foo", 1, :bar]"#).unwrap();
     /// let _: Value = values.block_call("map!", (), |args, _block| args.first().unwrap().to_r_string()).unwrap();
     /// assert_eq!(values.to_vec::<String>().unwrap(), vec!["foo", "1", "bar"]);
     /// ```
-    pub fn block_call<M, A, R, T>(
+    fn block_call<M, A, R, T>(
         self,
         method: M,
         args: A,
@@ -709,7 +893,7 @@ impl Value {
     /// # Examples
     ///
     /// ```
-    /// use magnus::RString;
+    /// use magnus::{prelude::*, RString};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let s = RString::new("example");
@@ -719,7 +903,7 @@ impl Value {
     /// assert!(!s.respond_to("non_existant", false).unwrap());
     /// assert!(!s.respond_to("non_existant", true).unwrap());
     /// ```
-    pub fn respond_to<M>(self, method: M, include_private: bool) -> Result<bool, Error>
+    fn respond_to<M>(self, method: M, include_private: bool) -> Result<bool, Error>
     where
         M: IntoId,
     {
@@ -744,14 +928,14 @@ impl Value {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, class, Value};
+    /// use magnus::{eval, class, prelude::*, Value};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let value = eval::<Value>("[]").unwrap();
     /// assert!(value.to_r_string().unwrap().is_kind_of(class::string()));
     /// ```
-    pub fn to_r_string(self) -> Result<RString, Error> {
-        match RString::from_value(self) {
+    fn to_r_string(self) -> Result<RString, Error> {
+        match RString::from_value(self.as_value()) {
             Some(v) => Ok(v),
             None => protect(|| unsafe {
                 RString::from_rb_value_unchecked(rb_obj_as_string(self.as_rb_value()))
@@ -773,7 +957,7 @@ impl Value {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, QTRUE};
+    /// use magnus::{eval, prelude::*, QTRUE};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let value = QTRUE;
@@ -782,8 +966,8 @@ impl Value {
     /// assert_eq!(s, "true");
     /// ```
     #[allow(clippy::wrong_self_convention)]
-    pub unsafe fn to_s(&self) -> Result<Cow<str>, Error> {
-        if let Some(s) = RString::ref_from_value(self) {
+    unsafe fn to_s(&self) -> Result<Cow<str>, Error> {
+        if let Some(s) = RString::ref_from_value(self.as_value_ref()) {
             if s.is_utf8_compatible_encoding() {
                 return s.as_str().map(Cow::Borrowed);
             } else {
@@ -794,38 +978,18 @@ impl Value {
             .and_then(|s| s.to_string().map(Cow::Owned))
     }
 
-    /// Convert `self` to a string. If an error is encountered returns a
-    /// generic string (usually the object's class name).
-    ///
-    /// # Safety
-    ///
-    /// This may return a direct view of memory owned and managed by Ruby. Ruby
-    /// may modify or free the memory backing the returned str, the caller must
-    /// ensure this does not happen.
-    #[allow(clippy::wrong_self_convention)]
-    pub(crate) unsafe fn to_s_infallible(&self) -> Cow<str> {
-        match self.to_s() {
-            Ok(v) => v,
-            Err(_) => Cow::Owned(
-                RString::from_rb_value_unchecked(rb_any_to_s(self.as_rb_value()))
-                    .to_string_lossy()
-                    .into_owned(),
-            ),
-        }
-    }
-
     /// Convert `self` to its Ruby debug representation.
     ///
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, Symbol, QNIL};
+    /// use magnus::{eval, prelude::*, Symbol, QNIL};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// assert_eq!(QNIL.inspect(), "nil");
     /// assert_eq!(Symbol::new("foo").inspect(), ":foo");
     /// ```
-    pub fn inspect(self) -> String {
+    fn inspect(self) -> String {
         unsafe {
             let s = protect(|| RString::from_rb_value_unchecked(rb_inspect(self.as_rb_value())))
                 .unwrap_or_else(|_| {
@@ -851,7 +1015,7 @@ impl Value {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, RHash};
+    /// use magnus::{eval, prelude::*, RHash};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let value = RHash::new();
@@ -859,7 +1023,7 @@ impl Value {
     /// let s = unsafe { value.classname() }.into_owned();
     /// assert_eq!(s, "Hash");
     /// ```
-    pub unsafe fn classname(&self) -> Cow<str> {
+    unsafe fn classname(&self) -> Cow<str> {
         let ptr = rb_obj_classname(self.as_rb_value());
         let cstr = CStr::from_ptr(ptr);
         cstr.to_string_lossy()
@@ -870,15 +1034,15 @@ impl Value {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{class, eval, Value};
+    /// use magnus::{class, eval, prelude::*, Value};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let value = eval::<Value>("[]").unwrap();
     /// assert!(value.is_kind_of(class::array()));
     /// ```
-    pub fn is_kind_of<T>(self, class: T) -> bool
+    fn is_kind_of<T>(self, class: T) -> bool
     where
-        T: Deref<Target = Value> + Module,
+        T: ReprValue + Module,
     {
         unsafe { Value::new(rb_obj_is_kind_of(self.as_rb_value(), class.as_rb_value())).to_bool() }
     }
@@ -889,7 +1053,7 @@ impl Value {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{class, eval, r_string};
+    /// use magnus::{class, eval, prelude::*, r_string};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let s = r_string!("foo\\bar\\baz");
@@ -900,7 +1064,7 @@ impl Value {
     /// }
     /// assert_eq!(i, 3);
     /// ```
-    pub fn enumeratorize<M, A>(self, method: M, args: A) -> Enumerator
+    fn enumeratorize<M, A>(self, method: M, args: A) -> Enumerator
     where
         M: IntoSymbol,
         A: ArgList,
@@ -926,7 +1090,7 @@ impl Value {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, Value};
+    /// use magnus::{eval, prelude::*, Value};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// assert_eq!(eval::<Value>("42").unwrap().try_convert::<i64>().unwrap(), 42);
@@ -935,252 +1099,16 @@ impl Value {
     /// assert_eq!(eval::<Value>("nil").unwrap().try_convert::<Option<i64>>().unwrap(), None);
     /// assert_eq!(eval::<Value>("42").unwrap().try_convert::<Option<i64>>().unwrap(), Some(42));
     /// ```
-    #[inline]
-    pub fn try_convert<T>(self) -> Result<T, Error>
+    fn try_convert<T>(self) -> Result<T, Error>
     where
         T: TryConvert,
     {
-        T::try_convert(self)
+        T::try_convert(self.as_value())
     }
 }
-
-impl Default for Value {
-    fn default() -> Self {
-        Value::new(ruby_special_consts::RUBY_Qnil as VALUE)
-    }
-}
-
-impl fmt::Display for Value {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", unsafe { self.to_s_infallible() })
-    }
-}
-
-impl fmt::Debug for Value {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.inspect())
-    }
-}
-
-impl IntoValue for Value {
-    fn into_value_with(self, _: &RubyHandle) -> Value {
-        self
-    }
-}
-
-impl IntoValue for i8 {
-    fn into_value_with(self, handle: &RubyHandle) -> Value {
-        handle.integer_from_i64(self as i64).into()
-    }
-}
-
-unsafe impl IntoValueFromNative for i8 {}
-
-impl From<i8> for Value {
-    fn from(value: i8) -> Self {
-        value.into_value()
-    }
-}
-
-impl IntoValue for i16 {
-    fn into_value_with(self, handle: &RubyHandle) -> Value {
-        handle.integer_from_i64(self as i64).into()
-    }
-}
-
-unsafe impl IntoValueFromNative for i16 {}
-
-impl From<i16> for Value {
-    fn from(value: i16) -> Self {
-        value.into_value()
-    }
-}
-
-impl IntoValue for i32 {
-    fn into_value_with(self, handle: &RubyHandle) -> Value {
-        handle.integer_from_i64(self as i64).into()
-    }
-}
-
-unsafe impl IntoValueFromNative for i32 {}
-
-impl From<i32> for Value {
-    fn from(value: i32) -> Self {
-        value.into_value()
-    }
-}
-
-impl IntoValue for i64 {
-    fn into_value_with(self, handle: &RubyHandle) -> Value {
-        handle.integer_from_i64(self).into()
-    }
-}
-
-unsafe impl IntoValueFromNative for i64 {}
-
-impl From<i64> for Value {
-    fn from(value: i64) -> Self {
-        value.into_value()
-    }
-}
-
-impl IntoValue for isize {
-    fn into_value_with(self, handle: &RubyHandle) -> Value {
-        handle.integer_from_i64(self as i64).into()
-    }
-}
-
-unsafe impl IntoValueFromNative for isize {}
-
-impl From<isize> for Value {
-    fn from(value: isize) -> Self {
-        value.into_value()
-    }
-}
-
-impl IntoValue for u8 {
-    fn into_value_with(self, handle: &RubyHandle) -> Value {
-        handle.integer_from_u64(self as u64).into()
-    }
-}
-
-unsafe impl IntoValueFromNative for u8 {}
-
-impl From<u8> for Value {
-    fn from(value: u8) -> Self {
-        value.into_value()
-    }
-}
-
-impl IntoValue for u16 {
-    fn into_value_with(self, handle: &RubyHandle) -> Value {
-        handle.integer_from_u64(self as u64).into()
-    }
-}
-
-unsafe impl IntoValueFromNative for u16 {}
-
-impl From<u16> for Value {
-    fn from(value: u16) -> Self {
-        value.into_value()
-    }
-}
-
-impl IntoValue for u32 {
-    fn into_value_with(self, handle: &RubyHandle) -> Value {
-        handle.integer_from_u64(self as u64).into()
-    }
-}
-
-unsafe impl IntoValueFromNative for u32 {}
-
-impl From<u32> for Value {
-    fn from(value: u32) -> Self {
-        value.into_value()
-    }
-}
-
-impl IntoValue for u64 {
-    fn into_value_with(self, handle: &RubyHandle) -> Value {
-        handle.integer_from_u64(self).into()
-    }
-}
-
-unsafe impl IntoValueFromNative for u64 {}
-
-impl From<u64> for Value {
-    fn from(value: u64) -> Self {
-        value.into_value()
-    }
-}
-
-impl IntoValue for usize {
-    fn into_value_with(self, handle: &RubyHandle) -> Value {
-        handle.integer_from_u64(self as u64).into()
-    }
-}
-
-unsafe impl IntoValueFromNative for usize {}
-
-impl From<usize> for Value {
-    fn from(value: usize) -> Self {
-        value.into_value()
-    }
-}
-
-impl IntoValue for f32 {
-    fn into_value_with(self, handle: &RubyHandle) -> Value {
-        handle.float_from_f64(self as f64).into()
-    }
-}
-
-unsafe impl IntoValueFromNative for f32 {}
-
-impl From<f32> for Value {
-    fn from(value: f32) -> Self {
-        value.into_value()
-    }
-}
-
-impl IntoValue for f64 {
-    fn into_value_with(self, handle: &RubyHandle) -> Value {
-        handle.float_from_f64(self).into()
-    }
-}
-
-unsafe impl IntoValueFromNative for f64 {}
-
-impl From<f64> for Value {
-    fn from(value: f64) -> Self {
-        value.into_value()
-    }
-}
-
-impl TryConvert for Value {
-    fn try_convert(val: Value) -> Result<Self, Error> {
-        Ok(val)
-    }
-}
-
-pub(crate) mod private {
-    use super::*;
-
-    /// Marker trait for types that have the same representation as [`Value`].
-    ///
-    /// Types that are `ReprValue` can be safely transmuted to Value.
-    ///
-    /// # Safety
-    ///
-    /// This trait should only be implemented for types that a guaranteed to
-    /// have the same layout as [`Value`] and have come from the Ruby VM.
-    pub unsafe trait ReprValue: Copy {
-        /// Convert `self` to a [`Value`].
-        ///
-        /// Usually types that implement this trait will also implement
-        /// `Deref<Target = Value>`. You should prefer `*data` over
-        /// `data.to_value()`.
-        ///
-        /// This method is for use cases where we effectively want
-        /// `transmute::<_, Value>(data)`.
-        fn to_value(self) -> Value;
-
-        /// Convert `val` to a `Self`.
-        ///
-        /// # Safety
-        ///
-        /// This should only be used when `val` is known to uphold all the
-        // invariants of `Self`. It is recommended not to use this method.
-        unsafe fn from_value_unchecked(val: Value) -> Self;
-    }
-}
-
-/// Marker trait for types that have the same representation as [`Value`].
-///
-/// Types that are `ReprValue` can be safely transmuted to Value.
-pub trait ReprValue: private::ReprValue {}
 
 unsafe impl private::ReprValue for Value {
-    fn to_value(self) -> Value {
+    fn as_value(self) -> Value {
         self
     }
 
@@ -1204,22 +1132,12 @@ impl NonZeroValue {
     pub(crate) const fn get(self) -> Value {
         Value::new(self.0.get() as VALUE)
     }
-
-    pub(crate) fn get_ref(&self) -> &Value {
-        let self_ptr = self as *const Self;
-        let value_ptr = self_ptr as *const Value;
-        // we just got this pointer from &self, so we know it's valid to deref
-        unsafe { &*value_ptr }
-    }
 }
 
 /// Protects a Ruby Value from the garbage collector.
 ///
 /// See also [`gc::register_mark_object`](crate::gc::register_mark_object) for
 /// a value that should be permanently excluded from garbage collection.
-///
-/// All [`Value`] methods should be available on this type through [`Deref`],
-/// but some may be missed by this documentation.
 pub struct BoxValue<T>(Box<T>);
 
 impl<T> BoxValue<T>
@@ -1302,7 +1220,7 @@ where
     T: ReprValue,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", unsafe { self.to_value().to_s_infallible() })
+        write!(f, "{}", unsafe { self.as_value().to_s_infallible() })
     }
 }
 
@@ -1311,7 +1229,7 @@ where
     T: ReprValue,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.to_value().inspect())
+        write!(f, "{}", self.as_value().inspect())
     }
 }
 
@@ -1320,27 +1238,17 @@ where
     T: ReprValue,
 {
     fn into_value_with(self, _: &RubyHandle) -> Value {
-        self.to_value()
+        self.as_value()
     }
 }
 
 unsafe impl<T> IntoValueFromNative for BoxValue<T> where T: ReprValue {}
 
-impl<T> From<BoxValue<T>> for Value
-where
-    T: ReprValue,
-{
-    fn from(val: BoxValue<T>) -> Self {
-        val.to_value()
-    }
-}
-
 /// Ruby's `false` value.
 ///
 /// See [`QFALSE`] to obtain a value of this type.
 ///
-/// All [`Value`] methods should be available on this type through [`Deref`],
-/// but some may be missed by this documentation.
+/// See the [`ReprValue`] trait for additional methods available on this type.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct Qfalse(Value);
@@ -1372,14 +1280,6 @@ impl Qfalse {
     }
 }
 
-impl Deref for Qfalse {
-    type Target = Value;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
 impl fmt::Display for Qfalse {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", unsafe { self.to_s_infallible() })
@@ -1394,19 +1294,13 @@ impl fmt::Debug for Qfalse {
 
 impl IntoValue for Qfalse {
     fn into_value_with(self, _: &RubyHandle) -> Value {
-        *self
-    }
-}
-
-impl From<Qfalse> for Value {
-    fn from(val: Qfalse) -> Self {
-        *val
+        self.0
     }
 }
 
 unsafe impl private::ReprValue for Qfalse {
-    fn to_value(self) -> Value {
-        *self
+    fn as_value(self) -> Value {
+        self.0
     }
 
     unsafe fn from_value_unchecked(val: Value) -> Self {
@@ -1434,8 +1328,7 @@ impl TryConvertOwned for Qfalse {}
 ///
 /// See [`QNIL`] to obtain a value of this type.
 ///
-/// All [`Value`] methods should be available on this type through [`Deref`],
-/// but some may be missed by this documentation.
+/// See the [`ReprValue`] trait for additional methods available on this type.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct Qnil(NonZeroValue);
@@ -1471,14 +1364,6 @@ impl Qnil {
     }
 }
 
-impl Deref for Qnil {
-    type Target = Value;
-
-    fn deref(&self) -> &Self::Target {
-        self.0.get_ref()
-    }
-}
-
 impl fmt::Display for Qnil {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", unsafe { self.to_s_infallible() })
@@ -1493,29 +1378,17 @@ impl fmt::Debug for Qnil {
 
 impl IntoValue for Qnil {
     fn into_value_with(self, _: &RubyHandle) -> Value {
-        *self
-    }
-}
-
-impl From<Qnil> for Value {
-    fn from(val: Qnil) -> Self {
-        *val
+        self.0.get()
     }
 }
 
 impl IntoValue for () {
-    fn into_value_with(self, _: &RubyHandle) -> Value {
-        QNIL.into()
+    fn into_value_with(self, handle: &RubyHandle) -> Value {
+        QNIL.into_value_with(handle)
     }
 }
 
 unsafe impl IntoValueFromNative for () {}
-
-impl From<()> for Value {
-    fn from(val: ()) -> Self {
-        val.into_value()
-    }
-}
 
 impl<T> IntoValue for Option<T>
 where
@@ -1532,8 +1405,8 @@ where
 unsafe impl<T> IntoValueFromNative for Option<T> where T: IntoValueFromNative {}
 
 unsafe impl private::ReprValue for Qnil {
-    fn to_value(self) -> Value {
-        *self
+    fn as_value(self) -> Value {
+        self.0.get()
     }
 
     unsafe fn from_value_unchecked(val: Value) -> Self {
@@ -1561,8 +1434,7 @@ impl TryConvertOwned for Qnil {}
 ///
 /// See [`QTRUE`] to obtain a value of this type.
 ///
-/// All [`Value`] methods should be available on this type through [`Deref`],
-/// but some may be missed by this documentation.
+/// See the [`ReprValue`] trait for additional methods available on this type.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct Qtrue(NonZeroValue);
@@ -1598,14 +1470,6 @@ impl Qtrue {
     }
 }
 
-impl Deref for Qtrue {
-    type Target = Value;
-
-    fn deref(&self) -> &Self::Target {
-        self.0.get_ref()
-    }
-}
-
 impl fmt::Display for Qtrue {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", unsafe { self.to_s_infallible() })
@@ -1620,37 +1484,25 @@ impl fmt::Debug for Qtrue {
 
 impl IntoValue for Qtrue {
     fn into_value_with(self, _: &RubyHandle) -> Value {
-        *self
-    }
-}
-
-impl From<Qtrue> for Value {
-    fn from(val: Qtrue) -> Self {
-        *val
+        self.0.get()
     }
 }
 
 impl IntoValue for bool {
-    fn into_value_with(self, _: &RubyHandle) -> Value {
+    fn into_value_with(self, handle: &RubyHandle) -> Value {
         if self {
-            QTRUE.into()
+            QTRUE.into_value_with(handle)
         } else {
-            QFALSE.into()
+            QFALSE.into_value_with(handle)
         }
     }
 }
 
 unsafe impl IntoValueFromNative for bool {}
 
-impl From<bool> for Value {
-    fn from(val: bool) -> Self {
-        val.into_value()
-    }
-}
-
 unsafe impl private::ReprValue for Qtrue {
-    fn to_value(self) -> Value {
-        *self
+    fn as_value(self) -> Value {
+        self.0.get()
     }
 
     unsafe fn from_value_unchecked(val: Value) -> Self {
@@ -1722,8 +1574,14 @@ impl Qundef {
     /// appropriate to pass a [`Value`] created from `Qundef` (hence this
     /// method, rather than implimenting [`IntoValue`]).
     #[inline]
-    pub unsafe fn to_value(self) -> Value {
+    pub unsafe fn as_value(self) -> Value {
         self.0.get()
+    }
+
+    #[doc(hidden)]
+    #[deprecated(since = "0.5.0", note = "please use `as_value` instead")]
+    pub unsafe fn to_value(self) -> Value {
+        self.as_value()
     }
 }
 
@@ -1746,8 +1604,7 @@ impl RubyHandle {
 ///
 /// See also [`Integer`].
 ///
-/// All [`Value`] methods should be available on this type through [`Deref`],
-/// but some may be missed by this documentation.
+/// See the [`ReprValue`] trait for additional methods available on this type.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct Fixnum(NonZeroValue);
@@ -2111,14 +1968,6 @@ impl Fixnum {
     }
 }
 
-impl Deref for Fixnum {
-    type Target = Value;
-
-    fn deref(&self) -> &Self::Target {
-        self.0.get_ref()
-    }
-}
-
 impl fmt::Display for Fixnum {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", unsafe { self.to_s_infallible() })
@@ -2133,19 +1982,13 @@ impl fmt::Debug for Fixnum {
 
 impl IntoValue for Fixnum {
     fn into_value_with(self, _: &RubyHandle) -> Value {
-        *self
-    }
-}
-
-impl From<Fixnum> for Value {
-    fn from(val: Fixnum) -> Self {
-        *val
+        self.0.get()
     }
 }
 
 unsafe impl private::ReprValue for Fixnum {
-    fn to_value(self) -> Value {
-        *self
+    fn as_value(self) -> Value {
+        self.0.get()
     }
 
     unsafe fn from_value_unchecked(val: Value) -> Self {
@@ -2196,8 +2039,7 @@ impl RubyHandle {
 ///
 /// See also [`Symbol`].
 ///
-/// All [`Value`] methods should be available on this type through [`Deref`],
-/// but some may be missed by this documentation.
+/// See the [`ReprValue`] trait for additional methods available on this type.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct StaticSymbol(NonZeroValue);
@@ -2301,14 +2143,6 @@ impl StaticSymbol {
     }
 }
 
-impl Deref for StaticSymbol {
-    type Target = Value;
-
-    fn deref(&self) -> &Self::Target {
-        self.0.get_ref()
-    }
-}
-
 impl fmt::Display for StaticSymbol {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", unsafe { self.to_s_infallible() })
@@ -2331,19 +2165,13 @@ impl From<Id> for StaticSymbol {
 
 impl IntoValue for StaticSymbol {
     fn into_value_with(self, _: &RubyHandle) -> Value {
-        *self
-    }
-}
-
-impl From<StaticSymbol> for Value {
-    fn from(val: StaticSymbol) -> Self {
-        *val
+        self.0.get()
     }
 }
 
 unsafe impl private::ReprValue for StaticSymbol {
-    fn to_value(self) -> Value {
-        *self
+    fn as_value(self) -> Value {
+        self.0.get()
     }
 
     unsafe fn from_value_unchecked(val: Value) -> Self {

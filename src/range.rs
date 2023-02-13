@@ -2,9 +2,7 @@
 
 use std::{
     fmt,
-    ops::{
-        Deref, Range as StdRange, RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToInclusive,
-    },
+    ops::{Range as StdRange, RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToInclusive},
     os::raw::{c_int, c_long},
 };
 
@@ -19,7 +17,10 @@ use crate::{
     r_struct::RStruct,
     ruby_handle::RubyHandle,
     try_convert::TryConvert,
-    value::{private, ReprValue, Value, QNIL},
+    value::{
+        private::{self, ReprValue as _},
+        ReprValue, Value, QNIL,
+    },
 };
 
 impl RubyHandle {
@@ -40,8 +41,8 @@ impl RubyHandle {
 
 /// Wrapper type for a Value known to be an instance of Ruby's Range class.
 ///
-/// All [`Value`] methods should be available on this type through [`Deref`],
-/// but some may be missed by this documentation.
+/// See the [`ReprValue`] and [`Object`] traits for additional methods
+/// available on this type.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct Range(RStruct);
@@ -259,14 +260,6 @@ impl Range {
     }
 }
 
-impl Deref for Range {
-    type Target = Value;
-
-    fn deref(&self) -> &Self::Target {
-        self.0.deref()
-    }
-}
-
 impl fmt::Display for Range {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", unsafe { self.to_s_infallible() })
@@ -280,14 +273,8 @@ impl fmt::Debug for Range {
 }
 
 impl IntoValue for Range {
-    fn into_value_with(self, _: &RubyHandle) -> Value {
-        *self
-    }
-}
-
-impl From<Range> for Value {
-    fn from(val: Range) -> Self {
-        *val
+    fn into_value_with(self, handle: &RubyHandle) -> Value {
+        self.0.into_value_with(handle)
     }
 }
 
@@ -296,54 +283,39 @@ where
     T: IntoValue,
 {
     fn into_value_with(self, handle: &RubyHandle) -> Value {
-        *handle.range_new(self.start, self.end, true).unwrap()
+        handle
+            .range_new(self.start, self.end, true)
+            .unwrap()
+            .into_value_with(handle)
     }
 }
 
 unsafe impl<T> IntoValueFromNative for StdRange<T> where T: IntoValueFromNative {}
-
-impl<T> From<StdRange<T>> for Value
-where
-    T: IntoValue,
-{
-    fn from(value: StdRange<T>) -> Self {
-        value.into_value()
-    }
-}
 
 impl<T> IntoValue for RangeFrom<T>
 where
     T: IntoValue,
 {
     fn into_value_with(self, handle: &RubyHandle) -> Value {
-        *handle.range_new(self.start, QNIL, false).unwrap()
+        handle
+            .range_new(self.start, QNIL, false)
+            .unwrap()
+            .into_value_with(handle)
     }
 }
 
 unsafe impl<T> IntoValueFromNative for RangeFrom<T> where T: IntoValueFromNative {}
 
-impl<T> From<RangeFrom<T>> for Value
-where
-    T: IntoValue,
-{
-    fn from(value: RangeFrom<T>) -> Self {
-        value.into_value()
-    }
-}
-
 impl IntoValue for RangeFull {
     fn into_value_with(self, handle: &RubyHandle) -> Value {
-        *handle.range_new(QNIL, QNIL, false).unwrap()
+        handle
+            .range_new(QNIL, QNIL, false)
+            .unwrap()
+            .into_value_with(handle)
     }
 }
 
 unsafe impl IntoValueFromNative for RangeFull {}
-
-impl From<RangeFull> for Value {
-    fn from(value: RangeFull) -> Self {
-        value.into_value()
-    }
-}
 
 impl<T> IntoValue for RangeInclusive<T>
 where
@@ -351,66 +323,48 @@ where
 {
     fn into_value_with(self, handle: &RubyHandle) -> Value {
         let (start, end) = self.into_inner();
-        *handle.range_new(start, end, false).unwrap()
+        handle
+            .range_new(start, end, false)
+            .unwrap()
+            .into_value_with(handle)
     }
 }
 
 unsafe impl<T> IntoValueFromNative for RangeInclusive<T> where T: IntoValueFromNative {}
-
-impl<T> From<RangeInclusive<T>> for Value
-where
-    T: IntoValue,
-{
-    fn from(value: RangeInclusive<T>) -> Self {
-        value.into_value()
-    }
-}
 
 impl<T> IntoValue for RangeTo<T>
 where
     T: IntoValue,
 {
     fn into_value_with(self, handle: &RubyHandle) -> Value {
-        *handle.range_new(QNIL, self.end, true).unwrap()
+        handle
+            .range_new(QNIL, self.end, true)
+            .unwrap()
+            .into_value_with(handle)
     }
 }
 
 unsafe impl<T> IntoValueFromNative for RangeTo<T> where T: IntoValueFromNative {}
-
-impl<T> From<RangeTo<T>> for Value
-where
-    T: IntoValue,
-{
-    fn from(value: RangeTo<T>) -> Self {
-        value.into_value()
-    }
-}
 
 impl<T> IntoValue for RangeToInclusive<T>
 where
     T: IntoValue,
 {
     fn into_value_with(self, handle: &RubyHandle) -> Value {
-        *handle.range_new(QNIL, self.end, false).unwrap()
+        handle
+            .range_new(QNIL, self.end, false)
+            .unwrap()
+            .into_value_with(handle)
     }
 }
 
 unsafe impl<T> IntoValueFromNative for RangeToInclusive<T> where T: IntoValueFromNative {}
 
-impl<T> From<RangeToInclusive<T>> for Value
-where
-    T: IntoValue,
-{
-    fn from(value: RangeToInclusive<T>) -> Self {
-        value.into_value()
-    }
-}
-
 impl Object for Range {}
 
 unsafe impl private::ReprValue for Range {
-    fn to_value(self) -> Value {
-        *self
+    fn as_value(self) -> Value {
+        self.0.as_value()
     }
 
     unsafe fn from_value_unchecked(val: Value) -> Self {

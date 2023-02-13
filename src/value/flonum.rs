@@ -1,4 +1,4 @@
-use std::{fmt, ops::Deref};
+use std::fmt;
 
 use rb_sys::{rb_float_new_in_heap, VALUE};
 
@@ -8,7 +8,10 @@ use crate::{
     numeric::Numeric,
     ruby_handle::RubyHandle,
     try_convert::TryConvertOwned,
-    value::{private, NonZeroValue, ReprValue},
+    value::{
+        private::{self, ReprValue as _},
+        NonZeroValue, ReprValue,
+    },
     Error, Float, RFloat, TryConvert, Value,
 };
 
@@ -25,8 +28,7 @@ impl RubyHandle {
 ///
 /// See also `Float`.
 ///
-/// All [`Value`] methods should be available on this type through [`Deref`],
-/// but some may be missed by this documentation.
+/// See the [`ReprValue`] trait for additional methods available on this type.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct Flonum(NonZeroValue);
@@ -115,14 +117,6 @@ impl Flonum {
     }
 }
 
-impl Deref for Flonum {
-    type Target = Value;
-
-    fn deref(&self) -> &Self::Target {
-        self.0.get_ref()
-    }
-}
-
 impl fmt::Display for Flonum {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", unsafe { self.to_s_infallible() })
@@ -137,21 +131,15 @@ impl fmt::Debug for Flonum {
 
 impl IntoValue for Flonum {
     fn into_value_with(self, _: &RubyHandle) -> Value {
-        *self
-    }
-}
-
-impl From<Flonum> for Value {
-    fn from(val: Flonum) -> Self {
-        *val
+        self.0.get()
     }
 }
 
 impl Numeric for Flonum {}
 
 unsafe impl private::ReprValue for Flonum {
-    fn to_value(self) -> Value {
-        *self
+    fn as_value(self) -> Value {
+        self.0.get()
     }
 
     unsafe fn from_value_unchecked(val: Value) -> Self {
@@ -164,7 +152,7 @@ impl ReprValue for Flonum {}
 impl TryConvert for Flonum {
     fn try_convert(val: Value) -> Result<Self, Error> {
         let float = val.try_convert::<Float>()?;
-        if let Some(flonum) = Flonum::from_value(*float) {
+        if let Some(flonum) = Flonum::from_value(float.as_value()) {
             Ok(flonum)
         } else {
             Err(Error::new(

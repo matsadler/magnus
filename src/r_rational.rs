@@ -1,4 +1,4 @@
-use std::{fmt, num::NonZeroI64, ops::Deref};
+use std::{fmt, num::NonZeroI64};
 
 use rb_sys::{rb_rational_den, rb_rational_new, rb_rational_num, ruby_value_type, VALUE};
 
@@ -10,7 +10,10 @@ use crate::{
     numeric::Numeric,
     ruby_handle::RubyHandle,
     try_convert::TryConvert,
-    value::{private, NonZeroValue, ReprValue, Value},
+    value::{
+        private::{self, ReprValue as _},
+        NonZeroValue, ReprValue, Value,
+    },
 };
 
 impl RubyHandle {
@@ -29,8 +32,7 @@ impl RubyHandle {
 /// A Value pointer to a RRational struct, Ruby's internal representation of
 /// rational numbers.
 ///
-/// All [`Value`] methods should be available on this type through [`Deref`],
-/// but some may be missed by this documentation.
+/// See the [`ReprValue`] trait for additional methods available on this type.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct RRational(NonZeroValue);
@@ -104,14 +106,6 @@ impl RRational {
     }
 }
 
-impl Deref for RRational {
-    type Target = Value;
-
-    fn deref(&self) -> &Self::Target {
-        self.0.get_ref()
-    }
-}
-
 impl fmt::Display for RRational {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", unsafe { self.to_s_infallible() })
@@ -126,19 +120,13 @@ impl fmt::Debug for RRational {
 
 impl IntoValue for RRational {
     fn into_value_with(self, _: &RubyHandle) -> Value {
-        *self
-    }
-}
-
-impl From<RRational> for Value {
-    fn from(val: RRational) -> Self {
-        *val
+        self.0.get()
     }
 }
 
 unsafe impl private::ReprValue for RRational {
-    fn to_value(self) -> Value {
-        *self
+    fn as_value(self) -> Value {
+        self.0.get()
     }
 
     unsafe fn from_value_unchecked(val: Value) -> Self {

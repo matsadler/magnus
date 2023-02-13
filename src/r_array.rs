@@ -1,6 +1,5 @@
 use std::{
-    cmp::Ordering, convert::TryInto, fmt, iter::FromIterator, ops::Deref, os::raw::c_long,
-    ptr::NonNull, slice,
+    cmp::Ordering, convert::TryInto, fmt, iter::FromIterator, os::raw::c_long, ptr::NonNull, slice,
 };
 
 #[cfg(ruby_gte_3_0)]
@@ -25,7 +24,10 @@ use crate::{
     r_string::{IntoRString, RString},
     ruby_handle::RubyHandle,
     try_convert::{TryConvert, TryConvertOwned},
-    value::{private, NonZeroValue, ReprValue, Value, QNIL},
+    value::{
+        private::{self, ReprValue as _},
+        NonZeroValue, ReprValue, Value, QNIL,
+    },
 };
 
 impl RubyHandle {
@@ -62,8 +64,8 @@ impl RubyHandle {
 /// A Value pointer to a RArray struct, Ruby's internal representation of an
 /// Array.
 ///
-/// All [`Value`] methods should be available on this type through [`Deref`],
-/// but some may be missed by this documentation.
+/// See the [`ReprValue`] and [`Object`] traits for additional methods
+/// available on this type.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct RArray(NonZeroValue);
@@ -148,14 +150,14 @@ impl RArray {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, RArray, Value};
+    /// use magnus::{eval, IntoValue, RArray, Value};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// let ary = RArray::to_ary(Value::from(1)).unwrap();
+    /// let ary = RArray::to_ary(1.into_value()).unwrap();
     /// let res: bool = eval!("[1] == ary", ary).unwrap();
     /// assert!(res);
     ///
-    /// let ary = RArray::to_ary(Value::from(vec![1, 2, 3])).unwrap();
+    /// let ary = RArray::to_ary(vec![1, 2, 3].into_value()).unwrap();
     /// let res: bool = eval!("[1, 2, 3] == ary", ary).unwrap();
     /// assert!(res);
     /// ```
@@ -287,11 +289,11 @@ impl RArray {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, Integer, QNIL, RArray, Symbol};
+    /// use magnus::{eval, prelude::*, Integer, IntoValue, QNIL, RArray, Symbol};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let ary = RArray::new();
-    /// ary.cat(&[*Symbol::new("a"), *Integer::from_i64(1), *QNIL]).unwrap();
+    /// ary.cat(&[Symbol::new("a").into_value(), Integer::from_i64(1).into_value(), QNIL.into_value()]).unwrap();
     /// let res: bool = eval!("ary == [:a, 1, nil]", ary).unwrap();
     /// assert!(res);
     /// ```
@@ -371,10 +373,10 @@ impl RArray {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, Integer, QNIL, RArray, Symbol};
+    /// use magnus::{eval, Integer, IntoValue, QNIL, RArray, Symbol};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// let ary = RArray::from_slice(&[*Symbol::new("a"), *Integer::from_i64(1), *QNIL]);
+    /// let ary = RArray::from_slice(&[Symbol::new("a").into_value(), Integer::from_i64(1).into_value(), QNIL.into_value()]);
     /// let res: bool = eval!("ary == [:a, 1, nil]", ary).unwrap();
     /// assert!(res);
     /// ```
@@ -879,10 +881,10 @@ impl RArray {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, Integer, RArray, Symbol, QNIL};
+    /// use magnus::{eval, Integer, IntoValue, RArray, Symbol, QNIL};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// let ary = RArray::from_slice(&[*Symbol::new("a"), *Integer::from_i64(1), *QNIL]);
+    /// let ary = RArray::from_slice(&[Symbol::new("a").into_value(), Integer::from_i64(1).into_value(), QNIL.into_value()]);
     /// assert_eq!(ary.join(", ").unwrap().to_string().unwrap(), "a, 1, ")
     /// ```
     pub fn join<T>(self, sep: T) -> Result<RString, Error>
@@ -969,7 +971,7 @@ impl RArray {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, RArray};
+    /// use magnus::{eval, prelude::*, RArray};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let mut res = Vec::new();
@@ -1181,14 +1183,6 @@ impl RArray {
     }
 }
 
-impl Deref for RArray {
-    type Target = Value;
-
-    fn deref(&self) -> &Self::Target {
-        self.0.get_ref()
-    }
-}
-
 impl fmt::Display for RArray {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", unsafe { self.to_s_infallible() })
@@ -1203,13 +1197,7 @@ impl fmt::Debug for RArray {
 
 impl IntoValue for RArray {
     fn into_value_with(self, _: &RubyHandle) -> Value {
-        *self
-    }
-}
-
-impl From<RArray> for Value {
-    fn from(val: RArray) -> Self {
-        *val
+        self.0.get()
     }
 }
 
@@ -1219,20 +1207,11 @@ where
 {
     fn into_value_with(self, handle: &RubyHandle) -> Value {
         let ary = [handle.into_value(self.0)];
-        handle.ary_new_from_values(&ary).into()
+        handle.ary_new_from_values(&ary).into_value_with(handle)
     }
 }
 
 unsafe impl<T0> IntoValueFromNative for (T0,) where T0: IntoValueFromNative {}
-
-impl<T0> From<(T0,)> for Value
-where
-    T0: IntoValue,
-{
-    fn from(val: (T0,)) -> Self {
-        val.into_value()
-    }
-}
 
 impl<T0, T1> IntoValue for (T0, T1)
 where
@@ -1241,7 +1220,7 @@ where
 {
     fn into_value_with(self, handle: &RubyHandle) -> Value {
         let ary = [handle.into_value(self.0), handle.into_value(self.1)];
-        handle.ary_new_from_values(&ary).into()
+        handle.ary_new_from_values(&ary).into_value_with(handle)
     }
 }
 
@@ -1250,16 +1229,6 @@ where
     T0: IntoValueFromNative,
     T1: IntoValueFromNative,
 {
-}
-
-impl<T0, T1> From<(T0, T1)> for Value
-where
-    T0: IntoValue,
-    T1: IntoValue,
-{
-    fn from(val: (T0, T1)) -> Self {
-        val.into_value()
-    }
 }
 
 impl<T0, T1, T2> IntoValue for (T0, T1, T2)
@@ -1274,7 +1243,7 @@ where
             handle.into_value(self.1),
             handle.into_value(self.2),
         ];
-        handle.ary_new_from_values(&ary).into()
+        handle.ary_new_from_values(&ary).into_value_with(handle)
     }
 }
 
@@ -1284,17 +1253,6 @@ where
     T1: IntoValueFromNative,
     T2: IntoValueFromNative,
 {
-}
-
-impl<T0, T1, T2> From<(T0, T1, T2)> for Value
-where
-    T0: IntoValue,
-    T1: IntoValue,
-    T2: IntoValue,
-{
-    fn from(val: (T0, T1, T2)) -> Self {
-        val.into_value()
-    }
 }
 
 impl<T0, T1, T2, T3> IntoValue for (T0, T1, T2, T3)
@@ -1311,7 +1269,7 @@ where
             handle.into_value(self.2),
             handle.into_value(self.3),
         ];
-        handle.ary_new_from_values(&ary).into()
+        handle.ary_new_from_values(&ary).into_value_with(handle)
     }
 }
 
@@ -1322,18 +1280,6 @@ where
     T2: IntoValueFromNative,
     T3: IntoValueFromNative,
 {
-}
-
-impl<T0, T1, T2, T3> From<(T0, T1, T2, T3)> for Value
-where
-    T0: IntoValue,
-    T1: IntoValue,
-    T2: IntoValue,
-    T3: IntoValue,
-{
-    fn from(val: (T0, T1, T2, T3)) -> Self {
-        val.into_value()
-    }
 }
 
 impl<T0, T1, T2, T3, T4> IntoValue for (T0, T1, T2, T3, T4)
@@ -1352,7 +1298,7 @@ where
             handle.into_value(self.3),
             handle.into_value(self.4),
         ];
-        handle.ary_new_from_values(&ary).into()
+        handle.ary_new_from_values(&ary).into_value_with(handle)
     }
 }
 
@@ -1364,19 +1310,6 @@ where
     T3: IntoValueFromNative,
     T4: IntoValueFromNative,
 {
-}
-
-impl<T0, T1, T2, T3, T4> From<(T0, T1, T2, T3, T4)> for Value
-where
-    T0: IntoValue,
-    T1: IntoValue,
-    T2: IntoValue,
-    T3: IntoValue,
-    T4: IntoValue,
-{
-    fn from(val: (T0, T1, T2, T3, T4)) -> Self {
-        val.into_value()
-    }
 }
 
 impl<T0, T1, T2, T3, T4, T5> IntoValue for (T0, T1, T2, T3, T4, T5)
@@ -1397,7 +1330,7 @@ where
             handle.into_value(self.4),
             handle.into_value(self.5),
         ];
-        handle.ary_new_from_values(&ary).into()
+        handle.ary_new_from_values(&ary).into_value_with(handle)
     }
 }
 
@@ -1410,20 +1343,6 @@ where
     T4: IntoValueFromNative,
     T5: IntoValueFromNative,
 {
-}
-
-impl<T0, T1, T2, T3, T4, T5> From<(T0, T1, T2, T3, T4, T5)> for Value
-where
-    T0: IntoValue,
-    T1: IntoValue,
-    T2: IntoValue,
-    T3: IntoValue,
-    T4: IntoValue,
-    T5: IntoValue,
-{
-    fn from(val: (T0, T1, T2, T3, T4, T5)) -> Self {
-        val.into_value()
-    }
 }
 
 impl<T0, T1, T2, T3, T4, T5, T6> IntoValue for (T0, T1, T2, T3, T4, T5, T6)
@@ -1446,7 +1365,7 @@ where
             handle.into_value(self.5),
             handle.into_value(self.6),
         ];
-        handle.ary_new_from_values(&ary).into()
+        handle.ary_new_from_values(&ary).into_value_with(handle)
     }
 }
 
@@ -1460,21 +1379,6 @@ where
     T5: IntoValueFromNative,
     T6: IntoValueFromNative,
 {
-}
-
-impl<T0, T1, T2, T3, T4, T5, T6> From<(T0, T1, T2, T3, T4, T5, T6)> for Value
-where
-    T0: IntoValue,
-    T1: IntoValue,
-    T2: IntoValue,
-    T3: IntoValue,
-    T4: IntoValue,
-    T5: IntoValue,
-    T6: IntoValue,
-{
-    fn from(val: (T0, T1, T2, T3, T4, T5, T6)) -> Self {
-        val.into_value()
-    }
 }
 
 impl<T0, T1, T2, T3, T4, T5, T6, T7> IntoValue for (T0, T1, T2, T3, T4, T5, T6, T7)
@@ -1499,7 +1403,7 @@ where
             handle.into_value(self.6),
             handle.into_value(self.7),
         ];
-        handle.ary_new_from_values(&ary).into()
+        handle.ary_new_from_values(&ary).into_value_with(handle)
     }
 }
 
@@ -1514,22 +1418,6 @@ where
     T6: IntoValueFromNative,
     T7: IntoValueFromNative,
 {
-}
-
-impl<T0, T1, T2, T3, T4, T5, T6, T7> From<(T0, T1, T2, T3, T4, T5, T6, T7)> for Value
-where
-    T0: IntoValue,
-    T1: IntoValue,
-    T2: IntoValue,
-    T3: IntoValue,
-    T4: IntoValue,
-    T5: IntoValue,
-    T6: IntoValue,
-    T7: IntoValue,
-{
-    fn from(val: (T0, T1, T2, T3, T4, T5, T6, T7)) -> Self {
-        val.into_value()
-    }
 }
 
 impl<T0, T1, T2, T3, T4, T5, T6, T7, T8> IntoValue for (T0, T1, T2, T3, T4, T5, T6, T7, T8)
@@ -1556,7 +1444,7 @@ where
             handle.into_value(self.7),
             handle.into_value(self.8),
         ];
-        handle.ary_new_from_values(&ary).into()
+        handle.ary_new_from_values(&ary).into_value_with(handle)
     }
 }
 
@@ -1573,23 +1461,6 @@ where
     T7: IntoValueFromNative,
     T8: IntoValueFromNative,
 {
-}
-
-impl<T0, T1, T2, T3, T4, T5, T6, T7, T8> From<(T0, T1, T2, T3, T4, T5, T6, T7, T8)> for Value
-where
-    T0: IntoValue,
-    T1: IntoValue,
-    T2: IntoValue,
-    T3: IntoValue,
-    T4: IntoValue,
-    T5: IntoValue,
-    T6: IntoValue,
-    T7: IntoValue,
-    T8: IntoValue,
-{
-    fn from(val: (T0, T1, T2, T3, T4, T5, T6, T7, T8)) -> Self {
-        val.into_value()
-    }
 }
 
 impl<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9> IntoValue for (T0, T1, T2, T3, T4, T5, T6, T7, T8, T9)
@@ -1618,7 +1489,7 @@ where
             handle.into_value(self.8),
             handle.into_value(self.9),
         ];
-        handle.ary_new_from_values(&ary).into()
+        handle.ary_new_from_values(&ary).into_value_with(handle)
     }
 }
 
@@ -1686,7 +1557,7 @@ where
             handle.into_value(self.9),
             handle.into_value(self.10),
         ];
-        handle.ary_new_from_values(&ary).into()
+        handle.ary_new_from_values(&ary).into_value_with(handle)
     }
 }
 
@@ -1758,7 +1629,7 @@ where
             handle.into_value(self.10),
             handle.into_value(self.11),
         ];
-        handle.ary_new_from_values(&ary).into()
+        handle.ary_new_from_values(&ary).into_value_with(handle)
     }
 }
 
@@ -1806,16 +1677,7 @@ where
     T: IntoValueFromNative,
 {
     fn into_value_with(self, handle: &RubyHandle) -> Value {
-        handle.ary_from_vec(self).into()
-    }
-}
-
-impl<T> From<Vec<T>> for Value
-where
-    T: IntoValueFromNative,
-{
-    fn from(val: Vec<T>) -> Self {
-        val.into_value()
+        handle.ary_from_vec(self).into_value_with(handle)
     }
 }
 
@@ -1844,8 +1706,8 @@ where
 impl Object for RArray {}
 
 unsafe impl private::ReprValue for RArray {
-    fn to_value(self) -> Value {
-        *self
+    fn as_value(self) -> Value {
+        self.0.get()
     }
 
     unsafe fn from_value_unchecked(val: Value) -> Self {

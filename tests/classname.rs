@@ -1,4 +1,4 @@
-use magnus::{eval, Value};
+use magnus::{eval, prelude::*, Value};
 
 #[test]
 fn it_returns_the_class_name() {

@@ -1,4 +1,4 @@
-use std::{fmt, ops::Deref, os::raw::c_int};
+use std::{fmt, os::raw::c_int};
 
 use rb_sys::{
     rb_reg_backref_number, rb_reg_last_match, rb_reg_match_last, rb_reg_match_post,
@@ -13,14 +13,17 @@ use crate::{
     r_string::{IntoRString, RString},
     ruby_handle::RubyHandle,
     try_convert::TryConvert,
-    value::{private, NonZeroValue, ReprValue, Value, QNIL},
+    value::{
+        private::{self, ReprValue as _},
+        NonZeroValue, ReprValue, Value, QNIL,
+    },
 };
 
 /// A Value pointer to a RMatch struct, Ruby's internal representation of the
 /// MatchData returned from a regex match.
 ///
-/// All [`Value`] methods should be available on this type through [`Deref`],
-/// but some may be missed by this documentation.
+/// See the [`ReprValue`] and [`Object`] traits for additional methods
+/// available on this type.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct RMatch(NonZeroValue);
@@ -209,14 +212,6 @@ impl RMatch {
     }
 }
 
-impl Deref for RMatch {
-    type Target = Value;
-
-    fn deref(&self) -> &Self::Target {
-        self.0.get_ref()
-    }
-}
-
 impl fmt::Display for RMatch {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", unsafe { self.to_s_infallible() })
@@ -231,21 +226,15 @@ impl fmt::Debug for RMatch {
 
 impl IntoValue for RMatch {
     fn into_value_with(self, _: &RubyHandle) -> Value {
-        *self
-    }
-}
-
-impl From<RMatch> for Value {
-    fn from(val: RMatch) -> Self {
-        *val
+        self.0.get()
     }
 }
 
 impl Object for RMatch {}
 
 unsafe impl private::ReprValue for RMatch {
-    fn to_value(self) -> Value {
-        *self
+    fn as_value(self) -> Value {
+        self.0.get()
     }
 
     unsafe fn from_value_unchecked(val: Value) -> Self {

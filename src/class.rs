@@ -1,6 +1,6 @@
 //! Types and functions for working with Ruby classes.
 
-use std::{borrow::Cow, ffi::CStr, fmt, ops::Deref, os::raw::c_int};
+use std::{borrow::Cow, ffi::CStr, fmt, os::raw::c_int};
 
 #[cfg(ruby_gte_3_1)]
 use rb_sys::rb_cRefinement;
@@ -21,7 +21,10 @@ use crate::{
     object::Object,
     ruby_handle::RubyHandle,
     try_convert::TryConvert,
-    value::{private, NonZeroValue, ReprValue, Value},
+    value::{
+        private::{self, ReprValue as _},
+        NonZeroValue, ReprValue, Value,
+    },
 };
 
 /// A Value pointer to a RClass struct, Ruby's internal representation of
@@ -31,8 +34,7 @@ use crate::{
 /// classes/modules.
 /// See the [`Object`] trait for defining singlton methods (aka class methods).
 ///
-/// All [`Value`] methods should be available on this type through [`Deref`],
-/// but some may be missed by this documentation.
+/// See the [`ReprValue`] trait for additional methods available on this type.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct RClass(NonZeroValue);
@@ -68,7 +70,7 @@ impl RClass {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{class, RClass};
+    /// use magnus::{class, prelude::*, RClass};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let class = RClass::new(Default::default()).unwrap();
@@ -84,7 +86,7 @@ impl RClass {
     /// # Examples
     ///
     /// ```
-    /// use magnus::class;
+    /// use magnus::{class, prelude::*};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let s = class::string().new_instance(()).unwrap();
@@ -105,7 +107,7 @@ impl RClass {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{class, eval};
+    /// use magnus::{class, eval, prelude::*};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let klass = class::hash().superclass().unwrap();
@@ -147,14 +149,6 @@ impl Default for RClass {
     }
 }
 
-impl Deref for RClass {
-    type Target = Value;
-
-    fn deref(&self) -> &Self::Target {
-        self.0.get_ref()
-    }
-}
-
 impl fmt::Display for RClass {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", unsafe { self.to_s_infallible() })
@@ -169,13 +163,7 @@ impl fmt::Debug for RClass {
 
 impl IntoValue for RClass {
     fn into_value_with(self, _: &RubyHandle) -> Value {
-        *self
-    }
-}
-
-impl From<RClass> for Value {
-    fn from(val: RClass) -> Self {
-        *val
+        self.0.get()
     }
 }
 
@@ -183,8 +171,8 @@ impl Object for RClass {}
 impl Module for RClass {}
 
 unsafe impl private::ReprValue for RClass {
-    fn to_value(self) -> Value {
-        *self
+    fn as_value(self) -> Value {
+        self.0.get()
     }
 
     unsafe fn from_value_unchecked(val: Value) -> Self {
@@ -289,7 +277,7 @@ pub trait Class: Module {
 
     /// Return `self` as an [`RClass`].
     fn as_r_class(self) -> RClass {
-        RClass::from_value(*self).unwrap()
+        RClass::from_value(self.as_value()).unwrap()
     }
 
     /// Remove the allocator function of a class.

@@ -1,4 +1,4 @@
-use std::{convert::TryFrom, fmt, ops::Deref};
+use std::{convert::TryFrom, fmt};
 
 use rb_sys::{rb_ll2inum, rb_to_int, rb_ull2inum, ruby_special_consts, ruby_value_type, VALUE};
 
@@ -10,7 +10,10 @@ use crate::{
     r_bignum::RBignum,
     ruby_handle::RubyHandle,
     try_convert::TryConvert,
-    value::{private, Fixnum, NonZeroValue, ReprValue, Value},
+    value::{
+        private::{self, ReprValue as _},
+        Fixnum, NonZeroValue, ReprValue, Value,
+    },
 };
 
 pub(crate) enum IntegerType {
@@ -44,8 +47,7 @@ impl RubyHandle {
 
 /// A type wrapping either a [`Fixnum`] or a [`RBignum`].
 ///
-/// All [`Value`] methods should be available on this type through [`Deref`],
-/// but some may be missed by this documentation.
+/// See the [`ReprValue`] trait for additional methods available on this type.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct Integer(NonZeroValue);
@@ -362,14 +364,6 @@ impl Integer {
     }
 }
 
-impl Deref for Integer {
-    type Target = Value;
-
-    fn deref(&self) -> &Self::Target {
-        self.0.get_ref()
-    }
-}
-
 impl fmt::Display for Integer {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", unsafe { self.to_s_infallible() })
@@ -384,21 +378,15 @@ impl fmt::Debug for Integer {
 
 impl IntoValue for Integer {
     fn into_value_with(self, _: &RubyHandle) -> Value {
-        *self
-    }
-}
-
-impl From<Integer> for Value {
-    fn from(val: Integer) -> Self {
-        *val
+        self.0.get()
     }
 }
 
 impl Numeric for Integer {}
 
 unsafe impl private::ReprValue for Integer {
-    fn to_value(self) -> Value {
-        *self
+    fn as_value(self) -> Value {
+        self.0.get()
     }
 
     unsafe fn from_value_unchecked(val: Value) -> Self {

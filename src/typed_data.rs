@@ -10,7 +10,6 @@ use std::{
     hash::Hasher,
     marker::PhantomData,
     mem::size_of_val,
-    ops::Deref,
     panic::catch_unwind,
     ptr,
 };
@@ -34,7 +33,10 @@ use crate::{
     r_typed_data::RTypedData,
     ruby_handle::RubyHandle,
     try_convert::TryConvert,
-    value::{private, ReprValue, Value},
+    value::{
+        private::{self, ReprValue as _},
+        ReprValue, Value,
+    },
 };
 
 /// A C struct containing metadata on a Rust type, for use with the
@@ -435,16 +437,7 @@ where
     T: TypedData,
 {
     fn into_value_with(self, handle: &RubyHandle) -> Value {
-        handle.wrap(self).into()
-    }
-}
-
-impl<T> From<T> for Value
-where
-    T: TypedData,
-{
-    fn from(data: T) -> Self {
-        data.into_value()
+        handle.wrap(self).into_value_with(handle)
     }
 }
 
@@ -455,8 +448,8 @@ where
 /// tracks the Rust type it should contains and errors early in [`TryConvert`]
 /// if types don't match, rather than on [`Obj::get`].
 ///
-/// All [`Value`] methods should be available on this type through [`Deref`],
-/// but some may be missed by this documentation.
+/// See the [`ReprValue`] and [`Object`] traits for additional methods
+/// available on this type.
 #[repr(transparent)]
 pub struct Obj<T> {
     inner: RTypedData,
@@ -500,7 +493,7 @@ where
     /// # Examples
     ///
     /// ```
-    /// use magnus::{define_class, typed_data};
+    /// use magnus::{define_class, prelude::*, typed_data};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// #[magnus::wrap(class = "Point")]
@@ -544,17 +537,6 @@ where
     }
 }
 
-impl<T> Deref for Obj<T>
-where
-    T: TypedData,
-{
-    type Target = Value;
-
-    fn deref(&self) -> &Self::Target {
-        self.inner.deref()
-    }
-}
-
 impl<T> fmt::Display for Obj<T>
 where
     T: TypedData,
@@ -577,17 +559,8 @@ impl<T> IntoValue for Obj<T>
 where
     T: TypedData,
 {
-    fn into_value_with(self, _: &RubyHandle) -> Value {
-        *self.inner
-    }
-}
-
-impl<T> From<Obj<T>> for Value
-where
-    T: TypedData,
-{
-    fn from(val: Obj<T>) -> Self {
-        *val.inner
+    fn into_value_with(self, handle: &RubyHandle) -> Value {
+        self.inner.into_value_with(handle)
     }
 }
 
@@ -606,8 +579,8 @@ unsafe impl<T> private::ReprValue for Obj<T>
 where
     T: TypedData,
 {
-    fn to_value(self) -> Value {
-        *self.inner
+    fn as_value(self) -> Value {
+        self.inner.as_value()
     }
 
     unsafe fn from_value_unchecked(val: Value) -> Self {
@@ -659,7 +632,7 @@ where
 ///
 /// use magnus::{
 ///     prelude::*, define_class, embed::init, function, gc, method, typed_data, DataTypeFunctions, Error,
-///     RHash, TypedData, Value,
+///     IntoValue, RHash, TypedData, Value,
 /// };
 ///
 /// #[derive(TypedData)]
@@ -677,8 +650,8 @@ where
 ///
 /// impl DataTypeFunctions for Pair {
 ///     fn mark(&self) {
-///         gc::mark(&self.a);
-///         gc::mark(&self.b);
+///         gc::mark(self.a);
+///         gc::mark(self.b);
 ///     }
 /// }
 ///
@@ -703,7 +676,7 @@ where
 ///
 /// impl PartialEq for Pair {
 ///     fn eq(&self, other: &Self) -> bool {
-///         self.a.eql(&other.a).unwrap_or(false) && self.b.eql(&other.b).unwrap_or(false)
+///         self.a.eql(other.a).unwrap_or(false) && self.b.eql(other.b).unwrap_or(false)
 ///     }
 /// }
 ///
@@ -722,14 +695,14 @@ where
 ///     .define_method("eql?", method!(<Pair as typed_data::IsEql>::is_eql, 1))
 ///     .unwrap();
 ///
-/// let a = Pair::new(Value::from("foo"), Value::from(1));
+/// let a = Pair::new("foo".into_value(), 1.into_value());
 /// let hash = RHash::new();
 /// hash.aset(a, "test value").unwrap();
 ///
-/// let b = Pair::new(Value::from("foo"), Value::from(1));
+/// let b = Pair::new("foo".into_value(), 1.into_value());
 /// assert_eq!("test value", hash.fetch::<_, String>(b).unwrap());
 ///
-/// let c = Pair::new(Value::from("bar"), Value::from(2));
+/// let c = Pair::new("bar".into_value(), 2.into_value());
 /// assert!(hash.get(c).is_none());
 /// ```
 pub trait Hash {
@@ -765,7 +738,7 @@ where
 ///
 /// use magnus::{
 ///     prelude::*, define_class, embed::init, function, gc, method, typed_data, DataTypeFunctions, Error,
-///     RHash, TypedData, Value,
+///     IntoValue, RHash, TypedData, Value,
 /// };
 ///
 /// #[derive(TypedData)]
@@ -783,8 +756,8 @@ where
 ///
 /// impl DataTypeFunctions for Pair {
 ///     fn mark(&self) {
-///         gc::mark(&self.a);
-///         gc::mark(&self.b);
+///         gc::mark(self.a);
+///         gc::mark(self.b);
 ///     }
 /// }
 ///
@@ -809,7 +782,7 @@ where
 ///
 /// impl PartialEq for Pair {
 ///     fn eq(&self, other: &Self) -> bool {
-///         self.a.eql(&other.a).unwrap_or(false) && self.b.eql(&other.b).unwrap_or(false)
+///         self.a.eql(other.a).unwrap_or(false) && self.b.eql(other.b).unwrap_or(false)
 ///     }
 /// }
 ///
@@ -828,14 +801,14 @@ where
 ///     .define_method("eql?", method!(<Pair as typed_data::IsEql>::is_eql, 1))
 ///     .unwrap();
 ///
-/// let a = Pair::new(Value::from("foo"), Value::from(1));
+/// let a = Pair::new("foo".into_value(), 1.into_value());
 /// let hash = RHash::new();
 /// hash.aset(a, "test value").unwrap();
 ///
-/// let b = Pair::new(Value::from("foo"), Value::from(1));
+/// let b = Pair::new("foo".into_value(), 1.into_value());
 /// assert_eq!("test value", hash.fetch::<_, String>(b).unwrap());
 ///
-/// let c = Pair::new(Value::from("bar"), Value::from(2));
+/// let c = Pair::new("bar".into_value(), 2.into_value());
 /// assert!(hash.get(c).is_none());
 /// ```
 pub trait IsEql {

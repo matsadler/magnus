@@ -1,6 +1,6 @@
 //! Rust types for working with Ruby Exceptions and other interrupts.
 
-use std::{any::Any, borrow::Cow, ffi::CString, fmt, mem::transmute, ops::Deref, os::raw::c_int};
+use std::{any::Any, borrow::Cow, ffi::CString, fmt, mem::transmute, os::raw::c_int};
 
 use rb_sys::{
     rb_bug, rb_ensure, rb_errinfo, rb_exc_raise, rb_iter_break, rb_iter_break_value, rb_jump_tag,
@@ -14,7 +14,7 @@ use crate::{
     module::Module,
     r_string::RString,
     ruby_handle::RubyHandle,
-    value::{ReprValue, Value, QNIL},
+    value::{private::ReprValue as _, ReprValue, Value, QNIL},
 };
 
 impl RubyHandle {
@@ -93,7 +93,7 @@ impl Error {
     /// Ruby's `rescue`.
     pub fn is_kind_of<T>(&self, class: T) -> bool
     where
-        T: Deref<Target = Value> + Module,
+        T: ReprValue + Module,
     {
         match self {
             Error::Jump(_) => false,
@@ -222,7 +222,7 @@ where
         T: ReprValue,
     {
         let closure = (*(arg as *mut Option<F>)).take().unwrap();
-        (closure)().to_value().as_rb_value()
+        (closure)().as_rb_value()
     }
 
     // Tag::None

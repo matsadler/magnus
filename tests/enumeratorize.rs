@@ -1,4 +1,4 @@
-use magnus::Value;
+use magnus::{prelude::*, Value};
 
 macro_rules! rb_assert {
     ($s:literal) => {

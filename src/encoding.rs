@@ -20,7 +20,7 @@ use std::{
     convert::TryInto,
     ffi::{CStr, CString},
     fmt,
-    ops::{Deref, Range},
+    ops::Range,
     os::raw::{c_char, c_int},
     ptr::{self, NonNull},
 };
@@ -46,7 +46,10 @@ use crate::{
     r_string::RString,
     ruby_handle::RubyHandle,
     try_convert::TryConvert,
-    value::{private, NonZeroValue, ReprValue, Value, QNIL},
+    value::{
+        private::{self, ReprValue as _},
+        NonZeroValue, ReprValue, Value, QNIL,
+    },
 };
 
 impl RubyHandle {
@@ -63,8 +66,8 @@ impl RubyHandle {
 ///
 /// This is the representation of an encoding exposed to Ruby code.
 ///
-/// All [`Value`] methods should be available on this type through [`Deref`],
-/// but some may be missed by this documentation.
+/// See the [`ReprValue`] and [`Object`] traits for additional methods
+/// available on this type.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct Encoding(NonZeroValue);
@@ -116,14 +119,6 @@ impl Encoding {
     }
 }
 
-impl Deref for Encoding {
-    type Target = Value;
-
-    fn deref(&self) -> &Self::Target {
-        self.0.get_ref()
-    }
-}
-
 impl fmt::Display for Encoding {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", unsafe { self.to_s_infallible() })
@@ -132,7 +127,7 @@ impl fmt::Display for Encoding {
 
 impl fmt::Debug for Encoding {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.deref().inspect())
+        write!(f, "{}", self.inspect())
     }
 }
 
@@ -155,21 +150,15 @@ impl From<Encoding> for RbEncoding {
 
 impl IntoValue for Encoding {
     fn into_value_with(self, _: &RubyHandle) -> Value {
-        *self
-    }
-}
-
-impl From<Encoding> for Value {
-    fn from(val: Encoding) -> Self {
-        *val
+        self.0.get()
     }
 }
 
 impl Object for Encoding {}
 
 unsafe impl private::ReprValue for Encoding {
-    fn to_value(self) -> Value {
-        *self
+    fn as_value(self) -> Value {
+        self.0.get()
     }
 
     unsafe fn from_value_unchecked(val: Value) -> Self {
@@ -769,14 +758,8 @@ impl From<RbEncoding> for Index {
 }
 
 impl IntoValue for RbEncoding {
-    fn into_value_with(self, _: &RubyHandle) -> Value {
-        *Encoding::from(self)
-    }
-}
-
-impl From<RbEncoding> for Value {
-    fn from(val: RbEncoding) -> Self {
-        *Encoding::from(val)
+    fn into_value_with(self, handle: &RubyHandle) -> Value {
+        Encoding::from(self).into_value_with(handle)
     }
 }
 
@@ -935,7 +918,7 @@ impl TryConvert for Index {
                 format!("ArgumentError: unknown encoding name - {}", val),
             ));
         } else if i == -1 {
-            return RString::try_convert(val)?.try_convert();
+            return val.try_convert::<RString>()?.try_convert();
         }
         Ok(Index(i))
     }
@@ -956,7 +939,7 @@ pub enum Coderange {
 }
 
 /// Trait that marks Ruby types cable of having an encoding.
-pub trait EncodingCapable: Deref<Target = Value> + ReprValue + Copy {
+pub trait EncodingCapable: ReprValue + Copy {
     /// Get the encoding of `self`.
     ///
     /// # Examples
@@ -970,7 +953,7 @@ pub trait EncodingCapable: Deref<Target = Value> + ReprValue + Copy {
     fn enc_get(self) -> Index {
         let i = unsafe { rb_enc_get_index(self.as_rb_value()) };
         if i == -1 {
-            panic!("{} not encoding capable", self.deref());
+            panic!("{} not encoding capable", self.as_value());
         }
         Index(i)
     }

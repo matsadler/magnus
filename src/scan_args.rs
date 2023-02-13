@@ -41,11 +41,12 @@ use crate::{
     block::Proc,
     error::{protect, Error},
     exception,
+    into_value::IntoValue,
     r_array::RArray,
     r_hash::RHash,
     ruby_handle::RubyHandle,
     try_convert::{TryConvert, TryConvertOwned},
-    value::{Id, IntoId, Value, QNIL},
+    value::{private::ReprValue as _, Id, IntoId, ReprValue, Value, QNIL},
 };
 
 struct ArgSpec {
@@ -1100,6 +1101,7 @@ impl<T> ScanArgsBlock for T where T: private::ScanArgsBlock {}
 /// `def new(hostname=nil, port)`.
 /// ```
 /// use magnus::{prelude::*, define_class, error::Error, function, scan_args::scan_args, Value};
+/// # use magnus::IntoValue;
 /// # let _cleanup = unsafe { magnus::embed::init() };
 ///
 /// fn tcp_svr_init(args: &[Value]) -> Result<Value, Error> {
@@ -1115,7 +1117,7 @@ impl<T> ScanArgsBlock for T where T: private::ScanArgsBlock {}
 /// #   let res = magnus::RArray::with_capacity(2);
 /// #   res.push(hostname)?;
 /// #   res.push(port)?;
-/// #   Ok(res.into())
+/// #   Ok(res.into_value())
 /// }
 ///
 /// let class = define_class("TCPServer", Default::default()).unwrap();
@@ -1129,6 +1131,7 @@ impl<T> ScanArgsBlock for T where T: private::ScanArgsBlock {}
 /// The same example as above, specifying the types slightly differently.
 /// ```
 /// use magnus::{prelude::*, define_class, error::Error, function, scan_args::scan_args, Value};
+/// # use magnus::IntoValue;
 /// # let _cleanup = unsafe { magnus::embed::init() };
 ///
 /// fn tcp_svr_init(args: &[Value]) -> Result<Value, Error> {
@@ -1140,7 +1143,7 @@ impl<T> ScanArgsBlock for T where T: private::ScanArgsBlock {}
 /// #   let res = magnus::RArray::with_capacity(2);
 /// #   res.push(hostname)?;
 /// #   res.push(port)?;
-/// #   Ok(res.into())
+/// #   Ok(res.into_value())
 /// }
 ///
 /// let class = define_class("TCPServer", Default::default()).unwrap();
@@ -1157,6 +1160,7 @@ impl<T> ScanArgsBlock for T where T: private::ScanArgsBlock {}
 /// use magnus::{
 ///     prelude::*, define_class, error::Error, function, scan_args::{scan_args, get_kwargs}, RHash, Symbol, Value,
 /// };
+/// # use magnus::IntoValue;
 /// # let _cleanup = unsafe { magnus::embed::init() };
 ///
 /// fn getaddrinfo(args: &[Value]) -> Result<Value, Error> {
@@ -1180,7 +1184,7 @@ impl<T> ScanArgsBlock for T where T: private::ScanArgsBlock {}
 /// #   res.push(protocol)?;
 /// #   res.push(flags)?;
 /// #   res.push(timeout)?;
-/// #   Ok(res.into())
+/// #   Ok(res.into_value())
 /// }
 ///
 /// let class = define_class("Addrinfo", Default::default()).unwrap();
@@ -1223,7 +1227,7 @@ where
 
 // Nice-ish interface to rb_scan_args, but returns `Value`s without conversion.
 fn scan_args_untyped(args: &[Value], arg_spec: ArgSpec) -> Result<ScannedArgs, Error> {
-    let mut out = [*QNIL; 30];
+    let mut out = [QNIL.as_value(); 30];
     let parsed =
         unsafe { scan_args_impl(args, &arg_spec.to_string(), &mut out[..arg_spec.len()])? };
 
@@ -1981,6 +1985,7 @@ pub struct KwArgs<Req, Opt, Splat> {
 /// The rough equivalent of `def example(a:, b:, c: nil, **rest)` would be:
 /// ```
 /// use magnus::{prelude::*, class, error::Error, method, scan_args::get_kwargs, RHash, Value};
+/// # use magnus::IntoValue;
 /// # let _cleanup = unsafe { magnus::embed::init() };
 ///
 /// fn example(rb_self: Value, kw: RHash) -> Result<Value, Error> {
@@ -1995,7 +2000,7 @@ pub struct KwArgs<Req, Opt, Splat> {
 /// #   res.push(b)?;
 /// #   res.push(c)?;
 /// #   res.push(rest)?;
-/// #   Ok(res.into())
+/// #   Ok(res.into_value())
 /// }
 ///
 /// class::object().define_method("example", method!(example, 1)).unwrap();
@@ -2007,6 +2012,7 @@ pub struct KwArgs<Req, Opt, Splat> {
 /// The rough equivalent of `def example(a: "foo")` would be:
 /// ```
 /// use magnus::{prelude::*, class, error::Error, method, scan_args::{get_kwargs, scan_args}, RHash, Value};
+/// # use magnus::IntoValue;
 /// # let _cleanup = unsafe { magnus::embed::init() };
 ///
 /// fn example(rb_self: Value, args: &[Value]) -> Result<Value, Error> {
@@ -2019,7 +2025,7 @@ pub struct KwArgs<Req, Opt, Splat> {
 ///     let a  = a.unwrap_or_else(|| String::from("foo"));
 ///
 ///     // ...
-///     Ok(a.into())
+///     Ok(a.into_value())
 /// }
 ///
 /// class::object().define_method("example", method!(example, -1)).unwrap();
@@ -2031,6 +2037,7 @@ pub struct KwArgs<Req, Opt, Splat> {
 /// or, specifying the types slightly differently:
 /// ```
 /// use magnus::{prelude::*, class, error::Error, method, scan_args::{get_kwargs, scan_args}, RHash, Value};
+/// # use magnus::IntoValue;
 /// # let _cleanup = unsafe { magnus::embed::init() };
 ///
 /// fn example(rb_self: Value, args: &[Value]) -> Result<Value, Error> {
@@ -2040,7 +2047,7 @@ pub struct KwArgs<Req, Opt, Splat> {
 ///     let a  = a.unwrap_or_else(|| String::from("foo"));
 ///
 ///     // ...
-///     Ok(a.into())
+///     Ok(a.into_value())
 /// }
 ///
 /// class::object().define_method("example", method!(example, -1)).unwrap();
@@ -2079,7 +2086,7 @@ where
     } else {
         optional.len() as i8
     };
-    let mut out = [*QNIL; 19];
+    let mut out = [QNIL.as_value(); 19];
     let total = Req::LEN + Opt::LEN + Splat::REQ as usize;
 
     let mut parsed = 0;
@@ -2100,7 +2107,7 @@ where
     Ok(KwArgs {
         required: Req::from_slice(&out[..Req::LEN])?,
         optional: Opt::from_slice(&out[Req::LEN..opt_end])?,
-        splat: Splat::from_opt(Splat::REQ.then(|| kw.into()))?,
+        splat: Splat::from_opt(Splat::REQ.then(|| unsafe { kw.into_value_unchecked() }))?,
     })
 }
 

@@ -1,4 +1,4 @@
-use std::{fmt, ops::Deref, ptr::NonNull};
+use std::{fmt, ptr::NonNull};
 
 use rb_sys::{self, rb_check_typeddata, rb_data_typed_object_wrap, ruby_value_type};
 
@@ -9,7 +9,10 @@ use crate::{
     object::Object,
     ruby_handle::RubyHandle,
     typed_data::TypedData,
-    value::{private, NonZeroValue, ReprValue, Value, QNIL},
+    value::{
+        private::{self, ReprValue as _},
+        NonZeroValue, ReprValue, Value, QNIL,
+    },
 };
 
 impl RubyHandle {
@@ -35,8 +38,8 @@ impl RubyHandle {
 ///
 /// See also [`typed_data::Obj`](crate::typed_data::Obj).
 ///
-/// All [`Value`] methods should be available on this type through [`Deref`],
-/// but some may be missed by this documentation.
+/// See the [`ReprValue`] and [`Object`] traits for additional methods
+/// available on this type.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct RTypedData(NonZeroValue);
@@ -64,7 +67,7 @@ impl RTypedData {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{define_class, RTypedData};
+    /// use magnus::{define_class, prelude::*, RTypedData};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// #[magnus::wrap(class = "Point")]
@@ -146,14 +149,6 @@ impl RTypedData {
     }
 }
 
-impl Deref for RTypedData {
-    type Target = Value;
-
-    fn deref(&self) -> &Self::Target {
-        self.0.get_ref()
-    }
-}
-
 impl fmt::Display for RTypedData {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", unsafe { self.to_s_infallible() })
@@ -168,21 +163,15 @@ impl fmt::Debug for RTypedData {
 
 impl IntoValue for RTypedData {
     fn into_value_with(self, _: &RubyHandle) -> Value {
-        *self
-    }
-}
-
-impl From<RTypedData> for Value {
-    fn from(val: RTypedData) -> Self {
-        *val
+        self.0.get()
     }
 }
 
 impl Object for RTypedData {}
 
 unsafe impl private::ReprValue for RTypedData {
-    fn to_value(self) -> Value {
-        *self
+    fn as_value(self) -> Value {
+        self.0.get()
     }
 
     unsafe fn from_value_unchecked(val: Value) -> Self {

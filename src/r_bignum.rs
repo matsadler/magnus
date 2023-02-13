@@ -1,6 +1,5 @@
 use std::{
     fmt,
-    ops::Deref,
     os::raw::{c_long, c_longlong, c_ulong, c_ulonglong},
 };
 
@@ -17,7 +16,10 @@ use crate::{
     numeric::Numeric,
     ruby_handle::RubyHandle,
     try_convert::TryConvert,
-    value::{private, Fixnum, NonZeroValue, ReprValue, Value, QNIL},
+    value::{
+        private::{self, ReprValue as _},
+        Fixnum, NonZeroValue, ReprValue, Value, QNIL,
+    },
 };
 
 impl RubyHandle {
@@ -43,8 +45,7 @@ impl RubyHandle {
 ///
 /// See also [`Integer`].
 ///
-/// All [`Value`] methods should be available on this type through [`Deref`],
-/// but some may be missed by this documentation.
+/// See the [`ReprValue`] trait for additional methods available on this type.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct RBignum(NonZeroValue);
@@ -333,14 +334,6 @@ impl RBignum {
     }
 }
 
-impl Deref for RBignum {
-    type Target = Value;
-
-    fn deref(&self) -> &Self::Target {
-        self.0.get_ref()
-    }
-}
-
 impl fmt::Display for RBignum {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", unsafe { self.to_s_infallible() })
@@ -355,19 +348,13 @@ impl fmt::Debug for RBignum {
 
 impl IntoValue for RBignum {
     fn into_value_with(self, _: &RubyHandle) -> Value {
-        *self
-    }
-}
-
-impl From<RBignum> for Value {
-    fn from(val: RBignum) -> Self {
-        *val
+        self.0.get()
     }
 }
 
 unsafe impl private::ReprValue for RBignum {
-    fn to_value(self) -> Value {
-        *self
+    fn as_value(self) -> Value {
+        self.0.get()
     }
 
     unsafe fn from_value_unchecked(val: Value) -> Self {

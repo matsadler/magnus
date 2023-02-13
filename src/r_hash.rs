@@ -6,7 +6,6 @@ use std::{
     hash::Hash,
     iter::FromIterator,
     marker::PhantomData,
-    ops::Deref,
     os::raw::{c_int, c_long},
     panic::AssertUnwindSafe,
 };
@@ -28,7 +27,10 @@ use crate::{
     object::Object,
     ruby_handle::RubyHandle,
     try_convert::{TryConvert, TryConvertOwned},
-    value::{private, Fixnum, NonZeroValue, ReprValue, Value, QNIL, QUNDEF},
+    value::{
+        private::{self, ReprValue as _},
+        Fixnum, NonZeroValue, ReprValue, Value, QNIL, QUNDEF,
+    },
 };
 
 /// Iteration state for [`RHash::foreach`].
@@ -100,8 +102,8 @@ impl RubyHandle {
 /// A Value pointer to a RHash struct, Ruby's internal representation of Hash
 /// objects.
 ///
-/// All [`Value`] methods should be available on this type through [`Deref`],
-/// but some may be missed by this documentation.
+/// See the [`ReprValue`] and [`Object`] traits for additional methods
+/// available on this type.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct RHash(NonZeroValue);
@@ -214,11 +216,11 @@ impl RHash {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, RHash, RString, Symbol};
+    /// use magnus::{eval, IntoValue, RHash, RString, Symbol};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let hash = RHash::new();
-    /// hash.bulk_insert(&[*Symbol::new("given_name"), *RString::new("Arthur"), *Symbol::new("family_name"), *RString::new("Dent")]);
+    /// hash.bulk_insert(&[Symbol::new("given_name").into_value(), RString::new("Arthur").into_value(), Symbol::new("family_name").into_value(), RString::new("Dent").into_value()]);
     /// let res: bool = eval!(r#"hash == {given_name: "Arthur", family_name: "Dent"}"#, hash).unwrap();
     /// assert!(res);
     /// ```
@@ -372,7 +374,7 @@ impl RHash {
             Value::new(rb_hash_lookup2(
                 self.as_rb_value(),
                 key.as_rb_value(),
-                QUNDEF.to_value().as_rb_value(),
+                QUNDEF.as_value().as_rb_value(),
             ))
         })
         .ok()
@@ -628,14 +630,6 @@ impl RHash {
     }
 }
 
-impl Deref for RHash {
-    type Target = Value;
-
-    fn deref(&self) -> &Self::Target {
-        self.0.get_ref()
-    }
-}
-
 impl fmt::Display for RHash {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", unsafe { self.to_s_infallible() })
@@ -650,13 +644,7 @@ impl fmt::Debug for RHash {
 
 impl IntoValue for RHash {
     fn into_value_with(self, _: &RubyHandle) -> Value {
-        *self
-    }
-}
-
-impl From<RHash> for Value {
-    fn from(val: RHash) -> Self {
-        *val
+        self.0.get()
     }
 }
 
@@ -670,17 +658,7 @@ where
         for (k, v) in self {
             let _ = hash.aset(k, v);
         }
-        *hash
-    }
-}
-
-impl<K, V> From<HashMap<K, V>> for Value
-where
-    K: IntoValue,
-    V: IntoValue,
-{
-    fn from(map: HashMap<K, V>) -> Self {
-        map.into_iter().collect::<RHash>().into()
+        hash.into_value_with(handle)
     }
 }
 
@@ -704,8 +682,8 @@ where
 impl Object for RHash {}
 
 unsafe impl private::ReprValue for RHash {
-    fn to_value(self) -> Value {
-        *self
+    fn as_value(self) -> Value {
+        self.0.get()
     }
 
     unsafe fn from_value_unchecked(val: Value) -> Self {

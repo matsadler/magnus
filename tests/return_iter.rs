@@ -1,6 +1,8 @@
 use magnus::{
     block::{block_given, Yield},
-    define_global_function, method, Value,
+    define_global_function, method,
+    prelude::*,
+    Value,
 };
 
 macro_rules! rb_assert {

@@ -5,8 +5,8 @@
 //!
 //! All Ruby objects are represented by [`Value`]. To make it easier to work
 //! with values that are instances of specific classes a number of wrapper
-//! types are available. These wrappers will [`Deref`](`std::ops::Deref`) to
-//! `Value`, so you can still use `Value`'s methods on them.
+//! types are available. These wrappers and [`Value`] all implement the
+//! [`ReprValue`] trait, so share many methods.
 //!
 //! | Ruby Class | Magnus Type |
 //! |------------|-------------|
@@ -1835,7 +1835,7 @@ mod object;
 pub mod prelude {
     pub use crate::{
         class::Class as _, encoding::EncodingCapable as _, module::Module as _,
-        numeric::Numeric as _, object::Object as _,
+        numeric::Numeric as _, object::Object as _, value::ReprValue as _,
     };
 }
 mod r_array;
@@ -1911,8 +1911,11 @@ pub use crate::{
     value::{Fixnum, StaticSymbol, Value, QFALSE, QNIL, QTRUE},
 };
 use crate::{
-    error::protect, method::Method, r_string::IntoRString, ruby_handle::RubyHandle,
-    value::private::ReprValue as _,
+    error::protect,
+    method::Method,
+    r_string::IntoRString,
+    ruby_handle::RubyHandle,
+    value::{private::ReprValue as _, ReprValue},
 };
 
 /// Utility to simplify initialising a static with [`std::sync::Once`].
@@ -1965,7 +1968,7 @@ impl RubyHandle {
         superclass: ExceptionClass,
     ) -> Result<ExceptionClass, Error> {
         define_class(name, superclass.as_r_class())
-            .map(|c| unsafe { ExceptionClass::from_value_unchecked(*c) })
+            .map(|c| unsafe { ExceptionClass::from_value_unchecked(c.as_value()) })
     }
 
     pub fn define_variable<T>(&self, name: &str, initial: T) -> Result<*mut Value, Error>

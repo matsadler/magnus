@@ -1,3 +1,5 @@
+use magnus::prelude::*;
+
 #[test]
 fn it_converts_floats_from_value() {
     let _cleanup = unsafe { magnus::embed::init() };

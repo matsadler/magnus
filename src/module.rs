@@ -1,6 +1,6 @@
 //! Types and functions for working with Ruby modules.
 
-use std::{ffi::CString, fmt, mem::transmute, ops::Deref, os::raw::c_int};
+use std::{ffi::CString, fmt, mem::transmute, os::raw::c_int};
 
 use rb_sys::{
     rb_alias, rb_attr, rb_class_inherited_p, rb_const_get, rb_const_set, rb_define_class_id_under,
@@ -40,8 +40,7 @@ impl RubyHandle {
 /// classes/modules.
 /// See the [`Object`] trait for defining singlton methods (aka class methods).
 ///
-/// All [`Value`] methods should be available on this type through [`Deref`],
-/// but some may be missed by this documentation.
+/// See the [`ReprValue`] trait for additional methods available on this type.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct RModule(NonZeroValue);
@@ -81,7 +80,7 @@ impl RModule {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{class, RModule};
+    /// use magnus::{class, prelude::*, RModule};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let module = RModule::new();
@@ -139,14 +138,6 @@ impl RModule {
     }
 }
 
-impl Deref for RModule {
-    type Target = Value;
-
-    fn deref(&self) -> &Self::Target {
-        self.0.get_ref()
-    }
-}
-
 impl fmt::Display for RModule {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", unsafe { self.to_s_infallible() })
@@ -161,13 +152,7 @@ impl fmt::Debug for RModule {
 
 impl IntoValue for RModule {
     fn into_value_with(self, _: &RubyHandle) -> Value {
-        *self
-    }
-}
-
-impl From<RModule> for Value {
-    fn from(val: RModule) -> Self {
-        *val
+        self.0.get()
     }
 }
 
@@ -175,8 +160,8 @@ impl Object for RModule {}
 impl Module for RModule {}
 
 unsafe impl private::ReprValue for RModule {
-    fn to_value(self) -> Value {
-        *self
+    fn as_value(self) -> Value {
+        self.0.get()
     }
 
     unsafe fn from_value_unchecked(val: Value) -> Self {
@@ -200,13 +185,13 @@ impl TryConvert for RModule {
 }
 
 /// Functions available on both classes and modules.
-pub trait Module: Object + Deref<Target = Value> + ReprValue + Copy {
+pub trait Module: Object + ReprValue + Copy {
     /// Define a class in `self`'s scope.
     ///
     /// # Examples
     ///
     /// ```
-    /// use magnus::{class, define_module, Module};
+    /// use magnus::{class, define_module, prelude::*};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let outer = define_module("Outer").unwrap();
@@ -235,7 +220,7 @@ pub trait Module: Object + Deref<Target = Value> + ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{class, define_module, Module};
+    /// use magnus::{class, define_module, prelude::*};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let outer = define_module("Outer").unwrap();
@@ -260,7 +245,7 @@ pub trait Module: Object + Deref<Target = Value> + ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{exception, define_module, Module};
+    /// use magnus::{exception, define_module, prelude::*};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let outer = define_module("Outer").unwrap();
@@ -272,7 +257,7 @@ pub trait Module: Object + Deref<Target = Value> + ReprValue + Copy {
         T: IntoId,
     {
         self.define_class(name, superclass.as_r_class())
-            .map(|c| unsafe { ExceptionClass::from_value_unchecked(*c) })
+            .map(|c| unsafe { ExceptionClass::from_value_unchecked(c.as_value()) })
     }
 
     /// Include `module` into `self`.
@@ -283,7 +268,7 @@ pub trait Module: Object + Deref<Target = Value> + ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{function, Module, RClass, RModule};
+    /// use magnus::{function, prelude::*, RClass, RModule};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// fn example() -> i64 {
@@ -315,7 +300,7 @@ pub trait Module: Object + Deref<Target = Value> + ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{call_super, eval, function, Error, Module, RClass, RModule};
+    /// use magnus::{call_super, eval, function, prelude::*, Error, RClass, RModule};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// fn super_example() -> i64 {
@@ -422,7 +407,7 @@ pub trait Module: Object + Deref<Target = Value> + ReprValue + Copy {
     /// ```
     fn is_inherited<T>(self, other: T) -> bool
     where
-        T: Deref<Target = Value> + Module,
+        T: ReprValue + Module,
     {
         unsafe {
             Value::new(rb_class_inherited_p(
@@ -600,7 +585,7 @@ pub trait Module: Object + Deref<Target = Value> + ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{Attr, Module, RClass, Value};
+    /// use magnus::{prelude::*, Attr, Module, RClass, Value};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let class = RClass::new(Default::default()).unwrap();
@@ -633,7 +618,7 @@ pub trait Module: Object + Deref<Target = Value> + ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{function, Module, RClass};
+    /// use magnus::{function, prelude::*, Module, RClass};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// fn example() -> i64 {

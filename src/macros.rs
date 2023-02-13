@@ -12,7 +12,7 @@ macro_rules! debug_assert_value {
         // anyway.
         #[allow(unused_unsafe)]
         #[cfg(debug_assertions)]
-        match unsafe { $value.rb_type() } {
+        match unsafe { $crate::value::private::ReprValue::rb_type($value) } {
             ::rb_sys::ruby_value_type::RUBY_T_NONE | ::rb_sys::ruby_value_type::RUBY_T_ZOMBIE => {
                 panic!("Attempting to access garbage collected Object")
             }

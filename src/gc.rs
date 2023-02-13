@@ -1,6 +1,6 @@
 //! Functions for working with Ruby's Garbage Collector.
 
-use std::ops::{Deref, Range};
+use std::ops::Range;
 
 use rb_sys::{
     rb_gc_adjust_memory_usage, rb_gc_count, rb_gc_disable, rb_gc_enable, rb_gc_mark,
@@ -15,7 +15,7 @@ use crate::{
     r_hash::RHash,
     ruby_handle::RubyHandle,
     symbol::IntoSymbol,
-    value::{ReprValue, Value, QNIL},
+    value::{private::ReprValue as _, ReprValue, Value, QNIL},
 };
 
 impl RubyHandle {}
@@ -26,7 +26,7 @@ impl RubyHandle {}
 /// [`DataTypeFunctions::mark`](`crate::typed_data::DataTypeFunctions::mark`).
 pub fn mark<T>(value: T)
 where
-    T: Deref<Target = Value>,
+    T: ReprValue,
 {
     unsafe { rb_gc_mark(value.as_rb_value()) };
 }
@@ -62,7 +62,7 @@ where
 #[cfg_attr(docsrs, doc(cfg(ruby_gte_2_7)))]
 pub fn mark_movable<T>(value: T)
 where
-    T: Deref<Target = Value>,
+    T: ReprValue,
 {
     unsafe { rb_gc_mark_movable(value.as_rb_value()) };
 }
@@ -83,7 +83,7 @@ pub fn location<T>(value: T) -> T
 where
     T: ReprValue,
 {
-    unsafe { T::from_value_unchecked(Value::new(rb_gc_location(value.to_value().as_rb_value()))) }
+    unsafe { T::from_value_unchecked(Value::new(rb_gc_location(value.as_rb_value()))) }
 }
 
 /// Registers `value` to never be garbage collected.
@@ -93,7 +93,7 @@ pub fn register_mark_object<T>(value: T)
 where
     T: ReprValue,
 {
-    unsafe { rb_gc_register_mark_object(value.to_value().as_rb_value()) }
+    unsafe { rb_gc_register_mark_object(value.as_rb_value()) }
 }
 
 /// Inform Ruby's garbage collector that `valref` points to a live Ruby object.

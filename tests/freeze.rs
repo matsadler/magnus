@@ -1,4 +1,4 @@
-use magnus::{eval, RArray, Value};
+use magnus::{eval, prelude::*, RArray, Value};
 
 macro_rules! rb_assert {
     ($s:literal) => {

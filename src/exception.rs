@@ -1,6 +1,6 @@
 //! Types and functions for working with Ruby exceptions.
 
-use std::{fmt, ops::Deref};
+use std::fmt;
 
 #[cfg(ruby_gte_2_7)]
 use rb_sys::rb_eNoMatchingPatternError;
@@ -34,8 +34,8 @@ use crate::{
 
 /// Wrapper type for a Value known to be an instance of Ruby's Exception class.
 ///
-/// All [`Value`] methods should be available on this type through [`Deref`],
-/// but some may be missed by this documentation.
+/// See the [`ReprValue`] and [`Object`] traits for additional methods
+/// available on this type.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct Exception(NonZeroValue);
@@ -61,14 +61,6 @@ impl Exception {
     /// [`RString`](`crate::r_string::RString`)s.
     pub fn backtrace(&self) -> Result<Option<RArray>, Error> {
         self.funcall("backtrace", ())
-    }
-}
-
-impl Deref for Exception {
-    type Target = Value;
-
-    fn deref(&self) -> &Self::Target {
-        self.0.get_ref()
     }
 }
 
@@ -102,19 +94,13 @@ impl fmt::Debug for Exception {
 
 impl IntoValue for Exception {
     fn into_value_with(self, _: &RubyHandle) -> Value {
-        *self
-    }
-}
-
-impl From<Exception> for Value {
-    fn from(val: Exception) -> Self {
-        *val
+        self.0.get()
     }
 }
 
 unsafe impl private::ReprValue for Exception {
-    fn to_value(self) -> Value {
-        *self
+    fn as_value(self) -> Value {
+        self.0.get()
     }
 
     unsafe fn from_value_unchecked(val: Value) -> Self {
@@ -145,8 +131,8 @@ impl TryConvert for Exception {
 
 /// A Value known to be an instance of Class and subclass of Exception.
 ///
-/// All [`Value`] methods should be available on this type through [`Deref`],
-/// but some may be missed by this documentation.
+/// See the [`ReprValue`] and [`Object`] traits for additional methods
+/// available on this type.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct ExceptionClass(NonZeroValue);
@@ -178,14 +164,6 @@ impl Default for ExceptionClass {
     }
 }
 
-impl Deref for ExceptionClass {
-    type Target = Value;
-
-    fn deref(&self) -> &Self::Target {
-        self.0.get_ref()
-    }
-}
-
 impl fmt::Display for ExceptionClass {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", unsafe { self.to_s_infallible() })
@@ -200,13 +178,7 @@ impl fmt::Debug for ExceptionClass {
 
 impl IntoValue for ExceptionClass {
     fn into_value_with(self, _: &RubyHandle) -> Value {
-        *self
-    }
-}
-
-impl From<ExceptionClass> for Value {
-    fn from(val: ExceptionClass) -> Self {
-        *val
+        self.0.get()
     }
 }
 
@@ -218,7 +190,7 @@ impl Class for ExceptionClass {
 
     fn new(superclass: Self) -> Result<Self, Error> {
         RClass::new(superclass.as_r_class())
-            .map(|class| unsafe { ExceptionClass::from_value_unchecked(*class) })
+            .map(|class| unsafe { ExceptionClass::from_value_unchecked(class.as_value()) })
     }
 
     fn new_instance<T>(self, args: T) -> Result<Self::Instance, Error>
@@ -231,13 +203,13 @@ impl Class for ExceptionClass {
     }
 
     fn as_r_class(self) -> RClass {
-        unsafe { RClass::from_value_unchecked(*self) }
+        unsafe { RClass::from_value_unchecked(self.as_value()) }
     }
 }
 
 unsafe impl private::ReprValue for ExceptionClass {
-    fn to_value(self) -> Value {
-        *self
+    fn as_value(self) -> Value {
+        self.0.get()
     }
 
     unsafe fn from_value_unchecked(val: Value) -> Self {

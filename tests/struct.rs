@@ -1,4 +1,7 @@
-use magnus::r_struct::{define_struct, RStruct};
+use magnus::{
+    prelude::*,
+    r_struct::{define_struct, RStruct},
+};
 
 macro_rules! rb_assert {
     ($s:literal) => {

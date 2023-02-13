@@ -1,6 +1,6 @@
 //! Types and functions for working with Ruby blocks and Procs.
 
-use std::{fmt, mem::forget, ops::Deref, os::raw::c_int};
+use std::{fmt, mem::forget, os::raw::c_int};
 
 use rb_sys::{
     rb_block_given_p, rb_block_proc, rb_data_typed_object_wrap, rb_obj_is_proc, rb_proc_arity,
@@ -19,7 +19,10 @@ use crate::{
     ruby_handle::RubyHandle,
     try_convert::TryConvert,
     typed_data::{DataType, DataTypeFunctions},
-    value::{private, NonZeroValue, ReprValue, Value},
+    value::{
+        private::{self, ReprValue as _},
+        NonZeroValue, ReprValue, Value,
+    },
 };
 
 impl RubyHandle {
@@ -93,8 +96,8 @@ impl RubyHandle {
 
 /// Wrapper type for a Value known to be an instance of Ruby’s Proc class.
 ///
-/// All [`Value`] methods should be available on this type through [`Deref`],
-/// but some may be missed by this documentation.
+/// See the [`ReprValue`] and [`Object`] traits for additional methods
+/// available on this type.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct Proc(NonZeroValue);
@@ -128,7 +131,7 @@ impl Proc {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{block::Proc, eval};
+    /// use magnus::{block::Proc, eval, prelude::*};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let proc = Proc::new(|args, _block| {
@@ -163,7 +166,7 @@ impl Proc {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{block::Proc, eval};
+    /// use magnus::{block::Proc, eval, prelude::*};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let proc = Proc::from_fn(|args, _block| {
@@ -258,14 +261,6 @@ impl Proc {
     }
 }
 
-impl Deref for Proc {
-    type Target = Value;
-
-    fn deref(&self) -> &Self::Target {
-        self.0.get_ref()
-    }
-}
-
 impl fmt::Display for Proc {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", unsafe { self.to_s_infallible() })
@@ -280,21 +275,15 @@ impl fmt::Debug for Proc {
 
 impl IntoValue for Proc {
     fn into_value_with(self, _: &RubyHandle) -> Value {
-        *self
-    }
-}
-
-impl From<Proc> for Value {
-    fn from(val: Proc) -> Self {
-        *val
+        self.0.get()
     }
 }
 
 impl Object for Proc {}
 
 unsafe impl private::ReprValue for Proc {
-    fn to_value(self) -> Value {
-        *self
+    fn as_value(self) -> Value {
+        self.0.get()
     }
 
     unsafe fn from_value_unchecked(val: Value) -> Self {
@@ -569,7 +558,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use magnus::{block::{block_given, Yield}, Value};
+/// use magnus::{block::{block_given, Yield}, prelude::*, Value};
 ///
 /// fn count_to_3(rb_self: Value) -> Yield<impl Iterator<Item = u8>> {
 ///     if block_given() {

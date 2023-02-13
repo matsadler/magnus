@@ -55,11 +55,11 @@ class.define_method("blank?", magnus::method!(is_blank, 0))?;
 
 Some Ruby methods have direct counterparts in Ruby's C API and therefore in
 Magnus. Ruby's `Object#frozen?` method is available as
-`magnus::Value::check_frozen`, or `Array#[]` becomes `magnus::RArray::aref`.
+`magnus::ReprValue::check_frozen`, or `Array#[]` becomes `magnus::RArray::aref`.
 
 Other Ruby methods that are defined only in Ruby must be called with
-`magnus::Value::funcall`. All of Magnus' Ruby wrapper types deref to `Value`,
-so `funcall` can be used on all of them.
+`magnus::ReprValue::funcall`. All of Magnus' Ruby wrapper types implement the
+`ReprValue` trait, so `funcall` can be used on all of them.
 
 ```rust
 let s: String = value.funcall("test", ())?; // 0 arguments

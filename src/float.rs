@@ -1,4 +1,4 @@
-use std::{fmt, ops::Deref};
+use std::fmt;
 
 use rb_sys::{
     rb_float_new_in_heap, rb_float_value, rb_flt_rationalize, rb_flt_rationalize_with_prec,
@@ -14,7 +14,10 @@ use crate::{
     r_rational::RRational,
     ruby_handle::RubyHandle,
     try_convert::TryConvert,
-    value::{private, NonZeroValue, ReprValue, Value},
+    value::{
+        private::{self, ReprValue as _},
+        NonZeroValue, ReprValue, Value,
+    },
 };
 
 impl RubyHandle {
@@ -37,8 +40,7 @@ impl RubyHandle {
 /// A type wrapping either a [`Flonum`](`crate::value::Flonum`) value or a
 /// Value known to be an instance of Float.
 ///
-/// All [`Value`] methods should be available on this type through [`Deref`],
-/// but some may be missed by this documentation.
+/// See the [`ReprValue`] trait for additional methods available on this type.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct Float(NonZeroValue);
@@ -109,7 +111,7 @@ impl Float {
     #[inline]
     pub fn to_f64(self) -> f64 {
         #[cfg(ruby_use_flonum)]
-        if let Some(flonum) = Flonum::from_value(*self) {
+        if let Some(flonum) = Flonum::from_value(self.as_value()) {
             return flonum.to_f64();
         }
         unsafe { rb_float_value(self.as_rb_value()) }
@@ -154,14 +156,6 @@ impl Float {
     }
 }
 
-impl Deref for Float {
-    type Target = Value;
-
-    fn deref(&self) -> &Self::Target {
-        self.0.get_ref()
-    }
-}
-
 impl fmt::Display for Float {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", unsafe { self.to_s_infallible() })
@@ -176,19 +170,13 @@ impl fmt::Debug for Float {
 
 impl IntoValue for Float {
     fn into_value_with(self, _: &RubyHandle) -> Value {
-        *self
-    }
-}
-
-impl From<Float> for Value {
-    fn from(val: Float) -> Self {
-        *val
+        self.0.get()
     }
 }
 
 unsafe impl private::ReprValue for Float {
-    fn to_value(self) -> Value {
-        *self
+    fn as_value(self) -> Value {
+        self.0.get()
     }
 
     unsafe fn from_value_unchecked(val: Value) -> Self {

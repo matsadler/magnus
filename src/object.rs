@@ -1,4 +1,4 @@
-use std::{ffi::CString, mem::transmute, ops::Deref};
+use std::{ffi::CString, mem::transmute};
 
 use rb_sys::{
     rb_define_singleton_method, rb_extend_object, rb_ivar_get, rb_ivar_set, rb_singleton_class,
@@ -11,11 +11,11 @@ use crate::{
     method::Method,
     module::RModule,
     try_convert::TryConvert,
-    value::{IntoId, ReprValue, Value, QNIL},
+    value::{private::ReprValue as _, IntoId, ReprValue, Value, QNIL},
 };
 
 /// Functions available all non-immediate values.
-pub trait Object: Deref<Target = Value> + ReprValue + Copy {
+pub trait Object: ReprValue + Copy {
     /// Define a singleton method in `self`'s scope.
     ///
     /// Singleton methods defined on a class are Ruby's method for implementing
@@ -100,7 +100,7 @@ pub trait Object: Deref<Target = Value> + ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{class, function, Module, Object, RModule, RObject};
+    /// use magnus::{class, function, prelude::*, RModule, RObject};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// fn example() -> i64 {

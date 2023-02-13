@@ -1,4 +1,4 @@
-use std::{borrow::Cow, fmt, ops::Deref};
+use std::{borrow::Cow, fmt};
 
 use rb_sys::{
     rb_check_id, rb_id2sym, rb_intern_str, rb_sym2str, rb_to_symbol, ruby_value_type, VALUE,
@@ -12,7 +12,10 @@ use crate::{
     r_string::RString,
     ruby_handle::RubyHandle,
     try_convert::TryConvert,
-    value::{private, Id, NonZeroValue, ReprValue, StaticSymbol, Value},
+    value::{
+        private::{self, ReprValue as _},
+        Id, NonZeroValue, ReprValue, StaticSymbol, Value,
+    },
 };
 
 impl RubyHandle {
@@ -25,8 +28,7 @@ impl RubyHandle {
 /// A type wrapping either a [`StaticSymbol`] or a Value pointer to a RSymbol
 /// struct.
 ///
-/// All [`Value`] methods should be available on this type through [`Deref`],
-/// but some may be missed by this documentation.
+/// See the [`ReprValue`] trait for additional methods available on this type.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct Symbol(NonZeroValue);
@@ -164,7 +166,7 @@ impl Symbol {
     /// let static_sym = sym.to_static();
     /// ```
     pub fn to_static(self) -> StaticSymbol {
-        if let Some(sym) = StaticSymbol::from_value(*self) {
+        if let Some(sym) = StaticSymbol::from_value(self.as_value()) {
             return sym;
         }
         unsafe {
@@ -172,14 +174,6 @@ impl Symbol {
             let id = rb_intern_str(name);
             StaticSymbol::from_rb_value_unchecked(rb_id2sym(id))
         }
-    }
-}
-
-impl Deref for Symbol {
-    type Target = Value;
-
-    fn deref(&self) -> &Self::Target {
-        self.0.get_ref()
     }
 }
 
@@ -257,8 +251,8 @@ impl IntoSymbol for String {
 }
 
 impl IntoSymbol for StaticSymbol {
-    fn into_symbol_with(self, _: &RubyHandle) -> Symbol {
-        unsafe { Symbol(NonZeroValue::new_unchecked(self.into())) }
+    fn into_symbol_with(self, handle: &RubyHandle) -> Symbol {
+        unsafe { Symbol(NonZeroValue::new_unchecked(self.into_value_with(handle))) }
     }
 }
 
@@ -270,19 +264,13 @@ impl From<StaticSymbol> for Symbol {
 
 impl IntoValue for Symbol {
     fn into_value_with(self, _: &RubyHandle) -> Value {
-        *self
-    }
-}
-
-impl From<Symbol> for Value {
-    fn from(val: Symbol) -> Self {
-        *val
+        self.0.get()
     }
 }
 
 unsafe impl private::ReprValue for Symbol {
-    fn to_value(self) -> Value {
-        *self
+    fn as_value(self) -> Value {
+        self.0.get()
     }
 
     unsafe fn from_value_unchecked(val: Value) -> Self {

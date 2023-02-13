@@ -7,7 +7,6 @@ use std::{
     fmt, io,
     iter::Iterator,
     mem::transmute,
-    ops::Deref,
     os::raw::{c_char, c_long},
     path::{Path, PathBuf},
     ptr::{self, NonNull},
@@ -38,7 +37,10 @@ use crate::{
     r_array::RArray,
     ruby_handle::RubyHandle,
     try_convert::TryConvert,
-    value::{private, NonZeroValue, ReprValue, Value, QNIL},
+    value::{
+        private::{self, ReprValue as _},
+        NonZeroValue, ReprValue, Value, QNIL,
+    },
 };
 
 impl RubyHandle {
@@ -106,8 +108,8 @@ impl RubyHandle {
 /// A Value pointer to a RString struct, Ruby's internal representation of
 /// strings.
 ///
-/// All [`Value`] methods should be available on this type through [`Deref`],
-/// but some may be missed by this documentation.
+/// See the [`ReprValue`] and [`Object`] traits for additional methods
+/// available on this type.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct RString(NonZeroValue);
@@ -637,7 +639,7 @@ impl RString {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{encoding::Coderange, RString};
+    /// use magnus::{encoding::Coderange, prelude::*, RString};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// // Coderange is unknown on creation.
@@ -698,7 +700,7 @@ impl RString {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{encoding::Coderange, RString};
+    /// use magnus::{encoding::Coderange, prelude::*, RString};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let s = RString::new("🦀");
@@ -1237,7 +1239,7 @@ impl RString {
         unsafe {
             Self::from_rb_value_unchecked(rb_str_times(
                 self.as_rb_value(),
-                Value::from(num).as_rb_value(),
+                num.into_value_unchecked().as_rb_value(),
             ))
         }
     }
@@ -1407,7 +1409,7 @@ impl RString {
     /// # Examples
     ///
     /// ```
-    /// use magnus::RString;
+    /// use magnus::{prelude::*, RString};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let s = RString::new(" foo  bar  baz ");
@@ -1431,14 +1433,6 @@ unsafe fn embed_len(_: RString, mut f: VALUE) -> VALUE {
     f &= ruby_rstring_flags::RSTRING_EMBED_LEN_MASK as VALUE;
     f >>= RSTRING_EMBED_LEN_SHIFT as VALUE;
     f
-}
-
-impl Deref for RString {
-    type Target = Value;
-
-    fn deref(&self) -> &Self::Target {
-        self.0.get_ref()
-    }
 }
 
 impl fmt::Display for RString {
@@ -1513,36 +1507,17 @@ impl IntoRString for String {
 
 impl IntoValue for RString {
     fn into_value_with(self, _: &RubyHandle) -> Value {
-        *self
-    }
-}
-
-impl From<RString> for Value {
-    fn from(val: RString) -> Self {
-        *val
+        self.0.get()
     }
 }
 
 impl IntoValue for &str {
     fn into_value_with(self, handle: &RubyHandle) -> Value {
-        handle.str_new(self).into()
+        handle.str_new(self).into_value_with(handle)
     }
 }
 
 unsafe impl IntoValueFromNative for &str {}
-
-impl From<&str> for Value {
-    fn from(val: &str) -> Self {
-        val.into_value()
-    }
-}
-
-#[cfg(feature = "bytes-crate")]
-impl From<bytes::Bytes> for Value {
-    fn from(val: bytes::Bytes) -> Self {
-        val.into_value()
-    }
-}
 
 #[cfg(feature = "bytes-crate")]
 impl IntoValue for bytes::Bytes {
@@ -1553,37 +1528,27 @@ impl IntoValue for bytes::Bytes {
 
 impl IntoValue for String {
     fn into_value_with(self, handle: &RubyHandle) -> Value {
-        handle.str_new(self.as_str()).into()
+        handle.str_new(self.as_str()).into_value_with(handle)
     }
 }
 
 unsafe impl IntoValueFromNative for String {}
 
-impl From<String> for Value {
-    fn from(val: String) -> Self {
-        val.into_value()
-    }
-}
-
 impl IntoValue for char {
     fn into_value_with(self, handle: &RubyHandle) -> Value {
-        handle.str_from_char(self).into()
+        handle.str_from_char(self).into_value_with(handle)
     }
 }
 
 unsafe impl IntoValueFromNative for char {}
 
-impl From<char> for Value {
-    fn from(val: char) -> Self {
-        val.into_value()
-    }
-}
-
 #[cfg(unix)]
 impl IntoValue for &Path {
     fn into_value_with(self, handle: &RubyHandle) -> Value {
         use std::os::unix::ffi::OsStrExt;
-        handle.str_from_slice(self.as_os_str().as_bytes()).into()
+        handle
+            .str_from_slice(self.as_os_str().as_bytes())
+            .into_value_with(handle)
     }
 }
 
@@ -1596,12 +1561,6 @@ impl IntoValue for &Path {
 
 unsafe impl IntoValueFromNative for &Path {}
 
-impl From<&Path> for Value {
-    fn from(val: &Path) -> Self {
-        val.into_value()
-    }
-}
-
 impl IntoValue for PathBuf {
     fn into_value_with(self, handle: &RubyHandle) -> Value {
         handle.into_value(self.as_path())
@@ -1610,17 +1569,11 @@ impl IntoValue for PathBuf {
 
 unsafe impl IntoValueFromNative for PathBuf {}
 
-impl From<PathBuf> for Value {
-    fn from(val: PathBuf) -> Self {
-        val.into_value()
-    }
-}
-
 impl Object for RString {}
 
 unsafe impl private::ReprValue for RString {
-    fn to_value(self) -> Value {
-        *self
+    fn as_value(self) -> Value {
+        self.0.get()
     }
 
     unsafe fn from_value_unchecked(val: Value) -> Self {
@@ -1739,14 +1692,6 @@ impl FString {
     }
 }
 
-impl Deref for FString {
-    type Target = Value;
-
-    fn deref(&self) -> &Self::Target {
-        self.0.deref()
-    }
-}
-
 impl fmt::Display for FString {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", unsafe { self.as_r_string().to_s_infallible() })
@@ -1760,20 +1705,14 @@ impl fmt::Debug for FString {
 }
 
 impl IntoValue for FString {
-    fn into_value_with(self, _: &RubyHandle) -> Value {
-        *self.as_r_string()
-    }
-}
-
-impl From<FString> for Value {
-    fn from(val: FString) -> Self {
-        *val.as_r_string()
+    fn into_value_with(self, handle: &RubyHandle) -> Value {
+        self.as_r_string().into_value_with(handle)
     }
 }
 
 unsafe impl private::ReprValue for FString {
-    fn to_value(self) -> Value {
-        *self
+    fn as_value(self) -> Value {
+        self.0.as_value()
     }
 
     unsafe fn from_value_unchecked(val: Value) -> Self {

@@ -2,7 +2,6 @@
 
 use std::{
     fmt,
-    ops::Deref,
     os::raw::{c_char, c_int, c_long, c_uint},
 };
 
@@ -18,7 +17,10 @@ use crate::{
     r_string::{IntoRString, RString},
     ruby_handle::RubyHandle,
     try_convert::TryConvert,
-    value::{private, NonZeroValue, ReprValue, Value},
+    value::{
+        private::{self, ReprValue as _},
+        NonZeroValue, ReprValue, Value,
+    },
 };
 
 impl RubyHandle {
@@ -37,8 +39,7 @@ impl RubyHandle {
 /// A Value pointer to a RRegexp struct, Ruby's internal representation of
 /// regular expressions.
 ///
-/// All [`Value`] methods should be available on this type through [`Deref`],
-/// but some may be missed by this documentation.
+/// See the [`ReprValue`] trait for additional methods available on this type.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct RRegexp(NonZeroValue);
@@ -141,14 +142,6 @@ impl RRegexp {
     }
 }
 
-impl Deref for RRegexp {
-    type Target = Value;
-
-    fn deref(&self) -> &Self::Target {
-        self.0.get_ref()
-    }
-}
-
 impl fmt::Display for RRegexp {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", unsafe { self.to_s_infallible() })
@@ -165,19 +158,13 @@ impl EncodingCapable for RRegexp {}
 
 impl IntoValue for RRegexp {
     fn into_value_with(self, _: &RubyHandle) -> Value {
-        *self
-    }
-}
-
-impl From<RRegexp> for Value {
-    fn from(val: RRegexp) -> Self {
-        *val
+        self.0.get()
     }
 }
 
 unsafe impl private::ReprValue for RRegexp {
-    fn to_value(self) -> Value {
-        *self
+    fn as_value(self) -> Value {
+        self.0.get()
     }
 
     unsafe fn from_value_unchecked(val: Value) -> Self {

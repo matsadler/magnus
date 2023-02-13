@@ -15,7 +15,7 @@ use crate::{
     into_value::{ArgList, IntoValue},
     r_array::RArray,
     try_convert::TryConvert,
-    value::Value,
+    value::{ReprValue, Value},
 };
 
 mod private {
@@ -398,7 +398,7 @@ mod private {
                     unsafe { do_yield_iter(iter) };
                     Ok(Value::default())
                 }
-                Yield::Enumerator(e) => Ok(e.into()),
+                Yield::Enumerator(e) => Ok(unsafe { e.into_value_unchecked() }),
             }
         }
     }
@@ -424,7 +424,7 @@ mod private {
                     unsafe { do_yield_values_iter(iter) };
                     Ok(Value::default())
                 }
-                YieldValues::Enumerator(e) => Ok(e.into()),
+                YieldValues::Enumerator(e) => Ok(unsafe { e.into_value_unchecked() }),
             }
         }
     }
@@ -449,7 +449,7 @@ mod private {
                     unsafe { do_yield_splat_iter(iter) };
                     Ok(Value::default())
                 }
-                YieldSplat::Enumerator(e) => Ok(e.into()),
+                YieldSplat::Enumerator(e) => Ok(unsafe { e.into_value_unchecked() }),
             }
         }
     }

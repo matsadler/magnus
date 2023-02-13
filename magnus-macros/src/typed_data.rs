@@ -197,7 +197,7 @@ pub fn expand_derive_typed_data(input: DeriveInput) -> TokenStream {
     let tokens = quote! {
         unsafe impl magnus::TypedData for #ident {
             fn class() -> magnus::RClass {
-                use magnus::{Module, Class, RClass};
+                use magnus::{Module, Class, RClass, value::ReprValue};
                 *magnus::memoize!(RClass: {
                     let class: RClass = RClass::default().funcall("const_get", (#class,)).unwrap();
                     class.undef_alloc_func();

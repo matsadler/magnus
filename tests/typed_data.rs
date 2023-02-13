@@ -1,4 +1,4 @@
-use magnus::{define_class, embed::init, eval, Value};
+use magnus::{define_class, embed::init, eval, IntoValue, Value};
 
 macro_rules! rb_assert {
     ($s:literal) => {
@@ -19,7 +19,7 @@ fn make_rb_example(value: &str) -> Value {
     let ex = Example {
         value: value.to_owned(),
     };
-    ex.into()
+    ex.into_value()
 }
 
 #[test]

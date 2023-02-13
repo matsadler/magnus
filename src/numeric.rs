@@ -1,6 +1,6 @@
 //! Types and Traits for working with Ruby’s Numeric class.
 
-use std::{fmt, ops::Deref};
+use std::fmt;
 
 use rb_sys::{rb_num_coerce_bin, rb_num_coerce_bit, rb_num_coerce_cmp, rb_num_coerce_relop, VALUE};
 
@@ -11,11 +11,14 @@ use crate::{
     into_value::IntoValue,
     ruby_handle::RubyHandle,
     try_convert::TryConvert,
-    value::{private, IntoId, NonZeroValue, ReprValue, Value},
+    value::{
+        private::{self, ReprValue as _},
+        IntoId, NonZeroValue, ReprValue, Value,
+    },
 };
 
 /// Functions available for all of Ruby's Numeric types.
-pub trait Numeric: Deref<Target = Value> + ReprValue + Copy {
+pub trait Numeric: ReprValue + Copy {
     /// Apply the operator `op` with coercion.
     ///
     /// As Ruby's operators are implimented as methods, this function can be
@@ -204,14 +207,13 @@ pub trait Numeric: Deref<Target = Value> + ReprValue + Copy {
 
 /// Wrapper type for a Value known to be an instance of Ruby’s Numeric class.
 ///
-/// All [`Value`] methods should be available on this type through [`Deref`],
-/// but some may be missed by this documentation.
+/// See the [`ReprValue`] trait for additional methods available on this type.
 ///
 /// # Examples
 ///
 /// ```
 /// use std::num::NonZeroI64;
-/// use magnus::{numeric::NumericValue, Integer, Float, Numeric, RRational};
+/// use magnus::{prelude::*, numeric::NumericValue, Integer, Float, RRational};
 /// # let _cleanup = unsafe { magnus::embed::init() };
 ///
 /// let a = Integer::from_i64(1);
@@ -235,14 +237,6 @@ impl NumericValue {
     }
 }
 
-impl Deref for NumericValue {
-    type Target = Value;
-
-    fn deref(&self) -> &Self::Target {
-        self.0.get_ref()
-    }
-}
-
 impl fmt::Display for NumericValue {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", unsafe { self.to_s_infallible() })
@@ -257,19 +251,13 @@ impl fmt::Debug for NumericValue {
 
 impl IntoValue for NumericValue {
     fn into_value_with(self, _: &RubyHandle) -> Value {
-        *self
-    }
-}
-
-impl From<NumericValue> for Value {
-    fn from(val: NumericValue) -> Self {
-        *val
+        self.0.get()
     }
 }
 
 unsafe impl private::ReprValue for NumericValue {
-    fn to_value(self) -> Value {
-        *self
+    fn as_value(self) -> Value {
+        self.0.get()
     }
 
     unsafe fn from_value_unchecked(val: Value) -> Self {

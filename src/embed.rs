@@ -11,7 +11,12 @@ use rb_sys::{
     ruby_cleanup, ruby_exec_node, ruby_process_options, ruby_set_script_name, ruby_setup,
 };
 
-use crate::{error::protect, r_string::IntoRString, ruby_handle::RubyHandle, value::QNIL};
+use crate::{
+    error::protect,
+    r_string::IntoRString,
+    ruby_handle::RubyHandle,
+    value::{private::ReprValue, QNIL},
+};
 
 /// A guard value that will run the cleanup function for the Ruby VM when
 /// dropped.
