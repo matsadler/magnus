@@ -1,8 +1,8 @@
-use magnus::{eval, RString};
-
 #[test]
 #[cfg(feature = "bytes-crate")]
 fn it_converts_to_bytes() {
+    use magnus::{eval, RString};
+
     let _cleanup = unsafe { magnus::embed::init() };
 
     let s: RString = unsafe { eval("[0,0,0].pack('c*')").unwrap() };

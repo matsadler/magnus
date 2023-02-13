@@ -512,7 +512,7 @@ mod private {
 /// [`function`](crate::function!) macros for converting functions to an
 /// implementor of this trait.
 ///
-/// This trait is implimented for the following function signatures:
+/// This trait is implemented for the following function signatures:
 ///
 /// | Arity | Signature                                                    |
 /// |-------|--------------------------------------------------------------|
