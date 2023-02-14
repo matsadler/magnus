@@ -156,15 +156,7 @@ impl IntoValue for Encoding {
 
 impl Object for Encoding {}
 
-unsafe impl private::ReprValue for Encoding {
-    fn as_value(self) -> Value {
-        self.0.get()
-    }
-
-    unsafe fn from_value_unchecked(val: Value) -> Self {
-        Self(NonZeroValue::new_unchecked(val))
-    }
-}
+unsafe impl private::ReprValue for Encoding {}
 
 impl ReprValue for Encoding {}
 
@@ -918,7 +910,7 @@ impl TryConvert for Index {
                 format!("ArgumentError: unknown encoding name - {}", val),
             ));
         } else if i == -1 {
-            return val.try_convert::<RString>()?.try_convert();
+            return TryConvert::try_convert(RString::try_convert(val)?.as_value());
         }
         Ok(Index(i))
     }

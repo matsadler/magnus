@@ -118,7 +118,7 @@ impl RRegexp {
     {
         let s = unsafe { s.into_r_string_unchecked() };
         protect(|| unsafe { Value::new(rb_reg_match(self.as_rb_value(), s.as_rb_value())) })
-            .and_then(|v| v.try_convert())
+            .and_then(TryConvert::try_convert)
     }
 
     /// Returns the options set for `self`.
@@ -162,15 +162,7 @@ impl IntoValue for RRegexp {
     }
 }
 
-unsafe impl private::ReprValue for RRegexp {
-    fn as_value(self) -> Value {
-        self.0.get()
-    }
-
-    unsafe fn from_value_unchecked(val: Value) -> Self {
-        Self(NonZeroValue::new_unchecked(val))
-    }
-}
+unsafe impl private::ReprValue for RRegexp {}
 
 impl ReprValue for RRegexp {}
 

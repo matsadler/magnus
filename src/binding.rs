@@ -169,15 +169,7 @@ impl IntoValue for Binding {
 
 impl Object for Binding {}
 
-unsafe impl private::ReprValue for Binding {
-    fn as_value(self) -> Value {
-        self.0.get()
-    }
-
-    unsafe fn from_value_unchecked(val: Value) -> Self {
-        Self(NonZeroValue::new_unchecked(val))
-    }
-}
+unsafe impl private::ReprValue for Binding {}
 
 impl ReprValue for Binding {}
 

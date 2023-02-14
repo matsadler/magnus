@@ -459,7 +459,7 @@ impl RArray {
         T: TryConvert,
     {
         protect(|| unsafe { Value::new(rb_ary_pop(self.as_rb_value())) })
-            .and_then(|val| val.try_convert())
+            .and_then(TryConvert::try_convert)
     }
 
     /// Add `item` to the beginning of `self`.
@@ -524,7 +524,7 @@ impl RArray {
         T: TryConvert,
     {
         protect(|| unsafe { Value::new(rb_ary_shift(self.as_rb_value())) })
-            .and_then(|val| val.try_convert())
+            .and_then(TryConvert::try_convert)
     }
 
     /// Remove all elements from `self` that match `item`'s `==` method.
@@ -584,7 +584,7 @@ impl RArray {
         T: TryConvert,
     {
         protect(|| unsafe { Value::new(rb_ary_delete_at(self.as_rb_value(), index as c_long)) })
-            .and_then(|val| val.try_convert())
+            .and_then(TryConvert::try_convert)
     }
 
     /// Remove all elements from `self`
@@ -870,7 +870,8 @@ impl RArray {
             // now need to go via Vec
             slice
                 .iter()
-                .map(|v| v.try_convert())
+                .copied()
+                .map(TryConvert::try_convert)
                 .collect::<Result<Vec<T>, Error>>()
                 .map(|v| v.try_into().ok().unwrap())
         }
@@ -927,7 +928,12 @@ impl RArray {
     where
         T: TryConvert,
     {
-        unsafe { Value::new(rb_ary_entry(self.as_rb_value(), offset as c_long)).try_convert() }
+        unsafe {
+            T::try_convert(Value::new(rb_ary_entry(
+                self.as_rb_value(),
+                offset as c_long,
+            )))
+        }
     }
 
     /// Set the element at `offset`.
@@ -976,7 +982,7 @@ impl RArray {
     ///
     /// let mut res = Vec::new();
     /// for i in eval::<RArray>("[1, 2, 3]").unwrap().each() {
-    ///     res.push(i.unwrap().try_convert::<i64>().unwrap());
+    ///     res.push(i64::try_convert(i.unwrap()).unwrap());
     /// }
     /// assert_eq!(res, vec![1, 2, 3]);
     /// ```
@@ -1105,7 +1111,7 @@ impl RArray {
                 key.into_value_unchecked().as_rb_value(),
             ))
         })
-        .and_then(|val| val.try_convert())
+        .and_then(TryConvert::try_convert)
     }
 
     /// Search `self` as an 'associative array' for `value`.
@@ -1135,7 +1141,7 @@ impl RArray {
                 value.into_value_unchecked().as_rb_value(),
             ))
         })
-        .and_then(|val| val.try_convert())
+        .and_then(TryConvert::try_convert)
     }
 
     /// Recursively compares elements of the two arrays using Ruby's `<=>`.
@@ -1178,7 +1184,7 @@ impl RArray {
     #[allow(clippy::should_implement_trait)]
     pub fn cmp(self, other: Self) -> Result<Option<Ordering>, Error> {
         protect(|| unsafe { Value::new(rb_ary_cmp(self.as_rb_value(), other.as_rb_value())) })
-            .and_then(|val| val.try_convert::<Option<i64>>())
+            .and_then(<Option<i64>>::try_convert)
             .map(|opt| opt.map(|i| i.cmp(&0)))
     }
 }
@@ -1705,15 +1711,7 @@ where
 
 impl Object for RArray {}
 
-unsafe impl private::ReprValue for RArray {
-    fn as_value(self) -> Value {
-        self.0.get()
-    }
-
-    unsafe fn from_value_unchecked(val: Value) -> Self {
-        Self(NonZeroValue::new_unchecked(val))
-    }
-}
+unsafe impl private::ReprValue for RArray {}
 
 impl ReprValue for RArray {}
 

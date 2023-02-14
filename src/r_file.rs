@@ -54,15 +54,7 @@ impl IntoValue for RFile {
 
 impl Object for RFile {}
 
-unsafe impl private::ReprValue for RFile {
-    fn as_value(self) -> Value {
-        self.0.get()
-    }
-
-    unsafe fn from_value_unchecked(val: Value) -> Self {
-        Self(NonZeroValue::new_unchecked(val))
-    }
-}
+unsafe impl private::ReprValue for RFile {}
 
 impl ReprValue for RFile {}
 

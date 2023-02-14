@@ -174,15 +174,7 @@ impl IntoValue for Float {
     }
 }
 
-unsafe impl private::ReprValue for Float {
-    fn as_value(self) -> Value {
-        self.0.get()
-    }
-
-    unsafe fn from_value_unchecked(val: Value) -> Self {
-        Self(NonZeroValue::new_unchecked(val))
-    }
-}
+unsafe impl private::ReprValue for Float {}
 
 impl Numeric for Float {}
 

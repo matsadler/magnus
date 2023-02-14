@@ -106,7 +106,7 @@ impl RComplex {
         T: TryConvert,
     {
         let val = unsafe { Value::new(rb_complex_real(self.as_rb_value())) };
-        val.try_convert()
+        T::try_convert(val)
     }
 
     /// Returns the imaginary part of `self`.
@@ -125,7 +125,7 @@ impl RComplex {
         T: TryConvert,
     {
         let val = unsafe { Value::new(rb_complex_imag(self.as_rb_value())) };
-        val.try_convert()
+        T::try_convert(val)
     }
 
     /// Returns the complex conjugate.
@@ -193,15 +193,7 @@ impl IntoValue for RComplex {
     }
 }
 
-unsafe impl private::ReprValue for RComplex {
-    fn as_value(self) -> Value {
-        self.0.get()
-    }
-
-    unsafe fn from_value_unchecked(val: Value) -> Self {
-        Self(NonZeroValue::new_unchecked(val))
-    }
-}
+unsafe impl private::ReprValue for RComplex {}
 
 impl Numeric for RComplex {}
 

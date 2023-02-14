@@ -134,6 +134,7 @@ impl RStruct {
             let slice = self.as_slice();
             slice
                 .get(index)
+                .copied()
                 .ok_or_else(|| {
                     Error::new(
                         exception::index_error(),
@@ -144,7 +145,7 @@ impl RStruct {
                         ),
                     )
                 })
-                .and_then(|v| v.try_convert())
+                .and_then(TryConvert::try_convert)
         }
     }
 
@@ -158,7 +159,7 @@ impl RStruct {
     {
         let index = unsafe { index.into_value_unchecked() };
         protect(|| unsafe { Value::new(rb_struct_aref(self.as_rb_value(), index.as_rb_value())) })
-            .and_then(|v| v.try_convert())
+            .and_then(TryConvert::try_convert)
     }
 
     /// Return the value for the member at `index`.
@@ -185,11 +186,7 @@ impl RStruct {
 
     /// Returns the count of members this struct has.
     pub fn size(self) -> usize {
-        unsafe {
-            Value::new(rb_struct_size(self.as_rb_value()))
-                .try_convert()
-                .unwrap()
-        }
+        unsafe { usize::try_convert(Value::new(rb_struct_size(self.as_rb_value()))).unwrap() }
     }
 
     /// Returns the member names for this struct as [`Symbol`]s.
@@ -212,7 +209,7 @@ impl RStruct {
     {
         let id = unsafe { id.into_id_unchecked() };
         protect(|| unsafe { Value::new(rb_struct_getmember(self.as_rb_value(), id.as_rb_id())) })
-            .and_then(|v| v.try_convert())
+            .and_then(TryConvert::try_convert)
     }
 }
 
@@ -236,15 +233,7 @@ impl IntoValue for RStruct {
 
 impl Object for RStruct {}
 
-unsafe impl value::private::ReprValue for RStruct {
-    fn as_value(self) -> Value {
-        self.0.get()
-    }
-
-    unsafe fn from_value_unchecked(val: Value) -> Self {
-        Self(NonZeroValue::new_unchecked(val))
-    }
-}
+unsafe impl value::private::ReprValue for RStruct {}
 
 impl ReprValue for RStruct {}
 

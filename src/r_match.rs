@@ -75,7 +75,7 @@ impl RMatch {
     /// ```
     pub fn nth_defined(self, n: isize) -> Option<bool> {
         let value = unsafe { Value::new(rb_reg_nth_defined(n as c_int, self.as_rb_value())) };
-        value.try_convert().unwrap() // conversion to Option<bool> is infallible
+        Option::<bool>::try_convert(value).unwrap() // infallible
     }
 
     /// Returns the string captured by the `n`th capture group.
@@ -232,15 +232,7 @@ impl IntoValue for RMatch {
 
 impl Object for RMatch {}
 
-unsafe impl private::ReprValue for RMatch {
-    fn as_value(self) -> Value {
-        self.0.get()
-    }
-
-    unsafe fn from_value_unchecked(val: Value) -> Self {
-        Self(NonZeroValue::new_unchecked(val))
-    }
-}
+unsafe impl private::ReprValue for RMatch {}
 
 impl ReprValue for RMatch {}
 

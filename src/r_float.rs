@@ -109,21 +109,13 @@ impl IntoValue for RFloat {
 
 impl Numeric for RFloat {}
 
-unsafe impl private::ReprValue for RFloat {
-    fn as_value(self) -> Value {
-        self.0.get()
-    }
-
-    unsafe fn from_value_unchecked(val: Value) -> Self {
-        Self(NonZeroValue::new_unchecked(val))
-    }
-}
+unsafe impl private::ReprValue for RFloat {}
 
 impl ReprValue for RFloat {}
 
 impl TryConvert for RFloat {
     fn try_convert(val: Value) -> Result<Self, Error> {
-        let float = val.try_convert::<Float>()?;
+        let float = Float::try_convert(val)?;
         if let Some(rfloat) = RFloat::from_value(float.as_value()) {
             Ok(rfloat)
         } else {

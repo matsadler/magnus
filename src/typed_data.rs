@@ -575,21 +575,7 @@ where
 
 impl<T> Object for Obj<T> where T: TypedData {}
 
-unsafe impl<T> private::ReprValue for Obj<T>
-where
-    T: TypedData,
-{
-    fn as_value(self) -> Value {
-        self.inner.as_value()
-    }
-
-    unsafe fn from_value_unchecked(val: Value) -> Self {
-        Self {
-            inner: RTypedData::from_value_unchecked(val),
-            phantom: PhantomData,
-        }
-    }
-}
+unsafe impl<T> private::ReprValue for Obj<T> where T: TypedData {}
 
 impl<T> ReprValue for Obj<T> where T: TypedData {}
 
@@ -823,8 +809,7 @@ where
     &'a T: TryConvert,
 {
     fn is_eql(&self, other: Value) -> bool {
-        other
-            .try_convert::<&'a T>()
+        <&'a T>::try_convert(other)
             .map(|o| self == o)
             .unwrap_or(false)
     }

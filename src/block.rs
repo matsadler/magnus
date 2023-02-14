@@ -135,8 +135,8 @@ impl Proc {
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let proc = Proc::new(|args, _block| {
-    ///     let acc = args.get(0).unwrap().try_convert::<i64>()?;
-    ///     let i = args.get(1).unwrap().try_convert::<i64>()?;
+    ///     let acc = i64::try_convert(*args.get(0).unwrap())?;
+    ///     let i = i64::try_convert(*args.get(1).unwrap())?;
     ///     Ok(acc + i)
     /// });
     ///
@@ -170,8 +170,8 @@ impl Proc {
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let proc = Proc::from_fn(|args, _block| {
-    ///     let acc = args.get(0).unwrap().try_convert::<i64>()?;
-    ///     let i = args.get(1).unwrap().try_convert::<i64>()?;
+    ///     let acc = i64::try_convert(*args.get(0).unwrap())?;
+    ///     let i = i64::try_convert(*args.get(1).unwrap())?;
     ///     Ok(acc + i)
     /// });
     ///
@@ -203,7 +203,7 @@ impl Proc {
         let args = args.into_array_arg_list();
         unsafe {
             protect(|| Value::new(rb_proc_call(self.as_rb_value(), args.as_rb_value())))
-                .and_then(|v| v.try_convert())
+                .and_then(TryConvert::try_convert)
         }
     }
 
@@ -281,15 +281,7 @@ impl IntoValue for Proc {
 
 impl Object for Proc {}
 
-unsafe impl private::ReprValue for Proc {
-    fn as_value(self) -> Value {
-        self.0.get()
-    }
-
-    unsafe fn from_value_unchecked(val: Value) -> Self {
-        Self(NonZeroValue::new_unchecked(val))
-    }
-}
+unsafe impl private::ReprValue for Proc {}
 
 impl ReprValue for Proc {}
 
@@ -366,7 +358,9 @@ impl RubyHandle {
         U: TryConvert,
     {
         let val = self.into_value(val);
-        unsafe { protect(|| Value::new(rb_yield(val.as_rb_value()))).and_then(|v| v.try_convert()) }
+        unsafe {
+            protect(|| Value::new(rb_yield(val.as_rb_value()))).and_then(TryConvert::try_convert)
+        }
     }
 
     pub fn yield_values<T, U>(&self, vals: T) -> Result<U, Error>
@@ -383,7 +377,7 @@ impl RubyHandle {
                     slice.as_ptr() as *const VALUE,
                 ))
             })
-            .and_then(|v| v.try_convert())
+            .and_then(TryConvert::try_convert)
         }
     }
 
@@ -392,7 +386,8 @@ impl RubyHandle {
         T: TryConvert,
     {
         unsafe {
-            protect(|| Value::new(rb_yield_splat(vals.as_rb_value()))).and_then(|v| v.try_convert())
+            protect(|| Value::new(rb_yield_splat(vals.as_rb_value())))
+                .and_then(TryConvert::try_convert)
         }
     }
 }

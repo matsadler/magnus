@@ -55,15 +55,7 @@ impl IntoValue for RObject {
 
 impl Object for RObject {}
 
-unsafe impl private::ReprValue for RObject {
-    fn as_value(self) -> Value {
-        self.0.get()
-    }
-
-    unsafe fn from_value_unchecked(val: Value) -> Self {
-        Self(NonZeroValue::new_unchecked(val))
-    }
-}
+unsafe impl private::ReprValue for RObject {}
 
 impl ReprValue for RObject {}
 

@@ -69,6 +69,30 @@ impl Value {
     pub(crate) const fn as_rb_value(self) -> VALUE {
         self.0
     }
+
+    /// Convert `self` to the Rust type `T`.
+    ///
+    /// See the types that [`TryConvert`] is implemented on for what this
+    /// method can convert to.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, prelude::*, Value};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// assert_eq!(eval::<Value>("42").unwrap().try_convert::<i64>().unwrap(), 42);
+    /// assert_eq!(eval::<Value>("1.23").unwrap().try_convert::<i64>().unwrap(), 1);
+    /// assert_eq!(eval::<Value>("1").unwrap().try_convert::<f64>().unwrap(), 1.0);
+    /// assert_eq!(eval::<Value>("nil").unwrap().try_convert::<Option<i64>>().unwrap(), None);
+    /// assert_eq!(eval::<Value>("42").unwrap().try_convert::<Option<i64>>().unwrap(), Some(42));
+    /// ```
+    pub fn try_convert<T>(self) -> Result<T, Error>
+    where
+        T: TryConvert,
+    {
+        T::try_convert(self.as_value())
+    }
 }
 
 impl Default for Value {
@@ -210,19 +234,21 @@ pub(crate) mod private {
     /// This trait should only be implemented for types that a guaranteed to
     /// have the same layout as [`Value`] and have come from the Ruby VM.
     pub unsafe trait ReprValue: Copy {
-        /// Convert `self` to a [`Value`].
-        ///
-        /// This method is for use cases where we effectively want
-        /// `transmute::<_, Value>(data)`.
-        fn as_value(self) -> Value;
-
         /// Convert `val` to a `Self`.
         ///
         /// # Safety
         ///
         /// This should only be used when `val` is known to uphold all the
         // invariants of `Self`. It is recommended not to use this method.
-        unsafe fn from_value_unchecked(val: Value) -> Self;
+        unsafe fn from_value_unchecked(val: Value) -> Self {
+            *(&val as *const Value as *const Self)
+        }
+
+        fn copy_as_value(self) -> Value {
+            // This trait is only ever implemented for things with the same
+            // representation as Value
+            unsafe { *(&self as *const Self as *const Value) }
+        }
 
         fn as_value_ref(&self) -> &Value {
             // This trait is only ever implemented for things with the same
@@ -231,7 +257,7 @@ pub(crate) mod private {
         }
 
         fn as_rb_value(self) -> VALUE {
-            self.as_value().0
+            self.copy_as_value().0
         }
 
         unsafe fn r_basic_unchecked(self) -> ptr::NonNull<RBasic> {
@@ -239,7 +265,7 @@ pub(crate) mod private {
             if self.is_immediate() {
                 panic!("attempting to access immediate value as pointer");
             }
-            ptr::NonNull::new_unchecked(self.as_value().0 as *mut RBasic)
+            ptr::NonNull::new_unchecked(self.copy_as_value().0 as *mut RBasic)
         }
 
         /// Returns whether `self` is an 'immediate' value.
@@ -302,7 +328,7 @@ pub(crate) mod private {
                 None => {
                     if self.is_false() {
                         ruby_value_type::RUBY_T_FALSE
-                    } else if self.as_value().is_nil() {
+                    } else if self.copy_as_value().is_nil() {
                         ruby_value_type::RUBY_T_NIL
                     } else if self.is_true() {
                         ruby_value_type::RUBY_T_TRUE
@@ -349,6 +375,13 @@ use private::ReprValue as _;
 ///
 /// Types that are `ReprValue` can be safely transmuted to Value.
 pub trait ReprValue: private::ReprValue {
+    /// Return `self` as a [`Value`].
+    fn as_value(self) -> Value {
+        // This trait is only ever implemented for things with the same
+        // representation as Value
+        unsafe { *(&self as *const Self as *const Value) }
+    }
+
     /// Returns whether `self` is Ruby's `nil` value.
     ///
     /// # Examples
@@ -659,7 +692,7 @@ pub trait ReprValue: private::ReprValue {
                     slice.as_ptr() as *const VALUE,
                 ))
             })
-            .and_then(|v| v.try_convert())
+            .and_then(TryConvert::try_convert)
         }
     }
 
@@ -715,7 +748,7 @@ pub trait ReprValue: private::ReprValue {
                     slice.as_ptr() as *const VALUE,
                 ))
             })
-            .and_then(|v| v.try_convert())
+            .and_then(TryConvert::try_convert)
         }
     }
 
@@ -758,7 +791,7 @@ pub trait ReprValue: private::ReprValue {
             });
             match result {
                 Ok(v) if v.is_undef() => None,
-                Ok(v) => Some(v.try_convert()),
+                Ok(v) => Some(T::try_convert(v)),
                 Err(e) => Some(Err(e)),
             }
         }
@@ -801,7 +834,7 @@ pub trait ReprValue: private::ReprValue {
                     block.as_rb_value(),
                 ))
             })
-            .and_then(|v| v.try_convert())
+            .and_then(TryConvert::try_convert)
         }
     }
 
@@ -880,7 +913,7 @@ pub trait ReprValue: private::ReprValue {
                 block as VALUE,
             ))
         })
-        .and_then(|v| v.try_convert())
+        .and_then(TryConvert::try_convert)
     }
 
     /// Check if `self` responds to the given Ruby method.
@@ -1081,41 +1114,9 @@ pub trait ReprValue: private::ReprValue {
             ))
         }
     }
-
-    /// Convert `self` to the Rust type `T`.
-    ///
-    /// See the types that [`TryConvert`] is implemented on for what this
-    /// method can convert to.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use magnus::{eval, prelude::*, Value};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
-    ///
-    /// assert_eq!(eval::<Value>("42").unwrap().try_convert::<i64>().unwrap(), 42);
-    /// assert_eq!(eval::<Value>("1.23").unwrap().try_convert::<i64>().unwrap(), 1);
-    /// assert_eq!(eval::<Value>("1").unwrap().try_convert::<f64>().unwrap(), 1.0);
-    /// assert_eq!(eval::<Value>("nil").unwrap().try_convert::<Option<i64>>().unwrap(), None);
-    /// assert_eq!(eval::<Value>("42").unwrap().try_convert::<Option<i64>>().unwrap(), Some(42));
-    /// ```
-    fn try_convert<T>(self) -> Result<T, Error>
-    where
-        T: TryConvert,
-    {
-        T::try_convert(self.as_value())
-    }
 }
 
-unsafe impl private::ReprValue for Value {
-    fn as_value(self) -> Value {
-        self
-    }
-
-    unsafe fn from_value_unchecked(val: Value) -> Self {
-        val
-    }
-}
+unsafe impl private::ReprValue for Value {}
 
 impl ReprValue for Value {}
 
@@ -1298,15 +1299,7 @@ impl IntoValue for Qfalse {
     }
 }
 
-unsafe impl private::ReprValue for Qfalse {
-    fn as_value(self) -> Value {
-        self.0
-    }
-
-    unsafe fn from_value_unchecked(val: Value) -> Self {
-        Self(val)
-    }
-}
+unsafe impl private::ReprValue for Qfalse {}
 
 impl ReprValue for Qfalse {}
 
@@ -1404,15 +1397,7 @@ where
 
 unsafe impl<T> IntoValueFromNative for Option<T> where T: IntoValueFromNative {}
 
-unsafe impl private::ReprValue for Qnil {
-    fn as_value(self) -> Value {
-        self.0.get()
-    }
-
-    unsafe fn from_value_unchecked(val: Value) -> Self {
-        Self(NonZeroValue::new_unchecked(val))
-    }
-}
+unsafe impl private::ReprValue for Qnil {}
 
 impl ReprValue for Qnil {}
 
@@ -1500,15 +1485,7 @@ impl IntoValue for bool {
 
 unsafe impl IntoValueFromNative for bool {}
 
-unsafe impl private::ReprValue for Qtrue {
-    fn as_value(self) -> Value {
-        self.0.get()
-    }
-
-    unsafe fn from_value_unchecked(val: Value) -> Self {
-        Self(NonZeroValue::new_unchecked(val))
-    }
-}
+unsafe impl private::ReprValue for Qtrue {}
 
 impl ReprValue for Qtrue {}
 
@@ -1986,15 +1963,7 @@ impl IntoValue for Fixnum {
     }
 }
 
-unsafe impl private::ReprValue for Fixnum {
-    fn as_value(self) -> Value {
-        self.0.get()
-    }
-
-    unsafe fn from_value_unchecked(val: Value) -> Self {
-        Self(NonZeroValue::new_unchecked(val))
-    }
-}
+unsafe impl private::ReprValue for Fixnum {}
 
 impl Numeric for Fixnum {}
 
@@ -2002,7 +1971,7 @@ impl ReprValue for Fixnum {}
 
 impl TryConvert for Fixnum {
     fn try_convert(val: Value) -> Result<Self, Error> {
-        match val.try_convert::<Integer>()?.integer_type() {
+        match Integer::try_convert(val)?.integer_type() {
             IntegerType::Fixnum(fix) => Ok(fix),
             IntegerType::Bignum(_) => Err(Error::new(
                 exception::range_error(),
@@ -2169,21 +2138,13 @@ impl IntoValue for StaticSymbol {
     }
 }
 
-unsafe impl private::ReprValue for StaticSymbol {
-    fn as_value(self) -> Value {
-        self.0.get()
-    }
-
-    unsafe fn from_value_unchecked(val: Value) -> Self {
-        Self(NonZeroValue::new_unchecked(val))
-    }
-}
+unsafe impl private::ReprValue for StaticSymbol {}
 
 impl ReprValue for StaticSymbol {}
 
 impl TryConvert for StaticSymbol {
     fn try_convert(val: Value) -> Result<Self, Error> {
-        val.try_convert::<Symbol>().map(|s| s.to_static())
+        Symbol::try_convert(val).map(|s| s.to_static())
     }
 }
 impl TryConvertOwned for StaticSymbol {}

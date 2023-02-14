@@ -124,15 +124,7 @@ impl IntoValue for RRational {
     }
 }
 
-unsafe impl private::ReprValue for RRational {
-    fn as_value(self) -> Value {
-        self.0.get()
-    }
-
-    unsafe fn from_value_unchecked(val: Value) -> Self {
-        Self(NonZeroValue::new_unchecked(val))
-    }
-}
+unsafe impl private::ReprValue for RRational {}
 
 impl Numeric for RRational {}
 

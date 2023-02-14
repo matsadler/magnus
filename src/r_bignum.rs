@@ -352,15 +352,7 @@ impl IntoValue for RBignum {
     }
 }
 
-unsafe impl private::ReprValue for RBignum {
-    fn as_value(self) -> Value {
-        self.0.get()
-    }
-
-    unsafe fn from_value_unchecked(val: Value) -> Self {
-        Self(NonZeroValue::new_unchecked(val))
-    }
-}
+unsafe impl private::ReprValue for RBignum {}
 
 impl Numeric for RBignum {}
 
@@ -368,7 +360,7 @@ impl ReprValue for RBignum {}
 
 impl TryConvert for RBignum {
     fn try_convert(val: Value) -> Result<Self, Error> {
-        match val.try_convert::<Integer>()?.integer_type() {
+        match Integer::try_convert(val)?.integer_type() {
             IntegerType::Fixnum(_) => Err(Error::new(
                 exception::range_error(),
                 "integer to small for bignum",

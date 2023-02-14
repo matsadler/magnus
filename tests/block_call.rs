@@ -7,7 +7,7 @@ fn it_can_call_method_with_block() {
     let ary = RArray::from_slice(&[1_i64.into_value(), 2_i64.into_value(), 3_i64.into_value()]);
     let _: Value = ary
         .block_call("map!", (), |args, _| {
-            args[0].try_convert::<i64>().map(|i| i * 4)
+            i64::try_convert(args[0]).map(|i| i * 4)
         })
         .unwrap();
 

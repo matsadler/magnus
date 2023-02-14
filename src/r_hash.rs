@@ -311,7 +311,7 @@ impl RHash {
     {
         let key = unsafe { key.into_value_unchecked() };
         protect(|| unsafe { Value::new(rb_hash_aref(self.as_rb_value(), key.as_rb_value())) })
-            .and_then(|v| v.try_convert())
+            .and_then(TryConvert::try_convert)
     }
 
     /// Return the value for `key`, converting it to `U`.
@@ -342,7 +342,7 @@ impl RHash {
     {
         let key = unsafe { key.into_value_unchecked() };
         protect(|| unsafe { Value::new(rb_hash_lookup(self.as_rb_value(), key.as_rb_value())) })
-            .and_then(|v| v.try_convert())
+            .and_then(TryConvert::try_convert)
     }
 
     /// Return the value for `key` as a [`Value`].
@@ -409,7 +409,7 @@ impl RHash {
     {
         let key = unsafe { key.into_value_unchecked() };
         protect(|| unsafe { Value::new(rb_hash_fetch(self.as_rb_value(), key.as_rb_value())) })
-            .and_then(|v| v.try_convert())
+            .and_then(TryConvert::try_convert)
     }
 
     /// Removes the key `key` from self and returns the associated value,
@@ -434,7 +434,7 @@ impl RHash {
     {
         let key = unsafe { key.into_value_unchecked() };
         protect(|| unsafe { Value::new(rb_hash_delete(self.as_rb_value(), key.as_rb_value())) })
-            .and_then(|v| v.try_convert())
+            .and_then(TryConvert::try_convert)
     }
 
     /// Removes all entries from `self`.
@@ -681,15 +681,7 @@ where
 
 impl Object for RHash {}
 
-unsafe impl private::ReprValue for RHash {
-    fn as_value(self) -> Value {
-        self.0.get()
-    }
-
-    unsafe fn from_value_unchecked(val: Value) -> Self {
-        Self(NonZeroValue::new_unchecked(val))
-    }
-}
+unsafe impl private::ReprValue for RHash {}
 
 impl ReprValue for RHash {}
 

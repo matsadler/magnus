@@ -159,15 +159,7 @@ impl IntoValue for RModule {
 impl Object for RModule {}
 impl Module for RModule {}
 
-unsafe impl private::ReprValue for RModule {
-    fn as_value(self) -> Value {
-        self.0.get()
-    }
-
-    unsafe fn from_value_unchecked(val: Value) -> Self {
-        Self(NonZeroValue::new_unchecked(val))
-    }
-}
+unsafe impl private::ReprValue for RModule {}
 
 impl ReprValue for RModule {}
 
@@ -387,7 +379,7 @@ pub trait Module: Object + ReprValue + Copy {
         let id = unsafe { name.into_id_unchecked() };
         let res =
             unsafe { protect(|| Value::new(rb_const_get(self.as_rb_value(), id.as_rb_id()))) };
-        res.and_then(|v| v.try_convert())
+        res.and_then(TryConvert::try_convert)
     }
 
     /// Returns whether or not `self` inherits from `other`.

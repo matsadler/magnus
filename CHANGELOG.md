@@ -4,10 +4,13 @@
 ### Added
 
 ### Changed
+- `ReprValue` and `TryConvert` added to `magnus::prelude`.
+- `Value`'s methods moved to the `ReprValue` trait.
 
 ### Deprecated
 
 ### Removed
+- `Into<Value>`/`From<T> for Value`, implementations use `IntoValue`.
 
 ### Fixed
 

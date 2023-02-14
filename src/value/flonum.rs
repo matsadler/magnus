@@ -137,21 +137,13 @@ impl IntoValue for Flonum {
 
 impl Numeric for Flonum {}
 
-unsafe impl private::ReprValue for Flonum {
-    fn as_value(self) -> Value {
-        self.0.get()
-    }
-
-    unsafe fn from_value_unchecked(val: Value) -> Self {
-        Self(NonZeroValue::new_unchecked(val))
-    }
-}
+unsafe impl private::ReprValue for Flonum {}
 
 impl ReprValue for Flonum {}
 
 impl TryConvert for Flonum {
     fn try_convert(val: Value) -> Result<Self, Error> {
-        let float = val.try_convert::<Float>()?;
+        let float = Float::try_convert(val)?;
         if let Some(flonum) = Flonum::from_value(float.as_value()) {
             Ok(flonum)
         } else {

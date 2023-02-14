@@ -384,15 +384,7 @@ impl IntoValue for Integer {
 
 impl Numeric for Integer {}
 
-unsafe impl private::ReprValue for Integer {
-    fn as_value(self) -> Value {
-        self.0.get()
-    }
-
-    unsafe fn from_value_unchecked(val: Value) -> Self {
-        Self(NonZeroValue::new_unchecked(val))
-    }
-}
+unsafe impl private::ReprValue for Integer {}
 
 impl ReprValue for Integer {}
 

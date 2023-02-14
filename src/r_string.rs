@@ -1413,9 +1413,9 @@ impl RString {
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let s = RString::new(" foo  bar  baz ");
-    /// assert_eq!(s.split("").try_convert::<Vec<String>>().unwrap(), vec![" ", "f", "o", "o", " ", " ", "b", "a", "r", " ", " ", "b", "a", "z", " "]);
-    /// assert_eq!(s.split(" ").try_convert::<Vec<String>>().unwrap(), vec!["foo", "bar", "baz"]);
-    /// assert_eq!(s.split(" bar ").try_convert::<Vec<String>>().unwrap(), vec![" foo ", " baz "]);
+    /// assert_eq!(Vec::<String>::try_convert(s.split("").as_value()).unwrap(), vec![" ", "f", "o", "o", " ", " ", "b", "a", "r", " ", " ", "b", "a", "z", " "]);
+    /// assert_eq!(Vec::<String>::try_convert(s.split(" ").as_value()).unwrap(), vec!["foo", "bar", "baz"]);
+    /// assert_eq!(Vec::<String>::try_convert(s.split(" bar ").as_value()).unwrap(), vec![" foo ", " baz "]);
     /// ```
     pub fn split(self, delim: &str) -> RArray {
         let delim = CString::new(delim).unwrap();
@@ -1555,7 +1555,9 @@ impl IntoValue for &Path {
 #[cfg(not(unix))]
 impl IntoValue for &Path {
     fn into_value_with(self, handle: &RubyHandle) -> Value {
-        handle.str_new(self.to_string_lossy().as_ref()).into()
+        handle
+            .str_new(self.to_string_lossy().as_ref())
+            .into_value_with(handle)
     }
 }
 
@@ -1571,15 +1573,7 @@ unsafe impl IntoValueFromNative for PathBuf {}
 
 impl Object for RString {}
 
-unsafe impl private::ReprValue for RString {
-    fn as_value(self) -> Value {
-        self.0.get()
-    }
-
-    unsafe fn from_value_unchecked(val: Value) -> Self {
-        Self(NonZeroValue::new_unchecked(val))
-    }
-}
+unsafe impl private::ReprValue for RString {}
 
 impl ReprValue for RString {}
 
@@ -1710,15 +1704,7 @@ impl IntoValue for FString {
     }
 }
 
-unsafe impl private::ReprValue for FString {
-    fn as_value(self) -> Value {
-        self.0.as_value()
-    }
-
-    unsafe fn from_value_unchecked(val: Value) -> Self {
-        Self(RString::from_value_unchecked(val))
-    }
-}
+unsafe impl private::ReprValue for FString {}
 
 impl ReprValue for FString {}
 

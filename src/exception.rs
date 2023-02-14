@@ -98,15 +98,7 @@ impl IntoValue for Exception {
     }
 }
 
-unsafe impl private::ReprValue for Exception {
-    fn as_value(self) -> Value {
-        self.0.get()
-    }
-
-    unsafe fn from_value_unchecked(val: Value) -> Self {
-        Self(NonZeroValue::new_unchecked(val))
-    }
-}
+unsafe impl private::ReprValue for Exception {}
 
 impl ReprValue for Exception {}
 
@@ -207,15 +199,7 @@ impl Class for ExceptionClass {
     }
 }
 
-unsafe impl private::ReprValue for ExceptionClass {
-    fn as_value(self) -> Value {
-        self.0.get()
-    }
-
-    unsafe fn from_value_unchecked(val: Value) -> Self {
-        Self(NonZeroValue::new_unchecked(val))
-    }
-}
+unsafe impl private::ReprValue for ExceptionClass {}
 
 impl ReprValue for ExceptionClass {}
 

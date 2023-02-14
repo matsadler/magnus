@@ -362,15 +362,7 @@ unsafe impl<T> IntoValueFromNative for RangeToInclusive<T> where T: IntoValueFro
 
 impl Object for Range {}
 
-unsafe impl private::ReprValue for Range {
-    fn as_value(self) -> Value {
-        self.0.as_value()
-    }
-
-    unsafe fn from_value_unchecked(val: Value) -> Self {
-        Self(RStruct::from_value_unchecked(val))
-    }
-}
+unsafe impl private::ReprValue for Range {}
 
 impl ReprValue for Range {}
 

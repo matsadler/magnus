@@ -51,7 +51,7 @@ pub trait Object: ReprValue + Copy {
         debug_assert_value!(self);
         let id = unsafe { name.into_id_unchecked() };
         let res = unsafe { protect(|| Value::new(rb_ivar_get(self.as_rb_value(), id.as_rb_id()))) };
-        res.and_then(|v| v.try_convert())
+        res.and_then(TryConvert::try_convert)
     }
 
     /// Set the value for the instance variable `name` within `self`'s scope.
@@ -110,7 +110,7 @@ pub trait Object: ReprValue + Copy {
     /// let module = RModule::new();
     /// module.define_method("example", function!(example, 0)).unwrap();
     ///
-    /// let obj: RObject = class::object().new_instance(()).unwrap().try_convert().unwrap();
+    /// let obj = RObject::try_convert(class::object().new_instance(()).unwrap()).unwrap();
     /// obj.extend_object(module).unwrap();
     /// assert_eq!(obj.funcall::<_, _, i64>("example", ()).unwrap(), 42);
     /// ```

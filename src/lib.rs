@@ -1835,7 +1835,8 @@ mod object;
 pub mod prelude {
     pub use crate::{
         class::Class as _, encoding::EncodingCapable as _, module::Module as _,
-        numeric::Numeric as _, object::Object as _, value::ReprValue as _,
+        numeric::Numeric as _, object::Object as _, try_convert::TryConvert as _,
+        value::ReprValue as _,
     };
 }
 mod r_array;
@@ -2021,7 +2022,7 @@ impl RubyHandle {
     where
         T: TryConvert,
     {
-        protect(|| unsafe { Value::new(rb_current_receiver()) }).and_then(|v| v.try_convert())
+        protect(|| unsafe { Value::new(rb_current_receiver()) }).and_then(TryConvert::try_convert)
     }
 
     pub fn call_super<A, T>(&self, args: A) -> Result<T, Error>
@@ -2038,7 +2039,7 @@ impl RubyHandle {
                     slice.as_ptr() as *const VALUE,
                 ))
             })
-            .and_then(|v| v.try_convert())
+            .and_then(TryConvert::try_convert)
         }
     }
 
@@ -2049,14 +2050,14 @@ impl RubyHandle {
     {
         let feature = feature.into_r_string_with(self);
         protect(|| unsafe { Value::new(rb_require_string(feature.as_rb_value())) })
-            .and_then(|v| v.try_convert())
+            .and_then(TryConvert::try_convert)
     }
 
     #[cfg(ruby_lt_2_7)]
     pub fn require(&self, feature: &str) -> Result<bool, Error> {
         let feature = CString::new(feature).unwrap();
         protect(|| unsafe { Value::new(rb_require(feature.as_ptr())) })
-            .and_then(|v| v.try_convert())
+            .and_then(TryConvert::try_convert)
     }
 
     pub fn eval<T>(&self, s: &str) -> Result<T, Error>
@@ -2073,7 +2074,7 @@ impl RubyHandle {
 
         match state {
             // Tag::None
-            0 => Value::new(result).try_convert(),
+            0 => T::try_convert(Value::new(result)),
             // Tag::Raise
             6 => unsafe {
                 let ex = Exception::from_rb_value_unchecked(rb_errinfo());

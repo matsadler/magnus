@@ -718,7 +718,7 @@ where
 
     #[inline]
     unsafe fn call_convert_value(self, rb_self: Value, args: RArray) -> Result<Value, Error> {
-        (self.func)(rb_self.try_convert()?, args.try_convert()?).into_return_value()
+        (self.func)(rb_self.try_convert()?, args.as_value().try_convert()?).into_return_value()
     }
 
     #[inline]
@@ -3074,7 +3074,7 @@ where
 
     #[inline]
     unsafe fn call_convert_value(self, args: RArray) -> Result<Value, Error> {
-        (self.func)(args.try_convert()?).into_return_value()
+        (self.func)(args.as_value().try_convert()?).into_return_value()
     }
 
     #[inline]

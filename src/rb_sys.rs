@@ -214,7 +214,7 @@ mod tests {
         let symbols: RArray = sym_class.funcall("all_symbols", ()).unwrap();
 
         for sym in symbols.each() {
-            let sym: Symbol = sym.unwrap().try_convert().unwrap();
+            let sym = Symbol::try_convert(sym.unwrap()).unwrap();
             let id: Id = sym.into();
 
             assert_eq!(id, unsafe { Id::from_raw(id.as_raw()) });

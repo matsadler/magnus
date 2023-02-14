@@ -72,7 +72,7 @@ pub trait Numeric: ReprValue + Copy {
                 op.as_rb_id(),
             ))
         })
-        .and_then(|v| v.try_convert())
+        .and_then(TryConvert::try_convert)
     }
 
     /// Apply the operator `op` with coercion.
@@ -117,7 +117,7 @@ pub trait Numeric: ReprValue + Copy {
                 op.as_rb_id(),
             ))
         })
-        .and_then(|v| v.try_convert())
+        .and_then(TryConvert::try_convert)
     }
 
     /// Apply the operator `op` with coercion.
@@ -159,7 +159,7 @@ pub trait Numeric: ReprValue + Copy {
                 op.as_rb_id(),
             ))
         })
-        .and_then(|v| v.try_convert())
+        .and_then(TryConvert::try_convert)
     }
 
     /// Apply the operator `op` with coercion.
@@ -201,7 +201,7 @@ pub trait Numeric: ReprValue + Copy {
                 op.as_rb_id(),
             ))
         })
-        .and_then(|v| v.try_convert())
+        .and_then(TryConvert::try_convert)
     }
 }
 
@@ -224,7 +224,7 @@ pub trait Numeric: ReprValue + Copy {
 /// let result: NumericValue = a.coerce_bin(b, "+").unwrap();
 /// let result: NumericValue = result.coerce_bin(c, "+").unwrap();
 /// let result: NumericValue = result.coerce_bin(d, "+").unwrap();
-/// assert_eq!(result.try_convert::<f64>().unwrap(), 5.8);
+/// assert_eq!(f64::try_convert(result.as_value()).unwrap(), 5.8);
 /// ```
 #[derive(Clone, Copy)]
 #[repr(transparent)]
@@ -255,15 +255,7 @@ impl IntoValue for NumericValue {
     }
 }
 
-unsafe impl private::ReprValue for NumericValue {
-    fn as_value(self) -> Value {
-        self.0.get()
-    }
-
-    unsafe fn from_value_unchecked(val: Value) -> Self {
-        Self(NonZeroValue::new_unchecked(val))
-    }
-}
+unsafe impl private::ReprValue for NumericValue {}
 
 impl Numeric for NumericValue {}
 
