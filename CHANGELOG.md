@@ -4,10 +4,14 @@
 ### Added
 
 ### Changed
+- `typed_data::Obj<T>` derefs to `T` so now `T`'s methods can be called
+  directly on `typed_data::Obj<T>`.
 - `ReprValue` and `TryConvert` added to `magnus::prelude`.
 - `Value`'s methods moved to the `ReprValue` trait.
 
 ### Deprecated
+- `typed_data::Obj::get` as it is made redundant by the `Deref` implementation
+  for `typed_data::Obj`.
 
 ### Removed
 - `Into<Value>`/`From<T> for Value`, implementations use `IntoValue`.

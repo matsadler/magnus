@@ -4,6 +4,7 @@
 //! `rb_data_typed_object_wrap` function from Ruby's C API.
 
 use std::{
+    ops::Deref,
     collections::hash_map::DefaultHasher,
     ffi::{c_void, CString},
     fmt,
@@ -512,27 +513,20 @@ where
         get_ruby!().obj_wrap(data)
     }
 
-    /// Get a reference to the Rust type wrapped in the Ruby object `self`.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use magnus::{define_class, typed_data};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
-    ///
-    /// #[magnus::wrap(class = "Point")]
-    /// #[derive(Debug, PartialEq, Eq)]
-    /// struct Point {
-    ///     x: isize,
-    ///     y: isize,
-    /// }
-    ///
-    /// let point_class = define_class("Point", Default::default()).unwrap();
-    /// let value = typed_data::Obj::wrap(Point { x: 4, y: 2 });
-    ///
-    /// assert_eq!(value.get(), &Point { x: 4, y: 2 });
-    /// ```
+    #[doc(hidden)]
+    #[deprecated(since = "0.6.0", note = "Obj::get() is unnecessary, Obj<T> derefs to T")]
     pub fn get(&self) -> &T {
+        self.inner.get().unwrap()
+    }
+}
+
+impl<T> Deref for Obj<T>
+where
+    T: TypedData,
+{
+    type Target = T;
+
+    fn deref(&self) -> &Self::Target {
         self.inner.get().unwrap()
     }
 }
