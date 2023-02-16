@@ -1558,7 +1558,7 @@ impl Qundef {
     }
 
     #[doc(hidden)]
-    #[deprecated(since = "0.5.0", note = "please use `as_value` instead")]
+    #[deprecated(since = "0.6.0", note = "please use `as_value` instead")]
     pub unsafe fn to_value(self) -> Value {
         self.as_value()
     }
