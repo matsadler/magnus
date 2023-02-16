@@ -222,7 +222,7 @@ mod private {
 
         fn from_slice(vals: &[Value]) -> Result<Self, Error> {
             if vals.len() == <Self as ScanArgsRequired>::LEN {
-                Ok((vals[0].try_convert()?,))
+                Ok((TryConvert::try_convert(vals[0])?,))
             } else {
                 panic!(
                     "unexpected arguments, expected {} got {}",
@@ -242,7 +242,10 @@ mod private {
 
         fn from_slice(vals: &[Value]) -> Result<Self, Error> {
             if vals.len() == <Self as ScanArgsRequired>::LEN {
-                Ok((vals[0].try_convert()?, vals[1].try_convert()?))
+                Ok((
+                    TryConvert::try_convert(vals[0])?,
+                    TryConvert::try_convert(vals[1])?,
+                ))
             } else {
                 panic!(
                     "unexpected arguments, expected {} got {}",
@@ -264,9 +267,9 @@ mod private {
         fn from_slice(vals: &[Value]) -> Result<Self, Error> {
             if vals.len() == <Self as ScanArgsRequired>::LEN {
                 Ok((
-                    vals[0].try_convert()?,
-                    vals[1].try_convert()?,
-                    vals[2].try_convert()?,
+                    TryConvert::try_convert(vals[0])?,
+                    TryConvert::try_convert(vals[1])?,
+                    TryConvert::try_convert(vals[2])?,
                 ))
             } else {
                 panic!(
@@ -290,10 +293,10 @@ mod private {
         fn from_slice(vals: &[Value]) -> Result<Self, Error> {
             if vals.len() == <Self as ScanArgsRequired>::LEN {
                 Ok((
-                    vals[0].try_convert()?,
-                    vals[1].try_convert()?,
-                    vals[2].try_convert()?,
-                    vals[3].try_convert()?,
+                    TryConvert::try_convert(vals[0])?,
+                    TryConvert::try_convert(vals[1])?,
+                    TryConvert::try_convert(vals[2])?,
+                    TryConvert::try_convert(vals[3])?,
                 ))
             } else {
                 panic!(
@@ -318,11 +321,11 @@ mod private {
         fn from_slice(vals: &[Value]) -> Result<Self, Error> {
             if vals.len() == <Self as ScanArgsRequired>::LEN {
                 Ok((
-                    vals[0].try_convert()?,
-                    vals[1].try_convert()?,
-                    vals[2].try_convert()?,
-                    vals[3].try_convert()?,
-                    vals[4].try_convert()?,
+                    TryConvert::try_convert(vals[0])?,
+                    TryConvert::try_convert(vals[1])?,
+                    TryConvert::try_convert(vals[2])?,
+                    TryConvert::try_convert(vals[3])?,
+                    TryConvert::try_convert(vals[4])?,
                 ))
             } else {
                 panic!(
@@ -348,12 +351,12 @@ mod private {
         fn from_slice(vals: &[Value]) -> Result<Self, Error> {
             if vals.len() == <Self as ScanArgsRequired>::LEN {
                 Ok((
-                    vals[0].try_convert()?,
-                    vals[1].try_convert()?,
-                    vals[2].try_convert()?,
-                    vals[3].try_convert()?,
-                    vals[4].try_convert()?,
-                    vals[5].try_convert()?,
+                    TryConvert::try_convert(vals[0])?,
+                    TryConvert::try_convert(vals[1])?,
+                    TryConvert::try_convert(vals[2])?,
+                    TryConvert::try_convert(vals[3])?,
+                    TryConvert::try_convert(vals[4])?,
+                    TryConvert::try_convert(vals[5])?,
                 ))
             } else {
                 panic!(
@@ -380,13 +383,13 @@ mod private {
         fn from_slice(vals: &[Value]) -> Result<Self, Error> {
             if vals.len() == <Self as ScanArgsRequired>::LEN {
                 Ok((
-                    vals[0].try_convert()?,
-                    vals[1].try_convert()?,
-                    vals[2].try_convert()?,
-                    vals[3].try_convert()?,
-                    vals[4].try_convert()?,
-                    vals[5].try_convert()?,
-                    vals[6].try_convert()?,
+                    TryConvert::try_convert(vals[0])?,
+                    TryConvert::try_convert(vals[1])?,
+                    TryConvert::try_convert(vals[2])?,
+                    TryConvert::try_convert(vals[3])?,
+                    TryConvert::try_convert(vals[4])?,
+                    TryConvert::try_convert(vals[5])?,
+                    TryConvert::try_convert(vals[6])?,
                 ))
             } else {
                 panic!(
@@ -414,14 +417,14 @@ mod private {
         fn from_slice(vals: &[Value]) -> Result<Self, Error> {
             if vals.len() == <Self as ScanArgsRequired>::LEN {
                 Ok((
-                    vals[0].try_convert()?,
-                    vals[1].try_convert()?,
-                    vals[2].try_convert()?,
-                    vals[3].try_convert()?,
-                    vals[4].try_convert()?,
-                    vals[5].try_convert()?,
-                    vals[6].try_convert()?,
-                    vals[7].try_convert()?,
+                    TryConvert::try_convert(vals[0])?,
+                    TryConvert::try_convert(vals[1])?,
+                    TryConvert::try_convert(vals[2])?,
+                    TryConvert::try_convert(vals[3])?,
+                    TryConvert::try_convert(vals[4])?,
+                    TryConvert::try_convert(vals[5])?,
+                    TryConvert::try_convert(vals[6])?,
+                    TryConvert::try_convert(vals[7])?,
                 ))
             } else {
                 panic!(
@@ -450,15 +453,15 @@ mod private {
         fn from_slice(vals: &[Value]) -> Result<Self, Error> {
             if vals.len() == <Self as ScanArgsRequired>::LEN {
                 Ok((
-                    vals[0].try_convert()?,
-                    vals[1].try_convert()?,
-                    vals[2].try_convert()?,
-                    vals[3].try_convert()?,
-                    vals[4].try_convert()?,
-                    vals[5].try_convert()?,
-                    vals[6].try_convert()?,
-                    vals[7].try_convert()?,
-                    vals[8].try_convert()?,
+                    TryConvert::try_convert(vals[0])?,
+                    TryConvert::try_convert(vals[1])?,
+                    TryConvert::try_convert(vals[2])?,
+                    TryConvert::try_convert(vals[3])?,
+                    TryConvert::try_convert(vals[4])?,
+                    TryConvert::try_convert(vals[5])?,
+                    TryConvert::try_convert(vals[6])?,
+                    TryConvert::try_convert(vals[7])?,
+                    TryConvert::try_convert(vals[8])?,
                 ))
             } else {
                 panic!(
@@ -503,7 +506,8 @@ mod private {
                 Ok((vals
                     .get(0)
                     .filter(|v| !v.is_undef())
-                    .map(|v| v.try_convert())
+                    .copied()
+                    .map(TryConvert::try_convert)
                     .transpose()?,))
             } else {
                 panic!(
@@ -527,11 +531,13 @@ mod private {
                 Ok((
                     vals.get(0)
                         .filter(|v| !v.is_undef())
-                        .map(|v| v.try_convert())
+                        .copied()
+                        .map(TryConvert::try_convert)
                         .transpose()?,
                     vals.get(1)
                         .filter(|v| !v.is_undef())
-                        .map(|v| v.try_convert())
+                        .copied()
+                        .map(TryConvert::try_convert)
                         .transpose()?,
                 ))
             } else {
@@ -557,15 +563,18 @@ mod private {
                 Ok((
                     vals.get(0)
                         .filter(|v| !v.is_undef())
-                        .map(|v| v.try_convert())
+                        .copied()
+                        .map(TryConvert::try_convert)
                         .transpose()?,
                     vals.get(1)
                         .filter(|v| !v.is_undef())
-                        .map(|v| v.try_convert())
+                        .copied()
+                        .map(TryConvert::try_convert)
                         .transpose()?,
                     vals.get(2)
                         .filter(|v| !v.is_undef())
-                        .map(|v| v.try_convert())
+                        .copied()
+                        .map(TryConvert::try_convert)
                         .transpose()?,
                 ))
             } else {
@@ -592,19 +601,23 @@ mod private {
                 Ok((
                     vals.get(0)
                         .filter(|v| !v.is_undef())
-                        .map(|v| v.try_convert())
+                        .copied()
+                        .map(TryConvert::try_convert)
                         .transpose()?,
                     vals.get(1)
                         .filter(|v| !v.is_undef())
-                        .map(|v| v.try_convert())
+                        .copied()
+                        .map(TryConvert::try_convert)
                         .transpose()?,
                     vals.get(2)
                         .filter(|v| !v.is_undef())
-                        .map(|v| v.try_convert())
+                        .copied()
+                        .map(TryConvert::try_convert)
                         .transpose()?,
                     vals.get(3)
                         .filter(|v| !v.is_undef())
-                        .map(|v| v.try_convert())
+                        .copied()
+                        .map(TryConvert::try_convert)
                         .transpose()?,
                 ))
             } else {
@@ -633,23 +646,28 @@ mod private {
                 Ok((
                     vals.get(0)
                         .filter(|v| !v.is_undef())
-                        .map(|v| v.try_convert())
+                        .copied()
+                        .map(TryConvert::try_convert)
                         .transpose()?,
                     vals.get(1)
                         .filter(|v| !v.is_undef())
-                        .map(|v| v.try_convert())
+                        .copied()
+                        .map(TryConvert::try_convert)
                         .transpose()?,
                     vals.get(2)
                         .filter(|v| !v.is_undef())
-                        .map(|v| v.try_convert())
+                        .copied()
+                        .map(TryConvert::try_convert)
                         .transpose()?,
                     vals.get(3)
                         .filter(|v| !v.is_undef())
-                        .map(|v| v.try_convert())
+                        .copied()
+                        .map(TryConvert::try_convert)
                         .transpose()?,
                     vals.get(4)
                         .filter(|v| !v.is_undef())
-                        .map(|v| v.try_convert())
+                        .copied()
+                        .map(TryConvert::try_convert)
                         .transpose()?,
                 ))
             } else {
@@ -686,27 +704,33 @@ mod private {
                 Ok((
                     vals.get(0)
                         .filter(|v| !v.is_undef())
-                        .map(|v| v.try_convert())
+                        .copied()
+                        .map(TryConvert::try_convert)
                         .transpose()?,
                     vals.get(1)
                         .filter(|v| !v.is_undef())
-                        .map(|v| v.try_convert())
+                        .copied()
+                        .map(TryConvert::try_convert)
                         .transpose()?,
                     vals.get(2)
                         .filter(|v| !v.is_undef())
-                        .map(|v| v.try_convert())
+                        .copied()
+                        .map(TryConvert::try_convert)
                         .transpose()?,
                     vals.get(3)
                         .filter(|v| !v.is_undef())
-                        .map(|v| v.try_convert())
+                        .copied()
+                        .map(TryConvert::try_convert)
                         .transpose()?,
                     vals.get(4)
                         .filter(|v| !v.is_undef())
-                        .map(|v| v.try_convert())
+                        .copied()
+                        .map(TryConvert::try_convert)
                         .transpose()?,
                     vals.get(5)
                         .filter(|v| !v.is_undef())
-                        .map(|v| v.try_convert())
+                        .copied()
+                        .map(TryConvert::try_convert)
                         .transpose()?,
                 ))
             } else {
@@ -745,31 +769,38 @@ mod private {
                 Ok((
                     vals.get(0)
                         .filter(|v| !v.is_undef())
-                        .map(|v| v.try_convert())
+                        .copied()
+                        .map(TryConvert::try_convert)
                         .transpose()?,
                     vals.get(1)
                         .filter(|v| !v.is_undef())
-                        .map(|v| v.try_convert())
+                        .copied()
+                        .map(TryConvert::try_convert)
                         .transpose()?,
                     vals.get(2)
                         .filter(|v| !v.is_undef())
-                        .map(|v| v.try_convert())
+                        .copied()
+                        .map(TryConvert::try_convert)
                         .transpose()?,
                     vals.get(3)
                         .filter(|v| !v.is_undef())
-                        .map(|v| v.try_convert())
+                        .copied()
+                        .map(TryConvert::try_convert)
                         .transpose()?,
                     vals.get(4)
                         .filter(|v| !v.is_undef())
-                        .map(|v| v.try_convert())
+                        .copied()
+                        .map(TryConvert::try_convert)
                         .transpose()?,
                     vals.get(5)
                         .filter(|v| !v.is_undef())
-                        .map(|v| v.try_convert())
+                        .copied()
+                        .map(TryConvert::try_convert)
                         .transpose()?,
                     vals.get(6)
                         .filter(|v| !v.is_undef())
-                        .map(|v| v.try_convert())
+                        .copied()
+                        .map(TryConvert::try_convert)
                         .transpose()?,
                 ))
             } else {
@@ -810,35 +841,43 @@ mod private {
                 Ok((
                     vals.get(0)
                         .filter(|v| !v.is_undef())
-                        .map(|v| v.try_convert())
+                        .copied()
+                        .map(TryConvert::try_convert)
                         .transpose()?,
                     vals.get(1)
                         .filter(|v| !v.is_undef())
-                        .map(|v| v.try_convert())
+                        .copied()
+                        .map(TryConvert::try_convert)
                         .transpose()?,
                     vals.get(2)
                         .filter(|v| !v.is_undef())
-                        .map(|v| v.try_convert())
+                        .copied()
+                        .map(TryConvert::try_convert)
                         .transpose()?,
                     vals.get(3)
                         .filter(|v| !v.is_undef())
-                        .map(|v| v.try_convert())
+                        .copied()
+                        .map(TryConvert::try_convert)
                         .transpose()?,
                     vals.get(4)
                         .filter(|v| !v.is_undef())
-                        .map(|v| v.try_convert())
+                        .copied()
+                        .map(TryConvert::try_convert)
                         .transpose()?,
                     vals.get(5)
                         .filter(|v| !v.is_undef())
-                        .map(|v| v.try_convert())
+                        .copied()
+                        .map(TryConvert::try_convert)
                         .transpose()?,
                     vals.get(6)
                         .filter(|v| !v.is_undef())
-                        .map(|v| v.try_convert())
+                        .copied()
+                        .map(TryConvert::try_convert)
                         .transpose()?,
                     vals.get(7)
                         .filter(|v| !v.is_undef())
-                        .map(|v| v.try_convert())
+                        .copied()
+                        .map(TryConvert::try_convert)
                         .transpose()?,
                 ))
             } else {
@@ -881,39 +920,48 @@ mod private {
                 Ok((
                     vals.get(0)
                         .filter(|v| !v.is_undef())
-                        .map(|v| v.try_convert())
+                        .copied()
+                        .map(TryConvert::try_convert)
                         .transpose()?,
                     vals.get(1)
                         .filter(|v| !v.is_undef())
-                        .map(|v| v.try_convert())
+                        .copied()
+                        .map(TryConvert::try_convert)
                         .transpose()?,
                     vals.get(2)
                         .filter(|v| !v.is_undef())
-                        .map(|v| v.try_convert())
+                        .copied()
+                        .map(TryConvert::try_convert)
                         .transpose()?,
                     vals.get(3)
                         .filter(|v| !v.is_undef())
-                        .map(|v| v.try_convert())
+                        .copied()
+                        .map(TryConvert::try_convert)
                         .transpose()?,
                     vals.get(4)
                         .filter(|v| !v.is_undef())
-                        .map(|v| v.try_convert())
+                        .copied()
+                        .map(TryConvert::try_convert)
                         .transpose()?,
                     vals.get(5)
                         .filter(|v| !v.is_undef())
-                        .map(|v| v.try_convert())
+                        .copied()
+                        .map(TryConvert::try_convert)
                         .transpose()?,
                     vals.get(6)
                         .filter(|v| !v.is_undef())
-                        .map(|v| v.try_convert())
+                        .copied()
+                        .map(TryConvert::try_convert)
                         .transpose()?,
                     vals.get(7)
                         .filter(|v| !v.is_undef())
-                        .map(|v| v.try_convert())
+                        .copied()
+                        .map(TryConvert::try_convert)
                         .transpose()?,
                     vals.get(8)
                         .filter(|v| !v.is_undef())
-                        .map(|v| v.try_convert())
+                        .copied()
+                        .map(TryConvert::try_convert)
                         .transpose()?,
                 ))
             } else {
@@ -947,7 +995,7 @@ mod private {
         const REQ: bool = true;
 
         fn from_opt(val: Option<Value>) -> Result<Self, Error> {
-            val.expect("expected splat").try_convert()
+            TryConvert::try_convert(val.expect("expected splat"))
         }
     }
 
@@ -958,7 +1006,7 @@ mod private {
         const REQ: bool = true;
 
         fn from_opt(val: Option<Value>) -> Result<Self, Error> {
-            val.expect("expected splat").try_convert()
+            TryConvert::try_convert(val.expect("expected splat"))
         }
     }
 
@@ -987,7 +1035,7 @@ mod private {
             if val.is_nil() {
                 return Ok(RHash::new());
             }
-            val.try_convert()
+            TryConvert::try_convert(val)
         }
     }
 
@@ -1016,7 +1064,7 @@ mod private {
             if val.is_nil() {
                 return Err(Error::new(exception::arg_error(), "no block given"));
             }
-            val.try_convert()
+            TryConvert::try_convert(val)
         }
     }
 
@@ -1024,7 +1072,7 @@ mod private {
         const REQ: bool = true;
 
         fn from_opt(val: Option<Value>) -> Result<Self, Error> {
-            val.expect("expected block").try_convert()
+            TryConvert::try_convert(val.expect("expected block"))
         }
     }
 }

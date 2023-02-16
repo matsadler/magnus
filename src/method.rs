@@ -718,7 +718,11 @@ where
 
     #[inline]
     unsafe fn call_convert_value(self, rb_self: Value, args: RArray) -> Result<Value, Error> {
-        (self.func)(rb_self.try_convert()?, args.as_value().try_convert()?).into_return_value()
+        (self.func)(
+            TryConvert::try_convert(rb_self)?,
+            TryConvert::try_convert(args.as_value())?,
+        )
+        .into_return_value()
     }
 
     #[inline]
@@ -771,7 +775,7 @@ where
         rb_self: Value,
     ) -> Result<Value, Error> {
         let args = slice::from_raw_parts(argv, argc as usize);
-        (self.func)(rb_self.try_convert()?, args).into_return_value()
+        (self.func)(TryConvert::try_convert(rb_self)?, args).into_return_value()
     }
 
     #[inline]
@@ -824,7 +828,7 @@ where
 
     #[inline]
     unsafe fn call_convert_value(self, rb_self: Value) -> Result<Value, Error> {
-        (self.func)(rb_self.try_convert()?).into_return_value()
+        (self.func)(TryConvert::try_convert(rb_self)?).into_return_value()
     }
 
     #[inline]
@@ -873,7 +877,11 @@ where
 
     #[inline]
     unsafe fn call_convert_value(self, rb_self: Value, a: Value) -> Result<Value, Error> {
-        (self.func)(rb_self.try_convert()?, a.try_convert()?).into_return_value()
+        (self.func)(
+            TryConvert::try_convert(rb_self)?,
+            TryConvert::try_convert(a)?,
+        )
+        .into_return_value()
     }
 
     #[inline]
@@ -926,7 +934,12 @@ where
 
     #[inline]
     unsafe fn call_convert_value(self, rb_self: Value, a: Value, b: Value) -> Result<Value, Error> {
-        (self.func)(rb_self.try_convert()?, a.try_convert()?, b.try_convert()?).into_return_value()
+        (self.func)(
+            TryConvert::try_convert(rb_self)?,
+            TryConvert::try_convert(a)?,
+            TryConvert::try_convert(b)?,
+        )
+        .into_return_value()
     }
 
     #[inline]
@@ -989,10 +1002,10 @@ where
         c: Value,
     ) -> Result<Value, Error> {
         (self.func)(
-            rb_self.try_convert()?,
-            a.try_convert()?,
-            b.try_convert()?,
-            c.try_convert()?,
+            TryConvert::try_convert(rb_self)?,
+            TryConvert::try_convert(a)?,
+            TryConvert::try_convert(b)?,
+            TryConvert::try_convert(c)?,
         )
         .into_return_value()
     }
@@ -1061,11 +1074,11 @@ where
         d: Value,
     ) -> Result<Value, Error> {
         (self.func)(
-            rb_self.try_convert()?,
-            a.try_convert()?,
-            b.try_convert()?,
-            c.try_convert()?,
-            d.try_convert()?,
+            TryConvert::try_convert(rb_self)?,
+            TryConvert::try_convert(a)?,
+            TryConvert::try_convert(b)?,
+            TryConvert::try_convert(c)?,
+            TryConvert::try_convert(d)?,
         )
         .into_return_value()
     }
@@ -1145,12 +1158,12 @@ where
         e: Value,
     ) -> Result<Value, Error> {
         (self.func)(
-            rb_self.try_convert()?,
-            a.try_convert()?,
-            b.try_convert()?,
-            c.try_convert()?,
-            d.try_convert()?,
-            e.try_convert()?,
+            TryConvert::try_convert(rb_self)?,
+            TryConvert::try_convert(a)?,
+            TryConvert::try_convert(b)?,
+            TryConvert::try_convert(c)?,
+            TryConvert::try_convert(d)?,
+            TryConvert::try_convert(e)?,
         )
         .into_return_value()
     }
@@ -1235,13 +1248,13 @@ where
         f: Value,
     ) -> Result<Value, Error> {
         (self.func)(
-            rb_self.try_convert()?,
-            a.try_convert()?,
-            b.try_convert()?,
-            c.try_convert()?,
-            d.try_convert()?,
-            e.try_convert()?,
-            f.try_convert()?,
+            TryConvert::try_convert(rb_self)?,
+            TryConvert::try_convert(a)?,
+            TryConvert::try_convert(b)?,
+            TryConvert::try_convert(c)?,
+            TryConvert::try_convert(d)?,
+            TryConvert::try_convert(e)?,
+            TryConvert::try_convert(f)?,
         )
         .into_return_value()
     }
@@ -1331,14 +1344,14 @@ where
         g: Value,
     ) -> Result<Value, Error> {
         (self.func)(
-            rb_self.try_convert()?,
-            a.try_convert()?,
-            b.try_convert()?,
-            c.try_convert()?,
-            d.try_convert()?,
-            e.try_convert()?,
-            f.try_convert()?,
-            g.try_convert()?,
+            TryConvert::try_convert(rb_self)?,
+            TryConvert::try_convert(a)?,
+            TryConvert::try_convert(b)?,
+            TryConvert::try_convert(c)?,
+            TryConvert::try_convert(d)?,
+            TryConvert::try_convert(e)?,
+            TryConvert::try_convert(f)?,
+            TryConvert::try_convert(g)?,
         )
         .into_return_value()
     }
@@ -1433,15 +1446,15 @@ where
         h: Value,
     ) -> Result<Value, Error> {
         (self.func)(
-            rb_self.try_convert()?,
-            a.try_convert()?,
-            b.try_convert()?,
-            c.try_convert()?,
-            d.try_convert()?,
-            e.try_convert()?,
-            f.try_convert()?,
-            g.try_convert()?,
-            h.try_convert()?,
+            TryConvert::try_convert(rb_self)?,
+            TryConvert::try_convert(a)?,
+            TryConvert::try_convert(b)?,
+            TryConvert::try_convert(c)?,
+            TryConvert::try_convert(d)?,
+            TryConvert::try_convert(e)?,
+            TryConvert::try_convert(f)?,
+            TryConvert::try_convert(g)?,
+            TryConvert::try_convert(h)?,
         )
         .into_return_value()
     }
@@ -1542,16 +1555,16 @@ where
         i: Value,
     ) -> Result<Value, Error> {
         (self.func)(
-            rb_self.try_convert()?,
-            a.try_convert()?,
-            b.try_convert()?,
-            c.try_convert()?,
-            d.try_convert()?,
-            e.try_convert()?,
-            f.try_convert()?,
-            g.try_convert()?,
-            h.try_convert()?,
-            i.try_convert()?,
+            TryConvert::try_convert(rb_self)?,
+            TryConvert::try_convert(a)?,
+            TryConvert::try_convert(b)?,
+            TryConvert::try_convert(c)?,
+            TryConvert::try_convert(d)?,
+            TryConvert::try_convert(e)?,
+            TryConvert::try_convert(f)?,
+            TryConvert::try_convert(g)?,
+            TryConvert::try_convert(h)?,
+            TryConvert::try_convert(i)?,
         )
         .into_return_value()
     }
@@ -1657,17 +1670,17 @@ where
         j: Value,
     ) -> Result<Value, Error> {
         (self.func)(
-            rb_self.try_convert()?,
-            a.try_convert()?,
-            b.try_convert()?,
-            c.try_convert()?,
-            d.try_convert()?,
-            e.try_convert()?,
-            f.try_convert()?,
-            g.try_convert()?,
-            h.try_convert()?,
-            i.try_convert()?,
-            j.try_convert()?,
+            TryConvert::try_convert(rb_self)?,
+            TryConvert::try_convert(a)?,
+            TryConvert::try_convert(b)?,
+            TryConvert::try_convert(c)?,
+            TryConvert::try_convert(d)?,
+            TryConvert::try_convert(e)?,
+            TryConvert::try_convert(f)?,
+            TryConvert::try_convert(g)?,
+            TryConvert::try_convert(h)?,
+            TryConvert::try_convert(i)?,
+            TryConvert::try_convert(j)?,
         )
         .into_return_value()
     }
@@ -1778,18 +1791,18 @@ where
         k: Value,
     ) -> Result<Value, Error> {
         (self.func)(
-            rb_self.try_convert()?,
-            a.try_convert()?,
-            b.try_convert()?,
-            c.try_convert()?,
-            d.try_convert()?,
-            e.try_convert()?,
-            f.try_convert()?,
-            g.try_convert()?,
-            h.try_convert()?,
-            i.try_convert()?,
-            j.try_convert()?,
-            k.try_convert()?,
+            TryConvert::try_convert(rb_self)?,
+            TryConvert::try_convert(a)?,
+            TryConvert::try_convert(b)?,
+            TryConvert::try_convert(c)?,
+            TryConvert::try_convert(d)?,
+            TryConvert::try_convert(e)?,
+            TryConvert::try_convert(f)?,
+            TryConvert::try_convert(g)?,
+            TryConvert::try_convert(h)?,
+            TryConvert::try_convert(i)?,
+            TryConvert::try_convert(j)?,
+            TryConvert::try_convert(k)?,
         )
         .into_return_value()
     }
@@ -1905,19 +1918,19 @@ where
         l: Value,
     ) -> Result<Value, Error> {
         (self.func)(
-            rb_self.try_convert()?,
-            a.try_convert()?,
-            b.try_convert()?,
-            c.try_convert()?,
-            d.try_convert()?,
-            e.try_convert()?,
-            f.try_convert()?,
-            g.try_convert()?,
-            h.try_convert()?,
-            i.try_convert()?,
-            j.try_convert()?,
-            k.try_convert()?,
-            l.try_convert()?,
+            TryConvert::try_convert(rb_self)?,
+            TryConvert::try_convert(a)?,
+            TryConvert::try_convert(b)?,
+            TryConvert::try_convert(c)?,
+            TryConvert::try_convert(d)?,
+            TryConvert::try_convert(e)?,
+            TryConvert::try_convert(f)?,
+            TryConvert::try_convert(g)?,
+            TryConvert::try_convert(h)?,
+            TryConvert::try_convert(i)?,
+            TryConvert::try_convert(j)?,
+            TryConvert::try_convert(k)?,
+            TryConvert::try_convert(l)?,
         )
         .into_return_value()
     }
@@ -2038,20 +2051,20 @@ where
         m: Value,
     ) -> Result<Value, Error> {
         (self.func)(
-            rb_self.try_convert()?,
-            a.try_convert()?,
-            b.try_convert()?,
-            c.try_convert()?,
-            d.try_convert()?,
-            e.try_convert()?,
-            f.try_convert()?,
-            g.try_convert()?,
-            h.try_convert()?,
-            i.try_convert()?,
-            j.try_convert()?,
-            k.try_convert()?,
-            l.try_convert()?,
-            m.try_convert()?,
+            TryConvert::try_convert(rb_self)?,
+            TryConvert::try_convert(a)?,
+            TryConvert::try_convert(b)?,
+            TryConvert::try_convert(c)?,
+            TryConvert::try_convert(d)?,
+            TryConvert::try_convert(e)?,
+            TryConvert::try_convert(f)?,
+            TryConvert::try_convert(g)?,
+            TryConvert::try_convert(h)?,
+            TryConvert::try_convert(i)?,
+            TryConvert::try_convert(j)?,
+            TryConvert::try_convert(k)?,
+            TryConvert::try_convert(l)?,
+            TryConvert::try_convert(m)?,
         )
         .into_return_value()
     }
@@ -2177,21 +2190,21 @@ where
         n: Value,
     ) -> Result<Value, Error> {
         (self.func)(
-            rb_self.try_convert()?,
-            a.try_convert()?,
-            b.try_convert()?,
-            c.try_convert()?,
-            d.try_convert()?,
-            e.try_convert()?,
-            f.try_convert()?,
-            g.try_convert()?,
-            h.try_convert()?,
-            i.try_convert()?,
-            j.try_convert()?,
-            k.try_convert()?,
-            l.try_convert()?,
-            m.try_convert()?,
-            n.try_convert()?,
+            TryConvert::try_convert(rb_self)?,
+            TryConvert::try_convert(a)?,
+            TryConvert::try_convert(b)?,
+            TryConvert::try_convert(c)?,
+            TryConvert::try_convert(d)?,
+            TryConvert::try_convert(e)?,
+            TryConvert::try_convert(f)?,
+            TryConvert::try_convert(g)?,
+            TryConvert::try_convert(h)?,
+            TryConvert::try_convert(i)?,
+            TryConvert::try_convert(j)?,
+            TryConvert::try_convert(k)?,
+            TryConvert::try_convert(l)?,
+            TryConvert::try_convert(m)?,
+            TryConvert::try_convert(n)?,
         )
         .into_return_value()
     }
@@ -2322,22 +2335,22 @@ where
         o: Value,
     ) -> Result<Value, Error> {
         (self.func)(
-            rb_self.try_convert()?,
-            a.try_convert()?,
-            b.try_convert()?,
-            c.try_convert()?,
-            d.try_convert()?,
-            e.try_convert()?,
-            f.try_convert()?,
-            g.try_convert()?,
-            h.try_convert()?,
-            i.try_convert()?,
-            j.try_convert()?,
-            k.try_convert()?,
-            l.try_convert()?,
-            m.try_convert()?,
-            n.try_convert()?,
-            o.try_convert()?,
+            TryConvert::try_convert(rb_self)?,
+            TryConvert::try_convert(a)?,
+            TryConvert::try_convert(b)?,
+            TryConvert::try_convert(c)?,
+            TryConvert::try_convert(d)?,
+            TryConvert::try_convert(e)?,
+            TryConvert::try_convert(f)?,
+            TryConvert::try_convert(g)?,
+            TryConvert::try_convert(h)?,
+            TryConvert::try_convert(i)?,
+            TryConvert::try_convert(j)?,
+            TryConvert::try_convert(k)?,
+            TryConvert::try_convert(l)?,
+            TryConvert::try_convert(m)?,
+            TryConvert::try_convert(n)?,
+            TryConvert::try_convert(o)?,
         )
         .into_return_value()
     }
@@ -2473,23 +2486,23 @@ where
         p: Value,
     ) -> Result<Value, Error> {
         (self.func)(
-            rb_self.try_convert()?,
-            a.try_convert()?,
-            b.try_convert()?,
-            c.try_convert()?,
-            d.try_convert()?,
-            e.try_convert()?,
-            f.try_convert()?,
-            g.try_convert()?,
-            h.try_convert()?,
-            i.try_convert()?,
-            j.try_convert()?,
-            k.try_convert()?,
-            l.try_convert()?,
-            m.try_convert()?,
-            n.try_convert()?,
-            o.try_convert()?,
-            p.try_convert()?,
+            TryConvert::try_convert(rb_self)?,
+            TryConvert::try_convert(a)?,
+            TryConvert::try_convert(b)?,
+            TryConvert::try_convert(c)?,
+            TryConvert::try_convert(d)?,
+            TryConvert::try_convert(e)?,
+            TryConvert::try_convert(f)?,
+            TryConvert::try_convert(g)?,
+            TryConvert::try_convert(h)?,
+            TryConvert::try_convert(i)?,
+            TryConvert::try_convert(j)?,
+            TryConvert::try_convert(k)?,
+            TryConvert::try_convert(l)?,
+            TryConvert::try_convert(m)?,
+            TryConvert::try_convert(n)?,
+            TryConvert::try_convert(o)?,
+            TryConvert::try_convert(p)?,
         )
         .into_return_value()
     }
@@ -3074,7 +3087,7 @@ where
 
     #[inline]
     unsafe fn call_convert_value(self, args: RArray) -> Result<Value, Error> {
-        (self.func)(args.as_value().try_convert()?).into_return_value()
+        (self.func)(TryConvert::try_convert(args.as_value())?).into_return_value()
     }
 
     #[inline]
@@ -3208,7 +3221,7 @@ where
 
     #[inline]
     unsafe fn call_convert_value(self, a: Value) -> Result<Value, Error> {
-        (self.func)(a.try_convert()?).into_return_value()
+        (self.func)(TryConvert::try_convert(a)?).into_return_value()
     }
 
     #[inline]
@@ -3256,7 +3269,7 @@ where
 
     #[inline]
     unsafe fn call_convert_value(self, a: Value, b: Value) -> Result<Value, Error> {
-        (self.func)(a.try_convert()?, b.try_convert()?).into_return_value()
+        (self.func)(TryConvert::try_convert(a)?, TryConvert::try_convert(b)?).into_return_value()
     }
 
     #[inline]
@@ -3308,7 +3321,12 @@ where
 
     #[inline]
     unsafe fn call_convert_value(self, a: Value, b: Value, c: Value) -> Result<Value, Error> {
-        (self.func)(a.try_convert()?, b.try_convert()?, c.try_convert()?).into_return_value()
+        (self.func)(
+            TryConvert::try_convert(a)?,
+            TryConvert::try_convert(b)?,
+            TryConvert::try_convert(c)?,
+        )
+        .into_return_value()
     }
 
     #[inline]
@@ -3370,10 +3388,10 @@ where
         d: Value,
     ) -> Result<Value, Error> {
         (self.func)(
-            a.try_convert()?,
-            b.try_convert()?,
-            c.try_convert()?,
-            d.try_convert()?,
+            TryConvert::try_convert(a)?,
+            TryConvert::try_convert(b)?,
+            TryConvert::try_convert(c)?,
+            TryConvert::try_convert(d)?,
         )
         .into_return_value()
     }
@@ -3442,11 +3460,11 @@ where
         e: Value,
     ) -> Result<Value, Error> {
         (self.func)(
-            a.try_convert()?,
-            b.try_convert()?,
-            c.try_convert()?,
-            d.try_convert()?,
-            e.try_convert()?,
+            TryConvert::try_convert(a)?,
+            TryConvert::try_convert(b)?,
+            TryConvert::try_convert(c)?,
+            TryConvert::try_convert(d)?,
+            TryConvert::try_convert(e)?,
         )
         .into_return_value()
     }
@@ -3526,12 +3544,12 @@ where
         f: Value,
     ) -> Result<Value, Error> {
         (self.func)(
-            a.try_convert()?,
-            b.try_convert()?,
-            c.try_convert()?,
-            d.try_convert()?,
-            e.try_convert()?,
-            f.try_convert()?,
+            TryConvert::try_convert(a)?,
+            TryConvert::try_convert(b)?,
+            TryConvert::try_convert(c)?,
+            TryConvert::try_convert(d)?,
+            TryConvert::try_convert(e)?,
+            TryConvert::try_convert(f)?,
         )
         .into_return_value()
     }
@@ -3616,13 +3634,13 @@ where
         g: Value,
     ) -> Result<Value, Error> {
         (self.func)(
-            a.try_convert()?,
-            b.try_convert()?,
-            c.try_convert()?,
-            d.try_convert()?,
-            e.try_convert()?,
-            f.try_convert()?,
-            g.try_convert()?,
+            TryConvert::try_convert(a)?,
+            TryConvert::try_convert(b)?,
+            TryConvert::try_convert(c)?,
+            TryConvert::try_convert(d)?,
+            TryConvert::try_convert(e)?,
+            TryConvert::try_convert(f)?,
+            TryConvert::try_convert(g)?,
         )
         .into_return_value()
     }
@@ -3712,14 +3730,14 @@ where
         h: Value,
     ) -> Result<Value, Error> {
         (self.func)(
-            a.try_convert()?,
-            b.try_convert()?,
-            c.try_convert()?,
-            d.try_convert()?,
-            e.try_convert()?,
-            f.try_convert()?,
-            g.try_convert()?,
-            h.try_convert()?,
+            TryConvert::try_convert(a)?,
+            TryConvert::try_convert(b)?,
+            TryConvert::try_convert(c)?,
+            TryConvert::try_convert(d)?,
+            TryConvert::try_convert(e)?,
+            TryConvert::try_convert(f)?,
+            TryConvert::try_convert(g)?,
+            TryConvert::try_convert(h)?,
         )
         .into_return_value()
     }
@@ -3814,15 +3832,15 @@ where
         i: Value,
     ) -> Result<Value, Error> {
         (self.func)(
-            a.try_convert()?,
-            b.try_convert()?,
-            c.try_convert()?,
-            d.try_convert()?,
-            e.try_convert()?,
-            f.try_convert()?,
-            g.try_convert()?,
-            h.try_convert()?,
-            i.try_convert()?,
+            TryConvert::try_convert(a)?,
+            TryConvert::try_convert(b)?,
+            TryConvert::try_convert(c)?,
+            TryConvert::try_convert(d)?,
+            TryConvert::try_convert(e)?,
+            TryConvert::try_convert(f)?,
+            TryConvert::try_convert(g)?,
+            TryConvert::try_convert(h)?,
+            TryConvert::try_convert(i)?,
         )
         .into_return_value()
     }
@@ -3922,16 +3940,16 @@ where
         j: Value,
     ) -> Result<Value, Error> {
         (self.func)(
-            a.try_convert()?,
-            b.try_convert()?,
-            c.try_convert()?,
-            d.try_convert()?,
-            e.try_convert()?,
-            f.try_convert()?,
-            g.try_convert()?,
-            h.try_convert()?,
-            i.try_convert()?,
-            j.try_convert()?,
+            TryConvert::try_convert(a)?,
+            TryConvert::try_convert(b)?,
+            TryConvert::try_convert(c)?,
+            TryConvert::try_convert(d)?,
+            TryConvert::try_convert(e)?,
+            TryConvert::try_convert(f)?,
+            TryConvert::try_convert(g)?,
+            TryConvert::try_convert(h)?,
+            TryConvert::try_convert(i)?,
+            TryConvert::try_convert(j)?,
         )
         .into_return_value()
     }
@@ -4037,17 +4055,17 @@ where
         k: Value,
     ) -> Result<Value, Error> {
         (self.func)(
-            a.try_convert()?,
-            b.try_convert()?,
-            c.try_convert()?,
-            d.try_convert()?,
-            e.try_convert()?,
-            f.try_convert()?,
-            g.try_convert()?,
-            h.try_convert()?,
-            i.try_convert()?,
-            j.try_convert()?,
-            k.try_convert()?,
+            TryConvert::try_convert(a)?,
+            TryConvert::try_convert(b)?,
+            TryConvert::try_convert(c)?,
+            TryConvert::try_convert(d)?,
+            TryConvert::try_convert(e)?,
+            TryConvert::try_convert(f)?,
+            TryConvert::try_convert(g)?,
+            TryConvert::try_convert(h)?,
+            TryConvert::try_convert(i)?,
+            TryConvert::try_convert(j)?,
+            TryConvert::try_convert(k)?,
         )
         .into_return_value()
     }
@@ -4158,18 +4176,18 @@ where
         l: Value,
     ) -> Result<Value, Error> {
         (self.func)(
-            a.try_convert()?,
-            b.try_convert()?,
-            c.try_convert()?,
-            d.try_convert()?,
-            e.try_convert()?,
-            f.try_convert()?,
-            g.try_convert()?,
-            h.try_convert()?,
-            i.try_convert()?,
-            j.try_convert()?,
-            k.try_convert()?,
-            l.try_convert()?,
+            TryConvert::try_convert(a)?,
+            TryConvert::try_convert(b)?,
+            TryConvert::try_convert(c)?,
+            TryConvert::try_convert(d)?,
+            TryConvert::try_convert(e)?,
+            TryConvert::try_convert(f)?,
+            TryConvert::try_convert(g)?,
+            TryConvert::try_convert(h)?,
+            TryConvert::try_convert(i)?,
+            TryConvert::try_convert(j)?,
+            TryConvert::try_convert(k)?,
+            TryConvert::try_convert(l)?,
         )
         .into_return_value()
     }
@@ -4285,19 +4303,19 @@ where
         m: Value,
     ) -> Result<Value, Error> {
         (self.func)(
-            a.try_convert()?,
-            b.try_convert()?,
-            c.try_convert()?,
-            d.try_convert()?,
-            e.try_convert()?,
-            f.try_convert()?,
-            g.try_convert()?,
-            h.try_convert()?,
-            i.try_convert()?,
-            j.try_convert()?,
-            k.try_convert()?,
-            l.try_convert()?,
-            m.try_convert()?,
+            TryConvert::try_convert(a)?,
+            TryConvert::try_convert(b)?,
+            TryConvert::try_convert(c)?,
+            TryConvert::try_convert(d)?,
+            TryConvert::try_convert(e)?,
+            TryConvert::try_convert(f)?,
+            TryConvert::try_convert(g)?,
+            TryConvert::try_convert(h)?,
+            TryConvert::try_convert(i)?,
+            TryConvert::try_convert(j)?,
+            TryConvert::try_convert(k)?,
+            TryConvert::try_convert(l)?,
+            TryConvert::try_convert(m)?,
         )
         .into_return_value()
     }
@@ -4418,20 +4436,20 @@ where
         n: Value,
     ) -> Result<Value, Error> {
         (self.func)(
-            a.try_convert()?,
-            b.try_convert()?,
-            c.try_convert()?,
-            d.try_convert()?,
-            e.try_convert()?,
-            f.try_convert()?,
-            g.try_convert()?,
-            h.try_convert()?,
-            i.try_convert()?,
-            j.try_convert()?,
-            k.try_convert()?,
-            l.try_convert()?,
-            m.try_convert()?,
-            n.try_convert()?,
+            TryConvert::try_convert(a)?,
+            TryConvert::try_convert(b)?,
+            TryConvert::try_convert(c)?,
+            TryConvert::try_convert(d)?,
+            TryConvert::try_convert(e)?,
+            TryConvert::try_convert(f)?,
+            TryConvert::try_convert(g)?,
+            TryConvert::try_convert(h)?,
+            TryConvert::try_convert(i)?,
+            TryConvert::try_convert(j)?,
+            TryConvert::try_convert(k)?,
+            TryConvert::try_convert(l)?,
+            TryConvert::try_convert(m)?,
+            TryConvert::try_convert(n)?,
         )
         .into_return_value()
     }
@@ -4557,21 +4575,21 @@ where
         o: Value,
     ) -> Result<Value, Error> {
         (self.func)(
-            a.try_convert()?,
-            b.try_convert()?,
-            c.try_convert()?,
-            d.try_convert()?,
-            e.try_convert()?,
-            f.try_convert()?,
-            g.try_convert()?,
-            h.try_convert()?,
-            i.try_convert()?,
-            j.try_convert()?,
-            k.try_convert()?,
-            l.try_convert()?,
-            m.try_convert()?,
-            n.try_convert()?,
-            o.try_convert()?,
+            TryConvert::try_convert(a)?,
+            TryConvert::try_convert(b)?,
+            TryConvert::try_convert(c)?,
+            TryConvert::try_convert(d)?,
+            TryConvert::try_convert(e)?,
+            TryConvert::try_convert(f)?,
+            TryConvert::try_convert(g)?,
+            TryConvert::try_convert(h)?,
+            TryConvert::try_convert(i)?,
+            TryConvert::try_convert(j)?,
+            TryConvert::try_convert(k)?,
+            TryConvert::try_convert(l)?,
+            TryConvert::try_convert(m)?,
+            TryConvert::try_convert(n)?,
+            TryConvert::try_convert(o)?,
         )
         .into_return_value()
     }
@@ -4702,22 +4720,22 @@ where
         p: Value,
     ) -> Result<Value, Error> {
         (self.func)(
-            a.try_convert()?,
-            b.try_convert()?,
-            c.try_convert()?,
-            d.try_convert()?,
-            e.try_convert()?,
-            f.try_convert()?,
-            g.try_convert()?,
-            h.try_convert()?,
-            i.try_convert()?,
-            j.try_convert()?,
-            k.try_convert()?,
-            l.try_convert()?,
-            m.try_convert()?,
-            n.try_convert()?,
-            o.try_convert()?,
-            p.try_convert()?,
+            TryConvert::try_convert(a)?,
+            TryConvert::try_convert(b)?,
+            TryConvert::try_convert(c)?,
+            TryConvert::try_convert(d)?,
+            TryConvert::try_convert(e)?,
+            TryConvert::try_convert(f)?,
+            TryConvert::try_convert(g)?,
+            TryConvert::try_convert(h)?,
+            TryConvert::try_convert(i)?,
+            TryConvert::try_convert(j)?,
+            TryConvert::try_convert(k)?,
+            TryConvert::try_convert(l)?,
+            TryConvert::try_convert(m)?,
+            TryConvert::try_convert(n)?,
+            TryConvert::try_convert(o)?,
+            TryConvert::try_convert(p)?,
         )
         .into_return_value()
     }

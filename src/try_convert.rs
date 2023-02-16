@@ -222,7 +222,7 @@ where
                 "expected Array of length 1",
             ));
         }
-        Ok((slice[0].try_convert()?,))
+        Ok((TryConvert::try_convert(slice[0])?,))
     }
 }
 impl<T0> TryConvertOwned for (T0,) where T0: TryConvert {}
@@ -242,7 +242,10 @@ where
                 "expected Array of length 2",
             ));
         }
-        Ok((slice[0].try_convert()?, slice[1].try_convert()?))
+        Ok((
+            TryConvert::try_convert(slice[0])?,
+            TryConvert::try_convert(slice[1])?,
+        ))
     }
 }
 impl<T0, T1> TryConvertOwned for (T0, T1)
@@ -269,9 +272,9 @@ where
             ));
         }
         Ok((
-            slice[0].try_convert()?,
-            slice[1].try_convert()?,
-            slice[2].try_convert()?,
+            TryConvert::try_convert(slice[0])?,
+            TryConvert::try_convert(slice[1])?,
+            TryConvert::try_convert(slice[2])?,
         ))
     }
 }
@@ -301,10 +304,10 @@ where
             ));
         }
         Ok((
-            slice[0].try_convert()?,
-            slice[1].try_convert()?,
-            slice[2].try_convert()?,
-            slice[3].try_convert()?,
+            TryConvert::try_convert(slice[0])?,
+            TryConvert::try_convert(slice[1])?,
+            TryConvert::try_convert(slice[2])?,
+            TryConvert::try_convert(slice[3])?,
         ))
     }
 }
@@ -336,11 +339,11 @@ where
             ));
         }
         Ok((
-            slice[0].try_convert()?,
-            slice[1].try_convert()?,
-            slice[2].try_convert()?,
-            slice[3].try_convert()?,
-            slice[4].try_convert()?,
+            TryConvert::try_convert(slice[0])?,
+            TryConvert::try_convert(slice[1])?,
+            TryConvert::try_convert(slice[2])?,
+            TryConvert::try_convert(slice[3])?,
+            TryConvert::try_convert(slice[4])?,
         ))
     }
 }
@@ -374,12 +377,12 @@ where
             ));
         }
         Ok((
-            slice[0].try_convert()?,
-            slice[1].try_convert()?,
-            slice[2].try_convert()?,
-            slice[3].try_convert()?,
-            slice[4].try_convert()?,
-            slice[5].try_convert()?,
+            TryConvert::try_convert(slice[0])?,
+            TryConvert::try_convert(slice[1])?,
+            TryConvert::try_convert(slice[2])?,
+            TryConvert::try_convert(slice[3])?,
+            TryConvert::try_convert(slice[4])?,
+            TryConvert::try_convert(slice[5])?,
         ))
     }
 }
@@ -415,13 +418,13 @@ where
             ));
         }
         Ok((
-            slice[0].try_convert()?,
-            slice[1].try_convert()?,
-            slice[2].try_convert()?,
-            slice[3].try_convert()?,
-            slice[4].try_convert()?,
-            slice[5].try_convert()?,
-            slice[6].try_convert()?,
+            TryConvert::try_convert(slice[0])?,
+            TryConvert::try_convert(slice[1])?,
+            TryConvert::try_convert(slice[2])?,
+            TryConvert::try_convert(slice[3])?,
+            TryConvert::try_convert(slice[4])?,
+            TryConvert::try_convert(slice[5])?,
+            TryConvert::try_convert(slice[6])?,
         ))
     }
 }
@@ -459,14 +462,14 @@ where
             ));
         }
         Ok((
-            slice[0].try_convert()?,
-            slice[1].try_convert()?,
-            slice[2].try_convert()?,
-            slice[3].try_convert()?,
-            slice[4].try_convert()?,
-            slice[5].try_convert()?,
-            slice[6].try_convert()?,
-            slice[7].try_convert()?,
+            TryConvert::try_convert(slice[0])?,
+            TryConvert::try_convert(slice[1])?,
+            TryConvert::try_convert(slice[2])?,
+            TryConvert::try_convert(slice[3])?,
+            TryConvert::try_convert(slice[4])?,
+            TryConvert::try_convert(slice[5])?,
+            TryConvert::try_convert(slice[6])?,
+            TryConvert::try_convert(slice[7])?,
         ))
     }
 }
@@ -506,15 +509,15 @@ where
             ));
         }
         Ok((
-            slice[0].try_convert()?,
-            slice[1].try_convert()?,
-            slice[2].try_convert()?,
-            slice[3].try_convert()?,
-            slice[4].try_convert()?,
-            slice[5].try_convert()?,
-            slice[6].try_convert()?,
-            slice[7].try_convert()?,
-            slice[8].try_convert()?,
+            TryConvert::try_convert(slice[0])?,
+            TryConvert::try_convert(slice[1])?,
+            TryConvert::try_convert(slice[2])?,
+            TryConvert::try_convert(slice[3])?,
+            TryConvert::try_convert(slice[4])?,
+            TryConvert::try_convert(slice[5])?,
+            TryConvert::try_convert(slice[6])?,
+            TryConvert::try_convert(slice[7])?,
+            TryConvert::try_convert(slice[8])?,
         ))
     }
 }
@@ -556,16 +559,16 @@ where
             ));
         }
         Ok((
-            slice[0].try_convert()?,
-            slice[1].try_convert()?,
-            slice[2].try_convert()?,
-            slice[3].try_convert()?,
-            slice[4].try_convert()?,
-            slice[5].try_convert()?,
-            slice[6].try_convert()?,
-            slice[7].try_convert()?,
-            slice[8].try_convert()?,
-            slice[9].try_convert()?,
+            TryConvert::try_convert(slice[0])?,
+            TryConvert::try_convert(slice[1])?,
+            TryConvert::try_convert(slice[2])?,
+            TryConvert::try_convert(slice[3])?,
+            TryConvert::try_convert(slice[4])?,
+            TryConvert::try_convert(slice[5])?,
+            TryConvert::try_convert(slice[6])?,
+            TryConvert::try_convert(slice[7])?,
+            TryConvert::try_convert(slice[8])?,
+            TryConvert::try_convert(slice[9])?,
         ))
     }
 }
@@ -611,17 +614,17 @@ where
             ));
         }
         Ok((
-            slice[0].try_convert()?,
-            slice[1].try_convert()?,
-            slice[2].try_convert()?,
-            slice[3].try_convert()?,
-            slice[4].try_convert()?,
-            slice[5].try_convert()?,
-            slice[6].try_convert()?,
-            slice[7].try_convert()?,
-            slice[8].try_convert()?,
-            slice[9].try_convert()?,
-            slice[10].try_convert()?,
+            TryConvert::try_convert(slice[0])?,
+            TryConvert::try_convert(slice[1])?,
+            TryConvert::try_convert(slice[2])?,
+            TryConvert::try_convert(slice[3])?,
+            TryConvert::try_convert(slice[4])?,
+            TryConvert::try_convert(slice[5])?,
+            TryConvert::try_convert(slice[6])?,
+            TryConvert::try_convert(slice[7])?,
+            TryConvert::try_convert(slice[8])?,
+            TryConvert::try_convert(slice[9])?,
+            TryConvert::try_convert(slice[10])?,
         ))
     }
 }
@@ -669,18 +672,18 @@ where
             ));
         }
         Ok((
-            slice[0].try_convert()?,
-            slice[1].try_convert()?,
-            slice[2].try_convert()?,
-            slice[3].try_convert()?,
-            slice[4].try_convert()?,
-            slice[5].try_convert()?,
-            slice[6].try_convert()?,
-            slice[7].try_convert()?,
-            slice[8].try_convert()?,
-            slice[9].try_convert()?,
-            slice[10].try_convert()?,
-            slice[11].try_convert()?,
+            TryConvert::try_convert(slice[0])?,
+            TryConvert::try_convert(slice[1])?,
+            TryConvert::try_convert(slice[2])?,
+            TryConvert::try_convert(slice[3])?,
+            TryConvert::try_convert(slice[4])?,
+            TryConvert::try_convert(slice[5])?,
+            TryConvert::try_convert(slice[6])?,
+            TryConvert::try_convert(slice[7])?,
+            TryConvert::try_convert(slice[8])?,
+            TryConvert::try_convert(slice[9])?,
+            TryConvert::try_convert(slice[10])?,
+            TryConvert::try_convert(slice[11])?,
         ))
     }
 }

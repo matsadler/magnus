@@ -69,7 +69,10 @@ where
 
     #[inline]
     unsafe fn call_convert_value(mut self, key: Value, value: Value) -> Result<ForEach, Error> {
-        (self.func)(key.try_convert()?, value.try_convert()?)
+        (self.func)(
+            TryConvert::try_convert(key)?,
+            TryConvert::try_convert(value)?,
+        )
     }
 
     #[inline]
