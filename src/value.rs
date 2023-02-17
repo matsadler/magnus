@@ -1551,7 +1551,7 @@ impl Qundef {
     /// It is not a good idea to return this to Ruby code, bad things will
     /// happen. There are only a handful of places in Ruby's API where it is
     /// appropriate to pass a [`Value`] created from `Qundef` (hence this
-    /// method, rather than implimenting [`IntoValue`]).
+    /// method, rather than implementing [`IntoValue`]).
     #[inline]
     pub unsafe fn as_value(self) -> Value {
         self.0.get()

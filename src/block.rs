@@ -470,7 +470,7 @@ where
 
 // Our regular implementation of `yield` breaks yielding methods being
 // converted to Enumerators because of the protect call not being compatible
-// with the fibers used in Ruby itself to impliment `Enumerator#next`.
+// with the fibers used in Ruby itself to implement `Enumerator#next`.
 // We have to use protect in `yield` because otherwise Ruby code can
 // `break`/`return` through Rust code and break Rust invariants.
 // This gives up using `protect` by instead using `ensure`, not exposing the

@@ -21,7 +21,7 @@ use crate::{
 pub trait Numeric: ReprValue + Copy {
     /// Apply the operator `op` with coercion.
     ///
-    /// As Ruby's operators are implimented as methods, this function can be
+    /// As Ruby's operators are implemented as methods, this function can be
     /// thought of as a specialised version of [`Value::funcall`], just for
     /// subclasses of `Numeric`, and that follows Ruby's coercion protocol.
     ///
@@ -77,7 +77,7 @@ pub trait Numeric: ReprValue + Copy {
 
     /// Apply the operator `op` with coercion.
     ///
-    /// As Ruby's operators are implimented as methods, this function can be
+    /// As Ruby's operators are implemented as methods, this function can be
     /// thought of as a specialised version of [`Value::funcall`], just for
     /// subclasses of `Numeric`, and that follows Ruby's coercion protocol.
     ///
@@ -122,7 +122,7 @@ pub trait Numeric: ReprValue + Copy {
 
     /// Apply the operator `op` with coercion.
     ///
-    /// As Ruby's operators are implimented as methods, this function can be
+    /// As Ruby's operators are implemented as methods, this function can be
     /// thought of as a specialised version of [`Value::funcall`], just for
     /// subclasses of `Numeric`, and that follows Ruby's coercion protocol.
     ///
@@ -164,7 +164,7 @@ pub trait Numeric: ReprValue + Copy {
 
     /// Apply the operator `op` with coercion.
     ///
-    /// As Ruby's operators are implimented as methods, this function can be
+    /// As Ruby's operators are implemented as methods, this function can be
     /// thought of as a specialised version of [`Value::funcall`], just for
     /// subclasses of `Numeric`, and that follows Ruby's coercion protocol.
     ///

@@ -45,7 +45,7 @@ pub trait IntoValue: Sized {
 ///
 /// # Safety
 ///
-/// This trait must not be implimented for types that contain `Value`.
+/// This trait must not be implemented for types that contain `Value`.
 pub unsafe trait IntoValueFromNative: IntoValue {}
 
 /// Trait for types that can be used as an arguments list when calling Ruby
