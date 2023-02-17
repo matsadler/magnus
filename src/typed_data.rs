@@ -526,6 +526,26 @@ where
 {
     type Target = T;
 
+    /// Dereference to the Rust type wrapped in the Ruby object `self`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{define_class, typed_data};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// #[magnus::wrap(class = "Point")]
+    /// #[derive(Debug, PartialEq, Eq)]
+    /// struct Point {
+    ///     x: isize,
+    ///     y: isize,
+    /// }
+    ///
+    /// let point_class = define_class("Point", Default::default()).unwrap();
+    /// let value = typed_data::Obj::wrap(Point { x: 4, y: 2 });
+    ///
+    /// assert_eq!(&*value, &Point { x: 4, y: 2 });
+    /// ```
     fn deref(&self) -> &Self::Target {
         self.inner.get().unwrap()
     }
