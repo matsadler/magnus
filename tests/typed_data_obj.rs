@@ -28,8 +28,8 @@ impl Line {
     }
 
     fn length(&self) -> f64 {
-        let start = self.start.get();
-        let end = self.end.get();
+        let start = self.start;
+        let end = self.end;
 
         (((end.x - start.x).pow(2) + (end.y - start.y).pow(2)) as f64).sqrt()
     }
