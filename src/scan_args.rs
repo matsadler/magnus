@@ -1034,7 +1034,7 @@ mod private {
 /// This trait is implemented for `(T0,)`, `(T0, T1)`, `(T0, T1, T2)`, etc,
 /// through to a length of 9, where `T0`, `T1`, etc implement [`TryConvert`].
 ///
-/// `()` also impliments this trait as a placeholder indicating no required
+/// `()` also implements this trait as a placeholder indicating no required
 /// arguments are required.
 pub trait ScanArgsRequired: private::ScanArgsRequired {}
 impl<T> ScanArgsRequired for T where T: private::ScanArgsRequired {}
@@ -1046,7 +1046,7 @@ impl<T> ScanArgsRequired for T where T: private::ScanArgsRequired {}
 /// etc, through to a length of 9, where `T0`, `T1`, etc implement
 /// [`TryConvert`].
 ///
-/// `()` also impliments this trait as a placeholder indicating no optional
+/// `()` also implements this trait as a placeholder indicating no optional
 /// arguments are required.
 pub trait ScanArgsOpt: private::ScanArgsOpt {}
 impl<T> ScanArgsOpt for T where T: private::ScanArgsOpt {}
@@ -1058,7 +1058,7 @@ impl<T> ScanArgsOpt for T where T: private::ScanArgsOpt {}
 /// and converts to an owned Rust value (not a handle to a Ruby object). It is
 /// also implemented for [`RArray`].
 ///
-/// `()` also impliments this trait as a placeholder indicating no splat
+/// `()` also implements this trait as a placeholder indicating no splat
 /// argument is required.
 pub trait ScanArgsSplat: private::ScanArgsSplat {}
 impl<T> ScanArgsSplat for T where T: private::ScanArgsSplat {}
@@ -1068,7 +1068,7 @@ impl<T> ScanArgsSplat for T where T: private::ScanArgsSplat {}
 ///
 /// This trait is implemented for [`RHash`].
 ///
-/// `()` also impliments this trait as a placeholder indicating no keyword
+/// `()` also implements this trait as a placeholder indicating no keyword
 /// arguments are required.
 pub trait ScanArgsKw: private::ScanArgsKw {}
 impl<T> ScanArgsKw for T where T: private::ScanArgsKw {}
@@ -1078,7 +1078,7 @@ impl<T> ScanArgsKw for T where T: private::ScanArgsKw {}
 ///
 /// This trait is implemented for [`Proc`] and `Option<Proc>`.
 ///
-/// `()` also impliments this trait as a placeholder for when no block argument
+/// `()` also implements this trait as a placeholder for when no block argument
 /// is required, although Ruby will still allow a block to be passed, it will
 /// just ignore it (as is standard for all Ruby methods).
 pub trait ScanArgsBlock: private::ScanArgsBlock {}

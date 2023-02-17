@@ -293,9 +293,9 @@ where
 ///
 /// # Safety
 ///
-/// This trait is unsafe to impliment as the fields of [`DataType`] returned by
+/// This trait is unsafe to implement as the fields of [`DataType`] returned by
 /// [`TypedData::data_type`] control low level behaviour that can go very wrong
-/// if set incorrectly. Implimenting this trait is the only way a [`DataType`]
+/// if set incorrectly. Implementing this trait is the only way a [`DataType`]
 /// can be passed to Ruby and result in safety violations, [`DataType`] is
 /// otherwise safe (but useless) to create.
 ///
