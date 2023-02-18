@@ -1,7 +1,7 @@
 use std::{borrow::Cow, fmt};
 
 use rb_sys::{
-    rb_check_id, rb_id2sym, rb_intern_str, rb_sym2str, rb_to_symbol, ruby_value_type, VALUE,
+    rb_check_id, rb_intern_str, rb_sym2str, rb_to_symbol, ruby_value_type, VALUE,
 };
 
 use crate::{
@@ -171,8 +171,7 @@ impl Symbol {
         }
         unsafe {
             let name = rb_sym2str(self.as_rb_value());
-            let id = rb_intern_str(name);
-            StaticSymbol::from_rb_value_unchecked(rb_id2sym(id))
+            Id::from_rb_id(rb_intern_str(name)).into()
         }
     }
 }
@@ -224,8 +223,8 @@ impl IntoSymbol for Symbol {
 }
 
 impl IntoSymbol for Id {
-    fn into_symbol_with(self, _: &RubyHandle) -> Symbol {
-        unsafe { Symbol::from_rb_value_unchecked(rb_id2sym(self.as_rb_id())) }
+    fn into_symbol_with(self, handle: &RubyHandle) -> Symbol {
+        StaticSymbol::from(self).into_symbol_with(handle)
     }
 }
 

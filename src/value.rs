@@ -2296,8 +2296,8 @@ impl IntoId for String {
 }
 
 impl IntoId for StaticSymbol {
-    fn into_id_with(self, _: &RubyHandle) -> Id {
-        Id::from_rb_id(unsafe { rb_sym2id(self.as_rb_value()) })
+    fn into_id_with(self, handle: &RubyHandle) -> Id {
+        self.into_symbol_with(handle).into_id_with(handle)
     }
 }
 
