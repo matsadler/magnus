@@ -150,12 +150,6 @@ impl ExceptionClass {
     }
 }
 
-impl Default for ExceptionClass {
-    fn default() -> Self {
-        standard_error()
-    }
-}
-
 impl fmt::Display for ExceptionClass {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", unsafe { self.to_s_infallible() })

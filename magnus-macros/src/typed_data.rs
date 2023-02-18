@@ -145,7 +145,7 @@ pub fn expand_derive_typed_data(input: DeriveInput) -> TokenStream {
             let ident = variant.ident;
             let fetch_class = quote! {
                 *magnus::memoize!(RClass: {
-                    let class: RClass = RClass::default().funcall("const_get", (#class,)).unwrap();
+                    let class: RClass = class::object().funcall("const_get", (#class,)).unwrap();
                     class.undef_alloc_func();
                     class
                 })
@@ -160,7 +160,7 @@ pub fn expand_derive_typed_data(input: DeriveInput) -> TokenStream {
     let class_for = if !arms.is_empty() {
         quote! {
             fn class_for(value: &Self) -> magnus::RClass {
-                use magnus::{Module, Class, RClass};
+                use magnus::{class, Module, Class, RClass};
                 #[allow(unreachable_patterns)]
                 match value {
                     #(#arms,)*
@@ -197,9 +197,9 @@ pub fn expand_derive_typed_data(input: DeriveInput) -> TokenStream {
     let tokens = quote! {
         unsafe impl magnus::TypedData for #ident {
             fn class() -> magnus::RClass {
-                use magnus::{Module, Class, RClass, value::ReprValue};
+                use magnus::{class, Module, Class, RClass, value::ReprValue};
                 *magnus::memoize!(RClass: {
-                    let class: RClass = RClass::default().funcall("const_get", (#class,)).unwrap();
+                    let class: RClass = class::object().funcall("const_get", (#class,)).unwrap();
                     class.undef_alloc_func();
                     class
                 })

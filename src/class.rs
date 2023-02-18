@@ -73,7 +73,7 @@ impl RClass {
     /// use magnus::{class, prelude::*, RClass};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// let class = RClass::new(Default::default()).unwrap();
+    /// let class = RClass::new(class::object()).unwrap();
     /// assert!(class.is_kind_of(class::class()));
     /// ```
     pub fn new(superclass: RClass) -> Result<RClass, Error> {
@@ -140,12 +140,6 @@ impl RClass {
     /// ```
     pub unsafe fn name(&self) -> Cow<str> {
         Class::name(self)
-    }
-}
-
-impl Default for RClass {
-    fn default() -> Self {
-        unsafe { RClass::from_rb_value_unchecked(rb_sys::rb_cObject) }
     }
 }
 
@@ -284,7 +278,7 @@ pub trait Class: Module {
     /// ```
     /// use magnus::{class, eval, Class};
     /// # let _cleanup = unsafe { magnus::embed::init() };
-    /// let class = magnus::define_class("Point", Default::default()).unwrap();
+    /// let class = magnus::define_class("Point", class::object()).unwrap();
     ///
     /// class.undef_alloc_func();
     ///

@@ -1,5 +1,5 @@
 use magnus::{
-    define_class, embed::init, eval, function, gc, method, prelude::*, ruby_handle::RubyHandle,
+    class, define_class, embed::init, eval, function, gc, method, prelude::*, ruby_handle::RubyHandle,
     typed_data::Obj, value::Opaque, DataTypeFunctions, TypedData,
 };
 
@@ -59,12 +59,12 @@ impl DataTypeFunctions for Line {
 fn it_can_nest_wrapped_structs() {
     let _cleanup = unsafe { init() };
 
-    let class = define_class("Point", Default::default()).unwrap();
+    let class = define_class("Point", class::object()).unwrap();
     class
         .define_singleton_method("new", function!(Point::new, 2))
         .unwrap();
 
-    let class = define_class("Line", Default::default()).unwrap();
+    let class = define_class("Line", class::object()).unwrap();
     class
         .define_singleton_method("new", function!(Line::new, 2))
         .unwrap();

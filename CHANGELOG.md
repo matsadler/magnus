@@ -18,6 +18,7 @@
 
 ### Removed
 - `Into<Value>`/`From<T> for Value`, implementations use `IntoValue`.
+- `Default` implementations for `Value`, `RClass`, and `ExceptionClass`.
 
 ### Fixed
 

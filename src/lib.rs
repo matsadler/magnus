@@ -57,7 +57,7 @@
 //! # Examples
 //!
 //! ```
-//! use magnus::{define_module, function, method, prelude::*, Error};
+//! use magnus::{class, define_module, function, method, prelude::*, Error};
 //!
 //! #[magnus::wrap(class = "Euclid::Point", free_immediately, size)]
 //! struct Point {
@@ -86,7 +86,7 @@
 //! #[magnus::init]
 //! fn init() -> Result<(), Error> {
 //!     let module = define_module("Euclid")?;
-//!     let class = module.define_class("Point", Default::default())?;
+//!     let class = module.define_class("Point", class::object())?;
 //!     class.define_singleton_method("new", function!(Point::new, 2))?;
 //!     class.define_method("x", method!(Point::x, 0))?;
 //!     class.define_method("y", method!(Point::y, 0))?;
@@ -1928,10 +1928,10 @@ use crate::{
 /// # Examples
 ///
 /// ```
-/// use magnus::{define_class, memoize, RClass};
+/// use magnus::{class, define_class, memoize, RClass};
 ///
 /// fn foo_class() -> &'static RClass {
-///     memoize!(RClass: define_class("Foo", Default::default()).unwrap())
+///     memoize!(RClass: define_class("Foo", class::object()).unwrap())
 /// }
 /// ```
 #[macro_export]

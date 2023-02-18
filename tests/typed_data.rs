@@ -1,4 +1,4 @@
-use magnus::{define_class, embed::init, eval, IntoValue, Value};
+use magnus::{class, define_class, embed::init, eval, IntoValue, Value};
 
 macro_rules! rb_assert {
     ($s:literal) => {
@@ -26,7 +26,7 @@ fn make_rb_example(value: &str) -> Value {
 fn it_wraps_rust_struct() {
     let _cleanup = unsafe { init() };
 
-    define_class("Example", Default::default()).unwrap();
+    define_class("Example", class::object()).unwrap();
 
     let val = make_rb_example("foo");
     rb_assert!("val.class == Example", val);

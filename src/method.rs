@@ -15,7 +15,7 @@ use crate::{
     into_value::{ArgList, IntoValue},
     r_array::RArray,
     try_convert::TryConvert,
-    value::{ReprValue, Value},
+    value::{ReprValue, Value, QNIL},
 };
 
 mod private {
@@ -396,7 +396,7 @@ mod private {
             match self {
                 Yield::Iter(iter) => {
                     unsafe { do_yield_iter(iter) };
-                    Ok(Value::default())
+                    Ok(QNIL.as_value())
                 }
                 Yield::Enumerator(e) => Ok(unsafe { e.into_value_unchecked() }),
             }
@@ -422,7 +422,7 @@ mod private {
             match self {
                 YieldValues::Iter(iter) => {
                     unsafe { do_yield_values_iter(iter) };
-                    Ok(Value::default())
+                    Ok(QNIL.as_value())
                 }
                 YieldValues::Enumerator(e) => Ok(unsafe { e.into_value_unchecked() }),
             }
@@ -447,7 +447,7 @@ mod private {
             match self {
                 YieldSplat::Iter(iter) => {
                     unsafe { do_yield_splat_iter(iter) };
-                    Ok(Value::default())
+                    Ok(QNIL.as_value())
                 }
                 YieldSplat::Enumerator(e) => Ok(unsafe { e.into_value_unchecked() }),
             }
@@ -2582,7 +2582,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use magnus::{define_class, method, prelude::*, Error};
+/// use magnus::{class, define_class, method, prelude::*, Error};
 ///
 /// fn rb_is_blank(rb_self: String) -> bool {
 ///     rb_self.contains(|c: char| !c.is_whitespace())
@@ -2590,7 +2590,7 @@ where
 ///
 /// #[magnus::init]
 /// fn init() -> Result<(), Error> {
-///     let class = define_class("String", Default::default())?;
+///     let class = define_class("String", class::object())?;
 ///     class.define_method("blank?", method!(rb_is_blank, 0))?;
 ///     Ok(())
 /// }

@@ -258,14 +258,16 @@ where
     }
 }
 
-pub(crate) fn ensure<F1, F2>(func: F1, ensure: F2) -> Value
+pub(crate) fn ensure<F1, F2, T>(func: F1, ensure: F2) -> T
 where
-    F1: FnOnce() -> Value,
+    F1: FnOnce() -> T,
     F2: FnOnce(),
+    T: ReprValue,
 {
-    unsafe extern "C" fn call_func<F1>(arg: VALUE) -> VALUE
+    unsafe extern "C" fn call_func<F1, T>(arg: VALUE) -> VALUE
     where
-        F1: FnOnce() -> Value,
+        F1: FnOnce() -> T,
+        T: ReprValue,
     {
         let closure = (*(arg as *mut Option<F1>)).take().unwrap();
         (closure)().as_rb_value()
@@ -281,7 +283,7 @@ where
     }
 
     let result = unsafe {
-        let call_func_ptr = call_func::<F1> as unsafe extern "C" fn(VALUE) -> VALUE;
+        let call_func_ptr = call_func::<F1, T> as unsafe extern "C" fn(VALUE) -> VALUE;
         #[cfg(ruby_lt_2_7)]
         let call_func_ptr: unsafe extern "C" fn() -> VALUE = std::mem::transmute(call_func_ptr);
         let mut some_func = Some(func);
@@ -299,7 +301,7 @@ where
         )
     };
 
-    Value::new(result)
+    unsafe { T::from_value_unchecked(Value::new(result)) }
 }
 
 pub(crate) fn raise(e: Error) -> ! {

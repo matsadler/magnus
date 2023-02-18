@@ -1148,7 +1148,7 @@ impl<T> ScanArgsBlock for T where T: private::ScanArgsBlock {}
 /// `TCPServer::new`'s argument handling. This is roughly equivalent to
 /// `def new(hostname=nil, port)`.
 /// ```
-/// use magnus::{prelude::*, define_class, error::Error, function, scan_args::scan_args, Value};
+/// use magnus::{prelude::*, class, define_class, error::Error, function, scan_args::scan_args, Value};
 /// # use magnus::IntoValue;
 /// # let _cleanup = unsafe { magnus::embed::init() };
 ///
@@ -1168,7 +1168,7 @@ impl<T> ScanArgsBlock for T where T: private::ScanArgsBlock {}
 /// #   Ok(res.into_value())
 /// }
 ///
-/// let class = define_class("TCPServer", Default::default()).unwrap();
+/// let class = define_class("TCPServer", class::object()).unwrap();
 /// class.define_singleton_method("new", function!(tcp_svr_init, -1)).unwrap();
 /// # let res = magnus::eval::<bool>(r#"TCPServer.new("foo", 1) == ["foo", 1]"#).unwrap();
 /// # assert!(res);
@@ -1178,7 +1178,7 @@ impl<T> ScanArgsBlock for T where T: private::ScanArgsBlock {}
 ///
 /// The same example as above, specifying the types slightly differently.
 /// ```
-/// use magnus::{prelude::*, define_class, error::Error, function, scan_args::scan_args, Value};
+/// use magnus::{prelude::*, class, define_class, error::Error, function, scan_args::scan_args, Value};
 /// # use magnus::IntoValue;
 /// # let _cleanup = unsafe { magnus::embed::init() };
 ///
@@ -1194,7 +1194,7 @@ impl<T> ScanArgsBlock for T where T: private::ScanArgsBlock {}
 /// #   Ok(res.into_value())
 /// }
 ///
-/// let class = define_class("TCPServer", Default::default()).unwrap();
+/// let class = define_class("TCPServer", class::object()).unwrap();
 /// class.define_singleton_method("new", function!(tcp_svr_init, -1)).unwrap();
 /// # let res = magnus::eval::<bool>(r#"TCPServer.new("foo", 1) == ["foo", 1]"#).unwrap();
 /// # assert!(res);
@@ -1206,7 +1206,7 @@ impl<T> ScanArgsBlock for T where T: private::ScanArgsBlock {}
 /// `def getaddrinfo(nodename, service, family=nil, socktype=nil, protocol=nil, flags=nil, timeout: nil)`.
 /// ```
 /// use magnus::{
-///     prelude::*, define_class, error::Error, function, scan_args::{scan_args, get_kwargs}, RHash, Symbol, Value,
+///     prelude::*, class, define_class, error::Error, function, scan_args::{scan_args, get_kwargs}, RHash, Symbol, Value,
 /// };
 /// # use magnus::IntoValue;
 /// # let _cleanup = unsafe { magnus::embed::init() };
@@ -1235,7 +1235,7 @@ impl<T> ScanArgsBlock for T where T: private::ScanArgsBlock {}
 /// #   Ok(res.into_value())
 /// }
 ///
-/// let class = define_class("Addrinfo", Default::default()).unwrap();
+/// let class = define_class("Addrinfo", class::object()).unwrap();
 /// class.define_singleton_method("getaddrinfo", function!(getaddrinfo, -1)).unwrap();
 /// # let res = magnus::eval::<bool>(r#"Addrinfo.getaddrinfo("a", 1) == ["a", 1, nil, nil, nil, nil, nil]"#).unwrap();
 /// # assert!(res);
