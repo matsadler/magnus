@@ -13,6 +13,10 @@
 
 ### Security
 
+## [0.5.1] - 2023-02-18
+### Fixed
+- Documentation fixes.
+
 ## [0.5.0] - 2023-02-11
 ### Added
 - `typed_data::Obj<T>`, a Ruby object wrapping a Rust type known to be `T`.
@@ -297,7 +301,8 @@
 - Pre-built bindings for Ruby 2.6 - 3.1 on common platforms, build-time
   generated bindings otherwise.
 
-[Unreleased]: https://github.com/matsadler/magnus/compare/0.5.0...HEAD
+[Unreleased]: https://github.com/matsadler/magnus/compare/0.5.1...HEAD
+[0.5.1]: https://github.com/matsadler/magnus/compare/0.5.0...0.5.1
 [0.5.0]: https://github.com/matsadler/magnus/compare/0.4.4...0.5.0
 [0.4.4]: https://github.com/matsadler/magnus/compare/0.4.3...0.4.4
 [0.4.3]: https://github.com/matsadler/magnus/compare/0.4.2...0.4.3
