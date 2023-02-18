@@ -46,7 +46,7 @@ fn is_blank(rb_self: String) -> bool {
     !rb_self.contains(|c: char| !c.is_whitespace())
 }
 
-let class = magnus::define_class("String", Default::default())?;
+let class = magnus::define_class("String", magnus::class::object())?;
 // 0 as self doesn't count against the number of arguments
 class.define_method("blank?", magnus::method!(is_blank, 0))?;
 ```
@@ -82,7 +82,7 @@ wrapped in the specified class, and whenever it is passed back to Rust it will
 be unwrapped to a reference.
 
 ```rust
-use magnus::{define_class, function, method, prelude::*, Error};
+use magnus::{class, define_class, function, method, prelude::*, Error};
 
 #[magnus::wrap(class = "Point")]
 struct Point {
@@ -110,7 +110,7 @@ impl Point {
 
 #[magnus::init]
 fn init() -> Result<(), Error> {
-    let class = define_class("Point", Default::default())?;
+    let class = define_class("Point", class::object())?;
     class.define_singleton_method("new", function!(Point::new, 2))?;
     class.define_method("x", method!(Point::x, 0))?;
     class.define_method("y", method!(Point::y, 0))?;

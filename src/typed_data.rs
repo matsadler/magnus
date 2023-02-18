@@ -317,7 +317,7 @@ where
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, define_class, memoize, RClass, TypedData};
+    /// use magnus::{prelude::*, class, define_class, memoize, RClass, TypedData};
     /// # use magnus::DataType;
     ///
     /// struct Example();
@@ -325,7 +325,7 @@ where
     /// unsafe impl TypedData for Example {
     ///     fn class() -> RClass {
     ///         *memoize!(RClass: {
-    ///           let class = define_class("Example", Default::default()).unwrap();
+    ///           let class = define_class("Example", class::object()).unwrap();
     ///           class.undef_alloc_func();
     ///           class
     ///         })
@@ -500,7 +500,7 @@ where
     /// # Examples
     ///
     /// ```
-    /// use magnus::{define_class, typed_data};
+    /// use magnus::{class, define_class, typed_data};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// #[magnus::wrap(class = "Point")]
@@ -509,7 +509,7 @@ where
     ///     y: isize,
     /// }
     ///
-    /// let point_class = define_class("Point", Default::default()).unwrap();
+    /// let point_class = define_class("Point", class::object()).unwrap();
     ///
     /// let value = typed_data::Obj::wrap(Point { x: 4, y: 2 });
     /// assert!(value.is_kind_of(point_class));
@@ -524,7 +524,7 @@ where
     /// # Examples
     ///
     /// ```
-    /// use magnus::{define_class, typed_data};
+    /// use magnus::{class, define_class, typed_data};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// #[magnus::wrap(class = "Point")]
@@ -534,7 +534,7 @@ where
     ///     y: isize,
     /// }
     ///
-    /// let point_class = define_class("Point", Default::default()).unwrap();
+    /// let point_class = define_class("Point", class::object()).unwrap();
     /// let value = typed_data::Obj::wrap(Point { x: 4, y: 2 });
     ///
     /// assert_eq!(value.get(), &Point { x: 4, y: 2 });
@@ -658,7 +658,7 @@ where
 /// use std::hash::Hasher;
 ///
 /// use magnus::{
-///     prelude::*, define_class, embed::init, function, gc, method, typed_data, DataTypeFunctions, Error,
+///     prelude::*, class, define_class, embed::init, function, gc, method, typed_data, DataTypeFunctions, Error,
 ///     RHash, TypedData, Value,
 /// };
 ///
@@ -711,7 +711,7 @@ where
 ///
 /// let _cleanup = unsafe { init() };
 ///
-/// let class = define_class("Pair", Default::default()).unwrap();
+/// let class = define_class("Pair", class::object()).unwrap();
 /// class
 ///     .define_singleton_method("new", function!(Pair::new, 2))
 ///     .unwrap();
@@ -764,7 +764,7 @@ where
 /// use std::hash::Hasher;
 ///
 /// use magnus::{
-///     prelude::*, define_class, embed::init, function, gc, method, typed_data, DataTypeFunctions, Error,
+///     prelude::*, class, define_class, embed::init, function, gc, method, typed_data, DataTypeFunctions, Error,
 ///     RHash, TypedData, Value,
 /// };
 ///
@@ -817,7 +817,7 @@ where
 ///
 /// let _cleanup = unsafe { init() };
 ///
-/// let class = define_class("Pair", Default::default()).unwrap();
+/// let class = define_class("Pair", class::object()).unwrap();
 /// class
 ///     .define_singleton_method("new", function!(Pair::new, 2))
 ///     .unwrap();

@@ -1,4 +1,4 @@
-use magnus::{define_class, embed::init, method, prelude::*};
+use magnus::{class, define_class, embed::init, method, prelude::*};
 
 macro_rules! rb_assert {
     ($s:literal) => {
@@ -31,7 +31,7 @@ impl Pleasantry {
 fn it_wraps_rust_struct() {
     let _cleanup = unsafe { init() };
 
-    let class = define_class("Pleasantry", Default::default()).unwrap();
+    let class = define_class("Pleasantry", class::object()).unwrap();
     define_class("Farewell", class).unwrap();
     define_class("Greeting", class).unwrap();
 

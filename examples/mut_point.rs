@@ -1,6 +1,6 @@
 use std::cell::RefCell;
 
-use magnus::{define_class, embed, eval, function, method, prelude::*, wrap, Error};
+use magnus::{class, define_class, embed, eval, function, method, prelude::*, wrap, Error};
 
 struct Point {
     x: isize,
@@ -39,7 +39,7 @@ impl MutPoint {
 fn main() -> Result<(), Error> {
     let _cleanup = unsafe { embed::init() };
 
-    let class = define_class("Point", Default::default())?;
+    let class = define_class("Point", class::object())?;
     class.define_singleton_method("new", function!(MutPoint::new, 2))?;
     class.define_method("x", method!(MutPoint::x, 0))?;
     class.define_method("x=", method!(MutPoint::set_x, 1))?;

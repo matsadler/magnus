@@ -2569,7 +2569,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use magnus::{define_class, method, prelude::*, Error};
+/// use magnus::{class, define_class, method, prelude::*, Error};
 ///
 /// fn rb_is_blank(rb_self: String) -> bool {
 ///     rb_self.contains(|c: char| !c.is_whitespace())
@@ -2577,7 +2577,7 @@ where
 ///
 /// #[magnus::init]
 /// fn init() -> Result<(), Error> {
-///     let class = define_class("String", Default::default())?;
+///     let class = define_class("String", class::object())?;
 ///     class.define_method("blank?", method!(rb_is_blank, 0))?;
 ///     Ok(())
 /// }

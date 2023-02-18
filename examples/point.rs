@@ -1,4 +1,4 @@
-use magnus::{define_class, embed, eval, function, method, prelude::*, wrap, Error};
+use magnus::{class, define_class, embed, eval, function, method, prelude::*, wrap, Error};
 
 #[wrap(class = "Point")]
 struct Point {
@@ -27,7 +27,7 @@ impl Point {
 fn main() -> Result<(), Error> {
     let _cleanup = unsafe { embed::init() };
 
-    let class = define_class("Point", Default::default())?;
+    let class = define_class("Point", class::object())?;
     class.define_singleton_method("new", function!(Point::new, 2))?;
     class.define_method("x", method!(Point::x, 0))?;
     class.define_method("y", method!(Point::y, 0))?;

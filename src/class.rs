@@ -71,7 +71,7 @@ impl RClass {
     /// use magnus::{class, RClass};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// let class = RClass::new(Default::default()).unwrap();
+    /// let class = RClass::new(class::object()).unwrap();
     /// assert!(class.is_kind_of(class::class()));
     /// ```
     pub fn new(superclass: RClass) -> Result<RClass, Error> {
@@ -304,7 +304,7 @@ pub trait Class: Module {
     /// ```
     /// use magnus::{class, eval, Class};
     /// # let _cleanup = unsafe { magnus::embed::init() };
-    /// let class = magnus::define_class("Point", Default::default()).unwrap();
+    /// let class = magnus::define_class("Point", class::object()).unwrap();
     ///
     /// class.undef_alloc_func();
     ///

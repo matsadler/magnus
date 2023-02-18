@@ -1,4 +1,5 @@
 use magnus::{
+    class,
     define_class,
     encoding::{CType, RbEncoding},
     method,
@@ -38,7 +39,7 @@ fn is_blank(rb_self: RString) -> Result<bool, Error> {
 
 #[magnus::init]
 fn init() -> Result<(), Error> {
-    let class = define_class("String", Default::default())?;
+    let class = define_class("String", class::object())?;
     class.define_method("blank?", method!(is_blank, 0))?;
     Ok(())
 }

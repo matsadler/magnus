@@ -210,7 +210,7 @@ pub trait Module: Object + Deref<Target = Value> + ReprValue + Copy {
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let outer = define_module("Outer").unwrap();
-    /// let inner = outer.define_class("Inner", Default::default()).unwrap();
+    /// let inner = outer.define_class("Inner", class::object()).unwrap();
     /// assert!(inner.is_kind_of(class::class()));
     /// ```
     fn define_class<T>(self, name: T, superclass: RClass) -> Result<RClass, Error>
@@ -264,7 +264,7 @@ pub trait Module: Object + Deref<Target = Value> + ReprValue + Copy {
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let outer = define_module("Outer").unwrap();
-    /// let inner = outer.define_error("InnerError", Default::default()).unwrap();
+    /// let inner = outer.define_error("InnerError", exception::standard_error()).unwrap();
     /// assert!(inner.is_inherited(exception::standard_error()));
     /// ```
     fn define_error<T>(self, name: T, superclass: ExceptionClass) -> Result<ExceptionClass, Error>
@@ -283,7 +283,7 @@ pub trait Module: Object + Deref<Target = Value> + ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{function, Module, RClass, RModule};
+    /// use magnus::{class, function, Module, RClass, RModule};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// fn example() -> i64 {
@@ -293,7 +293,7 @@ pub trait Module: Object + Deref<Target = Value> + ReprValue + Copy {
     /// let module = RModule::new();
     /// module.define_method("example", function!(example, 0)).unwrap();
     ///
-    /// let class = RClass::new(Default::default()).unwrap();
+    /// let class = RClass::new(class::object()).unwrap();
     /// class.include_module(module);
     ///
     /// let obj = class.new_instance(()).unwrap();
@@ -412,10 +412,10 @@ pub trait Module: Object + Deref<Target = Value> + ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, Module, RClass};
+    /// use magnus::{class, eval, Module, RClass};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// let a = RClass::new(Default::default()).unwrap();
+    /// let a = RClass::new(class::object()).unwrap();
     /// let b = RClass::new(a).unwrap();
     /// assert!(b.is_inherited(a));
     /// assert!(!a.is_inherited(b));
@@ -600,10 +600,10 @@ pub trait Module: Object + Deref<Target = Value> + ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{Attr, Module, RClass, Value};
+    /// use magnus::{class, Attr, Module, RClass, Value};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// let class = RClass::new(Default::default()).unwrap();
+    /// let class = RClass::new(class::object()).unwrap();
     /// class.define_attr("example", Attr::ReadWrite).unwrap();
     ///
     /// let obj = class.new_instance(()).unwrap();
@@ -633,14 +633,14 @@ pub trait Module: Object + Deref<Target = Value> + ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{function, Module, RClass};
+    /// use magnus::{class, function, Module, RClass};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// fn example() -> i64 {
     ///     42
     /// }
     ///
-    /// let class = RClass::new(Default::default()).unwrap();
+    /// let class = RClass::new(class::object()).unwrap();
     /// class.define_method("example", function!(example, 0)).unwrap();
     /// class.define_alias("test", "example").unwrap();
     ///

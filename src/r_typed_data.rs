@@ -64,7 +64,7 @@ impl RTypedData {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{define_class, RTypedData};
+    /// use magnus::{class, define_class, RTypedData};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// #[magnus::wrap(class = "Point")]
@@ -73,7 +73,7 @@ impl RTypedData {
     ///     y: isize,
     /// }
     ///
-    /// let point_class = define_class("Point", Default::default()).unwrap();
+    /// let point_class = define_class("Point", class::object()).unwrap();
     ///
     /// let value = RTypedData::wrap(Point { x: 4, y: 2 });
     /// assert!(value.is_kind_of(point_class));
@@ -91,7 +91,7 @@ impl RTypedData {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{define_class, RTypedData};
+    /// use magnus::{class, define_class, RTypedData};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// #[magnus::wrap(class = "Point")]
@@ -101,7 +101,7 @@ impl RTypedData {
     ///     y: isize,
     /// }
     ///
-    /// let point_class = define_class("Point", Default::default()).unwrap();
+    /// let point_class = define_class("Point", class::object()).unwrap();
     /// let value = RTypedData::wrap(Point { x: 4, y: 2 });
     ///
     /// assert_eq!(value.get::<Point>().unwrap(), &Point { x: 4, y: 2 });
