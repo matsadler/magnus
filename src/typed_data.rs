@@ -4,13 +4,13 @@
 //! `rb_data_typed_object_wrap` function from Ruby's C API.
 
 use std::{
-    ops::Deref,
     collections::hash_map::DefaultHasher,
     ffi::{c_void, CString},
     fmt,
     hash::Hasher,
     marker::PhantomData,
     mem::size_of_val,
+    ops::Deref,
     panic::catch_unwind,
     ptr,
 };
@@ -514,7 +514,10 @@ where
     }
 
     #[doc(hidden)]
-    #[deprecated(since = "0.6.0", note = "Obj::get() is unnecessary, Obj<T> derefs to T")]
+    #[deprecated(
+        since = "0.6.0",
+        note = "Obj::get() is unnecessary, Obj<T> derefs to T"
+    )]
     pub fn get(&self) -> &T {
         self.inner.get().unwrap()
     }
