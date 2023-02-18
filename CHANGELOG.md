@@ -4,6 +4,9 @@
 ### Added
 
 ### Changed
+- Ruby types are no longer `Send` or `Sync`.
+- `value::Opaque` can be used to wrap a Ruby type to make it `Send` + `Sync`.
+- `value::OpaqueId` is a `Send` + `Sync` version of `value::Id`.
 - `typed_data::Obj<T>` derefs to `T` so now `T`'s methods can be called
   directly on `typed_data::Obj<T>`.
 - `ReprValue` and `TryConvert` added to `magnus::prelude`.

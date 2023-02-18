@@ -4,10 +4,11 @@
 mod flonum;
 
 use std::{
-    borrow::Cow,
+    borrow::{Borrow, Cow},
     convert::TryFrom,
     ffi::CStr,
     fmt,
+    marker::PhantomData,
     mem::transmute,
     num::NonZeroUsize,
     ops::{Deref, DerefMut},
@@ -57,12 +58,12 @@ use crate::{
 /// also implemented for all Ruby types.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
-pub struct Value(VALUE);
+pub struct Value(VALUE, PhantomData<*mut RBasic>);
 
 impl Value {
     #[inline]
     pub(crate) const fn new(val: VALUE) -> Self {
-        Self(val)
+        Self(val, PhantomData)
     }
 
     #[inline]
@@ -222,6 +223,68 @@ impl TryConvert for Value {
         Ok(val)
     }
 }
+
+/// A wrapper to make a Ruby type [`Send`] + [`Sync`].
+///
+/// Ruby types are not [`Send`] or [`Sync`] as they provide a way to call
+/// Ruby's APIs, which it is not safe to do from a non-Ruby thread.
+///
+/// Ruby types are safe to send between Ruby threads, but Rust's trait system
+/// currently can not model this detail.
+///
+/// To resolve this, the `Opaque` type makes a Ruby type [`Send`] + [`Sync`]
+/// by removing the ability to do anything with it, making it impossible to
+/// call Ruby's API on non-Ruby threads.
+///
+/// An `Opaque<T>` can be unwrapped to `T` with [`RubyHandle::unwrap_opaque`],
+/// as it is only possible to instantiate a [`RubyHandle`] on a Ruby thread.
+/// # Examples
+///
+/// ```
+/// use magnus::{eval, ruby_handle::RubyHandle, value::Opaque, RString,};
+/// # let _cleanup = unsafe { magnus::embed::init() };
+/// let opaque_str = Opaque::from(RString::new("example"));
+///
+/// // send to another Ruby thread
+///
+/// let handle = RubyHandle::get().unwrap(); // errors on non-Ruby thread
+/// let str = handle.unwrap_opaque(opaque_str);
+/// let res: bool = eval!(r#"str == "example""#, str).unwrap();
+/// assert!(res);
+/// ```
+#[derive(Clone, Copy)]
+#[repr(transparent)]
+pub struct Opaque<T>(T);
+
+impl<T> From<T> for Opaque<T>
+where
+    T: ReprValue,
+{
+    fn from(val: T) -> Self {
+        Self(val)
+    }
+}
+
+impl<T> IntoValue for Opaque<T>
+where
+    T: IntoValue,
+{
+    fn into_value_with(self, handle: &RubyHandle) -> Value {
+        self.0.into_value_with(handle)
+    }
+}
+
+impl RubyHandle {
+    pub fn unwrap_opaque<T>(self, val: Opaque<T>) -> T
+    where
+        T: ReprValue,
+    {
+        val.0
+    }
+}
+
+unsafe impl<T: ReprValue> Send for Opaque<T> {}
+unsafe impl<T: ReprValue> Sync for Opaque<T> {}
 
 pub(crate) mod private {
     use super::*;
@@ -1122,14 +1185,17 @@ unsafe impl private::ReprValue for Value {}
 
 impl ReprValue for Value {}
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Eq, Hash, PartialEq)]
 #[repr(transparent)]
-pub(crate) struct NonZeroValue(NonZeroUsize);
+pub(crate) struct NonZeroValue(NonZeroUsize, PhantomData<ptr::NonNull<RBasic>>);
 
 impl NonZeroValue {
     #[inline]
     pub(crate) const unsafe fn new_unchecked(val: Value) -> Self {
-        Self(NonZeroUsize::new_unchecked(val.as_rb_value() as usize))
+        Self(
+            NonZeroUsize::new_unchecked(val.as_rb_value() as usize),
+            PhantomData,
+        )
     }
 
     pub(crate) const fn get(self) -> Value {
@@ -2011,7 +2077,7 @@ impl RubyHandle {
 /// See also [`Symbol`].
 ///
 /// See the [`ReprValue`] trait for additional methods available on this type.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Eq, Hash, PartialEq)]
 #[repr(transparent)]
 pub struct StaticSymbol(NonZeroValue);
 
@@ -2114,6 +2180,12 @@ impl StaticSymbol {
     }
 }
 
+impl Borrow<Symbol> for StaticSymbol {
+    fn borrow(&self) -> &Symbol {
+        unsafe { &*(self as *const Self as *const Symbol) }
+    }
+}
+
 impl fmt::Display for StaticSymbol {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", unsafe { self.to_s_infallible() })
@@ -2137,6 +2209,24 @@ impl From<Id> for StaticSymbol {
 impl IntoValue for StaticSymbol {
     fn into_value_with(self, _: &RubyHandle) -> Value {
         self.0.get()
+    }
+}
+
+impl PartialEq<Id> for StaticSymbol {
+    fn eq(&self, other: &Id) -> bool {
+        unsafe { self.into_id_unchecked() == *other }
+    }
+}
+
+impl PartialEq<OpaqueId> for StaticSymbol {
+    fn eq(&self, other: &OpaqueId) -> bool {
+        OpaqueId::from(*self) == *other
+    }
+}
+
+impl PartialEq<Symbol> for StaticSymbol {
+    fn eq(&self, other: &Symbol) -> bool {
+        other.as_static().map(|o| *self == o).unwrap_or(false)
     }
 }
 
@@ -2165,9 +2255,9 @@ impl RubyHandle {
 }
 
 /// The internal value of a Ruby symbol.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 #[repr(transparent)]
-pub struct Id(ID);
+pub struct Id(ID, PhantomData<*mut u8>);
 
 impl Id {
     /// Create a new `Id` for `name`.
@@ -2193,7 +2283,7 @@ impl Id {
     }
 
     pub(crate) fn from_rb_id(id: ID) -> Self {
-        Self(id)
+        Self(id, PhantomData)
     }
 
     pub(crate) fn as_rb_id(self) -> ID {
@@ -2242,6 +2332,12 @@ impl Id {
             cstr.to_str()
                 .map_err(|e| Error::new(exception::encoding_error(), e.to_string()))
         }
+    }
+}
+
+impl Borrow<OpaqueId> for Id {
+    fn borrow(&self) -> &OpaqueId {
+        unsafe { &*(self as *const Self as *const OpaqueId) }
     }
 }
 
@@ -2309,12 +2405,110 @@ impl From<StaticSymbol> for Id {
 
 impl IntoId for Symbol {
     fn into_id_with(self, _: &RubyHandle) -> Id {
-        Id::from_rb_id(unsafe { rb_sym2id(self.as_rb_value()) })
+        if self.is_static_symbol() {
+            Id::from_rb_id(self.as_rb_value() >> ruby_special_consts::RUBY_SPECIAL_SHIFT as VALUE)
+        } else {
+            Id::from_rb_id(unsafe { rb_sym2id(self.as_rb_value()) })
+        }
     }
 }
 
 impl From<Symbol> for Id {
     fn from(sym: Symbol) -> Self {
         unsafe { sym.into_id_unchecked() }
+    }
+}
+
+impl PartialEq<OpaqueId> for Id {
+    fn eq(&self, other: &OpaqueId) -> bool {
+        self.0 == other.0
+    }
+}
+
+impl PartialEq<StaticSymbol> for Id {
+    fn eq(&self, other: &StaticSymbol) -> bool {
+        *self == unsafe { other.into_id_unchecked() }
+    }
+}
+
+impl PartialEq<Symbol> for Id {
+    fn eq(&self, other: &Symbol) -> bool {
+        other.as_static().map(|o| *self == o).unwrap_or(false)
+    }
+}
+
+/// A wrapper to make a Ruby [`Id`] [`Send`] + [`Sync`].
+///
+/// [`Id`] is not [`Send`] or [`Sync`] as it provides a way to call some of
+/// Ruby's APIs, which are not safe to call from a non-Ruby thread.
+///
+/// [`Id`] is safe to send between Ruby threads, but Rust's trait system
+/// currently can not model this detail.
+///
+/// To resolve this, the `OpaqueId` type makes an [`Id`] [`Send`] + [`Sync`]
+/// by removing the ability use it with any Ruby APIs.
+///
+/// [`IntoId`] and [`IntoSymbol`] can be used to convert an `OpaqueId` back
+/// into a type that can be used with Ruby's APIs. These traits can only be
+/// used from a Ruby thread.
+///
+/// `OpaqueId` implements [`Eq`]/[`PartialEq`] and [`Hash`], so can be used as
+/// a key or id on non-Ruby threads, or in data structures that must be
+/// [`Send`] or [`Sync`].
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
+#[repr(transparent)]
+pub struct OpaqueId(ID);
+
+impl From<Id> for OpaqueId {
+    fn from(id: Id) -> Self {
+        Self(id.0)
+    }
+}
+
+impl From<StaticSymbol> for OpaqueId {
+    fn from(sym: StaticSymbol) -> Self {
+        unsafe { sym.into_id_unchecked().into() }
+    }
+}
+
+impl From<Symbol> for OpaqueId {
+    fn from(sym: Symbol) -> Self {
+        unsafe { sym.into_id_unchecked().into() }
+    }
+}
+
+impl IntoId for OpaqueId {
+    fn into_id_with(self, _: &RubyHandle) -> Id {
+        Id::from_rb_id(self.0)
+    }
+}
+
+impl IntoSymbol for OpaqueId {
+    fn into_symbol_with(self, handle: &RubyHandle) -> Symbol {
+        self.into_id_with(handle).into_symbol_with(handle)
+    }
+}
+
+impl IntoValue for OpaqueId {
+    fn into_value_with(self, handle: &RubyHandle) -> Value {
+        self.into_symbol_with(handle).into_value_with(handle)
+    }
+}
+
+impl PartialEq<Id> for OpaqueId {
+    fn eq(&self, other: &Id) -> bool {
+        *self == Self::from(*other)
+    }
+}
+
+impl PartialEq<StaticSymbol> for OpaqueId {
+    fn eq(&self, other: &StaticSymbol) -> bool {
+        *self == unsafe { other.into_id_unchecked() }
+    }
+}
+
+impl PartialEq<Symbol> for OpaqueId {
+    fn eq(&self, other: &Symbol) -> bool {
+        other.as_static().map(|o| *self == o).unwrap_or(false)
     }
 }

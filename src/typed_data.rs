@@ -634,41 +634,51 @@ where
 /// use std::hash::Hasher;
 ///
 /// use magnus::{
-///     prelude::*, define_class, embed::init, function, gc, method, typed_data, DataTypeFunctions, Error,
-///     IntoValue, RHash, TypedData, Value,
+///     prelude::*, define_class, embed::init, function, gc, method, ruby_handle::RubyHandle, typed_data, value::Opaque,
+///     DataTypeFunctions, Error, IntoValue, RHash, TypedData, Value,
 /// };
 ///
 /// #[derive(TypedData)]
 /// #[magnus(class = "Pair", free_immediatly, mark)]
 /// struct Pair {
-///     a: Value,
-///     b: Value,
+///     a: Opaque<Value>,
+///     b: Opaque<Value>,
 /// }
 ///
 /// impl Pair {
 ///     fn new(a: Value, b: Value) -> Self {
-///         Self { a, b }
+///         Self { a: a.into(), b: b.into() }
+///     }
+///
+///     fn a(&self) -> Value {
+///         let handle = unsafe { RubyHandle::get_unchecked() };
+///         handle.unwrap_opaque(self.a)
+///     }
+///
+///     fn b(&self) -> Value {
+///         let handle = unsafe { RubyHandle::get_unchecked() };
+///         handle.unwrap_opaque(self.b)
 ///     }
 /// }
 ///
 /// impl DataTypeFunctions for Pair {
 ///     fn mark(&self) {
-///         gc::mark(self.a);
-///         gc::mark(self.b);
+///         gc::mark(self.a());
+///         gc::mark(self.b());
 ///     }
 /// }
 ///
 /// impl std::hash::Hash for Pair {
 ///     fn hash<H: Hasher>(&self, state: &mut H) {
 ///         state.write_i64(
-///             self.a
+///             self.a()
 ///                 .hash()
 ///                 .expect("#hash should not fail")
 ///                 .to_i64()
 ///                 .expect("#hash result guaranteed to be <= i64"),
 ///         );
 ///         state.write_i64(
-///             self.b
+///             self.b()
 ///                 .hash()
 ///                 .expect("#hash should not fail")
 ///                 .to_i64()
@@ -679,7 +689,7 @@ where
 ///
 /// impl PartialEq for Pair {
 ///     fn eq(&self, other: &Self) -> bool {
-///         self.a.eql(other.a).unwrap_or(false) && self.b.eql(other.b).unwrap_or(false)
+///         self.a().eql(other.a()).unwrap_or(false) && self.b().eql(other.b()).unwrap_or(false)
 ///     }
 /// }
 ///
@@ -740,41 +750,51 @@ where
 /// use std::hash::Hasher;
 ///
 /// use magnus::{
-///     prelude::*, define_class, embed::init, function, gc, method, typed_data, DataTypeFunctions, Error,
-///     IntoValue, RHash, TypedData, Value,
+///     prelude::*, define_class, embed::init, function, gc, method, ruby_handle::RubyHandle, typed_data, value::Opaque,
+///     DataTypeFunctions, Error, IntoValue, RHash, TypedData, Value,
 /// };
 ///
 /// #[derive(TypedData)]
 /// #[magnus(class = "Pair", free_immediatly, mark)]
 /// struct Pair {
-///     a: Value,
-///     b: Value,
+///     a: Opaque<Value>,
+///     b: Opaque<Value>,
 /// }
 ///
 /// impl Pair {
 ///     fn new(a: Value, b: Value) -> Self {
-///         Self { a, b }
+///         Self { a: a.into(), b: b.into() }
+///     }
+///
+///     fn a(&self) -> Value {
+///         let handle = unsafe { RubyHandle::get_unchecked() };
+///         handle.unwrap_opaque(self.a)
+///     }
+///
+///     fn b(&self) -> Value {
+///         let handle = unsafe { RubyHandle::get_unchecked() };
+///         handle.unwrap_opaque(self.b)
 ///     }
 /// }
 ///
 /// impl DataTypeFunctions for Pair {
 ///     fn mark(&self) {
-///         gc::mark(self.a);
-///         gc::mark(self.b);
+///         gc::mark(self.a());
+///         gc::mark(self.b());
 ///     }
 /// }
 ///
 /// impl std::hash::Hash for Pair {
 ///     fn hash<H: Hasher>(&self, state: &mut H) {
 ///         state.write_i64(
-///             self.a
+///             self.a()
 ///                 .hash()
 ///                 .expect("#hash should not fail")
 ///                 .to_i64()
 ///                 .expect("#hash result guaranteed to be <= i64"),
 ///         );
 ///         state.write_i64(
-///             self.b
+///             self.b()
 ///                 .hash()
 ///                 .expect("#hash should not fail")
 ///                 .to_i64()
@@ -785,7 +805,7 @@ where
 ///
 /// impl PartialEq for Pair {
 ///     fn eq(&self, other: &Self) -> bool {
-///         self.a.eql(other.a).unwrap_or(false) && self.b.eql(other.b).unwrap_or(false)
+///         self.a().eql(other.a()).unwrap_or(false) && self.b().eql(other.b()).unwrap_or(false)
 ///     }
 /// }
 ///

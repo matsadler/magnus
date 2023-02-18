@@ -1,8 +1,6 @@
 use std::{borrow::Cow, fmt};
 
-use rb_sys::{
-    rb_check_id, rb_intern_str, rb_sym2str, rb_to_symbol, ruby_value_type, VALUE,
-};
+use rb_sys::{rb_check_id, rb_intern_str, rb_sym2str, rb_to_symbol, ruby_value_type, VALUE};
 
 use crate::{
     encoding::EncodingCapable,
@@ -14,7 +12,7 @@ use crate::{
     try_convert::TryConvert,
     value::{
         private::{self, ReprValue as _},
-        Id, NonZeroValue, ReprValue, StaticSymbol, Value,
+        Id, NonZeroValue, OpaqueId, ReprValue, StaticSymbol, Value,
     },
 };
 
@@ -29,7 +27,7 @@ impl RubyHandle {
 /// struct.
 ///
 /// See the [`ReprValue`] trait for additional methods available on this type.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Eq, PartialEq)]
 #[repr(transparent)]
 pub struct Symbol(NonZeroValue);
 
@@ -264,6 +262,24 @@ impl From<StaticSymbol> for Symbol {
 impl IntoValue for Symbol {
     fn into_value_with(self, _: &RubyHandle) -> Value {
         self.0.get()
+    }
+}
+
+impl PartialEq<Id> for Symbol {
+    fn eq(&self, other: &Id) -> bool {
+        self.as_static().map(|s| s == *other).unwrap_or(false)
+    }
+}
+
+impl PartialEq<OpaqueId> for Symbol {
+    fn eq(&self, other: &OpaqueId) -> bool {
+        self.as_static().map(|s| s == *other).unwrap_or(false)
+    }
+}
+
+impl PartialEq<StaticSymbol> for Symbol {
+    fn eq(&self, other: &StaticSymbol) -> bool {
+        self.as_static().map(|s| s == *other).unwrap_or(false)
     }
 }
 

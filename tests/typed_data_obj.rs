@@ -1,6 +1,6 @@
 use magnus::{
-    define_class, embed::init, eval, function, gc, method, prelude::*, typed_data::Obj,
-    DataTypeFunctions, TypedData,
+    define_class, embed::init, eval, function, gc, method, prelude::*, ruby_handle::RubyHandle,
+    typed_data::Obj, value::Opaque, DataTypeFunctions, TypedData,
 };
 
 #[magnus::wrap(class = "Point", free_immediatly)]
@@ -18,18 +18,31 @@ impl Point {
 #[derive(TypedData)]
 #[magnus(class = "Line", free_immediatly, mark)]
 struct Line {
-    start: Obj<Point>,
-    end: Obj<Point>,
+    start: Opaque<Obj<Point>>,
+    end: Opaque<Obj<Point>>,
 }
 
 impl Line {
     fn new(start: Obj<Point>, end: Obj<Point>) -> Self {
-        Self { start, end }
+        Self {
+            start: start.into(),
+            end: end.into(),
+        }
+    }
+
+    fn start(&self) -> Obj<Point> {
+        let handle = unsafe { RubyHandle::get_unchecked() };
+        handle.unwrap_opaque(self.start)
+    }
+
+    fn end(&self) -> Obj<Point> {
+        let handle = unsafe { RubyHandle::get_unchecked() };
+        handle.unwrap_opaque(self.end)
     }
 
     fn length(&self) -> f64 {
-        let start = self.start;
-        let end = self.end;
+        let start = self.start();
+        let end = self.end();
 
         (((end.x - start.x).pow(2) + (end.y - start.y).pow(2)) as f64).sqrt()
     }
@@ -37,8 +50,8 @@ impl Line {
 
 impl DataTypeFunctions for Line {
     fn mark(&self) {
-        gc::mark(self.start);
-        gc::mark(self.end);
+        gc::mark(self.start());
+        gc::mark(self.end());
     }
 }
 
