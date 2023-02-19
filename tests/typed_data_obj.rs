@@ -1,6 +1,6 @@
 use magnus::{
-    class, define_class, embed::init, eval, function, gc, method, prelude::*,
-    ruby_handle::RubyHandle, typed_data::Obj, value::Opaque, DataTypeFunctions, TypedData,
+    class, define_class, embed::init, eval, function, gc, method, prelude::*, typed_data::Obj,
+    value::Opaque, DataTypeFunctions, TypedData,
 };
 
 #[magnus::wrap(class = "Point", free_immediatly)]

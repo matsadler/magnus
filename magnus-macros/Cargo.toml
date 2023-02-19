@@ -17,5 +17,4 @@ quote = "1"
 syn = { version = "1", features = ["full"] }
 
 [dev-dependencies]
-magnus = { path = "../" }
- 
+magnus = { path = "../", features = ["embed"] }

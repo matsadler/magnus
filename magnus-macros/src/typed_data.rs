@@ -124,7 +124,7 @@ pub fn expand_derive_typed_data(input: DeriveInput) -> TokenStream {
     let class_for = if !arms.is_empty() {
         quote! {
             fn class_for(value: &Self) -> magnus::RClass {
-                use magnus::{class, Module, Class, RClass};
+                use magnus::{class, Module, Class, RClass, value::ReprValue};
                 #[allow(unreachable_patterns)]
                 match value {
                     #(#arms,)*
@@ -163,7 +163,7 @@ pub fn expand_derive_typed_data(input: DeriveInput) -> TokenStream {
             if read {
                 accessors.push(quote! {
                     fn #ident(&self) -> <#ty as magnus::value::OpaqueVal>::Val {
-                        let handle = unsafe { RubyHandle::get_unchecked() };
+                        let handle = unsafe { magnus::ruby_handle::RubyHandle::get_unchecked() };
                         handle.unwrap_opaque(self.#ident)
                     }
                 });

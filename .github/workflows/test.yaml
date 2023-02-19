@@ -63,4 +63,4 @@ jobs:
         run: bundle exec rake test
 
       - name: Run tests
-        run: cargo test
+        run: cargo test --workspace

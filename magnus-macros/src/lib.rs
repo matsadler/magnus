@@ -174,7 +174,7 @@ pub fn init(attrs: TokenStream, item: TokenStream) -> TokenStream {
 ///
 /// #[magnus::init]
 /// fn init() -> Result<(), magnus::Error> {
-///     let shape = define_class("Shape", class:object())?;
+///     let shape = define_class("Shape", class::object())?;
 ///     shape.define_method("area", method!(Shape::area, 0))?;
 ///
 ///     let circle = define_class("Circle", shape)?;
@@ -286,7 +286,7 @@ pub fn derive_data_type_functions(input: TokenStream) -> TokenStream {
 ///
 /// #[magnus::init]
 /// fn init() -> Result<(), magnus::Error> {
-///     let shape = define_class("Shape", class:object())?;
+///     let shape = define_class("Shape", class::object())?;
 ///     define_class("Circle", shape)?;
 ///     define_class("Rectangle", shape)?;
 ///     Ok(())
@@ -321,6 +321,12 @@ pub fn derive_data_type_functions(input: TokenStream) -> TokenStream {
 ///     DataTypeFunctions, TypedData,
 /// };
 ///
+/// # #[magnus::wrap(class = "Point", free_immediately, size)]
+/// # struct Point {
+/// #     x: isize,
+/// #     y: isize,
+/// # }
+/// #
 /// #[derive(TypedData)]
 /// #[magnus(class = "Line", free_immediatly, mark)]
 /// struct Line {
@@ -356,8 +362,8 @@ pub fn derive_data_type_functions(input: TokenStream) -> TokenStream {
 /// #[magnus::init]
 /// fn init() -> Result<(), magnus::Error> {
 ///     let line = define_class("Line", class::object())?;
-///     line.define_singleton_method("new", function!(new, 2))?;
-///     line.define_method("length", method!(length, 0))?;
+///     line.define_singleton_method("new", function!(Line::new, 2))?;
+///     line.define_method("length", method!(Line::length, 0))?;
 ///     Ok(())
 /// }
 /// ```
