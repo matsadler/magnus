@@ -1,3 +1,5 @@
+//! Types and traits for working with Ruby symbols.
+
 use std::{borrow::Cow, fmt};
 
 use rb_sys::{rb_check_id, rb_intern_str, rb_sym2str, rb_to_symbol, ruby_value_type, VALUE};

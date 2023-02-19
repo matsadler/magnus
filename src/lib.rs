@@ -1860,7 +1860,7 @@ pub mod rb_sys;
 #[doc(hidden)]
 pub mod ruby_handle;
 pub mod scan_args;
-mod symbol;
+pub mod symbol;
 mod try_convert;
 pub mod typed_data;
 pub mod value;
