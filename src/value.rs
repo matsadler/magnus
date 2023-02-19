@@ -250,6 +250,19 @@ impl TryConvert for Value {
 #[repr(transparent)]
 pub struct Opaque<T>(T);
 
+// implementation detail for opaque_attr_accessor proc macro attribute
+#[doc(hidden)]
+pub trait OpaqueVal {
+    type Val: ReprValue;
+}
+
+impl<T> OpaqueVal for Opaque<T>
+where
+    T: ReprValue,
+{
+    type Val = T;
+}
+
 impl<T> From<T> for Opaque<T>
 where
     T: ReprValue,
@@ -269,7 +282,7 @@ where
 }
 
 impl RubyHandle {
-    pub fn unwrap_opaque<T>(self, val: Opaque<T>) -> T
+    pub fn unwrap_opaque<T>(&self, val: Opaque<T>) -> T
     where
         T: ReprValue,
     {

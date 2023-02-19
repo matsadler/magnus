@@ -1,7 +1,33 @@
 use std::collections::HashMap;
 
 use proc_macro2::Span;
-use syn::{AttributeArgs, Error, Lit, Meta, MetaNameValue, NestedMeta, Path};
+use syn::{
+    spanned::Spanned, Attribute, AttributeArgs, Error, Lit, Meta, MetaNameValue, NestedMeta, Path,
+};
+
+pub fn to_attribute_args(attrs: &[Attribute]) -> Result<Option<AttributeArgs>, Error> {
+    let mut attrs = attrs
+        .iter()
+        .filter(|attr| attr.path.is_ident("magnus"))
+        .collect::<Vec<_>>();
+    if attrs.is_empty() {
+        return Ok(None);
+    } else if attrs.len() > 1 {
+        return Err(attrs
+            .into_iter()
+            .map(|a| Error::new(a.span(), "duplicate attribute"))
+            .reduce(|mut a, b| {
+                a.combine(b);
+                a
+            })
+            .unwrap());
+    }
+    match attrs.remove(0).parse_meta() {
+        Ok(Meta::List(v)) => Ok(Some(v.nested.into_iter().collect())),
+        Ok(v) => Err(Error::new_spanned(v, "Expected meta list")),
+        Err(e) => Err(e),
+    }
+}
 
 pub struct Value {
     path: Path,

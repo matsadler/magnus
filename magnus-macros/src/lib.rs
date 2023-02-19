@@ -9,7 +9,7 @@
 //!
 //! #[magnus::init]
 //! fn init() -> Result<(), magnus::Error> {
-//!     magnus::define_class("RbPoint", Default::default())?;
+//!     magnus::define_class("RbPoint", magnus::class::object())?;
 //!     Ok(())
 //! }
 //! ```
@@ -51,7 +51,7 @@ mod util;
 /// ```
 /// The init function can also return `Result<(), magnus::Error>`.
 /// ```
-/// use magnus::{define_module, function, method, prelude::*, Error};
+/// use magnus::{class, define_module, function, method, prelude::*, Error};
 ///
 /// #[magnus::wrap(class = "Euclid::Point", free_immediately, size)]
 /// struct Point {
@@ -76,7 +76,7 @@ mod util;
 /// #[magnus::init]
 /// fn init() -> Result<(), Error> {
 ///     let module = define_module("Euclid")?;
-///     let class = module.define_class("Point", Default::default())?;
+///     let class = module.define_class("Point", class::object())?;
 ///     class.define_singleton_method("new", function!(Point::new, 2))?;
 ///     class.define_method("x", method!(Point::x, 0))?;
 ///     class.define_method("y", method!(Point::y, 0))?;
@@ -153,7 +153,7 @@ pub fn init(attrs: TokenStream, item: TokenStream) -> TokenStream {
 /// ```
 /// use std::f64::consts::PI;
 ///
-/// use magnus::{prelude::*, define_class, function, method};
+/// use magnus::{prelude::*, class, define_class, function, method};
 ///
 /// #[magnus::wrap(class = "Shape")]
 /// enum Shape {
@@ -174,7 +174,7 @@ pub fn init(attrs: TokenStream, item: TokenStream) -> TokenStream {
 ///
 /// #[magnus::init]
 /// fn init() -> Result<(), magnus::Error> {
-///     let shape = define_class("Shape", Default::default())?;
+///     let shape = define_class("Shape", class:object())?;
 ///     shape.define_method("area", method!(Shape::area, 0))?;
 ///
 ///     let circle = define_class("Circle", shape)?;
@@ -224,6 +224,14 @@ pub fn derive_data_type_functions(input: TokenStream) -> TokenStream {
 /// * `wb_protected` - Enable the `wb_protected` flag.
 /// * `frozen_shareable` - Enable the `frozen_shareable` flag.
 ///
+/// # Field Attributes
+///
+/// The `#[magnus(...)]` attribute can be set on struct fields with the
+/// following values:
+///
+/// * `opaque_attr_reader` - For a Ruby value wrapped in `Opaque`, creates a
+///   accessor method that returns the unwrapped Ruby value.
+///
 /// # Variant Attributes
 ///
 /// The `#[magnus(...)]` attribute can be set on enum variants with the
@@ -266,7 +274,7 @@ pub fn derive_data_type_functions(input: TokenStream) -> TokenStream {
 /// With subclasses for enum variants:
 ///
 /// ```
-/// use magnus::define_class;
+/// use magnus::{class, define_class};
 ///
 /// #[magnus::wrap(class = "Shape")]
 /// enum Shape {
@@ -278,7 +286,7 @@ pub fn derive_data_type_functions(input: TokenStream) -> TokenStream {
 ///
 /// #[magnus::init]
 /// fn init() -> Result<(), magnus::Error> {
-///     let shape = define_class("Shape", Default::default())?;
+///     let shape = define_class("Shape", class:object())?;
 ///     define_class("Circle", shape)?;
 ///     define_class("Rectangle", shape)?;
 ///     Ok(())
@@ -302,6 +310,55 @@ pub fn derive_data_type_functions(input: TokenStream) -> TokenStream {
 ///     fn size(&self) -> usize {
 ///         size_of_val(&self.first) + size_of_val(&self.last)
 ///     }
+/// }
+/// ```
+///
+/// A struct containing Ruby values.
+///
+/// ```
+/// use magnus::{
+///     class, define_class, gc, method, function, prelude::*, typed_data::Obj, value::Opaque,
+///     DataTypeFunctions, TypedData,
+/// };
+///
+/// #[derive(TypedData)]
+/// #[magnus(class = "Line", free_immediatly, mark)]
+/// struct Line {
+///     #[magnus(opaque_attr_reader)]
+///     start: Opaque<Obj<Point>>,
+///     #[magnus(opaque_attr_reader)]
+///     end: Opaque<Obj<Point>>,
+/// }
+///
+/// impl Line {
+///     fn new(start: Obj<Point>, end: Obj<Point>) -> Self {
+///         Self {
+///             start: start.into(),
+///             end: end.into(),
+///         }
+///     }
+///
+///     fn length(&self) -> f64 {
+///         let start = self.start();
+///         let end = self.end();
+///
+///         (((end.x - start.x).pow(2) + (end.y - start.y).pow(2)) as f64).sqrt()
+///     }
+/// }
+///
+/// impl DataTypeFunctions for Line {
+///     fn mark(&self) {
+///         gc::mark(self.start());
+///         gc::mark(self.end());
+///     }
+/// }
+///
+/// #[magnus::init]
+/// fn init() -> Result<(), magnus::Error> {
+///     let line = define_class("Line", class::object())?;
+///     line.define_singleton_method("new", function!(new, 2))?;
+///     line.define_method("length", method!(length, 0))?;
+///     Ok(())
 /// }
 /// ```
 #[proc_macro_derive(TypedData, attributes(magnus))]

@@ -1,6 +1,6 @@
 use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
-use syn::{spanned::Spanned, Data, DataEnum, DeriveInput, Error, Fields, Meta};
+use syn::{spanned::Spanned, Data, DataEnum, DataStruct, DeriveInput, Error, Fields, FieldsNamed};
 
 use crate::util;
 
@@ -28,29 +28,11 @@ pub fn expand_derive_typed_data(input: DeriveInput) -> TokenStream {
         )
         .into_compile_error();
     }
-    let mut attrs = input
-        .attrs
-        .clone()
-        .into_iter()
-        .filter(|attr| attr.path.is_ident("magnus"))
-        .collect::<Vec<_>>();
-    if attrs.len() > 1 {
-        return attrs
-            .into_iter()
-            .map(|a| Error::new(a.span(), "duplicate attribute"))
-            .reduce(|mut a, b| {
-                a.combine(b);
-                a
-            })
-            .unwrap()
-            .into_compile_error();
-    }
-    if attrs.is_empty() {
-        return Error::new(input.span(), "missing #[magnus] attribute").into_compile_error();
-    }
-    let attrs = match attrs.remove(0).parse_meta() {
-        Ok(Meta::List(v)) => v.nested.into_iter().collect(),
-        Ok(v) => return Error::new_spanned(v, "Expected meta list").into_compile_error(),
+    let attrs = match util::to_attribute_args(&input.attrs) {
+        Ok(Some(v)) => v,
+        Ok(None) => {
+            return Error::new(input.span(), "missing #[magnus] attribute").into_compile_error()
+        }
         Err(e) => return e.into_compile_error(),
     };
     let mut args = match util::Args::new_with_aliases(
@@ -106,32 +88,14 @@ pub fn expand_derive_typed_data(input: DeriveInput) -> TokenStream {
         Err(e) => return e.into_compile_error(),
     };
 
-    let ident = input.ident;
+    let ident = &input.ident;
 
     let mut arms = Vec::new();
-    if let Data::Enum(DataEnum { variants, .. }) = input.data {
+    if let Data::Enum(DataEnum { ref variants, .. }) = input.data {
         for variant in variants.into_iter() {
-            let mut attrs = variant
-                .attrs
-                .into_iter()
-                .filter(|attr| attr.path.is_ident("magnus"))
-                .collect::<Vec<_>>();
-            if attrs.is_empty() {
-                continue;
-            } else if attrs.len() > 1 {
-                return attrs
-                    .into_iter()
-                    .map(|a| Error::new(a.span(), "duplicate attribute"))
-                    .reduce(|mut a, b| {
-                        a.combine(b);
-                        a
-                    })
-                    .unwrap()
-                    .into_compile_error();
-            }
-            let attrs = match attrs.remove(0).parse_meta() {
-                Ok(Meta::List(v)) => v.nested.into_iter().collect(),
-                Ok(v) => return Error::new_spanned(v, "Expected meta list").into_compile_error(),
+            let attrs = match util::to_attribute_args(&variant.attrs) {
+                Ok(Some(v)) => v,
+                Ok(None) => continue,
                 Err(e) => return e.into_compile_error(),
             };
             let mut args = match util::Args::new(attrs, &["class"]) {
@@ -142,7 +106,7 @@ pub fn expand_derive_typed_data(input: DeriveInput) -> TokenStream {
                 Ok(v) => v,
                 Err(e) => return e.into_compile_error(),
             };
-            let ident = variant.ident;
+            let ident = &variant.ident;
             let fetch_class = quote! {
                 *magnus::memoize!(RClass: {
                     let class: RClass = class::object().funcall("const_get", (#class,)).unwrap();
@@ -172,6 +136,51 @@ pub fn expand_derive_typed_data(input: DeriveInput) -> TokenStream {
         quote! {}
     };
 
+    let mut accessors = Vec::new();
+    if let Data::Struct(DataStruct {
+        fields: Fields::Named(FieldsNamed { ref named, .. }),
+        ..
+    }) = input.data
+    {
+        for field in named {
+            let attrs = match util::to_attribute_args(&field.attrs) {
+                Ok(Some(v)) => v,
+                Ok(None) => continue,
+                Err(e) => return e.into_compile_error(),
+            };
+            let mut args = match util::Args::new(attrs, &["opaque_attr_reader"]) {
+                Ok(v) => v,
+                Err(e) => return e.into_compile_error(),
+            };
+            let mut read = false;
+            match args.extract::<Option<()>>("opaque_attr_reader") {
+                Ok(Some(())) => read = true,
+                Ok(None) => {}
+                Err(e) => return e.into_compile_error(),
+            };
+            let ident = field.ident.as_ref().unwrap();
+            let ty = &field.ty;
+            if read {
+                accessors.push(quote! {
+                    fn #ident(&self) -> <#ty as magnus::value::OpaqueVal>::Val {
+                        let handle = unsafe { RubyHandle::get_unchecked() };
+                        handle.unwrap_opaque(self.#ident)
+                    }
+                });
+            }
+        }
+    }
+
+    let accessor_impl = if !accessors.is_empty() {
+        quote! {
+            impl #ident {
+                #(#accessors)*
+            }
+        }
+    } else {
+        quote! {}
+    };
+
     let mut builder = Vec::new();
     builder.push(quote! { let mut builder = magnus::DataType::builder::<Self>(#name); });
     if mark {
@@ -195,6 +204,8 @@ pub fn expand_derive_typed_data(input: DeriveInput) -> TokenStream {
     builder.push(quote! { builder.build() });
     let builder = builder.into_iter().collect::<TokenStream>();
     let tokens = quote! {
+        #accessor_impl
+
         unsafe impl magnus::TypedData for #ident {
             fn class() -> magnus::RClass {
                 use magnus::{class, Module, Class, RClass, value::ReprValue};

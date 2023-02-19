@@ -641,23 +641,15 @@ where
 /// #[derive(TypedData)]
 /// #[magnus(class = "Pair", free_immediatly, mark)]
 /// struct Pair {
+///     #[magnus(opaque_attr_reader)]
 ///     a: Opaque<Value>,
+///     #[magnus(opaque_attr_reader)]
 ///     b: Opaque<Value>,
 /// }
 ///
 /// impl Pair {
 ///     fn new(a: Value, b: Value) -> Self {
 ///         Self { a: a.into(), b: b.into() }
-///     }
-///
-///     fn a(&self) -> Value {
-///         let handle = unsafe { RubyHandle::get_unchecked() };
-///         handle.unwrap_opaque(self.a)
-///     }
-///
-///     fn b(&self) -> Value {
-///         let handle = unsafe { RubyHandle::get_unchecked() };
-///         handle.unwrap_opaque(self.b)
 ///     }
 /// }
 ///
@@ -757,23 +749,15 @@ where
 /// #[derive(TypedData)]
 /// #[magnus(class = "Pair", free_immediatly, mark)]
 /// struct Pair {
+///     #[magnus(opaque_attr_reader)]
 ///     a: Opaque<Value>,
+///     #[magnus(opaque_attr_reader)]
 ///     b: Opaque<Value>,
 /// }
 ///
 /// impl Pair {
 ///     fn new(a: Value, b: Value) -> Self {
 ///         Self { a: a.into(), b: b.into() }
-///     }
-///
-///     fn a(&self) -> Value {
-///         let handle = unsafe { RubyHandle::get_unchecked() };
-///         handle.unwrap_opaque(self.a)
-///     }
-///
-///     fn b(&self) -> Value {
-///         let handle = unsafe { RubyHandle::get_unchecked() };
-///         handle.unwrap_opaque(self.b)
 ///     }
 /// }
 ///
