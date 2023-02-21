@@ -889,10 +889,10 @@ where
 /// impl PartialOrd for Pair {
 ///     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
 ///         let a = self.a().funcall("<=>", (other.a(),)).ok().map(|o: i64| o.cmp(&0))?;
-///         if !a.is_eq() {
-///             return Some(a);
+///         match a {
+///             Ordering::Less | Ordering::Greater => Some(a),
+///             Ordering::Equal => self.b().funcall("<=>", (other.b(),)).ok().map(|o: i64| o.cmp(&0)),
 ///         }
-///         self.b().funcall("<=>", (other.b(),)).ok().map(|o: i64| o.cmp(&0))
 ///     }
 /// }
 ///
