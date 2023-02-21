@@ -17,7 +17,10 @@ use std::{
 
 #[cfg(ruby_gte_3_0)]
 use rb_sys::rbimpl_typeddata_flags::{self, RUBY_TYPED_FREE_IMMEDIATELY, RUBY_TYPED_WB_PROTECTED};
-use rb_sys::{self, rb_data_type_struct__bindgen_ty_1, rb_data_type_t, size_t, VALUE};
+use rb_sys::{
+    self, rb_data_type_struct__bindgen_ty_1, rb_data_type_t, rb_obj_reveal,
+    rb_singleton_class_attached, rb_singleton_class_clone, size_t, VALUE,
+};
 
 #[cfg(ruby_lt_3_0)]
 const RUBY_TYPED_FREE_IMMEDIATELY: u32 = 1;
@@ -33,6 +36,7 @@ use crate::{
     object::Object,
     r_typed_data::RTypedData,
     ruby_handle::RubyHandle,
+    scan_args::{get_kwargs, scan_args},
     try_convert::TryConvert,
     value::{
         private::{self, ReprValue as _},
@@ -626,7 +630,7 @@ where
 ///
 /// Automatically implemented for any type implementing [`std::hash::Hash`].
 ///
-/// See also [`IsEql`].
+/// See also [`Dup`], [`Inspect`], [`IsEql`], and [`typed_data::Cmp`](Cmp).
 ///
 /// # Examples
 ///
@@ -634,7 +638,7 @@ where
 /// use std::hash::Hasher;
 ///
 /// use magnus::{
-///     prelude::*, class, define_class, embed::init, function, gc, method, ruby_handle::RubyHandle, typed_data, value::Opaque,
+///     prelude::*, class, define_class, function, gc, method, typed_data, value::Opaque,
 ///     DataTypeFunctions, Error, IntoValue, RHash, TypedData, Value,
 /// };
 ///
@@ -687,8 +691,8 @@ where
 ///
 /// impl Eq for Pair {}
 ///
-/// let _cleanup = unsafe { init() };
-///
+/// # let _cleanup = unsafe { magnus::embed::init() };
+/// #
 /// let class = define_class("Pair", class::object()).unwrap();
 /// class
 ///     .define_singleton_method("new", function!(Pair::new, 2))
@@ -734,7 +738,8 @@ where
 /// Automatically implemented for any type implementing [`Eq`] and
 /// [`TryConvert`].
 ///
-/// See also [`typed_data::Hash`](Hash).
+/// See also [`Dup`], [`Inspect`], [`typed_data::Cmp`](Cmp), and
+/// [`typed_data::Hash`](Hash).
 ///
 /// # Examples
 ///
@@ -742,7 +747,7 @@ where
 /// use std::hash::Hasher;
 ///
 /// use magnus::{
-///     prelude::*, class, define_class, embed::init, function, gc, method, ruby_handle::RubyHandle, typed_data, value::Opaque,
+///     prelude::*, class, define_class, function, gc, method, typed_data, value::Opaque,
 ///     DataTypeFunctions, Error, IntoValue, RHash, TypedData, Value,
 /// };
 ///
@@ -795,8 +800,8 @@ where
 ///
 /// impl Eq for Pair {}
 ///
-/// let _cleanup = unsafe { init() };
-///
+/// # let _cleanup = unsafe { magnus::embed::init() };
+/// #
 /// let class = define_class("Pair", class::object()).unwrap();
 /// class
 ///     .define_singleton_method("new", function!(Pair::new, 2))
@@ -833,5 +838,271 @@ where
         <&'a T>::try_convert(other)
             .map(|o| self == o)
             .unwrap_or(false)
+    }
+}
+
+/// Trait for a Ruby-compatible `#<=>` method.
+///
+/// Automatically implemented for any type implementing [`PartialOrd`] and
+/// [`TryConvert`].
+///
+/// See also [`Dup`], [`Inspect`], [`IsEql`] and [`typed_data::Hash`](Hash).
+///
+/// # Examples
+///
+/// ```
+/// use std::cmp::Ordering;
+///
+/// use magnus::{
+///     prelude::*, class, define_class, eval, function, gc, method, module, typed_data, value::Opaque,
+///     DataTypeFunctions, Error, IntoValue, Module, TypedData, Value,
+/// };
+///
+/// #[derive(TypedData)]
+/// #[magnus(class = "Pair", free_immediatly, mark)]
+/// struct Pair {
+///     #[magnus(opaque_attr_reader)]
+///     a: Opaque<Value>,
+///     #[magnus(opaque_attr_reader)]
+///     b: Opaque<Value>,
+/// }
+///
+/// impl Pair {
+///     fn new(a: Value, b: Value) -> Self {
+///         Self { a: a.into(), b: b.into() }
+///     }
+/// }
+///
+/// impl DataTypeFunctions for Pair {
+///     fn mark(&self) {
+///         gc::mark(self.a());
+///         gc::mark(self.b());
+///     }
+/// }
+///
+/// impl PartialEq for Pair {
+///     fn eq(&self, other: &Self) -> bool {
+///         self.a().eql(other.a()).unwrap_or(false) && self.b().eql(other.b()).unwrap_or(false)
+///     }
+/// }
+///
+/// impl PartialOrd for Pair {
+///     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+///         let a = self.a().funcall("<=>", (other.a(),)).ok().map(|o: i64| o.cmp(&0))?;
+///         if !a.is_eq() {
+///             return Some(a);
+///         }
+///         self.b().funcall("<=>", (other.b(),)).ok().map(|o: i64| o.cmp(&0))
+///     }
+/// }
+///
+/// # let _cleanup = unsafe { magnus::embed::init() };
+/// #
+/// let class = define_class("Pair", class::object()).unwrap();
+/// class
+///     .define_singleton_method("new", function!(Pair::new, 2))
+///     .unwrap();
+/// class
+///     .define_method("<=>", method!(<Pair as typed_data::Cmp>::cmp, 1))
+///     .unwrap();
+/// class.include_module(module::comparable()).unwrap();
+///
+/// let a = Pair::new("foo".into_value(), 1.into_value());
+/// let b = Pair::new("foo".into_value(), 2.into_value());
+/// let res: bool = eval!("a < b", a, b).unwrap();
+/// assert!(res);
+///
+/// let b = Pair::new("foo".into_value(), 2.into_value());
+/// let c = Pair::new("bar".into_value(), 3.into_value());
+/// let res: bool = eval!("b > c", b, c).unwrap();
+/// assert!(res);
+///
+/// let a = Pair::new("foo".into_value(), 1.into_value());
+/// let b = Pair::new("foo".into_value(), 2.into_value());
+/// let res: i64 = eval!("a <=> b", a, b).unwrap();
+/// assert_eq!(res, -1);
+/// ```
+pub trait Cmp {
+    // Docs at trait level.
+    #![allow(missing_docs)]
+    fn cmp(&self, other: Value) -> Option<i64>;
+}
+
+impl<'a, T> Cmp for T
+where
+    T: PartialOrd + 'a,
+    &'a T: TryConvert,
+{
+    fn cmp(&self, other: Value) -> Option<i64> {
+        <&'a T>::try_convert(other)
+            .ok()
+            .and_then(|o| self.partial_cmp(o))
+            .map(|o| o as i64)
+    }
+}
+
+/// Trait for a Ruby-compatible `#inspect` method.
+///
+/// Automatically implemented for any type implementing [`Debug`].
+///
+/// See also [`Dup`], [`IsEql`], [`typed_data::Cmp`](Cmp), and
+/// [`typed_data::Hash`](Hash).
+///
+/// # Examples
+///
+/// ```
+/// use std::fmt;
+///
+/// use magnus::{
+///     prelude::*, class, define_class, eval, function, gc, method, typed_data, value::Opaque,
+///     DataTypeFunctions, IntoValue, TypedData, Value,
+/// };
+///
+/// #[derive(TypedData)]
+/// #[magnus(class = "Pair", free_immediatly, mark)]
+/// struct Pair {
+///     #[magnus(opaque_attr_reader)]
+///     a: Opaque<Value>,
+///     #[magnus(opaque_attr_reader)]
+///     b: Opaque<Value>,
+/// }
+///
+/// impl Pair {
+///     fn new(a: Value, b: Value) -> Self {
+///         Self { a: a.into(), b: b.into() }
+///     }
+/// }
+///
+/// impl DataTypeFunctions for Pair {
+///     fn mark(&self) {
+///         gc::mark(self.a());
+///         gc::mark(self.b());
+///     }
+/// }
+///
+/// impl fmt::Debug for Pair {
+///     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+///         f.debug_struct("Pair")
+///          .field("a", &self.a())
+///          .field("b", &self.b())
+///          .finish()
+///     }
+/// }
+///
+/// # let _cleanup = unsafe { magnus::embed::init() };
+/// #
+/// let class = define_class("Pair", class::object()).unwrap();
+/// class
+///     .define_singleton_method("new", function!(Pair::new, 2))
+///     .unwrap();
+/// class
+///     .define_method("inspect", method!(<Pair as typed_data::Inspect>::inspect, 0))
+///     .unwrap();
+///
+/// let pair = Pair::new("foo".into_value(), 1.into_value());
+/// let res: bool = eval!(r#"pair.inspect == "Pair { a: \"foo\", b: 1 }""#, pair).unwrap();
+/// assert!(res);
+/// ```
+pub trait Inspect {
+    // Docs at trait level.
+    #![allow(missing_docs)]
+    fn inspect(&self) -> String;
+}
+
+impl<T> Inspect for T
+where
+    T: fmt::Debug,
+{
+    fn inspect(&self) -> String {
+        format!("{:?}", self)
+    }
+}
+
+/// Trait for a Ruby-compatible `#dup` and `#clone` methods.
+///
+/// Automatically implemented for any type implementing [`Clone`].
+///
+/// See also [`Inspect`], [`IsEql`], [`typed_data::Cmp`](Cmp), and
+/// [`typed_data::Hash`](Hash).
+///
+/// # Examples
+///
+/// ```
+/// use magnus::{
+///     prelude::*, class, define_class, eval, function, gc, method, typed_data, value::Opaque,
+///     DataTypeFunctions, IntoValue, TypedData, Value,
+/// };
+///
+/// #[derive(TypedData, Clone)]
+/// #[magnus(class = "Pair", free_immediatly, mark)]
+/// struct Pair {
+///     #[magnus(opaque_attr_reader)]
+///     a: Opaque<Value>,
+///     #[magnus(opaque_attr_reader)]
+///     b: Opaque<Value>,
+/// }
+///
+/// impl Pair {
+///     fn new(a: Value, b: Value) -> Self {
+///         Self { a: a.into(), b: b.into() }
+///     }
+/// }
+///
+/// impl DataTypeFunctions for Pair {
+///     fn mark(&self) {
+///         gc::mark(self.a());
+///         gc::mark(self.b());
+///     }
+/// }
+///
+/// # let _cleanup = unsafe { magnus::embed::init() };
+/// #
+/// let class = define_class("Pair", class::object()).unwrap();
+/// class
+///     .define_singleton_method("new", function!(Pair::new, 2))
+///     .unwrap();
+/// class
+///     .define_method("dup", method!(<Pair as typed_data::Dup>::dup, 0))
+///     .unwrap();
+/// class
+///     .define_method("clone", method!(<Pair as typed_data::Dup>::clone, -1))
+///     .unwrap();
+///
+/// let a = Pair::new("foo".into_value(), 1.into_value());
+/// let res: bool = eval!("b = a.dup; a.object_id != b.object_id", a).unwrap();
+/// assert!(res);
+/// ```
+pub trait Dup: Sized {
+    // Docs at trait level.
+    #![allow(missing_docs)]
+    fn dup(&self) -> Self;
+    fn clone(rbself: Obj<Self>, args: &[Value]) -> Result<Obj<Self>, Error>;
+}
+
+impl<T> Dup for T
+where
+    T: Clone + TypedData,
+{
+    fn dup(&self) -> Self {
+        self.clone()
+    }
+
+    fn clone(rbself: Obj<Self>, args: &[Value]) -> Result<Obj<Self>, Error> {
+        let args = scan_args::<(), (), (), (), _, ()>(args)?;
+        let kwargs =
+            get_kwargs::<_, (), (Option<Option<bool>>,), ()>(args.keywords, &[], &["freeze"])?;
+        let (freeze,) = kwargs.optional;
+        let freeze = freeze.flatten();
+
+        let clone = Obj::wrap((*rbself).clone());
+        let class_clone = unsafe { rb_singleton_class_clone(rbself.as_rb_value()) };
+        unsafe { rb_obj_reveal(clone.as_rb_value(), class_clone) };
+        unsafe { rb_singleton_class_attached(class_clone, clone.as_rb_value()) };
+        match freeze {
+            Some(true) => clone.freeze(),
+            None if rbself.is_frozen() => clone.freeze(),
+            _ => (),
+        }
+        Ok(clone)
     }
 }
