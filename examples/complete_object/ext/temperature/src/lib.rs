@@ -7,8 +7,8 @@ use magnus::{
     typed_data, Error, Value,
 };
 
-#[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Hash)]
 #[magnus::wrap(class = "Temperature", free_immediately, size)]
+#[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Hash)]
 struct Temperature {
     microkelvin: u64,
 }
