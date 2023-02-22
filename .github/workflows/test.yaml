@@ -43,13 +43,17 @@ jobs:
           bundler-cache: true
           cargo-cache: true
           cargo-cache-extra-path: |
-            examples/rust_blank/ext/rust_blank/target/
             examples/rust_blank/tmp/
+            examples/complete_object/tmp/
             examples/custom_exception_ruby/tmp/
             examples/custom_exception_rust/tmp/
 
       - name: Example gem tests (blank?)
         working-directory: examples/rust_blank
+        run: bundle exec rake test
+
+      - name: Example gem tests (complete object)
+        working-directory: examples/complete_object
         run: bundle exec rake test
 
       - name: Example gem tests (custom exception defined in Ruby)
