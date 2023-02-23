@@ -118,7 +118,7 @@ where
     ///
     /// This function **must not** panic. The process will abort if this
     /// function panics.
-    fn compact(&self) {}
+    fn compact(&mut self) {}
 
     /// Extern wrapper for `free`. Don't define or call.
     ///
@@ -173,7 +173,7 @@ where
     /// This function must not panic.
     #[doc(hidden)]
     unsafe extern "C" fn extern_compact(ptr: *mut c_void) {
-        if let Err(e) = catch_unwind(|| Self::compact(&*(ptr as *mut Self))) {
+        if let Err(e) = catch_unwind(|| Self::compact(&mut *(ptr as *mut Self))) {
             bug_from_panic(e, "panic in DataTypeFunctions::compact")
         }
     }
