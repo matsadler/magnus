@@ -83,9 +83,17 @@ where
     ///
     /// This can be implemented to perform Ruby-specific clean up when your
     /// type is no longer referenced from Ruby, but it is likely easier to do
-    /// this in a Drop implementation for your type.
+    /// this in a [`Drop`] implementation for your type.
+    ///
+    /// This function will always be called by Ruby on GC, it can not be opted
+    /// out of.
     ///
     /// The default implementation simply drops `self`.
+    ///
+    /// If this function (or the [`Drop`] implementation for your type) call
+    /// Ruby APIs you should not enable the `free_immediately` flag with the
+    /// [`wrap`](macro@crate::wrap)/[`TypedData`](macro@crate::TypedData)
+    /// macro or [`DataTypeBuilder::free_immediately`].
     ///
     /// This function **must not** panic. The process will abort if this
     /// function panics.
@@ -96,6 +104,10 @@ where
     /// If your type contains any Ruby values you must mark each of those
     /// values in this function to avoid them being garbage collected.
     ///
+    /// This function is only called when the `mark` flag is set with the
+    /// [`wrap`](macro@crate::wrap)/[`TypedData`](macro@crate::TypedData)
+    /// macro or [`DataTypeBuilder::mark`].
+    ///
     /// The default implementation does nothing.
     ///
     /// This function **must not** panic. The process will abort if this
@@ -104,6 +116,10 @@ where
 
     /// Called by Ruby to establish the memory size of this data, to optimise
     /// when garbage collection happens.
+    ///
+    /// This function is only called when the `size` flag is set with the
+    /// [`wrap`](macro@crate::wrap)/[`TypedData`](macro@crate::TypedData)
+    /// macro or [`DataTypeBuilder::mark`].
     ///
     /// The default implementation delegates to [`std::mem::size_of_val`].
     ///
@@ -115,8 +131,24 @@ where
 
     /// Called during garbage collection.
     ///
-    /// If your type contains any Ruby values that have been marked as moveable
-    /// you must update them in this function.
+    /// If your type contains any Ruby values that you have marked as moveable
+    /// in your [`mark`](Self::mark) function, you must update them in this
+    /// function using [`gc::location`](crate::gc::location).
+    ///
+    /// Ruby values would be concidered moveable if marked with the
+    /// [`gc::mark_movable`](crate::gc::mark_movable) function. Other marking
+    /// functions such as [`gc::mark`](crate::gc::mark) will prevent values
+    /// being moved.
+    ///
+    /// As it is only safe for this function to receive a shared `&self`
+    /// reference, you must implement interior mutablility to be able to update
+    /// values. This is very hard to do correctly, and it is recommended to
+    /// simply avoid using [`gc::mark_movable`](crate::gc::mark_movable) and
+    /// `compact`.
+    ///
+    /// This function is only called when the `compact` flag is set with the
+    /// [`wrap`](macro@crate::wrap)/[`TypedData`](macro@crate::TypedData)
+    /// macro or [`DataTypeBuilder::mark`].
     ///
     /// The default implementation does nothing.
     ///
