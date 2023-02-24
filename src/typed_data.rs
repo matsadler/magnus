@@ -281,14 +281,6 @@ where
         self.wb_protected = true;
     }
 
-    /// Enable the 'frozen_shareable' flag.
-    ///
-    /// Set this if your type is thread safe when the Ruby wrapper object is
-    /// frozen.
-    pub fn frozen_shareable(&mut self) {
-        self.frozen_shareable = true;
-    }
-
     /// Consume the builder and create a DataType.
     pub fn build(self) -> DataType {
         let mut flags = 0_usize as VALUE;
@@ -324,6 +316,19 @@ where
             data: ptr::null_mut(),
             flags,
         })
+    }
+}
+
+impl<T> DataTypeBuilder<T>
+where
+    T: DataTypeFunctions + Sync,
+{
+    /// Enable the 'frozen_shareable' flag.
+    ///
+    /// Set this if your type is thread safe when the Ruby wrapper object is
+    /// frozen.
+    pub fn frozen_shareable(&mut self) {
+        self.frozen_shareable = true;
     }
 }
 

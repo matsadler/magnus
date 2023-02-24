@@ -17,6 +17,7 @@
 - `typed_data::Cmp`, `typed_data::Dup` and `typed_data::Inspect` traits to help
   with implementing `#<=>`, `#dup` & `#clone`, and `#inspect` methods for
   wrapped structs.
+- wrapped data must be `Sync` to enable `frozen_shareable` flag.
 
 ### Deprecated
 - `typed_data::Obj::get` as it is made redundant by the `Deref` implementation
