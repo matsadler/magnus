@@ -2249,6 +2249,16 @@ impl TryConvert for StaticSymbol {
 impl TryConvertOwned for StaticSymbol {}
 
 impl RubyHandle {
+    pub fn intern(&self, name: &str) -> Id {
+        Id::from_rb_id(unsafe {
+            rb_intern3(
+                name.as_ptr() as *const c_char,
+                name.len() as c_long,
+                self.utf8_encoding().as_ptr(),
+            )
+        })
+    }
+
     pub fn check_id(&self, name: &str) -> Option<Id> {
         let res = unsafe {
             rb_check_id_cstr(
@@ -2286,7 +2296,7 @@ impl Id {
     where
         T: AsRef<str>,
     {
-        name.as_ref().into_id()
+        get_ruby!().intern(name.as_ref())
     }
 
     pub(crate) fn from_rb_id(id: ID) -> Self {
@@ -2382,13 +2392,7 @@ impl IntoId for Id {
 
 impl IntoId for &str {
     fn into_id_with(self, handle: &RubyHandle) -> Id {
-        Id::from_rb_id(unsafe {
-            rb_intern3(
-                self.as_ptr() as *const c_char,
-                self.len() as c_long,
-                handle.utf8_encoding().as_ptr(),
-            )
-        })
+        handle.intern(self)
     }
 }
 
