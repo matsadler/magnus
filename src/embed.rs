@@ -12,10 +12,7 @@ use rb_sys::{
 };
 
 use crate::{
-    error::protect,
-    r_string::IntoRString,
-    ruby_handle::RubyHandle,
-    value::{private::ReprValue, QNIL},
+    error::protect, r_string::IntoRString, ruby_handle::RubyHandle, value::private::ReprValue,
 };
 
 /// A guard value that will run the cleanup function for the Ruby VM when
@@ -118,7 +115,7 @@ unsafe fn init_options(opts: &[&str]) {
     let mut node = 0 as _;
     protect(|| {
         node = ruby_process_options(argv.len() as i32, argv.as_mut_ptr());
-        QNIL
+        RubyHandle::get_unchecked().qnil()
     })
     .unwrap();
     if ruby_exec_node(node) != 0 {

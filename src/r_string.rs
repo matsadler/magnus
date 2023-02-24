@@ -39,7 +39,7 @@ use crate::{
     try_convert::TryConvert,
     value::{
         private::{self, ReprValue as _},
-        NonZeroValue, ReprValue, Value, QNIL,
+        NonZeroValue, ReprValue, Value,
     },
 };
 
@@ -621,7 +621,7 @@ impl RString {
                 self.as_rb_value(),
                 replacement
                     .map(|r| r.as_rb_value())
-                    .unwrap_or_else(|| QNIL.as_rb_value()),
+                    .unwrap_or_else(|| RubyHandle::get_unchecked().qnil().as_rb_value()),
             ))
         })?;
         if val.is_nil() {
@@ -1131,7 +1131,7 @@ impl RString {
     pub fn replace(self, other: Self) -> Result<(), Error> {
         protect(|| unsafe {
             rb_str_replace(self.as_rb_value(), other.as_rb_value());
-            QNIL
+            RubyHandle::get_unchecked().qnil()
         })?;
         Ok(())
     }
@@ -1161,7 +1161,7 @@ impl RString {
     pub fn shared_replace(self, other: Self) -> Result<(), Error> {
         protect(|| unsafe {
             rb_str_shared_replace(self.as_rb_value(), other.as_rb_value());
-            QNIL
+            RubyHandle::get_unchecked().qnil()
         })?;
         Ok(())
     }
@@ -1200,7 +1200,7 @@ impl RString {
                 len as c_long,
                 other.as_rb_value(),
             );
-            QNIL
+            RubyHandle::get_unchecked().qnil()
         })?;
         Ok(())
     }
@@ -1257,11 +1257,9 @@ impl RString {
     /// assert_eq!(s.to_string().unwrap(), "bar");
     /// ```
     pub fn drop_bytes(self, len: usize) -> Result<(), Error> {
-        protect(|| {
-            unsafe {
-                rb_str_drop_bytes(self.as_rb_value(), len as c_long);
-            }
-            QNIL
+        protect(|| unsafe {
+            rb_str_drop_bytes(self.as_rb_value(), len as c_long);
+            RubyHandle::get_unchecked().qnil()
         })?;
         Ok(())
     }

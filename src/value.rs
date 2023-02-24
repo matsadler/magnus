@@ -1014,13 +1014,10 @@ pub trait ReprValue: private::ReprValue {
     {
         let id = unsafe { method.into_id_unchecked() };
         let mut res = false;
-        protect(|| {
-            unsafe {
-                res =
-                    rb_obj_respond_to(self.as_rb_value(), id.as_rb_id(), include_private as c_int)
-                        != 0;
-            }
-            QNIL
+        protect(|| unsafe {
+            res =
+                rb_obj_respond_to(self.as_rb_value(), id.as_rb_id(), include_private as c_int) != 0;
+            RubyHandle::get_unchecked().qnil()
         })?;
         Ok(res)
     }
@@ -1062,11 +1059,11 @@ pub trait ReprValue: private::ReprValue {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, prelude::*, QTRUE};
+    /// use magnus::{eval, prelude::*, IntoValue, QTRUE};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// let value = QTRUE;
-    /// // safe as we neve give Ruby a chance to free the string.
+    /// let value = QTRUE.into_value();
+    /// // safe as we never give Ruby a chance to free the string.
     /// let s = unsafe { value.to_s() }.unwrap().into_owned();
     /// assert_eq!(s, "true");
     /// ```
@@ -1088,10 +1085,10 @@ pub trait ReprValue: private::ReprValue {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, prelude::*, Symbol, QNIL};
+    /// use magnus::{eval, prelude::*, IntoValue, Symbol, QNIL};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// assert_eq!(QNIL.inspect(), "nil");
+    /// assert_eq!(QNIL.into_value().inspect(), "nil");
     /// assert_eq!(Symbol::new("foo").inspect(), ":foo");
     /// ```
     fn inspect(self) -> String {
@@ -1320,6 +1317,13 @@ where
 
 unsafe impl<T> IntoValueFromNative for BoxValue<T> where T: ReprValue {}
 
+impl RubyHandle {
+    #[inline]
+    pub fn qfalse(&self) -> Qfalse {
+        self.unwrap_opaque(QFALSE)
+    }
+}
+
 /// Ruby's `false` value.
 ///
 /// See [`QFALSE`] to obtain a value of this type.
@@ -1330,7 +1334,7 @@ unsafe impl<T> IntoValueFromNative for BoxValue<T> where T: ReprValue {}
 pub struct Qfalse(Value);
 
 /// Ruby's `false` value.
-pub const QFALSE: Qfalse = Qfalse::new();
+pub const QFALSE: Opaque<Qfalse> = Opaque(Qfalse::new());
 
 impl Qfalse {
     /// Create a new `Qfalse`.
@@ -1392,6 +1396,13 @@ impl TryConvert for Qfalse {
 }
 impl TryConvertOwned for Qfalse {}
 
+impl RubyHandle {
+    #[inline]
+    pub fn qnil(&self) -> Qnil {
+        self.unwrap_opaque(QNIL)
+    }
+}
+
 /// Ruby's `nil` value.
 ///
 /// See [`QNIL`] to obtain a value of this type.
@@ -1402,7 +1413,7 @@ impl TryConvertOwned for Qfalse {}
 pub struct Qnil(NonZeroValue);
 
 /// Ruby's `nil` value.
-pub const QNIL: Qnil = Qnil::new();
+pub const QNIL: Opaque<Qnil> = Opaque(Qnil::new());
 
 impl Qnil {
     /// Create a new `Qnil`.
@@ -1490,6 +1501,13 @@ impl TryConvert for Qnil {
 }
 impl TryConvertOwned for Qnil {}
 
+impl RubyHandle {
+    #[inline]
+    pub fn qtrue(&self) -> Qtrue {
+        self.unwrap_opaque(QTRUE)
+    }
+}
+
 /// Ruby's `true` value.
 ///
 /// See [`QTRUE`] to obtain a value of this type.
@@ -1500,7 +1518,7 @@ impl TryConvertOwned for Qnil {}
 pub struct Qtrue(NonZeroValue);
 
 /// Ruby's `true` value.
-pub const QTRUE: Qtrue = Qtrue::new();
+pub const QTRUE: Opaque<Qtrue> = Opaque(Qtrue::new());
 
 impl Qtrue {
     /// Create a new `Qtrue`.

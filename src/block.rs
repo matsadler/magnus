@@ -21,7 +21,7 @@ use crate::{
     typed_data::{DataType, DataTypeFunctions},
     value::{
         private::{self, ReprValue as _},
-        NonZeroValue, ReprValue, Value, QNIL,
+        NonZeroValue, ReprValue, Value,
     },
 };
 
@@ -494,7 +494,7 @@ where
             for val in &mut *ptr {
                 rb_yield(val.into_value_unchecked().as_rb_value());
             }
-            QNIL
+            RubyHandle::get_unchecked().qnil()
         },
         || {
             ptr.drop_in_place();
@@ -517,7 +517,7 @@ where
                 let slice = vals.as_ref();
                 rb_yield_values2(slice.len() as c_int, slice.as_ptr() as *const VALUE);
             }
-            QNIL
+            RubyHandle::get_unchecked().qnil()
         },
         || {
             ptr.drop_in_place();
@@ -537,7 +537,7 @@ where
             for val in &mut *ptr {
                 rb_yield_splat(val.as_rb_value());
             }
-            QNIL
+            RubyHandle::get_unchecked().qnil()
         },
         || {
             ptr.drop_in_place();

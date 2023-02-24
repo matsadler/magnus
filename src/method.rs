@@ -14,8 +14,9 @@ use crate::{
     error::{raise, Error},
     into_value::{ArgList, IntoValue},
     r_array::RArray,
+    ruby_handle::RubyHandle,
     try_convert::TryConvert,
-    value::{ReprValue, Value, QNIL},
+    value::{ReprValue, Value},
 };
 
 mod private {
@@ -394,10 +395,10 @@ mod private {
     {
         fn into_return_value(self) -> Result<Value, Error> {
             match self {
-                Yield::Iter(iter) => {
-                    unsafe { do_yield_iter(iter) };
-                    Ok(QNIL.as_value())
-                }
+                Yield::Iter(iter) => unsafe {
+                    do_yield_iter(iter);
+                    Ok(RubyHandle::get_unchecked().qnil().as_value())
+                },
                 Yield::Enumerator(e) => Ok(unsafe { e.into_value_unchecked() }),
             }
         }
@@ -420,10 +421,10 @@ mod private {
     {
         fn into_return_value(self) -> Result<Value, Error> {
             match self {
-                YieldValues::Iter(iter) => {
-                    unsafe { do_yield_values_iter(iter) };
-                    Ok(QNIL.as_value())
-                }
+                YieldValues::Iter(iter) => unsafe {
+                    do_yield_values_iter(iter);
+                    Ok(RubyHandle::get_unchecked().qnil().as_value())
+                },
                 YieldValues::Enumerator(e) => Ok(unsafe { e.into_value_unchecked() }),
             }
         }
@@ -445,10 +446,10 @@ mod private {
     {
         fn into_return_value(self) -> Result<Value, Error> {
             match self {
-                YieldSplat::Iter(iter) => {
-                    unsafe { do_yield_splat_iter(iter) };
-                    Ok(QNIL.as_value())
-                }
+                YieldSplat::Iter(iter) => unsafe {
+                    do_yield_splat_iter(iter);
+                    Ok(RubyHandle::get_unchecked().qnil().as_value())
+                },
                 YieldSplat::Enumerator(e) => Ok(unsafe { e.into_value_unchecked() }),
             }
         }

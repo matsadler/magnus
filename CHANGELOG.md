@@ -7,6 +7,7 @@
 - Ruby types are no longer `Send` or `Sync`.
 - `value::Opaque` can be used to wrap a Ruby type to make it `Send` + `Sync`.
 - `value::OpaqueId` is a `Send` + `Sync` version of `value::Id`.
+- The values of `QTRUE`, `QFALSE`, and `QNIL` are now wrapped in `Opaque`.
 - the `#[magnus(opaque_attr_reader)]` attribute can be set on `Opaque` wrapped
   fields of a struct when deriving `TypedData` to generate a method to return
   the inner value.

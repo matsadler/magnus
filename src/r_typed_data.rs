@@ -11,7 +11,7 @@ use crate::{
     typed_data::TypedData,
     value::{
         private::{self, ReprValue as _},
-        NonZeroValue, ReprValue, Value, QNIL,
+        NonZeroValue, ReprValue, Value,
     },
 };
 
@@ -134,7 +134,7 @@ impl RTypedData {
                 T::data_type().as_rb_data_type() as *const _,
             ) as *const T)
                 .as_ref();
-            QNIL
+            RubyHandle::get_unchecked().qnil()
         });
         res.ok_or_else(|| {
             Error::new(

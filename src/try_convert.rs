@@ -11,7 +11,8 @@ use crate::{
     r_array::RArray,
     r_hash::RHash,
     r_string::RString,
-    value::{Fixnum, ReprValue, Value, QNIL},
+    ruby_handle::RubyHandle,
+    value::{Fixnum, ReprValue, Value},
 };
 
 /// Conversions from [`Value`] to Rust types.
@@ -150,9 +151,9 @@ impl TryConvert for f64 {
         }
         debug_assert_value!(val);
         let mut res = 0.0;
-        protect(|| {
-            res = unsafe { rb_num2dbl(val.as_rb_value()) };
-            QNIL
+        protect(|| unsafe {
+            res = rb_num2dbl(val.as_rb_value());
+            RubyHandle::get_unchecked().qnil()
         })?;
         Ok(res)
     }

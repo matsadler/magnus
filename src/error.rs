@@ -14,7 +14,7 @@ use crate::{
     module::Module,
     r_string::RString,
     ruby_handle::RubyHandle,
-    value::{private::ReprValue as _, ReprValue, Value, QNIL},
+    value::{private::ReprValue as _, ReprValue, Value},
 };
 
 impl RubyHandle {
@@ -27,13 +27,13 @@ impl RubyHandle {
                 let val = self.into_value(val);
                 protect(|| {
                     unsafe { rb_iter_break_value(val.as_rb_value()) };
-                    QNIL
+                    self.qnil()
                 })
                 .unwrap_err()
             }
             None => protect(|| {
                 unsafe { rb_iter_break() };
-                QNIL
+                self.qnil()
             })
             .unwrap_err(),
         }
@@ -251,7 +251,7 @@ where
         // Tag::Raise
         6 => unsafe {
             let ex = Exception::from_rb_value_unchecked(rb_errinfo());
-            rb_set_errinfo(QNIL.as_rb_value());
+            rb_set_errinfo(RubyHandle::get_unchecked().qnil().as_rb_value());
             Err(Error::Exception(ex))
         },
         other => Err(Error::Jump(unsafe { transmute(other) })),

@@ -15,7 +15,7 @@ use crate::{
     try_convert::TryConvert,
     value::{
         private::{self, ReprValue as _},
-        NonZeroValue, ReprValue, Value, QNIL,
+        NonZeroValue, ReprValue, Value,
     },
 };
 
@@ -129,9 +129,9 @@ impl RMatch {
     {
         let name = name.into_r_string();
         let mut n = 0;
-        protect(|| {
-            n = unsafe { rb_reg_backref_number(self.as_rb_value(), name.as_rb_value()) as usize };
-            QNIL
+        protect(|| unsafe {
+            n = rb_reg_backref_number(self.as_rb_value(), name.as_rb_value()) as usize;
+            RubyHandle::get_unchecked().qnil()
         })?;
         Ok(n)
     }

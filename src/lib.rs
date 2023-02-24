@@ -1976,7 +1976,7 @@ impl RubyHandle {
     where
         T: IntoValue,
     {
-        let initial = unsafe { initial.into_value_unchecked() };
+        let initial = self.into_value(initial);
         debug_assert_value!(initial);
         let name = CString::new(name).unwrap();
         let ptr = Box::into_raw(Box::new(initial));
@@ -1990,13 +1990,13 @@ impl RubyHandle {
     where
         T: IntoValue,
     {
-        let value = unsafe { value.into_value_unchecked() };
+        let value = self.into_value(value);
         let name = CString::new(name).unwrap();
         protect(|| {
             unsafe {
                 rb_define_global_const(name.as_ptr(), value.as_rb_value());
             }
-            QNIL
+            self.qnil()
         })?;
         Ok(())
     }
@@ -2078,7 +2078,7 @@ impl RubyHandle {
             // Tag::Raise
             6 => unsafe {
                 let ex = Exception::from_rb_value_unchecked(rb_errinfo());
-                rb_set_errinfo(QNIL.as_rb_value());
+                rb_set_errinfo(self.qnil().as_rb_value());
                 Err(Error::Exception(ex))
             },
             other => Err(Error::Jump(unsafe { transmute(other) })),

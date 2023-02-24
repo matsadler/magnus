@@ -29,7 +29,7 @@ use crate::{
     try_convert::{TryConvert, TryConvertOwned},
     value::{
         private::{self, ReprValue as _},
-        Fixnum, NonZeroValue, ReprValue, Value, QNIL, QUNDEF,
+        Fixnum, NonZeroValue, ReprValue, Value, QUNDEF,
     },
 };
 
@@ -236,7 +236,7 @@ impl RHash {
         let ptr = slice.as_ptr() as *const VALUE;
         protect(|| unsafe {
             rb_hash_bulk_insert(slice.len() as c_long, ptr, self.as_rb_value());
-            QNIL
+            RubyHandle::get_unchecked().qnil()
         })?;
         Ok(())
     }
@@ -269,7 +269,7 @@ impl RHash {
     pub fn update(self, other: RHash) -> Result<(), Error> {
         protect(|| unsafe {
             rb_hash_update_by(self.as_rb_value(), other.as_rb_value(), None);
-            QNIL
+            RubyHandle::get_unchecked().qnil()
         })?;
         Ok(())
     }
@@ -511,7 +511,7 @@ impl RHash {
                 #[cfg(ruby_lt_2_7)]
                 let fptr: unsafe extern "C" fn() -> c_int = std::mem::transmute(fptr);
                 rb_hash_foreach(self.as_rb_value(), Some(fptr), arg);
-                QNIL
+                RubyHandle::get_unchecked().qnil()
             })?;
         }
         Ok(())

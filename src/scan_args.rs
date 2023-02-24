@@ -46,7 +46,7 @@ use crate::{
     r_hash::RHash,
     ruby_handle::RubyHandle,
     try_convert::{TryConvert, TryConvertOwned},
-    value::{private::ReprValue as _, Id, IntoId, ReprValue, Value, QNIL},
+    value::{private::ReprValue as _, Id, IntoId, ReprValue, Value},
 };
 
 struct ArgSpec {
@@ -1275,7 +1275,7 @@ where
 
 // Nice-ish interface to rb_scan_args, but returns `Value`s without conversion.
 fn scan_args_untyped(args: &[Value], arg_spec: ArgSpec) -> Result<ScannedArgs, Error> {
-    let mut out = [QNIL.as_value(); 30];
+    let mut out = [unsafe { RubyHandle::get_unchecked().qnil().as_value() }; 30];
     let parsed =
         unsafe { scan_args_impl(args, &arg_spec.to_string(), &mut out[..arg_spec.len()])? };
 
@@ -1298,11 +1298,11 @@ unsafe fn scan_args_impl(args: &[Value], fmt: &str, out: &mut [Value]) -> Result
     match out.len() {
         0 => protect(|| {
             result = rb_scan_args(argc, argv, fmt) as usize;
-            QNIL
+            RubyHandle::get_unchecked().qnil()
         })?,
         1 => protect(|| {
             result = rb_scan_args(argc, argv, fmt, &mut out[0] as *mut VALUE) as usize;
-            QNIL
+            RubyHandle::get_unchecked().qnil()
         })?,
         2 => protect(|| {
             result = rb_scan_args(
@@ -1312,7 +1312,7 @@ unsafe fn scan_args_impl(args: &[Value], fmt: &str, out: &mut [Value]) -> Result
                 &mut out[0] as *mut VALUE,
                 &mut out[1] as *mut VALUE,
             ) as usize;
-            QNIL
+            RubyHandle::get_unchecked().qnil()
         })?,
         3 => protect(|| {
             result = rb_scan_args(
@@ -1323,7 +1323,7 @@ unsafe fn scan_args_impl(args: &[Value], fmt: &str, out: &mut [Value]) -> Result
                 &mut out[1] as *mut VALUE,
                 &mut out[2] as *mut VALUE,
             ) as usize;
-            QNIL
+            RubyHandle::get_unchecked().qnil()
         })?,
         4 => protect(|| {
             result = rb_scan_args(
@@ -1335,7 +1335,7 @@ unsafe fn scan_args_impl(args: &[Value], fmt: &str, out: &mut [Value]) -> Result
                 &mut out[2] as *mut VALUE,
                 &mut out[3] as *mut VALUE,
             ) as usize;
-            QNIL
+            RubyHandle::get_unchecked().qnil()
         })?,
         5 => protect(|| {
             result = rb_scan_args(
@@ -1348,7 +1348,7 @@ unsafe fn scan_args_impl(args: &[Value], fmt: &str, out: &mut [Value]) -> Result
                 &mut out[3] as *mut VALUE,
                 &mut out[4] as *mut VALUE,
             ) as usize;
-            QNIL
+            RubyHandle::get_unchecked().qnil()
         })?,
         6 => protect(|| {
             result = rb_scan_args(
@@ -1362,7 +1362,7 @@ unsafe fn scan_args_impl(args: &[Value], fmt: &str, out: &mut [Value]) -> Result
                 &mut out[4] as *mut VALUE,
                 &mut out[5] as *mut VALUE,
             ) as usize;
-            QNIL
+            RubyHandle::get_unchecked().qnil()
         })?,
         7 => protect(|| {
             result = rb_scan_args(
@@ -1377,7 +1377,7 @@ unsafe fn scan_args_impl(args: &[Value], fmt: &str, out: &mut [Value]) -> Result
                 &mut out[5] as *mut VALUE,
                 &mut out[6] as *mut VALUE,
             ) as usize;
-            QNIL
+            RubyHandle::get_unchecked().qnil()
         })?,
         8 => protect(|| {
             result = rb_scan_args(
@@ -1393,7 +1393,7 @@ unsafe fn scan_args_impl(args: &[Value], fmt: &str, out: &mut [Value]) -> Result
                 &mut out[6] as *mut VALUE,
                 &mut out[7] as *mut VALUE,
             ) as usize;
-            QNIL
+            RubyHandle::get_unchecked().qnil()
         })?,
         9 => protect(|| {
             result = rb_scan_args(
@@ -1410,7 +1410,7 @@ unsafe fn scan_args_impl(args: &[Value], fmt: &str, out: &mut [Value]) -> Result
                 &mut out[7] as *mut VALUE,
                 &mut out[8] as *mut VALUE,
             ) as usize;
-            QNIL
+            RubyHandle::get_unchecked().qnil()
         })?,
         10 => protect(|| {
             result = rb_scan_args(
@@ -1428,7 +1428,7 @@ unsafe fn scan_args_impl(args: &[Value], fmt: &str, out: &mut [Value]) -> Result
                 &mut out[8] as *mut VALUE,
                 &mut out[9] as *mut VALUE,
             ) as usize;
-            QNIL
+            RubyHandle::get_unchecked().qnil()
         })?,
         11 => protect(|| {
             result = rb_scan_args(
@@ -1447,7 +1447,7 @@ unsafe fn scan_args_impl(args: &[Value], fmt: &str, out: &mut [Value]) -> Result
                 &mut out[9] as *mut VALUE,
                 &mut out[10] as *mut VALUE,
             ) as usize;
-            QNIL
+            RubyHandle::get_unchecked().qnil()
         })?,
         12 => protect(|| {
             result = rb_scan_args(
@@ -1467,7 +1467,7 @@ unsafe fn scan_args_impl(args: &[Value], fmt: &str, out: &mut [Value]) -> Result
                 &mut out[10] as *mut VALUE,
                 &mut out[11] as *mut VALUE,
             ) as usize;
-            QNIL
+            RubyHandle::get_unchecked().qnil()
         })?,
         13 => protect(|| {
             result = rb_scan_args(
@@ -1488,7 +1488,7 @@ unsafe fn scan_args_impl(args: &[Value], fmt: &str, out: &mut [Value]) -> Result
                 &mut out[11] as *mut VALUE,
                 &mut out[12] as *mut VALUE,
             ) as usize;
-            QNIL
+            RubyHandle::get_unchecked().qnil()
         })?,
         14 => protect(|| {
             result = rb_scan_args(
@@ -1510,7 +1510,7 @@ unsafe fn scan_args_impl(args: &[Value], fmt: &str, out: &mut [Value]) -> Result
                 &mut out[12] as *mut VALUE,
                 &mut out[13] as *mut VALUE,
             ) as usize;
-            QNIL
+            RubyHandle::get_unchecked().qnil()
         })?,
         15 => protect(|| {
             result = rb_scan_args(
@@ -1533,7 +1533,7 @@ unsafe fn scan_args_impl(args: &[Value], fmt: &str, out: &mut [Value]) -> Result
                 &mut out[13] as *mut VALUE,
                 &mut out[14] as *mut VALUE,
             ) as usize;
-            QNIL
+            RubyHandle::get_unchecked().qnil()
         })?,
         16 => protect(|| {
             result = rb_scan_args(
@@ -1557,7 +1557,7 @@ unsafe fn scan_args_impl(args: &[Value], fmt: &str, out: &mut [Value]) -> Result
                 &mut out[14] as *mut VALUE,
                 &mut out[15] as *mut VALUE,
             ) as usize;
-            QNIL
+            RubyHandle::get_unchecked().qnil()
         })?,
         17 => protect(|| {
             result = rb_scan_args(
@@ -1582,7 +1582,7 @@ unsafe fn scan_args_impl(args: &[Value], fmt: &str, out: &mut [Value]) -> Result
                 &mut out[15] as *mut VALUE,
                 &mut out[16] as *mut VALUE,
             ) as usize;
-            QNIL
+            RubyHandle::get_unchecked().qnil()
         })?,
         18 => protect(|| {
             result = rb_scan_args(
@@ -1608,7 +1608,7 @@ unsafe fn scan_args_impl(args: &[Value], fmt: &str, out: &mut [Value]) -> Result
                 &mut out[16] as *mut VALUE,
                 &mut out[17] as *mut VALUE,
             ) as usize;
-            QNIL
+            RubyHandle::get_unchecked().qnil()
         })?,
         19 => protect(|| {
             result = rb_scan_args(
@@ -1635,7 +1635,7 @@ unsafe fn scan_args_impl(args: &[Value], fmt: &str, out: &mut [Value]) -> Result
                 &mut out[17] as *mut VALUE,
                 &mut out[18] as *mut VALUE,
             ) as usize;
-            QNIL
+            RubyHandle::get_unchecked().qnil()
         })?,
         20 => protect(|| {
             result = rb_scan_args(
@@ -1663,7 +1663,7 @@ unsafe fn scan_args_impl(args: &[Value], fmt: &str, out: &mut [Value]) -> Result
                 &mut out[18] as *mut VALUE,
                 &mut out[19] as *mut VALUE,
             ) as usize;
-            QNIL
+            RubyHandle::get_unchecked().qnil()
         })?,
         21 => protect(|| {
             result = rb_scan_args(
@@ -1692,7 +1692,7 @@ unsafe fn scan_args_impl(args: &[Value], fmt: &str, out: &mut [Value]) -> Result
                 &mut out[19] as *mut VALUE,
                 &mut out[20] as *mut VALUE,
             ) as usize;
-            QNIL
+            RubyHandle::get_unchecked().qnil()
         })?,
         22 => protect(|| {
             result = rb_scan_args(
@@ -1722,7 +1722,7 @@ unsafe fn scan_args_impl(args: &[Value], fmt: &str, out: &mut [Value]) -> Result
                 &mut out[20] as *mut VALUE,
                 &mut out[21] as *mut VALUE,
             ) as usize;
-            QNIL
+            RubyHandle::get_unchecked().qnil()
         })?,
         23 => protect(|| {
             result = rb_scan_args(
@@ -1753,7 +1753,7 @@ unsafe fn scan_args_impl(args: &[Value], fmt: &str, out: &mut [Value]) -> Result
                 &mut out[21] as *mut VALUE,
                 &mut out[22] as *mut VALUE,
             ) as usize;
-            QNIL
+            RubyHandle::get_unchecked().qnil()
         })?,
         24 => protect(|| {
             result = rb_scan_args(
@@ -1785,7 +1785,7 @@ unsafe fn scan_args_impl(args: &[Value], fmt: &str, out: &mut [Value]) -> Result
                 &mut out[22] as *mut VALUE,
                 &mut out[23] as *mut VALUE,
             ) as usize;
-            QNIL
+            RubyHandle::get_unchecked().qnil()
         })?,
         25 => protect(|| {
             result = rb_scan_args(
@@ -1818,7 +1818,7 @@ unsafe fn scan_args_impl(args: &[Value], fmt: &str, out: &mut [Value]) -> Result
                 &mut out[23] as *mut VALUE,
                 &mut out[24] as *mut VALUE,
             ) as usize;
-            QNIL
+            RubyHandle::get_unchecked().qnil()
         })?,
         26 => protect(|| {
             result = rb_scan_args(
@@ -1852,7 +1852,7 @@ unsafe fn scan_args_impl(args: &[Value], fmt: &str, out: &mut [Value]) -> Result
                 &mut out[24] as *mut VALUE,
                 &mut out[25] as *mut VALUE,
             ) as usize;
-            QNIL
+            RubyHandle::get_unchecked().qnil()
         })?,
         27 => protect(|| {
             result = rb_scan_args(
@@ -1887,7 +1887,7 @@ unsafe fn scan_args_impl(args: &[Value], fmt: &str, out: &mut [Value]) -> Result
                 &mut out[25] as *mut VALUE,
                 &mut out[26] as *mut VALUE,
             ) as usize;
-            QNIL
+            RubyHandle::get_unchecked().qnil()
         })?,
         28 => protect(|| {
             result = rb_scan_args(
@@ -1923,7 +1923,7 @@ unsafe fn scan_args_impl(args: &[Value], fmt: &str, out: &mut [Value]) -> Result
                 &mut out[26] as *mut VALUE,
                 &mut out[27] as *mut VALUE,
             ) as usize;
-            QNIL
+            RubyHandle::get_unchecked().qnil()
         })?,
         29 => protect(|| {
             result = rb_scan_args(
@@ -1960,7 +1960,7 @@ unsafe fn scan_args_impl(args: &[Value], fmt: &str, out: &mut [Value]) -> Result
                 &mut out[27] as *mut VALUE,
                 &mut out[28] as *mut VALUE,
             ) as usize;
-            QNIL
+            RubyHandle::get_unchecked().qnil()
         })?,
         _ => protect(|| {
             result = rb_scan_args(
@@ -1998,7 +1998,7 @@ unsafe fn scan_args_impl(args: &[Value], fmt: &str, out: &mut [Value]) -> Result
                 &mut out[28] as *mut VALUE,
                 &mut out[29] as *mut VALUE,
             ) as usize;
-            QNIL
+            RubyHandle::get_unchecked().qnil()
         })?,
     };
     Ok(result)
@@ -2134,7 +2134,7 @@ where
     } else {
         optional.len() as i8
     };
-    let mut out = [QNIL.as_value(); 19];
+    let mut out = [unsafe { RubyHandle::get_unchecked().qnil().as_value() }; 19];
     let total = Req::LEN + Opt::LEN + Splat::REQ as usize;
 
     let mut parsed = 0;
@@ -2147,7 +2147,7 @@ where
                 optional_len as c_int,
                 out[..total].as_mut_ptr() as *mut VALUE,
             ) as usize;
-            QNIL
+            RubyHandle::get_unchecked().qnil()
         })?;
     };
 
@@ -2178,7 +2178,7 @@ impl RubyHandle {
             };
             protect(|| {
                 unsafe { rb_error_arity(len as c_int, min, max) };
-                QNIL
+                self.qnil()
             })?;
         }
         Ok(())

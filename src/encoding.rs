@@ -48,7 +48,7 @@ use crate::{
     try_convert::TryConvert,
     value::{
         private::{self, ReprValue as _},
-        NonZeroValue, ReprValue, Value, QNIL,
+        NonZeroValue, ReprValue, Value,
     },
 };
 
@@ -582,16 +582,14 @@ impl RbEncoding {
         let Range { start: p, end: e } = slice.as_ptr_range();
         let mut len = 0;
         let mut c = 0;
-        protect(|| {
-            c = unsafe {
-                rb_enc_codepoint_len(
-                    p as *const c_char,
-                    e as *const c_char,
-                    &mut len as *mut _,
-                    self.as_ptr(),
-                )
-            };
-            QNIL
+        protect(|| unsafe {
+            c = rb_enc_codepoint_len(
+                p as *const c_char,
+                e as *const c_char,
+                &mut len as *mut _,
+                self.as_ptr(),
+            );
+            RubyHandle::get_unchecked().qnil()
         })?;
         Ok((c, len as usize))
     }
@@ -615,9 +613,9 @@ impl RbEncoding {
                 Error::new(exception::arg_error(), e.to_string())
             })?;
         let mut len = 0;
-        protect(|| {
-            unsafe { len = rb_enc_codelen(code, self.as_ptr()) as usize }
-            QNIL
+        protect(|| unsafe {
+            len = rb_enc_codelen(code, self.as_ptr()) as usize;
+            RubyHandle::get_unchecked().qnil()
         })?;
         Ok(len)
     }
@@ -758,9 +756,9 @@ impl IntoValue for RbEncoding {
 impl TryConvert for RbEncoding {
     fn try_convert(val: Value) -> Result<Self, Error> {
         let mut ptr = ptr::null_mut();
-        protect(|| {
-            ptr = unsafe { rb_to_encoding(val.as_rb_value()) };
-            QNIL
+        protect(|| unsafe {
+            ptr = rb_to_encoding(val.as_rb_value());
+            RubyHandle::get_unchecked().qnil()
         })?;
         Ok(Self::new(ptr).unwrap())
     }
@@ -790,9 +788,9 @@ impl RubyHandle {
     pub fn find_encindex(&self, name: &str) -> Result<Index, Error> {
         let name = CString::new(name).unwrap();
         let mut i = 0;
-        protect(|| {
-            i = unsafe { rb_enc_find_index(name.as_ptr()) };
-            QNIL
+        protect(|| unsafe {
+            i = rb_enc_find_index(name.as_ptr());
+            RubyHandle::get_unchecked().qnil()
         })?;
         if i == -1 {
             return Err(Error::new(
@@ -971,9 +969,9 @@ pub trait EncodingCapable: ReprValue + Copy {
     where
         T: Into<Index>,
     {
-        protect(|| {
-            unsafe { rb_enc_set_index(self.as_rb_value(), enc.into().to_int()) };
-            QNIL
+        protect(|| unsafe {
+            rb_enc_set_index(self.as_rb_value(), enc.into().to_int());
+            RubyHandle::get_unchecked().qnil()
         })?;
         Ok(())
     }
@@ -1064,9 +1062,9 @@ where
     U: EncodingCapable,
 {
     let mut ptr = ptr::null_mut();
-    protect(|| {
-        ptr = unsafe { rb_enc_check(v1.as_rb_value(), v2.as_rb_value()) };
-        QNIL
+    protect(|| unsafe {
+        ptr = rb_enc_check(v1.as_rb_value(), v2.as_rb_value());
+        RubyHandle::get_unchecked().qnil()
     })?;
     Ok(RbEncoding::new(ptr).unwrap())
 }
@@ -1099,9 +1097,9 @@ where
     T: EncodingCapable,
     U: EncodingCapable,
 {
-    protect(|| {
-        unsafe { rb_enc_copy(dst.as_rb_value(), src.as_rb_value()) };
-        QNIL
+    protect(|| unsafe {
+        rb_enc_copy(dst.as_rb_value(), src.as_rb_value());
+        RubyHandle::get_unchecked().qnil()
     })?;
     Ok(())
 }

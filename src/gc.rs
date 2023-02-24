@@ -15,7 +15,7 @@ use crate::{
     r_hash::RHash,
     ruby_handle::RubyHandle,
     symbol::IntoSymbol,
-    value::{private::ReprValue as _, ReprValue, Value, QNIL},
+    value::{private::ReprValue as _, ReprValue, Value},
 };
 
 impl RubyHandle {}
@@ -149,7 +149,7 @@ impl RubyHandle {
         let mut res = 0;
         protect(|| {
             res = unsafe { rb_gc_stat(sym.as_rb_value()) as usize };
-            QNIL
+            self.qnil()
         })?;
         Ok(res)
     }

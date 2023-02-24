@@ -10,8 +10,9 @@ use crate::{
     into_value::IntoValue,
     method::Method,
     module::RModule,
+    ruby_handle::RubyHandle,
     try_convert::TryConvert,
-    value::{private::ReprValue as _, IntoId, ReprValue, Value, QNIL},
+    value::{private::ReprValue as _, IntoId, ReprValue, Value},
 };
 
 /// Functions available all non-immediate values.
@@ -26,16 +27,14 @@ pub trait Object: ReprValue + Copy {
     {
         debug_assert_value!(self);
         let name = CString::new(name).unwrap();
-        protect(|| {
-            unsafe {
-                rb_define_singleton_method(
-                    self.as_rb_value(),
-                    name.as_ptr(),
-                    transmute(func.as_ptr()),
-                    M::arity().into(),
-                );
-            };
-            QNIL
+        protect(|| unsafe {
+            rb_define_singleton_method(
+                self.as_rb_value(),
+                name.as_ptr(),
+                transmute(func.as_ptr()),
+                M::arity().into(),
+            );
+            RubyHandle::get_unchecked().qnil()
         })?;
         Ok(())
     }
@@ -117,7 +116,7 @@ pub trait Object: ReprValue + Copy {
     fn extend_object(self, module: RModule) -> Result<(), Error> {
         protect(|| unsafe {
             rb_extend_object(self.as_rb_value(), module.as_rb_value());
-            QNIL
+            RubyHandle::get_unchecked().qnil()
         })?;
         Ok(())
     }

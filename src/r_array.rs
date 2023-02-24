@@ -26,7 +26,7 @@ use crate::{
     try_convert::{TryConvert, TryConvertOwned},
     value::{
         private::{self, ReprValue as _},
-        NonZeroValue, ReprValue, Value, QNIL,
+        NonZeroValue, ReprValue, Value,
     },
 };
 
@@ -275,7 +275,7 @@ impl RArray {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, RArray, Symbol, QNIL};
+    /// use magnus::{eval, IntoValue, RArray, Symbol, QNIL};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let ary = eval::<RArray>(r#"[:foo, "bar", 2]"#).unwrap();
@@ -285,7 +285,7 @@ impl RArray {
     /// // 2.0 == 2 in Ruby
     /// assert!(ary.includes(2.0));
     /// assert!(!ary.includes("foo"));
-    /// assert!(!ary.includes(QNIL));
+    /// assert!(!ary.includes(QNIL.into_value()));
     /// ```
     pub fn includes<T>(self, val: T) -> bool
     where
@@ -341,7 +341,7 @@ impl RArray {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, Integer, QNIL, RArray, Symbol};
+    /// use magnus::{eval, Integer, RArray, Symbol};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let a = RArray::from_vec(vec![1, 2, 3]);
@@ -363,7 +363,7 @@ impl RArray {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, Integer, QNIL, RArray, Symbol};
+    /// use magnus::{eval, Integer, RArray, Symbol};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let a = RArray::from_vec(vec![1, 2, 3]);
@@ -985,7 +985,7 @@ impl RArray {
                 offset as c_long,
                 val.into_value_unchecked().as_rb_value(),
             );
-            QNIL
+            RubyHandle::get_unchecked().qnil()
         })?;
         Ok(())
     }
@@ -1173,7 +1173,7 @@ impl RArray {
     ///
     /// ```
     /// use std::cmp::Ordering;
-    /// use magnus::{eval, RArray, QNIL};
+    /// use magnus::{eval, IntoValue, RArray, QNIL};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let a = RArray::from_vec(vec![1, 2, 3]);
@@ -1187,7 +1187,7 @@ impl RArray {
     /// assert_eq!(a.cmp(d).unwrap(), Some(Ordering::Less));
     ///
     /// let e = RArray::from_vec(vec![1, 2]);
-    /// e.push(QNIL);
+    /// e.push(QNIL.into_value());
     /// assert_eq!(a.cmp(e).unwrap(), None);
     /// ```
     ///
