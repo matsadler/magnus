@@ -59,6 +59,24 @@ impl RubyHandle {
             RArray::from_rb_value_unchecked(rb_ary_new_from_values(slice.len() as c_long, ptr))
         }
     }
+
+    pub fn ary_from_iter<I, T>(&self, iter: I) -> RArray
+    where
+        I: IntoIterator<Item = T>,
+        T: IntoValue,
+    {
+        let iter = iter.into_iter();
+        let (lower, _) = iter.size_hint();
+        let array = if lower > 0 {
+            self.ary_new_capa(lower)
+        } else {
+            self.ary_new()
+        };
+        for i in iter {
+            array.push(i).expect("array shouldn't be frozen");
+        }
+        array
+    }
 }
 
 /// A Value pointer to a RArray struct, Ruby's internal representation of an
@@ -1691,21 +1709,17 @@ impl<T> FromIterator<T> for RArray
 where
     T: IntoValue,
 {
+    /// Creates a Ruby array from an iterator.
+    ///
+    /// # Panics
+    ///
+    /// Panics if called from a non-Ruby thread.
+    ///
     fn from_iter<I>(iter: I) -> Self
     where
         I: IntoIterator<Item = T>,
     {
-        let iter = iter.into_iter();
-        let (lower, _) = iter.size_hint();
-        let array = if lower > 0 {
-            RArray::with_capacity(lower)
-        } else {
-            RArray::new()
-        };
-        for i in iter {
-            array.push(i).unwrap();
-        }
-        array
+        get_ruby!().ary_from_iter(iter)
     }
 }
 
