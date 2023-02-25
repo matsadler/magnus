@@ -14,9 +14,9 @@ use crate::{
     error::{raise, Error},
     into_value::{ArgList, IntoValue},
     r_array::RArray,
-    ruby_handle::RubyHandle,
     try_convert::TryConvert,
     value::{ReprValue, Value},
+    Ruby,
 };
 
 mod private {
@@ -397,7 +397,7 @@ mod private {
             match self {
                 Yield::Iter(iter) => unsafe {
                     do_yield_iter(iter);
-                    Ok(RubyHandle::get_unchecked().qnil().as_value())
+                    Ok(Ruby::get_unchecked().qnil().as_value())
                 },
                 Yield::Enumerator(e) => Ok(unsafe { e.into_value_unchecked() }),
             }
@@ -423,7 +423,7 @@ mod private {
             match self {
                 YieldValues::Iter(iter) => unsafe {
                     do_yield_values_iter(iter);
-                    Ok(RubyHandle::get_unchecked().qnil().as_value())
+                    Ok(Ruby::get_unchecked().qnil().as_value())
                 },
                 YieldValues::Enumerator(e) => Ok(unsafe { e.into_value_unchecked() }),
             }
@@ -448,7 +448,7 @@ mod private {
             match self {
                 YieldSplat::Iter(iter) => unsafe {
                     do_yield_splat_iter(iter);
-                    Ok(RubyHandle::get_unchecked().qnil().as_value())
+                    Ok(Ruby::get_unchecked().qnil().as_value())
                 },
                 YieldSplat::Enumerator(e) => Ok(unsafe { e.into_value_unchecked() }),
             }

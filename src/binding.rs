@@ -10,16 +10,16 @@ use crate::{
     into_value::IntoValue,
     object::Object,
     r_string::IntoRString,
-    ruby_handle::RubyHandle,
     symbol::IntoSymbol,
     try_convert::TryConvert,
     value::{
         private::{self, ReprValue as _},
         NonZeroValue, ReprValue, Value,
     },
+    Ruby,
 };
 
-impl RubyHandle {
+impl Ruby {
     #[cfg(any(ruby_lte_3_1, docsrs))]
     #[cfg_attr(docsrs, doc(cfg(ruby_lte_3_1)))]
     #[deprecated(since = "0.2.0", note = "this will no longer function as of Ruby 3.2")]
@@ -162,7 +162,7 @@ impl fmt::Debug for Binding {
 }
 
 impl IntoValue for Binding {
-    fn into_value_with(self, _: &RubyHandle) -> Value {
+    fn into_value_with(self, _: &Ruby) -> Value {
         self.0.get()
     }
 }

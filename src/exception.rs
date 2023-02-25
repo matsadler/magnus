@@ -24,12 +24,12 @@ use crate::{
     module::Module,
     object::Object,
     r_array::RArray,
-    ruby_handle::RubyHandle,
     try_convert::TryConvert,
     value::{
         private::{self, ReprValue as _},
         NonZeroValue, ReprValue, Value,
     },
+    Ruby,
 };
 
 /// Wrapper type for a Value known to be an instance of Ruby's Exception class.
@@ -93,7 +93,7 @@ impl fmt::Debug for Exception {
 }
 
 impl IntoValue for Exception {
-    fn into_value_with(self, _: &RubyHandle) -> Value {
+    fn into_value_with(self, _: &Ruby) -> Value {
         self.0.get()
     }
 }
@@ -163,7 +163,7 @@ impl fmt::Debug for ExceptionClass {
 }
 
 impl IntoValue for ExceptionClass {
-    fn into_value_with(self, _: &RubyHandle) -> Value {
+    fn into_value_with(self, _: &Ruby) -> Value {
         self.0.get()
     }
 }
@@ -211,7 +211,7 @@ impl TryConvert for ExceptionClass {
     }
 }
 
-impl RubyHandle {
+impl Ruby {
     #[inline]
     pub fn exception_arg_error(&self) -> ExceptionClass {
         unsafe { ExceptionClass::from_rb_value_unchecked(rb_eArgError) }

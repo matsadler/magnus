@@ -47,9 +47,9 @@ use crate::{
     numeric::Numeric,
     r_bignum::RBignum,
     r_string::RString,
-    ruby_handle::RubyHandle,
     symbol::{IntoSymbol, Symbol},
     try_convert::{TryConvert, TryConvertOwned},
+    Ruby,
 };
 
 /// Ruby's `VALUE` type, which can represent any Ruby object.
@@ -111,13 +111,13 @@ impl fmt::Debug for Value {
 }
 
 impl IntoValue for Value {
-    fn into_value_with(self, _: &RubyHandle) -> Value {
+    fn into_value_with(self, _: &Ruby) -> Value {
         self
     }
 }
 
 impl IntoValue for i8 {
-    fn into_value_with(self, handle: &RubyHandle) -> Value {
+    fn into_value_with(self, handle: &Ruby) -> Value {
         handle.integer_from_i64(self as i64).into_value_with(handle)
     }
 }
@@ -125,7 +125,7 @@ impl IntoValue for i8 {
 unsafe impl IntoValueFromNative for i8 {}
 
 impl IntoValue for i16 {
-    fn into_value_with(self, handle: &RubyHandle) -> Value {
+    fn into_value_with(self, handle: &Ruby) -> Value {
         handle.integer_from_i64(self as i64).into_value_with(handle)
     }
 }
@@ -133,7 +133,7 @@ impl IntoValue for i16 {
 unsafe impl IntoValueFromNative for i16 {}
 
 impl IntoValue for i32 {
-    fn into_value_with(self, handle: &RubyHandle) -> Value {
+    fn into_value_with(self, handle: &Ruby) -> Value {
         handle.integer_from_i64(self as i64).into_value_with(handle)
     }
 }
@@ -141,7 +141,7 @@ impl IntoValue for i32 {
 unsafe impl IntoValueFromNative for i32 {}
 
 impl IntoValue for i64 {
-    fn into_value_with(self, handle: &RubyHandle) -> Value {
+    fn into_value_with(self, handle: &Ruby) -> Value {
         handle.integer_from_i64(self).into_value_with(handle)
     }
 }
@@ -149,7 +149,7 @@ impl IntoValue for i64 {
 unsafe impl IntoValueFromNative for i64 {}
 
 impl IntoValue for isize {
-    fn into_value_with(self, handle: &RubyHandle) -> Value {
+    fn into_value_with(self, handle: &Ruby) -> Value {
         handle.integer_from_i64(self as i64).into_value_with(handle)
     }
 }
@@ -157,7 +157,7 @@ impl IntoValue for isize {
 unsafe impl IntoValueFromNative for isize {}
 
 impl IntoValue for u8 {
-    fn into_value_with(self, handle: &RubyHandle) -> Value {
+    fn into_value_with(self, handle: &Ruby) -> Value {
         handle.integer_from_u64(self as u64).into_value_with(handle)
     }
 }
@@ -165,7 +165,7 @@ impl IntoValue for u8 {
 unsafe impl IntoValueFromNative for u8 {}
 
 impl IntoValue for u16 {
-    fn into_value_with(self, handle: &RubyHandle) -> Value {
+    fn into_value_with(self, handle: &Ruby) -> Value {
         handle.integer_from_u64(self as u64).into_value_with(handle)
     }
 }
@@ -173,7 +173,7 @@ impl IntoValue for u16 {
 unsafe impl IntoValueFromNative for u16 {}
 
 impl IntoValue for u32 {
-    fn into_value_with(self, handle: &RubyHandle) -> Value {
+    fn into_value_with(self, handle: &Ruby) -> Value {
         handle.integer_from_u64(self as u64).into_value_with(handle)
     }
 }
@@ -181,7 +181,7 @@ impl IntoValue for u32 {
 unsafe impl IntoValueFromNative for u32 {}
 
 impl IntoValue for u64 {
-    fn into_value_with(self, handle: &RubyHandle) -> Value {
+    fn into_value_with(self, handle: &Ruby) -> Value {
         handle.integer_from_u64(self).into_value_with(handle)
     }
 }
@@ -189,7 +189,7 @@ impl IntoValue for u64 {
 unsafe impl IntoValueFromNative for u64 {}
 
 impl IntoValue for usize {
-    fn into_value_with(self, handle: &RubyHandle) -> Value {
+    fn into_value_with(self, handle: &Ruby) -> Value {
         handle.integer_from_u64(self as u64).into_value_with(handle)
     }
 }
@@ -197,7 +197,7 @@ impl IntoValue for usize {
 unsafe impl IntoValueFromNative for usize {}
 
 impl IntoValue for f32 {
-    fn into_value_with(self, handle: &RubyHandle) -> Value {
+    fn into_value_with(self, handle: &Ruby) -> Value {
         handle.float_from_f64(self as f64).into_value_with(handle)
     }
 }
@@ -205,7 +205,7 @@ impl IntoValue for f32 {
 unsafe impl IntoValueFromNative for f32 {}
 
 impl IntoValue for f64 {
-    fn into_value_with(self, handle: &RubyHandle) -> Value {
+    fn into_value_with(self, handle: &Ruby) -> Value {
         handle.float_from_f64(self).into_value_with(handle)
     }
 }
@@ -230,18 +230,18 @@ impl TryConvert for Value {
 /// by removing the ability to do anything with it, making it impossible to
 /// call Ruby's API on non-Ruby threads.
 ///
-/// An `Opaque<T>` can be unwrapped to `T` with [`RubyHandle::unwrap_opaque`],
-/// as it is only possible to instantiate a [`RubyHandle`] on a Ruby thread.
+/// An `Opaque<T>` can be unwrapped to `T` with [`Ruby::unwrap_opaque`],
+/// as it is only possible to instantiate a [`Ruby`] on a Ruby thread.
 /// # Examples
 ///
 /// ```
-/// use magnus::{eval, ruby_handle::RubyHandle, value::Opaque, RString,};
+/// use magnus::{eval, value::Opaque, RString, Ruby};
 /// # let _cleanup = unsafe { magnus::embed::init() };
 /// let opaque_str = Opaque::from(RString::new("example"));
 ///
 /// // send to another Ruby thread
 ///
-/// let handle = RubyHandle::get().unwrap(); // errors on non-Ruby thread
+/// let handle = Ruby::get().unwrap(); // errors on non-Ruby thread
 /// let str = handle.unwrap_opaque(opaque_str);
 /// let res: bool = eval!(r#"str == "example""#, str).unwrap();
 /// assert!(res);
@@ -276,12 +276,12 @@ impl<T> IntoValue for Opaque<T>
 where
     T: IntoValue,
 {
-    fn into_value_with(self, handle: &RubyHandle) -> Value {
+    fn into_value_with(self, handle: &Ruby) -> Value {
         self.0.into_value_with(handle)
     }
 }
 
-impl RubyHandle {
+impl Ruby {
     pub fn unwrap_opaque<T>(&self, val: Opaque<T>) -> T
     where
         T: ReprValue,
@@ -1017,7 +1017,7 @@ pub trait ReprValue: private::ReprValue {
         protect(|| unsafe {
             res =
                 rb_obj_respond_to(self.as_rb_value(), id.as_rb_id(), include_private as c_int) != 0;
-            RubyHandle::get_unchecked().qnil()
+            Ruby::get_unchecked().qnil()
         })?;
         Ok(res)
     }
@@ -1310,14 +1310,14 @@ impl<T> IntoValue for BoxValue<T>
 where
     T: ReprValue,
 {
-    fn into_value_with(self, _: &RubyHandle) -> Value {
+    fn into_value_with(self, _: &Ruby) -> Value {
         self.as_value()
     }
 }
 
 unsafe impl<T> IntoValueFromNative for BoxValue<T> where T: ReprValue {}
 
-impl RubyHandle {
+impl Ruby {
     #[inline]
     pub fn qfalse(&self) -> Qfalse {
         self.unwrap_opaque(QFALSE)
@@ -1373,7 +1373,7 @@ impl fmt::Debug for Qfalse {
 }
 
 impl IntoValue for Qfalse {
-    fn into_value_with(self, _: &RubyHandle) -> Value {
+    fn into_value_with(self, _: &Ruby) -> Value {
         self.0
     }
 }
@@ -1396,7 +1396,7 @@ impl TryConvert for Qfalse {
 }
 impl TryConvertOwned for Qfalse {}
 
-impl RubyHandle {
+impl Ruby {
     #[inline]
     pub fn qnil(&self) -> Qnil {
         self.unwrap_opaque(QNIL)
@@ -1456,13 +1456,13 @@ impl fmt::Debug for Qnil {
 }
 
 impl IntoValue for Qnil {
-    fn into_value_with(self, _: &RubyHandle) -> Value {
+    fn into_value_with(self, _: &Ruby) -> Value {
         self.0.get()
     }
 }
 
 impl IntoValue for () {
-    fn into_value_with(self, handle: &RubyHandle) -> Value {
+    fn into_value_with(self, handle: &Ruby) -> Value {
         handle.qnil().as_value()
     }
 }
@@ -1473,7 +1473,7 @@ impl<T> IntoValue for Option<T>
 where
     T: IntoValue,
 {
-    fn into_value_with(self, handle: &RubyHandle) -> Value {
+    fn into_value_with(self, handle: &Ruby) -> Value {
         match self {
             Some(t) => handle.into_value(t),
             None => handle.qnil().as_value(),
@@ -1501,7 +1501,7 @@ impl TryConvert for Qnil {
 }
 impl TryConvertOwned for Qnil {}
 
-impl RubyHandle {
+impl Ruby {
     #[inline]
     pub fn qtrue(&self) -> Qtrue {
         self.unwrap_opaque(QTRUE)
@@ -1561,13 +1561,13 @@ impl fmt::Debug for Qtrue {
 }
 
 impl IntoValue for Qtrue {
-    fn into_value_with(self, _: &RubyHandle) -> Value {
+    fn into_value_with(self, _: &Ruby) -> Value {
         self.0.get()
     }
 }
 
 impl IntoValue for bool {
-    fn into_value_with(self, handle: &RubyHandle) -> Value {
+    fn into_value_with(self, handle: &Ruby) -> Value {
         if self {
             QTRUE.into_value_with(handle)
         } else {
@@ -1655,7 +1655,7 @@ impl Qundef {
     }
 }
 
-impl RubyHandle {
+impl Ruby {
     #[inline]
     pub fn fixnum_from_i64(&self, n: i64) -> Result<Fixnum, RBignum> {
         Fixnum::from_i64_impl(n)
@@ -2051,7 +2051,7 @@ impl fmt::Debug for Fixnum {
 }
 
 impl IntoValue for Fixnum {
-    fn into_value_with(self, _: &RubyHandle) -> Value {
+    fn into_value_with(self, _: &Ruby) -> Value {
         self.0.get()
     }
 }
@@ -2075,7 +2075,7 @@ impl TryConvert for Fixnum {
 }
 impl TryConvertOwned for Fixnum {}
 
-impl RubyHandle {
+impl Ruby {
     #[inline]
     pub fn sym_new<T>(&self, name: T) -> StaticSymbol
     where
@@ -2232,7 +2232,7 @@ impl From<Id> for StaticSymbol {
 }
 
 impl IntoValue for StaticSymbol {
-    fn into_value_with(self, _: &RubyHandle) -> Value {
+    fn into_value_with(self, _: &Ruby) -> Value {
         self.0.get()
     }
 }
@@ -2266,7 +2266,7 @@ impl TryConvert for StaticSymbol {
 }
 impl TryConvertOwned for StaticSymbol {}
 
-impl RubyHandle {
+impl Ruby {
     pub fn intern(&self, name: &str) -> Id {
         Id::from_rb_id(unsafe {
             rb_intern3(
@@ -2395,33 +2395,33 @@ pub trait IntoId: Sized {
     ///
     /// This method should only be called from a Ruby thread.
     unsafe fn into_id_unchecked(self) -> Id {
-        self.into_id_with(&RubyHandle::get_unchecked())
+        self.into_id_with(&Ruby::get_unchecked())
     }
 
     /// Convert `self` into [`Id`].
-    fn into_id_with(self, handle: &RubyHandle) -> Id;
+    fn into_id_with(self, handle: &Ruby) -> Id;
 }
 
 impl IntoId for Id {
-    fn into_id_with(self, _: &RubyHandle) -> Id {
+    fn into_id_with(self, _: &Ruby) -> Id {
         self
     }
 }
 
 impl IntoId for &str {
-    fn into_id_with(self, handle: &RubyHandle) -> Id {
+    fn into_id_with(self, handle: &Ruby) -> Id {
         handle.intern(self)
     }
 }
 
 impl IntoId for String {
-    fn into_id_with(self, handle: &RubyHandle) -> Id {
+    fn into_id_with(self, handle: &Ruby) -> Id {
         self.as_str().into_id_with(handle)
     }
 }
 
 impl IntoId for StaticSymbol {
-    fn into_id_with(self, handle: &RubyHandle) -> Id {
+    fn into_id_with(self, handle: &Ruby) -> Id {
         self.into_symbol_with(handle).into_id_with(handle)
     }
 }
@@ -2433,7 +2433,7 @@ impl From<StaticSymbol> for Id {
 }
 
 impl IntoId for Symbol {
-    fn into_id_with(self, _: &RubyHandle) -> Id {
+    fn into_id_with(self, _: &Ruby) -> Id {
         if self.is_static_symbol() {
             Id::from_rb_id(self.as_rb_value() >> ruby_special_consts::RUBY_SPECIAL_SHIFT as VALUE)
         } else {
@@ -2507,19 +2507,19 @@ impl From<Symbol> for OpaqueId {
 }
 
 impl IntoId for OpaqueId {
-    fn into_id_with(self, _: &RubyHandle) -> Id {
+    fn into_id_with(self, _: &Ruby) -> Id {
         Id::from_rb_id(self.0)
     }
 }
 
 impl IntoSymbol for OpaqueId {
-    fn into_symbol_with(self, handle: &RubyHandle) -> Symbol {
+    fn into_symbol_with(self, handle: &Ruby) -> Symbol {
         self.into_id_with(handle).into_symbol_with(handle)
     }
 }
 
 impl IntoValue for OpaqueId {
-    fn into_value_with(self, handle: &RubyHandle) -> Value {
+    fn into_value_with(self, handle: &Ruby) -> Value {
         self.into_symbol_with(handle).into_value_with(handle)
     }
 }

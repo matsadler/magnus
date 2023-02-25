@@ -8,12 +8,12 @@ use crate::{
     exception,
     into_value::IntoValue,
     object::Object,
-    ruby_handle::RubyHandle,
     try_convert::TryConvert,
     value::{
         private::{self, ReprValue as _},
         NonZeroValue, ReprValue, Value,
     },
+    Ruby,
 };
 
 /// Wrapper type for a Value known to be an instance of Ruby's Enumerator class.
@@ -65,7 +65,7 @@ impl fmt::Debug for Enumerator {
 }
 
 impl IntoValue for Enumerator {
-    fn into_value_with(self, _: &RubyHandle) -> Value {
+    fn into_value_with(self, _: &Ruby) -> Value {
         self.0.get()
     }
 }

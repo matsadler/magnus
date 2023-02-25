@@ -19,15 +19,15 @@ use crate::{
     method::Method,
     object::Object,
     r_array::RArray,
-    ruby_handle::RubyHandle,
     try_convert::TryConvert,
     value::{
         private::{self, ReprValue as _},
         IntoId, NonZeroValue, ReprValue, Value,
     },
+    Ruby,
 };
 
-impl RubyHandle {
+impl Ruby {
     pub fn module_new(&self) -> RModule {
         unsafe { RModule::from_rb_value_unchecked(rb_module_new()) }
     }
@@ -130,7 +130,7 @@ impl RModule {
                 transmute(func.as_ptr()),
                 M::arity().into(),
             );
-            RubyHandle::get_unchecked().qnil()
+            Ruby::get_unchecked().qnil()
         })?;
         Ok(())
     }
@@ -149,7 +149,7 @@ impl fmt::Debug for RModule {
 }
 
 impl IntoValue for RModule {
-    fn into_value_with(self, _: &RubyHandle) -> Value {
+    fn into_value_with(self, _: &Ruby) -> Value {
         self.0.get()
     }
 }
@@ -277,7 +277,7 @@ pub trait Module: Object + ReprValue + Copy {
     fn include_module(self, module: RModule) -> Result<(), Error> {
         protect(|| unsafe {
             rb_include_module(self.as_rb_value(), module.as_rb_value());
-            RubyHandle::get_unchecked().qnil()
+            Ruby::get_unchecked().qnil()
         })?;
         Ok(())
     }
@@ -320,7 +320,7 @@ pub trait Module: Object + ReprValue + Copy {
     fn prepend_module(self, module: RModule) -> Result<(), Error> {
         protect(|| unsafe {
             rb_prepend_module(self.as_rb_value(), module.as_rb_value());
-            RubyHandle::get_unchecked().qnil()
+            Ruby::get_unchecked().qnil()
         })?;
         Ok(())
     }
@@ -346,7 +346,7 @@ pub trait Module: Object + ReprValue + Copy {
         let val = unsafe { value.into_value_unchecked() };
         protect(|| unsafe {
             rb_const_set(self.as_rb_value(), id.as_rb_id(), val.as_rb_value());
-            RubyHandle::get_unchecked().qnil()
+            Ruby::get_unchecked().qnil()
         })?;
         Ok(())
     }
@@ -456,7 +456,7 @@ pub trait Module: Object + ReprValue + Copy {
                 transmute(func.as_ptr()),
                 M::arity().into(),
             );
-            RubyHandle::get_unchecked().qnil()
+            Ruby::get_unchecked().qnil()
         })?;
         Ok(())
     }
@@ -505,7 +505,7 @@ pub trait Module: Object + ReprValue + Copy {
                 transmute(func.as_ptr()),
                 M::arity().into(),
             );
-            RubyHandle::get_unchecked().qnil()
+            Ruby::get_unchecked().qnil()
         })?;
         Ok(())
     }
@@ -557,7 +557,7 @@ pub trait Module: Object + ReprValue + Copy {
                 transmute(func.as_ptr()),
                 M::arity().into(),
             );
-            RubyHandle::get_unchecked().qnil()
+            Ruby::get_unchecked().qnil()
         })?;
         Ok(())
     }
@@ -592,7 +592,7 @@ pub trait Module: Object + ReprValue + Copy {
                 rw.is_write() as c_int,
                 0,
             );
-            RubyHandle::get_unchecked().qnil()
+            Ruby::get_unchecked().qnil()
         })?;
         Ok(())
     }
@@ -625,7 +625,7 @@ pub trait Module: Object + ReprValue + Copy {
         let s_id = unsafe { src.into_id_unchecked() };
         protect(|| unsafe {
             rb_alias(self.as_rb_value(), d_id.as_rb_id(), s_id.as_rb_id());
-            RubyHandle::get_unchecked().qnil()
+            Ruby::get_unchecked().qnil()
         })?;
         Ok(())
     }
@@ -658,7 +658,7 @@ impl Attr {
     }
 }
 
-impl RubyHandle {
+impl Ruby {
     #[inline]
     pub fn module_comparable(&self) -> RModule {
         unsafe { RModule::from_rb_value_unchecked(rb_mComparable) }

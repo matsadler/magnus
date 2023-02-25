@@ -12,15 +12,15 @@ use crate::{
     into_value::IntoValue,
     numeric::Numeric,
     r_rational::RRational,
-    ruby_handle::RubyHandle,
     try_convert::TryConvert,
     value::{
         private::{self, ReprValue as _},
         NonZeroValue, ReprValue, Value,
     },
+    Ruby,
 };
 
-impl RubyHandle {
+impl Ruby {
     #[inline]
     pub fn float_from_f64(&self, n: f64) -> Float {
         unsafe {
@@ -169,7 +169,7 @@ impl fmt::Debug for Float {
 }
 
 impl IntoValue for Float {
-    fn into_value_with(self, _: &RubyHandle) -> Value {
+    fn into_value_with(self, _: &Ruby) -> Value {
         self.0.get()
     }
 }

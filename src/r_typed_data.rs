@@ -7,15 +7,15 @@ use crate::{
     exception,
     into_value::IntoValue,
     object::Object,
-    ruby_handle::RubyHandle,
     typed_data::TypedData,
     value::{
         private::{self, ReprValue as _},
         NonZeroValue, ReprValue, Value,
     },
+    Ruby,
 };
 
-impl RubyHandle {
+impl Ruby {
     pub fn wrap<T>(&self, data: T) -> RTypedData
     where
         T: TypedData,
@@ -134,7 +134,7 @@ impl RTypedData {
                 T::data_type().as_rb_data_type() as *const _,
             ) as *const T)
                 .as_ref();
-            RubyHandle::get_unchecked().qnil()
+            Ruby::get_unchecked().qnil()
         });
         res.ok_or_else(|| {
             Error::new(
@@ -162,7 +162,7 @@ impl fmt::Debug for RTypedData {
 }
 
 impl IntoValue for RTypedData {
-    fn into_value_with(self, _: &RubyHandle) -> Value {
+    fn into_value_with(self, _: &Ruby) -> Value {
         self.0.get()
     }
 }

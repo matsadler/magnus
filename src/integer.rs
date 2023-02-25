@@ -8,12 +8,12 @@ use crate::{
     into_value::IntoValue,
     numeric::Numeric,
     r_bignum::RBignum,
-    ruby_handle::RubyHandle,
     try_convert::TryConvert,
     value::{
         private::{self, ReprValue as _},
         Fixnum, NonZeroValue, ReprValue, Value,
     },
+    Ruby,
 };
 
 pub(crate) enum IntegerType {
@@ -21,7 +21,7 @@ pub(crate) enum IntegerType {
     Bignum(RBignum),
 }
 
-impl RubyHandle {
+impl Ruby {
     #[inline]
     pub fn integer_from_i64(&self, n: i64) -> Integer {
         unsafe {
@@ -377,7 +377,7 @@ impl fmt::Debug for Integer {
 }
 
 impl IntoValue for Integer {
-    fn into_value_with(self, _: &RubyHandle) -> Value {
+    fn into_value_with(self, _: &Ruby) -> Value {
         self.0.get()
     }
 }

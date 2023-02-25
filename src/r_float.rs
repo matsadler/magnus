@@ -10,15 +10,15 @@ use crate::{
     float::Float,
     into_value::IntoValue,
     numeric::Numeric,
-    ruby_handle::RubyHandle,
     try_convert::TryConvert,
     value::{
         private::{self, ReprValue as _},
         NonZeroValue, ReprValue, Value,
     },
+    Ruby,
 };
 
-impl RubyHandle {
+impl Ruby {
     #[cfg(ruby_use_flonum)]
     pub fn r_float_from_f64(&self, n: f64) -> Result<RFloat, Flonum> {
         unsafe {
@@ -102,7 +102,7 @@ impl fmt::Debug for RFloat {
 }
 
 impl IntoValue for RFloat {
-    fn into_value_with(self, _: &RubyHandle) -> Value {
+    fn into_value_with(self, _: &Ruby) -> Value {
         self.0.get()
     }
 }

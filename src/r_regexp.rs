@@ -15,15 +15,15 @@ use crate::{
     exception,
     into_value::IntoValue,
     r_string::{IntoRString, RString},
-    ruby_handle::RubyHandle,
     try_convert::TryConvert,
     value::{
         private::{self, ReprValue as _},
         NonZeroValue, ReprValue, Value,
     },
+    Ruby,
 };
 
-impl RubyHandle {
+impl Ruby {
     pub fn reg_new(&self, pattern: &str, opts: Opts) -> Result<RRegexp, Error> {
         protect(|| unsafe {
             RRegexp::from_rb_value_unchecked(rb_enc_reg_new(
@@ -157,7 +157,7 @@ impl fmt::Debug for RRegexp {
 impl EncodingCapable for RRegexp {}
 
 impl IntoValue for RRegexp {
-    fn into_value_with(self, _: &RubyHandle) -> Value {
+    fn into_value_with(self, _: &Ruby) -> Value {
         self.0.get()
     }
 }

@@ -163,7 +163,7 @@ pub fn expand_derive_typed_data(input: DeriveInput) -> TokenStream {
             if read {
                 accessors.push(quote! {
                     fn #ident(&self) -> <#ty as magnus::value::OpaqueVal>::Val {
-                        let handle = unsafe { magnus::ruby_handle::RubyHandle::get_unchecked() };
+                        let handle = unsafe { magnus::Ruby::get_unchecked() };
                         handle.unwrap_opaque(self.#ident)
                     }
                 });

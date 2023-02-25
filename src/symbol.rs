@@ -10,15 +10,15 @@ use crate::{
     exception,
     into_value::IntoValue,
     r_string::RString,
-    ruby_handle::RubyHandle,
     try_convert::TryConvert,
     value::{
         private::{self, ReprValue as _},
         Id, NonZeroValue, OpaqueId, ReprValue, StaticSymbol, Value,
     },
+    Ruby,
 };
 
-impl RubyHandle {
+impl Ruby {
     #[inline]
     pub fn to_symbol<T: AsRef<str>>(&self, name: T) -> Symbol {
         name.as_ref().into_symbol_with(self)
@@ -209,21 +209,21 @@ pub trait IntoSymbol: Sized {
     ///
     /// This method should only be called from a Ruby thread.
     unsafe fn into_symbol_unchecked(self) -> Symbol {
-        self.into_symbol_with(&RubyHandle::get_unchecked())
+        self.into_symbol_with(&Ruby::get_unchecked())
     }
 
     /// Convert `self` into [`Symbol`].
-    fn into_symbol_with(self, handle: &RubyHandle) -> Symbol;
+    fn into_symbol_with(self, handle: &Ruby) -> Symbol;
 }
 
 impl IntoSymbol for Symbol {
-    fn into_symbol_with(self, _: &RubyHandle) -> Symbol {
+    fn into_symbol_with(self, _: &Ruby) -> Symbol {
         self
     }
 }
 
 impl IntoSymbol for Id {
-    fn into_symbol_with(self, handle: &RubyHandle) -> Symbol {
+    fn into_symbol_with(self, handle: &Ruby) -> Symbol {
         StaticSymbol::from(self).into_symbol_with(handle)
     }
 }
@@ -235,7 +235,7 @@ impl From<Id> for Symbol {
 }
 
 impl IntoSymbol for &str {
-    fn into_symbol_with(self, handle: &RubyHandle) -> Symbol {
+    fn into_symbol_with(self, handle: &Ruby) -> Symbol {
         protect(|| unsafe {
             Symbol::from_rb_value_unchecked(rb_to_symbol(handle.str_new(self).as_rb_value()))
         })
@@ -244,13 +244,13 @@ impl IntoSymbol for &str {
 }
 
 impl IntoSymbol for String {
-    fn into_symbol_with(self, handle: &RubyHandle) -> Symbol {
+    fn into_symbol_with(self, handle: &Ruby) -> Symbol {
         self.as_str().into_symbol_with(handle)
     }
 }
 
 impl IntoSymbol for StaticSymbol {
-    fn into_symbol_with(self, handle: &RubyHandle) -> Symbol {
+    fn into_symbol_with(self, handle: &Ruby) -> Symbol {
         unsafe { Symbol(NonZeroValue::new_unchecked(self.into_value_with(handle))) }
     }
 }
@@ -262,7 +262,7 @@ impl From<StaticSymbol> for Symbol {
 }
 
 impl IntoValue for Symbol {
-    fn into_value_with(self, _: &RubyHandle) -> Value {
+    fn into_value_with(self, _: &Ruby) -> Value {
         self.0.get()
     }
 }

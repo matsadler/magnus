@@ -1813,6 +1813,7 @@
 #[macro_use]
 mod macros;
 
+mod aaa_ruby;
 mod binding;
 pub mod block;
 pub mod class;
@@ -1856,9 +1857,6 @@ mod range;
 #[cfg(feature = "rb-sys-interop")]
 #[cfg_attr(docsrs, doc(cfg(feature = "rb-sys-interop")))]
 pub mod rb_sys;
-// Not quite ready to be public, but needed to implement IntoValue
-#[doc(hidden)]
-pub mod ruby_handle;
 pub mod scan_args;
 pub mod symbol;
 mod try_convert;
@@ -1881,6 +1879,7 @@ pub use magnus_macros::{init, wrap, DataTypeFunctions, TypedData};
 #[cfg(ruby_use_flonum)]
 pub use crate::value::Flonum;
 pub use crate::{
+    aaa_ruby::Ruby,
     binding::Binding,
     class::{Class, RClass},
     enumerator::Enumerator,
@@ -1915,7 +1914,6 @@ use crate::{
     error::protect,
     method::Method,
     r_string::IntoRString,
-    ruby_handle::RubyHandle,
     value::{private::ReprValue as _, ReprValue},
 };
 
@@ -1948,7 +1946,7 @@ macro_rules! memoize {
     }};
 }
 
-impl RubyHandle {
+impl Ruby {
     pub fn define_class(&self, name: &str, superclass: RClass) -> Result<RClass, Error> {
         debug_assert_value!(superclass);
         let name = CString::new(name).unwrap();

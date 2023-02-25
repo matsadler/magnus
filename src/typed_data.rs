@@ -35,13 +35,13 @@ use crate::{
     into_value::IntoValue,
     object::Object,
     r_typed_data::RTypedData,
-    ruby_handle::RubyHandle,
     scan_args::{get_kwargs, scan_args},
     try_convert::TryConvert,
     value::{
         private::{self, ReprValue as _},
         ReprValue, Value,
     },
+    Ruby,
 };
 
 /// A C struct containing metadata on a Rust type, for use with the
@@ -478,7 +478,7 @@ impl<T> IntoValue for T
 where
     T: TypedData,
 {
-    fn into_value_with(self, handle: &RubyHandle) -> Value {
+    fn into_value_with(self, handle: &Ruby) -> Value {
         handle.wrap(self).into_value_with(handle)
     }
 }
@@ -509,7 +509,7 @@ where
     }
 }
 
-impl RubyHandle {
+impl Ruby {
     pub fn obj_wrap<T>(&self, data: T) -> Obj<T>
     where
         T: TypedData,
@@ -617,7 +617,7 @@ impl<T> IntoValue for Obj<T>
 where
     T: TypedData,
 {
-    fn into_value_with(self, handle: &RubyHandle) -> Value {
+    fn into_value_with(self, handle: &Ruby) -> Value {
         self.inner.into_value_with(handle)
     }
 }

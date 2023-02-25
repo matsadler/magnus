@@ -11,9 +11,7 @@ use rb_sys::{
     ruby_cleanup, ruby_exec_node, ruby_process_options, ruby_set_script_name, ruby_setup,
 };
 
-use crate::{
-    error::protect, r_string::IntoRString, ruby_handle::RubyHandle, value::private::ReprValue,
-};
+use crate::{error::protect, r_string::IntoRString, value::private::ReprValue, Ruby};
 
 /// A guard value that will run the cleanup function for the Ruby VM when
 /// dropped.
@@ -115,7 +113,7 @@ unsafe fn init_options(opts: &[&str]) {
     let mut node = 0 as _;
     protect(|| {
         node = ruby_process_options(argv.len() as i32, argv.as_mut_ptr());
-        RubyHandle::get_unchecked().qnil()
+        Ruby::get_unchecked().qnil()
     })
     .unwrap();
     if ruby_exec_node(node) != 0 {
@@ -123,7 +121,7 @@ unsafe fn init_options(opts: &[&str]) {
     };
 }
 
-impl RubyHandle {
+impl Ruby {
     pub fn script<T>(&self, name: T)
     where
         T: IntoRString,

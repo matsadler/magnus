@@ -9,12 +9,12 @@ use crate::{
     error::{protect, Error},
     exception,
     into_value::IntoValue,
-    ruby_handle::RubyHandle,
     try_convert::TryConvert,
     value::{
         private::{self, ReprValue as _},
         IntoId, NonZeroValue, ReprValue, Value,
     },
+    Ruby,
 };
 
 /// Functions available for all of Ruby's Numeric types.
@@ -250,7 +250,7 @@ impl fmt::Debug for NumericValue {
 }
 
 impl IntoValue for NumericValue {
-    fn into_value_with(self, _: &RubyHandle) -> Value {
+    fn into_value_with(self, _: &Ruby) -> Value {
         self.0.get()
     }
 }

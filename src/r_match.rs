@@ -11,12 +11,12 @@ use crate::{
     into_value::IntoValue,
     object::Object,
     r_string::{IntoRString, RString},
-    ruby_handle::RubyHandle,
     try_convert::TryConvert,
     value::{
         private::{self, ReprValue as _},
         NonZeroValue, ReprValue, Value,
     },
+    Ruby,
 };
 
 /// A Value pointer to a RMatch struct, Ruby's internal representation of the
@@ -131,7 +131,7 @@ impl RMatch {
         let mut n = 0;
         protect(|| unsafe {
             n = rb_reg_backref_number(self.as_rb_value(), name.as_rb_value()) as usize;
-            RubyHandle::get_unchecked().qnil()
+            Ruby::get_unchecked().qnil()
         })?;
         Ok(n)
     }
@@ -225,7 +225,7 @@ impl fmt::Debug for RMatch {
 }
 
 impl IntoValue for RMatch {
-    fn into_value_with(self, _: &RubyHandle) -> Value {
+    fn into_value_with(self, _: &Ruby) -> Value {
         self.0.get()
     }
 }

@@ -6,16 +6,15 @@ use crate::{
     exception,
     into_value::IntoValue,
     numeric::Numeric,
-    ruby_handle::RubyHandle,
     try_convert::TryConvertOwned,
     value::{
         private::{self, ReprValue as _},
         NonZeroValue, ReprValue,
     },
-    Error, Float, RFloat, TryConvert, Value,
+    Error, Float, RFloat, Ruby, TryConvert, Value,
 };
 
-impl RubyHandle {
+impl Ruby {
     #[inline]
     pub fn flonum_from_f64(&self, n: f64) -> Result<Flonum, RFloat> {
         Flonum::from_f64_impl(n)
@@ -130,7 +129,7 @@ impl fmt::Debug for Flonum {
 }
 
 impl IntoValue for Flonum {
-    fn into_value_with(self, _: &RubyHandle) -> Value {
+    fn into_value_with(self, _: &Ruby) -> Value {
         self.0.get()
     }
 }

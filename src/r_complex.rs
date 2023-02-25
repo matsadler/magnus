@@ -11,12 +11,12 @@ use crate::{
     float::Float,
     into_value::IntoValue,
     numeric::Numeric,
-    ruby_handle::RubyHandle,
     try_convert::TryConvert,
     value::{
         private::{self, ReprValue as _},
         NonZeroValue, ReprValue, Value,
     },
+    Ruby,
 };
 
 /// A Value pointer to a RComplex struct, Ruby's internal representation of
@@ -188,7 +188,7 @@ impl fmt::Debug for RComplex {
 }
 
 impl IntoValue for RComplex {
-    fn into_value_with(self, _: &RubyHandle) -> Value {
+    fn into_value_with(self, _: &Ruby) -> Value {
         self.0.get()
     }
 }

@@ -44,15 +44,15 @@ use crate::{
     into_value::IntoValue,
     object::Object,
     r_string::RString,
-    ruby_handle::RubyHandle,
     try_convert::TryConvert,
     value::{
         private::{self, ReprValue as _},
         NonZeroValue, ReprValue, Value,
     },
+    Ruby,
 };
 
-impl RubyHandle {
+impl Ruby {
     pub fn enc_default_external(&self) -> Encoding {
         Encoding::from_value(Value::new(unsafe { rb_enc_default_external() })).unwrap()
     }
@@ -149,7 +149,7 @@ impl From<Encoding> for RbEncoding {
 }
 
 impl IntoValue for Encoding {
-    fn into_value_with(self, _: &RubyHandle) -> Value {
+    fn into_value_with(self, _: &Ruby) -> Value {
         self.0.get()
     }
 }
@@ -169,7 +169,7 @@ impl TryConvert for Encoding {
     }
 }
 
-impl RubyHandle {
+impl Ruby {
     pub fn ascii8bit_encoding(&self) -> RbEncoding {
         RbEncoding::new(unsafe { rb_ascii8bit_encoding() }).unwrap()
     }
@@ -589,7 +589,7 @@ impl RbEncoding {
                 &mut len as *mut _,
                 self.as_ptr(),
             );
-            RubyHandle::get_unchecked().qnil()
+            Ruby::get_unchecked().qnil()
         })?;
         Ok((c, len as usize))
     }
@@ -615,7 +615,7 @@ impl RbEncoding {
         let mut len = 0;
         protect(|| unsafe {
             len = rb_enc_codelen(code, self.as_ptr()) as usize;
-            RubyHandle::get_unchecked().qnil()
+            Ruby::get_unchecked().qnil()
         })?;
         Ok(len)
     }
@@ -748,7 +748,7 @@ impl From<RbEncoding> for Index {
 }
 
 impl IntoValue for RbEncoding {
-    fn into_value_with(self, handle: &RubyHandle) -> Value {
+    fn into_value_with(self, handle: &Ruby) -> Value {
         Encoding::from(self).into_value_with(handle)
     }
 }
@@ -758,13 +758,13 @@ impl TryConvert for RbEncoding {
         let mut ptr = ptr::null_mut();
         protect(|| unsafe {
             ptr = rb_to_encoding(val.as_rb_value());
-            RubyHandle::get_unchecked().qnil()
+            Ruby::get_unchecked().qnil()
         })?;
         Ok(Self::new(ptr).unwrap())
     }
 }
 
-impl RubyHandle {
+impl Ruby {
     pub fn ascii8bit_encindex(&self) -> Index {
         Index(unsafe { rb_ascii8bit_encindex() })
     }
@@ -790,7 +790,7 @@ impl RubyHandle {
         let mut i = 0;
         protect(|| unsafe {
             i = rb_enc_find_index(name.as_ptr());
-            RubyHandle::get_unchecked().qnil()
+            Ruby::get_unchecked().qnil()
         })?;
         if i == -1 {
             return Err(Error::new(
@@ -971,7 +971,7 @@ pub trait EncodingCapable: ReprValue + Copy {
     {
         protect(|| unsafe {
             rb_enc_set_index(self.as_rb_value(), enc.into().to_int());
-            RubyHandle::get_unchecked().qnil()
+            Ruby::get_unchecked().qnil()
         })?;
         Ok(())
     }
@@ -1064,7 +1064,7 @@ where
     let mut ptr = ptr::null_mut();
     protect(|| unsafe {
         ptr = rb_enc_check(v1.as_rb_value(), v2.as_rb_value());
-        RubyHandle::get_unchecked().qnil()
+        Ruby::get_unchecked().qnil()
     })?;
     Ok(RbEncoding::new(ptr).unwrap())
 }
@@ -1099,7 +1099,7 @@ where
 {
     protect(|| unsafe {
         rb_enc_copy(dst.as_rb_value(), src.as_rb_value());
-        RubyHandle::get_unchecked().qnil()
+        Ruby::get_unchecked().qnil()
     })?;
     Ok(())
 }

@@ -25,20 +25,20 @@ macro_rules! debug_assert_value {
     };
 }
 
-/// Get a `RubyHandle`.
+/// Get a `Ruby`.
 ///
 /// Panics in debug mode if not on a Ruby thread.
 /// Undefined behaviour in release if not on a Ruby thread.
 ///
-/// The check is currently not performed in release mode as the RubyHandle API
+/// The check is currently not performed in release mode as the Ruby API
 /// hasn't been finalised and there isn't an alternative to this that avoids
 /// the check and the associated perfomance hit.
 macro_rules! get_ruby {
     () => {
         if cfg!(debug_assertions) {
-            $crate::ruby_handle::RubyHandle::get().unwrap()
+            $crate::Ruby::get().unwrap()
         } else {
-            unsafe { $crate::ruby_handle::RubyHandle::get_unchecked() }
+            unsafe { $crate::Ruby::get_unchecked() }
         }
     };
 }

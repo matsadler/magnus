@@ -13,11 +13,32 @@ use crate::{
     into_value::IntoValue,
     module::Module,
     r_string::RString,
-    ruby_handle::RubyHandle,
     value::{private::ReprValue as _, ReprValue, Value},
+    Ruby,
 };
 
-impl RubyHandle {
+/// An error returned to indicate an attempt to interact with the Ruby API from
+/// a non-Ruby thread or without aquiring the GVL.
+#[derive(Debug)]
+pub enum RubyUnavailableError {
+    /// GVL is not locked.
+    GvlUnlocked,
+    /// Current thread is not a Ruby thread.
+    NonRubyThread,
+}
+
+impl fmt::Display for RubyUnavailableError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::NonRubyThread => write!(f, "Current thread is not a Ruby thread."),
+            Self::GvlUnlocked => write!(f, "GVL is not locked."),
+        }
+    }
+}
+
+impl std::error::Error for RubyUnavailableError {}
+
+impl Ruby {
     pub fn iter_break_value<T>(&self, val: Option<T>) -> Error
     where
         T: IntoValue,
@@ -251,7 +272,7 @@ where
         // Tag::Raise
         6 => unsafe {
             let ex = Exception::from_rb_value_unchecked(rb_errinfo());
-            rb_set_errinfo(RubyHandle::get_unchecked().qnil().as_rb_value());
+            rb_set_errinfo(Ruby::get_unchecked().qnil().as_rb_value());
             Err(Error::Exception(ex))
         },
         other => Err(Error::Jump(unsafe { transmute(other) })),
@@ -338,7 +359,7 @@ pub fn bug(s: &str) -> ! {
     unreachable!()
 }
 
-impl RubyHandle {
+impl Ruby {
     pub fn warning(&self, s: &str) {
         let s = CString::new(s).unwrap();
         unsafe { rb_warning(s.as_ptr()) };

@@ -14,15 +14,15 @@ use crate::{
     integer::{Integer, IntegerType},
     into_value::IntoValue,
     numeric::Numeric,
-    ruby_handle::RubyHandle,
     try_convert::TryConvert,
     value::{
         private::{self, ReprValue as _},
         Fixnum, NonZeroValue, ReprValue, Value,
     },
+    Ruby,
 };
 
-impl RubyHandle {
+impl Ruby {
     pub fn bignum_from_i64(&self, n: i64) -> Result<RBignum, Fixnum> {
         unsafe {
             let val = Value::new(rb_ll2inum(n));
@@ -137,7 +137,7 @@ impl RBignum {
         let mut res = 0;
         protect(|| unsafe {
             res = rb_num2long(self.as_rb_value());
-            RubyHandle::get_unchecked().qnil()
+            Ruby::get_unchecked().qnil()
         })?;
         if res > i32::MAX as c_long {
             return Err(Error::new(
@@ -167,7 +167,7 @@ impl RBignum {
         let mut res = 0;
         protect(|| unsafe {
             res = rb_num2ll(self.as_rb_value());
-            RubyHandle::get_unchecked().qnil()
+            Ruby::get_unchecked().qnil()
         })?;
         Ok(res)
     }
@@ -189,7 +189,7 @@ impl RBignum {
         let mut res = 0;
         protect(|| unsafe {
             res = rb_num2ll(self.as_rb_value());
-            RubyHandle::get_unchecked().qnil()
+            Ruby::get_unchecked().qnil()
         })?;
         if res > isize::MAX as c_longlong {
             return Err(Error::new(
@@ -216,7 +216,7 @@ impl RBignum {
         let mut res = 0;
         protect(|| unsafe {
             res = rb_num2ulong(self.as_rb_value());
-            RubyHandle::get_unchecked().qnil()
+            Ruby::get_unchecked().qnil()
         })?;
         if res > u32::MAX as c_ulong {
             return Err(Error::new(
@@ -250,7 +250,7 @@ impl RBignum {
         let mut res = 0;
         protect(|| unsafe {
             res = rb_num2ull(self.as_rb_value());
-            RubyHandle::get_unchecked().qnil()
+            Ruby::get_unchecked().qnil()
         })?;
         Ok(res)
     }
@@ -278,7 +278,7 @@ impl RBignum {
         let mut res = 0;
         protect(|| unsafe {
             res = rb_num2ull(self.as_rb_value());
-            RubyHandle::get_unchecked().qnil()
+            Ruby::get_unchecked().qnil()
         })?;
         if res > usize::MAX as c_ulonglong {
             return Err(Error::new(
@@ -347,7 +347,7 @@ impl fmt::Debug for RBignum {
 }
 
 impl IntoValue for RBignum {
-    fn into_value_with(self, _: &RubyHandle) -> Value {
+    fn into_value_with(self, _: &Ruby) -> Value {
         self.0.get()
     }
 }

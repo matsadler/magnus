@@ -1,4 +1,7 @@
-use std::{cell::RefCell, error::Error, fmt, marker::PhantomData};
+//! This module/file's name is a hack to get the `impl Ruby` defined here to
+//! show first in docs. This module shouldn't be exposed publicly.
+
+use std::{cell::RefCell, marker::PhantomData};
 
 use rb_sys::ruby_native_thread_p;
 
@@ -10,26 +13,7 @@ extern "C" {
     fn ruby_thread_has_gvl_p() -> ::std::os::raw::c_int;
 }
 
-/// An error returned to indicate an attempt to interact with the Ruby API from
-/// a non-Ruby thread or without aquiring the GVL.
-#[derive(Debug)]
-pub enum RubyUnavailableError {
-    /// GVL is not locked.
-    GvlUnlocked,
-    /// Current thread is not a Ruby thread.
-    NonRubyThread,
-}
-
-impl fmt::Display for RubyUnavailableError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::NonRubyThread => write!(f, "Current thread is not a Ruby thread."),
-            Self::GvlUnlocked => write!(f, "GVL is not locked."),
-        }
-    }
-}
-
-impl Error for RubyUnavailableError {}
+use crate::error::RubyUnavailableError;
 
 #[derive(Clone, Copy)]
 enum RubyGvlState {
@@ -92,9 +76,9 @@ impl RubyGvlState {
 /// be available.
 // Not quite ready to be public, but needed to implement IntoValue
 #[doc(hidden)]
-pub struct RubyHandle(PhantomData<*mut ()>);
+pub struct Ruby(PhantomData<*mut ()>);
 
-impl RubyHandle {
+impl Ruby {
     /// Get a handle to Ruby's API.
     ///
     /// Returns a new handle to Ruby's API if it can be verified the current

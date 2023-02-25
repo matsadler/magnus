@@ -13,12 +13,12 @@ use rb_sys::{rb_gc_location, rb_gc_mark_movable};
 use crate::{
     error::{protect, Error},
     r_hash::RHash,
-    ruby_handle::RubyHandle,
     symbol::IntoSymbol,
     value::{private::ReprValue as _, ReprValue, Value},
+    Ruby,
 };
 
-impl RubyHandle {}
+impl Ruby {}
 
 /// Mark an Object.
 ///
@@ -120,7 +120,7 @@ where
     unsafe { rb_gc_unregister_address(valref as *const _ as *mut VALUE) }
 }
 
-impl RubyHandle {
+impl Ruby {
     pub fn gc_disable(&self) -> bool {
         unsafe { Value::new(rb_gc_disable()).to_bool() }
     }

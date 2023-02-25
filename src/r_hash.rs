@@ -25,12 +25,12 @@ use crate::{
     exception,
     into_value::{IntoValue, IntoValueFromNative},
     object::Object,
-    ruby_handle::RubyHandle,
     try_convert::{TryConvert, TryConvertOwned},
     value::{
         private::{self, ReprValue as _},
         Fixnum, NonZeroValue, ReprValue, Value, QUNDEF,
     },
+    Ruby,
 };
 
 /// Iteration state for [`RHash::foreach`].
@@ -90,7 +90,7 @@ where
     }
 }
 
-impl RubyHandle {
+impl Ruby {
     pub fn hash_new(&self) -> RHash {
         unsafe { RHash::from_rb_value_unchecked(rb_hash_new()) }
     }
@@ -236,7 +236,7 @@ impl RHash {
         let ptr = slice.as_ptr() as *const VALUE;
         protect(|| unsafe {
             rb_hash_bulk_insert(slice.len() as c_long, ptr, self.as_rb_value());
-            RubyHandle::get_unchecked().qnil()
+            Ruby::get_unchecked().qnil()
         })?;
         Ok(())
     }
@@ -269,7 +269,7 @@ impl RHash {
     pub fn update(self, other: RHash) -> Result<(), Error> {
         protect(|| unsafe {
             rb_hash_update_by(self.as_rb_value(), other.as_rb_value(), None);
-            RubyHandle::get_unchecked().qnil()
+            Ruby::get_unchecked().qnil()
         })?;
         Ok(())
     }
@@ -511,7 +511,7 @@ impl RHash {
                 #[cfg(ruby_lt_2_7)]
                 let fptr: unsafe extern "C" fn() -> c_int = std::mem::transmute(fptr);
                 rb_hash_foreach(self.as_rb_value(), Some(fptr), arg);
-                RubyHandle::get_unchecked().qnil()
+                Ruby::get_unchecked().qnil()
             })?;
         }
         Ok(())
@@ -646,7 +646,7 @@ impl fmt::Debug for RHash {
 }
 
 impl IntoValue for RHash {
-    fn into_value_with(self, _: &RubyHandle) -> Value {
+    fn into_value_with(self, _: &Ruby) -> Value {
         self.0.get()
     }
 }
@@ -656,7 +656,7 @@ where
     K: IntoValueFromNative,
     V: IntoValueFromNative,
 {
-    fn into_value_with(self, handle: &RubyHandle) -> Value {
+    fn into_value_with(self, handle: &Ruby) -> Value {
         let hash = handle.hash_new();
         for (k, v) in self {
             let _ = hash.aset(k, v);

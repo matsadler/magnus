@@ -7,12 +7,12 @@ use crate::{
     exception,
     into_value::IntoValue,
     object::Object,
-    ruby_handle::RubyHandle,
     try_convert::TryConvert,
     value::{
         private::{self, ReprValue as _},
         NonZeroValue, ReprValue, Value,
     },
+    Ruby,
 };
 
 /// A Value pointer to a RFile struct, Ruby's internal representation of files.
@@ -47,7 +47,7 @@ impl fmt::Debug for RFile {
 }
 
 impl IntoValue for RFile {
-    fn into_value_with(self, _: &RubyHandle) -> Value {
+    fn into_value_with(self, _: &Ruby) -> Value {
         self.0.get()
     }
 }

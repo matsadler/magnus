@@ -22,15 +22,15 @@ use crate::{
     into_value::{IntoValue, IntoValueFromNative},
     object::Object,
     r_string::{IntoRString, RString},
-    ruby_handle::RubyHandle,
     try_convert::{TryConvert, TryConvertOwned},
     value::{
         private::{self, ReprValue as _},
         NonZeroValue, ReprValue, Value,
     },
+    Ruby,
 };
 
-impl RubyHandle {
+impl Ruby {
     pub fn ary_new(&self) -> RArray {
         unsafe { RArray::from_rb_value_unchecked(rb_ary_new()) }
     }
@@ -985,7 +985,7 @@ impl RArray {
                 offset as c_long,
                 val.into_value_unchecked().as_rb_value(),
             );
-            RubyHandle::get_unchecked().qnil()
+            Ruby::get_unchecked().qnil()
         })?;
         Ok(())
     }
@@ -1220,7 +1220,7 @@ impl fmt::Debug for RArray {
 }
 
 impl IntoValue for RArray {
-    fn into_value_with(self, _: &RubyHandle) -> Value {
+    fn into_value_with(self, _: &Ruby) -> Value {
         self.0.get()
     }
 }
@@ -1229,7 +1229,7 @@ impl<T0> IntoValue for (T0,)
 where
     T0: IntoValue,
 {
-    fn into_value_with(self, handle: &RubyHandle) -> Value {
+    fn into_value_with(self, handle: &Ruby) -> Value {
         let ary = [handle.into_value(self.0)];
         handle.ary_new_from_values(&ary).into_value_with(handle)
     }
@@ -1242,7 +1242,7 @@ where
     T0: IntoValue,
     T1: IntoValue,
 {
-    fn into_value_with(self, handle: &RubyHandle) -> Value {
+    fn into_value_with(self, handle: &Ruby) -> Value {
         let ary = [handle.into_value(self.0), handle.into_value(self.1)];
         handle.ary_new_from_values(&ary).into_value_with(handle)
     }
@@ -1261,7 +1261,7 @@ where
     T1: IntoValue,
     T2: IntoValue,
 {
-    fn into_value_with(self, handle: &RubyHandle) -> Value {
+    fn into_value_with(self, handle: &Ruby) -> Value {
         let ary = [
             handle.into_value(self.0),
             handle.into_value(self.1),
@@ -1286,7 +1286,7 @@ where
     T2: IntoValue,
     T3: IntoValue,
 {
-    fn into_value_with(self, handle: &RubyHandle) -> Value {
+    fn into_value_with(self, handle: &Ruby) -> Value {
         let ary = [
             handle.into_value(self.0),
             handle.into_value(self.1),
@@ -1314,7 +1314,7 @@ where
     T3: IntoValue,
     T4: IntoValue,
 {
-    fn into_value_with(self, handle: &RubyHandle) -> Value {
+    fn into_value_with(self, handle: &Ruby) -> Value {
         let ary = [
             handle.into_value(self.0),
             handle.into_value(self.1),
@@ -1345,7 +1345,7 @@ where
     T4: IntoValue,
     T5: IntoValue,
 {
-    fn into_value_with(self, handle: &RubyHandle) -> Value {
+    fn into_value_with(self, handle: &Ruby) -> Value {
         let ary = [
             handle.into_value(self.0),
             handle.into_value(self.1),
@@ -1379,7 +1379,7 @@ where
     T5: IntoValue,
     T6: IntoValue,
 {
-    fn into_value_with(self, handle: &RubyHandle) -> Value {
+    fn into_value_with(self, handle: &Ruby) -> Value {
         let ary = [
             handle.into_value(self.0),
             handle.into_value(self.1),
@@ -1416,7 +1416,7 @@ where
     T6: IntoValue,
     T7: IntoValue,
 {
-    fn into_value_with(self, handle: &RubyHandle) -> Value {
+    fn into_value_with(self, handle: &Ruby) -> Value {
         let ary = [
             handle.into_value(self.0),
             handle.into_value(self.1),
@@ -1456,7 +1456,7 @@ where
     T7: IntoValue,
     T8: IntoValue,
 {
-    fn into_value_with(self, handle: &RubyHandle) -> Value {
+    fn into_value_with(self, handle: &Ruby) -> Value {
         let ary = [
             handle.into_value(self.0),
             handle.into_value(self.1),
@@ -1500,7 +1500,7 @@ where
     T8: IntoValue,
     T9: IntoValue,
 {
-    fn into_value_with(self, handle: &RubyHandle) -> Value {
+    fn into_value_with(self, handle: &Ruby) -> Value {
         let ary = [
             handle.into_value(self.0),
             handle.into_value(self.1),
@@ -1567,7 +1567,7 @@ where
     T9: IntoValue,
     T10: IntoValue,
 {
-    fn into_value_with(self, handle: &RubyHandle) -> Value {
+    fn into_value_with(self, handle: &Ruby) -> Value {
         let ary = [
             handle.into_value(self.0),
             handle.into_value(self.1),
@@ -1638,7 +1638,7 @@ where
     T10: IntoValue,
     T11: IntoValue,
 {
-    fn into_value_with(self, handle: &RubyHandle) -> Value {
+    fn into_value_with(self, handle: &Ruby) -> Value {
         let ary = [
             handle.into_value(self.0),
             handle.into_value(self.1),
@@ -1700,7 +1700,7 @@ impl<T> IntoValue for Vec<T>
 where
     T: IntoValueFromNative,
 {
-    fn into_value_with(self, handle: &RubyHandle) -> Value {
+    fn into_value_with(self, handle: &Ruby) -> Value {
         handle.ary_from_vec(self).into_value_with(handle)
     }
 }

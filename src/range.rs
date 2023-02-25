@@ -15,15 +15,15 @@ use crate::{
     into_value::{IntoValue, IntoValueFromNative},
     object::Object,
     r_struct::RStruct,
-    ruby_handle::RubyHandle,
     try_convert::TryConvert,
     value::{
         private::{self, ReprValue as _},
         ReprValue, Value,
     },
+    Ruby,
 };
 
-impl RubyHandle {
+impl Ruby {
     pub fn range_new<T, U>(&self, beg: T, end: U, excl: bool) -> Result<Range, Error>
     where
         T: IntoValue,
@@ -273,7 +273,7 @@ impl fmt::Debug for Range {
 }
 
 impl IntoValue for Range {
-    fn into_value_with(self, handle: &RubyHandle) -> Value {
+    fn into_value_with(self, handle: &Ruby) -> Value {
         self.0.into_value_with(handle)
     }
 }
@@ -282,7 +282,7 @@ impl<T> IntoValue for StdRange<T>
 where
     T: IntoValue,
 {
-    fn into_value_with(self, handle: &RubyHandle) -> Value {
+    fn into_value_with(self, handle: &Ruby) -> Value {
         handle
             .range_new(self.start, self.end, true)
             .unwrap()
@@ -296,7 +296,7 @@ impl<T> IntoValue for RangeFrom<T>
 where
     T: IntoValue,
 {
-    fn into_value_with(self, handle: &RubyHandle) -> Value {
+    fn into_value_with(self, handle: &Ruby) -> Value {
         handle
             .range_new(self.start, handle.qnil(), false)
             .unwrap()
@@ -307,7 +307,7 @@ where
 unsafe impl<T> IntoValueFromNative for RangeFrom<T> where T: IntoValueFromNative {}
 
 impl IntoValue for RangeFull {
-    fn into_value_with(self, handle: &RubyHandle) -> Value {
+    fn into_value_with(self, handle: &Ruby) -> Value {
         handle
             .range_new(handle.qnil(), handle.qnil(), false)
             .unwrap()
@@ -321,7 +321,7 @@ impl<T> IntoValue for RangeInclusive<T>
 where
     T: IntoValue,
 {
-    fn into_value_with(self, handle: &RubyHandle) -> Value {
+    fn into_value_with(self, handle: &Ruby) -> Value {
         let (start, end) = self.into_inner();
         handle
             .range_new(start, end, false)
@@ -336,7 +336,7 @@ impl<T> IntoValue for RangeTo<T>
 where
     T: IntoValue,
 {
-    fn into_value_with(self, handle: &RubyHandle) -> Value {
+    fn into_value_with(self, handle: &Ruby) -> Value {
         handle
             .range_new(handle.qnil(), self.end, true)
             .unwrap()
@@ -350,7 +350,7 @@ impl<T> IntoValue for RangeToInclusive<T>
 where
     T: IntoValue,
 {
-    fn into_value_with(self, handle: &RubyHandle) -> Value {
+    fn into_value_with(self, handle: &Ruby) -> Value {
         handle
             .range_new(handle.qnil(), self.end, false)
             .unwrap()

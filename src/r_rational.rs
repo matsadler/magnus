@@ -8,15 +8,15 @@ use crate::{
     integer::Integer,
     into_value::IntoValue,
     numeric::Numeric,
-    ruby_handle::RubyHandle,
     try_convert::TryConvert,
     value::{
         private::{self, ReprValue as _},
         NonZeroValue, ReprValue, Value,
     },
+    Ruby,
 };
 
-impl RubyHandle {
+impl Ruby {
     pub fn rational_new(&self, num: i64, den: NonZeroI64) -> RRational {
         let num = self.into_value(num);
         let den = self.into_value(den.get());
@@ -119,7 +119,7 @@ impl fmt::Debug for RRational {
 }
 
 impl IntoValue for RRational {
-    fn into_value_with(self, _: &RubyHandle) -> Value {
+    fn into_value_with(self, _: &Ruby) -> Value {
         self.0.get()
     }
 }

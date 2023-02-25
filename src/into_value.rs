@@ -1,6 +1,6 @@
-use crate::{r_array::RArray, ruby_handle::RubyHandle, value::Value};
+use crate::{r_array::RArray, value::Value, Ruby};
 
-impl RubyHandle {
+impl Ruby {
     #[allow(clippy::wrong_self_convention)]
     pub fn into_value<T>(&self, val: T) -> Value
     where
@@ -29,11 +29,11 @@ pub trait IntoValue: Sized {
     ///
     /// This method should only be called from a Ruby thread.
     unsafe fn into_value_unchecked(self) -> Value {
-        self.into_value_with(&RubyHandle::get_unchecked())
+        self.into_value_with(&Ruby::get_unchecked())
     }
 
     /// Convert `self` into [`Value`].
-    fn into_value_with(self, handle: &RubyHandle) -> Value;
+    fn into_value_with(self, handle: &Ruby) -> Value;
 }
 
 /// Conversions from Rust types that do not contain [`Value`] into [`Value`].

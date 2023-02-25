@@ -19,12 +19,12 @@ use crate::{
     into_value::{ArgList, IntoValue},
     module::Module,
     object::Object,
-    ruby_handle::RubyHandle,
     try_convert::TryConvert,
     value::{
         private::{self, ReprValue as _},
         NonZeroValue, ReprValue, Value,
     },
+    Ruby,
 };
 
 /// A Value pointer to a RClass struct, Ruby's internal representation of
@@ -156,7 +156,7 @@ impl fmt::Debug for RClass {
 }
 
 impl IntoValue for RClass {
-    fn into_value_with(self, _: &RubyHandle) -> Value {
+    fn into_value_with(self, _: &Ruby) -> Value {
         self.0.get()
     }
 }
@@ -321,7 +321,7 @@ impl Class for RClass {
     }
 }
 
-impl RubyHandle {
+impl Ruby {
     #[inline]
     pub fn class_array(&self) -> RClass {
         unsafe { RClass::from_rb_value_unchecked(rb_cArray) }

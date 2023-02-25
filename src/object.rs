@@ -10,9 +10,9 @@ use crate::{
     into_value::IntoValue,
     method::Method,
     module::RModule,
-    ruby_handle::RubyHandle,
     try_convert::TryConvert,
     value::{private::ReprValue as _, IntoId, ReprValue, Value},
+    Ruby,
 };
 
 /// Functions available all non-immediate values.
@@ -34,7 +34,7 @@ pub trait Object: ReprValue + Copy {
                 transmute(func.as_ptr()),
                 M::arity().into(),
             );
-            RubyHandle::get_unchecked().qnil()
+            Ruby::get_unchecked().qnil()
         })?;
         Ok(())
     }
@@ -116,7 +116,7 @@ pub trait Object: ReprValue + Copy {
     fn extend_object(self, module: RModule) -> Result<(), Error> {
         protect(|| unsafe {
             rb_extend_object(self.as_rb_value(), module.as_rb_value());
-            RubyHandle::get_unchecked().qnil()
+            Ruby::get_unchecked().qnil()
         })?;
         Ok(())
     }

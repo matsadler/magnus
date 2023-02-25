@@ -16,16 +16,16 @@ use crate::{
     method::{Block, BlockReturn},
     object::Object,
     r_array::RArray,
-    ruby_handle::RubyHandle,
     try_convert::TryConvert,
     typed_data::{DataType, DataTypeFunctions},
     value::{
         private::{self, ReprValue as _},
         NonZeroValue, ReprValue, Value,
     },
+    Ruby,
 };
 
-impl RubyHandle {
+impl Ruby {
     pub fn proc_new<R>(&self, block: fn(&[Value], Option<Proc>) -> R) -> Proc
     where
         R: BlockReturn,
@@ -274,7 +274,7 @@ impl fmt::Debug for Proc {
 }
 
 impl IntoValue for Proc {
-    fn into_value_with(self, _: &RubyHandle) -> Value {
+    fn into_value_with(self, _: &Ruby) -> Value {
         self.0.get()
     }
 }
@@ -342,7 +342,7 @@ where
     (ptr, value)
 }
 
-impl RubyHandle {
+impl Ruby {
     pub fn block_given(&self) -> bool {
         unsafe { rb_block_given_p() != 0 }
     }
@@ -494,7 +494,7 @@ where
             for val in &mut *ptr {
                 rb_yield(val.into_value_unchecked().as_rb_value());
             }
-            RubyHandle::get_unchecked().qnil()
+            Ruby::get_unchecked().qnil()
         },
         || {
             ptr.drop_in_place();
@@ -517,7 +517,7 @@ where
                 let slice = vals.as_ref();
                 rb_yield_values2(slice.len() as c_int, slice.as_ptr() as *const VALUE);
             }
-            RubyHandle::get_unchecked().qnil()
+            Ruby::get_unchecked().qnil()
         },
         || {
             ptr.drop_in_place();
@@ -537,7 +537,7 @@ where
             for val in &mut *ptr {
                 rb_yield_splat(val.as_rb_value());
             }
-            RubyHandle::get_unchecked().qnil()
+            Ruby::get_unchecked().qnil()
         },
         || {
             ptr.drop_in_place();

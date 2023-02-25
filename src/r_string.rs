@@ -35,15 +35,15 @@ use crate::{
     into_value::{IntoValue, IntoValueFromNative},
     object::Object,
     r_array::RArray,
-    ruby_handle::RubyHandle,
     try_convert::TryConvert,
     value::{
         private::{self, ReprValue as _},
         NonZeroValue, ReprValue, Value,
     },
+    Ruby,
 };
 
-impl RubyHandle {
+impl Ruby {
     pub fn str_new(&self, s: &str) -> RString {
         let len = s.len();
         let ptr = s.as_ptr();
@@ -621,7 +621,7 @@ impl RString {
                 self.as_rb_value(),
                 replacement
                     .map(|r| r.as_rb_value())
-                    .unwrap_or_else(|| RubyHandle::get_unchecked().qnil().as_rb_value()),
+                    .unwrap_or_else(|| Ruby::get_unchecked().qnil().as_rb_value()),
             ))
         })?;
         if val.is_nil() {
@@ -1131,7 +1131,7 @@ impl RString {
     pub fn replace(self, other: Self) -> Result<(), Error> {
         protect(|| unsafe {
             rb_str_replace(self.as_rb_value(), other.as_rb_value());
-            RubyHandle::get_unchecked().qnil()
+            Ruby::get_unchecked().qnil()
         })?;
         Ok(())
     }
@@ -1161,7 +1161,7 @@ impl RString {
     pub fn shared_replace(self, other: Self) -> Result<(), Error> {
         protect(|| unsafe {
             rb_str_shared_replace(self.as_rb_value(), other.as_rb_value());
-            RubyHandle::get_unchecked().qnil()
+            Ruby::get_unchecked().qnil()
         })?;
         Ok(())
     }
@@ -1200,7 +1200,7 @@ impl RString {
                 len as c_long,
                 other.as_rb_value(),
             );
-            RubyHandle::get_unchecked().qnil()
+            Ruby::get_unchecked().qnil()
         })?;
         Ok(())
     }
@@ -1259,7 +1259,7 @@ impl RString {
     pub fn drop_bytes(self, len: usize) -> Result<(), Error> {
         protect(|| unsafe {
             rb_str_drop_bytes(self.as_rb_value(), len as c_long);
-            RubyHandle::get_unchecked().qnil()
+            Ruby::get_unchecked().qnil()
         })?;
         Ok(())
     }
@@ -1478,39 +1478,39 @@ pub trait IntoRString: Sized {
     ///
     /// This method should only be called from a Ruby thread.
     unsafe fn into_r_string_unchecked(self) -> RString {
-        self.into_r_string_with(&RubyHandle::get_unchecked())
+        self.into_r_string_with(&Ruby::get_unchecked())
     }
 
     /// Convert `self` into [`RString`].
-    fn into_r_string_with(self, handle: &RubyHandle) -> RString;
+    fn into_r_string_with(self, handle: &Ruby) -> RString;
 }
 
 impl IntoRString for RString {
-    fn into_r_string_with(self, _: &RubyHandle) -> RString {
+    fn into_r_string_with(self, _: &Ruby) -> RString {
         self
     }
 }
 
 impl IntoRString for &str {
-    fn into_r_string_with(self, handle: &RubyHandle) -> RString {
+    fn into_r_string_with(self, handle: &Ruby) -> RString {
         handle.str_new(self)
     }
 }
 
 impl IntoRString for String {
-    fn into_r_string_with(self, handle: &RubyHandle) -> RString {
+    fn into_r_string_with(self, handle: &Ruby) -> RString {
         handle.str_new(&self)
     }
 }
 
 impl IntoValue for RString {
-    fn into_value_with(self, _: &RubyHandle) -> Value {
+    fn into_value_with(self, _: &Ruby) -> Value {
         self.0.get()
     }
 }
 
 impl IntoValue for &str {
-    fn into_value_with(self, handle: &RubyHandle) -> Value {
+    fn into_value_with(self, handle: &Ruby) -> Value {
         handle.str_new(self).into_value_with(handle)
     }
 }
@@ -1519,13 +1519,13 @@ unsafe impl IntoValueFromNative for &str {}
 
 #[cfg(feature = "bytes-crate")]
 impl IntoValue for bytes::Bytes {
-    fn into_value_with(self, handle: &RubyHandle) -> Value {
+    fn into_value_with(self, handle: &Ruby) -> Value {
         handle.str_from_slice(self.as_ref()).into()
     }
 }
 
 impl IntoValue for String {
-    fn into_value_with(self, handle: &RubyHandle) -> Value {
+    fn into_value_with(self, handle: &Ruby) -> Value {
         handle.str_new(self.as_str()).into_value_with(handle)
     }
 }
@@ -1533,7 +1533,7 @@ impl IntoValue for String {
 unsafe impl IntoValueFromNative for String {}
 
 impl IntoValue for char {
-    fn into_value_with(self, handle: &RubyHandle) -> Value {
+    fn into_value_with(self, handle: &Ruby) -> Value {
         handle.str_from_char(self).into_value_with(handle)
     }
 }
@@ -1542,7 +1542,7 @@ unsafe impl IntoValueFromNative for char {}
 
 #[cfg(unix)]
 impl IntoValue for &Path {
-    fn into_value_with(self, handle: &RubyHandle) -> Value {
+    fn into_value_with(self, handle: &Ruby) -> Value {
         use std::os::unix::ffi::OsStrExt;
         handle
             .str_from_slice(self.as_os_str().as_bytes())
@@ -1552,7 +1552,7 @@ impl IntoValue for &Path {
 
 #[cfg(not(unix))]
 impl IntoValue for &Path {
-    fn into_value_with(self, handle: &RubyHandle) -> Value {
+    fn into_value_with(self, handle: &Ruby) -> Value {
         handle
             .str_new(self.to_string_lossy().as_ref())
             .into_value_with(handle)
@@ -1562,7 +1562,7 @@ impl IntoValue for &Path {
 unsafe impl IntoValueFromNative for &Path {}
 
 impl IntoValue for PathBuf {
-    fn into_value_with(self, handle: &RubyHandle) -> Value {
+    fn into_value_with(self, handle: &Ruby) -> Value {
         handle.into_value(self.as_path())
     }
 }
@@ -1697,7 +1697,7 @@ impl fmt::Debug for FString {
 }
 
 impl IntoValue for FString {
-    fn into_value_with(self, handle: &RubyHandle) -> Value {
+    fn into_value_with(self, handle: &Ruby) -> Value {
         self.as_r_string().into_value_with(handle)
     }
 }

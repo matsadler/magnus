@@ -21,10 +21,10 @@ use crate::{
     into_value::IntoValue,
     object::Object,
     r_array::RArray,
-    ruby_handle::RubyHandle,
     symbol::Symbol,
     try_convert::TryConvert,
     value::{self, private::ReprValue as _, IntoId, NonZeroValue, ReprValue, Value},
+    Ruby,
 };
 
 // Ruby provides some inline functions to get a pointer to the struct's
@@ -226,7 +226,7 @@ impl fmt::Debug for RStruct {
 }
 
 impl IntoValue for RStruct {
-    fn into_value_with(self, _: &RubyHandle) -> Value {
+    fn into_value_with(self, _: &Ruby) -> Value {
         self.0.get()
     }
 }
@@ -250,7 +250,7 @@ impl TryConvert for RStruct {
     }
 }
 
-impl RubyHandle {
+impl Ruby {
     pub fn define_struct<T>(&self, name: Option<&str>, members: T) -> Result<RClass, Error>
     where
         T: StructMembers,
