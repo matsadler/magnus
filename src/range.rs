@@ -19,7 +19,7 @@ use crate::{
     try_convert::TryConvert,
     value::{
         private::{self, ReprValue as _},
-        ReprValue, Value, QNIL,
+        ReprValue, Value,
     },
 };
 
@@ -298,7 +298,7 @@ where
 {
     fn into_value_with(self, handle: &RubyHandle) -> Value {
         handle
-            .range_new(self.start, QNIL, false)
+            .range_new(self.start, handle.qnil(), false)
             .unwrap()
             .into_value_with(handle)
     }
@@ -309,7 +309,7 @@ unsafe impl<T> IntoValueFromNative for RangeFrom<T> where T: IntoValueFromNative
 impl IntoValue for RangeFull {
     fn into_value_with(self, handle: &RubyHandle) -> Value {
         handle
-            .range_new(QNIL, QNIL, false)
+            .range_new(handle.qnil(), handle.qnil(), false)
             .unwrap()
             .into_value_with(handle)
     }
@@ -338,7 +338,7 @@ where
 {
     fn into_value_with(self, handle: &RubyHandle) -> Value {
         handle
-            .range_new(QNIL, self.end, true)
+            .range_new(handle.qnil(), self.end, true)
             .unwrap()
             .into_value_with(handle)
     }
@@ -352,7 +352,7 @@ where
 {
     fn into_value_with(self, handle: &RubyHandle) -> Value {
         handle
-            .range_new(QNIL, self.end, false)
+            .range_new(handle.qnil(), self.end, false)
             .unwrap()
             .into_value_with(handle)
     }

@@ -1463,7 +1463,7 @@ impl IntoValue for Qnil {
 
 impl IntoValue for () {
     fn into_value_with(self, handle: &RubyHandle) -> Value {
-        QNIL.into_value_with(handle)
+        handle.qnil().as_value()
     }
 }
 
@@ -1476,7 +1476,7 @@ where
     fn into_value_with(self, handle: &RubyHandle) -> Value {
         match self {
             Some(t) => handle.into_value(t),
-            None => handle.into_value(QNIL),
+            None => handle.qnil().as_value(),
         }
     }
 }
