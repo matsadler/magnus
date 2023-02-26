@@ -1533,25 +1533,6 @@ where
 {
 }
 
-impl<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9> From<(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9)>
-    for Value
-where
-    T0: IntoValue,
-    T1: IntoValue,
-    T2: IntoValue,
-    T3: IntoValue,
-    T4: IntoValue,
-    T5: IntoValue,
-    T6: IntoValue,
-    T7: IntoValue,
-    T8: IntoValue,
-    T9: IntoValue,
-{
-    fn from(val: (T0, T1, T2, T3, T4, T5, T6, T7, T8, T9)) -> Self {
-        val.into_value()
-    }
-}
-
 impl<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> IntoValue
     for (T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10)
 where
@@ -1600,26 +1581,6 @@ where
     T9: IntoValueFromNative,
     T10: IntoValueFromNative,
 {
-}
-
-impl<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>
-    From<(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10)> for Value
-where
-    T0: IntoValue,
-    T1: IntoValue,
-    T2: IntoValue,
-    T3: IntoValue,
-    T4: IntoValue,
-    T5: IntoValue,
-    T6: IntoValue,
-    T7: IntoValue,
-    T8: IntoValue,
-    T9: IntoValue,
-    T10: IntoValue,
-{
-    fn from(val: (T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10)) -> Self {
-        val.into_value()
-    }
 }
 
 impl<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> IntoValue
@@ -1673,27 +1634,6 @@ where
     T10: IntoValueFromNative,
     T11: IntoValueFromNative,
 {
-}
-
-impl<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>
-    From<(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11)> for Value
-where
-    T0: IntoValue,
-    T1: IntoValue,
-    T2: IntoValue,
-    T3: IntoValue,
-    T4: IntoValue,
-    T5: IntoValue,
-    T6: IntoValue,
-    T7: IntoValue,
-    T8: IntoValue,
-    T9: IntoValue,
-    T10: IntoValue,
-    T11: IntoValue,
-{
-    fn from(val: (T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11)) -> Self {
-        val.into_value()
-    }
 }
 
 impl<T> IntoValue for Vec<T>
