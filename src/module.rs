@@ -123,14 +123,16 @@ impl RModule {
     {
         debug_assert_value!(self);
         let name = CString::new(name).unwrap();
-        protect(|| unsafe {
-            rb_define_module_function(
-                self.as_rb_value(),
-                name.as_ptr(),
-                transmute(func.as_ptr()),
-                M::arity().into(),
-            );
-            Ruby::get_unchecked().qnil()
+        protect(|| {
+            unsafe {
+                rb_define_module_function(
+                    self.as_rb_value(),
+                    name.as_ptr(),
+                    transmute(func.as_ptr()),
+                    M::arity().into(),
+                )
+            };
+            Ruby::get_with(self).qnil()
         })?;
         Ok(())
     }
@@ -194,7 +196,7 @@ pub trait Module: Object + ReprValue + Copy {
     {
         debug_assert_value!(self);
         debug_assert_value!(superclass);
-        let id = unsafe { name.into_id_unchecked() };
+        let id = name.into_id_with(&Ruby::get_with(self));
         let superclass = superclass.as_rb_value();
         protect(|| unsafe {
             RClass::from_rb_value_unchecked(rb_define_class_id_under(
@@ -221,7 +223,7 @@ pub trait Module: Object + ReprValue + Copy {
     where
         T: IntoId,
     {
-        let id = unsafe { name.into_id_unchecked() };
+        let id = name.into_id_with(&Ruby::get_with(self));
         protect(|| unsafe {
             RModule::from_rb_value_unchecked(rb_define_module_id_under(
                 self.as_rb_value(),
@@ -275,9 +277,9 @@ pub trait Module: Object + ReprValue + Copy {
     /// assert_eq!(obj.funcall::<_, _, i64>("example", ()).unwrap(), 42);
     /// ```
     fn include_module(self, module: RModule) -> Result<(), Error> {
-        protect(|| unsafe {
-            rb_include_module(self.as_rb_value(), module.as_rb_value());
-            Ruby::get_unchecked().qnil()
+        protect(|| {
+            unsafe { rb_include_module(self.as_rb_value(), module.as_rb_value()) };
+            Ruby::get_with(self).qnil()
         })?;
         Ok(())
     }
@@ -318,9 +320,9 @@ pub trait Module: Object + ReprValue + Copy {
     /// assert_eq!(obj.funcall::<_, _, i64>("example", ()).unwrap(), 42);
     /// ```
     fn prepend_module(self, module: RModule) -> Result<(), Error> {
-        protect(|| unsafe {
-            rb_prepend_module(self.as_rb_value(), module.as_rb_value());
-            Ruby::get_unchecked().qnil()
+        protect(|| {
+            unsafe { rb_prepend_module(self.as_rb_value(), module.as_rb_value()) };
+            Ruby::get_with(self).qnil()
         })?;
         Ok(())
     }
@@ -342,11 +344,12 @@ pub trait Module: Object + ReprValue + Copy {
         T: IntoId,
         U: IntoValue,
     {
-        let id = unsafe { name.into_id_unchecked() };
-        let val = unsafe { value.into_value_unchecked() };
-        protect(|| unsafe {
-            rb_const_set(self.as_rb_value(), id.as_rb_id(), val.as_rb_value());
-            Ruby::get_unchecked().qnil()
+        let handle = Ruby::get_with(self);
+        let id = name.into_id_with(&handle);
+        let val = value.into_value_with(&handle);
+        protect(|| {
+            unsafe { rb_const_set(self.as_rb_value(), id.as_rb_id(), val.as_rb_value()) };
+            handle.qnil()
         })?;
         Ok(())
     }
@@ -374,7 +377,7 @@ pub trait Module: Object + ReprValue + Copy {
         U: TryConvert,
     {
         debug_assert_value!(self);
-        let id = unsafe { name.into_id_unchecked() };
+        let id = name.into_id_with(&Ruby::get_with(self));
         let res =
             unsafe { protect(|| Value::new(rb_const_get(self.as_rb_value(), id.as_rb_id()))) };
         res.and_then(TryConvert::try_convert)
@@ -448,15 +451,18 @@ pub trait Module: Object + ReprValue + Copy {
         M: Method,
     {
         debug_assert_value!(self);
-        let id = unsafe { name.into_id_unchecked() };
-        protect(|| unsafe {
-            rb_define_method_id(
-                self.as_rb_value(),
-                id.as_rb_id(),
-                transmute(func.as_ptr()),
-                M::arity().into(),
-            );
-            Ruby::get_unchecked().qnil()
+        let handle = Ruby::get_with(self);
+        let id = name.into_id_with(&handle);
+        protect(|| {
+            unsafe {
+                rb_define_method_id(
+                    self.as_rb_value(),
+                    id.as_rb_id(),
+                    transmute(func.as_ptr()),
+                    M::arity().into(),
+                )
+            };
+            handle.qnil()
         })?;
         Ok(())
     }
@@ -498,14 +504,16 @@ pub trait Module: Object + ReprValue + Copy {
     {
         debug_assert_value!(self);
         let name = CString::new(name).unwrap();
-        protect(|| unsafe {
-            rb_define_private_method(
-                self.as_rb_value(),
-                name.as_ptr(),
-                transmute(func.as_ptr()),
-                M::arity().into(),
-            );
-            Ruby::get_unchecked().qnil()
+        protect(|| {
+            unsafe {
+                rb_define_private_method(
+                    self.as_rb_value(),
+                    name.as_ptr(),
+                    transmute(func.as_ptr()),
+                    M::arity().into(),
+                )
+            };
+            Ruby::get_with(self).qnil()
         })?;
         Ok(())
     }
@@ -550,14 +558,16 @@ pub trait Module: Object + ReprValue + Copy {
     {
         debug_assert_value!(self);
         let name = CString::new(name).unwrap();
-        protect(|| unsafe {
-            rb_define_protected_method(
-                self.as_rb_value(),
-                name.as_ptr(),
-                transmute(func.as_ptr()),
-                M::arity().into(),
-            );
-            Ruby::get_unchecked().qnil()
+        protect(|| {
+            unsafe {
+                rb_define_protected_method(
+                    self.as_rb_value(),
+                    name.as_ptr(),
+                    transmute(func.as_ptr()),
+                    M::arity().into(),
+                )
+            };
+            Ruby::get_with(self).qnil()
         })?;
         Ok(())
     }
@@ -583,16 +593,19 @@ pub trait Module: Object + ReprValue + Copy {
     where
         T: IntoId,
     {
-        let id = unsafe { name.into_id_unchecked() };
-        protect(|| unsafe {
-            rb_attr(
-                self.as_rb_value(),
-                id.as_rb_id(),
-                rw.is_read() as c_int,
-                rw.is_write() as c_int,
-                0,
-            );
-            Ruby::get_unchecked().qnil()
+        let handle = Ruby::get_with(self);
+        let id = name.into_id_with(&handle);
+        protect(|| {
+            unsafe {
+                rb_attr(
+                    self.as_rb_value(),
+                    id.as_rb_id(),
+                    rw.is_read() as c_int,
+                    rw.is_write() as c_int,
+                    0,
+                )
+            };
+            handle.qnil()
         })?;
         Ok(())
     }
@@ -621,11 +634,12 @@ pub trait Module: Object + ReprValue + Copy {
         T: IntoId,
         U: IntoId,
     {
-        let d_id = unsafe { dst.into_id_unchecked() };
-        let s_id = unsafe { src.into_id_unchecked() };
-        protect(|| unsafe {
-            rb_alias(self.as_rb_value(), d_id.as_rb_id(), s_id.as_rb_id());
-            Ruby::get_unchecked().qnil()
+        let handle = Ruby::get_with(self);
+        let d_id = dst.into_id_with(&handle);
+        let s_id = src.into_id_with(&handle);
+        protect(|| {
+            unsafe { rb_alias(self.as_rb_value(), d_id.as_rb_id(), s_id.as_rb_id()) };
+            handle.qnil()
         })?;
         Ok(())
     }

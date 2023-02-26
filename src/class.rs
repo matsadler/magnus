@@ -303,7 +303,7 @@ impl Class for RClass {
     where
         T: ArgList,
     {
-        let args = args.into_arg_list();
+        let args = args.into_arg_list_with(&Ruby::get_with(self));
         let slice = args.as_ref();
         unsafe {
             protect(|| {

@@ -1064,7 +1064,7 @@ where
     let mut ptr = ptr::null_mut();
     protect(|| unsafe {
         ptr = rb_enc_check(v1.as_rb_value(), v2.as_rb_value());
-        Ruby::get_unchecked().qnil()
+        Ruby::get_with(v1).qnil()
     })?;
     Ok(RbEncoding::new(ptr).unwrap())
 }
@@ -1099,7 +1099,7 @@ where
 {
     protect(|| unsafe {
         rb_enc_copy(dst.as_rb_value(), src.as_rb_value());
-        Ruby::get_unchecked().qnil()
+        Ruby::get_with(dst).qnil()
     })?;
     Ok(())
 }

@@ -752,10 +752,11 @@ pub trait ReprValue: private::ReprValue {
         A: ArgList,
         T: TryConvert,
     {
+        let handle = Ruby::get_with(self);
+        let id = method.into_id_with(&handle);
+        let args = args.into_arg_list_with(&handle);
+        let slice = args.as_ref();
         unsafe {
-            let id = method.into_id_unchecked();
-            let args = args.into_arg_list();
-            let slice = args.as_ref();
             protect(|| {
                 Value::new(rb_funcallv(
                     self.as_rb_value(),
@@ -808,10 +809,11 @@ pub trait ReprValue: private::ReprValue {
         A: ArgList,
         T: TryConvert,
     {
+        let handle = Ruby::get_with(self);
+        let id = method.into_id_with(&handle);
+        let args = args.into_arg_list_with(&handle);
+        let slice = args.as_ref();
         unsafe {
-            let id = method.into_id_unchecked();
-            let args = args.into_arg_list();
-            let slice = args.as_ref();
             protect(|| {
                 Value::new(rb_funcallv_public(
                     self.as_rb_value(),
@@ -849,8 +851,9 @@ pub trait ReprValue: private::ReprValue {
         A: ArgList,
         T: TryConvert,
     {
-        let id = unsafe { method.into_id_unchecked() };
-        let args = args.into_arg_list();
+        let handle = Ruby::get_with(self);
+        let id = method.into_id_with(&handle);
+        let args = args.into_arg_list_with(&handle);
         let slice = args.as_ref();
         unsafe {
             let result = protect(|| {
@@ -893,10 +896,11 @@ pub trait ReprValue: private::ReprValue {
         A: ArgList,
         T: TryConvert,
     {
+        let handle = Ruby::get_with(self);
+        let id = method.into_id_with(&handle);
+        let args = args.into_arg_list_with(&handle);
+        let slice = args.as_ref();
         unsafe {
-            let id = method.into_id_unchecked();
-            let args = args.into_arg_list();
-            let slice = args.as_ref();
             protect(|| {
                 Value::new(rb_funcall_with_block(
                     self.as_rb_value(),
@@ -966,8 +970,9 @@ pub trait ReprValue: private::ReprValue {
                 .as_rb_value()
         }
 
-        let id = unsafe { method.into_id_unchecked() };
-        let args = args.into_arg_list();
+        let handle = Ruby::get_with(self);
+        let id = method.into_id_with(&handle);
+        let args = args.into_arg_list_with(&handle);
         let slice = args.as_ref();
         let call_func =
             call::<R> as unsafe extern "C" fn(VALUE, VALUE, c_int, *const VALUE, VALUE) -> VALUE;
@@ -1012,12 +1017,15 @@ pub trait ReprValue: private::ReprValue {
     where
         M: IntoId,
     {
-        let id = unsafe { method.into_id_unchecked() };
+        let handle = Ruby::get_with(self);
+        let id = method.into_id_with(&handle);
         let mut res = false;
-        protect(|| unsafe {
-            res =
-                rb_obj_respond_to(self.as_rb_value(), id.as_rb_id(), include_private as c_int) != 0;
-            Ruby::get_unchecked().qnil()
+        protect(|| {
+            unsafe {
+                res = rb_obj_respond_to(self.as_rb_value(), id.as_rb_id(), include_private as c_int)
+                    != 0
+            };
+            handle.qnil()
         })?;
         Ok(res)
     }
@@ -1171,12 +1179,13 @@ pub trait ReprValue: private::ReprValue {
         M: IntoSymbol,
         A: ArgList,
     {
-        let args = args.into_arg_list();
+        let handle = Ruby::get_with(self);
+        let args = args.into_arg_list_with(&handle);
         let slice = args.as_ref();
         unsafe {
             Enumerator::from_rb_value_unchecked(rb_enumeratorize_with_size(
                 self.as_rb_value(),
-                method.into_symbol_unchecked().as_rb_value(),
+                method.into_symbol_with(&handle).as_rb_value(),
                 slice.len() as c_int,
                 slice.as_ptr() as *const VALUE,
                 None,
@@ -2239,7 +2248,7 @@ impl IntoValue for StaticSymbol {
 
 impl PartialEq<Id> for StaticSymbol {
     fn eq(&self, other: &Id) -> bool {
-        unsafe { self.into_id_unchecked() == *other }
+        self.into_id_with(&Ruby::get_with(*self)) == *other
     }
 }
 
@@ -2386,7 +2395,7 @@ pub trait IntoId: Sized {
     ///
     #[inline]
     fn into_id(self) -> Id {
-        self.into_id_with(&get_ruby!())
+        self.into_id_with(&Ruby::get().unwrap())
     }
 
     /// Convert `self` into [`Id`].
@@ -2428,7 +2437,7 @@ impl IntoId for StaticSymbol {
 
 impl From<StaticSymbol> for Id {
     fn from(sym: StaticSymbol) -> Self {
-        unsafe { sym.into_id_unchecked() }
+        sym.into_id_with(&Ruby::get_with(sym))
     }
 }
 
@@ -2444,7 +2453,7 @@ impl IntoId for Symbol {
 
 impl From<Symbol> for Id {
     fn from(sym: Symbol) -> Self {
-        unsafe { sym.into_id_unchecked() }
+        sym.into_id_with(&Ruby::get_with(sym))
     }
 }
 
@@ -2456,7 +2465,7 @@ impl PartialEq<OpaqueId> for Id {
 
 impl PartialEq<StaticSymbol> for Id {
     fn eq(&self, other: &StaticSymbol) -> bool {
-        *self == unsafe { other.into_id_unchecked() }
+        *self == other.into_id_with(&Ruby::get_with(*other))
     }
 }
 
@@ -2496,13 +2505,13 @@ impl From<Id> for OpaqueId {
 
 impl From<StaticSymbol> for OpaqueId {
     fn from(sym: StaticSymbol) -> Self {
-        unsafe { sym.into_id_unchecked().into() }
+        sym.into_id_with(&Ruby::get_with(sym)).into()
     }
 }
 
 impl From<Symbol> for OpaqueId {
     fn from(sym: Symbol) -> Self {
-        unsafe { sym.into_id_unchecked().into() }
+        sym.into_id_with(&Ruby::get_with(sym)).into()
     }
 }
 
@@ -2532,7 +2541,7 @@ impl PartialEq<Id> for OpaqueId {
 
 impl PartialEq<StaticSymbol> for OpaqueId {
     fn eq(&self, other: &StaticSymbol) -> bool {
-        *self == unsafe { other.into_id_unchecked() }
+        *self == other.into_id_with(&Ruby::get_with(*other))
     }
 }
 

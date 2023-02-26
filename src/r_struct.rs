@@ -157,7 +157,7 @@ impl RStruct {
         T: IntoValue,
         U: TryConvert,
     {
-        let index = unsafe { index.into_value_unchecked() };
+        let index = Ruby::get_with(self).into_value(index);
         protect(|| unsafe { Value::new(rb_struct_aref(self.as_rb_value(), index.as_rb_value())) })
             .and_then(TryConvert::try_convert)
     }
@@ -170,8 +170,9 @@ impl RStruct {
         T: IntoValue,
         U: IntoValue,
     {
-        let index = unsafe { index.into_value_unchecked() };
-        let val = unsafe { val.into_value_unchecked() };
+        let handle = Ruby::get_with(self);
+        let index = handle.into_value(index);
+        let val = handle.into_value(val);
         unsafe {
             protect(|| {
                 Value::new(rb_struct_aset(
@@ -207,7 +208,7 @@ impl RStruct {
         T: IntoId,
         U: TryConvert,
     {
-        let id = unsafe { id.into_id_unchecked() };
+        let id = id.into_id_with(&Ruby::get_with(self));
         protect(|| unsafe { Value::new(rb_struct_getmember(self.as_rb_value(), id.as_rb_id())) })
             .and_then(TryConvert::try_convert)
     }

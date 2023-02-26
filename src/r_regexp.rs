@@ -116,7 +116,7 @@ impl RRegexp {
     where
         T: IntoRString,
     {
-        let s = unsafe { s.into_r_string_unchecked() };
+        let s = s.into_r_string_with(&Ruby::get_with(self));
         protect(|| unsafe { Value::new(rb_reg_match(self.as_rb_value(), s.as_rb_value())) })
             .and_then(TryConvert::try_convert)
     }

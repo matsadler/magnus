@@ -200,7 +200,7 @@ pub trait IntoSymbol: Sized {
     ///
     #[inline]
     fn into_symbol(self) -> Symbol {
-        self.into_symbol_with(&get_ruby!())
+        self.into_symbol_with(&Ruby::get().unwrap())
     }
 
     /// Convert `self` into [`Symbol`].
@@ -257,7 +257,7 @@ impl IntoSymbol for StaticSymbol {
 
 impl From<StaticSymbol> for Symbol {
     fn from(s: StaticSymbol) -> Self {
-        unsafe { s.into_symbol_unchecked() }
+        s.into_symbol_with(&Ruby::get_with(s))
     }
 }
 

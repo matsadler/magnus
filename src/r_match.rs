@@ -127,11 +127,12 @@ impl RMatch {
     where
         T: IntoRString,
     {
-        let name = name.into_r_string();
+        let handle = Ruby::get_with(self);
+        let name = name.into_r_string_with(&handle);
         let mut n = 0;
         protect(|| unsafe {
             n = rb_reg_backref_number(self.as_rb_value(), name.as_rb_value()) as usize;
-            Ruby::get_unchecked().qnil()
+            handle.qnil()
         })?;
         Ok(n)
     }

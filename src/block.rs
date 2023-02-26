@@ -200,7 +200,7 @@ impl Proc {
         A: RArrayArgList,
         T: TryConvert,
     {
-        let args = args.into_array_arg_list();
+        let args = args.into_array_arg_list_with(&Ruby::get_with(self));
         unsafe {
             protect(|| Value::new(rb_proc_call(self.as_rb_value(), args.as_rb_value())))
                 .and_then(TryConvert::try_convert)
@@ -368,7 +368,7 @@ impl Ruby {
         T: ArgList,
         U: TryConvert,
     {
-        let vals = vals.into_arg_list();
+        let vals = vals.into_arg_list_with(self);
         let slice = vals.as_ref();
         unsafe {
             protect(|| {
@@ -483,6 +483,7 @@ where
     I: Iterator<Item = T>,
     T: IntoValue,
 {
+    let handle = Ruby::get_unchecked();
     let ptr = &mut iter as *mut I;
     forget(iter); // we're going to drop this ourself;
                   // ensure runs the first closure, but yield may raise, so the first
@@ -492,9 +493,9 @@ where
     ensure(
         || {
             for val in &mut *ptr {
-                rb_yield(val.into_value_unchecked().as_rb_value());
+                rb_yield(handle.into_value(val).as_rb_value());
             }
-            Ruby::get_unchecked().qnil()
+            handle.qnil()
         },
         || {
             ptr.drop_in_place();
@@ -508,16 +509,17 @@ where
     I: Iterator<Item = T>,
     T: ArgList,
 {
+    let handle = Ruby::get_unchecked();
     let ptr = &mut iter as *mut I;
     forget(iter);
     ensure(
         || {
             for val in &mut *ptr {
-                let vals = val.into_arg_list();
+                let vals = val.into_arg_list_with(&handle);
                 let slice = vals.as_ref();
                 rb_yield_values2(slice.len() as c_int, slice.as_ptr() as *const VALUE);
             }
-            Ruby::get_unchecked().qnil()
+            handle.qnil()
         },
         || {
             ptr.drop_in_place();

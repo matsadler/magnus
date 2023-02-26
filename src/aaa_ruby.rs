@@ -13,7 +13,7 @@ extern "C" {
     fn ruby_thread_has_gvl_p() -> ::std::os::raw::c_int;
 }
 
-use crate::error::RubyUnavailableError;
+use crate::{error::RubyUnavailableError, value::ReprValue};
 
 #[derive(Clone, Copy)]
 enum RubyGvlState {
@@ -87,6 +87,21 @@ impl Ruby {
     /// If the Ruby API is not useable, returns `Err(RubyUnavailableError)`.
     pub fn get() -> Result<Self, RubyUnavailableError> {
         RubyGvlState::cached().ok(Self(PhantomData))
+    }
+
+    /// Get a handle to Ruby's API.
+    ///
+    /// Returns a new handle to Ruby's API using a Ruby value as proof that the
+    /// current thread is a Ruby thread.
+    ///
+    /// Note that all Ruby values are [`Copy`], so this will not take ownership
+    /// of the passed value.
+    #[allow(unused_variables)]
+    pub fn get_with<T>(value: T) -> Self
+    where
+        T: ReprValue,
+    {
+        Self(PhantomData)
     }
 
     /// Get a handle to Ruby's API.

@@ -64,7 +64,7 @@ pub trait Numeric: ReprValue + Copy {
         ID: IntoId,
         U: TryConvert,
     {
-        let op = unsafe { op.into_id_unchecked() };
+        let op = op.into_id_with(&Ruby::get_with(self));
         protect(|| unsafe {
             Value::new(rb_num_coerce_bin(
                 self.as_rb_value(),
@@ -109,7 +109,7 @@ pub trait Numeric: ReprValue + Copy {
         ID: IntoId,
         U: TryConvert,
     {
-        let op = unsafe { op.into_id_unchecked() };
+        let op = op.into_id_with(&Ruby::get_with(self));
         protect(|| unsafe {
             Value::new(rb_num_coerce_cmp(
                 self.as_rb_value(),
@@ -151,7 +151,7 @@ pub trait Numeric: ReprValue + Copy {
         ID: IntoId,
         U: TryConvert,
     {
-        let op = unsafe { op.into_id_unchecked() };
+        let op = op.into_id_with(&Ruby::get_with(self));
         protect(|| unsafe {
             Value::new(rb_num_coerce_relop(
                 self.as_rb_value(),
@@ -193,7 +193,7 @@ pub trait Numeric: ReprValue + Copy {
         ID: IntoId,
         U: TryConvert,
     {
-        let op = unsafe { op.into_id_unchecked() };
+        let op = op.into_id_with(&Ruby::get_with(self));
         protect(|| unsafe {
             Value::new(rb_num_coerce_bit(
                 self.as_rb_value(),

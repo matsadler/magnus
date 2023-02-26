@@ -135,9 +135,9 @@ impl RBignum {
     pub fn to_i32(self) -> Result<i32, Error> {
         debug_assert_value!(self);
         let mut res = 0;
-        protect(|| unsafe {
-            res = rb_num2long(self.as_rb_value());
-            Ruby::get_unchecked().qnil()
+        protect(|| {
+            unsafe { res = rb_num2long(self.as_rb_value()) };
+            Ruby::get_with(self).qnil()
         })?;
         if res > i32::MAX as c_long {
             return Err(Error::new(
@@ -165,9 +165,9 @@ impl RBignum {
     pub fn to_i64(self) -> Result<i64, Error> {
         debug_assert_value!(self);
         let mut res = 0;
-        protect(|| unsafe {
-            res = rb_num2ll(self.as_rb_value());
-            Ruby::get_unchecked().qnil()
+        protect(|| {
+            unsafe { res = rb_num2ll(self.as_rb_value()) };
+            Ruby::get_with(self).qnil()
         })?;
         Ok(res)
     }
@@ -187,9 +187,9 @@ impl RBignum {
     pub fn to_isize(self) -> Result<isize, Error> {
         debug_assert_value!(self);
         let mut res = 0;
-        protect(|| unsafe {
-            res = rb_num2ll(self.as_rb_value());
-            Ruby::get_unchecked().qnil()
+        protect(|| {
+            unsafe { res = rb_num2ll(self.as_rb_value()) };
+            Ruby::get_with(self).qnil()
         })?;
         if res > isize::MAX as c_longlong {
             return Err(Error::new(
@@ -214,9 +214,9 @@ impl RBignum {
             ));
         }
         let mut res = 0;
-        protect(|| unsafe {
-            res = rb_num2ulong(self.as_rb_value());
-            Ruby::get_unchecked().qnil()
+        protect(|| {
+            unsafe { res = rb_num2ulong(self.as_rb_value()) };
+            Ruby::get_with(self).qnil()
         })?;
         if res > u32::MAX as c_ulong {
             return Err(Error::new(
@@ -248,9 +248,9 @@ impl RBignum {
             ));
         }
         let mut res = 0;
-        protect(|| unsafe {
-            res = rb_num2ull(self.as_rb_value());
-            Ruby::get_unchecked().qnil()
+        protect(|| {
+            unsafe { res = rb_num2ull(self.as_rb_value()) };
+            Ruby::get_with(self).qnil()
         })?;
         Ok(res)
     }
@@ -276,9 +276,9 @@ impl RBignum {
             ));
         }
         let mut res = 0;
-        protect(|| unsafe {
-            res = rb_num2ull(self.as_rb_value());
-            Ruby::get_unchecked().qnil()
+        protect(|| {
+            unsafe { res = rb_num2ull(self.as_rb_value()) };
+            Ruby::get_with(self).qnil()
         })?;
         if res > usize::MAX as c_ulonglong {
             return Err(Error::new(

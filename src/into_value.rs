@@ -20,7 +20,7 @@ pub trait IntoValue: Sized {
     ///
     #[inline]
     fn into_value(self) -> Value {
-        self.into_value_with(&get_ruby!())
+        self.into_value_with(&Ruby::get().unwrap())
     }
 
     /// Convert `self` into [`Value`].
@@ -56,7 +56,7 @@ pub trait ArgList {
     type Output: AsRef<[Value]>;
 
     /// Convert `self` into a type that can be used as a Ruby argument list.
-    fn into_arg_list(self) -> Self::Output;
+    fn into_arg_list_with(self, handle: &Ruby) -> Self::Output;
 }
 
 /// # Safety
@@ -67,7 +67,7 @@ pub trait ArgList {
 impl<'a> ArgList for &'a [Value] {
     type Output = &'a [Value];
 
-    fn into_arg_list(self) -> Self::Output {
+    fn into_arg_list_with(self, _: &Ruby) -> Self::Output {
         self
     }
 }
@@ -75,7 +75,7 @@ impl<'a> ArgList for &'a [Value] {
 impl ArgList for () {
     type Output = [Value; 0];
 
-    fn into_arg_list(self) -> Self::Output {
+    fn into_arg_list_with(self, _: &Ruby) -> Self::Output {
         []
     }
 }
@@ -86,8 +86,8 @@ where
 {
     type Output = [Value; 1];
 
-    fn into_arg_list(self) -> Self::Output {
-        [self.0.into_value()]
+    fn into_arg_list_with(self, handle: &Ruby) -> Self::Output {
+        [handle.into_value(self.0)]
     }
 }
 
@@ -98,8 +98,8 @@ where
 {
     type Output = [Value; 2];
 
-    fn into_arg_list(self) -> Self::Output {
-        [self.0.into_value(), self.1.into_value()]
+    fn into_arg_list_with(self, handle: &Ruby) -> Self::Output {
+        [handle.into_value(self.0), handle.into_value(self.1)]
     }
 }
 
@@ -111,11 +111,11 @@ where
 {
     type Output = [Value; 3];
 
-    fn into_arg_list(self) -> Self::Output {
+    fn into_arg_list_with(self, handle: &Ruby) -> Self::Output {
         [
-            self.0.into_value(),
-            self.1.into_value(),
-            self.2.into_value(),
+            handle.into_value(self.0),
+            handle.into_value(self.1),
+            handle.into_value(self.2),
         ]
     }
 }
@@ -129,12 +129,12 @@ where
 {
     type Output = [Value; 4];
 
-    fn into_arg_list(self) -> Self::Output {
+    fn into_arg_list_with(self, handle: &Ruby) -> Self::Output {
         [
-            self.0.into_value(),
-            self.1.into_value(),
-            self.2.into_value(),
-            self.3.into_value(),
+            handle.into_value(self.0),
+            handle.into_value(self.1),
+            handle.into_value(self.2),
+            handle.into_value(self.3),
         ]
     }
 }
@@ -149,13 +149,13 @@ where
 {
     type Output = [Value; 5];
 
-    fn into_arg_list(self) -> Self::Output {
+    fn into_arg_list_with(self, handle: &Ruby) -> Self::Output {
         [
-            self.0.into_value(),
-            self.1.into_value(),
-            self.2.into_value(),
-            self.3.into_value(),
-            self.4.into_value(),
+            handle.into_value(self.0),
+            handle.into_value(self.1),
+            handle.into_value(self.2),
+            handle.into_value(self.3),
+            handle.into_value(self.4),
         ]
     }
 }
@@ -171,14 +171,14 @@ where
 {
     type Output = [Value; 6];
 
-    fn into_arg_list(self) -> Self::Output {
+    fn into_arg_list_with(self, handle: &Ruby) -> Self::Output {
         [
-            self.0.into_value(),
-            self.1.into_value(),
-            self.2.into_value(),
-            self.3.into_value(),
-            self.4.into_value(),
-            self.5.into_value(),
+            handle.into_value(self.0),
+            handle.into_value(self.1),
+            handle.into_value(self.2),
+            handle.into_value(self.3),
+            handle.into_value(self.4),
+            handle.into_value(self.5),
         ]
     }
 }
@@ -195,15 +195,15 @@ where
 {
     type Output = [Value; 7];
 
-    fn into_arg_list(self) -> Self::Output {
+    fn into_arg_list_with(self, handle: &Ruby) -> Self::Output {
         [
-            self.0.into_value(),
-            self.1.into_value(),
-            self.2.into_value(),
-            self.3.into_value(),
-            self.4.into_value(),
-            self.5.into_value(),
-            self.6.into_value(),
+            handle.into_value(self.0),
+            handle.into_value(self.1),
+            handle.into_value(self.2),
+            handle.into_value(self.3),
+            handle.into_value(self.4),
+            handle.into_value(self.5),
+            handle.into_value(self.6),
         ]
     }
 }
@@ -221,16 +221,16 @@ where
 {
     type Output = [Value; 8];
 
-    fn into_arg_list(self) -> Self::Output {
+    fn into_arg_list_with(self, handle: &Ruby) -> Self::Output {
         [
-            self.0.into_value(),
-            self.1.into_value(),
-            self.2.into_value(),
-            self.3.into_value(),
-            self.4.into_value(),
-            self.5.into_value(),
-            self.6.into_value(),
-            self.7.into_value(),
+            handle.into_value(self.0),
+            handle.into_value(self.1),
+            handle.into_value(self.2),
+            handle.into_value(self.3),
+            handle.into_value(self.4),
+            handle.into_value(self.5),
+            handle.into_value(self.6),
+            handle.into_value(self.7),
         ]
     }
 }
@@ -249,17 +249,17 @@ where
 {
     type Output = [Value; 9];
 
-    fn into_arg_list(self) -> Self::Output {
+    fn into_arg_list_with(self, handle: &Ruby) -> Self::Output {
         [
-            self.0.into_value(),
-            self.1.into_value(),
-            self.2.into_value(),
-            self.3.into_value(),
-            self.4.into_value(),
-            self.5.into_value(),
-            self.6.into_value(),
-            self.7.into_value(),
-            self.8.into_value(),
+            handle.into_value(self.0),
+            handle.into_value(self.1),
+            handle.into_value(self.2),
+            handle.into_value(self.3),
+            handle.into_value(self.4),
+            handle.into_value(self.5),
+            handle.into_value(self.6),
+            handle.into_value(self.7),
+            handle.into_value(self.8),
         ]
     }
 }
@@ -279,18 +279,18 @@ where
 {
     type Output = [Value; 10];
 
-    fn into_arg_list(self) -> Self::Output {
+    fn into_arg_list_with(self, handle: &Ruby) -> Self::Output {
         [
-            self.0.into_value(),
-            self.1.into_value(),
-            self.2.into_value(),
-            self.3.into_value(),
-            self.4.into_value(),
-            self.5.into_value(),
-            self.6.into_value(),
-            self.7.into_value(),
-            self.8.into_value(),
-            self.9.into_value(),
+            handle.into_value(self.0),
+            handle.into_value(self.1),
+            handle.into_value(self.2),
+            handle.into_value(self.3),
+            handle.into_value(self.4),
+            handle.into_value(self.5),
+            handle.into_value(self.6),
+            handle.into_value(self.7),
+            handle.into_value(self.8),
+            handle.into_value(self.9),
         ]
     }
 }
@@ -311,19 +311,19 @@ where
 {
     type Output = [Value; 11];
 
-    fn into_arg_list(self) -> Self::Output {
+    fn into_arg_list_with(self, handle: &Ruby) -> Self::Output {
         [
-            self.0.into_value(),
-            self.1.into_value(),
-            self.2.into_value(),
-            self.3.into_value(),
-            self.4.into_value(),
-            self.5.into_value(),
-            self.6.into_value(),
-            self.7.into_value(),
-            self.8.into_value(),
-            self.9.into_value(),
-            self.10.into_value(),
+            handle.into_value(self.0),
+            handle.into_value(self.1),
+            handle.into_value(self.2),
+            handle.into_value(self.3),
+            handle.into_value(self.4),
+            handle.into_value(self.5),
+            handle.into_value(self.6),
+            handle.into_value(self.7),
+            handle.into_value(self.8),
+            handle.into_value(self.9),
+            handle.into_value(self.10),
         ]
     }
 }
@@ -345,20 +345,20 @@ where
 {
     type Output = [Value; 12];
 
-    fn into_arg_list(self) -> Self::Output {
+    fn into_arg_list_with(self, handle: &Ruby) -> Self::Output {
         [
-            self.0.into_value(),
-            self.1.into_value(),
-            self.2.into_value(),
-            self.3.into_value(),
-            self.4.into_value(),
-            self.5.into_value(),
-            self.6.into_value(),
-            self.7.into_value(),
-            self.8.into_value(),
-            self.9.into_value(),
-            self.10.into_value(),
-            self.11.into_value(),
+            handle.into_value(self.0),
+            handle.into_value(self.1),
+            handle.into_value(self.2),
+            handle.into_value(self.3),
+            handle.into_value(self.4),
+            handle.into_value(self.5),
+            handle.into_value(self.6),
+            handle.into_value(self.7),
+            handle.into_value(self.8),
+            handle.into_value(self.9),
+            handle.into_value(self.10),
+            handle.into_value(self.11),
         ]
     }
 }
@@ -366,17 +366,17 @@ where
 impl<const N: usize> ArgList for [Value; N] {
     type Output = [Value; N];
 
-    fn into_arg_list(self) -> Self::Output {
+    fn into_arg_list_with(self, _: &Ruby) -> Self::Output {
         self
     }
 }
 
 pub trait RArrayArgList {
-    fn into_array_arg_list(self) -> RArray;
+    fn into_array_arg_list_with(self, handle: &Ruby) -> RArray;
 }
 
 impl RArrayArgList for RArray {
-    fn into_array_arg_list(self) -> RArray {
+    fn into_array_arg_list_with(self, _: &Ruby) -> RArray {
         self
     }
 }
@@ -385,7 +385,7 @@ impl<T> RArrayArgList for T
 where
     T: ArgList,
 {
-    fn into_array_arg_list(self) -> RArray {
-        RArray::from_slice(self.into_arg_list().as_ref())
+    fn into_array_arg_list_with(self, handle: &Ruby) -> RArray {
+        RArray::from_slice(self.into_arg_list_with(handle).as_ref())
     }
 }

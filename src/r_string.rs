@@ -621,7 +621,7 @@ impl RString {
                 self.as_rb_value(),
                 replacement
                     .map(|r| r.as_rb_value())
-                    .unwrap_or_else(|| Ruby::get_unchecked().qnil().as_rb_value()),
+                    .unwrap_or_else(|| Ruby::get_with(self).qnil().as_rb_value()),
             ))
         })?;
         if val.is_nil() {
@@ -1129,9 +1129,9 @@ impl RString {
     /// assert_eq!(a.to_string().unwrap(), "bar");
     /// ```
     pub fn replace(self, other: Self) -> Result<(), Error> {
-        protect(|| unsafe {
-            rb_str_replace(self.as_rb_value(), other.as_rb_value());
-            Ruby::get_unchecked().qnil()
+        protect(|| {
+            unsafe { rb_str_replace(self.as_rb_value(), other.as_rb_value()) };
+            Ruby::get_with(self).qnil()
         })?;
         Ok(())
     }
@@ -1159,9 +1159,9 @@ impl RString {
     /// assert_eq!(a.to_string().unwrap(), "bar");
     /// ```
     pub fn shared_replace(self, other: Self) -> Result<(), Error> {
-        protect(|| unsafe {
-            rb_str_shared_replace(self.as_rb_value(), other.as_rb_value());
-            Ruby::get_unchecked().qnil()
+        protect(|| {
+            unsafe { rb_str_shared_replace(self.as_rb_value(), other.as_rb_value()) };
+            Ruby::get_with(self).qnil()
         })?;
         Ok(())
     }
@@ -1193,14 +1193,16 @@ impl RString {
     /// assert_eq!(s.to_string().unwrap(), "crab");
     /// ```
     pub fn update(self, beg: isize, len: usize, other: Self) -> Result<(), Error> {
-        protect(|| unsafe {
-            rb_str_update(
-                self.as_rb_value(),
-                beg as c_long,
-                len as c_long,
-                other.as_rb_value(),
-            );
-            Ruby::get_unchecked().qnil()
+        protect(|| {
+            unsafe {
+                rb_str_update(
+                    self.as_rb_value(),
+                    beg as c_long,
+                    len as c_long,
+                    other.as_rb_value(),
+                )
+            };
+            Ruby::get_with(self).qnil()
         })?;
         Ok(())
     }
@@ -1236,10 +1238,11 @@ impl RString {
     /// assert_eq!(RString::new("foo").times(3).to_string().unwrap(), "foofoofoo");
     /// ```
     pub fn times(self, num: usize) -> Self {
+        let num = Ruby::get_with(self).into_value(num);
         unsafe {
             Self::from_rb_value_unchecked(rb_str_times(
                 self.as_rb_value(),
-                num.into_value_unchecked().as_rb_value(),
+                num.as_rb_value(),
             ))
         }
     }
@@ -1257,9 +1260,9 @@ impl RString {
     /// assert_eq!(s.to_string().unwrap(), "bar");
     /// ```
     pub fn drop_bytes(self, len: usize) -> Result<(), Error> {
-        protect(|| unsafe {
-            rb_str_drop_bytes(self.as_rb_value(), len as c_long);
-            Ruby::get_unchecked().qnil()
+        protect(|| {
+            unsafe { rb_str_drop_bytes(self.as_rb_value(), len as c_long) };
+            Ruby::get_with(self).qnil()
         })?;
         Ok(())
     }
@@ -1469,7 +1472,7 @@ pub trait IntoRString: Sized {
     ///
     #[inline]
     fn into_r_string(self) -> RString {
-        self.into_r_string_with(&get_ruby!())
+        self.into_r_string_with(&Ruby::get().unwrap())
     }
 
     /// Convert `self` into [`RString`].

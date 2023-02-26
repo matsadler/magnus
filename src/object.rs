@@ -27,14 +27,16 @@ pub trait Object: ReprValue + Copy {
     {
         debug_assert_value!(self);
         let name = CString::new(name).unwrap();
-        protect(|| unsafe {
-            rb_define_singleton_method(
-                self.as_rb_value(),
-                name.as_ptr(),
-                transmute(func.as_ptr()),
-                M::arity().into(),
-            );
-            Ruby::get_unchecked().qnil()
+        protect(|| {
+            unsafe {
+                rb_define_singleton_method(
+                    self.as_rb_value(),
+                    name.as_ptr(),
+                    transmute(func.as_ptr()),
+                    M::arity().into(),
+                )
+            };
+            Ruby::get_with(self).qnil()
         })?;
         Ok(())
     }
@@ -48,7 +50,7 @@ pub trait Object: ReprValue + Copy {
         U: TryConvert,
     {
         debug_assert_value!(self);
-        let id = unsafe { name.into_id_unchecked() };
+        let id = name.into_id_with(&Ruby::get_with(self));
         let res = unsafe { protect(|| Value::new(rb_ivar_get(self.as_rb_value(), id.as_rb_id()))) };
         res.and_then(TryConvert::try_convert)
     }
@@ -62,8 +64,9 @@ pub trait Object: ReprValue + Copy {
         U: IntoValue,
     {
         debug_assert_value!(self);
-        let id = unsafe { name.into_id_unchecked() };
-        let value = unsafe { value.into_value_unchecked() };
+        let handle = Ruby::get_with(self);
+        let id = name.into_id_with(&handle);
+        let value = value.into_value_with(&handle);
         unsafe {
             protect(|| {
                 Value::new(rb_ivar_set(
@@ -114,9 +117,9 @@ pub trait Object: ReprValue + Copy {
     /// assert_eq!(obj.funcall::<_, _, i64>("example", ()).unwrap(), 42);
     /// ```
     fn extend_object(self, module: RModule) -> Result<(), Error> {
-        protect(|| unsafe {
-            rb_extend_object(self.as_rb_value(), module.as_rb_value());
-            Ruby::get_unchecked().qnil()
+        protect(|| {
+            unsafe { rb_extend_object(self.as_rb_value(), module.as_rb_value()) };
+            Ruby::get_with(self).qnil()
         })?;
         Ok(())
     }

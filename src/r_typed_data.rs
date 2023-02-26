@@ -134,7 +134,7 @@ impl RTypedData {
                 T::data_type().as_rb_data_type() as *const _,
             ) as *const T)
                 .as_ref();
-            Ruby::get_unchecked().qnil()
+            Ruby::get_with(self).qnil()
         });
         res.ok_or_else(|| {
             Error::new(

@@ -88,12 +88,12 @@ impl Binding {
     /// let binding = eval::<Binding>("binding").unwrap();
     /// assert_eq!(binding.eval::<_, i64>("1 + 2").unwrap(), 3);
     /// ```
-    pub fn eval<T, U>(&self, s: T) -> Result<U, Error>
+    pub fn eval<T, U>(self, s: T) -> Result<U, Error>
     where
         T: IntoRString,
         U: TryConvert,
     {
-        self.funcall("eval", (unsafe { s.into_r_string_unchecked() },))
+        self.funcall("eval", (s.into_r_string_with(&Ruby::get_with(self)),))
     }
 
     /// Get the named local variable from the binding.
@@ -113,14 +113,14 @@ impl Binding {
     /// assert_eq!(binding.local_variable_get::<_, i64>("a").unwrap(), 1);
     /// assert!(binding.local_variable_get::<_, Value>("b").is_err());
     /// ```
-    pub fn local_variable_get<N, T>(&self, name: N) -> Result<T, Error>
+    pub fn local_variable_get<N, T>(self, name: N) -> Result<T, Error>
     where
         N: IntoSymbol,
         T: TryConvert,
     {
         self.funcall(
             "local_variable_get",
-            (unsafe { name.into_symbol_unchecked() },),
+            (name.into_symbol_with(&Ruby::get_with(self)),),
         )
     }
 
@@ -136,14 +136,14 @@ impl Binding {
     /// binding.local_variable_set("a", 1);
     /// assert_eq!(binding.local_variable_get::<_, i64>("a").unwrap(), 1);
     /// ```
-    pub fn local_variable_set<N, T>(&self, name: N, val: T)
+    pub fn local_variable_set<N, T>(self, name: N, val: T)
     where
         N: IntoSymbol,
         T: IntoValue,
     {
         self.funcall::<_, _, Value>(
             "local_variable_set",
-            (unsafe { name.into_symbol_unchecked() }, val),
+            (name.into_symbol_with(&Ruby::get_with(self)), val),
         )
         .unwrap();
     }

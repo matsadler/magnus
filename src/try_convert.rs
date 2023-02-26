@@ -151,9 +151,9 @@ impl TryConvert for f64 {
         }
         debug_assert_value!(val);
         let mut res = 0.0;
-        protect(|| unsafe {
-            res = rb_num2dbl(val.as_rb_value());
-            Ruby::get_unchecked().qnil()
+        protect(|| {
+            unsafe { res = rb_num2dbl(val.as_rb_value()) };
+            Ruby::get_with(val).qnil()
         })?;
         Ok(res)
     }

@@ -2029,7 +2029,7 @@ impl Ruby {
         T: TryConvert,
     {
         unsafe {
-            let args = args.into_arg_list();
+            let args = args.into_arg_list_with(self);
             let slice = args.as_ref();
             protect(|| {
                 Value::new(rb_call_super(

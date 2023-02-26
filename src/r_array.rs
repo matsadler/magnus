@@ -291,13 +291,8 @@ impl RArray {
     where
         T: IntoValue,
     {
-        unsafe {
-            Value::new(rb_ary_includes(
-                self.as_rb_value(),
-                val.into_value_unchecked().as_rb_value(),
-            ))
-            .to_bool()
-        }
+        let val = Ruby::get_with(self).into_value(val);
+        unsafe { Value::new(rb_ary_includes(self.as_rb_value(), val.as_rb_value())).to_bool() }
     }
 
     /// Concatenate elements from the slice `s` to `self`.
@@ -436,12 +431,8 @@ impl RArray {
     where
         T: IntoValue,
     {
-        protect(|| unsafe {
-            Value::new(rb_ary_push(
-                self.as_rb_value(),
-                item.into_value_unchecked().as_rb_value(),
-            ))
-        })?;
+        let item = Ruby::get_with(self).into_value(item);
+        protect(|| unsafe { Value::new(rb_ary_push(self.as_rb_value(), item.as_rb_value())) })?;
         Ok(())
     }
 
@@ -501,12 +492,8 @@ impl RArray {
     where
         T: IntoValue,
     {
-        protect(|| unsafe {
-            Value::new(rb_ary_unshift(
-                self.as_rb_value(),
-                item.into_value_unchecked().as_rb_value(),
-            ))
-        })?;
+        let item = Ruby::get_with(self).into_value(item);
+        protect(|| unsafe { Value::new(rb_ary_unshift(self.as_rb_value(), item.as_rb_value())) })?;
         Ok(())
     }
 
@@ -564,12 +551,8 @@ impl RArray {
     where
         T: IntoValue,
     {
-        protect(|| unsafe {
-            Value::new(rb_ary_delete(
-                self.as_rb_value(),
-                item.into_value_unchecked().as_rb_value(),
-            ))
-        })?;
+        let item = Ruby::get_with(self).into_value(item);
+        protect(|| unsafe { Value::new(rb_ary_delete(self.as_rb_value(), item.as_rb_value())) })?;
         Ok(())
     }
 
@@ -910,11 +893,9 @@ impl RArray {
     where
         T: IntoRString,
     {
+        let sep = sep.into_r_string_with(&Ruby::get_with(self));
         protect(|| unsafe {
-            RString::from_rb_value_unchecked(rb_ary_join(
-                self.as_rb_value(),
-                sep.into_r_string_unchecked().as_rb_value(),
-            ))
+            RString::from_rb_value_unchecked(rb_ary_join(self.as_rb_value(), sep.as_rb_value()))
         })
     }
 
@@ -979,13 +960,11 @@ impl RArray {
     where
         T: IntoValue,
     {
-        protect(|| unsafe {
-            rb_ary_store(
-                self.as_rb_value(),
-                offset as c_long,
-                val.into_value_unchecked().as_rb_value(),
-            );
-            Ruby::get_unchecked().qnil()
+        let handle = Ruby::get_with(self);
+        let val = handle.into_value(val);
+        protect(|| {
+            unsafe { rb_ary_store(self.as_rb_value(), offset as c_long, val.as_rb_value()) };
+            handle.qnil()
         })?;
         Ok(())
     }
@@ -1123,13 +1102,9 @@ impl RArray {
         K: IntoValue,
         T: TryConvert,
     {
-        protect(|| unsafe {
-            Value::new(rb_ary_assoc(
-                self.as_rb_value(),
-                key.into_value_unchecked().as_rb_value(),
-            ))
-        })
-        .and_then(TryConvert::try_convert)
+        let key = Ruby::get_with(self).into_value(key);
+        protect(|| unsafe { Value::new(rb_ary_assoc(self.as_rb_value(), key.as_rb_value())) })
+            .and_then(TryConvert::try_convert)
     }
 
     /// Search `self` as an 'associative array' for `value`.
@@ -1153,13 +1128,9 @@ impl RArray {
         K: IntoValue,
         T: TryConvert,
     {
-        protect(|| unsafe {
-            Value::new(rb_ary_rassoc(
-                self.as_rb_value(),
-                value.into_value_unchecked().as_rb_value(),
-            ))
-        })
-        .and_then(TryConvert::try_convert)
+        let value = Ruby::get_with(self).into_value(value);
+        protect(|| unsafe { Value::new(rb_ary_rassoc(self.as_rb_value(), value.as_rb_value())) })
+            .and_then(TryConvert::try_convert)
     }
 
     /// Recursively compares elements of the two arrays using Ruby's `<=>`.

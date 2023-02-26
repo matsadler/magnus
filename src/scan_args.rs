@@ -41,7 +41,6 @@ use crate::{
     block::Proc,
     error::{protect, Error},
     exception,
-    into_value::IntoValue,
     r_array::RArray,
     r_hash::RHash,
     try_convert::{TryConvert, TryConvertOwned},
@@ -2117,16 +2116,17 @@ where
 {
     assert_eq!(required.len(), Req::LEN);
     assert_eq!(optional.len(), Opt::LEN);
+    let handle = Ruby::get_with(kw);
 
     let ids = required
         .iter()
         .copied()
-        .map(|id| unsafe { id.into_id_unchecked() })
+        .map(|id| id.into_id_with(&handle))
         .chain(
             optional
                 .iter()
                 .copied()
-                .map(|id| unsafe { id.into_id_unchecked() }),
+                .map(|id| id.into_id_with(&handle)),
         )
         .collect::<Vec<Id>>();
     let optional_len = if Splat::REQ {
@@ -2155,7 +2155,7 @@ where
     Ok(KwArgs {
         required: Req::from_slice(&out[..Req::LEN])?,
         optional: Opt::from_slice(&out[Req::LEN..opt_end])?,
-        splat: Splat::from_opt(Splat::REQ.then(|| unsafe { kw.into_value_unchecked() }))?,
+        splat: Splat::from_opt(Splat::REQ.then(|| handle.into_value(kw)))?,
     })
 }
 

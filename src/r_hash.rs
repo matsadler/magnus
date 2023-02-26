@@ -200,8 +200,9 @@ impl RHash {
         K: IntoValue,
         V: IntoValue,
     {
-        let key = unsafe { key.into_value_unchecked() };
-        let val = unsafe { val.into_value_unchecked() };
+        let handle = Ruby::get_with(self);
+        let key = handle.into_value(key);
+        let val = handle.into_value(val);
         unsafe {
             protect(|| {
                 Value::new(rb_hash_aset(
@@ -234,9 +235,9 @@ impl RHash {
         T: ReprValue,
     {
         let ptr = slice.as_ptr() as *const VALUE;
-        protect(|| unsafe {
-            rb_hash_bulk_insert(slice.len() as c_long, ptr, self.as_rb_value());
-            Ruby::get_unchecked().qnil()
+        protect(|| {
+            unsafe { rb_hash_bulk_insert(slice.len() as c_long, ptr, self.as_rb_value()) };
+            Ruby::get_with(self).qnil()
         })?;
         Ok(())
     }
@@ -267,9 +268,9 @@ impl RHash {
     // Unfortunately there's no way to wrap this in a easy to use and safe Rust
     // api, so it has been omitted.
     pub fn update(self, other: RHash) -> Result<(), Error> {
-        protect(|| unsafe {
-            rb_hash_update_by(self.as_rb_value(), other.as_rb_value(), None);
-            Ruby::get_unchecked().qnil()
+        protect(|| {
+            unsafe { rb_hash_update_by(self.as_rb_value(), other.as_rb_value(), None) };
+            Ruby::get_with(self).qnil()
         })?;
         Ok(())
     }
@@ -312,7 +313,7 @@ impl RHash {
         T: IntoValue,
         U: TryConvert,
     {
-        let key = unsafe { key.into_value_unchecked() };
+        let key = Ruby::get_with(self).into_value(key);
         protect(|| unsafe { Value::new(rb_hash_aref(self.as_rb_value(), key.as_rb_value())) })
             .and_then(TryConvert::try_convert)
     }
@@ -343,7 +344,7 @@ impl RHash {
         T: IntoValue,
         U: TryConvert,
     {
-        let key = unsafe { key.into_value_unchecked() };
+        let key = Ruby::get_with(self).into_value(key);
         protect(|| unsafe { Value::new(rb_hash_lookup(self.as_rb_value(), key.as_rb_value())) })
             .and_then(TryConvert::try_convert)
     }
@@ -372,7 +373,7 @@ impl RHash {
     where
         T: IntoValue,
     {
-        let key = unsafe { key.into_value_unchecked() };
+        let key = Ruby::get_with(self).into_value(key);
         protect(|| unsafe {
             Value::new(rb_hash_lookup2(
                 self.as_rb_value(),
@@ -410,7 +411,7 @@ impl RHash {
         T: IntoValue,
         U: TryConvert,
     {
-        let key = unsafe { key.into_value_unchecked() };
+        let key = Ruby::get_with(self).into_value(key);
         protect(|| unsafe { Value::new(rb_hash_fetch(self.as_rb_value(), key.as_rb_value())) })
             .and_then(TryConvert::try_convert)
     }
@@ -435,7 +436,7 @@ impl RHash {
         T: IntoValue,
         U: TryConvert,
     {
-        let key = unsafe { key.into_value_unchecked() };
+        let key = Ruby::get_with(self).into_value(key);
         protect(|| unsafe { Value::new(rb_hash_delete(self.as_rb_value(), key.as_rb_value())) })
             .and_then(TryConvert::try_convert)
     }
@@ -511,7 +512,7 @@ impl RHash {
                 #[cfg(ruby_lt_2_7)]
                 let fptr: unsafe extern "C" fn() -> c_int = std::mem::transmute(fptr);
                 rb_hash_foreach(self.as_rb_value(), Some(fptr), arg);
-                Ruby::get_unchecked().qnil()
+                Ruby::get_with(self).qnil()
             })?;
         }
         Ok(())
