@@ -7,7 +7,6 @@ use rb_sys::{rb_num_coerce_bin, rb_num_coerce_bit, rb_num_coerce_cmp, rb_num_coe
 use crate::{
     class,
     error::{protect, Error},
-    exception,
     into_value::IntoValue,
     try_convert::TryConvert,
     value::{
@@ -267,7 +266,7 @@ impl TryConvert for NumericValue {
             .then(|| unsafe { Self::from_rb_value_unchecked(val.as_rb_value()) })
             .ok_or_else(|| {
                 Error::new(
-                    exception::type_error(),
+                    Ruby::get_with(val).exception_type_error(),
                     format!("no implicit conversion of {} into Numeric", unsafe {
                         val.classname()
                     },),

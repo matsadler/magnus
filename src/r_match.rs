@@ -7,7 +7,6 @@ use rb_sys::{
 
 use crate::{
     error::{protect, Error},
-    exception,
     into_value::IntoValue,
     object::Object,
     r_string::{IntoRString, RString},
@@ -241,7 +240,7 @@ impl TryConvert for RMatch {
     fn try_convert(val: Value) -> Result<Self, Error> {
         Self::from_value(val).ok_or_else(|| {
             Error::new(
-                exception::type_error(),
+                Ruby::get_with(val).exception_type_error(),
                 format!("no implicit conversion of {} into MatchData", unsafe {
                     val.classname()
                 },),

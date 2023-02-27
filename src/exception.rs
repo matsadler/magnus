@@ -19,7 +19,6 @@ use rb_sys::{
 use crate::{
     class::{Class, RClass},
     error::Error,
-    exception,
     into_value::{ArgList, IntoValue},
     module::Module,
     object::Object,
@@ -113,7 +112,7 @@ impl TryConvert for Exception {
             }
         }
         Err(Error::new(
-            exception::type_error(),
+            Ruby::get_with(val).exception_type_error(),
             format!("no implicit conversion of {} into Exception", unsafe {
                 val.classname()
             },),
@@ -201,7 +200,7 @@ impl TryConvert for ExceptionClass {
     fn try_convert(val: Value) -> Result<Self, Error> {
         Self::from_value(val).ok_or_else(|| {
             Error::new(
-                exception::type_error(),
+                Ruby::get_with(val).exception_type_error(),
                 format!(
                     "no implicit conversion of {} into Class inheriting Exception",
                     unsafe { val.classname() },

@@ -5,7 +5,6 @@ use rb_sys::VALUE;
 use crate::{
     class,
     error::Error,
-    exception,
     into_value::IntoValue,
     object::Object,
     try_convert::TryConvert,
@@ -46,7 +45,7 @@ impl Iterator for Enumerator {
     fn next(&mut self) -> Option<Self::Item> {
         match self.funcall("next", ()) {
             Ok(v) => Some(Ok(v)),
-            Err(e) if e.is_kind_of(exception::stop_iteration()) => None,
+            Err(e) if e.is_kind_of(Ruby::get_with(*self).exception_stop_iteration()) => None,
             Err(e) => Some(Err(e)),
         }
     }
@@ -80,7 +79,7 @@ impl TryConvert for Enumerator {
     fn try_convert(val: Value) -> Result<Self, Error> {
         Self::from_value(val).ok_or_else(|| {
             Error::new(
-                exception::type_error(),
+                Ruby::get_with(val).exception_type_error(),
                 format!("no implicit conversion of {} into Enumerator", unsafe {
                     val.classname()
                 },),

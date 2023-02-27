@@ -10,7 +10,6 @@ use rb_sys::{
 
 use crate::{
     error::{protect, Error},
-    exception,
     integer::{Integer, IntegerType},
     into_value::IntoValue,
     numeric::Numeric,
@@ -134,14 +133,15 @@ impl RBignum {
     #[doc(hidden)]
     pub fn to_i32(self) -> Result<i32, Error> {
         debug_assert_value!(self);
+        let handle = Ruby::get_with(self);
         let mut res = 0;
         protect(|| {
             unsafe { res = rb_num2long(self.as_rb_value()) };
-            Ruby::get_with(self).qnil()
+            handle.qnil()
         })?;
         if res > i32::MAX as c_long {
             return Err(Error::new(
-                exception::range_error(),
+                handle.exception_range_error(),
                 "bignum too big to convert into `i32`",
             ));
         }
@@ -186,14 +186,15 @@ impl RBignum {
     /// ```
     pub fn to_isize(self) -> Result<isize, Error> {
         debug_assert_value!(self);
+        let handle = Ruby::get_with(self);
         let mut res = 0;
         protect(|| {
             unsafe { res = rb_num2ll(self.as_rb_value()) };
-            Ruby::get_with(self).qnil()
+            handle.qnil()
         })?;
         if res > isize::MAX as c_longlong {
             return Err(Error::new(
-                exception::range_error(),
+                handle.exception_range_error(),
                 "bignum too big to convert into `isize`",
             ));
         }
@@ -207,20 +208,21 @@ impl RBignum {
     #[doc(hidden)]
     pub fn to_u32(self) -> Result<u32, Error> {
         debug_assert_value!(self);
+        let handle = Ruby::get_with(self);
         if self.is_negative() {
             return Err(Error::new(
-                exception::range_error(),
+                handle.exception_range_error(),
                 "can't convert negative integer to unsigned",
             ));
         }
         let mut res = 0;
         protect(|| {
             unsafe { res = rb_num2ulong(self.as_rb_value()) };
-            Ruby::get_with(self).qnil()
+            handle.qnil()
         })?;
         if res > u32::MAX as c_ulong {
             return Err(Error::new(
-                exception::range_error(),
+                handle.exception_range_error(),
                 "bignum too big to convert into `u32`",
             ));
         }
@@ -241,16 +243,17 @@ impl RBignum {
     /// ```
     pub fn to_u64(self) -> Result<u64, Error> {
         debug_assert_value!(self);
+        let handle = Ruby::get_with(self);
         if self.is_negative() {
             return Err(Error::new(
-                exception::range_error(),
+                handle.exception_range_error(),
                 "can't convert negative integer to unsigned",
             ));
         }
         let mut res = 0;
         protect(|| {
             unsafe { res = rb_num2ull(self.as_rb_value()) };
-            Ruby::get_with(self).qnil()
+            handle.qnil()
         })?;
         Ok(res)
     }
@@ -269,20 +272,21 @@ impl RBignum {
     /// ```
     pub fn to_usize(self) -> Result<usize, Error> {
         debug_assert_value!(self);
+        let handle = Ruby::get_with(self);
         if self.is_negative() {
             return Err(Error::new(
-                exception::range_error(),
+                handle.exception_range_error(),
                 "can't convert negative integer to unsigned",
             ));
         }
         let mut res = 0;
         protect(|| {
             unsafe { res = rb_num2ull(self.as_rb_value()) };
-            Ruby::get_with(self).qnil()
+            handle.qnil()
         })?;
         if res > usize::MAX as c_ulonglong {
             return Err(Error::new(
-                exception::range_error(),
+                handle.exception_range_error(),
                 "bignum too big to convert into `usize`",
             ));
         }
@@ -362,7 +366,7 @@ impl TryConvert for RBignum {
     fn try_convert(val: Value) -> Result<Self, Error> {
         match Integer::try_convert(val)?.integer_type() {
             IntegerType::Fixnum(_) => Err(Error::new(
-                exception::range_error(),
+                Ruby::get_with(val).exception_range_error(),
                 "integer to small for bignum",
             )),
             IntegerType::Bignum(big) => Ok(big),

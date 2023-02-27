@@ -3,7 +3,6 @@ use std::fmt;
 use rb_sys::{rb_float_new_in_heap, VALUE};
 
 use crate::{
-    exception,
     into_value::IntoValue,
     numeric::Numeric,
     try_convert::TryConvertOwned,
@@ -147,7 +146,7 @@ impl TryConvert for Flonum {
             Ok(flonum)
         } else {
             Err(Error::new(
-                exception::range_error(),
+                Ruby::get_with(val).exception_range_error(),
                 "float out of range for flonum",
             ))
         }

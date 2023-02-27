@@ -40,7 +40,6 @@ use rb_sys::{rb_error_arity, rb_get_kwargs, rb_scan_args, ID, VALUE};
 use crate::{
     block::Proc,
     error::{protect, Error},
-    exception,
     r_array::RArray,
     r_hash::RHash,
     try_convert::{TryConvert, TryConvertOwned},
@@ -1061,7 +1060,10 @@ mod private {
         fn from_opt(val: Option<Value>) -> Result<Self, Error> {
             let val = val.expect("expected block");
             if val.is_nil() {
-                return Err(Error::new(exception::arg_error(), "no block given"));
+                return Err(Error::new(
+                    unsafe { Ruby::get_unchecked().exception_arg_error() },
+                    "no block given",
+                ));
             }
             TryConvert::try_convert(val)
         }
@@ -2122,12 +2124,7 @@ where
         .iter()
         .copied()
         .map(|id| id.into_id_with(&handle))
-        .chain(
-            optional
-                .iter()
-                .copied()
-                .map(|id| id.into_id_with(&handle)),
-        )
+        .chain(optional.iter().copied().map(|id| id.into_id_with(&handle)))
         .collect::<Vec<Id>>();
     let optional_len = if Splat::REQ {
         -(optional.len() as i8 + 1)

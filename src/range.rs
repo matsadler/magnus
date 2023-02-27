@@ -11,7 +11,6 @@ use rb_sys::{rb_range_beg_len, rb_range_new};
 use crate::{
     class,
     error::{protect, Error},
-    exception,
     into_value::{IntoValue, IntoValueFromNative},
     object::Object,
     r_struct::RStruct,
@@ -370,7 +369,7 @@ impl TryConvert for Range {
     fn try_convert(val: Value) -> Result<Self, Error> {
         Self::from_value(val).ok_or_else(|| {
             Error::new(
-                exception::type_error(),
+                Ruby::get_with(val).exception_type_error(),
                 format!("no implicit conversion of {} into Range", unsafe {
                     val.classname()
                 },),

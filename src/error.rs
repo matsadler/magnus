@@ -9,12 +9,12 @@ use rb_sys::{
 
 use crate::{
     class::Class,
-    exception::{self, Exception, ExceptionClass},
+    exception::Exception,
     into_value::IntoValue,
     module::Module,
     r_string::RString,
     value::{private::ReprValue as _, ReprValue, Value},
-    Ruby,
+    ExceptionClass, Ruby,
 };
 
 /// An error returned to indicate an attempt to interact with the Ruby API from
@@ -94,7 +94,7 @@ impl Error {
     where
         T: Into<Cow<'static, str>>,
     {
-        Self::Error(exception::runtime_error(), msg.into())
+        Self::Error(get_ruby!().exception_runtime_error(), msg.into())
     }
 
     /// Create a new error that will break from a loop when returned to Ruby.
@@ -151,7 +151,7 @@ impl Error {
         } else {
             "panic".into()
         };
-        Self::Error(exception::fatal(), msg)
+        Self::Error(unsafe { Ruby::get_unchecked().exception_fatal() }, msg)
     }
 }
 

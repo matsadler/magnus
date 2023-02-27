@@ -4,7 +4,6 @@ use rb_sys::ruby_value_type;
 
 use crate::{
     error::Error,
-    exception,
     into_value::IntoValue,
     object::Object,
     try_convert::TryConvert,
@@ -63,7 +62,7 @@ impl TryConvert for RObject {
     fn try_convert(val: Value) -> Result<Self, Error> {
         Self::from_value(val).ok_or_else(|| {
             Error::new(
-                exception::type_error(),
+                Ruby::get_with(val).exception_type_error(),
                 format!("no implicit conversion of {} into Object", unsafe {
                     val.classname()
                 },),

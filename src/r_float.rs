@@ -6,7 +6,6 @@ use rb_sys::{rb_float_new, rb_float_value, ruby_value_type, VALUE};
 use crate::value::Flonum;
 use crate::{
     error::Error,
-    exception,
     float::Float,
     into_value::IntoValue,
     numeric::Numeric,
@@ -120,7 +119,7 @@ impl TryConvert for RFloat {
             Ok(rfloat)
         } else {
             Err(Error::new(
-                exception::range_error(),
+                Ruby::get_with(val).exception_range_error(),
                 "float in range for flonum",
             ))
         }

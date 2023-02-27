@@ -40,7 +40,6 @@ use rb_sys::{
 use crate::{
     class,
     error::{protect, Error},
-    exception,
     into_value::IntoValue,
     object::Object,
     r_string::RString,
@@ -607,15 +606,16 @@ impl RbEncoding {
     /// assert_eq!(RbEncoding::utf8().codelen(129408).unwrap(), 4);
     /// ```
     pub fn codelen(&self, code: u32) -> Result<usize, Error> {
+        let handle = unsafe { Ruby::get_unchecked() };
         let code = code
             .try_into()
             .map_err(|e: <usize as TryInto<c_int>>::Error| {
-                Error::new(exception::arg_error(), e.to_string())
+                Error::new(handle.exception_arg_error(), e.to_string())
             })?;
         let mut len = 0;
-        protect(|| unsafe {
-            len = rb_enc_codelen(code, self.as_ptr()) as usize;
-            Ruby::get_unchecked().qnil()
+        protect(|| {
+            unsafe { len = rb_enc_codelen(code, self.as_ptr()) as usize };
+            handle.qnil()
         })?;
         Ok(len)
     }
@@ -786,15 +786,16 @@ impl Ruby {
     }
 
     pub fn find_encindex(&self, name: &str) -> Result<Index, Error> {
+        let handle = unsafe { Ruby::get_unchecked() };
         let name = CString::new(name).unwrap();
         let mut i = 0;
-        protect(|| unsafe {
-            i = rb_enc_find_index(name.as_ptr());
-            Ruby::get_unchecked().qnil()
+        protect(|| {
+            unsafe { i = rb_enc_find_index(name.as_ptr()) };
+            handle.qnil()
         })?;
         if i == -1 {
             return Err(Error::new(
-                exception::runtime_error(),
+                handle.exception_runtime_error(),
                 format!("Encoding {:?} exists, but can not be loaded", name),
             ));
         }
@@ -904,7 +905,7 @@ impl TryConvert for Index {
         let i = unsafe { rb_to_encoding_index(val.as_rb_value()) };
         if i == -1 && RString::from_value(val).is_some() {
             return Err(Error::new(
-                exception::runtime_error(),
+                Ruby::get_with(val).exception_runtime_error(),
                 format!("ArgumentError: unknown encoding name - {}", val),
             ));
         } else if i == -1 {

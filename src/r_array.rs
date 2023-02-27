@@ -18,7 +18,6 @@ use rb_sys::{
 use crate::{
     enumerator::Enumerator,
     error::{protect, Error},
-    exception,
     into_value::{IntoValue, IntoValueFromNative},
     object::Object,
     r_string::{IntoRString, RString},
@@ -832,7 +831,7 @@ impl RArray {
         unsafe {
             self.as_slice().try_into().map_err(|_| {
                 Error::new(
-                    exception::type_error(),
+                    Ruby::get_with(self).exception_type_error(),
                     format!("expected Array of length {}", N),
                 )
             })
@@ -863,7 +862,7 @@ impl RArray {
             let slice = self.as_slice();
             if slice.len() != N {
                 return Err(Error::new(
-                    exception::type_error(),
+                    Ruby::get_with(self).exception_type_error(),
                     format!("expected Array of length {}", N),
                 ));
             }
@@ -1649,7 +1648,7 @@ impl TryConvert for RArray {
             protect(|| Value::new(rb_check_array_type(val.as_rb_value()))).and_then(|res| {
                 Self::from_value(res).ok_or_else(|| {
                     Error::new(
-                        exception::type_error(),
+                        Ruby::get_with(val).exception_type_error(),
                         format!("no implicit conversion of {} into Array", val.class()),
                     )
                 })

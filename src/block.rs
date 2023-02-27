@@ -10,7 +10,6 @@ use rb_sys::{
 use crate::{
     enumerator::Enumerator,
     error::{ensure, protect, Error},
-    exception,
     into_value::{ArgList, IntoValue, RArrayArgList},
     memoize,
     method::{Block, BlockReturn},
@@ -287,6 +286,7 @@ impl ReprValue for Proc {}
 
 impl TryConvert for Proc {
     fn try_convert(val: Value) -> Result<Self, Error> {
+        let handle = Ruby::get_with(val);
         if let Some(p) = Proc::from_value(val) {
             return Ok(p);
         }
@@ -294,7 +294,7 @@ impl TryConvert for Proc {
             Ok(v) => v,
             Err(_) => {
                 return Err(Error::new(
-                    exception::type_error(),
+                    handle.exception_type_error(),
                     format!("no implicit conversion of {} into Proc", unsafe {
                         val.classname()
                     },),
@@ -303,7 +303,7 @@ impl TryConvert for Proc {
         };
         Proc::from_value(val).ok_or_else(|| {
             Error::new(
-                exception::type_error(),
+                handle.exception_type_error(),
                 format!(
                     "can't convert {0} to Proc ({0}#to_proc gives {1})",
                     unsafe { val.classname() },

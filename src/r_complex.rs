@@ -7,7 +7,6 @@ use rb_sys::{
 
 use crate::{
     error::{protect, Error},
-    exception,
     float::Float,
     into_value::IntoValue,
     numeric::Numeric,
@@ -203,7 +202,7 @@ impl TryConvert for RComplex {
     fn try_convert(val: Value) -> Result<Self, Error> {
         Self::from_value(val).ok_or_else(|| {
             Error::new(
-                exception::type_error(),
+                Ruby::get_with(val).exception_type_error(),
                 format!("no implicit conversion of {} into Complex", unsafe {
                     val.classname()
                 },),

@@ -15,7 +15,6 @@ use rb_sys::{
 
 use crate::{
     error::{protect, Error},
-    exception,
     into_value::{ArgList, IntoValue},
     module::Module,
     object::Object,
@@ -173,7 +172,7 @@ impl TryConvert for RClass {
         match Self::from_value(val) {
             Some(v) => Ok(v),
             None => Err(Error::new(
-                exception::type_error(),
+                Ruby::get_with(val).exception_type_error(),
                 format!("no implicit conversion of {} into Class", unsafe {
                     val.classname()
                 },),

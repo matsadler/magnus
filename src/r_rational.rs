@@ -4,7 +4,6 @@ use rb_sys::{rb_rational_den, rb_rational_new, rb_rational_num, ruby_value_type,
 
 use crate::{
     error::Error,
-    exception,
     integer::Integer,
     into_value::IntoValue,
     numeric::Numeric,
@@ -134,7 +133,7 @@ impl TryConvert for RRational {
     fn try_convert(val: Value) -> Result<Self, Error> {
         Self::from_value(val).ok_or_else(|| {
             Error::new(
-                exception::type_error(),
+                Ruby::get_with(val).exception_type_error(),
                 format!("no implicit conversion of {} into Rational", unsafe {
                     val.classname()
                 },),

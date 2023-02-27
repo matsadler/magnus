@@ -22,7 +22,6 @@ use rb_sys::{
 
 use crate::{
     error::{protect, raise, Error},
-    exception,
     into_value::{IntoValue, IntoValueFromNative},
     object::Object,
     try_convert::{TryConvert, TryConvertOwned},
@@ -699,7 +698,7 @@ impl TryConvert for RHash {
             protect(|| Value::new(rb_check_hash_type(val.as_rb_value()))).and_then(|res| {
                 Self::from_value(res).ok_or_else(|| {
                     Error::new(
-                        exception::type_error(),
+                        Ruby::get_with(val).exception_type_error(),
                         format!("no implicit conversion of {} into Hash", val.class()),
                     )
                 })

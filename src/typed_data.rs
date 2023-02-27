@@ -31,7 +31,6 @@ const RUBY_TYPED_WB_PROTECTED: u32 = rb_sys::ruby_fl_type::RUBY_FL_WB_PROTECTED 
 use crate::{
     class::RClass,
     error::{bug_from_panic, Error},
-    exception,
     into_value::IntoValue,
     object::Object,
     r_typed_data::RTypedData,
@@ -461,7 +460,7 @@ where
             RTypedData::from_value(val)
                 .ok_or_else(|| {
                     Error::new(
-                        exception::type_error(),
+                        Ruby::get_with(val).exception_type_error(),
                         format!(
                             "no implicit conversion of {} into {}",
                             val.classname(),
@@ -644,7 +643,7 @@ where
     fn try_convert(val: Value) -> Result<Self, Error> {
         let inner = RTypedData::from_value(val).ok_or_else(|| {
             Error::new(
-                exception::type_error(),
+                Ruby::get_with(val).exception_type_error(),
                 format!(
                     "no implicit conversion of {} into {}",
                     unsafe { val.classname() },

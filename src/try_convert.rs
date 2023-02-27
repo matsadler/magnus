@@ -6,7 +6,6 @@ use rb_sys::{rb_get_path, rb_num2dbl};
 use crate::value::Flonum;
 use crate::{
     error::{protect, Error},
-    exception,
     integer::Integer,
     r_array::RArray,
     r_hash::RHash,
@@ -219,7 +218,7 @@ where
         let slice = unsafe { array.as_slice() };
         if slice.len() != 1 {
             return Err(Error::new(
-                exception::type_error(),
+                Ruby::get_with(val).exception_type_error(),
                 "expected Array of length 1",
             ));
         }
@@ -239,7 +238,7 @@ where
         let slice = unsafe { array.as_slice() };
         if slice.len() != 2 {
             return Err(Error::new(
-                exception::type_error(),
+                Ruby::get_with(val).exception_type_error(),
                 "expected Array of length 2",
             ));
         }
@@ -268,7 +267,7 @@ where
         let slice = unsafe { array.as_slice() };
         if slice.len() != 3 {
             return Err(Error::new(
-                exception::type_error(),
+                Ruby::get_with(val).exception_type_error(),
                 "expected Array of length 3",
             ));
         }
@@ -300,7 +299,7 @@ where
         let slice = unsafe { array.as_slice() };
         if slice.len() != 4 {
             return Err(Error::new(
-                exception::type_error(),
+                Ruby::get_with(val).exception_type_error(),
                 "expected Array of length 4",
             ));
         }
@@ -335,7 +334,7 @@ where
         let slice = unsafe { array.as_slice() };
         if slice.len() != 5 {
             return Err(Error::new(
-                exception::type_error(),
+                Ruby::get_with(val).exception_type_error(),
                 "expected Array of length 5",
             ));
         }
@@ -373,7 +372,7 @@ where
         let slice = unsafe { array.as_slice() };
         if slice.len() != 6 {
             return Err(Error::new(
-                exception::type_error(),
+                Ruby::get_with(val).exception_type_error(),
                 "expected Array of length 6",
             ));
         }
@@ -414,7 +413,7 @@ where
         let slice = unsafe { array.as_slice() };
         if slice.len() != 7 {
             return Err(Error::new(
-                exception::type_error(),
+                Ruby::get_with(val).exception_type_error(),
                 "expected Array of length 7",
             ));
         }
@@ -458,7 +457,7 @@ where
         let slice = unsafe { array.as_slice() };
         if slice.len() != 8 {
             return Err(Error::new(
-                exception::type_error(),
+                Ruby::get_with(val).exception_type_error(),
                 "expected Array of length 8",
             ));
         }
@@ -505,7 +504,7 @@ where
         let slice = unsafe { array.as_slice() };
         if slice.len() != 9 {
             return Err(Error::new(
-                exception::type_error(),
+                Ruby::get_with(val).exception_type_error(),
                 "expected Array of length 9",
             ));
         }
@@ -555,7 +554,7 @@ where
         let slice = unsafe { array.as_slice() };
         if slice.len() != 10 {
             return Err(Error::new(
-                exception::type_error(),
+                Ruby::get_with(val).exception_type_error(),
                 "expected Array of length 10",
             ));
         }
@@ -610,7 +609,7 @@ where
         let slice = unsafe { array.as_slice() };
         if slice.len() != 11 {
             return Err(Error::new(
-                exception::type_error(),
+                Ruby::get_with(val).exception_type_error(),
                 "expected Array of length 11",
             ));
         }
@@ -668,7 +667,7 @@ where
         let slice = unsafe { array.as_slice() };
         if slice.len() != 12 {
             return Err(Error::new(
-                exception::type_error(),
+                Ruby::get_with(val).exception_type_error(),
                 "expected Array of length 12",
             ));
         }

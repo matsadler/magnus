@@ -4,7 +4,6 @@ use rb_sys::{rb_ll2inum, rb_to_int, rb_ull2inum, ruby_special_consts, ruby_value
 
 use crate::{
     error::{protect, Error},
-    exception,
     into_value::IntoValue,
     numeric::Numeric,
     r_bignum::RBignum,
@@ -158,7 +157,7 @@ impl Integer {
         match self.integer_type() {
             IntegerType::Fixnum(fix) => fix.to_i8(),
             IntegerType::Bignum(_) => Err(Error::new(
-                exception::range_error(),
+                Ruby::get_with(self).exception_range_error(),
                 "bignum too big to convert into `i8`",
             )),
         }
@@ -183,7 +182,7 @@ impl Integer {
         match self.integer_type() {
             IntegerType::Fixnum(fix) => fix.to_i16(),
             IntegerType::Bignum(_) => Err(Error::new(
-                exception::range_error(),
+                Ruby::get_with(self).exception_range_error(),
                 "bignum too big to convert into `i16`",
             )),
         }
@@ -271,7 +270,7 @@ impl Integer {
         match self.integer_type() {
             IntegerType::Fixnum(fix) => fix.to_u8(),
             IntegerType::Bignum(_) => Err(Error::new(
-                exception::range_error(),
+                Ruby::get_with(self).exception_range_error(),
                 "bignum too big to convert into `u8`",
             )),
         }
@@ -295,7 +294,7 @@ impl Integer {
         match self.integer_type() {
             IntegerType::Fixnum(fix) => fix.to_u16(),
             IntegerType::Bignum(_) => Err(Error::new(
-                exception::range_error(),
+                Ruby::get_with(self).exception_range_error(),
                 "bignum too big to convert into `u16`",
             )),
         }

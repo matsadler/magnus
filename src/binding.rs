@@ -6,7 +6,6 @@ use rb_sys::{rb_binding_new, VALUE};
 use crate::{
     class,
     error::Error,
-    exception,
     into_value::IntoValue,
     object::Object,
     r_string::IntoRString,
@@ -177,7 +176,7 @@ impl TryConvert for Binding {
     fn try_convert(val: Value) -> Result<Self, Error> {
         Self::from_value(val).ok_or_else(|| {
             Error::new(
-                exception::type_error(),
+                Ruby::get_with(val).exception_type_error(),
                 format!("no implicit conversion of {} into Binding", unsafe {
                     val.classname()
                 },),

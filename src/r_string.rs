@@ -31,7 +31,6 @@ use rb_sys::{
 use crate::{
     encoding::{self, Coderange, EncodingCapable, RbEncoding},
     error::{protect, Error},
-    exception,
     into_value::{IntoValue, IntoValueFromNative},
     object::Object,
     r_array::RArray,
@@ -845,7 +844,7 @@ impl RString {
             } else {
                 "invalid byte sequence in UTF-8".into()
             };
-            Error::new(exception::encoding_error(), msg)
+            Error::new(Ruby::get_with(self).exception_encoding_error(), msg)
         })
     }
 
@@ -899,7 +898,12 @@ impl RString {
         };
         str::from_utf8(unsafe { utf8.as_slice() })
             .map(ToOwned::to_owned)
-            .map_err(|e| Error::new(exception::encoding_error(), format!("{}", e)))
+            .map_err(|e| {
+                Error::new(
+                    Ruby::get_with(self).exception_encoding_error(),
+                    format!("{}", e),
+                )
+            })
     }
 
     /// Returns `self` as an owned Rust `Bytes`.
@@ -939,13 +943,14 @@ impl RString {
         } else {
             self.conv_enc(RbEncoding::utf8())?
         };
+        let handle = Ruby::get_with(self);
         unsafe {
             str::from_utf8(utf8.as_slice())
-                .map_err(|e| Error::new(exception::encoding_error(), format!("{}", e)))?
+                .map_err(|e| Error::new(handle.exception_encoding_error(), format!("{}", e)))?
                 .parse()
                 .map_err(|e| {
                     Error::new(
-                        exception::type_error(),
+                        handle.exception_type_error(),
                         format!("could not convert string to char, {}", e),
                     )
                 })
@@ -1240,10 +1245,7 @@ impl RString {
     pub fn times(self, num: usize) -> Self {
         let num = Ruby::get_with(self).into_value(num);
         unsafe {
-            Self::from_rb_value_unchecked(rb_str_times(
-                self.as_rb_value(),
-                num.as_rb_value(),
-            ))
+            Self::from_rb_value_unchecked(rb_str_times(self.as_rb_value(), num.as_rb_value()))
         }
     }
 

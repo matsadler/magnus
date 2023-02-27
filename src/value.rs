@@ -39,7 +39,6 @@ use crate::{
     encoding::{EncodingCapable, RbEncoding},
     enumerator::Enumerator,
     error::{protect, Error},
-    exception,
     integer::{Integer, IntegerType},
     into_value::{ArgList, IntoValue, IntoValueFromNative},
     method::{Block, BlockReturn},
@@ -683,7 +682,7 @@ pub trait ReprValue: private::ReprValue {
     fn check_frozen(self) -> Result<(), Error> {
         if self.is_frozen() {
             Err(Error::new(
-                exception::frozen_error(),
+                Ruby::get_with(self).exception_frozen_error(),
                 format!("can't modify frozen {}", unsafe { self.classname() }),
             ))
         } else {
@@ -1395,7 +1394,7 @@ impl TryConvert for Qfalse {
     fn try_convert(val: Value) -> Result<Self, Error> {
         Self::from_value(val).ok_or_else(|| {
             Error::new(
-                exception::type_error(),
+                Ruby::get_with(val).exception_type_error(),
                 format!("no implicit conversion of {} into FalseClass", unsafe {
                     val.classname()
                 },),
@@ -1500,7 +1499,7 @@ impl TryConvert for Qnil {
     fn try_convert(val: Value) -> Result<Self, Error> {
         Self::from_value(val).ok_or_else(|| {
             Error::new(
-                exception::type_error(),
+                Ruby::get_with(val).exception_type_error(),
                 format!("no implicit conversion of {} into NilClass", unsafe {
                     val.classname()
                 },),
@@ -1595,7 +1594,7 @@ impl TryConvert for Qtrue {
     fn try_convert(val: Value) -> Result<Self, Error> {
         Self::from_value(val).ok_or_else(|| {
             Error::new(
-                exception::type_error(),
+                Ruby::get_with(val).exception_type_error(),
                 format!("no implicit conversion of {} into TrueClass", unsafe {
                     val.classname()
                 },),
@@ -1803,7 +1802,7 @@ impl Fixnum {
         let res = self.to_isize();
         if res > i8::MAX as isize || res < i8::MIN as isize {
             return Err(Error::new(
-                exception::range_error(),
+                Ruby::get_with(self).exception_range_error(),
                 "fixnum too big to convert into `i8`",
             ));
         }
@@ -1829,7 +1828,7 @@ impl Fixnum {
         let res = self.to_isize();
         if res > i16::MAX as isize || res < i16::MIN as isize {
             return Err(Error::new(
-                exception::range_error(),
+                Ruby::get_with(self).exception_range_error(),
                 "fixnum too big to convert into `i16`",
             ));
         }
@@ -1858,7 +1857,7 @@ impl Fixnum {
         let res = self.to_isize();
         if res > i32::MAX as isize || res < i32::MIN as isize {
             return Err(Error::new(
-                exception::range_error(),
+                Ruby::get_with(self).exception_range_error(),
                 "fixnum too big to convert into `i32`",
             ));
         }
@@ -1918,16 +1917,17 @@ impl Fixnum {
     /// ```
     #[inline]
     pub fn to_u8(self) -> Result<u8, Error> {
+        let handle = Ruby::get_with(self);
         if self.is_negative() {
             return Err(Error::new(
-                exception::range_error(),
+                handle.exception_range_error(),
                 "can't convert negative integer to unsigned",
             ));
         }
         let res = self.to_isize();
         if res > u8::MAX as isize {
             return Err(Error::new(
-                exception::range_error(),
+                handle.exception_range_error(),
                 "fixnum too big to convert into `u8`",
             ));
         }
@@ -1949,16 +1949,17 @@ impl Fixnum {
     /// ```
     #[inline]
     pub fn to_u16(self) -> Result<u16, Error> {
+        let handle = Ruby::get_with(self);
         if self.is_negative() {
             return Err(Error::new(
-                exception::range_error(),
+                handle.exception_range_error(),
                 "can't convert negative integer to unsigned",
             ));
         }
         let res = self.to_isize();
         if res > u16::MAX as isize {
             return Err(Error::new(
-                exception::range_error(),
+                handle.exception_range_error(),
                 "fixnum too big to convert into `u16`",
             ));
         }
@@ -1983,16 +1984,17 @@ impl Fixnum {
     /// ```
     #[inline]
     pub fn to_u32(self) -> Result<u32, Error> {
+        let handle = Ruby::get_with(self);
         if self.is_negative() {
             return Err(Error::new(
-                exception::range_error(),
+                handle.exception_range_error(),
                 "can't convert negative integer to unsigned",
             ));
         }
         let res = self.to_isize();
         if res > u32::MAX as isize {
             return Err(Error::new(
-                exception::range_error(),
+                handle.exception_range_error(),
                 "fixnum too big to convert into `u32`",
             ));
         }
@@ -2015,7 +2017,7 @@ impl Fixnum {
     pub fn to_u64(self) -> Result<u64, Error> {
         if self.is_negative() {
             return Err(Error::new(
-                exception::range_error(),
+                Ruby::get_with(self).exception_range_error(),
                 "can't convert negative integer to unsigned",
             ));
         }
@@ -2039,7 +2041,7 @@ impl Fixnum {
     pub fn to_usize(self) -> Result<usize, Error> {
         if self.is_negative() {
             return Err(Error::new(
-                exception::range_error(),
+                Ruby::get_with(self).exception_range_error(),
                 "can't convert negative integer to unsigned",
             ));
         }
@@ -2076,7 +2078,7 @@ impl TryConvert for Fixnum {
         match Integer::try_convert(val)?.integer_type() {
             IntegerType::Fixnum(fix) => Ok(fix),
             IntegerType::Bignum(_) => Err(Error::new(
-                exception::range_error(),
+                Ruby::get_with(val).exception_range_error(),
                 "integer too big for fixnum",
             )),
         }
@@ -2373,8 +2375,12 @@ impl Id {
         unsafe {
             let ptr = rb_id2name(self.as_rb_id());
             let cstr = CStr::from_ptr(ptr);
-            cstr.to_str()
-                .map_err(|e| Error::new(exception::encoding_error(), e.to_string()))
+            cstr.to_str().map_err(|e| {
+                Error::new(
+                    Ruby::get_unchecked().exception_encoding_error(),
+                    e.to_string(),
+                )
+            })
         }
     }
 }

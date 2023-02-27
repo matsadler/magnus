@@ -17,7 +17,6 @@ use rb_sys::{
 use crate::{
     class::RClass,
     error::{protect, Error},
-    exception,
     into_value::IntoValue,
     object::Object,
     r_array::RArray,
@@ -137,7 +136,7 @@ impl RStruct {
                 .copied()
                 .ok_or_else(|| {
                     Error::new(
-                        exception::index_error(),
+                        Ruby::get_with(self).exception_index_error(),
                         format!(
                             "offset {} too large for struct(size:{})",
                             index,
@@ -242,7 +241,7 @@ impl TryConvert for RStruct {
     fn try_convert(val: Value) -> Result<Self, Error> {
         Self::from_value(val).ok_or_else(|| {
             Error::new(
-                exception::type_error(),
+                Ruby::get_with(val).exception_type_error(),
                 format!("no implicit conversion of {} into Struct", unsafe {
                     val.classname()
                 },),

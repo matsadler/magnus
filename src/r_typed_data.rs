@@ -4,7 +4,6 @@ use rb_sys::{self, rb_check_typeddata, rb_data_typed_object_wrap, ruby_value_typ
 
 use crate::{
     error::{protect, Error},
-    exception,
     into_value::IntoValue,
     object::Object,
     typed_data::TypedData,
@@ -127,6 +126,7 @@ impl RTypedData {
         T: TypedData,
     {
         debug_assert_value!(self);
+        let handle = Ruby::get_with(self);
         let mut res = None;
         let _ = protect(|| {
             res = (rb_check_typeddata(
@@ -134,11 +134,11 @@ impl RTypedData {
                 T::data_type().as_rb_data_type() as *const _,
             ) as *const T)
                 .as_ref();
-            Ruby::get_with(self).qnil()
+            handle.qnil()
         });
         res.ok_or_else(|| {
             Error::new(
-                exception::type_error(),
+                handle.exception_type_error(),
                 format!(
                     "no implicit conversion of {} into {}",
                     self.classname(),

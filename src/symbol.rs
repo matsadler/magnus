@@ -7,7 +7,6 @@ use rb_sys::{rb_check_id, rb_intern_str, rb_sym2str, rb_to_symbol, ruby_value_ty
 use crate::{
     encoding::EncodingCapable,
     error::{protect, Error},
-    exception,
     into_value::IntoValue,
     r_string::RString,
     try_convert::TryConvert,
@@ -293,7 +292,7 @@ impl TryConvert for Symbol {
     fn try_convert(val: Value) -> Result<Self, Error> {
         Self::from_value(val).ok_or_else(|| {
             Error::new(
-                exception::type_error(),
+                Ruby::get_with(val).exception_type_error(),
                 format!("no implicit conversion of {} into Symbol", unsafe {
                     val.classname()
                 },),
