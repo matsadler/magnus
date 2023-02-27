@@ -38,7 +38,6 @@ use rb_sys::{
 };
 
 use crate::{
-    class,
     error::{protect, Error},
     into_value::IntoValue,
     object::Object,
@@ -86,7 +85,7 @@ impl Encoding {
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
         unsafe {
-            val.is_kind_of(class::encoding())
+            val.is_kind_of(Ruby::get_with(val).class_encoding())
                 .then(|| Self(NonZeroValue::new_unchecked(val)))
         }
     }

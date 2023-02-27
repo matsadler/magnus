@@ -5,7 +5,6 @@ use std::fmt;
 use rb_sys::{rb_num_coerce_bin, rb_num_coerce_bit, rb_num_coerce_cmp, rb_num_coerce_relop, VALUE};
 
 use crate::{
-    class,
     error::{protect, Error},
     into_value::IntoValue,
     try_convert::TryConvert,
@@ -262,11 +261,12 @@ impl ReprValue for NumericValue {}
 
 impl TryConvert for NumericValue {
     fn try_convert(val: Value) -> Result<Self, Error> {
-        val.is_kind_of(class::numeric())
+        let handle = Ruby::get_with(val);
+        val.is_kind_of(handle.class_numeric())
             .then(|| unsafe { Self::from_rb_value_unchecked(val.as_rb_value()) })
             .ok_or_else(|| {
                 Error::new(
-                    Ruby::get_with(val).exception_type_error(),
+                    handle.exception_type_error(),
                     format!("no implicit conversion of {} into Numeric", unsafe {
                         val.classname()
                     },),

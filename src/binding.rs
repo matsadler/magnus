@@ -4,7 +4,6 @@ use std::fmt;
 use rb_sys::{rb_binding_new, VALUE};
 
 use crate::{
-    class,
     error::Error,
     into_value::IntoValue,
     object::Object,
@@ -71,7 +70,7 @@ impl Binding {
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
         unsafe {
-            val.is_kind_of(class::binding())
+            val.is_kind_of(Ruby::get_with(val).class_binding())
                 .then(|| Self(NonZeroValue::new_unchecked(val)))
         }
     }

@@ -9,7 +9,6 @@ use std::{
 use rb_sys::{rb_range_beg_len, rb_range_new};
 
 use crate::{
-    class,
     error::{protect, Error},
     into_value::{IntoValue, IntoValueFromNative},
     object::Object,
@@ -61,7 +60,7 @@ impl Range {
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
         RStruct::from_value(val)
-            .filter(|_| val.is_kind_of(class::range()))
+            .filter(|_| val.is_kind_of(Ruby::get_with(val).class_range()))
             .map(Self)
     }
 

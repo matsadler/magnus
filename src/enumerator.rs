@@ -3,7 +3,6 @@ use std::fmt;
 use rb_sys::VALUE;
 
 use crate::{
-    class,
     error::Error,
     into_value::IntoValue,
     object::Object,
@@ -28,7 +27,7 @@ impl Enumerator {
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
         unsafe {
-            val.is_kind_of(class::enumerator())
+            val.is_kind_of(Ruby::get_with(val).class_enumerator())
                 .then(|| Self(NonZeroValue::new_unchecked(val)))
         }
     }

@@ -35,7 +35,7 @@ const RUBY_FIXNUM_MIN: c_long = c_long::MIN / 2;
 
 use crate::{
     block::Proc,
-    class::{self, RClass},
+    class::RClass,
     encoding::{EncodingCapable, RbEncoding},
     enumerator::Enumerator,
     error::{protect, Error},
@@ -609,24 +609,25 @@ pub trait ReprValue: private::ReprValue {
     /// assert_eq!(eval::<Value>("[1,2,3]").unwrap().class().inspect(), "Array");
     /// ```
     fn class(self) -> RClass {
+        let handle = Ruby::get_with(self);
         unsafe {
             match self.r_basic() {
                 Some(r_basic) => RClass::from_rb_value_unchecked(r_basic.as_ref().klass),
                 None => {
                     if self.is_false() {
-                        class::false_class()
+                        handle.class_false_class()
                     } else if self.is_nil() {
-                        class::nil_class()
+                        handle.class_nil_class()
                     } else if self.is_true() {
-                        class::true_class()
+                        handle.class_true_class()
                     } else if self.is_undef() {
                         panic!("undef does not have a class")
                     } else if self.is_fixnum() {
-                        class::integer()
+                        handle.class_integer()
                     } else if self.is_static_symbol() {
-                        class::symbol()
+                        handle.class_symbol()
                     } else if self.is_flonum() {
-                        class::float()
+                        handle.class_float()
                     } else {
                         unreachable!()
                     }
