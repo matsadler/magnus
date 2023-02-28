@@ -360,15 +360,15 @@ where
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, class, define_class, memoize, RClass, TypedData};
+    /// use magnus::{prelude::*, memoize, RClass, Ruby, TypedData};
     /// # use magnus::DataType;
     ///
     /// struct Example();
     ///
     /// unsafe impl TypedData for Example {
-    ///     fn class() -> RClass {
+    ///     fn class(ruby: &Ruby) -> RClass {
     ///         *memoize!(RClass: {
-    ///           let class = define_class("Example", class::object()).unwrap();
+    ///           let class = ruby.define_class("Example", ruby.class_object()).unwrap();
     ///           class.undef_alloc_func();
     ///           class
     ///         })
@@ -378,7 +378,7 @@ where
     /// #   fn data_type() -> &'static DataType { unimplemented!() }
     /// }
     /// ```
-    fn class() -> RClass;
+    fn class(ruby: &Ruby) -> RClass;
 
     /// Should return a static reference to a [`DataType`] with metadata about
     /// the wrapped type.
@@ -387,13 +387,13 @@ where
     ///
     /// ```
     /// use magnus::{memoize, typed_data::DataTypeBuilder, DataType, DataTypeFunctions, TypedData};
-    /// # use magnus::RClass;
+    /// # use magnus::{RClass, Ruby};
     ///
     /// #[derive(DataTypeFunctions)]
     /// struct Example();
     ///
     /// unsafe impl TypedData for Example {
-    /// #   fn class() -> RClass { unimplemented!() }
+    /// #   fn class(ruby: &Ruby) -> RClass { unimplemented!() }
     ///     // ...
     ///
     ///     fn data_type() -> &'static DataType {
@@ -416,7 +416,7 @@ where
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, define_class, memoize, RClass, TypedData};
+    /// use magnus::{prelude::*, memoize, RClass, Ruby, TypedData};
     /// # use magnus::DataType;
     ///
     /// enum Example {
@@ -425,19 +425,19 @@ where
     /// }
     ///
     /// unsafe impl TypedData for Example {
-    /// #   fn class() -> RClass { unimplemented!() }
+    /// #   fn class(ruby: &Ruby) -> RClass { unimplemented!() }
     /// #   fn data_type() -> &'static DataType { unimplemented!() }
     ///     // ...
     ///
-    ///     fn class_for(value: &Self) -> RClass {
+    ///     fn class_for(ruby: &Ruby, value: &Self) -> RClass {
     ///         match value {
     ///             Self::A => *memoize!(RClass: {
-    ///                 let class = define_class("A", <Self as TypedData>::class()).unwrap();
+    ///                 let class = ruby.define_class("A", <Self as TypedData>::class(ruby)).unwrap();
     ///                 class.undef_alloc_func();
     ///                 class
     ///             }),
     ///             Self::B => *memoize!(RClass: {
-    ///                 let class = define_class("B", <Self as TypedData>::class()).unwrap();
+    ///                 let class = ruby.define_class("B", <Self as TypedData>::class(ruby)).unwrap();
     ///                 class.undef_alloc_func();
     ///                 class
     ///             }),
@@ -446,8 +446,8 @@ where
     /// }
     /// ```
     #[allow(unused_variables)]
-    fn class_for(value: &Self) -> RClass {
-        Self::class()
+    fn class_for(ruby: &Ruby, value: &Self) -> RClass {
+        Self::class(ruby)
     }
 }
 
@@ -456,15 +456,16 @@ where
     T: TypedData,
 {
     fn try_convert(val: Value) -> Result<Self, Error> {
+        let handle = Ruby::get_with(val);
         unsafe {
             RTypedData::from_value(val)
                 .ok_or_else(|| {
                     Error::new(
-                        Ruby::get_with(val).exception_type_error(),
+                        handle.exception_type_error(),
                         format!(
                             "no implicit conversion of {} into {}",
                             val.classname(),
-                            T::class()
+                            T::class(&handle)
                         ),
                     )
                 })?
@@ -641,13 +642,14 @@ where
     T: TypedData,
 {
     fn try_convert(val: Value) -> Result<Self, Error> {
+        let handle = Ruby::get_with(val);
         let inner = RTypedData::from_value(val).ok_or_else(|| {
             Error::new(
-                Ruby::get_with(val).exception_type_error(),
+                handle.exception_type_error(),
                 format!(
                     "no implicit conversion of {} into {}",
                     unsafe { val.classname() },
-                    T::class()
+                    T::class(&handle)
                 ),
             )
         })?;

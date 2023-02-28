@@ -109,7 +109,7 @@ pub fn expand_derive_typed_data(input: DeriveInput) -> TokenStream {
             let ident = &variant.ident;
             let fetch_class = quote! {
                 *magnus::memoize!(RClass: {
-                    let class: RClass = class::object().funcall("const_get", (#class,)).unwrap();
+                    let class: RClass = ruby.class_object().funcall("const_get", (#class,)).unwrap();
                     class.undef_alloc_func();
                     class
                 })
@@ -123,12 +123,12 @@ pub fn expand_derive_typed_data(input: DeriveInput) -> TokenStream {
     }
     let class_for = if !arms.is_empty() {
         quote! {
-            fn class_for(value: &Self) -> magnus::RClass {
+            fn class_for(ruby: &magnus::Ruby, value: &Self) -> magnus::RClass {
                 use magnus::{class, Module, Class, RClass, value::ReprValue};
                 #[allow(unreachable_patterns)]
                 match value {
                     #(#arms,)*
-                    _ => Self::class(),
+                    _ => Self::class(ruby),
                 }
             }
         }
@@ -208,10 +208,10 @@ pub fn expand_derive_typed_data(input: DeriveInput) -> TokenStream {
         #accessor_impl
 
         unsafe impl magnus::TypedData for #ident {
-            fn class() -> magnus::RClass {
+            fn class(ruby: &magnus::Ruby) -> magnus::RClass {
                 use magnus::{class, Module, Class, RClass, value::ReprValue};
                 *magnus::memoize!(RClass: {
-                    let class: RClass = class::object().funcall("const_get", (#class,)).unwrap();
+                    let class: RClass = ruby.class_object().funcall("const_get", (#class,)).unwrap();
                     class.undef_alloc_func();
                     class
                 })

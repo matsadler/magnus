@@ -19,7 +19,7 @@ impl Ruby {
     where
         T: TypedData,
     {
-        let class = T::class_for(&data);
+        let class = T::class_for(&self, &data);
         let boxed = Box::new(data);
         unsafe {
             let value_ptr = rb_data_typed_object_wrap(
@@ -142,7 +142,7 @@ impl RTypedData {
                 format!(
                     "no implicit conversion of {} into {}",
                     self.classname(),
-                    T::class()
+                    T::class(&handle)
                 ),
             )
         })
