@@ -633,6 +633,45 @@ where
 }
 
 /// Helper type for wrapping a function with type conversions and error
+/// handling, as an 'init' function being passed [`&Ruby`](Ruby).
+///
+/// See the [`init`](magnus_macros::init) macro.
+#[doc(hidden)]
+pub struct InitRuby<Func, Res> {
+    func: Func,
+    res: PhantomData<Res>,
+}
+
+#[allow(missing_docs)]
+impl<Func, Res> InitRuby<Func, Res>
+where
+    Func: Fn(&Ruby) -> Res,
+    Res: InitReturn,
+{
+    #[inline]
+    pub fn new(func: Func) -> Self {
+        Self {
+            func,
+            res: Default::default(),
+        }
+    }
+
+    #[inline]
+    pub unsafe fn call_handle_error(self) {
+        let ruby = Ruby::get_unchecked();
+        let res =
+            match std::panic::catch_unwind(AssertUnwindSafe(|| (self.func)(&ruby).into_init_return())) {
+                Ok(v) => v,
+                Err(e) => Err(Error::from_panic(e)),
+            };
+        match res {
+            Ok(v) => v,
+            Err(e) => raise(e),
+        }
+    }
+}
+
+/// Helper type for wrapping a function with type conversions and error
 /// handling, as an 'block' function.
 ///
 /// See the [`Value::block_call`] function.
