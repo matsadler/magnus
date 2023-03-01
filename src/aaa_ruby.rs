@@ -74,8 +74,6 @@ impl RubyGvlState {
 /// This structure allows safe access to Ruby's API as it should only be
 /// possible to aquire an instance in situations where Ruby's API is known to
 /// be available.
-// Not quite ready to be public, but needed to implement IntoValue
-#[doc(hidden)]
 pub struct Ruby(PhantomData<*mut ()>);
 
 impl Ruby {

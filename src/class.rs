@@ -320,6 +320,7 @@ impl Class for RClass {
     }
 }
 
+#[allow(missing_docs)]
 impl Ruby {
     #[inline]
     pub fn class_array(&self) -> RClass {

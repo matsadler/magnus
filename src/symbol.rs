@@ -17,6 +17,7 @@ use crate::{
     Ruby,
 };
 
+#[allow(missing_docs)]
 impl Ruby {
     #[inline]
     pub fn to_symbol<T: AsRef<str>>(&self, name: T) -> Symbol {

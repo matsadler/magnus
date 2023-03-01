@@ -24,6 +24,7 @@ use crate::{
     Ruby,
 };
 
+#[allow(missing_docs)]
 impl Ruby {
     pub fn proc_new<R>(&self, block: fn(&[Value], Option<Proc>) -> R) -> Proc
     where
@@ -342,6 +343,7 @@ where
     (ptr, value)
 }
 
+#[allow(missing_docs)]
 impl Ruby {
     pub fn block_given(&self) -> bool {
         unsafe { rb_block_given_p() != 0 }

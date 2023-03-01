@@ -20,6 +20,7 @@ pub(crate) enum IntegerType {
     Bignum(RBignum),
 }
 
+#[allow(missing_docs)]
 impl Ruby {
     #[inline]
     pub fn integer_from_i64(&self, n: i64) -> Integer {

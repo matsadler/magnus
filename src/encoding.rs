@@ -50,6 +50,7 @@ use crate::{
     Ruby,
 };
 
+#[allow(missing_docs)]
 impl Ruby {
     pub fn enc_default_external(&self) -> Encoding {
         Encoding::from_value(Value::new(unsafe { rb_enc_default_external() })).unwrap()
@@ -167,6 +168,7 @@ impl TryConvert for Encoding {
     }
 }
 
+#[allow(missing_docs)]
 impl Ruby {
     pub fn ascii8bit_encoding(&self) -> RbEncoding {
         RbEncoding::new(unsafe { rb_ascii8bit_encoding() }).unwrap()
@@ -763,6 +765,7 @@ impl TryConvert for RbEncoding {
     }
 }
 
+#[allow(missing_docs)]
 impl Ruby {
     pub fn ascii8bit_encindex(&self) -> Index {
         Index(unsafe { rb_ascii8bit_encindex() })

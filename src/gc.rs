@@ -18,6 +18,7 @@ use crate::{
     Ruby,
 };
 
+#[allow(missing_docs)]
 impl Ruby {}
 
 /// Mark an Object.
@@ -120,6 +121,7 @@ where
     unsafe { rb_gc_unregister_address(valref as *const _ as *mut VALUE) }
 }
 
+#[allow(missing_docs)]
 impl Ruby {
     pub fn gc_disable(&self) -> bool {
         unsafe { Value::new(rb_gc_disable()).to_bool() }

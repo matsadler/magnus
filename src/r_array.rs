@@ -29,6 +29,7 @@ use crate::{
     Ruby,
 };
 
+#[allow(missing_docs)]
 impl Ruby {
     pub fn ary_new(&self) -> RArray {
         unsafe { RArray::from_rb_value_unchecked(rb_ary_new()) }

@@ -280,6 +280,7 @@ where
     }
 }
 
+#[allow(missing_docs)]
 impl Ruby {
     pub fn unwrap_opaque<T>(&self, val: Opaque<T>) -> T
     where
@@ -1326,6 +1327,7 @@ where
 
 unsafe impl<T> IntoValueFromNative for BoxValue<T> where T: ReprValue {}
 
+#[allow(missing_docs)]
 impl Ruby {
     #[inline]
     pub fn qfalse(&self) -> Qfalse {
@@ -1405,6 +1407,7 @@ impl TryConvert for Qfalse {
 }
 impl TryConvertOwned for Qfalse {}
 
+#[allow(missing_docs)]
 impl Ruby {
     #[inline]
     pub fn qnil(&self) -> Qnil {
@@ -1510,6 +1513,7 @@ impl TryConvert for Qnil {
 }
 impl TryConvertOwned for Qnil {}
 
+#[allow(missing_docs)]
 impl Ruby {
     #[inline]
     pub fn qtrue(&self) -> Qtrue {
@@ -1664,6 +1668,7 @@ impl Qundef {
     }
 }
 
+#[allow(missing_docs)]
 impl Ruby {
     #[inline]
     pub fn fixnum_from_i64(&self, n: i64) -> Result<Fixnum, RBignum> {
@@ -2087,6 +2092,7 @@ impl TryConvert for Fixnum {
 }
 impl TryConvertOwned for Fixnum {}
 
+#[allow(missing_docs)]
 impl Ruby {
     #[inline]
     pub fn sym_new<T>(&self, name: T) -> StaticSymbol
@@ -2278,6 +2284,7 @@ impl TryConvert for StaticSymbol {
 }
 impl TryConvertOwned for StaticSymbol {}
 
+#[allow(missing_docs)]
 impl Ruby {
     pub fn intern(&self, name: &str) -> Id {
         Id::from_rb_id(unsafe {

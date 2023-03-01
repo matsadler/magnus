@@ -20,6 +20,7 @@ use crate::{
     Ruby,
 };
 
+#[allow(missing_docs)]
 impl Ruby {
     #[inline]
     pub fn float_from_f64(&self, n: f64) -> Float {

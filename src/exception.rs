@@ -210,6 +210,7 @@ impl TryConvert for ExceptionClass {
     }
 }
 
+#[allow(missing_docs)]
 impl Ruby {
     #[inline]
     pub fn exception_arg_error(&self) -> ExceptionClass {

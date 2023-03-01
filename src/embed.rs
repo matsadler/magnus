@@ -121,6 +121,7 @@ unsafe fn init_options(opts: &[&str]) {
     };
 }
 
+#[allow(missing_docs)]
 impl Ruby {
     pub fn script<T>(&self, name: T)
     where

@@ -21,6 +21,7 @@ use crate::{
     Ruby,
 };
 
+#[allow(missing_docs)]
 impl Ruby {
     pub fn bignum_from_i64(&self, n: i64) -> Result<RBignum, Fixnum> {
         unsafe {

@@ -17,6 +17,7 @@ use crate::{
     Ruby,
 };
 
+#[allow(missing_docs)]
 impl Ruby {
     #[cfg(any(ruby_lte_3_1, docsrs))]
     #[cfg_attr(docsrs, doc(cfg(ruby_lte_3_1)))]

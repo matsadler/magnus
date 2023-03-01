@@ -14,6 +14,7 @@ use crate::{
     Ruby,
 };
 
+#[allow(missing_docs)]
 impl Ruby {
     pub fn wrap<T>(&self, data: T) -> RTypedData
     where

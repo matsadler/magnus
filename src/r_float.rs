@@ -17,6 +17,7 @@ use crate::{
     Ruby,
 };
 
+#[allow(missing_docs)]
 impl Ruby {
     #[cfg(ruby_use_flonum)]
     pub fn r_float_from_f64(&self, n: f64) -> Result<RFloat, Flonum> {

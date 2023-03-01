@@ -15,6 +15,7 @@ use crate::{
     Ruby,
 };
 
+#[allow(missing_docs)]
 impl Ruby {
     pub fn rational_new(&self, num: i64, den: NonZeroI64) -> RRational {
         let num = self.into_value(num);

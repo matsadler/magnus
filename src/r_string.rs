@@ -42,6 +42,7 @@ use crate::{
     Ruby,
 };
 
+#[allow(missing_docs)]
 impl Ruby {
     pub fn str_new(&self, s: &str) -> RString {
         let len = s.len();

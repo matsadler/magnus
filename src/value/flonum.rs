@@ -13,6 +13,7 @@ use crate::{
     Error, Float, RFloat, Ruby, TryConvert, Value,
 };
 
+#[allow(missing_docs)]
 impl Ruby {
     #[inline]
     pub fn flonum_from_f64(&self, n: f64) -> Result<Flonum, RFloat> {

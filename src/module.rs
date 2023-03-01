@@ -27,6 +27,7 @@ use crate::{
     Ruby,
 };
 
+#[allow(missing_docs)]
 impl Ruby {
     pub fn module_new(&self) -> RModule {
         unsafe { RModule::from_rb_value_unchecked(rb_module_new()) }
@@ -672,6 +673,7 @@ impl Attr {
     }
 }
 
+#[allow(missing_docs)]
 impl Ruby {
     #[inline]
     pub fn module_comparable(&self) -> RModule {

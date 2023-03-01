@@ -1,5 +1,6 @@
 use crate::{r_array::RArray, value::Value, Ruby};
 
+#[allow(missing_docs)]
 impl Ruby {
     #[allow(clippy::wrong_self_convention)]
     pub fn into_value<T>(&self, val: T) -> Value

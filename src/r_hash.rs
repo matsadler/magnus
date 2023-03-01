@@ -89,6 +89,7 @@ where
     }
 }
 
+#[allow(missing_docs)]
 impl Ruby {
     pub fn hash_new(&self) -> RHash {
         unsafe { RHash::from_rb_value_unchecked(rb_hash_new()) }
