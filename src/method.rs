@@ -659,11 +659,12 @@ where
     #[inline]
     pub unsafe fn call_handle_error(self) {
         let ruby = Ruby::get_unchecked();
-        let res =
-            match std::panic::catch_unwind(AssertUnwindSafe(|| (self.func)(&ruby).into_init_return())) {
-                Ok(v) => v,
-                Err(e) => Err(Error::from_panic(e)),
-            };
+        let res = match std::panic::catch_unwind(AssertUnwindSafe(|| {
+            (self.func)(&ruby).into_init_return()
+        })) {
+            Ok(v) => v,
+            Err(e) => Err(Error::from_panic(e)),
+        };
         match res {
             Ok(v) => v,
             Err(e) => raise(e),
