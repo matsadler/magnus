@@ -19,6 +19,9 @@
   with implementing `#<=>`, `#dup` & `#clone`, and `#inspect` methods for
   wrapped structs.
 - wrapped data must be `Sync` to enable `frozen_shareable` flag.
+- `TypedData::class` and `TypedData::class_for` now take a `&Ruby` argument.
+- init function marked with `#[magnus::init]` optionally takes a `&Ruby`
+  argument.
 
 ### Deprecated
 - `typed_data::Obj::get` as it is made redundant by the `Deref` implementation
@@ -93,9 +96,6 @@
   implemented by user code.
 - The `wb_protected` flag is automatically set for data wrapped in a Ruby
   object when `mark` is not set.
-- `TypedData::class` and `TypedData::class_for` now take a `&Ruby` argument.
-- init function marked with `#[magnus::init]` optionally takes a `&Ruby`
-  argument.
 
 ### Deprecated
 - `RString::append` (use `RString::buf_append`).
