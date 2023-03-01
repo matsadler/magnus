@@ -2,6 +2,7 @@
 
 use std::{
     ffi::CString,
+    ops::Deref,
     sync::atomic::{AtomicBool, Ordering},
 };
 
@@ -11,17 +12,32 @@ use rb_sys::{
     ruby_cleanup, ruby_exec_node, ruby_process_options, ruby_set_script_name, ruby_setup,
 };
 
-use crate::{error::protect, r_string::IntoRString, value::private::ReprValue, Ruby};
+use crate::{
+    error::{protect, Error},
+    r_string::IntoRString,
+    value::private::ReprValue,
+    Ruby,
+};
 
 /// A guard value that will run the cleanup function for the Ruby VM when
 /// dropped.
-pub struct Cleanup();
+///
+/// This value will [`Deref`] to [`Ruby`].
+pub struct Cleanup(Ruby);
 
 impl Drop for Cleanup {
     fn drop(&mut self) {
         unsafe {
             ruby_cleanup(0);
         }
+    }
+}
+
+impl Deref for Cleanup {
+    type Target = Ruby;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
     }
 }
 
@@ -39,16 +55,20 @@ impl Drop for Cleanup {
 ///
 /// Must be called in `main()`, or at least a function higher up the stack than
 /// any code calling Ruby. Must not drop Cleanup until the very end of the
-/// process, after all Ruby execution has finished.
+/// process, after all Ruby execution has finished. Do not use Ruby values
+/// after Cleanup has been dropped.
 ///
 /// # Panics
 ///
-/// Panics if this or [`init`] are collectively called more than once.
+/// Panics if this, [`init`], or [`Ruby::init`] are collectively called more
+/// than once.
 ///
 /// # Examples
 ///
 /// ```
-/// let _cleanup = unsafe { magnus::embed::init() };
+/// let ruby = unsafe { magnus::embed::setup() };
+/// let result: i64 = ruby.eval("2 + 2").unwrap();
+/// assert_eq!(result, 4);
 /// ```
 #[inline(always)]
 pub unsafe fn setup() -> Cleanup {
@@ -66,7 +86,7 @@ pub unsafe fn setup() -> Cleanup {
             if ruby_setup() != 0 {
                 panic!("Failed to setup Ruby");
             };
-            Cleanup()
+            Cleanup(Ruby::get_unchecked())
         }
         Err(true) => panic!("Ruby already initialized"),
         r => panic!("unexpected INIT state {:?}", r),
@@ -75,7 +95,7 @@ pub unsafe fn setup() -> Cleanup {
 
 /// Initialises the Ruby VM.
 ///
-/// See also [`setup`].
+/// See also [`Ruby::init`] and [`setup`].
 ///
 /// Calling this function is only required when embedding Ruby in Rust. It is
 /// not required when embedding Rust in Ruby, e.g. in a Ruby Gem.
@@ -84,16 +104,20 @@ pub unsafe fn setup() -> Cleanup {
 ///
 /// Must be called in `main()`, or at least a function higher up the stack than
 /// any code calling Ruby. Must not drop Cleanup until the very end of the
-/// process, after all Ruby execution has finished.
+/// process, after all Ruby execution has finished. Do not use Ruby values
+/// after Cleanup has been dropped.
 ///
 /// # Panics
 ///
-/// Panics if this or [`setup`] are collectively called more than once.
+/// Panics if this, [`setup`], or [`Ruby::init`] are collectively called more
+/// than once.
 ///
 /// # Examples
 ///
 /// ```
-/// let _cleanup = unsafe { magnus::embed::init() };
+/// let ruby = unsafe { magnus::embed::init() };
+/// let result: i64 = ruby.eval("2 + 2").unwrap();
+/// assert_eq!(result, 4);
 /// ```
 #[inline(always)]
 pub unsafe fn init() -> Cleanup {
@@ -121,8 +145,43 @@ unsafe fn init_options(opts: &[&str]) {
     };
 }
 
-#[allow(missing_docs)]
 impl Ruby {
+    /// Initialises the Ruby VM.
+    ///
+    /// See also [`init`] and [`setup`].
+    ///
+    /// Calling this function is only required when embedding Ruby in Rust. It
+    /// is not required when embedding Rust in Ruby, e.g. in a Ruby Gem.
+    ///
+    /// The Ruby VM can only be initialised once per process, and the Ruby VM
+    /// cleanup will be run once the passed function has completed.
+    ///
+    /// # Safety
+    ///
+    /// This function takes a function pointer, rather than a closure, so that
+    /// it is hard to leak Ruby values that could be used after the Ruby VM has
+    /// finished. It is still possible to leak Ruby values with, for example,
+    /// a `static` with interior mutability. Do not do this.
+    ///
+    /// # Panics
+    ///
+    /// Panics if this, [`init`], or [`setup`] are collectively called more
+    /// than once.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// magnus::Ruby::init(|ruby| {
+    ///     let result: i64 = ruby.eval("2 + 2")?;
+    ///     assert_eq!(result, 4);
+    ///     Ok(())
+    /// }).unwrap()
+    /// ```
+    pub fn init(func: fn(&Ruby) -> Result<(), Error>) -> Result<(), String> {
+        func(unsafe { &init() }).map_err(|e| e.to_string())
+    }
+
+    /// Sets the current script name.
     pub fn script<T>(&self, name: T)
     where
         T: IntoRString,

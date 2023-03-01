@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 ### Added
+- `Ruby::init` function to initialise Ruby when embedding Ruby in Rust that
+  runs a function with Ruby initialised, passing `&Ruby`.
 
 ### Changed
 - Ruby types are no longer `Send` or `Sync`.
@@ -22,6 +24,7 @@
 - `TypedData::class` and `TypedData::class_for` now take a `&Ruby` argument.
 - init function marked with `#[magnus::init]` optionally takes a `&Ruby`
   argument.
+- The value returned from `embed::init` derefs to `Ruby`.
 
 ### Deprecated
 - `typed_data::Obj::get` as it is made redundant by the `Deref` implementation
