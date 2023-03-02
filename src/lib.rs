@@ -101,15 +101,16 @@
 //! * [`serde_magnus`](https://docs.rs/serde_magnus) - Serde integration.
 //!
 //! # C Function Index
-//! <details>
-//! <summary>Click to show</summary>
 //!
 //! This lists all the Ruby C API functions currently implemented, and how they
 //! map to Rust functions and methods in Magnus.
-//!
+//
 // Currently unimplemented listed here, but not included in doc comments. The
 // plan is to start listing what's planned to implement, what can't/won't be
 // implemented, alternatives, etc.
+//
+//! <details>
+//! <summary>Click to show</summary>
 //!
 //! ## A-N
 //!

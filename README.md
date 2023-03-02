@@ -1,7 +1,7 @@
 # Magnus
 
-Ruby bindings for Rust. Write Ruby extension gems in Rust, or call Ruby code
-from a Rust binary.
+High level Ruby bindings for Rust. Write Ruby extension gems in Rust, or call
+Ruby code from a Rust binary.
 
 [API Docs] | [GitHub] | [crates.io]
 
@@ -452,15 +452,6 @@ In you the same directory as your `Cargo.toml` file, create a
 # Ruby.
 rustflags = ["-C", "link-dead-code=on"]
 ```
-
-## Alternatives
-
-* [rutie](https://github.com/danielpclark/rutie)
-* [rosy](https://github.com/nvzqz/rosy)
-* [ruby-sys](https://github.com/steveklabnik/ruby-sys)
-* [ruru](https://github.com/d-unseductable/ruru)
-* [plugger](https://github.com/dylanmckay/plugger)
-* [helix](https://github.com/tildeio/helix)
 
 ## Naming
 
