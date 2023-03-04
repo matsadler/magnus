@@ -68,6 +68,7 @@ impl RRational {
     /// let rational = RRational::new(2, NonZeroI64::new(4).unwrap());
     /// assert_eq!(rational.to_string(), "1/2");
     /// ```
+    #[cfg(feature = "friendly-api")]
     #[inline]
     pub fn new(num: i64, den: NonZeroI64) -> Self {
         get_ruby!().rational_new(num, den)

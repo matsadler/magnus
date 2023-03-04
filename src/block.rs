@@ -146,6 +146,7 @@ impl Proc {
     /// let res: bool = eval!("[1, 2, 3, 4, 5].inject(&proc) == 15", proc).unwrap();
     /// assert!(res);
     /// ```
+    #[cfg(feature = "friendly-api")]
     #[inline]
     pub fn new<R>(block: fn(&[Value], Option<Proc>) -> R) -> Self
     where
@@ -181,6 +182,7 @@ impl Proc {
     /// let res: bool = eval!("[1, 2, 3, 4, 5].inject(&proc) == 15", proc).unwrap();
     /// assert!(res);
     /// ```
+    #[cfg(feature = "friendly-api")]
     #[inline]
     pub fn from_fn<F, R>(block: F) -> Self
     where
@@ -399,6 +401,7 @@ impl Ruby {
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[cfg(feature = "friendly-api")]
 #[inline]
 pub fn block_given() -> bool {
     get_ruby!().block_given()
@@ -409,6 +412,7 @@ pub fn block_given() -> bool {
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[cfg(feature = "friendly-api")]
 #[inline]
 pub fn block_proc() -> Result<Proc, Error> {
     get_ruby!().block_proc()
@@ -424,6 +428,7 @@ pub fn block_proc() -> Result<Proc, Error> {
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[cfg(feature = "friendly-api")]
 #[inline]
 pub fn yield_value<T, U>(val: T) -> Result<U, Error>
 where
@@ -443,6 +448,7 @@ where
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[cfg(feature = "friendly-api")]
 #[inline]
 pub fn yield_values<T, U>(vals: T) -> Result<U, Error>
 where
@@ -462,6 +468,7 @@ where
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[cfg(feature = "friendly-api")]
 #[inline]
 pub fn yield_splat<T>(vals: RArray) -> Result<T, Error>
 where

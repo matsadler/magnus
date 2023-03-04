@@ -10,7 +10,7 @@ use rb_sys::{
 };
 
 use crate::{
-    encoding::{EncodingCapable, RbEncoding},
+    encoding::EncodingCapable,
     error::{protect, Error},
     into_value::IntoValue,
     r_string::{IntoRString, RString},
@@ -29,7 +29,7 @@ impl Ruby {
             RRegexp::from_rb_value_unchecked(rb_enc_reg_new(
                 pattern.as_ptr() as *const c_char,
                 pattern.len() as c_long,
-                RbEncoding::utf8().as_ptr(),
+                self.utf8_encoding().as_ptr(),
                 opts.0 as c_int,
             ))
         })
@@ -77,6 +77,7 @@ impl RRegexp {
     /// let res: bool = eval!(r#"regexp == /foo/i"#, regexp).unwrap();
     /// assert!(res);
     /// ```
+    #[cfg(feature = "friendly-api")]
     #[inline]
     pub fn new(pattern: &str, opts: Opts) -> Result<Self, Error> {
         get_ruby!().reg_new(pattern, opts)

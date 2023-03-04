@@ -1968,7 +1968,7 @@ impl Ruby {
         name: &str,
         superclass: ExceptionClass,
     ) -> Result<ExceptionClass, Error> {
-        define_class(name, superclass.as_r_class())
+        self.define_class(name, superclass.as_r_class())
             .map(|c| unsafe { ExceptionClass::from_value_unchecked(c.as_value()) })
     }
 
@@ -2091,6 +2091,7 @@ impl Ruby {
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[cfg(feature = "friendly-api")]
 #[inline]
 pub fn define_class(name: &str, superclass: RClass) -> Result<RClass, Error> {
     get_ruby!().define_class(name, superclass)
@@ -2101,6 +2102,7 @@ pub fn define_class(name: &str, superclass: RClass) -> Result<RClass, Error> {
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[cfg(feature = "friendly-api")]
 #[inline]
 pub fn define_module(name: &str) -> Result<RModule, Error> {
     get_ruby!().define_module(name)
@@ -2111,6 +2113,7 @@ pub fn define_module(name: &str) -> Result<RModule, Error> {
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[cfg(feature = "friendly-api")]
 #[inline]
 pub fn define_error(name: &str, superclass: ExceptionClass) -> Result<ExceptionClass, Error> {
     get_ruby!().define_error(name, superclass)
@@ -2121,6 +2124,7 @@ pub fn define_error(name: &str, superclass: ExceptionClass) -> Result<ExceptionC
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[cfg(feature = "friendly-api")]
 #[inline]
 pub fn define_variable<T>(name: &str, initial: T) -> Result<*mut Value, Error>
 where
@@ -2134,6 +2138,7 @@ where
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[cfg(feature = "friendly-api")]
 #[inline]
 pub fn define_global_const<T>(name: &str, value: T) -> Result<(), Error>
 where
@@ -2147,6 +2152,7 @@ where
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[cfg(feature = "friendly-api")]
 #[inline]
 pub fn define_global_function<M>(name: &str, func: M)
 where
@@ -2175,6 +2181,7 @@ where
 /// assert_eq!(match_data.matched().to_string().unwrap(), String::from("bar"));
 /// assert_eq!(match_data.nth_match(1).map(|v| v.to_string().unwrap()), Some(String::from("a")));
 /// ```
+#[cfg(feature = "friendly-api")]
 #[inline]
 pub fn backref_get() -> Option<RMatch> {
     get_ruby!().backref_get()
@@ -2187,6 +2194,7 @@ pub fn backref_get() -> Option<RMatch> {
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[cfg(feature = "friendly-api")]
 #[inline]
 pub fn current_receiver<T>() -> Result<T, Error>
 where
@@ -2204,6 +2212,7 @@ where
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[cfg(feature = "friendly-api")]
 #[inline]
 pub fn call_super<A, T>(args: A) -> Result<T, Error>
 where
@@ -2227,6 +2236,7 @@ where
 ///
 /// assert!(require("net/http").unwrap());
 /// ```
+#[cfg(feature = "friendly-api")]
 #[cfg(ruby_gte_2_7)]
 #[inline]
 pub fn require<T>(feature: T) -> Result<bool, Error>
@@ -2250,6 +2260,7 @@ where
 ///
 /// assert!(require("net/http").unwrap());
 /// ```
+#[cfg(feature = "friendly-api")]
 #[cfg(ruby_lt_2_7)]
 #[inline]
 pub fn require(feature: &str) -> Result<bool, Error> {
@@ -2277,6 +2288,7 @@ pub fn require(feature: &str) -> Result<bool, Error> {
 ///
 /// assert_eq!(magnus::eval::<i64>("1 + 2").unwrap(), 3);
 /// ```
+#[cfg(feature = "friendly-api")]
 #[inline]
 pub fn eval<T>(s: &str) -> Result<T, Error>
 where

@@ -89,6 +89,7 @@ impl Flonum {
     /// // representable as a Float, but Flonum does not have enough precision
     /// assert!(Flonum::from_f64(1.7272337110188890e-77).is_err());
     /// ```
+    #[cfg(feature = "friendly-api")]
     #[inline]
     pub fn from_f64(n: f64) -> Result<Self, RFloat> {
         get_ruby!().flonum_from_f64(n)

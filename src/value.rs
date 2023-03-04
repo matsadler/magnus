@@ -36,7 +36,7 @@ const RUBY_FIXNUM_MIN: c_long = c_long::MIN / 2;
 use crate::{
     block::Proc,
     class::RClass,
-    encoding::{EncodingCapable, RbEncoding},
+    encoding::EncodingCapable,
     enumerator::Enumerator,
     error::{protect, Error},
     integer::{Integer, IntegerType},
@@ -1101,12 +1101,13 @@ pub trait ReprValue: private::ReprValue {
     /// assert_eq!(Symbol::new("foo").inspect(), ":foo");
     /// ```
     fn inspect(self) -> String {
+        let handle = Ruby::get_with(self);
         unsafe {
             let s = protect(|| RString::from_rb_value_unchecked(rb_inspect(self.as_rb_value())))
                 .unwrap_or_else(|_| {
                     RString::from_rb_value_unchecked(rb_any_to_s(self.as_rb_value()))
                 });
-            s.conv_enc(RbEncoding::utf8())
+            s.conv_enc(handle.utf8_encoding())
                 .unwrap_or(s)
                 .to_string_lossy()
                 .into_owned()
@@ -1756,6 +1757,7 @@ impl Fixnum {
     /// assert!(Fixnum::from_i64(4611686018427387904).is_err());
     /// assert!(Fixnum::from_i64(-4611686018427387905).is_err());
     /// ```
+    #[cfg(feature = "friendly-api")]
     #[inline]
     pub fn from_i64(n: i64) -> Result<Self, RBignum> {
         get_ruby!().fixnum_from_i64(n)
@@ -1780,6 +1782,7 @@ impl Fixnum {
     /// // too big
     /// assert!(Fixnum::from_u64(4611686018427387904).is_err());
     /// ```
+    #[cfg(feature = "friendly-api")]
     #[inline]
     pub fn from_u64(n: u64) -> Result<Self, RBignum> {
         get_ruby!().fixnum_from_u64(n)
@@ -2107,7 +2110,7 @@ impl Ruby {
             let res = Value::new(rb_check_symbol_cstr(
                 name.as_ptr() as *mut c_char,
                 name.len() as c_long,
-                RbEncoding::utf8().as_ptr(),
+                self.utf8_encoding().as_ptr(),
             ));
             (!res.is_nil()).then(|| StaticSymbol::from_rb_value_unchecked(res.as_rb_value()))
         }
@@ -2176,6 +2179,7 @@ impl StaticSymbol {
     /// let result: bool = eval!(":example == sym", sym).unwrap();
     /// assert!(result);
     /// ```
+    #[cfg(feature = "friendly-api")]
     #[inline]
     pub fn new<T>(name: T) -> Self
     where
@@ -2200,6 +2204,7 @@ impl StaticSymbol {
     /// eval::<StaticSymbol>(":example").unwrap();
     /// assert!(StaticSymbol::check("example").is_some());
     /// ```
+    #[cfg(feature = "friendly-api")]
     #[inline]
     pub fn check(name: &str) -> Option<Self> {
         get_ruby!().check_symbol(name)
@@ -2301,7 +2306,7 @@ impl Ruby {
             rb_check_id_cstr(
                 name.as_ptr() as *mut c_char,
                 name.len() as c_long,
-                RbEncoding::utf8().as_ptr(),
+                self.utf8_encoding().as_ptr(),
             )
         };
         (res != 0).then(|| Id::from_rb_id(res))
@@ -2329,6 +2334,7 @@ impl Id {
     /// let id = Id::new("example");
     /// assert_eq!(id.name().unwrap(), "example");
     /// ```
+    #[cfg(feature = "friendly-api")]
     pub fn new<T>(name: T) -> Self
     where
         T: AsRef<str>,
@@ -2360,6 +2366,7 @@ impl Id {
     /// StaticSymbol::new("example");
     /// assert!(Id::check("example").is_some());
     /// ```
+    #[cfg(feature = "friendly-api")]
     #[inline]
     pub fn check(name: &str) -> Option<Self> {
         get_ruby!().check_id(name)
@@ -2407,9 +2414,10 @@ pub trait IntoId: Sized {
     ///
     /// Panics if called from a non-Ruby thread.
     ///
+    #[cfg(feature = "friendly-api")]
     #[inline]
     fn into_id(self) -> Id {
-        self.into_id_with(&Ruby::get().unwrap())
+        self.into_id_with(&get_ruby!())
     }
 
     /// Convert `self` into [`Id`].

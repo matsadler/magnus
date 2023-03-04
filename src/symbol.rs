@@ -79,6 +79,7 @@ impl Symbol {
     /// let result: bool = eval!(":example == sym", sym).unwrap();
     /// assert!(result);
     /// ```
+    #[cfg(feature = "friendly-api")]
     #[inline]
     pub fn new<T: AsRef<str>>(name: T) -> Self {
         get_ruby!().to_symbol(name)
@@ -198,9 +199,10 @@ pub trait IntoSymbol: Sized {
     ///
     /// Panics if called from a non-Ruby thread.
     ///
+    #[cfg(feature = "friendly-api")]
     #[inline]
     fn into_symbol(self) -> Symbol {
-        self.into_symbol_with(&Ruby::get().unwrap())
+        self.into_symbol_with(&get_ruby!())
     }
 
     /// Convert `self` into [`Symbol`].

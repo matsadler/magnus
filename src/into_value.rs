@@ -19,9 +19,10 @@ pub trait IntoValue: Sized {
     ///
     /// Panics if called from a non-Ruby thread.
     ///
+    #[cfg(feature = "friendly-api")]
     #[inline]
     fn into_value(self) -> Value {
-        self.into_value_with(&Ruby::get().unwrap())
+        self.into_value_with(&get_ruby!())
     }
 
     /// Convert `self` into [`Value`].
@@ -387,6 +388,6 @@ where
     T: ArgList,
 {
     fn into_array_arg_list_with(self, handle: &Ruby) -> RArray {
-        RArray::from_slice(self.into_arg_list_with(handle).as_ref())
+        handle.ary_new_from_values(self.into_arg_list_with(handle).as_ref())
     }
 }

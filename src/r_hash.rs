@@ -4,11 +4,13 @@ use std::{
     collections::HashMap,
     fmt,
     hash::Hash,
-    iter::FromIterator,
     marker::PhantomData,
     os::raw::{c_int, c_long},
     panic::AssertUnwindSafe,
 };
+#[cfg(feature = "friendly-api")]
+use std::iter::FromIterator;
+
 
 #[cfg(ruby_gte_2_7)]
 use rb_sys::rb_hash_bulk_insert;
@@ -152,6 +154,7 @@ impl RHash {
     /// let hash = RHash::new();
     /// assert!(hash.is_empty());
     /// ```
+    #[cfg(feature = "friendly-api")]
     #[inline]
     pub fn new() -> RHash {
         get_ruby!().hash_new()
@@ -173,6 +176,7 @@ impl RHash {
     /// let ary = RHash::with_capacity(16);
     /// assert!(ary.is_empty());
     /// ```
+    #[cfg(feature = "friendly-api")]
     #[cfg(any(ruby_gte_3_2, docsrs))]
     #[cfg_attr(docsrs, doc(cfg(ruby_gte_3_2)))]
     #[inline]
@@ -666,6 +670,7 @@ where
     }
 }
 
+#[cfg(feature = "friendly-api")]
 impl<K, V> FromIterator<(K, V)> for RHash
 where
     K: IntoValue,

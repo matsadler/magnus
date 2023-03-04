@@ -505,6 +505,7 @@ impl Ruby {
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[cfg(feature = "friendly-api")]
 #[inline]
 pub fn array() -> RClass {
     get_ruby!().class_array()
@@ -515,6 +516,7 @@ pub fn array() -> RClass {
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[cfg(feature = "friendly-api")]
 #[inline]
 pub fn basic_object() -> RClass {
     get_ruby!().class_basic_object()
@@ -525,6 +527,7 @@ pub fn basic_object() -> RClass {
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[cfg(feature = "friendly-api")]
 #[inline]
 pub fn binding() -> RClass {
     get_ruby!().class_binding()
@@ -535,6 +538,7 @@ pub fn binding() -> RClass {
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[cfg(feature = "friendly-api")]
 #[inline]
 pub fn class() -> RClass {
     get_ruby!().class_class()
@@ -545,6 +549,7 @@ pub fn class() -> RClass {
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[cfg(feature = "friendly-api")]
 #[inline]
 pub fn complex() -> RClass {
     get_ruby!().class_complex()
@@ -555,6 +560,7 @@ pub fn complex() -> RClass {
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[cfg(feature = "friendly-api")]
 #[inline]
 pub fn dir() -> RClass {
     get_ruby!().class_dir()
@@ -565,6 +571,7 @@ pub fn dir() -> RClass {
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[cfg(feature = "friendly-api")]
 #[inline]
 pub fn encoding() -> RClass {
     get_ruby!().class_encoding()
@@ -575,6 +582,7 @@ pub fn encoding() -> RClass {
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[cfg(feature = "friendly-api")]
 #[inline]
 pub fn enumerator() -> RClass {
     get_ruby!().class_enumerator()
@@ -585,6 +593,7 @@ pub fn enumerator() -> RClass {
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[cfg(feature = "friendly-api")]
 #[inline]
 pub fn false_class() -> RClass {
     get_ruby!().class_false_class()
@@ -595,6 +604,7 @@ pub fn false_class() -> RClass {
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[cfg(feature = "friendly-api")]
 #[inline]
 pub fn file() -> RClass {
     get_ruby!().class_file()
@@ -605,6 +615,7 @@ pub fn file() -> RClass {
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[cfg(feature = "friendly-api")]
 #[inline]
 pub fn float() -> RClass {
     get_ruby!().class_float()
@@ -615,6 +626,7 @@ pub fn float() -> RClass {
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[cfg(feature = "friendly-api")]
 #[inline]
 pub fn hash() -> RClass {
     get_ruby!().class_hash()
@@ -625,6 +637,7 @@ pub fn hash() -> RClass {
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[cfg(feature = "friendly-api")]
 #[inline]
 pub fn io() -> RClass {
     get_ruby!().class_io()
@@ -635,6 +648,7 @@ pub fn io() -> RClass {
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[cfg(feature = "friendly-api")]
 #[inline]
 pub fn integer() -> RClass {
     get_ruby!().class_integer()
@@ -645,6 +659,7 @@ pub fn integer() -> RClass {
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[cfg(feature = "friendly-api")]
 #[inline]
 pub fn match_class() -> RClass {
     get_ruby!().class_match_class()
@@ -655,6 +670,7 @@ pub fn match_class() -> RClass {
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[cfg(feature = "friendly-api")]
 #[inline]
 pub fn method() -> RClass {
     get_ruby!().class_method()
@@ -665,6 +681,7 @@ pub fn method() -> RClass {
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[cfg(feature = "friendly-api")]
 #[inline]
 pub fn module() -> RClass {
     get_ruby!().class_module()
@@ -675,6 +692,7 @@ pub fn module() -> RClass {
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[cfg(feature = "friendly-api")]
 #[inline]
 pub fn name_error_mesg() -> RClass {
     get_ruby!().class_name_error_mesg()
@@ -685,6 +703,7 @@ pub fn name_error_mesg() -> RClass {
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[cfg(feature = "friendly-api")]
 #[inline]
 pub fn nil_class() -> RClass {
     get_ruby!().class_nil_class()
@@ -695,6 +714,7 @@ pub fn nil_class() -> RClass {
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[cfg(feature = "friendly-api")]
 #[inline]
 pub fn numeric() -> RClass {
     get_ruby!().class_numeric()
@@ -705,6 +725,7 @@ pub fn numeric() -> RClass {
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[cfg(feature = "friendly-api")]
 #[inline]
 pub fn object() -> RClass {
     get_ruby!().class_object()
@@ -715,6 +736,7 @@ pub fn object() -> RClass {
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[cfg(feature = "friendly-api")]
 #[inline]
 pub fn proc() -> RClass {
     get_ruby!().class_proc()
@@ -725,6 +747,7 @@ pub fn proc() -> RClass {
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[cfg(feature = "friendly-api")]
 #[inline]
 pub fn random() -> RClass {
     get_ruby!().class_random()
@@ -735,6 +758,7 @@ pub fn random() -> RClass {
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[cfg(feature = "friendly-api")]
 #[inline]
 pub fn range() -> RClass {
     get_ruby!().class_range()
@@ -745,6 +769,7 @@ pub fn range() -> RClass {
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[cfg(feature = "friendly-api")]
 #[inline]
 pub fn rational() -> RClass {
     get_ruby!().class_rational()
@@ -755,6 +780,7 @@ pub fn rational() -> RClass {
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[cfg(feature = "friendly-api")]
 #[cfg(any(ruby_gte_3_1, docsrs))]
 #[cfg_attr(docsrs, doc(cfg(ruby_gte_3_1)))]
 #[inline]
@@ -767,6 +793,7 @@ pub fn refinement() -> RClass {
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[cfg(feature = "friendly-api")]
 #[inline]
 pub fn regexp() -> RClass {
     get_ruby!().class_regexp()
@@ -777,6 +804,7 @@ pub fn regexp() -> RClass {
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[cfg(feature = "friendly-api")]
 #[inline]
 pub fn stat() -> RClass {
     get_ruby!().class_stat()
@@ -787,6 +815,7 @@ pub fn stat() -> RClass {
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[cfg(feature = "friendly-api")]
 #[inline]
 pub fn string() -> RClass {
     get_ruby!().class_string()
@@ -797,6 +826,7 @@ pub fn string() -> RClass {
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[cfg(feature = "friendly-api")]
 #[inline]
 pub fn struct_class() -> RClass {
     get_ruby!().class_struct_class()
@@ -807,6 +837,7 @@ pub fn struct_class() -> RClass {
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[cfg(feature = "friendly-api")]
 #[inline]
 pub fn symbol() -> RClass {
     get_ruby!().class_symbol()
@@ -817,6 +848,7 @@ pub fn symbol() -> RClass {
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[cfg(feature = "friendly-api")]
 #[inline]
 pub fn thread() -> RClass {
     get_ruby!().class_thread()
@@ -827,6 +859,7 @@ pub fn thread() -> RClass {
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[cfg(feature = "friendly-api")]
 #[inline]
 pub fn time() -> RClass {
     get_ruby!().class_time()
@@ -837,6 +870,7 @@ pub fn time() -> RClass {
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[cfg(feature = "friendly-api")]
 #[inline]
 pub fn true_class() -> RClass {
     get_ruby!().class_true_class()
@@ -847,6 +881,7 @@ pub fn true_class() -> RClass {
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[cfg(feature = "friendly-api")]
 #[inline]
 pub fn unbound_method() -> RClass {
     get_ruby!().class_unbound_method()

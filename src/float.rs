@@ -94,6 +94,7 @@ impl Float {
     /// let res: bool = eval!("f == 1.7272337110188890e-77", f = Float::from_f64(1.7272337110188890e-77)).unwrap();
     /// assert!(res);
     /// ```
+    #[cfg(feature = "friendly-api")]
     #[inline]
     pub fn from_f64(n: f64) -> Self {
         get_ruby!().float_from_f64(n)

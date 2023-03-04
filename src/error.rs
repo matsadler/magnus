@@ -12,7 +12,6 @@ use crate::{
     exception::Exception,
     into_value::IntoValue,
     module::Module,
-    r_string::RString,
     value::{private::ReprValue as _, ReprValue, Value},
     ExceptionClass, Ruby,
 };
@@ -91,6 +90,7 @@ impl Error {
         since = "0.5.0",
         note = "Please use `Error::new(exception::runtime_error(), msg)` instead"
     )]
+    #[cfg(feature = "friendly-api")]
     pub fn runtime_error<T>(msg: T) -> Self
     where
         T: Into<Cow<'static, str>>,
@@ -103,6 +103,7 @@ impl Error {
     /// # Panics
     ///
     /// Panics if called from a non-Ruby thread.
+    #[cfg(feature = "friendly-api")]
     #[inline]
     pub fn iter_break<T>(val: Option<T>) -> Self
     where
@@ -130,9 +131,10 @@ impl Error {
     ///
     /// Panics if called on an `Error::Jump`.
     fn exception(self) -> Exception {
+        let handle = unsafe { Ruby::get_unchecked() };
         match self {
             Error::Jump(_) => panic!("Error::exception() called on {}", self),
-            Error::Error(class, msg) => match class.new_instance((RString::new(msg.as_ref()),)) {
+            Error::Error(class, msg) => match class.new_instance((handle.str_new(msg.as_ref()),)) {
                 Ok(e) | Err(Error::Exception(e)) => e,
                 Err(err) => unreachable!("*very* unexpected error: {}", err),
             },
@@ -375,6 +377,7 @@ impl Ruby {
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[cfg(feature = "friendly-api")]
 #[inline]
 pub fn warning(s: &str) {
     get_ruby!().warning(s)

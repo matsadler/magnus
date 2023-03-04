@@ -196,6 +196,7 @@ impl Ruby {
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[cfg(feature = "friendly-api")]
 #[inline]
 pub fn ruby_script<T>(name: T)
 where

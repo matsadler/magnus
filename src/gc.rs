@@ -157,7 +157,7 @@ impl Ruby {
     }
 
     pub fn gc_all_stats(&self) -> RHash {
-        let res = RHash::new();
+        let res = self.hash_new();
         unsafe { rb_gc_stat(res.as_rb_value()) };
         res
     }
@@ -173,6 +173,7 @@ impl Ruby {
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[cfg(feature = "friendly-api")]
 #[inline]
 pub fn disable() -> bool {
     get_ruby!().gc_disable()
@@ -188,6 +189,7 @@ pub fn disable() -> bool {
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[cfg(feature = "friendly-api")]
 #[inline]
 pub fn enable() -> bool {
     get_ruby!().gc_enable()
@@ -206,6 +208,7 @@ pub fn enable() -> bool {
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[cfg(feature = "friendly-api")]
 #[inline]
 pub fn start() {
     get_ruby!().gc_start()
@@ -223,6 +226,7 @@ pub fn start() {
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[cfg(feature = "friendly-api")]
 #[inline]
 pub fn adjust_memory_usage(diff: isize) {
     get_ruby!().gc_adjust_memory_usage(diff)
@@ -234,6 +238,7 @@ pub fn adjust_memory_usage(diff: isize) {
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[cfg(feature = "friendly-api")]
 #[inline]
 pub fn count() -> usize {
     get_ruby!().gc_count()
@@ -244,6 +249,7 @@ pub fn count() -> usize {
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[cfg(feature = "friendly-api")]
 #[inline]
 pub fn stat<T>(key: T) -> Result<usize, Error>
 where
@@ -258,6 +264,7 @@ where
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[cfg(feature = "friendly-api")]
 #[inline]
 pub fn all_stats() -> RHash {
     get_ruby!().gc_all_stats()

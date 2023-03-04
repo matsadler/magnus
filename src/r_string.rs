@@ -29,7 +29,7 @@ use rb_sys::{
 };
 
 use crate::{
-    encoding::{self, Coderange, EncodingCapable, RbEncoding},
+    encoding::{Coderange, EncodingCapable, RbEncoding},
     error::{protect, Error},
     into_value::{IntoValue, IntoValueFromNative},
     object::Object,
@@ -65,7 +65,7 @@ impl Ruby {
 
     pub fn str_with_capacity(&self, n: usize) -> RString {
         let s = self.str_buf_new(n);
-        s.enc_associate(encoding::Index::utf8()).unwrap();
+        s.enc_associate(self.utf8_encindex()).unwrap();
         s
     }
 
@@ -169,12 +169,14 @@ impl RString {
     /// let res: bool = eval!(r#"val == "example""#, val).unwrap();
     /// assert!(res);
     /// ```
+    #[cfg(feature = "friendly-api")]
     #[inline]
     pub fn new(s: &str) -> Self {
         get_ruby!().str_new(s)
     }
 
     /// Implementation detail of [`r_string`].
+    #[cfg(feature = "friendly-api")]
     #[doc(hidden)]
     #[inline]
     pub unsafe fn new_lit(ptr: *const c_char, len: c_long) -> Self {
@@ -201,6 +203,7 @@ impl RString {
     /// let res: bool = eval!(r#"buf == "\r\x0E\n\r\v\x0E\x0E\x0F""#, buf).unwrap();
     /// assert!(res);
     /// ```
+    #[cfg(feature = "friendly-api")]
     #[inline]
     pub fn buf_new(n: usize) -> Self {
         get_ruby!().str_buf_new(n)
@@ -228,6 +231,7 @@ impl RString {
     /// let res: bool = eval!(r#"s == "foobarbaz""#, s).unwrap();
     /// assert!(res);
     /// ```
+    #[cfg(feature = "friendly-api")]
     #[inline]
     pub fn with_capacity(n: usize) -> Self {
         get_ruby!().str_with_capacity(n)
@@ -251,6 +255,7 @@ impl RString {
     /// let res: bool = eval!(r#"buf == "\r\x0E\n\r\v\x0E\x0E\x0F""#, buf).unwrap();
     /// assert!(res);
     /// ```
+    #[cfg(feature = "friendly-api")]
     #[inline]
     pub fn from_slice(s: &[u8]) -> Self {
         get_ruby!().str_from_slice(s)
@@ -281,6 +286,7 @@ impl RString {
     /// let res: bool = eval!(r#"val == "\xFF\x80\x80".force_encoding("BINARY")"#, val).unwrap();
     /// assert!(res);
     /// ```
+    #[cfg(feature = "friendly-api")]
     #[inline]
     pub fn enc_new<T, E>(s: T, enc: E) -> Self
     where
@@ -317,6 +323,7 @@ impl RString {
     /// let res: bool = eval!(r#"c == "🦀""#, c).unwrap();
     /// assert!(res);
     /// ```
+    #[cfg(feature = "friendly-api")]
     #[inline]
     pub fn from_char(c: char) -> Self {
         get_ruby!().str_from_char(c)
@@ -350,6 +357,7 @@ impl RString {
     /// let res: bool = eval!(r#"c == "🦀""#, c).unwrap();
     /// assert!(res);
     /// ```
+    #[cfg(feature = "friendly-api")]
     #[inline]
     pub fn chr<T>(code: u32, enc: T) -> Result<Self, Error>
     where
@@ -560,9 +568,10 @@ impl RString {
     /// assert!(!s.is_utf8_compatible_encoding());
     /// ```
     pub fn is_utf8_compatible_encoding(self) -> bool {
+        let handle = Ruby::get_with(self);
         let encindex = self.enc_get();
         // us-ascii is a 100% compatible subset of utf8
-        encindex == encoding::Index::utf8() || encindex == encoding::Index::usascii()
+        encindex == handle.utf8_encindex() || encindex == handle.usascii_encindex()
     }
 
     /// Returns a new string by reencoding `self` from its current encoding to
@@ -826,11 +835,12 @@ impl RString {
     }
 
     unsafe fn test_as_str_unconstrained<'a>(self) -> Option<&'a str> {
+        let handle = Ruby::get_with(self);
         let enc = self.enc_get();
         let cr = self.enc_coderange_scan();
         ((self.is_utf8_compatible_encoding()
             && (cr == Coderange::SevenBit || cr == Coderange::Valid))
-            || (enc == encoding::Index::ascii8bit() && cr == Coderange::SevenBit))
+            || (enc == handle.ascii8bit_encindex() && cr == Coderange::SevenBit))
             .then(|| str::from_utf8_unchecked(self.as_slice_unconstrained()))
     }
 
@@ -892,16 +902,17 @@ impl RString {
     /// assert_eq!(s.to_string().unwrap(), "example");
     /// ```
     pub fn to_string(self) -> Result<String, Error> {
+        let handle = Ruby::get_with(self);
         let utf8 = if self.is_utf8_compatible_encoding() {
             self
         } else {
-            self.conv_enc(RbEncoding::utf8())?
+            self.conv_enc(handle.utf8_encoding())?
         };
         str::from_utf8(unsafe { utf8.as_slice() })
             .map(ToOwned::to_owned)
             .map_err(|e| {
                 Error::new(
-                    Ruby::get_with(self).exception_encoding_error(),
+                    handle.exception_encoding_error(),
                     format!("{}", e),
                 )
             })
@@ -939,12 +950,12 @@ impl RString {
     /// assert_eq!(s.to_char().unwrap(), 'a');
     /// ```
     pub fn to_char(self) -> Result<char, Error> {
+        let handle = Ruby::get_with(self);
         let utf8 = if self.is_utf8_compatible_encoding() {
             self
         } else {
-            self.conv_enc(RbEncoding::utf8())?
+            self.conv_enc(handle.utf8_encoding())?
         };
-        let handle = Ruby::get_with(self);
         unsafe {
             str::from_utf8(utf8.as_slice())
                 .map_err(|e| Error::new(handle.exception_encoding_error(), format!("{}", e)))?
@@ -1473,9 +1484,10 @@ pub trait IntoRString: Sized {
     ///
     /// Panics if called from a non-Ruby thread.
     ///
+    #[cfg(feature = "friendly-api")]
     #[inline]
     fn into_r_string(self) -> RString {
-        self.into_r_string_with(&Ruby::get().unwrap())
+        self.into_r_string_with(&get_ruby!())
     }
 
     /// Convert `self` into [`RString`].

@@ -65,6 +65,7 @@ impl RFloat {
     ///
     /// Returns `Ok(RFloat)` if `n` requires a high precision float, otherwise
     /// returns `Err(Fixnum)`.
+    #[cfg(feature = "friendly-api")]
     #[cfg(ruby_use_flonum)]
     #[inline]
     pub fn from_f64(n: f64) -> Result<Self, Flonum> {
@@ -76,6 +77,7 @@ impl RFloat {
     /// # Panics
     ///
     /// Panics if called from a non-Ruby thread.
+    #[cfg(feature = "friendly-api")]
     #[cfg(not(ruby_use_flonum))]
     #[inline]
     pub fn from_f64(n: f64) -> Result<Self, Self> {

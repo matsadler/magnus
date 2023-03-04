@@ -87,6 +87,7 @@ impl RModule {
     /// let module = RModule::new();
     /// assert!(module.is_kind_of(class::module()));
     /// ```
+    #[cfg(feature = "friendly-api")]
     #[inline]
     pub fn new() -> Self {
         get_ruby!().module_new()
@@ -731,6 +732,7 @@ impl Ruby {
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[cfg(feature = "friendly-api")]
 #[inline]
 pub fn comparable() -> RModule {
     get_ruby!().module_comparable()
@@ -741,6 +743,7 @@ pub fn comparable() -> RModule {
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[cfg(feature = "friendly-api")]
 #[inline]
 pub fn enumerable() -> RModule {
     get_ruby!().module_enumerable()
@@ -751,6 +754,7 @@ pub fn enumerable() -> RModule {
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[cfg(feature = "friendly-api")]
 #[inline]
 pub fn errno() -> RModule {
     get_ruby!().module_errno()
@@ -761,6 +765,7 @@ pub fn errno() -> RModule {
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[cfg(feature = "friendly-api")]
 #[inline]
 pub fn file_test() -> RModule {
     get_ruby!().module_file_test()
@@ -771,6 +776,7 @@ pub fn file_test() -> RModule {
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[cfg(feature = "friendly-api")]
 #[inline]
 pub fn gc() -> RModule {
     get_ruby!().module_gc()
@@ -781,6 +787,7 @@ pub fn gc() -> RModule {
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[cfg(feature = "friendly-api")]
 #[inline]
 pub fn kernel() -> RModule {
     get_ruby!().module_kernel()
@@ -791,6 +798,7 @@ pub fn kernel() -> RModule {
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[cfg(feature = "friendly-api")]
 #[inline]
 pub fn math() -> RModule {
     get_ruby!().module_math()
@@ -801,6 +809,7 @@ pub fn math() -> RModule {
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[cfg(feature = "friendly-api")]
 #[inline]
 pub fn process() -> RModule {
     get_ruby!().module_process()
@@ -811,6 +820,7 @@ pub fn process() -> RModule {
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[cfg(feature = "friendly-api")]
 #[inline]
 pub fn wait_readable() -> RModule {
     get_ruby!().module_wait_readable()
@@ -821,6 +831,7 @@ pub fn wait_readable() -> RModule {
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread.
+#[cfg(feature = "friendly-api")]
 #[inline]
 pub fn wait_writable() -> RModule {
     get_ruby!().module_wait_writable()

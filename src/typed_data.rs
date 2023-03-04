@@ -515,7 +515,7 @@ impl Ruby {
     where
         T: TypedData,
     {
-        let inner = RTypedData::wrap(data);
+        let inner = self.wrap(data);
         Obj {
             inner,
             phantom: PhantomData,
@@ -550,6 +550,7 @@ where
     /// let value = typed_data::Obj::wrap(Point { x: 4, y: 2 });
     /// assert!(value.is_kind_of(point_class));
     /// ```
+    #[cfg(feature = "friendly-api")]
     #[inline]
     pub fn wrap(data: T) -> Self {
         get_ruby!().obj_wrap(data)
@@ -1133,7 +1134,7 @@ where
         let (freeze,) = kwargs.optional;
         let freeze = freeze.flatten();
 
-        let clone = Obj::wrap((*rbself).clone());
+        let clone = Ruby::get_with(rbself).obj_wrap((*rbself).clone());
         let class_clone = unsafe { rb_singleton_class_clone(rbself.as_rb_value()) };
         unsafe { rb_obj_reveal(clone.as_rb_value(), class_clone) };
         unsafe { rb_singleton_class_attached(class_clone, clone.as_rb_value()) };

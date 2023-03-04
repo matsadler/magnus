@@ -18,10 +18,12 @@ members = ["magnus-macros"]
 exclude = ["examples/rust_blank/ext/rust_blank", "examples/custom_exception_ruby/ext/ahriman", "examples/custom_exception_rust/ext/ahriman", "examples/complete_object/ext/temperature"]
 
 [features]
+default = ["friendly-api"]
+bytes-crate = ["bytes"]
 embed = ["rb-sys/link-ruby"]
+friendly-api = []
 rb-sys-interop = []
 ruby-static = ["rb-sys/ruby-static"]
-bytes-crate = ["bytes"]
 
 [dependencies]
 magnus-macros = { version = "0.4.0", path = "magnus-macros" }

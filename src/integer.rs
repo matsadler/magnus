@@ -112,6 +112,7 @@ impl Integer {
     /// let res: bool = eval!("i == -4611686018427387905", i = Integer::from_i64(-4611686018427387905)).unwrap();
     /// assert!(res);
     /// ```
+    #[cfg(feature = "friendly-api")]
     #[inline]
     pub fn from_i64(n: i64) -> Self {
         get_ruby!().integer_from_i64(n)
@@ -134,6 +135,7 @@ impl Integer {
     /// let res: bool = eval!("i == 4611686018427387904", i = Integer::from_u64(4611686018427387904)).unwrap();
     /// assert!(res);
     /// ```
+    #[cfg(feature = "friendly-api")]
     #[inline]
     pub fn from_u64(n: u64) -> Self {
         get_ruby!().integer_from_u64(n)

@@ -1029,9 +1029,10 @@ mod private {
         const REQ: bool = true;
 
         fn from_opt(val: Option<Value>) -> Result<Self, Error> {
+            let handle = unsafe { Ruby::get_unchecked() };
             let val = val.expect("expected keywords");
             if val.is_nil() {
-                return Ok(RHash::new());
+                return Ok(handle.hash_new());
             }
             TryConvert::try_convert(val)
         }
@@ -2206,6 +2207,7 @@ impl Ruby {
 /// assert_eq!(eval::<String>("example(1)").unwrap_err().to_string(), "wrong number of arguments (given 1, expected 2..4)");
 /// assert_eq!(eval::<String>("example(1, 2, 3, 4, 5)").unwrap_err().to_string(), "wrong number of arguments (given 5, expected 2..4)");
 /// ```
+#[cfg(feature = "friendly-api")]
 #[inline]
 pub fn check_arity<T>(len: usize, bounds: T) -> Result<(), Error>
 where

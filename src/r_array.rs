@@ -1,6 +1,9 @@
 use std::{
-    cmp::Ordering, convert::TryInto, fmt, iter::FromIterator, os::raw::c_long, ptr::NonNull, slice,
+    cmp::Ordering, convert::TryInto, fmt, os::raw::c_long, ptr::NonNull, slice,
 };
+#[cfg(feature = "friendly-api")]
+use std::iter::FromIterator;
+
 
 #[cfg(ruby_gte_3_0)]
 use rb_sys::ruby_rarray_consts::RARRAY_EMBED_LEN_SHIFT;
@@ -134,6 +137,7 @@ impl RArray {
     /// let ary = RArray::new();
     /// assert!(ary.is_empty());
     /// ```
+    #[cfg(feature = "friendly-api")]
     #[inline]
     pub fn new() -> Self {
         get_ruby!().ary_new()
@@ -155,6 +159,7 @@ impl RArray {
     /// let ary = RArray::with_capacity(16);
     /// assert!(ary.is_empty());
     /// ```
+    #[cfg(feature = "friendly-api")]
     #[inline]
     pub fn with_capacity(n: usize) -> Self {
         get_ruby!().ary_new_capa(n)
@@ -402,6 +407,7 @@ impl RArray {
     /// let res: bool = eval!("ary == [:a, :b, :c]", ary).unwrap();
     /// assert!(res);
     /// ```
+    #[cfg(feature = "friendly-api")]
     #[inline]
     pub fn from_slice<T>(slice: &[T]) -> Self
     where
@@ -729,6 +735,7 @@ impl RArray {
     /// let res: bool = eval!("ary == [1, 2, 3]", ary).unwrap();
     /// assert!(res);
     /// ```
+    #[cfg(feature = "friendly-api")]
     #[inline]
     pub fn from_vec<T>(vec: Vec<T>) -> Self
     where
@@ -1616,6 +1623,7 @@ where
     }
 }
 
+#[cfg(feature = "friendly-api")]
 impl<T> FromIterator<T> for RArray
 where
     T: IntoValue,
