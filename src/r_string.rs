@@ -910,12 +910,7 @@ impl RString {
         };
         str::from_utf8(unsafe { utf8.as_slice() })
             .map(ToOwned::to_owned)
-            .map_err(|e| {
-                Error::new(
-                    handle.exception_encoding_error(),
-                    format!("{}", e),
-                )
-            })
+            .map_err(|e| Error::new(handle.exception_encoding_error(), format!("{}", e)))
     }
 
     /// Returns `self` as an owned Rust `Bytes`.

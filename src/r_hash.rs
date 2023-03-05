@@ -1,5 +1,7 @@
 //! Types and functions for working with Ruby’s Hash class.
 
+#[cfg(feature = "friendly-api")]
+use std::iter::FromIterator;
 use std::{
     collections::HashMap,
     fmt,
@@ -8,9 +10,6 @@ use std::{
     os::raw::{c_int, c_long},
     panic::AssertUnwindSafe,
 };
-#[cfg(feature = "friendly-api")]
-use std::iter::FromIterator;
-
 
 #[cfg(ruby_gte_2_7)]
 use rb_sys::rb_hash_bulk_insert;

@@ -1,9 +1,6 @@
-use std::{
-    cmp::Ordering, convert::TryInto, fmt, os::raw::c_long, ptr::NonNull, slice,
-};
 #[cfg(feature = "friendly-api")]
 use std::iter::FromIterator;
-
+use std::{cmp::Ordering, convert::TryInto, fmt, os::raw::c_long, ptr::NonNull, slice};
 
 #[cfg(ruby_gte_3_0)]
 use rb_sys::ruby_rarray_consts::RARRAY_EMBED_LEN_SHIFT;
