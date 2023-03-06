@@ -24,6 +24,8 @@
 - `TypedData::class` and `TypedData::class_for` now take a `&Ruby` argument.
 - init function marked with `#[magnus::init]` optionally takes a `&Ruby`
   argument.
+- function bound as Ruby methods with `method!()` and `function!()` optionally
+  take `&Ruby` as a first argument.
 - The value returned from `embed::init` derefs to `Ruby`.
 
 ### Deprecated

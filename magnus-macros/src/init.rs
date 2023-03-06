@@ -27,19 +27,14 @@ pub fn expand(args: AttributeArgs, input: ItemFn) -> TokenStream {
     );
     let init_name = input.sig.ident.clone();
 
-    let init_type = if input.sig.inputs.is_empty() {
-        quote!(magnus::method::Init)
-    } else {
-        quote!(magnus::method::InitRuby)
-    };
-
     quote! {
         #input
 
         #[allow(non_snake_case)]
         #[no_mangle]
-        pub extern "C" fn #extern_init_name() {
-            unsafe { #init_type::new(#init_name).call_handle_error() }
+        pub unsafe extern "C" fn #extern_init_name() {
+            use magnus::method::{Init, RubyInit};
+            #init_name.call_handle_error()
         }
     }
 }

@@ -41,8 +41,7 @@ impl Ruby {
             R: BlockReturn,
         {
             let func = std::mem::transmute::<VALUE, fn(&[Value], Option<Proc>) -> R>(callback_arg);
-            Block::new(func)
-                .call_handle_error(argc, argv as *const Value, Value::new(blockarg))
+            func.call_handle_error(argc, argv as *const Value, Value::new(blockarg))
                 .as_rb_value()
         }
 
@@ -74,7 +73,7 @@ impl Ruby {
             R: BlockReturn,
         {
             let closure = &mut *(callback_arg as *mut F);
-            Block::new(closure)
+            closure
                 .call_handle_error(argc, argv as *const Value, Value::new(blockarg))
                 .as_rb_value()
         }

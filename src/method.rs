@@ -1,10 +1,10 @@
-//! Types and Traits for exposing Rust functions as Ruby methods.
+//! Traits for exposing Rust functions as Ruby methods.
 
 #![allow(clippy::too_many_arguments)]
 #![allow(clippy::many_single_char_names)]
 #![allow(clippy::missing_safety_doc)]
 
-use std::{ffi::c_void, marker::PhantomData, os::raw::c_int, panic::AssertUnwindSafe, slice};
+use std::{ffi::c_void, os::raw::c_int, panic::AssertUnwindSafe, slice};
 
 use seq_macro::seq;
 
@@ -298,37 +298,22 @@ pub trait BlockReturn: private::BlockReturn {}
 
 impl<T> BlockReturn for T where T: private::BlockReturn {}
 
-/// Helper type for wrapping a function with type conversions and error
+/// Helper trait for wrapping a function with type conversions and error
 /// handling, as an 'init' function.
 ///
 /// See the [`init`](magnus_macros::init) macro.
 #[doc(hidden)]
-pub struct Init<Func, Res> {
-    func: Func,
-    res: PhantomData<Res>,
-}
-
-#[allow(missing_docs)]
-impl<Func, Res> Init<Func, Res>
+pub trait Init<Res>
 where
-    Func: Fn() -> Res,
+    Self: Sized + Fn() -> Res,
     Res: InitReturn,
 {
     #[inline]
-    pub fn new(func: Func) -> Self {
-        Self {
-            func,
-            res: Default::default(),
-        }
-    }
-
-    #[inline]
-    pub unsafe fn call_handle_error(self) {
-        let res =
-            match std::panic::catch_unwind(AssertUnwindSafe(|| (self.func)().into_init_return())) {
-                Ok(v) => v,
-                Err(e) => Err(Error::from_panic(e)),
-            };
+    unsafe fn call_handle_error(self) {
+        let res = match std::panic::catch_unwind(AssertUnwindSafe(|| (self)().into_init_return())) {
+            Ok(v) => v,
+            Err(e) => Err(Error::from_panic(e)),
+        };
         match res {
             Ok(v) => v,
             Err(e) => raise(e),
@@ -336,35 +321,27 @@ where
     }
 }
 
-/// Helper type for wrapping a function with type conversions and error
+impl<Func, Res> Init<Res> for Func
+where
+    Func: Fn() -> Res,
+    Res: InitReturn,
+{
+}
+
+/// Helper trait for wrapping a function with type conversions and error
 /// handling, as an 'init' function being passed [`&Ruby`](Ruby).
 ///
 /// See the [`init`](magnus_macros::init) macro.
 #[doc(hidden)]
-pub struct InitRuby<Func, Res> {
-    func: Func,
-    res: PhantomData<Res>,
-}
-
-#[allow(missing_docs)]
-impl<Func, Res> InitRuby<Func, Res>
+pub trait RubyInit<Res>
 where
-    Func: Fn(&Ruby) -> Res,
+    Self: Sized + Fn(&Ruby) -> Res,
     Res: InitReturn,
 {
     #[inline]
-    pub fn new(func: Func) -> Self {
-        Self {
-            func,
-            res: Default::default(),
-        }
-    }
-
-    #[inline]
-    pub unsafe fn call_handle_error(self) {
-        let ruby = Ruby::get_unchecked();
+    unsafe fn call_handle_error(self) {
         let res = match std::panic::catch_unwind(AssertUnwindSafe(|| {
-            (self.func)(&ruby).into_init_return()
+            (self)(&Ruby::get_unchecked()).into_init_return()
         })) {
             Ok(v) => v,
             Err(e) => Err(Error::from_panic(e)),
@@ -376,37 +353,36 @@ where
     }
 }
 
-/// Helper type for wrapping a function with type conversions and error
+impl<Func, Res> RubyInit<Res> for Func
+where
+    Func: Fn(&Ruby) -> Res,
+    Res: InitReturn,
+{
+}
+
+/// Helper trait for wrapping a function with type conversions and error
 /// handling, as an 'block' function.
 ///
 /// See the [`Value::block_call`] function.
 #[doc(hidden)]
-pub struct Block<Func, Res> {
-    func: Func,
-    res: PhantomData<Res>,
-}
-
-#[allow(missing_docs)]
-impl<Func, Res> Block<Func, Res>
+pub trait Block<Res>
 where
-    Func: FnMut(&[Value], Option<Proc>) -> Res,
+    Self: Sized + FnMut(&[Value], Option<Proc>) -> Res,
     Res: BlockReturn,
 {
     #[inline]
-    pub fn new(func: Func) -> Self {
-        Self {
-            func,
-            res: Default::default(),
-        }
-    }
-
-    #[inline]
-    pub unsafe fn call_handle_error(
-        self,
+    unsafe fn call_convert_value(
+        mut self,
         argc: c_int,
         argv: *const Value,
         blockarg: Value,
-    ) -> Value {
+    ) -> Result<Value, Error> {
+        let args = slice::from_raw_parts(argv, argc as usize);
+        (self)(args, Proc::from_value(blockarg)).into_block_return()
+    }
+
+    #[inline]
+    unsafe fn call_handle_error(self, argc: c_int, argv: *const Value, blockarg: Value) -> Value {
         let res = match std::panic::catch_unwind(AssertUnwindSafe(|| {
             self.call_convert_value(argc, argv, blockarg)
         })) {
@@ -418,52 +394,30 @@ where
             Err(e) => raise(e),
         }
     }
-
-    #[inline]
-    unsafe fn call_convert_value(
-        mut self,
-        argc: c_int,
-        argv: *const Value,
-        blockarg: Value,
-    ) -> Result<Value, Error> {
-        let args = slice::from_raw_parts(argv, argc as usize);
-        (self.func)(args, Proc::from_value(blockarg)).into_block_return()
-    }
 }
 
-/// Helper type for wrapping a function as a Ruby method taking self and a Ruby
-/// array of arguments, with type conversions and error handling.
+impl<Func, Res> Block<Res> for Func
+where
+    Func: FnMut(&[Value], Option<Proc>) -> Res,
+    Res: BlockReturn,
+{
+}
+
+/// Helper trait for wrapping a function as a Ruby method taking self and a
+/// Ruby array of arguments, with type conversions and error handling.
 ///
 /// See the [`method`](crate::method!) macro.
 #[doc(hidden)]
-pub struct MethodRbAry<Func, RbSelf, Args, Res> {
-    func: Func,
-    rb_self: PhantomData<RbSelf>,
-    args: PhantomData<Args>,
-    res: PhantomData<Res>,
-}
-
-#[allow(missing_docs)]
-impl<Func, RbSelf, Args, Res> MethodRbAry<Func, RbSelf, Args, Res>
+pub trait MethodRbAry<RbSelf, Args, Res>
 where
-    Func: Fn(RbSelf, Args) -> Res,
+    Self: Sized + Fn(RbSelf, Args) -> Res,
     RbSelf: TryConvert,
     Args: TryConvert,
     Res: ReturnValue,
 {
     #[inline]
-    pub fn new(func: Func) -> Self {
-        Self {
-            func,
-            rb_self: Default::default(),
-            args: Default::default(),
-            res: Default::default(),
-        }
-    }
-
-    #[inline]
-    unsafe fn call_convert_value(self, rb_self: Value, args: RArray) -> Result<Value, Error> {
-        (self.func)(
+    fn call_convert_value(self, rb_self: Value, args: RArray) -> Result<Value, Error> {
+        (self)(
             TryConvert::try_convert(rb_self)?,
             TryConvert::try_convert(args.as_value())?,
         )
@@ -471,7 +425,7 @@ where
     }
 
     #[inline]
-    pub unsafe fn call_handle_error(self, rb_self: Value, args: RArray) -> Value {
+    unsafe fn call_handle_error(self, rb_self: Value, args: RArray) -> Value {
         let res = match std::panic::catch_unwind(AssertUnwindSafe(|| {
             self.call_convert_value(rb_self, args)
         })) {
@@ -485,33 +439,73 @@ where
     }
 }
 
-/// Helper type for wrapping a function as a Ruby method taking self and a
+impl<Func, RbSelf, Args, Res> MethodRbAry<RbSelf, Args, Res> for Func
+where
+    Func: Fn(RbSelf, Args) -> Res,
+    RbSelf: TryConvert,
+    Args: TryConvert,
+    Res: ReturnValue,
+{
+}
+
+/// Helper trait for wrapping a function as a Ruby method taking
+/// [`&Ruby`](Ruby), self, and a Ruby array of arguments, with type conversions
+/// and error handling.
+///
+/// See the [`method`](crate::method!) macro.
+#[doc(hidden)]
+pub trait RubyMethodRbAry<RbSelf, Args, Res>
+where
+    Self: Sized + Fn(&Ruby, RbSelf, Args) -> Res,
+    RbSelf: TryConvert,
+    Args: TryConvert,
+    Res: ReturnValue,
+{
+    #[inline]
+    fn call_convert_value(self, rb_self: Value, args: RArray) -> Result<Value, Error> {
+        (self)(
+            &Ruby::get_with(rb_self),
+            TryConvert::try_convert(rb_self)?,
+            TryConvert::try_convert(args.as_value())?,
+        )
+        .into_return_value()
+    }
+
+    #[inline]
+    unsafe fn call_handle_error(self, rb_self: Value, args: RArray) -> Value {
+        let res = match std::panic::catch_unwind(AssertUnwindSafe(|| {
+            self.call_convert_value(rb_self, args)
+        })) {
+            Ok(v) => v,
+            Err(e) => Err(Error::from_panic(e)),
+        };
+        match res {
+            Ok(v) => v,
+            Err(e) => raise(e),
+        }
+    }
+}
+
+impl<Func, RbSelf, Args, Res> RubyMethodRbAry<RbSelf, Args, Res> for Func
+where
+    Func: Fn(&Ruby, RbSelf, Args) -> Res,
+    RbSelf: TryConvert,
+    Args: TryConvert,
+    Res: ReturnValue,
+{
+}
+
+/// Helper trait for wrapping a function as a Ruby method taking self and a
 /// slice of arguments, with type conversions and error handling.
 ///
 /// See the [`method`](crate::method!) macro.
 #[doc(hidden)]
-pub struct MethodCAry<Func, RbSelf, Res> {
-    func: Func,
-    rb_self: PhantomData<RbSelf>,
-    res: PhantomData<Res>,
-}
-
-#[allow(missing_docs)]
-impl<Func, RbSelf, Res> MethodCAry<Func, RbSelf, Res>
+pub trait MethodCAry<RbSelf, Res>
 where
-    Func: Fn(RbSelf, &[Value]) -> Res,
+    Self: Sized + Fn(RbSelf, &[Value]) -> Res,
     RbSelf: TryConvert,
     Res: ReturnValue,
 {
-    #[inline]
-    pub fn new(func: Func) -> Self {
-        Self {
-            func,
-            rb_self: Default::default(),
-            res: Default::default(),
-        }
-    }
-
     #[inline]
     unsafe fn call_convert_value(
         self,
@@ -520,16 +514,11 @@ where
         rb_self: Value,
     ) -> Result<Value, Error> {
         let args = slice::from_raw_parts(argv, argc as usize);
-        (self.func)(TryConvert::try_convert(rb_self)?, args).into_return_value()
+        (self)(TryConvert::try_convert(rb_self)?, args).into_return_value()
     }
 
     #[inline]
-    pub unsafe fn call_handle_error(
-        self,
-        argc: c_int,
-        argv: *const Value,
-        rb_self: Value,
-    ) -> Value {
+    unsafe fn call_handle_error(self, argc: c_int, argv: *const Value, rb_self: Value) -> Value {
         let res = match std::panic::catch_unwind(AssertUnwindSafe(|| {
             self.call_convert_value(argc, argv, rb_self)
         })) {
@@ -543,50 +532,90 @@ where
     }
 }
 
+impl<Func, RbSelf, Res> MethodCAry<RbSelf, Res> for Func
+where
+    Func: Fn(RbSelf, &[Value]) -> Res,
+    RbSelf: TryConvert,
+    Res: ReturnValue,
+{
+}
+
+/// Helper trait for wrapping a function as a Ruby method taking
+/// [`&Ruby`](Ruby), self, and a slice of arguments, with type conversions and
+/// error handling.
+///
+/// See the [`method`](crate::method!) macro.
+#[doc(hidden)]
+pub trait RubyMethodCAry<RbSelf, Res>
+where
+    Self: Sized + Fn(&Ruby, RbSelf, &[Value]) -> Res,
+    RbSelf: TryConvert,
+    Res: ReturnValue,
+{
+    #[inline]
+    unsafe fn call_convert_value(
+        self,
+        argc: c_int,
+        argv: *const Value,
+        rb_self: Value,
+    ) -> Result<Value, Error> {
+        let args = slice::from_raw_parts(argv, argc as usize);
+        (self)(
+            &Ruby::get_with(rb_self),
+            TryConvert::try_convert(rb_self)?,
+            args,
+        )
+        .into_return_value()
+    }
+
+    #[inline]
+    unsafe fn call_handle_error(self, argc: c_int, argv: *const Value, rb_self: Value) -> Value {
+        let res = match std::panic::catch_unwind(AssertUnwindSafe(|| {
+            self.call_convert_value(argc, argv, rb_self)
+        })) {
+            Ok(v) => v,
+            Err(e) => Err(Error::from_panic(e)),
+        };
+        match res {
+            Ok(v) => v,
+            Err(e) => raise(e),
+        }
+    }
+}
+
+impl<Func, RbSelf, Res> RubyMethodCAry<RbSelf, Res> for Func
+where
+    Func: Fn(&Ruby, RbSelf, &[Value]) -> Res,
+    RbSelf: TryConvert,
+    Res: ReturnValue,
+{
+}
+
 macro_rules! method_n {
-    ($name:ident, $n:literal) => {
+    ($name:ident, $ruby_name:ident, $n:literal) => {
         seq!(N in 0..$n {
-            /// Helper type for wrapping a function as a Ruby method taking
+            /// Helper trait for wrapping a function as a Ruby method taking
             /// self and N arguments, with type conversions and error handling.
             ///
             /// See the [`method`](crate::method!) macro.
             #[doc(hidden)]
-            pub struct $name<Func, RbSelf, #(T~N,)* Res> {
-                func: Func,
-                rb_self: PhantomData<RbSelf>,
-                #(f~N: PhantomData<T~N>,)*
-                res: PhantomData<Res>,
-            }
-
-            #[allow(missing_docs)]
-            impl<Func, RbSelf, #(T~N,)* Res> $name<Func, RbSelf, #(T~N,)* Res>
+            pub trait $name<RbSelf, #(T~N,)* Res>
             where
-                Func: Fn(RbSelf, #(T~N,)*) -> Res,
+                Self: Sized + Fn(RbSelf, #(T~N,)*) -> Res,
                 RbSelf: TryConvert,
                 #(T~N: TryConvert,)*
                 Res: ReturnValue,
             {
                 #[inline]
-                pub fn new(func: Func) -> Self {
-                    Self {
-                        func,
-                        rb_self: Default::default(),
-                        #(f~N: Default::default(),)*
-                        res: Default::default(),
-                    }
-                }
-
-                #[inline]
-                unsafe fn call_convert_value(self, rb_self: Value, #(arg~N: Value,)*) -> Result<Value, Error> {
-                    (self.func)(
+                fn call_convert_value(self, rb_self: Value, #(arg~N: Value,)*) -> Result<Value, Error> {
+                    (self)(
                         TryConvert::try_convert(rb_self)?,
                         #(TryConvert::try_convert(arg~N)?,)*
-
                     ).into_return_value()
                 }
 
                 #[inline]
-                pub unsafe fn call_handle_error(self, rb_self: Value, #(arg~N: Value,)*) -> Value {
+                unsafe fn call_handle_error(self, rb_self: Value, #(arg~N: Value,)*) -> Value {
                     let res =
                         match std::panic::catch_unwind(AssertUnwindSafe(|| {
                             self.call_convert_value(rb_self, #(arg~N,)*)
@@ -600,12 +629,66 @@ macro_rules! method_n {
                     }
                 }
             }
+
+            impl<Func, RbSelf, #(T~N,)* Res> $name<RbSelf, #(T~N,)* Res> for Func
+            where
+                Func: Fn(RbSelf, #(T~N,)*) -> Res,
+                RbSelf: TryConvert,
+                #(T~N: TryConvert,)*
+                Res: ReturnValue,
+            {}
+
+            /// Helper trait for wrapping a function as a Ruby method taking
+            /// [`&Ruby`](Ruby), self, and N arguments, with type conversions
+            /// and error handling.
+            ///
+            /// See the [`method`](crate::method!) macro.
+            #[doc(hidden)]
+            pub trait $ruby_name<RbSelf, #(T~N,)* Res>
+            where
+                Self: Sized + Fn(&Ruby, RbSelf, #(T~N,)*) -> Res,
+                RbSelf: TryConvert,
+                #(T~N: TryConvert,)*
+                Res: ReturnValue,
+            {
+                #[inline]
+                fn call_convert_value(self, rb_self: Value, #(arg~N: Value,)*) -> Result<Value, Error> {
+                    (self)(
+                        &Ruby::get_with(rb_self),
+                        TryConvert::try_convert(rb_self)?,
+                        #(TryConvert::try_convert(arg~N)?,)*
+                    ).into_return_value()
+                }
+
+                #[inline]
+                unsafe fn call_handle_error(self, rb_self: Value, #(arg~N: Value,)*) -> Value {
+                    let res =
+                        match std::panic::catch_unwind(AssertUnwindSafe(|| {
+                            self.call_convert_value(rb_self, #(arg~N,)*)
+                        })) {
+                            Ok(v) => v,
+                            Err(e) => Err(Error::from_panic(e)),
+                        };
+                    match res {
+                        Ok(v) => v,
+                        Err(e) => raise(e),
+                    }
+                }
+            }
+
+            impl<Func, RbSelf, #(T~N,)* Res> $ruby_name<RbSelf, #(T~N,)* Res> for Func
+            where
+                Func: Fn(&Ruby, RbSelf, #(T~N,)*) -> Res,
+                RbSelf: TryConvert,
+                #(T~N: TryConvert,)*
+                Res: ReturnValue,
+            {}
         });
     }
 }
 
 seq!(N in 0..=16 {
-    method_n!(Method~N, N);
+    method_n!(Method~N, RubyMethod~N, N);
 });
 
 /// Wrap a Rust function item with Ruby type conversion and error handling.
@@ -662,12 +745,12 @@ seq!(N in 0..=16 {
 ///     Ok(())
 /// }
 /// ```
-
 #[macro_export]
 macro_rules! method {
     ($name:expr, -2) => {{
         unsafe extern "C" fn anon(rb_self: $crate::Value, args: $crate::RArray) -> $crate::Value {
-            $crate::method::MethodRbAry::new($name).call_handle_error(rb_self, args)
+            use $crate::method::{MethodRbAry, RubyMethodRbAry};
+            $name.call_handle_error(rb_self, args)
         }
         anon as unsafe extern "C" fn($crate::Value, $crate::RArray) -> $crate::Value
     }};
@@ -677,7 +760,8 @@ macro_rules! method {
             argv: *const $crate::Value,
             rb_self: $crate::Value,
         ) -> $crate::Value {
-            $crate::method::MethodCAry::new($name).call_handle_error(argc, argv, rb_self)
+            use $crate::method::{MethodCAry, RubyMethodCAry};
+            $name.call_handle_error(argc, argv, rb_self)
         }
         anon as unsafe extern "C" fn(
             std::os::raw::c_int,
@@ -687,13 +771,15 @@ macro_rules! method {
     }};
     ($name:expr, 0) => {{
         unsafe extern "C" fn anon(rb_self: $crate::Value) -> $crate::Value {
-            $crate::method::Method0::new($name).call_handle_error(rb_self)
+            use $crate::method::{Method0, RubyMethod0};
+            $name.call_handle_error(rb_self)
         }
         anon as unsafe extern "C" fn($crate::Value) -> $crate::Value
     }};
     ($name:expr, 1) => {{
         unsafe extern "C" fn anon(rb_self: $crate::Value, a: $crate::Value) -> $crate::Value {
-            $crate::method::Method1::new($name).call_handle_error(rb_self, a)
+            use $crate::method::{Method1, RubyMethod1};
+            $name.call_handle_error(rb_self, a)
         }
         anon as unsafe extern "C" fn($crate::Value, $crate::Value) -> $crate::Value
     }};
@@ -703,7 +789,8 @@ macro_rules! method {
             a: $crate::Value,
             b: $crate::Value,
         ) -> $crate::Value {
-            $crate::method::Method2::new($name).call_handle_error(rb_self, a, b)
+            use $crate::method::{Method2, RubyMethod2};
+            $name.call_handle_error(rb_self, a, b)
         }
         anon as unsafe extern "C" fn($crate::Value, $crate::Value, $crate::Value) -> $crate::Value
     }};
@@ -714,7 +801,8 @@ macro_rules! method {
             b: $crate::Value,
             c: $crate::Value,
         ) -> $crate::Value {
-            $crate::method::Method3::new($name).call_handle_error(rb_self, a, b, c)
+            use $crate::method::{Method3, RubyMethod3};
+            $name.call_handle_error(rb_self, a, b, c)
         }
         anon as unsafe extern "C" fn(
             $crate::Value,
@@ -731,7 +819,8 @@ macro_rules! method {
             c: $crate::Value,
             d: $crate::Value,
         ) -> $crate::Value {
-            $crate::method::Method4::new($name).call_handle_error(rb_self, a, b, c, d)
+            use $crate::method::{Method4, RubyMethod4};
+            $name.call_handle_error(rb_self, a, b, c, d)
         }
         anon as unsafe extern "C" fn(
             $crate::Value,
@@ -750,7 +839,8 @@ macro_rules! method {
             d: $crate::Value,
             e: $crate::Value,
         ) -> $crate::Value {
-            $crate::method::Method5::new($name).call_handle_error(rb_self, a, b, c, d, e)
+            use $crate::method::{Method5, RubyMethod5};
+            $name.call_handle_error(rb_self, a, b, c, d, e)
         }
         anon as unsafe extern "C" fn(
             $crate::Value,
@@ -771,7 +861,8 @@ macro_rules! method {
             e: $crate::Value,
             f: $crate::Value,
         ) -> $crate::Value {
-            $crate::method::Method6::new($name).call_handle_error(rb_self, a, b, c, d, e, f)
+            use $crate::method::{Method6, RubyMethod6};
+            $name.call_handle_error(rb_self, a, b, c, d, e, f)
         }
         anon as unsafe extern "C" fn(
             $crate::Value,
@@ -794,7 +885,8 @@ macro_rules! method {
             f: $crate::Value,
             g: $crate::Value,
         ) -> $crate::Value {
-            $crate::method::Method7::new($name).call_handle_error(rb_self, a, b, c, d, e, f, g)
+            use $crate::method::{Method7, RubyMethod7};
+            $name.call_handle_error(rb_self, a, b, c, d, e, f, g)
         }
         anon as unsafe extern "C" fn(
             $crate::Value,
@@ -819,7 +911,8 @@ macro_rules! method {
             g: $crate::Value,
             h: $crate::Value,
         ) -> $crate::Value {
-            $crate::method::Method8::new($name).call_handle_error(rb_self, a, b, c, d, e, f, g, h)
+            use $crate::method::{Method8, RubyMethod8};
+            $name.call_handle_error(rb_self, a, b, c, d, e, f, g, h)
         }
         anon as unsafe extern "C" fn(
             $crate::Value,
@@ -846,8 +939,8 @@ macro_rules! method {
             h: $crate::Value,
             i: $crate::Value,
         ) -> $crate::Value {
-            $crate::method::Method9::new($name)
-                .call_handle_error(rb_self, a, b, c, d, e, f, g, h, i)
+            use $crate::method::{Method9, RubyMethod9};
+            $name.call_handle_error(rb_self, a, b, c, d, e, f, g, h, i)
         }
         anon as unsafe extern "C" fn(
             $crate::Value,
@@ -876,8 +969,8 @@ macro_rules! method {
             i: $crate::Value,
             j: $crate::Value,
         ) -> $crate::Value {
-            $crate::method::Method10::new($name)
-                .call_handle_error(rb_self, a, b, c, d, e, f, g, h, i, j)
+            use $crate::method::{Method10, RubyMethod10};
+            $name.call_handle_error(rb_self, a, b, c, d, e, f, g, h, i, j)
         }
         anon as unsafe extern "C" fn(
             $crate::Value,
@@ -908,8 +1001,8 @@ macro_rules! method {
             j: $crate::Value,
             k: $crate::Value,
         ) -> $crate::Value {
-            $crate::method::Method11::new($name)
-                .call_handle_error(rb_self, a, b, c, d, e, f, g, h, i, j, k)
+            use $crate::method::{Method11, RubyMethod11};
+            $name.call_handle_error(rb_self, a, b, c, d, e, f, g, h, i, j, k)
         }
         anon as unsafe extern "C" fn(
             $crate::Value,
@@ -942,8 +1035,8 @@ macro_rules! method {
             k: $crate::Value,
             l: $crate::Value,
         ) -> $crate::Value {
-            $crate::method::Method12::new($name)
-                .call_handle_error(rb_self, a, b, c, d, e, f, g, h, i, j, k, l)
+            use $crate::method::{Method12, RubyMethod12};
+            $name.call_handle_error(rb_self, a, b, c, d, e, f, g, h, i, j, k, l)
         }
         anon as unsafe extern "C" fn(
             $crate::Value,
@@ -978,8 +1071,8 @@ macro_rules! method {
             l: $crate::Value,
             m: $crate::Value,
         ) -> $crate::Value {
-            $crate::method::Method13::new($name)
-                .call_handle_error(rb_self, a, b, c, d, e, f, g, h, i, j, k, l, m)
+            use $crate::method::{Method13, RubyMethod13};
+            $name.call_handle_error(rb_self, a, b, c, d, e, f, g, h, i, j, k, l, m)
         }
         anon as unsafe extern "C" fn(
             $crate::Value,
@@ -1016,8 +1109,8 @@ macro_rules! method {
             m: $crate::Value,
             n: $crate::Value,
         ) -> $crate::Value {
-            $crate::method::Method14::new($name)
-                .call_handle_error(rb_self, a, b, c, d, e, f, g, h, i, j, k, l, m, n)
+            use $crate::method::{Method14, RubyMethod14};
+            $name.call_handle_error(rb_self, a, b, c, d, e, f, g, h, i, j, k, l, m, n)
         }
         anon as unsafe extern "C" fn(
             $crate::Value,
@@ -1056,8 +1149,8 @@ macro_rules! method {
             n: $crate::Value,
             o: $crate::Value,
         ) -> $crate::Value {
-            $crate::method::Method15::new($name)
-                .call_handle_error(rb_self, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o)
+            use $crate::method::{Method15, RubyMethod15};
+            $name.call_handle_error(rb_self, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o)
         }
         anon as unsafe extern "C" fn(
             $crate::Value,
@@ -1098,8 +1191,8 @@ macro_rules! method {
             o: $crate::Value,
             p: $crate::Value,
         ) -> $crate::Value {
-            $crate::method::Method16::new($name)
-                .call_handle_error(rb_self, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p)
+            use $crate::method::{Method16, RubyMethod16};
+            $name.call_handle_error(rb_self, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p)
         }
         anon as unsafe extern "C" fn(
             $crate::Value,
@@ -1126,40 +1219,24 @@ macro_rules! method {
     };
 }
 
-/// Helper type for wrapping a function as a Ruby method ignoring self and
+/// Helper trait for wrapping a function as a Ruby method ignoring self and
 /// taking a Ruby array of arguments, with type conversions and error handling.
 ///
 /// See the [`function`](crate::function!) macro.
 #[doc(hidden)]
-pub struct FunctionRbAry<Func, Args, Res> {
-    func: Func,
-    args: PhantomData<Args>,
-    res: PhantomData<Res>,
-}
-
-#[allow(missing_docs)]
-impl<Func, Args, Res> FunctionRbAry<Func, Args, Res>
+pub trait FunctionRbAry<Args, Res>
 where
-    Func: Fn(Args) -> Res,
+    Self: Sized + Fn(Args) -> Res,
     Args: TryConvert,
     Res: ReturnValue,
 {
     #[inline]
-    pub fn new(func: Func) -> Self {
-        Self {
-            func,
-            args: Default::default(),
-            res: Default::default(),
-        }
+    fn call_convert_value(self, args: RArray) -> Result<Value, Error> {
+        (self)(TryConvert::try_convert(args.as_value())?).into_return_value()
     }
 
     #[inline]
-    unsafe fn call_convert_value(self, args: RArray) -> Result<Value, Error> {
-        (self.func)(TryConvert::try_convert(args.as_value())?).into_return_value()
-    }
-
-    #[inline]
-    pub unsafe fn call_handle_error(self, args: RArray) -> Value {
+    unsafe fn call_handle_error(self, args: RArray) -> Value {
         let res = match std::panic::catch_unwind(AssertUnwindSafe(|| self.call_convert_value(args)))
         {
             Ok(v) => v,
@@ -1172,38 +1249,75 @@ where
     }
 }
 
-/// Helper type for wrapping a function as a Ruby method ignoring self and
+impl<Func, Args, Res> FunctionRbAry<Args, Res> for Func
+where
+    Func: Fn(Args) -> Res,
+    Args: TryConvert,
+    Res: ReturnValue,
+{
+}
+
+/// Helper trait for wrapping a function as a Ruby method taking
+/// [`&Ruby`](Ruby), ignoring self, and taking a Ruby array of arguments, with
+/// type conversions and error handling.
+///
+/// See the [`function`](crate::function!) macro.
+#[doc(hidden)]
+pub trait RubyFunctionRbAry<Args, Res>
+where
+    Self: Sized + Fn(&Ruby, Args) -> Res,
+    Args: TryConvert,
+    Res: ReturnValue,
+{
+    #[inline]
+    fn call_convert_value(self, args: RArray) -> Result<Value, Error> {
+        (self)(
+            &Ruby::get_with(args),
+            TryConvert::try_convert(args.as_value())?,
+        )
+        .into_return_value()
+    }
+
+    #[inline]
+    unsafe fn call_handle_error(self, args: RArray) -> Value {
+        let res = match std::panic::catch_unwind(AssertUnwindSafe(|| self.call_convert_value(args)))
+        {
+            Ok(v) => v,
+            Err(e) => Err(Error::from_panic(e)),
+        };
+        match res {
+            Ok(v) => v,
+            Err(e) => raise(e),
+        }
+    }
+}
+
+impl<Func, Args, Res> RubyFunctionRbAry<Args, Res> for Func
+where
+    Func: Fn(&Ruby, Args) -> Res,
+    Args: TryConvert,
+    Res: ReturnValue,
+{
+}
+
+/// Helper trait for wrapping a function as a Ruby method ignoring self and
 /// taking a slice of arguments, with type conversions and error handling.
 ///
 /// See the [`function`](crate::function!) macro.
 #[doc(hidden)]
-pub struct FunctionCAry<Func, Res> {
-    func: Func,
-    res: PhantomData<Res>,
-}
-
-#[allow(missing_docs)]
-impl<Func, Res> FunctionCAry<Func, Res>
+pub trait FunctionCAry<Res>
 where
-    Func: Fn(&[Value]) -> Res,
+    Self: Sized + Fn(&[Value]) -> Res,
     Res: ReturnValue,
 {
     #[inline]
-    pub fn new(func: Func) -> Self {
-        Self {
-            func,
-            res: Default::default(),
-        }
-    }
-
-    #[inline]
     unsafe fn call_convert_value(self, argc: c_int, argv: *const Value) -> Result<Value, Error> {
         let args = slice::from_raw_parts(argv, argc as usize);
-        (self.func)(args).into_return_value()
+        (self)(args).into_return_value()
     }
 
     #[inline]
-    pub unsafe fn call_handle_error(self, argc: c_int, argv: *const Value) -> Value {
+    unsafe fn call_handle_error(self, argc: c_int, argv: *const Value) -> Value {
         let res = match std::panic::catch_unwind(AssertUnwindSafe(|| {
             self.call_convert_value(argc, argv)
         })) {
@@ -1217,46 +1331,76 @@ where
     }
 }
 
+impl<Func, Res> FunctionCAry<Res> for Func
+where
+    Func: Fn(&[Value]) -> Res,
+    Res: ReturnValue,
+{
+}
+
+/// Helper trait for wrapping a function as a Ruby method taking
+/// [`&Ruby`](Ruby), ignoring self, and taking a slice of arguments, with type
+/// conversions and error handling.
+///
+/// See the [`function`](crate::function!) macro.
+#[doc(hidden)]
+pub trait RubyFunctionCAry<Res>
+where
+    Self: Sized + Fn(&Ruby, &[Value]) -> Res,
+    Res: ReturnValue,
+{
+    #[inline]
+    unsafe fn call_convert_value(self, argc: c_int, argv: *const Value) -> Result<Value, Error> {
+        let args = slice::from_raw_parts(argv, argc as usize);
+        (self)(&Ruby::get_unchecked(), args).into_return_value()
+    }
+
+    #[inline]
+    unsafe fn call_handle_error(self, argc: c_int, argv: *const Value) -> Value {
+        let res = match std::panic::catch_unwind(AssertUnwindSafe(|| {
+            self.call_convert_value(argc, argv)
+        })) {
+            Ok(v) => v,
+            Err(e) => Err(Error::from_panic(e)),
+        };
+        match res {
+            Ok(v) => v,
+            Err(e) => raise(e),
+        }
+    }
+}
+
+impl<Func, Res> RubyFunctionCAry<Res> for Func
+where
+    Func: Fn(&Ruby, &[Value]) -> Res,
+    Res: ReturnValue,
+{
+}
+
 macro_rules! function_n {
-    ($name:ident, $n:literal) => {
+    ($name:ident, $ruby_name:ident, $n:literal) => {
         seq!(N in 0..$n {
-            /// Helper type for wrapping a function as a Ruby method ignoring
+            /// Helper trait for wrapping a function as a Ruby method ignoring
             /// self and taking N arguments, with type conversions and error
             /// handling.
             ///
             /// See the [`function`](crate::function!) macro.
             #[doc(hidden)]
-            pub struct $name<Func, #(T~N,)* Res> {
-                func: Func,
-                #(f~N: PhantomData<T~N>,)*
-                res: PhantomData<Res>,
-            }
-
-            #[allow(missing_docs)]
-            impl<Func, #(T~N,)* Res> $name<Func, #(T~N,)* Res>
+            pub trait $name<#(T~N,)* Res>
             where
-                Func: Fn(#(T~N,)*) -> Res,
+                Self: Sized + Fn(#(T~N,)*) -> Res,
                 #(T~N: TryConvert,)*
                 Res: ReturnValue,
             {
                 #[inline]
-                pub fn new(func: Func) -> Self {
-                    Self {
-                        func,
-                        #(f~N: Default::default(),)*
-                        res: Default::default(),
-                    }
-                }
-
-                #[inline]
-                unsafe fn call_convert_value(self, #(arg~N: Value,)*) -> Result<Value, Error> {
-                    (self.func)(
+                fn call_convert_value(self, #(arg~N: Value,)*) -> Result<Value, Error> {
+                    (self)(
                         #(TryConvert::try_convert(arg~N)?,)*
                     ).into_return_value()
                 }
 
                 #[inline]
-                pub unsafe fn call_handle_error(self, #(arg~N: Value,)*) -> Value {
+                unsafe fn call_handle_error(self, #(arg~N: Value,)*) -> Value {
                     let res =
                         match std::panic::catch_unwind(AssertUnwindSafe(|| {
                             self.call_convert_value(#(arg~N,)*)
@@ -1270,12 +1414,62 @@ macro_rules! function_n {
                     }
                 }
             }
+
+            impl<Func, #(T~N,)* Res> $name<#(T~N,)* Res> for Func
+            where
+                Func: Fn(#(T~N,)*) -> Res,
+                #(T~N: TryConvert,)*
+                Res: ReturnValue,
+            {}
+
+            /// Helper trait for wrapping a function as a Ruby method taking
+            /// [`&Ruby`](Ruby), ignoring self, and taking N arguments, with
+            /// type conversions and error handling.
+            ///
+            /// See the [`function`](crate::function!) macro.
+            #[doc(hidden)]
+            pub trait $ruby_name<#(T~N,)* Res>
+            where
+                Self: Sized + Fn(&Ruby, #(T~N,)*) -> Res,
+                #(T~N: TryConvert,)*
+                Res: ReturnValue,
+            {
+                #[inline]
+                unsafe fn call_convert_value(self, #(arg~N: Value,)*) -> Result<Value, Error> {
+                    (self)(
+                        &Ruby::get_unchecked(),
+                        #(TryConvert::try_convert(arg~N)?,)*
+                    ).into_return_value()
+                }
+
+                #[inline]
+                unsafe fn call_handle_error(self, #(arg~N: Value,)*) -> Value {
+                    let res =
+                        match std::panic::catch_unwind(AssertUnwindSafe(|| {
+                            self.call_convert_value(#(arg~N,)*)
+                        })) {
+                            Ok(v) => v,
+                            Err(e) => Err(Error::from_panic(e)),
+                        };
+                    match res {
+                        Ok(v) => v,
+                        Err(e) => raise(e),
+                    }
+                }
+            }
+
+            impl<Func, #(T~N,)* Res> $ruby_name<#(T~N,)* Res> for Func
+            where
+                Func: Fn(&Ruby, #(T~N,)*) -> Res,
+                #(T~N: TryConvert,)*
+                Res: ReturnValue,
+            {}
         });
     }
 }
 
 seq!(N in 0..=16 {
-    function_n!(Function~N, N);
+    function_n!(Function~N, RubyFunction~N, N);
 });
 
 /// Wrap a Rust function item with Ruby type conversion and error handling,
@@ -1331,7 +1525,8 @@ seq!(N in 0..=16 {
 macro_rules! function {
     ($name:expr, -2) => {{
         unsafe extern "C" fn anon(rb_self: $crate::Value, args: $crate::RArray) -> $crate::Value {
-            $crate::method::FunctionRbAry::new($name).call_handle_error(args)
+            use $crate::method::{FunctionRbAry, RubyFunctionRbAry};
+            $name.call_handle_error(args)
         }
         anon as unsafe extern "C" fn($crate::Value, $crate::RArray) -> $crate::Value
     }};
@@ -1341,7 +1536,8 @@ macro_rules! function {
             argv: *const $crate::Value,
             rb_self: $crate::Value,
         ) -> $crate::Value {
-            $crate::method::FunctionCAry::new($name).call_handle_error(argc, argv)
+            use $crate::method::{FunctionCAry, RubyFunctionCAry};
+            $name.call_handle_error(argc, argv)
         }
         anon as unsafe extern "C" fn(
             std::os::raw::c_int,
@@ -1351,13 +1547,15 @@ macro_rules! function {
     }};
     ($name:expr, 0) => {{
         unsafe extern "C" fn anon(rb_self: $crate::Value) -> $crate::Value {
-            $crate::method::Function0::new($name).call_handle_error()
+            use $crate::method::{Function0, RubyFunction0};
+            $name.call_handle_error()
         }
         anon as unsafe extern "C" fn($crate::Value) -> $crate::Value
     }};
     ($name:expr, 1) => {{
         unsafe extern "C" fn anon(rb_self: $crate::Value, a: $crate::Value) -> $crate::Value {
-            $crate::method::Function1::new($name).call_handle_error(a)
+            use $crate::method::{Function1, RubyFunction1};
+            $name.call_handle_error(a)
         }
         anon as unsafe extern "C" fn($crate::Value, $crate::Value) -> $crate::Value
     }};
@@ -1367,7 +1565,8 @@ macro_rules! function {
             a: $crate::Value,
             b: $crate::Value,
         ) -> $crate::Value {
-            $crate::method::Function2::new($name).call_handle_error(a, b)
+            use $crate::method::{Function2, RubyFunction2};
+            $name.call_handle_error(a, b)
         }
         anon as unsafe extern "C" fn($crate::Value, $crate::Value, $crate::Value) -> $crate::Value
     }};
@@ -1378,7 +1577,8 @@ macro_rules! function {
             b: $crate::Value,
             c: $crate::Value,
         ) -> $crate::Value {
-            $crate::method::Function3::new($name).call_handle_error(a, b, c)
+            use $crate::method::{Function3, RubyFunction3};
+            $name.call_handle_error(a, b, c)
         }
         anon as unsafe extern "C" fn(
             $crate::Value,
@@ -1395,7 +1595,8 @@ macro_rules! function {
             c: $crate::Value,
             d: $crate::Value,
         ) -> $crate::Value {
-            $crate::method::Function4::new($name).call_handle_error(a, b, c, d)
+            use $crate::method::{Function4, RubyFunction4};
+            $name.call_handle_error(a, b, c, d)
         }
         anon as unsafe extern "C" fn(
             $crate::Value,
@@ -1414,7 +1615,8 @@ macro_rules! function {
             d: $crate::Value,
             e: $crate::Value,
         ) -> $crate::Value {
-            $crate::method::Function5::new($name).call_handle_error(a, b, c, d, e)
+            use $crate::method::{Function5, RubyFunction5};
+            $name.call_handle_error(a, b, c, d, e)
         }
         anon as unsafe extern "C" fn(
             $crate::Value,
@@ -1435,7 +1637,8 @@ macro_rules! function {
             e: $crate::Value,
             f: $crate::Value,
         ) -> $crate::Value {
-            $crate::method::Function6::new($name).call_handle_error(a, b, c, d, e, f)
+            use $crate::method::{Function6, RubyFunction6};
+            $name.call_handle_error(a, b, c, d, e, f)
         }
         anon as unsafe extern "C" fn(
             $crate::Value,
@@ -1458,7 +1661,8 @@ macro_rules! function {
             f: $crate::Value,
             g: $crate::Value,
         ) -> $crate::Value {
-            $crate::method::Function7::new($name).call_handle_error(a, b, c, d, e, f, g)
+            use $crate::method::{Function7, RubyFunction7};
+            $name.call_handle_error(a, b, c, d, e, f, g)
         }
         anon as unsafe extern "C" fn(
             $crate::Value,
@@ -1483,7 +1687,8 @@ macro_rules! function {
             g: $crate::Value,
             h: $crate::Value,
         ) -> $crate::Value {
-            $crate::method::Function8::new($name).call_handle_error(a, b, c, d, e, f, g, h)
+            use $crate::method::{Function8, RubyFunction8};
+            $name.call_handle_error(a, b, c, d, e, f, g, h)
         }
         anon as unsafe extern "C" fn(
             $crate::Value,
@@ -1510,7 +1715,8 @@ macro_rules! function {
             h: $crate::Value,
             i: $crate::Value,
         ) -> $crate::Value {
-            $crate::method::Function9::new($name).call_handle_error(a, b, c, d, e, f, g, h, i)
+            use $crate::method::{Function9, RubyFunction9};
+            $name.call_handle_error(a, b, c, d, e, f, g, h, i)
         }
         anon as unsafe extern "C" fn(
             $crate::Value,
@@ -1539,7 +1745,8 @@ macro_rules! function {
             i: $crate::Value,
             j: $crate::Value,
         ) -> $crate::Value {
-            $crate::method::Function10::new($name).call_handle_error(a, b, c, d, e, f, g, h, i, j)
+            use $crate::method::{Function10, RubyFunction10};
+            $name.call_handle_error(a, b, c, d, e, f, g, h, i, j)
         }
         anon as unsafe extern "C" fn(
             $crate::Value,
@@ -1570,8 +1777,8 @@ macro_rules! function {
             j: $crate::Value,
             k: $crate::Value,
         ) -> $crate::Value {
-            $crate::method::Function11::new($name)
-                .call_handle_error(a, b, c, d, e, f, g, h, i, j, k)
+            use $crate::method::{Function11, RubyFunction11};
+            $name.call_handle_error(a, b, c, d, e, f, g, h, i, j, k)
         }
         anon as unsafe extern "C" fn(
             $crate::Value,
@@ -1604,8 +1811,8 @@ macro_rules! function {
             k: $crate::Value,
             l: $crate::Value,
         ) -> $crate::Value {
-            $crate::method::Function12::new($name)
-                .call_handle_error(a, b, c, d, e, f, g, h, i, j, k, l)
+            use $crate::method::{Function12, RubyFunction12};
+            $name.call_handle_error(a, b, c, d, e, f, g, h, i, j, k, l)
         }
         anon as unsafe extern "C" fn(
             $crate::Value,
@@ -1640,8 +1847,8 @@ macro_rules! function {
             l: $crate::Value,
             m: $crate::Value,
         ) -> $crate::Value {
-            $crate::method::Function13::new($name)
-                .call_handle_error(a, b, c, d, e, f, g, h, i, j, k, l, m)
+            use $crate::method::{Function13, RubyFunction13};
+            $name.call_handle_error(a, b, c, d, e, f, g, h, i, j, k, l, m)
         }
         anon as unsafe extern "C" fn(
             $crate::Value,
@@ -1678,8 +1885,8 @@ macro_rules! function {
             m: $crate::Value,
             n: $crate::Value,
         ) -> $crate::Value {
-            $crate::method::Function14::new($name)
-                .call_handle_error(a, b, c, d, e, f, g, h, i, j, k, l, m, n)
+            use $crate::method::{Function14, RubyFunction14};
+            $name.call_handle_error(a, b, c, d, e, f, g, h, i, j, k, l, m, n)
         }
         anon as unsafe extern "C" fn(
             $crate::Value,
@@ -1718,8 +1925,8 @@ macro_rules! function {
             n: $crate::Value,
             o: $crate::Value,
         ) -> $crate::Value {
-            $crate::method::Function15::new($name)
-                .call_handle_error(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o)
+            use $crate::method::{Function15, RubyFunction15};
+            $name.call_handle_error(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o)
         }
         anon as unsafe extern "C" fn(
             $crate::Value,
@@ -1760,8 +1967,8 @@ macro_rules! function {
             o: $crate::Value,
             p: $crate::Value,
         ) -> $crate::Value {
-            $crate::method::Function16::new($name)
-                .call_handle_error(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p)
+            use $crate::method::{Function16, RubyFunction16};
+            $name.call_handle_error(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p)
         }
         anon as unsafe extern "C" fn(
             $crate::Value,
