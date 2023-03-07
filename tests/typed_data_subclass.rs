@@ -1,14 +1,4 @@
-use magnus::{class, define_class, embed::init, method, prelude::*};
-
-macro_rules! rb_assert {
-    ($s:literal) => {
-        assert!(magnus::eval::<bool>($s).unwrap())
-    };
-    ($s:literal, $($rest:tt)*) => {
-        let result: bool = magnus::eval!($s, $($rest)*).unwrap();
-        assert!(result)
-    };
-}
+use magnus::{embed::init, method, prelude::*, rb_assert};
 
 #[magnus::wrap(class = "Pleasantry")]
 enum Pleasantry {
@@ -29,31 +19,33 @@ impl Pleasantry {
 
 #[test]
 fn it_wraps_rust_struct() {
-    let _cleanup = unsafe { init() };
+    let ruby = unsafe { init() };
 
-    let class = define_class("Pleasantry", class::object()).unwrap();
-    define_class("Farewell", class).unwrap();
-    define_class("Greeting", class).unwrap();
+    let class = ruby
+        .define_class("Pleasantry", ruby.class_object())
+        .unwrap();
+    ruby.define_class("Farewell", class).unwrap();
+    ruby.define_class("Greeting", class).unwrap();
 
     class
         .define_method("to_s", method!(Pleasantry::to_s, 0))
         .unwrap();
 
     let greeting = Pleasantry::Greeting("World".to_owned());
-    rb_assert!("greeting.is_a?(Greeting)", greeting);
+    rb_assert!(ruby, "greeting.is_a?(Greeting)", greeting);
 
     let greeting = Pleasantry::Greeting("World".to_owned());
-    rb_assert!("greeting.is_a?(Pleasantry)", greeting);
+    rb_assert!(ruby, "greeting.is_a?(Pleasantry)", greeting);
 
     let greeting = Pleasantry::Greeting("World".to_owned());
-    rb_assert!(r#"greeting.to_s == "Hello, World!""#, greeting);
+    rb_assert!(ruby, r#"greeting.to_s == "Hello, World!""#, greeting);
 
     let farewell = Pleasantry::Farewell("World".to_owned());
-    rb_assert!("farewell.is_a?(Farewell)", farewell);
+    rb_assert!(ruby, "farewell.is_a?(Farewell)", farewell);
 
     let farewell = Pleasantry::Farewell("World".to_owned());
-    rb_assert!("farewell.is_a?(Pleasantry)", farewell);
+    rb_assert!(ruby, "farewell.is_a?(Pleasantry)", farewell);
 
     let farewell = Pleasantry::Farewell("World".to_owned());
-    rb_assert!(r#"farewell.to_s == "Goodbye, World!""#, farewell);
+    rb_assert!(ruby, r#"farewell.to_s == "Goodbye, World!""#, farewell);
 }

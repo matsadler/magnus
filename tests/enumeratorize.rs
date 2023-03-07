@@ -1,20 +1,11 @@
-use magnus::{prelude::*, Value};
-
-macro_rules! rb_assert {
-    ($s:literal) => {
-        assert!(magnus::eval::<bool>($s).unwrap())
-    };
-    ($s:literal, $($rest:tt)*) => {
-        let result: bool = magnus::eval!($s, $($rest)*).unwrap();
-        assert!(result)
-    };
-}
+use magnus::{prelude::*, rb_assert, Value};
 
 #[test]
 fn it_makes_an_enumerator() {
-    let _cleanup = unsafe { magnus::embed::init() };
+    let ruby = unsafe { magnus::embed::init() };
 
     let val: Value = magnus::eval!(
+        ruby,
         "
     class Test
       def each
@@ -30,7 +21,7 @@ fn it_makes_an_enumerator() {
 
     let enumerator = val.enumeratorize("each", ());
 
-    rb_assert!("enumerator.next == 1", enumerator);
-    rb_assert!("enumerator.next == 2", enumerator);
-    rb_assert!("enumerator.next == 3", enumerator);
+    rb_assert!(ruby, "enumerator.next == 1", enumerator);
+    rb_assert!(ruby, "enumerator.next == 2", enumerator);
+    rb_assert!(ruby, "enumerator.next == 3", enumerator);
 }

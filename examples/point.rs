@@ -1,4 +1,4 @@
-use magnus::{class, define_class, embed, eval, function, method, prelude::*, wrap, Error};
+use magnus::{function, method, prelude::*, wrap};
 
 #[wrap(class = "Point")]
 struct Point {
@@ -24,21 +24,21 @@ impl Point {
     }
 }
 
-fn main() -> Result<(), Error> {
-    let _cleanup = unsafe { embed::init() };
+fn main() -> Result<(), String> {
+    magnus::Ruby::init(|ruby| {
+        let class = ruby.define_class("Point", ruby.class_object())?;
+        class.define_singleton_method("new", function!(Point::new, 2))?;
+        class.define_method("x", method!(Point::x, 0))?;
+        class.define_method("y", method!(Point::y, 0))?;
+        class.define_method("distance", method!(Point::distance, 1))?;
 
-    let class = define_class("Point", class::object())?;
-    class.define_singleton_method("new", function!(Point::new, 2))?;
-    class.define_method("x", method!(Point::x, 0))?;
-    class.define_method("y", method!(Point::y, 0))?;
-    class.define_method("distance", method!(Point::distance, 1))?;
+        let d: f64 = ruby.eval(
+            "a = Point.new(0, 0)
+             b = Point.new(5, 10)
+             a.distance(b)",
+        )?;
 
-    let d: f64 = eval(
-        "a = Point.new(0, 0)
-         b = Point.new(5, 10)
-         a.distance(b)",
-    )?;
-
-    println!("{}", d);
-    Ok(())
+        println!("{}", d);
+        Ok(())
+    })
 }

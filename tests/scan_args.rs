@@ -1,14 +1,13 @@
 use magnus::{
     block::Proc,
-    define_global_function,
     error::Error,
-    eval, method,
+    method,
     scan_args::{get_kwargs, scan_args},
     value::Value,
-    RArray, RHash, Symbol,
+    RArray, RHash, Ruby, Symbol,
 };
 
-fn example(_rb_self: Value, args: &[Value]) -> Result<RArray, Error> {
+fn example(ruby: &Ruby, _rb_self: Value, args: &[Value]) -> Result<RArray, Error> {
     let args = scan_args(args)?;
     let (a,): (String,) = args.required;
     let (b,): (Option<String>,) = args.optional;
@@ -24,7 +23,7 @@ fn example(_rb_self: Value, args: &[Value]) -> Result<RArray, Error> {
     let kw_splat = kw.splat;
     let _: Option<Proc> = args.block;
 
-    let res = RArray::with_capacity(7);
+    let res = ruby.ary_new_capa(7);
     res.push(a)?;
     res.push(b)?;
     res.push(splat)?;
@@ -43,20 +42,21 @@ fn example(_rb_self: Value, args: &[Value]) -> Result<RArray, Error> {
 
 #[test]
 fn it_scans_args() {
-    let _cleanup = unsafe { magnus::embed::init() };
+    let ruby = unsafe { magnus::embed::init() };
 
-    define_global_function("example", method!(example, -1));
+    ruby.define_global_function("example", method!(example, -1));
 
-    let res = eval::<bool>(r#"
+    let res = ruby.eval::<bool>(r#"
         example("a", "b", "splat1", "splat2", :c, d: 1, f: 2, h: 3) == ["a", "b", ["splat1", "splat2"], :c, 1, 2, {h: 3}]
     "#).unwrap();
     assert!(res);
 
-    let res = eval::<bool>(
-        r#"
+    let res = ruby
+        .eval::<bool>(
+            r#"
         example("a", :c, d: 1) == ["a", nil, [], :c, 1, nil, {}]
     "#,
-    )
-    .unwrap();
+        )
+        .unwrap();
     assert!(res);
 }

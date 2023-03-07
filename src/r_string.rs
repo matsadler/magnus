@@ -1784,8 +1784,11 @@ impl<'a> Iterator for CharBytes<'a> {
 #[macro_export]
 macro_rules! r_string {
     ($lit:expr) => {{
+        $crate::r_string!($crate::Ruby::get().unwrap(), $lit)
+    }};
+    ($ruby:expr, $lit:expr) => {{
         let s = concat!($lit, "\0");
         let len = s.len() - 1;
-        unsafe { $crate::RString::new_lit(s.as_ptr() as *const _, len as _) }
+        unsafe { $ruby.str_new_lit(s.as_ptr() as *const _, len as _) }
     }};
 }

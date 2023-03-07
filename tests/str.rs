@@ -1,12 +1,11 @@
-use magnus::{eval, RString};
+use magnus::RString;
 
 #[test]
 fn it_converts_to_ref_str() {
-    let _cleanup = unsafe { magnus::embed::init() };
+    let ruby = unsafe { magnus::embed::init() };
 
     unsafe {
-        // TODO why isn't this utf-8 on the Ruby side by default?
-        let s: RString = eval("'hello'.encode('utf-8')").unwrap();
+        let s: RString = ruby.eval("'hello'").unwrap();
 
         assert_eq!("hello", s.as_str().unwrap());
     }

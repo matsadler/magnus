@@ -1,11 +1,12 @@
-use magnus::{eval, Error};
+use magnus::Error;
 
 #[test]
 fn it_includes_backtrace_in_debug() {
-    let _cleanup = unsafe { magnus::embed::init() };
+    let ruby = unsafe { magnus::embed::init() };
 
-    let err = eval::<magnus::Value>(
-        r#"
+    let err = ruby
+        .eval::<magnus::Value>(
+            r#"
             def foo
               raise "bang"
             end
@@ -24,8 +25,8 @@ fn it_includes_backtrace_in_debug() {
 
             qux
         "#,
-    )
-    .unwrap_err();
+        )
+        .unwrap_err();
 
     let ex = match err {
         Error::Exception(e) => e,

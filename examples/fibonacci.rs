@@ -7,9 +7,13 @@ fn fib(n: usize) -> usize {
 }
 
 fn main() {
-    let _cleanup = unsafe { magnus::embed::init() };
+    magnus::Ruby::init(|ruby| {
+        ruby.define_global_function("fib", magnus::function!(fib, 1));
 
-    magnus::define_global_function("fib", magnus::function!(fib, 1));
+        ruby.eval::<magnus::Value>("p (0..12).map {|n| fib(n)}")
+            .unwrap();
 
-    magnus::eval::<magnus::Value>("p (0..12).map {|n| fib(n)}").unwrap();
+        Ok(())
+    })
+    .unwrap()
 }

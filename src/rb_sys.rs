@@ -195,29 +195,3 @@ where
 pub unsafe fn resume_error(e: Error) -> ! {
     raise(e)
 }
-
-#[cfg(test)]
-mod tests {
-    use crate::{
-        class,
-        prelude::*,
-        rb_sys::{AsRawId, FromRawId},
-        value::Id,
-        Module, RArray, RClass, Symbol,
-    };
-
-    #[test]
-    fn roundtrip_all_symbols() {
-        let _cleanup = unsafe { magnus::embed::init() };
-
-        let sym_class: RClass = class::object().const_get("Symbol").unwrap();
-        let symbols: RArray = sym_class.funcall("all_symbols", ()).unwrap();
-
-        for sym in symbols.each() {
-            let sym = Symbol::try_convert(sym.unwrap()).unwrap();
-            let id: Id = sym.into();
-
-            assert_eq!(id, unsafe { Id::from_raw(id.as_raw()) });
-        }
-    }
-}

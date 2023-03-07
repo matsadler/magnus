@@ -1,6 +1,6 @@
 use magnus::{
-    class, define_class, eval, function, gc, method, prelude::*, typed_data, value::Opaque,
-    DataTypeFunctions, TypedData, Value,
+    eval, function, gc, method, prelude::*, typed_data, value::Opaque, DataTypeFunctions,
+    TypedData, Value,
 };
 
 #[derive(TypedData, Clone)]
@@ -30,9 +30,9 @@ impl DataTypeFunctions for Pair {
 
 #[test]
 fn it_matches_builtin_clone() {
-    let _cleanup = unsafe { magnus::embed::init() };
+    let ruby = unsafe { magnus::embed::init() };
 
-    let class = define_class("Pair", class::object()).unwrap();
+    let class = ruby.define_class("Pair", ruby.class_object()).unwrap();
     class
         .define_singleton_method("new", function!(Pair::new, 2))
         .unwrap();
@@ -44,6 +44,7 @@ fn it_matches_builtin_clone() {
         .unwrap();
 
     let res: bool = eval!(
+        ruby,
         r#"
         a = Pair.new("foo", 1)
         raise "shouldn't be frozen without freeze:" if a.clone.frozen?

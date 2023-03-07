@@ -1,6 +1,6 @@
 use magnus::{
-    class, define_class, embed::init, eval, function, gc, method, prelude::*, typed_data::Obj,
-    value::Opaque, DataTypeFunctions, TypedData,
+    embed::init, function, gc, method, prelude::*, typed_data::Obj, value::Opaque,
+    DataTypeFunctions, TypedData,
 };
 
 #[magnus::wrap(class = "Point", free_immediatly)]
@@ -49,14 +49,14 @@ impl DataTypeFunctions for Line {
 
 #[test]
 fn it_can_nest_wrapped_structs() {
-    let _cleanup = unsafe { init() };
+    let ruby = unsafe { init() };
 
-    let class = define_class("Point", class::object()).unwrap();
+    let class = ruby.define_class("Point", ruby.class_object()).unwrap();
     class
         .define_singleton_method("new", function!(Point::new, 2))
         .unwrap();
 
-    let class = define_class("Line", class::object()).unwrap();
+    let class = ruby.define_class("Line", ruby.class_object()).unwrap();
     class
         .define_singleton_method("new", function!(Line::new, 2))
         .unwrap();
@@ -64,15 +64,16 @@ fn it_can_nest_wrapped_structs() {
         .define_method("length", method!(Line::length, 0))
         .unwrap();
 
-    let result: f64 = eval(
-        r#"
+    let result: f64 = ruby
+        .eval(
+            r#"
         start = Point.new(0, 0)
         finish = Point.new(10, 10)
         line = Line.new(start, finish)
         line.length
     "#,
-    )
-    .unwrap();
+        )
+        .unwrap();
 
     assert!(result - 14.14213 < 0.00001);
 }

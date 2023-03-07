@@ -1,10 +1,10 @@
-use magnus::{eval, RArray};
+use magnus::RArray;
 
 #[test]
 fn can_get_slice_from_r_attay() {
-    let _cleanup = unsafe { magnus::embed::init() };
+    let ruby = unsafe { magnus::embed::init() };
 
-    let ary: RArray = eval(r#"[1, nil, "foo"]"#).unwrap();
+    let ary: RArray = ruby.eval(r#"[1, nil, "foo"]"#).unwrap();
     let slice = unsafe { ary.as_slice() };
 
     assert_eq!(3, slice.len());
@@ -12,7 +12,9 @@ fn can_get_slice_from_r_attay() {
     assert_eq!("nil", format!("{:?}", slice[1]));
     assert_eq!(r#""foo""#, format!("{:?}", slice[2]));
 
-    let ary: RArray = eval(r#"["bar", "baz", 42, [1, 2, 3], :test]"#).unwrap();
+    let ary: RArray = ruby
+        .eval(r#"["bar", "baz", 42, [1, 2, 3], :test]"#)
+        .unwrap();
     let slice = unsafe { ary.as_slice() };
 
     assert_eq!(5, slice.len());

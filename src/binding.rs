@@ -192,6 +192,10 @@ impl TryConvert for Binding {
 ///
 /// See also the [`eval`](fn@crate::eval) function and [`Binding`].
 ///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
+///
 /// # Examples
 ///
 /// ```
@@ -209,13 +213,19 @@ impl TryConvert for Binding {
 #[macro_export]
 macro_rules! eval {
     ($s:literal) => {{
-        $crate::eval::<$crate::Binding>("binding").unwrap().eval($crate::r_string!($s))
+        $crate::eval!($crate::Ruby::get().unwrap(), $s)
     }};
     ($s:literal, $($rest:tt)*) => {{
-        let binding = $crate::eval::<$crate::Binding>("binding").unwrap();
+        $crate::eval!($crate::Ruby::get().unwrap(), $s, $($rest)*)
+    }};
+    ($ruby:expr, $s:literal) => {{
+        $ruby.eval::<$crate::Binding>("binding").unwrap().eval($crate::r_string!($ruby, $s))
+    }};
+    ($ruby:expr, $s:literal, $($rest:tt)*) => {{
+        let binding = $ruby.eval::<$crate::Binding>("binding").unwrap();
         $crate::bind!(binding, $($rest)*);
-        binding.eval($crate::r_string!($s))
-    }}
+        binding.eval($crate::r_string!($ruby, $s))
+    }};
 }
 
 #[doc(hidden)]
@@ -235,5 +245,5 @@ macro_rules! bind {
     ($binding:ident, $k:ident, $($rest:tt)*) => {{
         $binding.local_variable_set(stringify!($k), $k);
         $crate::bind!($binding, $($rest)*);
-    }}
+    }};
 }

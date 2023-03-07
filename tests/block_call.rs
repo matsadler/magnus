@@ -1,10 +1,14 @@
-use magnus::{prelude::*, IntoValue, RArray, Value};
+use magnus::{prelude::*, Value};
 
 #[test]
 fn it_can_call_method_with_block() {
-    let _cleanup = unsafe { magnus::embed::init() };
+    let ruby = unsafe { magnus::embed::init() };
 
-    let ary = RArray::from_slice(&[1_i64.into_value(), 2_i64.into_value(), 3_i64.into_value()]);
+    let ary = ruby.ary_new_from_values(&[
+        ruby.into_value(1_i64),
+        ruby.into_value(2_i64),
+        ruby.into_value(3_i64),
+    ]);
     let _: Value = ary
         .block_call("map!", (), |args, _| {
             i64::try_convert(args[0]).map(|i| i * 4)

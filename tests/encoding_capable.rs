@@ -1,25 +1,22 @@
-use magnus::{
-    encoding::{self, EncodingCapable},
-    eval, RRegexp, RString, StaticSymbol, Symbol,
-};
+use magnus::prelude::*;
 
 #[test]
 fn it_works_across_type() {
-    let _cleanup = unsafe { magnus::embed::init() };
+    let ruby = unsafe { magnus::embed::init() };
 
-    assert!(RString::new("example").enc_get() == encoding::Index::utf8());
+    assert!(ruby.str_new("example").enc_get() == ruby.utf8_encindex());
 
-    assert!(StaticSymbol::new("example").enc_get() == encoding::Index::usascii());
-    assert!(Symbol::new("example").enc_get() == encoding::Index::usascii());
+    assert!(ruby.sym_new("example").enc_get() == ruby.usascii_encindex());
+    assert!(ruby.to_symbol("example").enc_get() == ruby.usascii_encindex());
 
     // symbol upgrades to utf8 when required
-    assert!(StaticSymbol::new("🦀").enc_get() == encoding::Index::utf8());
-    assert!(Symbol::new("🦀").enc_get() == encoding::Index::utf8());
+    assert!(ruby.sym_new("🦀").enc_get() == ruby.utf8_encindex());
+    assert!(ruby.to_symbol("🦀").enc_get() == ruby.utf8_encindex());
 
-    let regexp: RRegexp = eval!("/example/").unwrap();
-    assert!(regexp.enc_get() == encoding::Index::usascii());
+    let regexp = ruby.reg_new("example", Default::default()).unwrap();
+    assert!(regexp.enc_get() == ruby.usascii_encindex());
 
     // regexp also upgrades to utf8 when needed
-    let regexp: RRegexp = eval!("/🦀/").unwrap();
-    assert!(regexp.enc_get() == encoding::Index::utf8());
+    let regexp = ruby.reg_new("🦀", Default::default()).unwrap();
+    assert!(regexp.enc_get() == ruby.utf8_encindex());
 }

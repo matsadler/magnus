@@ -1,6 +1,6 @@
 use std::cell::RefCell;
 
-use magnus::{class, define_class, embed, eval, function, method, prelude::*, wrap, Error};
+use magnus::{function, method, prelude::*, wrap};
 
 struct Point {
     x: isize,
@@ -36,25 +36,25 @@ impl MutPoint {
     }
 }
 
-fn main() -> Result<(), Error> {
-    let _cleanup = unsafe { embed::init() };
+fn main() -> Result<(), String> {
+    magnus::Ruby::init(|ruby| {
+        let class = ruby.define_class("Point", ruby.class_object())?;
+        class.define_singleton_method("new", function!(MutPoint::new, 2))?;
+        class.define_method("x", method!(MutPoint::x, 0))?;
+        class.define_method("x=", method!(MutPoint::set_x, 1))?;
+        class.define_method("y", method!(MutPoint::y, 0))?;
+        class.define_method("y=", method!(MutPoint::set_y, 1))?;
+        class.define_method("distance", method!(MutPoint::distance, 1))?;
 
-    let class = define_class("Point", class::object())?;
-    class.define_singleton_method("new", function!(MutPoint::new, 2))?;
-    class.define_method("x", method!(MutPoint::x, 0))?;
-    class.define_method("x=", method!(MutPoint::set_x, 1))?;
-    class.define_method("y", method!(MutPoint::y, 0))?;
-    class.define_method("y=", method!(MutPoint::set_y, 1))?;
-    class.define_method("distance", method!(MutPoint::distance, 1))?;
+        let d: f64 = ruby.eval(
+            "a = Point.new(0, 0)
+             b = Point.new(0, 0)
+             b.x = 5
+             b.y = 10
+             a.distance(b)",
+        )?;
 
-    let d: f64 = eval(
-        "a = Point.new(0, 0)
-         b = Point.new(0, 0)
-         b.x = 5
-         b.y = 10
-         a.distance(b)",
-    )?;
-
-    println!("{}", d);
-    Ok(())
+        println!("{}", d);
+        Ok(())
+    })
 }

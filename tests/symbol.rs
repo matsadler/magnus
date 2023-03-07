@@ -1,48 +1,38 @@
-use magnus::{eval, StaticSymbol, Symbol, Value};
-
-macro_rules! rb_assert {
-    ($s:literal) => {
-        assert!(magnus::eval::<bool>($s).unwrap())
-    };
-    ($s:literal, $($rest:tt)*) => {
-        let result: bool = magnus::eval!($s, $($rest)*).unwrap();
-        assert!(result)
-    };
-}
+use magnus::{rb_assert, StaticSymbol, Symbol, Value};
 
 #[test]
 fn it_makes_a_symbol() {
-    let _cleanup = unsafe { magnus::embed::init() };
+    let ruby = unsafe { magnus::embed::init() };
 
-    let sym = Symbol::new("foo");
+    let sym = ruby.to_symbol("foo");
     // not static by default
     assert!(!sym.is_static());
 
-    rb_assert!("sym == :foo", sym);
+    rb_assert!(ruby, "sym == :foo", sym);
 
-    magnus::eval::<Value>(":bar").unwrap();
-    let sym = Symbol::new("bar");
+    ruby.eval::<Value>(":bar").unwrap();
+    let sym = ruby.to_symbol("bar");
     // static because there's a previous Ruby symbol literal
     assert!(sym.is_static());
 
-    StaticSymbol::new("baz");
-    let sym = Symbol::new("baz");
+    ruby.sym_new("baz");
+    let sym = ruby.to_symbol("baz");
     // static because there's a previous StaticSymbol
     assert!(sym.is_static());
 
-    let sym: Symbol = StaticSymbol::new("qux").into();
+    let sym: Symbol = ruby.sym_new("qux").into();
     assert!(sym.is_static());
 
-    let sym = Symbol::new("example");
+    let sym = ruby.to_symbol("example");
     assert!(!sym.is_static());
     sym.to_static();
     assert!(sym.is_static());
 
-    let x = eval::<Symbol>(r#""xxx".to_sym"#).unwrap();
+    let x = ruby.eval::<Symbol>(r#""xxx".to_sym"#).unwrap();
     assert!(!x.is_static());
-    eval::<StaticSymbol>(":xxx").unwrap();
+    ruby.eval::<StaticSymbol>(":xxx").unwrap();
 
-    let y = eval::<Symbol>(r#""yyy".to_sym"#).unwrap();
+    let y = ruby.eval::<Symbol>(r#""yyy".to_sym"#).unwrap();
     assert!(!y.is_static());
-    StaticSymbol::from_value(eval::<Value>(":yyy").unwrap()).unwrap();
+    StaticSymbol::from_value(ruby.eval::<Value>(":yyy").unwrap()).unwrap();
 }

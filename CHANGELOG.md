@@ -4,6 +4,7 @@
 ### Added
 - `Ruby::init` function to initialise Ruby when embedding Ruby in Rust that
   runs a function with Ruby initialised, passing `&Ruby`.
+- `rb_assert!()` macro to assert a Ruby expression evaluates to a truthy value.
 
 ### Changed
 - Ruby types are no longer `Send` or `Sync`.

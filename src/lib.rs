@@ -1947,6 +1947,41 @@ macro_rules! memoize {
     }};
 }
 
+/// Asserts a Ruby expression evaluates to a truthy value.
+///
+/// Local variables can be set in the same way as the
+/// [`eval`](macro@crate::eval) macro.
+///
+/// # Examples
+///
+/// ```
+/// # let _cleanup = unsafe { magnus::embed::init() };
+/// magnus::rb_assert!("a + b == 3", a = 1, b = 2);
+/// ```
+#[macro_export]
+macro_rules! rb_assert {
+    ($s:literal) => {{
+        $crate::rb_assert!($crate::Ruby::get().unwrap(), $s)
+    }};
+    ($s:literal, $($rest:tt)*) => {{
+        $crate::rb_assert!($crate::Ruby::get().unwrap(), $s, $($rest)*)
+    }};
+    ($ruby:expr, $s:literal) => {{
+        $crate::rb_assert!($ruby, $s, __exp__ = ())
+    }};
+    ($ruby:expr, $s:literal, $($rest:tt)*) => {{
+        let msg: Option<String> = $crate::eval!($ruby, r#"
+            require "power_assert"
+            PowerAssert.start(__exp__, source_binding: binding) do |pa|
+              "\n#{pa.message}" unless pa.yield
+            end
+        "#, $($rest)*, __exp__ = $s).unwrap();
+        if let Some(msg) = msg {
+            panic!(msg)
+        };
+    }};
+}
+
 #[allow(missing_docs)]
 impl Ruby {
     pub fn define_class(&self, name: &str, superclass: RClass) -> Result<RClass, Error> {

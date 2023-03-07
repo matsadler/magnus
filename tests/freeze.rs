@@ -1,30 +1,23 @@
-use magnus::{eval, prelude::*, RArray, Value};
-
-macro_rules! rb_assert {
-    ($s:literal) => {
-        assert!(magnus::eval::<bool>($s).unwrap())
-    };
-    ($s:literal, $($rest:tt)*) => {
-        let result: bool = magnus::eval!($s, $($rest)*).unwrap();
-        assert!(result)
-    };
-}
+use magnus::{prelude::*, rb_assert, Value};
 
 #[test]
 fn it_can_check_frozen() {
-    let _cleanup = unsafe { magnus::embed::init() };
+    let ruby = unsafe { magnus::embed::init() };
 
-    assert!(eval::<Value>(r#"42"#).unwrap().is_frozen());
-    assert!(eval::<Value>(r#":foo"#).unwrap().is_frozen());
+    assert!(ruby.eval::<Value>(r#"42"#).unwrap().is_frozen());
+    assert!(ruby.eval::<Value>(r#":foo"#).unwrap().is_frozen());
 
-    assert!(!eval::<Value>(r#"Object.new"#).unwrap().is_frozen());
-    assert!(!eval::<Value>(r#"[1]"#).unwrap().is_frozen());
+    assert!(!ruby.eval::<Value>(r#"Object.new"#).unwrap().is_frozen());
+    assert!(!ruby.eval::<Value>(r#"[1]"#).unwrap().is_frozen());
 
-    assert!(eval::<Value>(r#"Object.new.freeze"#).unwrap().is_frozen());
-    assert!(eval::<Value>(r#"[1].freeze"#).unwrap().is_frozen());
+    assert!(ruby
+        .eval::<Value>(r#"Object.new.freeze"#)
+        .unwrap()
+        .is_frozen());
+    assert!(ruby.eval::<Value>(r#"[1].freeze"#).unwrap().is_frozen());
 
-    let val = RArray::new();
-    rb_assert!("!val.frozen?", val);
+    let val = ruby.ary_new();
+    rb_assert!(ruby, "!val.frozen?", val);
     val.freeze();
-    rb_assert!("val.frozen?", val);
+    rb_assert!(ruby, "val.frozen?", val);
 }

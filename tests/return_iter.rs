@@ -1,22 +1,7 @@
-use magnus::{
-    block::{block_given, Yield},
-    define_global_function, method,
-    prelude::*,
-    Value,
-};
+use magnus::{block::Yield, eval, method, prelude::*, rb_assert, Ruby, Value};
 
-macro_rules! rb_assert {
-    ($s:literal) => {
-        assert!(magnus::eval::<bool>($s).unwrap())
-    };
-    ($s:literal, $($rest:tt)*) => {
-        let result: bool = magnus::eval!($s, $($rest)*).unwrap();
-        assert!(result)
-    };
-}
-
-fn count_to_3(rb_self: Value) -> Yield<impl Iterator<Item = u8>> {
-    if block_given() {
+fn count_to_3(ruby: &Ruby, rb_self: Value) -> Yield<impl Iterator<Item = u8>> {
+    if ruby.block_given() {
         Yield::Iter((1..=3).into_iter())
     } else {
         Yield::Enumerator(rb_self.enumeratorize("count_to_3", ()))
@@ -25,30 +10,35 @@ fn count_to_3(rb_self: Value) -> Yield<impl Iterator<Item = u8>> {
 
 #[test]
 fn it_converts_iterator_to_yields() {
-    let _cleanup = unsafe { magnus::embed::init() };
+    let ruby = unsafe { magnus::embed::init() };
 
-    define_global_function("count_to_3", method!(count_to_3, 0));
+    ruby.define_global_function("count_to_3", method!(count_to_3, 0));
 
-    rb_assert!(
+    let a = ruby.ary_new();
+    let _: Value = eval!(
+        ruby,
         "
-    a = []
-    count_to_3 do |i|
-      a << i
-    end
-    a == [1,2,3]
-    "
-    );
+        count_to_3 do |i|
+          a << i
+        end
+        ",
+        a
+    )
+    .unwrap();
+    rb_assert!(ruby, "a == [1,2,3]", a);
 
-    rb_assert!(
+    let enumerator: Value = eval!(
+        ruby,
         "
-    def raises
-      yield
-      false
-    rescue StopIteration
-      true
-    end
-    enum = count_to_3
-    enum.next == 1 && enum.next == 2 && enum.next == 3 && raises { enum.next }
-    "
-    );
+        def raises
+          yield
+          false
+        rescue StopIteration
+          true
+        end
+        count_to_3
+        "
+    )
+    .unwrap();
+    rb_assert!(ruby, "enumerator.next == 1 && enumerator.next == 2 && enumerator.next == 3 && raises { enumerator.next }", enumerator);
 }

@@ -1,24 +1,15 @@
-macro_rules! rb_assert {
-    ($s:literal) => {
-        assert!(magnus::eval::<bool>($s).unwrap())
-    };
-    ($s:literal, $($rest:tt)*) => {
-        let result: bool = magnus::eval!($s, $($rest)*).unwrap();
-        assert!(result)
-    };
-}
-
 #[test]
 fn it_converts_floats_to_value() {
-    let _cleanup = unsafe { magnus::embed::init() };
-    rb_assert!("val == 0.5", val = 0.5);
+    let ruby = unsafe { magnus::embed::init() };
+    magnus::rb_assert!(ruby, "val == 0.5", val = 0.5);
 
-    rb_assert!(
+    magnus::rb_assert!(
+        ruby,
         "val == 18446744073709552000.0",
         val = 18446744073709552000.0
     );
 
-    rb_assert!("val == Float::INFINITY", val = f64::INFINITY);
+    magnus::rb_assert!(ruby, "val == Float::INFINITY", val = f64::INFINITY);
 
-    rb_assert!("val.nan?", val = f64::NAN);
+    magnus::rb_assert!(ruby, "val.nan?", val = f64::NAN);
 }
