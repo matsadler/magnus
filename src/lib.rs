@@ -1949,10 +1949,54 @@ macro_rules! memoize {
 
 /// Asserts a Ruby expression evaluates to a truthy value.
 ///
-/// Local variables can be set in the same way as the
-/// [`eval`](macro@crate::eval) macro.
+/// This macro uses the Ruby
+/// [`power_assert`](https://github.com/ruby/power_assert) gem that is part of
+/// the Ruby standard library to generate detailed failure messages.
+///
+/// ``` should_panic
+/// # let _cleanup = unsafe { magnus::embed::init() };
+/// magnus::rb_assert!("1 + 2 == 4");
+/// ```
+///
+/// Outputs:
+///
+/// ``` plain
+/// thread 'main' panicked at '
+/// 1 + 2 == 4
+///   |   |
+///   |   false
+///   3', src/lib.rs:5:1
+/// ```
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
 ///
 /// # Examples
+///
+/// ```
+/// # let _cleanup = unsafe { magnus::embed::init() };
+/// magnus::rb_assert!("1 + 2 == 3");
+/// ```
+///
+/// Passing [`Ruby`] to avoid the Ruby thread check:
+///
+/// ```
+/// # let _cleanup = unsafe { magnus::embed::init() };
+/// let ruby = magnus::Ruby::get().unwrap();
+/// magnus::rb_assert!(ruby, "1 + 2 == 3");
+/// ```
+///
+/// Making local variables accessible to Ruby:
+///
+/// ```
+/// # let _cleanup = unsafe { magnus::embed::init() };
+/// let a = 1;
+/// let b = 2;
+/// magnus::rb_assert!("a + b == 3", a, b);
+/// ```
+///
+/// Directly setting local variables:
 ///
 /// ```
 /// # let _cleanup = unsafe { magnus::embed::init() };
@@ -1960,22 +2004,22 @@ macro_rules! memoize {
 /// ```
 #[macro_export]
 macro_rules! rb_assert {
-    ($s:literal) => {{
-        $crate::rb_assert!($crate::Ruby::get().unwrap(), $s)
+    ($expr:literal) => {{
+        $crate::rb_assert!($crate::Ruby::get().unwrap(), $expr)
     }};
-    ($s:literal, $($rest:tt)*) => {{
-        $crate::rb_assert!($crate::Ruby::get().unwrap(), $s, $($rest)*)
+    ($expr:literal, $($bindings:tt)*) => {{
+        $crate::rb_assert!($crate::Ruby::get().unwrap(), $expr, $($bindings)*)
     }};
-    ($ruby:expr, $s:literal) => {{
-        $crate::rb_assert!($ruby, $s, __exp__ = ())
+    ($ruby:expr, $expr:literal) => {{
+        $crate::rb_assert!($ruby, $expr, __exp__ = ())
     }};
-    ($ruby:expr, $s:literal, $($rest:tt)*) => {{
+    ($ruby:expr, $expr:literal, $($bindings:tt)*) => {{
         let msg: Option<String> = $crate::eval!($ruby, r#"
             require "power_assert"
             PowerAssert.start(__exp__, source_binding: binding) do |pa|
               "\n#{pa.message}" unless pa.yield
             end
-        "#, $($rest)*, __exp__ = $s).unwrap();
+        "#, $($bindings)*, __exp__ = $expr).unwrap();
         if let Some(msg) = msg {
             panic!(msg)
         };

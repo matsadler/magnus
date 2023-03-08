@@ -212,19 +212,19 @@ impl TryConvert for Binding {
 /// ```
 #[macro_export]
 macro_rules! eval {
-    ($s:literal) => {{
-        $crate::eval!($crate::Ruby::get().unwrap(), $s)
+    ($str:literal) => {{
+        $crate::eval!($crate::Ruby::get().unwrap(), $str)
     }};
-    ($s:literal, $($rest:tt)*) => {{
-        $crate::eval!($crate::Ruby::get().unwrap(), $s, $($rest)*)
+    ($str:literal, $($bindings:tt)*) => {{
+        $crate::eval!($crate::Ruby::get().unwrap(), $str, $($bindings)*)
     }};
-    ($ruby:expr, $s:literal) => {{
-        $ruby.eval::<$crate::Binding>("binding").unwrap().eval($crate::r_string!($ruby, $s))
+    ($ruby:expr, $str:literal) => {{
+        $ruby.eval::<$crate::Binding>("binding").unwrap().eval($crate::r_string!($ruby, $str))
     }};
-    ($ruby:expr, $s:literal, $($rest:tt)*) => {{
+    ($ruby:expr, $str:literal, $($bindings:tt)*) => {{
         let binding = $ruby.eval::<$crate::Binding>("binding").unwrap();
-        $crate::bind!(binding, $($rest)*);
-        binding.eval($crate::r_string!($ruby, $s))
+        $crate::bind!(binding, $($bindings)*);
+        binding.eval($crate::r_string!($ruby, $str))
     }};
 }
 
