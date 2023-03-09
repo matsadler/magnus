@@ -2,30 +2,30 @@
 
 ## [Unreleased]
 ### Added
+- `value::Opaque` can be used to wrap a Ruby type to make it `Send` + `Sync`.
+- `value::OpaqueId` is a `Send` + `Sync` version of `value::Id`.
+- The `#[magnus(opaque_attr_reader)]` attribute can be set on `Opaque` wrapped
+  fields of a struct when deriving `TypedData` to generate a method to return
+  the inner value.
 - `Ruby::init` function to initialise Ruby when embedding Ruby in Rust that
   runs a function with Ruby initialised, passing `&Ruby`.
 - `rb_assert!()` macro to assert a Ruby expression evaluates to a truthy value.
 
 ### Changed
 - Ruby types are no longer `Send` or `Sync`.
-- `value::Opaque` can be used to wrap a Ruby type to make it `Send` + `Sync`.
-- `value::OpaqueId` is a `Send` + `Sync` version of `value::Id`.
+- `Value`'s methods moved to the `ReprValue` trait.
 - The values of `QTRUE`, `QFALSE`, and `QNIL` are now wrapped in `Opaque`.
-- the `#[magnus(opaque_attr_reader)]` attribute can be set on `Opaque` wrapped
-  fields of a struct when deriving `TypedData` to generate a method to return
-  the inner value.
 - `typed_data::Obj<T>` derefs to `T` so now `T`'s methods can be called
   directly on `typed_data::Obj<T>`.
 - `ReprValue` and `TryConvert` added to `magnus::prelude`.
-- `Value`'s methods moved to the `ReprValue` trait.
 - `typed_data::Cmp`, `typed_data::Dup` and `typed_data::Inspect` traits to help
   with implementing `#<=>`, `#dup` & `#clone`, and `#inspect` methods for
   wrapped structs.
-- wrapped data must be `Sync` to enable `frozen_shareable` flag.
+- Wrapped data must be `Sync` to enable `frozen_shareable` flag.
 - `TypedData::class` and `TypedData::class_for` now take a `&Ruby` argument.
-- init function marked with `#[magnus::init]` optionally takes a `&Ruby`
+- Init function marked with `#[magnus::init]` optionally takes a `&Ruby`
   argument.
-- function bound as Ruby methods with `method!()` and `function!()` optionally
+- Functions bound as Ruby methods with `method!()` and `function!()` optionally
   take `&Ruby` as a first argument.
 - The value returned from `embed::init` derefs to `Ruby`.
 
