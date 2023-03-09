@@ -5,15 +5,18 @@ mod flonum;
 
 use std::{
     borrow::{Borrow, Cow},
+    cell::UnsafeCell,
     convert::TryFrom,
     ffi::CStr,
     fmt,
+    hash::{Hash, Hasher},
     marker::PhantomData,
     mem::transmute,
     num::NonZeroUsize,
     ops::{Deref, DerefMut},
     os::raw::{c_char, c_int, c_long, c_ulong},
     ptr,
+    sync::Once,
 };
 
 #[cfg(ruby_use_flonum)]
@@ -2271,6 +2274,16 @@ impl PartialEq<OpaqueId> for StaticSymbol {
     }
 }
 
+impl PartialEq<LazyId> for StaticSymbol {
+    /// # Panics
+    ///
+    /// Panics if the first call is from a non-Ruby thread. The `LazyId` will
+    /// then be *poisoned* and all future use of it will panic.
+    fn eq(&self, other: &LazyId) -> bool {
+        OpaqueId::from(*self) == *other
+    }
+}
+
 impl PartialEq<Symbol> for StaticSymbol {
     fn eq(&self, other: &Symbol) -> bool {
         other.as_static().map(|o| *self == o).unwrap_or(false)
@@ -2472,6 +2485,12 @@ impl IntoId for Symbol {
     }
 }
 
+impl IntoValue for Id {
+    fn into_value_with(self, handle: &Ruby) -> Value {
+        StaticSymbol::from(self).into_value_with(handle)
+    }
+}
+
 impl From<Symbol> for Id {
     fn from(sym: Symbol) -> Self {
         sym.into_id_with(&Ruby::get_with(sym))
@@ -2481,6 +2500,12 @@ impl From<Symbol> for Id {
 impl PartialEq<OpaqueId> for Id {
     fn eq(&self, other: &OpaqueId) -> bool {
         self.0 == other.0
+    }
+}
+
+impl PartialEq<LazyId> for Id {
+    fn eq(&self, other: &LazyId) -> bool {
+        self.0 == (*other).0
     }
 }
 
@@ -2560,6 +2585,12 @@ impl PartialEq<Id> for OpaqueId {
     }
 }
 
+impl PartialEq<LazyId> for OpaqueId {
+    fn eq(&self, other: &LazyId) -> bool {
+        *self == Self::from(**other)
+    }
+}
+
 impl PartialEq<StaticSymbol> for OpaqueId {
     fn eq(&self, other: &StaticSymbol) -> bool {
         *self == other.into_id_with(&Ruby::get_with(*other))
@@ -2567,6 +2598,162 @@ impl PartialEq<StaticSymbol> for OpaqueId {
 }
 
 impl PartialEq<Symbol> for OpaqueId {
+    fn eq(&self, other: &Symbol) -> bool {
+        other.as_static().map(|o| *self == o).unwrap_or(false)
+    }
+}
+
+/// An [`Id`] that can be assigned to a `static` and [`Deref`]s to [`OpaqueId`].
+pub struct LazyId {
+    init: Once,
+    inner: UnsafeCell<LazyInner>,
+}
+
+union LazyInner {
+    name: &'static str,
+    value: OpaqueId,
+}
+
+impl LazyId {
+    /// Create a new `LazyId`.
+    pub const fn new(name: &'static str) -> Self {
+        Self {
+            init: Once::new(),
+            inner: UnsafeCell::new(LazyInner { name }),
+        }
+    }
+
+    /// Force evaluation of a `LazyId`.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the `LazyId` is *poisoned*. See [`LazyId::get`].
+    pub fn force(this: &Self, handle: &Ruby) {
+        Self::get_with(this, handle);
+    }
+
+    /// Get an [`OpaqueId`] from a `LazyId`.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the first call is from a non-Ruby thread. The `LazyId` will
+    /// then be *poisoned* and all future use of it will panic.
+    pub fn get(this: &Self) -> OpaqueId {
+        *this.deref()
+    }
+
+    /// Get a [`Id`] from a `LazyId`.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the `LazyId` is *poisoned*. See [`LazyId::get`].
+    pub fn get_with(this: &Self, handle: &Ruby) -> Id {
+        unsafe {
+            this.init.call_once(|| {
+                let inner = this.inner.get();
+                (*inner).value = handle.intern((*inner).name).into();
+            });
+            (*this.inner.get()).value.into_id_with(handle)
+        }
+    }
+
+    /// Get an [`OpaqueId`] from a `LazyId`, if it has already been evaluated.
+    ///
+    /// This function will not call Ruby and will not initialise the inner
+    /// `OpaqueId`. If the `LazyId` has not yet been initialised, returns
+    /// `None`.
+    ///
+    /// This function will not panic, if the `LazyId` is *poisoned* it will
+    /// return `None`.
+    pub fn try_get(this: &Self) -> Option<OpaqueId> {
+        unsafe { this.init.is_completed().then(|| (*this.inner.get()).value) }
+    }
+}
+
+unsafe impl Send for LazyId {}
+unsafe impl Sync for LazyId {}
+
+impl fmt::Debug for LazyId {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        #[allow(non_camel_case_types)]
+        #[derive(Debug)]
+        struct uninit();
+
+        f.debug_tuple("LazyId")
+            .field(
+                Self::try_get(self)
+                    .as_ref()
+                    .map(|v| v as &dyn fmt::Debug)
+                    .unwrap_or(&uninit()),
+            )
+            .finish()
+    }
+}
+
+impl Deref for LazyId {
+    type Target = OpaqueId;
+
+    /// # Panics
+    ///
+    /// Panics if the first call is from a non-Ruby thread. This `LazyId` will
+    /// then be *poisoned* and all future use of it will panic.
+    fn deref(&self) -> &Self::Target {
+        unsafe {
+            self.init.call_once(|| {
+                let inner = self.inner.get();
+                (*inner).value = Ruby::get().unwrap().intern((*inner).name).into();
+            });
+            &(*self.inner.get()).value
+        }
+    }
+}
+
+impl Hash for LazyId {
+    /// # Panics
+    ///
+    /// Panics if the first call is from a non-Ruby thread. This `LazyId` will
+    /// then be *poisoned* and all future use of it will panic.
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.deref().hash(state);
+    }
+}
+
+impl PartialEq for LazyId {
+    /// # Panics
+    ///
+    /// Panics if the first call is from a non-Ruby thread. This `LazyId` will
+    /// then be *poisoned* and all future use of it will panic.
+    fn eq(&self, other: &Self) -> bool {
+        self.deref() == other.deref()
+    }
+}
+impl Eq for LazyId {}
+
+impl PartialEq<Id> for LazyId {
+    /// # Panics
+    ///
+    /// Panics if the first call is from a non-Ruby thread. This `LazyId` will
+    /// then be *poisoned* and all future use of it will panic.
+    fn eq(&self, other: &Id) -> bool {
+        *self.deref() == *other
+    }
+}
+
+impl PartialEq<StaticSymbol> for LazyId {
+    /// # Panics
+    ///
+    /// Panics if the first call is from a non-Ruby thread. This `LazyId` will
+    /// then be *poisoned* and all future use of it will panic.
+    fn eq(&self, other: &StaticSymbol) -> bool {
+        *self == other.into_id_with(&Ruby::get_with(*other))
+    }
+}
+
+impl PartialEq<Symbol> for LazyId {
+    /// # Panics
+    ///
+    /// Panics if the first call is from a non-Ruby thread. This `LazyId` will
+    /// then be *poisoned* and all future use of it will panic.
     fn eq(&self, other: &Symbol) -> bool {
         other.as_static().map(|o| *self == o).unwrap_or(false)
     }

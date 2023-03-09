@@ -12,7 +12,7 @@ use crate::{
     try_convert::TryConvert,
     value::{
         private::{self, ReprValue as _},
-        Id, NonZeroValue, OpaqueId, ReprValue, StaticSymbol, Value,
+        Id, LazyId, NonZeroValue, OpaqueId, ReprValue, StaticSymbol, Value,
     },
     Ruby,
 };
@@ -277,6 +277,16 @@ impl PartialEq<Id> for Symbol {
 
 impl PartialEq<OpaqueId> for Symbol {
     fn eq(&self, other: &OpaqueId) -> bool {
+        self.as_static().map(|s| s == *other).unwrap_or(false)
+    }
+}
+
+impl PartialEq<LazyId> for Symbol {
+    /// # Panics
+    ///
+    /// Panics if the first call is from a non-Ruby thread. The `LazyId` will
+    /// then be *poisoned* and all future use of it will panic.
+    fn eq(&self, other: &LazyId) -> bool {
         self.as_static().map(|s| s == *other).unwrap_or(false)
     }
 }
