@@ -2604,6 +2604,11 @@ impl PartialEq<Symbol> for OpaqueId {
 }
 
 /// An [`Id`] that can be assigned to a `static` and [`Deref`]s to [`OpaqueId`].
+///
+/// The underlying Ruby Symbol will be lazily initialised when the `LazyId` is
+/// first used. This initialisation must happen on a Ruby thread. If the first
+/// use is from a non-Ruby thread the `LazyId` will panic and then become
+/// *poisoned* and all future use of it will panic.
 pub struct LazyId {
     init: Once,
     inner: UnsafeCell<LazyInner>,
@@ -2616,6 +2621,17 @@ union LazyInner {
 
 impl LazyId {
     /// Create a new `LazyId`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, value::LazyId};
+    ///
+    /// static EXAMPLE: LazyId = LazyId::new("example");
+    ///
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// rb_assert!("val == :example", val = *EXAMPLE);
+    /// ```
     pub const fn new(name: &'static str) -> Self {
         Self {
             init: Once::new(),
@@ -2625,19 +2641,54 @@ impl LazyId {
 
     /// Force evaluation of a `LazyId`.
     ///
+    /// This can be used in, for example, your [`init`](macro@crate::init)
+    /// function to force initialisation of the `LazyId`, to ensure that use
+    /// of the `LazyId` can't possibly panic.
+    ///
     /// # Panics
     ///
     /// Panics if the `LazyId` is *poisoned*. See [`LazyId::get`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{value::LazyId, Ruby};
+    ///
+    /// static EXAMPLE: LazyId = LazyId::new("example");
+    ///
+    /// #[magnus::init]
+    /// fn init(ruby: &Ruby) {
+    ///     LazyId::force(&EXAMPLE, ruby);
+    ///
+    ///     assert!(LazyId::try_get(&EXAMPLE).is_some());
+    /// }
+    /// # let ruby = unsafe { magnus::embed::init() };
+    /// # init(&ruby);
+    /// ```
     pub fn force(this: &Self, handle: &Ruby) {
         Self::get_with(this, handle);
     }
 
     /// Get an [`OpaqueId`] from a `LazyId`.
     ///
+    /// As `LazyId` derefs to `OpaqueId` this function should rarely be needed,
+    /// but it is implemented for completeness of the api.
+    ///
     /// # Panics
     ///
     /// Panics if the first call is from a non-Ruby thread. The `LazyId` will
     /// then be *poisoned* and all future use of it will panic.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{value::{Id, LazyId, OpaqueId}};
+    ///
+    /// static EXAMPLE: LazyId = LazyId::new("example");
+    ///
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// assert!(OpaqueId::from(Id::new("example")) == LazyId::get(&EXAMPLE));
+    /// ```
     pub fn get(this: &Self) -> OpaqueId {
         *this.deref()
     }
@@ -2647,6 +2698,18 @@ impl LazyId {
     /// # Panics
     ///
     /// Panics if the `LazyId` is *poisoned*. See [`LazyId::get`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{value::{Id, LazyId}, Ruby};
+    ///
+    /// static EXAMPLE: LazyId = LazyId::new("example");
+    ///
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// let ruby = Ruby::get().unwrap();
+    /// assert!(Id::new("example") == LazyId::get_with(&EXAMPLE, &ruby));
+    /// ```
     pub fn get_with(this: &Self, handle: &Ruby) -> Id {
         unsafe {
             this.init.call_once(|| {
@@ -2665,6 +2728,21 @@ impl LazyId {
     ///
     /// This function will not panic, if the `LazyId` is *poisoned* it will
     /// return `None`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, value::LazyId};
+    ///
+    /// static EXAMPLE: LazyId = LazyId::new("example");
+    ///
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// assert!(LazyId::try_get(&EXAMPLE).is_none());
+    ///
+    /// rb_assert!("val == :example", val = *EXAMPLE);
+    ///
+    /// assert!(LazyId::try_get(&EXAMPLE).is_some());
+    /// ```
     pub fn try_get(this: &Self) -> Option<OpaqueId> {
         unsafe { this.init.is_completed().then(|| (*this.inner.get()).value) }
     }
