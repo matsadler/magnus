@@ -296,6 +296,40 @@ impl Ruby {
 unsafe impl<T: ReprValue> Send for Opaque<T> {}
 unsafe impl<T: ReprValue> Sync for Opaque<T> {}
 
+pub struct Lazy<T: ReprValue> {
+    init: Once,
+    inner: UnsafeCell<LazyInner<T>>,
+}
+
+union LazyInner<T: ReprValue> {
+    func: fn(&Ruby) -> T,
+    value: T,
+}
+
+impl<T> Lazy<T>
+where
+    T: ReprValue,
+{
+    pub const fn new(func: fn(&Ruby) -> T) -> Self {
+        Self {
+            init: Once::new(),
+            inner: UnsafeCell::new(LazyInner { func }),
+        }
+    }
+
+    pub fn get(&self, handle: &Ruby) -> T {
+        unsafe {
+            self.init.call_once(|| {
+                let inner = self.inner.get();
+                (*inner).value = ((*inner).func)(handle);
+            });
+            (*self.inner.get()).value
+        }
+    }
+}
+
+unsafe impl<T: ReprValue> Sync for Lazy<T> {}
+
 pub(crate) mod private {
     use super::*;
     use crate::value::ReprValue as _;
@@ -2611,10 +2645,10 @@ impl PartialEq<Symbol> for OpaqueId {
 /// *poisoned* and all future use of it will panic.
 pub struct LazyId {
     init: Once,
-    inner: UnsafeCell<LazyInner>,
+    inner: UnsafeCell<LazyIdInner>,
 }
 
-union LazyInner {
+union LazyIdInner {
     name: &'static str,
     value: OpaqueId,
 }
@@ -2635,7 +2669,7 @@ impl LazyId {
     pub const fn new(name: &'static str) -> Self {
         Self {
             init: Once::new(),
-            inner: UnsafeCell::new(LazyInner { name }),
+            inner: UnsafeCell::new(LazyIdInner { name }),
         }
     }
 

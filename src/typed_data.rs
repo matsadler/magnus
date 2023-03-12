@@ -5,7 +5,7 @@
 
 use std::{
     collections::hash_map::DefaultHasher,
-    ffi::{c_void, CString},
+    ffi::{c_void, CStr, CString},
     fmt,
     hash::Hasher,
     marker::PhantomData,
@@ -53,7 +53,7 @@ impl DataType {
     ///
     /// `name` should be unique per wrapped type. It does not need to be a
     /// valid Ruby identifier.
-    pub fn builder<T>(name: &'static str) -> DataTypeBuilder<T>
+    pub const fn builder<T>(name: &'static CStr) -> DataTypeBuilder<T>
     where
         T: DataTypeFunctions,
     {
@@ -64,6 +64,9 @@ impl DataType {
         &self.0
     }
 }
+
+unsafe impl Send for DataType {}
+unsafe impl Sync for DataType {}
 
 impl Drop for DataType {
     fn drop(&mut self) {
@@ -216,7 +219,7 @@ where
 
 /// A builder for [`DataType`].
 pub struct DataTypeBuilder<T> {
-    name: &'static str,
+    name: &'static CStr,
     mark: bool,
     size: bool,
     compact: bool,
@@ -234,7 +237,7 @@ where
     ///
     /// `name` should be unique per wrapped type. It does not need to be a
     /// valid Ruby identifier.
-    pub fn new(name: &'static str) -> Self {
+    pub const fn new(name: &'static CStr) -> Self {
         Self {
             name,
             mark: false,
@@ -243,23 +246,26 @@ where
             free_immediately: false,
             wb_protected: false,
             frozen_shareable: false,
-            phantom: Default::default(),
+            phantom: PhantomData,
         }
     }
 
     /// Enable using the the `mark` function from `<T as DataTypeFunctions>`.
-    pub fn mark(&mut self) {
+    pub const fn mark(mut self) -> Self {
         self.mark = true;
+        self
     }
 
     /// Enable using the the `size` function from `<T as DataTypeFunctions>`.
-    pub fn size(&mut self) {
+    pub const fn size(mut self) -> Self {
         self.size = true;
+        self
     }
 
     /// Enable using the the `compact` function from `<T as DataTypeFunctions>`.
-    pub fn compact(&mut self) {
+    pub const fn compact(mut self) -> Self {
         self.compact = true;
+        self
     }
 
     /// Enable the 'free_immediately' flag.
@@ -269,19 +275,21 @@ where
     ///
     /// If safe this should be enabled as this performs better and is more
     /// memory efficient.
-    pub fn free_immediately(&mut self) {
+    pub const fn free_immediately(mut self) -> Self {
         self.free_immediately = true;
+        self
     }
 
     /// Enable the 'write barrier protected' flag.
     ///
     /// You almost certainly don't want to enable this.
-    pub fn wb_protected(&mut self) {
+    pub const fn wb_protected(mut self) -> Self {
         self.wb_protected = true;
+        self
     }
 
     /// Consume the builder and create a DataType.
-    pub fn build(self) -> DataType {
+    pub const fn build(self) -> DataType {
         let mut flags = 0_usize as VALUE;
         if self.free_immediately {
             flags |= RUBY_TYPED_FREE_IMMEDIATELY as VALUE;
@@ -293,13 +301,25 @@ where
         if self.frozen_shareable {
             flags |= rbimpl_typeddata_flags::RUBY_TYPED_FROZEN_SHAREABLE as VALUE;
         }
-        let dmark = self.mark.then(|| T::extern_mark as _);
+        let dmark = if self.mark {
+            Some(T::extern_mark as _)
+        } else {
+            None
+        };
         let dfree = Some(T::extern_free as _);
-        let dsize = self.size.then(|| T::extern_size as _);
+        let dsize = if self.size {
+            Some(T::extern_size as _)
+        } else {
+            None
+        };
         #[cfg(ruby_gte_2_7)]
-        let dcompact = self.compact.then(|| T::extern_compact as _);
+        let dcompact = if self.compact {
+            Some(T::extern_compact as _)
+        } else {
+            None
+        };
         DataType(rb_data_type_t {
-            wrap_struct_name: CString::new(self.name).unwrap().into_raw() as _,
+            wrap_struct_name: self.name.as_ptr() as _,
             function: rb_data_type_struct__bindgen_ty_1 {
                 dmark,
                 dfree,
@@ -360,18 +380,19 @@ where
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, memoize, RClass, Ruby, TypedData};
+    /// use magnus::{prelude::*, value::Lazy, RClass, Ruby, TypedData};
     /// # use magnus::DataType;
     ///
     /// struct Example();
     ///
     /// unsafe impl TypedData for Example {
     ///     fn class(ruby: &Ruby) -> RClass {
-    ///         *memoize!(RClass: {
-    ///           let class = ruby.define_class("Example", ruby.class_object()).unwrap();
-    ///           class.undef_alloc_func();
-    ///           class
-    ///         })
+    ///         static CLASS: Lazy<RClass> = Lazy::new(|ruby| {
+    ///             let class = ruby.define_class("Example", ruby.class_object()).unwrap();
+    ///             class.undef_alloc_func();
+    ///             class
+    ///         });
+    ///         CLASS.get(ruby)
     ///     }
     ///
     ///     // ...
@@ -386,7 +407,7 @@ where
     /// # Examples
     ///
     /// ```
-    /// use magnus::{memoize, typed_data::DataTypeBuilder, DataType, DataTypeFunctions, TypedData};
+    /// use magnus::{cstr, typed_data::DataTypeBuilder, DataType, DataTypeFunctions, TypedData};
     /// # use magnus::{RClass, Ruby};
     ///
     /// #[derive(DataTypeFunctions)]
@@ -397,7 +418,8 @@ where
     ///     // ...
     ///
     ///     fn data_type() -> &'static DataType {
-    ///         memoize!(DataType: DataTypeBuilder::<Example>::new("example").build())
+    ///         static DATA_TYPE: DataType = DataTypeBuilder::<Example>::new(cstr!("example")).build();
+    ///         &DATA_TYPE
     ///     }
     /// }
     /// ```
@@ -416,7 +438,7 @@ where
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, memoize, RClass, Ruby, TypedData};
+    /// use magnus::{prelude::*, value::Lazy, RClass, Ruby, TypedData};
     /// # use magnus::DataType;
     ///
     /// enum Example {
@@ -430,17 +452,19 @@ where
     ///     // ...
     ///
     ///     fn class_for(ruby: &Ruby, value: &Self) -> RClass {
+    ///         static A: Lazy<RClass> = Lazy::new(|ruby| {
+    ///             let class = ruby.define_class("A", Example::class(ruby)).unwrap();
+    ///             class.undef_alloc_func();
+    ///             class
+    ///         });
+    ///         static B: Lazy<RClass> = Lazy::new(|ruby| {
+    ///             let class = ruby.define_class("B", Example::class(ruby)).unwrap();
+    ///             class.undef_alloc_func();
+    ///             class
+    ///         });
     ///         match value {
-    ///             Self::A => *memoize!(RClass: {
-    ///                 let class = ruby.define_class("A", <Self as TypedData>::class(ruby)).unwrap();
-    ///                 class.undef_alloc_func();
-    ///                 class
-    ///             }),
-    ///             Self::B => *memoize!(RClass: {
-    ///                 let class = ruby.define_class("B", <Self as TypedData>::class(ruby)).unwrap();
-    ///                 class.undef_alloc_func();
-    ///                 class
-    ///             }),
+    ///             Self::A => A.get(ruby),
+    ///             Self::B => B.get(ruby),
     ///         }
     ///     }
     /// }

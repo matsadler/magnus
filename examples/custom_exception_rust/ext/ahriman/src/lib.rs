@@ -1,35 +1,35 @@
-use magnus::{
-    define_module,
-    exception::{self, ExceptionClass},
-    function, memoize,
-    prelude::*,
-    Error, RModule,
-};
+use magnus::{exception::ExceptionClass, function, prelude::*, value::Lazy, Error, RModule, Ruby};
 
-fn ahriman() -> RModule {
-    *memoize!(RModule: define_module("Ahriman").unwrap())
-}
+static AHRIMAN: Lazy<RModule> = Lazy::new(|ruby| ruby.define_module("Ahriman").unwrap());
 
-fn error() -> ExceptionClass {
-    *memoize!(ExceptionClass: ahriman().define_error("Error", exception::standard_error()).unwrap())
-}
+static ERROR: Lazy<ExceptionClass> = Lazy::new(|ruby| {
+    AHRIMAN
+        .get(ruby)
+        .define_error("Error", ruby.exception_standard_error())
+        .unwrap()
+});
 
-fn rubric_error() -> ExceptionClass {
-    *memoize!(ExceptionClass: ahriman().define_error("RubricError", error()).unwrap())
-}
+static RUBRIC_ERROR: Lazy<ExceptionClass> = Lazy::new(|ruby| {
+    AHRIMAN
+        .get(ruby)
+        .define_error("RubricError", ERROR.get(ruby))
+        .unwrap()
+});
 
-fn cast_rubric() -> Result<(), Error> {
+fn cast_rubric(ruby: &Ruby) -> Result<(), Error> {
     if false {
         Ok(())
     } else {
-        Err(Error::new(rubric_error(), "All is dust."))
+        Err(Error::new(RUBRIC_ERROR.get(ruby), "All is dust."))
     }
 }
 
 #[magnus::init]
-fn init() -> Result<(), Error> {
-    rubric_error(); // ensure error is defined on load
+fn init(ruby: &Ruby) -> Result<(), Error> {
+    RUBRIC_ERROR.get(ruby); // ensure error is defined on load
 
-    ahriman().define_singleton_method("cast_rubric", function!(cast_rubric, 0))?;
+    AHRIMAN
+        .get(ruby)
+        .define_singleton_method("cast_rubric", function!(cast_rubric, 0))?;
     Ok(())
 }

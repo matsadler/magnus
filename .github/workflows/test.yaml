@@ -22,15 +22,12 @@ jobs:
           - "3.2"
           - head
         rustup-toolchain:
-          - "1.51"
+          - "1.61"
           - stable
         include:
           - os: windows-latest
             ruby-version: mswin
             rustup-toolchain: stable
-        exclude:
-          - os: macos-latest
-            rustup-toolchain: "1.51"
 
     steps:
       - uses: actions/checkout@v3

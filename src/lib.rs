@@ -1918,21 +1918,11 @@ use crate::{
     value::{private::ReprValue as _, ReprValue},
 };
 
-/// Utility to simplify initialising a static with [`std::sync::Once`].
-///
-/// Similar (but less generally useful) to
-/// [`lazy_static!`](https://crates.io/crates/lazy_static) without an external
-/// dependency.
-///
-/// # Examples
-///
-/// ```
-/// use magnus::{class, define_class, memoize, RClass};
-///
-/// fn foo_class() -> &'static RClass {
-///     memoize!(RClass: define_class("Foo", class::object()).unwrap())
-/// }
-/// ```
+#[doc(hidden)]
+#[deprecated(
+    since = "0.6.0",
+    note = "please use `value::Lazy` or `DataType::builder` `const` constructors to set a `static` instead"
+)]
 #[macro_export]
 macro_rules! memoize {
     ($type:ty: $val:expr) => {{
@@ -1945,6 +1935,13 @@ macro_rules! memoize {
             VALUE.as_ref().unwrap()
         }
     }};
+}
+
+#[macro_export]
+macro_rules! cstr {
+    ($s:literal) => {
+        unsafe { std::ffi::CStr::from_bytes_with_nul_unchecked(concat!($s, "\0").as_bytes()) }
+    };
 }
 
 /// Asserts a Ruby expression evaluates to a truthy value.

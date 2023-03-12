@@ -1,23 +1,26 @@
 use magnus::{
-    class, define_module, exception::ExceptionClass, function, gc::register_mark_object, memoize,
-    prelude::*, Error, RModule,
+    define_module, exception::ExceptionClass, function, gc::register_mark_object, prelude::*,
+    value::Lazy, Error, RModule, Ruby,
 };
 
-fn rubric_error() -> ExceptionClass {
-    *memoize!(ExceptionClass: {
-        let ex = class::object().const_get::<_, RModule>("Ahriman").unwrap().const_get("RubricError").unwrap();
-        // ensure `ex` is never garbage collected (e.g. if constant is
-        // redefined) and also not moved under compacting GC.
-        register_mark_object(ex);
-        ex
-    })
-}
+static RUBRIC_ERROR: Lazy<ExceptionClass> = Lazy::new(|ruby| {
+    let ex = ruby
+        .class_object()
+        .const_get::<_, RModule>("Ahriman")
+        .unwrap()
+        .const_get("RubricError")
+        .unwrap();
+    // ensure `ex` is never garbage collected (e.g. if constant is
+    // redefined) and also not moved under compacting GC.
+    register_mark_object(ex);
+    ex
+});
 
-fn cast_rubric() -> Result<(), Error> {
+fn cast_rubric(ruby: &Ruby) -> Result<(), Error> {
     if false {
         Ok(())
     } else {
-        Err(Error::new(rubric_error(), "All is dust."))
+        Err(Error::new(RUBRIC_ERROR.get(ruby), "All is dust."))
     }
 }
 

@@ -8,10 +8,10 @@ use rb_sys::{
 };
 
 use crate::{
+    cstr,
     enumerator::Enumerator,
     error::{ensure, protect, Error},
     into_value::{ArgList, IntoValue, RArrayArgList},
-    memoize,
     method::{Block, BlockReturn},
     object::Object,
     r_array::RArray,
@@ -327,18 +327,18 @@ where
 {
     struct Closure();
     impl DataTypeFunctions for Closure {}
-    let data_type = memoize!(DataType: {
-        let mut builder = DataType::builder::<Closure>("rust closure");
-        builder.free_immediately();
-        builder.build()
-    });
+
+    static DATA_TYPE: DataType = DataType::builder::<Closure>(cstr!("rust closure"))
+        .free_immediately()
+        .build();
+
     let boxed = Box::new(func);
     let ptr = Box::into_raw(boxed);
     let value = unsafe {
         Value::new(rb_data_typed_object_wrap(
             0, // using 0 for the class will hide the object from ObjectSpace
             ptr as *mut _,
-            data_type.as_rb_data_type() as *const _,
+            DATA_TYPE.as_rb_data_type() as *const _,
         ))
     };
     (ptr, value)

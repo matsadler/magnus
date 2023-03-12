@@ -3,6 +3,8 @@
 ## [Unreleased]
 ### Added
 - `value::Opaque` can be used to wrap a Ruby type to make it `Send` + `Sync`.
+- `value::Lazy` lazily initialises a Ruby value so it can be assigned to a
+  `static`.
 - `value::OpaqueId` is a `Send` + `Sync` version of `value::Id`.
 - `value::LazyId` is an `Id` with a `const` constructor so can be assigned to a
   `static` and derefs to `OpaqueId`.
@@ -14,6 +16,7 @@
 - `rb_assert!()` macro to assert a Ruby expression evaluates to a truthy value.
 
 ### Changed
+- Minimum supported Rust version in now 1.61.
 - Ruby types are no longer `Send` or `Sync`.
 - `Value`'s methods moved to the `ReprValue` trait.
 - The values of `QTRUE`, `QFALSE`, and `QNIL` are now wrapped in `Opaque`.
@@ -30,6 +33,10 @@
 - Functions bound as Ruby methods with `method!()` and `function!()` optionally
   take `&Ruby` as a first argument.
 - The value returned from `embed::init` derefs to `Ruby`.
+- `DataTypeBuilder::new`/`DataType::builder` now take their `name` argument
+  as a `'static CStr` (see the `magnus::cstr!` macro).
+- All methods on `DataTypeBuilder` are now `const`, so `DataType` can be
+  constructed in a `const` context and be assigned to a `static`.
 
 ### Deprecated
 - `typed_data::Obj::get` as it is made redundant by the `Deref` implementation

@@ -108,15 +108,16 @@ pub fn expand_derive_typed_data(input: DeriveInput) -> TokenStream {
             };
             let ident = &variant.ident;
             let fetch_class = quote! {
-                *magnus::memoize!(RClass: {
+                static CLASS: Lazy<RClass> = Lazy::new(|ruby| {
                     let class: RClass = ruby.class_object().funcall("const_get", (#class,)).unwrap();
                     class.undef_alloc_func();
                     class
-                })
+                });
+                CLASS.get(ruby)
             };
             arms.push(match variant.fields {
-                Fields::Named(_) => quote! { Self::#ident { .. } => #fetch_class },
-                Fields::Unnamed(_) => quote! { Self::#ident(_) => #fetch_class },
+                Fields::Named(_) => quote! { Self::#ident { .. } => { #fetch_class } },
+                Fields::Unnamed(_) => quote! { Self::#ident(_) => { #fetch_class } },
                 Fields::Unit => quote! { Self::#ident => #fetch_class },
             });
         }
@@ -124,7 +125,7 @@ pub fn expand_derive_typed_data(input: DeriveInput) -> TokenStream {
     let class_for = if !arms.is_empty() {
         quote! {
             fn class_for(ruby: &magnus::Ruby, value: &Self) -> magnus::RClass {
-                use magnus::{class, Module, Class, RClass, value::ReprValue};
+                use magnus::{class, Module, Class, RClass, value::{Lazy, ReprValue}};
                 #[allow(unreachable_patterns)]
                 match value {
                     #(#arms,)*
@@ -183,44 +184,44 @@ pub fn expand_derive_typed_data(input: DeriveInput) -> TokenStream {
     };
 
     let mut builder = Vec::new();
-    builder.push(quote! { let mut builder = magnus::DataType::builder::<Self>(#name); });
+    builder.push(quote! { magnus::DataType::builder::<#ident>(magnus::cstr!(#name)) });
     if mark {
-        builder.push(quote! { builder.mark(); });
+        builder.push(quote! { .mark() });
     }
     if size {
-        builder.push(quote! { builder.size(); });
+        builder.push(quote! { .size() });
     }
     if compact {
-        builder.push(quote! { builder.compact(); });
+        builder.push(quote! { .compact() });
     }
     if free_immediately {
-        builder.push(quote! { builder.free_immediately(); });
+        builder.push(quote! { .free_immediately() });
     }
     if wb_protected {
-        builder.push(quote! { builder.wb_protected(); });
+        builder.push(quote! { .wb_protected() });
     }
     if frozen_shareable {
-        builder.push(quote! { builder.frozen_shareable(); });
+        builder.push(quote! { .frozen_shareable() });
     }
-    builder.push(quote! { builder.build() });
+    builder.push(quote! { .build() });
     let builder = builder.into_iter().collect::<TokenStream>();
     let tokens = quote! {
         #accessor_impl
 
         unsafe impl magnus::TypedData for #ident {
             fn class(ruby: &magnus::Ruby) -> magnus::RClass {
-                use magnus::{class, Module, Class, RClass, value::ReprValue};
-                *magnus::memoize!(RClass: {
+                use magnus::{class, Module, Class, RClass, value::{Lazy, ReprValue}};
+                static CLASS: Lazy<RClass> = Lazy::new(|ruby| {
                     let class: RClass = ruby.class_object().funcall("const_get", (#class,)).unwrap();
                     class.undef_alloc_func();
                     class
-                })
+                });
+                CLASS.get(ruby)
             }
 
             fn data_type() -> &'static magnus::DataType {
-                magnus::memoize!(magnus::DataType: {
-                    #builder
-                })
+                static DATA_TYPE: magnus::DataType = #builder;
+                &DATA_TYPE
             }
 
             #class_for
