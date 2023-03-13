@@ -389,7 +389,7 @@ where
     ///     fn class(ruby: &Ruby) -> RClass {
     ///         static CLASS: Lazy<RClass> = Lazy::new(|ruby| {
     ///             let class = ruby.define_class("Example", ruby.class_object()).unwrap();
-    ///             class.undef_alloc_func();
+    ///             class.undef_default_alloc_func();
     ///             class
     ///         });
     ///         CLASS.get(ruby)
@@ -454,12 +454,12 @@ where
     ///     fn class_for(ruby: &Ruby, value: &Self) -> RClass {
     ///         static A: Lazy<RClass> = Lazy::new(|ruby| {
     ///             let class = ruby.define_class("A", Example::class(ruby)).unwrap();
-    ///             class.undef_alloc_func();
+    ///             class.undef_default_alloc_func();
     ///             class
     ///         });
     ///         static B: Lazy<RClass> = Lazy::new(|ruby| {
     ///             let class = ruby.define_class("B", Example::class(ruby)).unwrap();
-    ///             class.undef_alloc_func();
+    ///             class.undef_default_alloc_func();
     ///             class
     ///         });
     ///         match value {

@@ -1615,7 +1615,7 @@
 // * `rb_ulong2num_inline`:
 // * `rb_undef`:
 // * `rb_undefine_finalizer`:
-//! * `rb_undef_alloc_func`: [`Class::undef_alloc_func`]
+//! * `rb_undef_alloc_func`: See [`Class::undef_default_alloc_func`].
 // * `rb_undef_method`:
 // * `rb_unexpected_type`:
 // * `RB_UNLIKELY`:

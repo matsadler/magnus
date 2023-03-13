@@ -110,7 +110,7 @@ pub fn expand_derive_typed_data(input: DeriveInput) -> TokenStream {
             let fetch_class = quote! {
                 static CLASS: Lazy<RClass> = Lazy::new(|ruby| {
                     let class: RClass = ruby.class_object().funcall("const_get", (#class,)).unwrap();
-                    class.undef_alloc_func();
+                    class.undef_default_alloc_func();
                     class
                 });
                 CLASS.get(ruby)
@@ -213,7 +213,7 @@ pub fn expand_derive_typed_data(input: DeriveInput) -> TokenStream {
                 use magnus::{class, Module, Class, RClass, value::{Lazy, ReprValue}};
                 static CLASS: Lazy<RClass> = Lazy::new(|ruby| {
                     let class: RClass = ruby.class_object().funcall("const_get", (#class,)).unwrap();
-                    class.undef_alloc_func();
+                    class.undef_default_alloc_func();
                     class
                 });
                 CLASS.get(ruby)

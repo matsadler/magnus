@@ -14,6 +14,8 @@
 - `Ruby::init` function to initialise Ruby when embedding Ruby in Rust that
   runs a function with Ruby initialised, passing `&Ruby`.
 - `rb_assert!()` macro to assert a Ruby expression evaluates to a truthy value.
+- `Class::undef_default_alloc_func` to remove a class' allocator function only
+  if it is Ruby's default allocator function.
 
 ### Changed
 - Minimum supported Rust version in now 1.61.
@@ -41,6 +43,7 @@
 ### Deprecated
 - `typed_data::Obj::get` as it is made redundant by the `Deref` implementation
   for `typed_data::Obj`.
+- `Class::undef_alloc_func`. Please use `Class::undef_default_alloc_func`.
 
 ### Removed
 - `Into<Value>`/`From<T> for Value`, implementations use `IntoValue`.

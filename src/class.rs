@@ -5,12 +5,13 @@ use std::{borrow::Cow, ffi::CStr, fmt, os::raw::c_int};
 #[cfg(ruby_gte_3_1)]
 use rb_sys::rb_cRefinement;
 use rb_sys::{
-    self, rb_cArray, rb_cBasicObject, rb_cBinding, rb_cClass, rb_cComplex, rb_cDir, rb_cEncoding,
-    rb_cEnumerator, rb_cFalseClass, rb_cFile, rb_cFloat, rb_cHash, rb_cIO, rb_cInteger, rb_cMatch,
-    rb_cMethod, rb_cModule, rb_cNameErrorMesg, rb_cNilClass, rb_cNumeric, rb_cObject, rb_cProc,
-    rb_cRandom, rb_cRange, rb_cRational, rb_cRegexp, rb_cStat, rb_cString, rb_cStruct, rb_cSymbol,
-    rb_cThread, rb_cTime, rb_cTrueClass, rb_cUnboundMethod, rb_class2name, rb_class_new,
-    rb_class_new_instance, rb_class_superclass, rb_undef_alloc_func, ruby_value_type, VALUE,
+    self, rb_alloc_func_t, rb_cArray, rb_cBasicObject, rb_cBinding, rb_cClass, rb_cComplex,
+    rb_cDir, rb_cEncoding, rb_cEnumerator, rb_cFalseClass, rb_cFile, rb_cFloat, rb_cHash, rb_cIO,
+    rb_cInteger, rb_cMatch, rb_cMethod, rb_cModule, rb_cNameErrorMesg, rb_cNilClass, rb_cNumeric,
+    rb_cObject, rb_cProc, rb_cRandom, rb_cRange, rb_cRational, rb_cRegexp, rb_cStat, rb_cString,
+    rb_cStruct, rb_cSymbol, rb_cThread, rb_cTime, rb_cTrueClass, rb_cUnboundMethod, rb_class2name,
+    rb_class_new, rb_class_new_instance, rb_class_superclass, rb_get_alloc_func,
+    rb_undef_alloc_func, ruby_value_type, VALUE,
 };
 
 use crate::{
@@ -265,12 +266,22 @@ pub trait Class: Module {
         RClass::from_value(self.as_value()).unwrap()
     }
 
-    /// Remove the allocator function of a class.
+    #[doc(hidden)]
+    #[deprecated(
+        since = "0.6.0",
+        note = "please use `undef_default_alloc_func` instead"
+    )]
+    fn undef_alloc_func(self) {
+        unsafe { rb_undef_alloc_func(self.as_rb_value()) }
+    }
+
+    /// Remove the allocator function of a class if it is Ruby's default
+    /// allocator function.
     ///
     /// Useful for RTypedData, where instances should not be allocated by
     /// the default allocate function. `#[derive(TypedData)]` and `#[wrap]`
     /// take care of undefining the allocator function, you do not need
-    /// to use `undef_alloc_func` if you're using one of those.
+    /// to use `undef_default_alloc_func` if you're using one of those.
     ///
     /// # Examples
     ///
@@ -279,13 +290,27 @@ pub trait Class: Module {
     /// # let _cleanup = unsafe { magnus::embed::init() };
     /// let class = magnus::define_class("Point", class::object()).unwrap();
     ///
-    /// class.undef_alloc_func();
+    /// class.undef_default_alloc_func();
     ///
     /// let instance = class.new_instance(());
     /// assert_eq!("allocator undefined for Point", instance.err().unwrap().to_string());
     /// ```
-    fn undef_alloc_func(self) {
-        unsafe { rb_undef_alloc_func(self.as_rb_value()) }
+    fn undef_default_alloc_func(self) {
+        static INIT: std::sync::Once = std::sync::Once::new();
+        static mut RB_CLASS_ALLOCATE_INSTANCE: rb_alloc_func_t = None;
+        let rb_class_allocate_instance = unsafe {
+            INIT.call_once(|| {
+                RB_CLASS_ALLOCATE_INSTANCE =
+                    rb_get_alloc_func(Ruby::get_unchecked().class_object().as_rb_value());
+            });
+            RB_CLASS_ALLOCATE_INSTANCE
+        };
+
+        unsafe {
+            if rb_get_alloc_func(self.as_rb_value()) == rb_class_allocate_instance {
+                rb_undef_alloc_func(self.as_rb_value())
+            }
+        }
     }
 }
 
