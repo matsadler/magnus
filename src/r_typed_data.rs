@@ -3,8 +3,10 @@ use std::{fmt, ptr::NonNull};
 use rb_sys::{self, rb_check_typeddata, rb_data_typed_object_wrap, ruby_value_type};
 
 use crate::{
+    class::RClass,
     error::{protect, Error},
     into_value::IntoValue,
+    module::Module,
     object::Object,
     typed_data::TypedData,
     value::{
@@ -16,11 +18,25 @@ use crate::{
 
 #[allow(missing_docs)]
 impl Ruby {
+    #[inline]
     pub fn wrap<T>(&self, data: T) -> RTypedData
     where
         T: TypedData,
     {
         let class = T::class_for(&self, &data);
+        self.wrap_as(data, class)
+    }
+
+    pub fn wrap_as<T>(&self, data: T, class: RClass) -> RTypedData
+    where
+        T: TypedData,
+    {
+        debug_assert!(
+            class.is_inherited(T::class(self)),
+            "{} is not a subclass of {}",
+            class,
+            T::class(self)
+        );
         let boxed = Box::new(data);
         unsafe {
             let value_ptr = rb_data_typed_object_wrap(
@@ -88,6 +104,81 @@ impl RTypedData {
         T: TypedData,
     {
         get_ruby!().wrap(data)
+    }
+
+    /// Wrap the Rust type `T` in a Ruby object that is an instance of the
+    /// given `class`.
+    ///
+    /// See also [`TypedData::class_for`].
+    ///
+    /// # Panics
+    ///
+    /// Panics if `class` is not a subclass of `<T as TypedData>::class()`, or
+    /// if called from a non-Ruby thread.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{prelude::*, class, define_class, RTypedData};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// #[magnus::wrap(class = "Point")]
+    /// struct Point {
+    ///     x: isize,
+    ///     y: isize,
+    /// }
+    ///
+    /// let point_class = define_class("Point", class::object()).unwrap();
+    /// let point_sub_class = define_class("SubPoint", point_class).unwrap();
+    ///
+    /// let value = RTypedData::wrap_as(Point { x: 4, y: 2 }, point_sub_class);
+    /// assert!(value.is_kind_of(point_sub_class));
+    /// assert!(value.is_kind_of(point_class));
+    /// ```
+    ///
+    /// Allowing a wrapped type to be subclassed from Ruby:
+    ///
+    /// (note, in this example `Point` does not have and does not call
+    /// the `initialize` method, subclasses would need to override the class
+    /// `new` method rather than `initialize`)
+    ///
+    /// ```
+    /// use magnus::{prelude::*, class, define_class, eval, function, method, RClass, RTypedData, Value};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// #[magnus::wrap(class = "Point")]
+    /// struct Point {
+    ///     x: isize,
+    ///     y: isize,
+    /// }
+    ///
+    /// impl Point {
+    ///     fn new(class: RClass, x: isize, y: isize) -> RTypedData {
+    ///         RTypedData::wrap_as(Self { x, y }, class)
+    ///     }
+    /// }
+    ///
+    ///
+    /// let point_class = define_class("Point", class::object()).unwrap();
+    /// point_class.define_singleton_method("new", method!(Point::new, 2)).unwrap();
+    /// point_class.define_singleton_method("inherited", function!(RClass::undef_default_alloc_func, 1)).unwrap();
+    ///
+    /// let value: Value = eval(r#"
+    ///     class SubPoint < Point
+    ///     end
+    ///     SubPoint.new(4, 2)
+    /// "#).unwrap();
+    ///
+    /// assert!(value.is_kind_of(class::object().const_get::<_, RClass>("SubPoint").unwrap()));
+    /// assert!(value.is_kind_of(point_class));
+    /// ```
+    #[cfg(feature = "friendly-api")]
+    #[inline]
+    pub fn wrap_as<T>(data: T, class: RClass) -> Self
+    where
+        T: TypedData,
+    {
+        get_ruby!().wrap_as(data, class)
     }
 
     /// Get a reference to the Rust type wrapped in the Ruby object `self`.

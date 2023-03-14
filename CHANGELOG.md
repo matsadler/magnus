@@ -16,6 +16,11 @@
 - `rb_assert!()` macro to assert a Ruby expression evaluates to a truthy value.
 - `Class::undef_default_alloc_func` to remove a class' allocator function only
   if it is Ruby's default allocator function.
+- `Class::obj_alloc` and `Class::define_alloc_func` for allocating an object
+  without calling `initialize`, and for defining an allocator function.
+- `RTypedData::wrap_as` & `typed_data::Obj<T>::wrap_as` can be used to
+  dynamically set the class when wrapping Rust data in a Ruby object. This can
+  be used to allow wrapped data to be subclassed in Ruby.
 
 ### Changed
 - Minimum supported Rust version in now 1.61.

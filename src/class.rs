@@ -1,6 +1,6 @@
 //! Types and functions for working with Ruby classes.
 
-use std::{borrow::Cow, ffi::CStr, fmt, os::raw::c_int};
+use std::{borrow::Cow, ffi::CStr, fmt, mem::transmute, os::raw::c_int};
 
 #[cfg(ruby_gte_3_1)]
 use rb_sys::rb_cRefinement;
@@ -10,8 +10,8 @@ use rb_sys::{
     rb_cInteger, rb_cMatch, rb_cMethod, rb_cModule, rb_cNameErrorMesg, rb_cNilClass, rb_cNumeric,
     rb_cObject, rb_cProc, rb_cRandom, rb_cRange, rb_cRational, rb_cRegexp, rb_cStat, rb_cString,
     rb_cStruct, rb_cSymbol, rb_cThread, rb_cTime, rb_cTrueClass, rb_cUnboundMethod, rb_class2name,
-    rb_class_new, rb_class_new_instance, rb_class_superclass, rb_get_alloc_func,
-    rb_undef_alloc_func, ruby_value_type, VALUE,
+    rb_class_new, rb_class_new_instance, rb_class_superclass, rb_define_alloc_func,
+    rb_get_alloc_func, rb_obj_alloc, rb_undef_alloc_func, ruby_value_type, VALUE,
 };
 
 use crate::{
@@ -20,6 +20,7 @@ use crate::{
     module::Module,
     object::Object,
     try_convert::TryConvert,
+    typed_data::TypedData,
     value::{
         private::{self, ReprValue as _},
         NonZeroValue, ReprValue, Value,
@@ -215,6 +216,20 @@ pub trait Class: Module {
     where
         T: ArgList;
 
+    /// Create a new object, an instance of `self`, without calling the class's
+    /// `initialize` method.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{exception, prelude::*};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let s = exception::standard_error().obj_alloc().unwrap();
+    /// assert!(s.is_kind_of(exception::standard_error()));
+    /// ```
+    fn obj_alloc(self) -> Result<Self::Instance, Error>;
+
     /// Returns the parent class of `self`.
     ///
     /// Returns `Err` if `self` can not have a parent class.
@@ -264,6 +279,121 @@ pub trait Class: Module {
     /// Return `self` as an [`RClass`].
     fn as_r_class(self) -> RClass {
         RClass::from_value(self.as_value()).unwrap()
+    }
+
+    /// Define an allocator function for `self` using `T`'s [`Default`]
+    /// implementation.
+    ///
+    /// In Ruby creating a new object has two steps, first the object is
+    /// allocated, and then it is initialised. Allocating the object is handled
+    /// by the `new` class method, which then also calls `initialize` on the
+    /// newly allocated object.
+    ///
+    /// This does not map well to Rust, where data is allocated and initialised
+    /// in a single step. For this reason most examples in this documentation
+    /// show defining the `new` class method directly, opting out of the two
+    /// step allocate and then initialise process. However, this means the
+    /// class can't be subclassed in Ruby.
+    ///
+    /// Defining an allocator function allows a class be subclassed with the
+    /// normal Ruby behaviour of calling the `initialize` method.
+    ///
+    /// Be aware when creating an instance of once of a class with an allocator
+    /// function from Rust it must be done with [`Class::new_instance`] to call
+    /// the allocator and then the `initialize` method.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `self` and `<T as TypedData>::class()` are not the same class.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use std::cell::RefCell;
+    ///
+    /// use magnus::{
+    ///     class, define_class, embed, eval, function, method, prelude::*, typed_data,
+    ///     wrap, Error, RClass, TypedData, Value,
+    /// };
+    /// # let _cleanup = unsafe { embed::init() };
+    ///
+    /// #[derive(Default)]
+    /// struct Point {
+    ///     x: isize,
+    ///     y: isize,
+    /// }
+    ///
+    /// #[derive(Default)]
+    /// #[wrap(class = "Point")]
+    /// struct MutPoint(RefCell<Point>);
+    ///
+    /// impl MutPoint {
+    ///     fn initialize(&self, x: isize, y: isize) {
+    ///         let mut this = self.0.borrow_mut();
+    ///         this.x = x;
+    ///         this.y = y;
+    ///     }
+    ///
+    ///     // bypasses initialize
+    ///     fn create(x: isize, y: isize) -> MutPoint {
+    ///         MutPoint(RefCell::new(Point { x, y }))
+    ///     }
+    ///
+    ///     // calls initialize
+    ///     fn call_new(class: RClass, x: isize, y: isize) -> Result<Value, Error> {
+    ///         class.new_instance((x, y))
+    ///     }
+    ///
+    ///     fn distance(&self, other: &MutPoint) -> f64 {
+    ///         let a = self.0.borrow();
+    ///         let b = other.0.borrow();
+    ///         (((b.x - a.x).pow(2) + (b.y - a.y).pow(2)) as f64).sqrt()
+    ///     }
+    /// }
+    ///
+    /// let class = define_class("Point", class::object()).unwrap();
+    /// class.define_alloc_func::<MutPoint>();
+    /// class.define_singleton_method("create", function!(MutPoint::create, 2)).unwrap();
+    /// class.define_singleton_method("call_new", method!(MutPoint::call_new, 2)).unwrap();
+    /// class.define_method("initialize", method!(MutPoint::initialize, 2)).unwrap();
+    /// class.define_method("distance", method!(MutPoint::distance, 1)).unwrap();
+    ///
+    /// let d: f64 = eval(
+    ///     "class OffsetPoint < Point
+    ///        def initialize(offset, x, y)
+    ///          super(x + offset, y + offset)
+    ///        end
+    ///      end
+    ///      a = Point.new(1, 1)
+    ///      b = OffsetPoint.new(2, 3, 3)
+    ///      a.distance(b).round(2)",
+    /// ).unwrap();
+    ///
+    /// assert_eq!(d, 5.66);
+    /// ```
+    fn define_alloc_func<T>(self)
+    where
+        T: Default + TypedData,
+    {
+        extern "C" fn allocate<T: Default + TypedData>(class: RClass) -> Value {
+            Ruby::get_with(class)
+                .obj_wrap_as(T::default(), class)
+                .as_value()
+        }
+
+        let class = T::class(&Ruby::get_with(self));
+        assert!(
+            class.equal(self).unwrap_or(false),
+            "{} does not match {}",
+            self.as_value(),
+            class
+        );
+        unsafe {
+            rb_define_alloc_func(
+                self.as_rb_value(),
+                Some(transmute(allocate::<T> as extern "C" fn(RClass) -> Value)),
+            )
+        }
     }
 
     #[doc(hidden)]
@@ -338,6 +468,10 @@ impl Class for RClass {
                 ))
             })
         }
+    }
+
+    fn obj_alloc(self) -> Result<Self::Instance, Error> {
+        unsafe { protect(|| Value::new(rb_obj_alloc(self.as_rb_value()))) }
     }
 
     fn as_r_class(self) -> RClass {

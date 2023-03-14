@@ -12,21 +12,18 @@ class TemperatureTest < Test::Unit::TestCase
   end
 
   def test_to_kelvin
-    temp = Temperature.new(kelvin: 292.65)
     assert { Temperature.new(kelvin: 292.65).to_kelvin == 292.65 }
     assert { Temperature.new(celsius: 19.5).to_kelvin == 292.65 }
     assert { Temperature.new(fahrenheit: 67.1).to_kelvin == 292.65 }
   end
 
   def test_to_celsius
-    temp = Temperature.new(kelvin: 292.65)
     assert { Temperature.new(kelvin: 292.65).to_celsius == 19.5 }
     assert { Temperature.new(celsius: 19.5).to_celsius == 19.5 }
     assert { Temperature.new(fahrenheit: 67.1).to_celsius == 19.5 }
   end
 
   def test_to_fahrenheit
-    temp = Temperature.new(kelvin: 292.65)
     assert { Temperature.new(kelvin: 292.65).to_fahrenheit == 67.1 }
     assert { Temperature.new(celsius: 19.5).to_fahrenheit == 67.1 }
     assert { Temperature.new(fahrenheit: 67.1).to_fahrenheit == 67.1 }
@@ -95,10 +92,23 @@ class TemperatureTest < Test::Unit::TestCase
   end
 
   def test_inspect
-    assert { Temperature.new(celsius: 19.5).inspect == "Temperature { microkelvin: 292650000 }" }
+    assert { Temperature.new(celsius: 19.5).inspect == "Temperature { microkelvin: RefCell { value: 292650000 } }" }
   end
 
   def test_to_s
     assert { Temperature.new(celsius: 19.5).to_s == "19.5°C" }
+  end
+
+  class OffsetTemperature < Temperature
+    def initialize(offset, **kwargs)
+      kwargs[:kelvin] += offset if kwargs.key?(:kelvin)
+      kwargs[:celsius] += offset if kwargs.key?(:celsius)
+      kwargs[:fahrenheit] += offset if kwargs.key?(:fahrenheit)
+      super(**kwargs)
+    end
+  end
+
+  def test_subclass
+    assert { OffsetTemperature.new(2,celsius: 19.5).to_s == "21.5°C" }
   end
 end

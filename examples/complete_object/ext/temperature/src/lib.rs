@@ -1,16 +1,27 @@
-use std::fmt;
+use std::{
+    cell::RefCell,
+    fmt,
+    hash::{Hash, Hasher},
+};
 
 use magnus::{
-    class, define_class, exception, function, method, module,
+    class, define_class, exception, method, module,
     prelude::*,
     scan_args::{get_kwargs, scan_args},
     typed_data, Error, Value,
 };
 
 #[magnus::wrap(class = "Temperature", free_immediately, size)]
-#[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Hash)]
+#[derive(Clone, Debug, Default, Eq, PartialEq, PartialOrd)]
 struct Temperature {
-    microkelvin: u64,
+    microkelvin: RefCell<u64>,
+}
+
+// can't derive this due to needing to use RefCell to get mutability
+impl Hash for Temperature {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.microkelvin.borrow().hash(state)
+    }
 }
 
 const FACTOR: f64 = 1000000.0;
@@ -25,50 +36,35 @@ fn c_to_f(c: f64) -> f64 {
 }
 
 impl Temperature {
-    fn new(args: &[Value]) -> Result<Self, Error> {
+    fn initialize(rb_self: typed_data::Obj<Self>, args: &[Value]) -> Result<(), Error> {
         let args = scan_args::<(), (), (), (), _, ()>(args)?;
         let kwargs = get_kwargs::<_, (), (Option<f64>, Option<f64>, Option<f64>), ()>(
             args.keywords,
             &[],
             &["kelvin", "celsius", "fahrenheit"],
         )?;
-        match kwargs.optional {
-            (Some(k), None, None) => Self::from_kelvin(k),
-            (None, Some(c), None) => Self::from_celsius(c),
-            (None, None, Some(f)) => Self::from_fahrenheit(f),
-            (None, None, None) => Err(Error::new(
-                exception::arg_error(),
-                "missing keyword: :kelvin, :celsius, or :fahrenheit",
-            )),
-            _ => Err(Error::new(
-                exception::arg_error(),
-                "unexpected keyword, supply one of: :kelvin, :celsius, or :fahrenheit",
-            )),
-        }
-    }
-
-    fn from_kelvin(k: f64) -> Result<Self, Error> {
-        if k < 0.0 {
-            return Err(Error::new(
-                exception::arg_error(),
-                "temperature must be above absolute zero",
-            ));
-        }
-        Ok(Self {
-            microkelvin: (k * FACTOR) as u64,
-        })
-    }
-
-    fn from_celsius(c: f64) -> Result<Self, Error> {
-        Self::from_kelvin(c + C_OFFSET)
-    }
-
-    fn from_fahrenheit(f: f64) -> Result<Self, Error> {
-        Self::from_celsius(f_to_c(f))
+        *rb_self.microkelvin.borrow_mut() = match kwargs.optional {
+            (Some(k), None, None) => (k * FACTOR) as u64,
+            (None, Some(c), None) => ((c + C_OFFSET) * FACTOR) as u64,
+            (None, None, Some(f)) => ((f_to_c(f) + C_OFFSET) * FACTOR) as u64,
+            (None, None, None) => {
+                return Err(Error::new(
+                    exception::arg_error(),
+                    "missing keyword: :kelvin, :celsius, or :fahrenheit",
+                ))
+            }
+            _ => {
+                return Err(Error::new(
+                    exception::arg_error(),
+                    "unexpected keyword, supply one of: :kelvin, :celsius, or :fahrenheit",
+                ))
+            }
+        };
+        Ok(())
     }
 
     fn to_kelvin(&self) -> f64 {
-        self.microkelvin as f64 / FACTOR
+        *self.microkelvin.borrow() as f64 / FACTOR
     }
 
     fn to_celsius(&self) -> f64 {
@@ -90,8 +86,10 @@ impl fmt::Display for Temperature {
 fn init() -> Result<(), Error> {
     let class = define_class("Temperature", class::object())?;
 
-    // define new directly, there is no #initialize
-    class.define_singleton_method("new", function!(Temperature::new, -1))?;
+    // Define alloc func based on the Default impl, plus an initialize method,
+    // rather than overwriting `new`, to allow class to be subclassed from Ruby
+    class.define_alloc_func::<Temperature>();
+    class.define_method("initialize", method!(Temperature::initialize, -1))?;
 
     class.define_method("to_kelvin", method!(Temperature::to_kelvin, 0))?;
     class.define_method("to_celsius", method!(Temperature::to_celsius, 0))?;

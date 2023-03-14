@@ -430,10 +430,11 @@ where
     /// The provided implementation simply returns the value of
     /// [`TypedData::class`].
     ///
-    /// Be aware [`TypedData::class`], will always be used in error messages if
-    /// a value fails to convert to `Self`. It is advised to have
-    /// [`TypedData::class`] return the superclass of those returned by this
-    /// function.
+    /// The classes returned by this function must be subclasses of
+    /// `TypedData::class`. `TypedData::class` will always be used in error
+    /// messages if a value fails to convert to `Self`.
+    ///
+    /// See also [`Obj::wrap_as`]/[`RTypedData::wrap_as`].
     ///
     /// # Examples
     ///
@@ -539,9 +540,18 @@ impl Ruby {
     where
         T: TypedData,
     {
-        let inner = self.wrap(data);
         Obj {
-            inner,
+            inner: self.wrap(data),
+            phantom: PhantomData,
+        }
+    }
+
+    pub fn obj_wrap_as<T>(&self, data: T, class: RClass) -> Obj<T>
+    where
+        T: TypedData,
+    {
+        Obj {
+            inner: self.wrap_as(data, class),
             phantom: PhantomData,
         }
     }
@@ -578,6 +588,76 @@ where
     #[inline]
     pub fn wrap(data: T) -> Self {
         get_ruby!().obj_wrap(data)
+    }
+
+    /// Wrap the Rust type `T` in a Ruby object that is an instance of the
+    /// given `class`.
+    ///
+    /// See also [`TypedData::class_for`].
+    ///
+    /// # Panics
+    ///
+    /// Panics if `class` is not a subclass of `<T as TypedData>::class()`, or
+    /// if called from a non-Ruby thread.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{prelude::*, class, define_class, typed_data};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// #[magnus::wrap(class = "Point")]
+    /// struct Point {
+    ///     x: isize,
+    ///     y: isize,
+    /// }
+    ///
+    /// let point_class = define_class("Point", class::object()).unwrap();
+    /// let point_sub_class = define_class("SubPoint", point_class).unwrap();
+    ///
+    /// let value = typed_data::Obj::wrap_as(Point { x: 4, y: 2 }, point_sub_class);
+    /// assert!(value.is_kind_of(point_sub_class));
+    /// assert!(value.is_kind_of(point_class));
+    /// ```
+    ///
+    /// Allowing a wrapped type to be subclassed from Ruby:
+    ///
+    /// (note, in this example `Point` does not have and does not call
+    /// the `initialize` method, subclasses would need to override the class
+    /// `new` method rather than `initialize`)
+    ///
+    /// ```
+    /// use magnus::{prelude::*, class, define_class, eval, function, method, typed_data, RClass, Value};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// #[magnus::wrap(class = "Point")]
+    /// struct Point {
+    ///     x: isize,
+    ///     y: isize,
+    /// }
+    ///
+    /// impl Point {
+    ///     fn new(class: RClass, x: isize, y: isize) -> typed_data::Obj<Self> {
+    ///         typed_data::Obj::wrap_as(Self { x, y }, class)
+    ///     }
+    /// }
+    /// let point_class = define_class("Point", class::object()).unwrap();
+    /// point_class.define_singleton_method("new", method!(Point::new, 2)).unwrap();
+    /// point_class.define_singleton_method("inherited", function!(RClass::undef_default_alloc_func, 1)).unwrap();
+    ///
+    /// let value: Value = eval(r#"
+    ///     class SubPoint < Point
+    ///     end
+    ///     SubPoint.new(4, 2)
+    /// "#).unwrap();
+    ///
+    /// assert!(value.is_kind_of(class::object().const_get::<_, RClass>("SubPoint").unwrap()));
+    /// assert!(value.is_kind_of(point_class));
+    /// ```
+    #[cfg(feature = "friendly-api")]
+    #[inline]
+    pub fn wrap_as(data: T, class: RClass) -> Self {
+        get_ruby!().obj_wrap_as(data, class)
     }
 
     #[doc(hidden)]

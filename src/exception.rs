@@ -187,6 +187,12 @@ impl Class for ExceptionClass {
             .map(|ins| unsafe { Exception::from_value_unchecked(ins) })
     }
 
+    fn obj_alloc(self) -> Result<Self::Instance, Error> {
+        self.as_r_class()
+            .obj_alloc()
+            .map(|ins| unsafe { Exception::from_value_unchecked(ins) })
+    }
+
     fn as_r_class(self) -> RClass {
         unsafe { RClass::from_value_unchecked(self.as_value()) }
     }
