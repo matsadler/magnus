@@ -1,6 +1,10 @@
 use seq_macro::seq;
 
-use crate::{r_array::RArray, value::Value, Ruby};
+use crate::{
+    r_array::RArray,
+    value::{ReprValue, Value},
+    Ruby,
+};
 
 #[allow(missing_docs)]
 impl Ruby {
@@ -55,9 +59,10 @@ pub unsafe trait IntoValueFromNative: IntoValue {}
 /// Trait for types that can be used as an arguments list when calling Ruby
 /// methods.
 pub trait ArgList {
+    type Value: ReprValue;
     /// The type of the arguments list. Must convert to `&[Value]` with
     /// [`AsRef`].
-    type Output: AsRef<[Value]>;
+    type Output: AsRef<[Self::Value]>;
 
     /// Convert `self` into a type that can be used as a Ruby argument list.
     fn into_arg_list_with(self, handle: &Ruby) -> Self::Output;
@@ -68,8 +73,12 @@ pub trait ArgList {
 /// The implmentation of `ArgList` for slices is not intended to suggest that
 /// it is valid to build a `Vec` of Ruby values to then convert to a slice.
 /// [Ruby values should never be put into a `Vec`](crate#safety).
-impl<'a> ArgList for &'a [Value] {
-    type Output = &'a [Value];
+impl<'a, T> ArgList for &'a [T]
+where
+    T: ReprValue,
+{
+    type Value = T;
+    type Output = &'a [Self::Value];
 
     fn into_arg_list_with(self, _: &Ruby) -> Self::Output {
         self
@@ -83,7 +92,8 @@ macro_rules! impl_arg_list {
             where
                 #(T~N: IntoValue,)*
             {
-                type Output = [Value; $n];
+                type Value = Value;
+                type Output = [Self::Value; $n];
 
                 #[allow(unused_variables)]
                 fn into_arg_list_with(self, handle: &Ruby) -> Self::Output {
@@ -98,8 +108,12 @@ seq!(N in 0..=12 {
     impl_arg_list!(N);
 });
 
-impl<const N: usize> ArgList for [Value; N] {
-    type Output = [Value; N];
+impl<T, const N: usize> ArgList for [T; N]
+where
+    T: ReprValue,
+{
+    type Value = T;
+    type Output = [Self::Value; N];
 
     fn into_arg_list_with(self, _: &Ruby) -> Self::Output {
         self
@@ -109,7 +123,6 @@ impl<const N: usize> ArgList for [Value; N] {
 /// Trait for types that can be used as an arguments list when calling Ruby
 /// Procs.
 pub trait RArrayArgList {
-
     /// Convert `self` into a type that can be used as a Ruby Proc argument
     /// list.
     fn into_array_arg_list_with(self, handle: &Ruby) -> RArray;
