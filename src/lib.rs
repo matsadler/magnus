@@ -1888,7 +1888,7 @@ pub use crate::{
     exception::{Exception, ExceptionClass},
     float::Float,
     integer::Integer,
-    into_value::{ArgList, IntoValue, IntoValueFromNative},
+    into_value::{ArgList, IntoValue, IntoValueFromNative, RArrayArgList},
     module::{Attr, Module, RModule},
     numeric::Numeric,
     object::Object,

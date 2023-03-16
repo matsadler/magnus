@@ -106,7 +106,12 @@ impl<const N: usize> ArgList for [Value; N] {
     }
 }
 
+/// Trait for types that can be used as an arguments list when calling Ruby
+/// Procs.
 pub trait RArrayArgList {
+
+    /// Convert `self` into a type that can be used as a Ruby Proc argument
+    /// list.
     fn into_array_arg_list_with(self, handle: &Ruby) -> RArray;
 }
 
