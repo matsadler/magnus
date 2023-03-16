@@ -1,3 +1,5 @@
+use seq_macro::seq;
+
 use crate::{r_array::RArray, value::Value, Ruby};
 
 #[allow(missing_docs)]
@@ -74,296 +76,27 @@ impl<'a> ArgList for &'a [Value] {
     }
 }
 
-impl ArgList for () {
-    type Output = [Value; 0];
+macro_rules! impl_arg_list {
+    ($n:literal) => {
+        seq!(N in 0..$n {
+            impl<#(T~N,)*> ArgList for (#(T~N,)*)
+            where
+                #(T~N: IntoValue,)*
+            {
+                type Output = [Value; $n];
 
-    fn into_arg_list_with(self, _: &Ruby) -> Self::Output {
-        []
+                #[allow(unused_variables)]
+                fn into_arg_list_with(self, handle: &Ruby) -> Self::Output {
+                    [#(handle.into_value(self.N),)*]
+                }
+            }
+        });
     }
 }
 
-impl<A> ArgList for (A,)
-where
-    A: IntoValue,
-{
-    type Output = [Value; 1];
-
-    fn into_arg_list_with(self, handle: &Ruby) -> Self::Output {
-        [handle.into_value(self.0)]
-    }
-}
-
-impl<A, B> ArgList for (A, B)
-where
-    A: IntoValue,
-    B: IntoValue,
-{
-    type Output = [Value; 2];
-
-    fn into_arg_list_with(self, handle: &Ruby) -> Self::Output {
-        [handle.into_value(self.0), handle.into_value(self.1)]
-    }
-}
-
-impl<A, B, C> ArgList for (A, B, C)
-where
-    A: IntoValue,
-    B: IntoValue,
-    C: IntoValue,
-{
-    type Output = [Value; 3];
-
-    fn into_arg_list_with(self, handle: &Ruby) -> Self::Output {
-        [
-            handle.into_value(self.0),
-            handle.into_value(self.1),
-            handle.into_value(self.2),
-        ]
-    }
-}
-
-impl<A, B, C, D> ArgList for (A, B, C, D)
-where
-    A: IntoValue,
-    B: IntoValue,
-    C: IntoValue,
-    D: IntoValue,
-{
-    type Output = [Value; 4];
-
-    fn into_arg_list_with(self, handle: &Ruby) -> Self::Output {
-        [
-            handle.into_value(self.0),
-            handle.into_value(self.1),
-            handle.into_value(self.2),
-            handle.into_value(self.3),
-        ]
-    }
-}
-
-impl<A, B, C, D, E> ArgList for (A, B, C, D, E)
-where
-    A: IntoValue,
-    B: IntoValue,
-    C: IntoValue,
-    D: IntoValue,
-    E: IntoValue,
-{
-    type Output = [Value; 5];
-
-    fn into_arg_list_with(self, handle: &Ruby) -> Self::Output {
-        [
-            handle.into_value(self.0),
-            handle.into_value(self.1),
-            handle.into_value(self.2),
-            handle.into_value(self.3),
-            handle.into_value(self.4),
-        ]
-    }
-}
-
-impl<A, B, C, D, E, F> ArgList for (A, B, C, D, E, F)
-where
-    A: IntoValue,
-    B: IntoValue,
-    C: IntoValue,
-    D: IntoValue,
-    E: IntoValue,
-    F: IntoValue,
-{
-    type Output = [Value; 6];
-
-    fn into_arg_list_with(self, handle: &Ruby) -> Self::Output {
-        [
-            handle.into_value(self.0),
-            handle.into_value(self.1),
-            handle.into_value(self.2),
-            handle.into_value(self.3),
-            handle.into_value(self.4),
-            handle.into_value(self.5),
-        ]
-    }
-}
-
-impl<A, B, C, D, E, F, G> ArgList for (A, B, C, D, E, F, G)
-where
-    A: IntoValue,
-    B: IntoValue,
-    C: IntoValue,
-    D: IntoValue,
-    E: IntoValue,
-    F: IntoValue,
-    G: IntoValue,
-{
-    type Output = [Value; 7];
-
-    fn into_arg_list_with(self, handle: &Ruby) -> Self::Output {
-        [
-            handle.into_value(self.0),
-            handle.into_value(self.1),
-            handle.into_value(self.2),
-            handle.into_value(self.3),
-            handle.into_value(self.4),
-            handle.into_value(self.5),
-            handle.into_value(self.6),
-        ]
-    }
-}
-
-impl<A, B, C, D, E, F, G, H> ArgList for (A, B, C, D, E, F, G, H)
-where
-    A: IntoValue,
-    B: IntoValue,
-    C: IntoValue,
-    D: IntoValue,
-    E: IntoValue,
-    F: IntoValue,
-    G: IntoValue,
-    H: IntoValue,
-{
-    type Output = [Value; 8];
-
-    fn into_arg_list_with(self, handle: &Ruby) -> Self::Output {
-        [
-            handle.into_value(self.0),
-            handle.into_value(self.1),
-            handle.into_value(self.2),
-            handle.into_value(self.3),
-            handle.into_value(self.4),
-            handle.into_value(self.5),
-            handle.into_value(self.6),
-            handle.into_value(self.7),
-        ]
-    }
-}
-
-impl<A, B, C, D, E, F, G, H, I> ArgList for (A, B, C, D, E, F, G, H, I)
-where
-    A: IntoValue,
-    B: IntoValue,
-    C: IntoValue,
-    D: IntoValue,
-    E: IntoValue,
-    F: IntoValue,
-    G: IntoValue,
-    H: IntoValue,
-    I: IntoValue,
-{
-    type Output = [Value; 9];
-
-    fn into_arg_list_with(self, handle: &Ruby) -> Self::Output {
-        [
-            handle.into_value(self.0),
-            handle.into_value(self.1),
-            handle.into_value(self.2),
-            handle.into_value(self.3),
-            handle.into_value(self.4),
-            handle.into_value(self.5),
-            handle.into_value(self.6),
-            handle.into_value(self.7),
-            handle.into_value(self.8),
-        ]
-    }
-}
-
-impl<A, B, C, D, E, F, G, H, I, J> ArgList for (A, B, C, D, E, F, G, H, I, J)
-where
-    A: IntoValue,
-    B: IntoValue,
-    C: IntoValue,
-    D: IntoValue,
-    E: IntoValue,
-    F: IntoValue,
-    G: IntoValue,
-    H: IntoValue,
-    I: IntoValue,
-    J: IntoValue,
-{
-    type Output = [Value; 10];
-
-    fn into_arg_list_with(self, handle: &Ruby) -> Self::Output {
-        [
-            handle.into_value(self.0),
-            handle.into_value(self.1),
-            handle.into_value(self.2),
-            handle.into_value(self.3),
-            handle.into_value(self.4),
-            handle.into_value(self.5),
-            handle.into_value(self.6),
-            handle.into_value(self.7),
-            handle.into_value(self.8),
-            handle.into_value(self.9),
-        ]
-    }
-}
-
-impl<A, B, C, D, E, F, G, H, I, J, K> ArgList for (A, B, C, D, E, F, G, H, I, J, K)
-where
-    A: IntoValue,
-    B: IntoValue,
-    C: IntoValue,
-    D: IntoValue,
-    E: IntoValue,
-    F: IntoValue,
-    G: IntoValue,
-    H: IntoValue,
-    I: IntoValue,
-    J: IntoValue,
-    K: IntoValue,
-{
-    type Output = [Value; 11];
-
-    fn into_arg_list_with(self, handle: &Ruby) -> Self::Output {
-        [
-            handle.into_value(self.0),
-            handle.into_value(self.1),
-            handle.into_value(self.2),
-            handle.into_value(self.3),
-            handle.into_value(self.4),
-            handle.into_value(self.5),
-            handle.into_value(self.6),
-            handle.into_value(self.7),
-            handle.into_value(self.8),
-            handle.into_value(self.9),
-            handle.into_value(self.10),
-        ]
-    }
-}
-
-impl<A, B, C, D, E, F, G, H, I, J, K, L> ArgList for (A, B, C, D, E, F, G, H, I, J, K, L)
-where
-    A: IntoValue,
-    B: IntoValue,
-    C: IntoValue,
-    D: IntoValue,
-    E: IntoValue,
-    F: IntoValue,
-    G: IntoValue,
-    H: IntoValue,
-    I: IntoValue,
-    J: IntoValue,
-    K: IntoValue,
-    L: IntoValue,
-{
-    type Output = [Value; 12];
-
-    fn into_arg_list_with(self, handle: &Ruby) -> Self::Output {
-        [
-            handle.into_value(self.0),
-            handle.into_value(self.1),
-            handle.into_value(self.2),
-            handle.into_value(self.3),
-            handle.into_value(self.4),
-            handle.into_value(self.5),
-            handle.into_value(self.6),
-            handle.into_value(self.7),
-            handle.into_value(self.8),
-            handle.into_value(self.9),
-            handle.into_value(self.10),
-            handle.into_value(self.11),
-        ]
-    }
-}
+seq!(N in 0..=12 {
+    impl_arg_list!(N);
+});
 
 impl<const N: usize> ArgList for [Value; N] {
     type Output = [Value; N];
