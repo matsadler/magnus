@@ -192,6 +192,45 @@ impl Proc {
     /// Returns `Ok(T)` if the proc runs without error and the return value
     /// converts into a `T`, or returns `Err` if the proc raises or the
     /// conversion fails.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{block::Proc, eval, prelude::*, Integer, RArray};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let proc: Proc = eval("Proc.new {|a, b| a + b}").unwrap();
+    ///
+    /// // call with a tuple
+    /// let result: i64 = proc.call((1, 2)).unwrap();
+    /// assert_eq!(3, result);
+    ///
+    /// // call with a slice
+    /// let result: i64 = proc.call(&[*Integer::from_i64(3), *Integer::from_i64(4)][..]).unwrap();
+    /// assert_eq!(7, result);
+    ///
+    /// // call with an array
+    /// let result: i64 = proc.call([*Integer::from_i64(5), *Integer::from_i64(6)]).unwrap();
+    /// assert_eq!(11, result);
+    ///
+    /// // call with a Ruby array
+    /// let array = RArray::from_vec(vec![7, 8]);
+    /// let result: i64 = proc.call(array).unwrap();
+    /// assert_eq!(15, result);
+    /// ```
+    ///
+    /// Ignoring return value:
+    ///
+    /// ```
+    /// use magnus::{block::Proc, eval, prelude::*, Value};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let proc: Proc = eval("Proc.new { $called = true }").unwrap();
+    ///
+    /// let _: Value = proc.call(()).unwrap();
+    ///
+    /// assert!(eval::<bool>("$called").unwrap());
+    /// ```
     pub fn call<A, T>(self, args: A) -> Result<T, Error>
     where
         A: RArrayArgList,
