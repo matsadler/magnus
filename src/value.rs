@@ -2304,7 +2304,7 @@ impl PartialEq<Id> for StaticSymbol {
 
 impl PartialEq<OpaqueId> for StaticSymbol {
     fn eq(&self, other: &OpaqueId) -> bool {
-        OpaqueId::from(*self) == *other
+        self.into_id_with(&Ruby::get_with(*self)).0 == other.0
     }
 }
 
@@ -2314,7 +2314,7 @@ impl PartialEq<LazyId> for StaticSymbol {
     /// Panics if the first call is from a non-Ruby thread. The `LazyId` will
     /// then be *poisoned* and all future use of it will panic.
     fn eq(&self, other: &LazyId) -> bool {
-        OpaqueId::from(*self) == *other
+        self.into_id_with(&Ruby::get_with(*self)).0 == other.0
     }
 }
 
@@ -2539,7 +2539,7 @@ impl PartialEq<OpaqueId> for Id {
 
 impl PartialEq<LazyId> for Id {
     fn eq(&self, other: &LazyId) -> bool {
-        self.0 == (*other).0
+        self.0 == other.0
     }
 }
 
@@ -2615,13 +2615,13 @@ impl IntoValue for OpaqueId {
 
 impl PartialEq<Id> for OpaqueId {
     fn eq(&self, other: &Id) -> bool {
-        *self == Self::from(*other)
+        self.0 == other.0
     }
 }
 
 impl PartialEq<LazyId> for OpaqueId {
     fn eq(&self, other: &LazyId) -> bool {
-        *self == Self::from(**other)
+        *self == **other
     }
 }
 

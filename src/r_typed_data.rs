@@ -23,7 +23,7 @@ impl Ruby {
     where
         T: TypedData,
     {
-        let class = T::class_for(&self, &data);
+        let class = T::class_for(self, &data);
         self.wrap_as(data, class)
     }
 
