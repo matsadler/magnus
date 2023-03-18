@@ -53,6 +53,9 @@ impl DataType {
     ///
     /// `name` should be unique per wrapped type. It does not need to be a
     /// valid Ruby identifier.
+    ///
+    /// See [`data_type_builder`](macro@crate::data_type_builder) to create a
+    /// `DataTypeBuilder` with a `'static CStr` `name` from a string literal.
     pub const fn builder<T>(name: &'static CStr) -> DataTypeBuilder<T>
     where
         T: DataTypeFunctions,
@@ -229,6 +232,21 @@ pub struct DataTypeBuilder<T> {
     phantom: PhantomData<T>,
 }
 
+/// Create a new [`DataTypeBuilder`].
+///
+/// `name` should be unique per wrapped type. It does not need to be a
+/// valid Ruby identifier.
+///
+/// `data_type_builder!(Example, "example")` is equivalent to
+/// `DataTypeBuilder::<Example>::new` with a `name` argument of `"example"` as
+/// a `'static CStr`.
+#[macro_export]
+macro_rules! data_type_builder {
+    ($t:ty, $name:literal) => {
+        $crate::typed_data::DataTypeBuilder::<$t>::new(unsafe { std::ffi::CStr::from_bytes_with_nul_unchecked(concat!($name, "\0").as_bytes()) })
+    };
+}
+
 impl<T> DataTypeBuilder<T>
 where
     T: DataTypeFunctions,
@@ -237,6 +255,9 @@ where
     ///
     /// `name` should be unique per wrapped type. It does not need to be a
     /// valid Ruby identifier.
+    ///
+    /// See [`data_type_builder`](macro@crate::data_type_builder) to create a
+    /// `DataTypeBuilder` with a `'static CStr` `name` from a string literal.
     pub const fn new(name: &'static CStr) -> Self {
         Self {
             name,
@@ -407,7 +428,7 @@ where
     /// # Examples
     ///
     /// ```
-    /// use magnus::{cstr, typed_data::DataTypeBuilder, DataType, DataTypeFunctions, TypedData};
+    /// use magnus::{data_type_builder, DataType, DataTypeFunctions, TypedData};
     /// # use magnus::{RClass, Ruby};
     ///
     /// #[derive(DataTypeFunctions)]
@@ -418,7 +439,7 @@ where
     ///     // ...
     ///
     ///     fn data_type() -> &'static DataType {
-    ///         static DATA_TYPE: DataType = DataTypeBuilder::<Example>::new(cstr!("example")).build();
+    ///         static DATA_TYPE: DataType = data_type_builder!(Example, "example").build();
     ///         &DATA_TYPE
     ///     }
     /// }

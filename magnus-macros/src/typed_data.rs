@@ -184,7 +184,7 @@ pub fn expand_derive_typed_data(input: DeriveInput) -> TokenStream {
     };
 
     let mut builder = Vec::new();
-    builder.push(quote! { magnus::DataType::builder::<#ident>(magnus::cstr!(#name)) });
+    builder.push(quote! { magnus::data_type_builder!(#ident, #name) });
     if mark {
         builder.push(quote! { .mark() });
     }

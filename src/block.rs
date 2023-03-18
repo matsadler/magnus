@@ -8,7 +8,7 @@ use rb_sys::{
 };
 
 use crate::{
-    cstr,
+    data_type_builder,
     enumerator::Enumerator,
     error::{ensure, protect, Error},
     into_value::{ArgList, IntoValue, RArrayArgList},
@@ -367,7 +367,7 @@ where
     struct Closure();
     impl DataTypeFunctions for Closure {}
 
-    static DATA_TYPE: DataType = DataType::builder::<Closure>(cstr!("rust closure"))
+    static DATA_TYPE: DataType = data_type_builder!(Closure, "rust closure")
         .free_immediately()
         .build();
 

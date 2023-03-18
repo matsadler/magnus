@@ -43,7 +43,8 @@
   take `&Ruby` as a first argument.
 - The value returned from `embed::init` derefs to `Ruby`.
 - `DataTypeBuilder::new`/`DataType::builder` now take their `name` argument
-  as a `'static CStr` (see the `magnus::cstr!` macro).
+  as a `'static CStr` (see the `magnus::data_type_builder!` macro to construct
+  a `DataTypeBuilder` with a `'static CStr` `name`).
 - All methods on `DataTypeBuilder` are now `const`, so `DataType` can be
   constructed in a `const` context and be assigned to a `static`.
 
