@@ -1,7 +1,5 @@
 //! Types and functions for working with Ruby’s Hash class.
 
-#[cfg(feature = "friendly-api")]
-use std::iter::FromIterator;
 use std::{
     collections::HashMap,
     fmt,

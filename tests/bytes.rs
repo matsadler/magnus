@@ -1,5 +1,5 @@
 #[test]
-#[cfg(feature = "bytes-crate")]
+#[cfg(feature = "bytes")]
 fn it_converts_to_bytes() {
     use magnus::{eval, RString};
 

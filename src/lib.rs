@@ -1248,7 +1248,7 @@
 // * `rb_profile_frame_qualified_method_name`:
 // * `rb_profile_frame_singleton_method_p`:
 //! * `rb_protect`: Called internally by Magnus when required. Available as
-//!   [`rb_sys::protect`] with `rb-sys-interop` feature for calling raw Ruby api.
+//!   [`rb_sys::protect`] with `rb-sys` feature for calling raw Ruby api.
 // * `rb_provide`:
 // * `rb_provided`:
 //!
@@ -1855,8 +1855,8 @@ pub mod r_string;
 pub mod r_struct;
 mod r_typed_data;
 mod range;
-#[cfg(feature = "rb-sys-interop")]
-#[cfg_attr(docsrs, doc(cfg(feature = "rb-sys-interop")))]
+#[cfg(feature = "rb-sys")]
+#[cfg_attr(docsrs, doc(cfg(feature = "rb-sys")))]
 pub mod rb_sys;
 pub mod scan_args;
 pub mod symbol;
@@ -2018,7 +2018,7 @@ macro_rules! rb_assert {
             end
         "#, $($bindings)*, __exp__ = $expr).unwrap();
         if let Some(msg) = msg {
-            panic!(msg)
+            panic!("{}", msg)
         };
     }};
 }

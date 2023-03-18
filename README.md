@@ -296,7 +296,7 @@ See `magnus::TryConvert` for more details.
 
 \*\* see the `wrap` macro.
 
-\*\*\* when the bytes-crate feature is enabled
+\*\*\* when the `bytes` feature is enabled
 
 ### Rust returning / passing values to Ruby
 
@@ -412,7 +412,7 @@ Support for 32 bit systems is almost certainly broken, patches are welcome.
 ### rb-sys
 
 Magnus uses [rb-sys] to provide the low-level bindings to Ruby. The
-`rb-sys-interop` feature enables the [`rb_sys`][rb_sys_module] module for
+`rb-sys` feature enables the [`rb_sys`][rb_sys_module] module for
 advanced interoperability with rb-sys, allows you to access low-level Ruby APIs
 which Magnus does not expose.
 

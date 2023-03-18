@@ -17,7 +17,6 @@
 //! string of an encoding name, and convert to an instance of `Encoding`.
 
 use std::{
-    convert::TryInto,
     ffi::{CStr, CString},
     fmt,
     ops::Range,

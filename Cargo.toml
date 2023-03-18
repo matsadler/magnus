@@ -2,8 +2,7 @@
 name = "magnus"
 version = "0.5.0"
 authors = ["Mat Sadler <mat@sourcetagsandcodes.com>"]
-edition = "2018"
-resolver = "2"
+edition = "2021"
 description = "High level Ruby bindings. Write Ruby extension gems in Rust, or call Ruby code from a Rust binary."
 keywords = ["ruby", "rubygem", "extension", "gem"]
 categories = ["api-bindings", "development-tools::ffi"]
@@ -19,10 +18,10 @@ exclude = ["examples/rust_blank/ext/rust_blank", "examples/custom_exception_ruby
 
 [features]
 default = ["friendly-api"]
-bytes-crate = ["bytes"]
+bytes = ["dep:bytes"]
 embed = ["rb-sys/link-ruby"]
 friendly-api = []
-rb-sys-interop = []
+rb-sys = []
 ruby-static = ["rb-sys/ruby-static"]
 
 [dependencies]
@@ -32,7 +31,7 @@ rb-sys = { version = "0.9.56", default-features = false, features = ["bindgen-rb
 seq-macro = "0.3"
 
 [dev-dependencies]
-magnus = { path = ".", features = ["embed", "rb-sys-interop"] }
+magnus = { path = ".", features = ["embed", "rb-sys"] }
 
 [build-dependencies]
 rb-sys-env = "0.1.1"

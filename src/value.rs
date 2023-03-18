@@ -6,7 +6,6 @@ mod flonum;
 use std::{
     borrow::{Borrow, Cow},
     cell::UnsafeCell,
-    convert::TryFrom,
     ffi::CStr,
     fmt,
     hash::{Hash, Hasher},

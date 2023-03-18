@@ -40,7 +40,9 @@ macro_rules! get_ruby {
             $crate::Ruby::get().unwrap()
         } else {
             #[allow(unused_unsafe)]
-            unsafe { $crate::Ruby::get_unchecked() }
+            unsafe {
+                $crate::Ruby::get_unchecked()
+            }
         }
     };
 }

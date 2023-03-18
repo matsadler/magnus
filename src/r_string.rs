@@ -925,8 +925,8 @@ impl RString {
     /// let s = RString::new("example");
     /// assert_eq!(s.to_bytes(), Bytes::from("example"));
     /// ```
-    #[cfg_attr(docsrs, doc(cfg(feature = "bytes-crate")))]
-    #[cfg(feature = "bytes-crate")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "bytes")))]
+    #[cfg(feature = "bytes")]
     pub fn to_bytes(self) -> bytes::Bytes {
         let vec = unsafe { self.as_slice().to_vec() };
         vec.into()
@@ -1530,7 +1530,7 @@ impl IntoValue for &str {
 
 unsafe impl IntoValueFromNative for &str {}
 
-#[cfg(feature = "bytes-crate")]
+#[cfg(feature = "bytes")]
 impl IntoValue for bytes::Bytes {
     fn into_value_with(self, handle: &Ruby) -> Value {
         handle.str_from_slice(self.as_ref()).into()

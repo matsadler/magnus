@@ -116,8 +116,6 @@ pub trait FromRawId {
     /// saftey guarantees provided by Magnus.
     ///
     /// ```
-    /// use std::convert::TryInto;
-    ///
     /// use magnus::{prelude::*, rb_sys::{AsRawId, FromRawId}, value::Id, Symbol};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
