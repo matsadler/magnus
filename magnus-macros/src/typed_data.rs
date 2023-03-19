@@ -1,6 +1,8 @@
 use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
-use syn::{spanned::Spanned, Data, DataEnum, DataStruct, DeriveInput, Error, Fields, FieldsNamed};
+use syn::{
+    spanned::Spanned, Data, DataEnum, DataStruct, DeriveInput, Error, Fields, FieldsNamed, LitStr,
+};
 
 use crate::util;
 
@@ -20,91 +22,87 @@ pub fn expand_derive_data_type_functions(input: DeriveInput) -> TokenStream {
     }
 }
 
-pub fn expand_derive_typed_data(input: DeriveInput) -> TokenStream {
+pub fn expand_derive_typed_data(input: DeriveInput) -> Result<TokenStream, Error> {
     if !input.generics.to_token_stream().is_empty() {
-        return Error::new(
+        return Err(Error::new(
             input.generics.span(),
             "TypedData can't be derived for generic types",
-        )
-        .into_compile_error();
+        ));
     }
-    let attrs = match util::to_attribute_args(&input.attrs) {
-        Ok(Some(v)) => v,
-        Ok(None) => {
-            return Error::new(input.span(), "missing #[magnus] attribute").into_compile_error()
-        }
-        Err(e) => return e.into_compile_error(),
-    };
-    let mut args = match util::Args::new_with_aliases(
-        attrs,
-        &[
-            "class",
-            "name",
-            "mark",
-            "size",
-            "compact",
-            "free_immediately",
-            "wb_protected",
-            "frozen_shareable",
-        ],
-        &vec![("free_immediatly", "free_immediately")]
-            .into_iter()
-            .collect(),
-    ) {
-        Ok(v) => v,
-        Err(e) => return e.into_compile_error(),
+
+    let attrs = match util::get_magnus_attrubute(&input.attrs)? {
+        Some(v) => v,
+        None => return Err(Error::new(input.span(), "missing #[magnus] attribute")),
     };
 
-    let class = match args.extract::<String>("class") {
-        Ok(v) => v,
-        Err(e) => return e.into_compile_error(),
+    let mut class = None;
+    let mut name = None;
+    let mut mark = false;
+    let mut size = false;
+    let mut compact = false;
+    let mut free_immediately = false;
+    let mut wb_protected = false;
+    let mut frozen_shareable = false;
+
+    attrs.parse_nested_meta(|meta| {
+        if meta.path.is_ident("class") {
+            class = Some(meta.value()?.parse::<LitStr>()?.value());
+            Ok(())
+        } else if meta.path.is_ident("name") {
+            name = Some(meta.value()?.parse::<LitStr>()?.value());
+            Ok(())
+        } else if meta.path.is_ident("mark") {
+            mark = true;
+            Ok(())
+        } else if meta.path.is_ident("size") {
+            size = true;
+            Ok(())
+        } else if meta.path.is_ident("compact") {
+            compact = true;
+            Ok(())
+        } else if meta.path.is_ident("free_immediately") {
+            free_immediately = true;
+            Ok(())
+        } else if meta.path.is_ident("wb_protected") {
+            wb_protected = true;
+            Ok(())
+        } else if meta.path.is_ident("frozen_shareable") {
+            frozen_shareable = true;
+            Ok(())
+        } else if meta.path.is_ident("free_immediatly") {
+            Err(meta.error("unsupported attribute (use free_immediately)"))
+        } else {
+            Err(meta.error("unsupported attribute"))
+        }
+    })?;
+
+    let class = match class {
+        Some(v) => v,
+        None => return Err(Error::new(attrs.span(), "missing attribute: `class = ...`")),
     };
-    let name = match args.extract::<Option<String>>("name") {
-        Ok(v) => v.unwrap_or_else(|| class.clone()),
-        Err(e) => return e.into_compile_error(),
-    };
-    let mark = match args.extract::<Option<()>>("mark") {
-        Ok(v) => v.is_some(),
-        Err(e) => return e.into_compile_error(),
-    };
-    let size = match args.extract::<Option<()>>("size") {
-        Ok(v) => v.is_some(),
-        Err(e) => return e.into_compile_error(),
-    };
-    let compact = match args.extract::<Option<()>>("compact") {
-        Ok(v) => v.is_some(),
-        Err(e) => return e.into_compile_error(),
-    };
-    let free_immediately = match args.extract::<Option<()>>("free_immediately") {
-        Ok(v) => v.is_some(),
-        Err(e) => return e.into_compile_error(),
-    };
-    let wb_protected = match args.extract::<Option<()>>("wb_protected") {
-        Ok(v) => v.is_some(),
-        Err(e) => return e.into_compile_error(),
-    };
-    let frozen_shareable = match args.extract::<Option<()>>("frozen_shareable") {
-        Ok(v) => v.is_some(),
-        Err(e) => return e.into_compile_error(),
-    };
+    let name = name.unwrap_or_else(|| class.clone());
 
     let ident = &input.ident;
 
     let mut arms = Vec::new();
     if let Data::Enum(DataEnum { ref variants, .. }) = input.data {
         for variant in variants.into_iter() {
-            let attrs = match util::to_attribute_args(&variant.attrs) {
-                Ok(Some(v)) => v,
-                Ok(None) => continue,
-                Err(e) => return e.into_compile_error(),
+            let attrs = match util::get_magnus_attrubute(&variant.attrs)? {
+                Some(v) => v,
+                None => continue,
             };
-            let mut args = match util::Args::new(attrs, &["class"]) {
-                Ok(v) => v,
-                Err(e) => return e.into_compile_error(),
-            };
-            let class = match args.extract::<String>("class") {
-                Ok(v) => v,
-                Err(e) => return e.into_compile_error(),
+            let mut class = None;
+            attrs.parse_nested_meta(|meta| {
+                if meta.path.is_ident("class") {
+                    class = Some(meta.value()?.parse::<LitStr>()?.value());
+                    Ok(())
+                } else {
+                    Err(meta.error("unsupported attribute"))
+                }
+            })?;
+            let class = match class {
+                Some(v) => v,
+                None => return Err(Error::new(attrs.span(), "missing attribute: `class = ...`")),
             };
             let ident = &variant.ident;
             let fetch_class = quote! {
@@ -144,21 +142,19 @@ pub fn expand_derive_typed_data(input: DeriveInput) -> TokenStream {
     }) = input.data
     {
         for field in named {
-            let attrs = match util::to_attribute_args(&field.attrs) {
-                Ok(Some(v)) => v,
-                Ok(None) => continue,
-                Err(e) => return e.into_compile_error(),
-            };
-            let mut args = match util::Args::new(attrs, &["opaque_attr_reader"]) {
-                Ok(v) => v,
-                Err(e) => return e.into_compile_error(),
+            let attrs = match util::get_magnus_attrubute(&field.attrs)? {
+                Some(v) => v,
+                None => continue,
             };
             let mut read = false;
-            match args.extract::<Option<()>>("opaque_attr_reader") {
-                Ok(Some(())) => read = true,
-                Ok(None) => {}
-                Err(e) => return e.into_compile_error(),
-            };
+            attrs.parse_nested_meta(|meta| {
+                if meta.path.is_ident("opaque_attr_reader") {
+                    read = true;
+                    Ok(())
+                } else {
+                    Err(meta.error("unsupported attribute"))
+                }
+            })?;
             let ident = field.ident.as_ref().unwrap();
             let ty = &field.ty;
             if read {
@@ -227,5 +223,5 @@ pub fn expand_derive_typed_data(input: DeriveInput) -> TokenStream {
             #class_for
         }
     };
-    tokens
+    Ok(tokens)
 }

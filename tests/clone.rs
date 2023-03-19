@@ -4,7 +4,7 @@ use magnus::{
 };
 
 #[derive(TypedData, Clone)]
-#[magnus(class = "Pair", free_immediatly, mark)]
+#[magnus(class = "Pair", free_immediately, mark)]
 struct Pair {
     #[magnus(opaque_attr_reader)]
     a: Opaque<Value>,

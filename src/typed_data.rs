@@ -243,7 +243,9 @@ pub struct DataTypeBuilder<T> {
 #[macro_export]
 macro_rules! data_type_builder {
     ($t:ty, $name:literal) => {
-        $crate::typed_data::DataTypeBuilder::<$t>::new(unsafe { std::ffi::CStr::from_bytes_with_nul_unchecked(concat!($name, "\0").as_bytes()) })
+        $crate::typed_data::DataTypeBuilder::<$t>::new(unsafe {
+            std::ffi::CStr::from_bytes_with_nul_unchecked(concat!($name, "\0").as_bytes())
+        })
     };
 }
 
@@ -808,7 +810,7 @@ where
 /// };
 ///
 /// #[derive(TypedData)]
-/// #[magnus(class = "Pair", free_immediatly, mark)]
+/// #[magnus(class = "Pair", free_immediately, mark)]
 /// struct Pair {
 ///     #[magnus(opaque_attr_reader)]
 ///     a: Opaque<Value>,
@@ -917,7 +919,7 @@ where
 /// };
 ///
 /// #[derive(TypedData)]
-/// #[magnus(class = "Pair", free_immediatly, mark)]
+/// #[magnus(class = "Pair", free_immediately, mark)]
 /// struct Pair {
 ///     #[magnus(opaque_attr_reader)]
 ///     a: Opaque<Value>,
@@ -1024,7 +1026,7 @@ where
 /// };
 ///
 /// #[derive(TypedData)]
-/// #[magnus(class = "Pair", free_immediatly, mark)]
+/// #[magnus(class = "Pair", free_immediately, mark)]
 /// struct Pair {
 ///     #[magnus(opaque_attr_reader)]
 ///     a: Opaque<Value>,
@@ -1124,7 +1126,7 @@ where
 /// };
 ///
 /// #[derive(TypedData)]
-/// #[magnus(class = "Pair", free_immediatly, mark)]
+/// #[magnus(class = "Pair", free_immediately, mark)]
 /// struct Pair {
 ///     #[magnus(opaque_attr_reader)]
 ///     a: Opaque<Value>,
@@ -1199,7 +1201,7 @@ where
 /// };
 ///
 /// #[derive(TypedData, Clone)]
-/// #[magnus(class = "Pair", free_immediatly, mark)]
+/// #[magnus(class = "Pair", free_immediately, mark)]
 /// struct Pair {
 ///     #[magnus(opaque_attr_reader)]
 ///     a: Opaque<Value>,

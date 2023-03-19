@@ -92,7 +92,23 @@ mod util;
 /// ```
 #[proc_macro_attribute]
 pub fn init(attrs: TokenStream, item: TokenStream) -> TokenStream {
-    init::expand(parse_macro_input!(attrs), parse_macro_input!(item)).into()
+    let mut name = None;
+    if !attrs.is_empty() {
+        let attr_parser = syn::meta::parser(|meta| {
+            if meta.path.is_ident("name") {
+                name = Some(meta.value()?.parse::<syn::LitStr>()?.value());
+                Ok(())
+            } else {
+                Err(meta.error("unsupported attribute"))
+            }
+        });
+        parse_macro_input!(attrs with attr_parser);
+    }
+    match init::expand(name, parse_macro_input!(item)) {
+        Ok(tokens) => tokens,
+        Err(e) => e.into_compile_error(),
+    }
+    .into()
 }
 
 /// Allow a Rust type to be passed to Ruby, automatically wrapped as a Ruby
@@ -328,7 +344,7 @@ pub fn derive_data_type_functions(input: TokenStream) -> TokenStream {
 /// # }
 /// #
 /// #[derive(TypedData)]
-/// #[magnus(class = "Line", free_immediatly, mark)]
+/// #[magnus(class = "Line", free_immediately, mark)]
 /// struct Line {
 ///     #[magnus(opaque_attr_reader)]
 ///     start: Opaque<Obj<Point>>,
@@ -369,5 +385,9 @@ pub fn derive_data_type_functions(input: TokenStream) -> TokenStream {
 /// ```
 #[proc_macro_derive(TypedData, attributes(magnus))]
 pub fn derive_typed_data(input: TokenStream) -> TokenStream {
-    typed_data::expand_derive_typed_data(parse_macro_input!(input)).into()
+    match typed_data::expand_derive_typed_data(parse_macro_input!(input)) {
+        Ok(tokens) => tokens,
+        Err(e) => e.into_compile_error(),
+    }
+    .into()
 }

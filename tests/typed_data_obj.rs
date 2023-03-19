@@ -3,7 +3,7 @@ use magnus::{
     DataTypeFunctions, TypedData,
 };
 
-#[magnus::wrap(class = "Point", free_immediatly)]
+#[magnus::wrap(class = "Point", free_immediately)]
 struct Point {
     x: isize,
     y: isize,
@@ -16,7 +16,7 @@ impl Point {
 }
 
 #[derive(TypedData)]
-#[magnus(class = "Line", free_immediatly, mark)]
+#[magnus(class = "Line", free_immediately, mark)]
 struct Line {
     #[magnus(opaque_attr_reader)]
     start: Opaque<Obj<Point>>,
