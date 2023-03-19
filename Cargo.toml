@@ -35,6 +35,9 @@ magnus = { path = ".", features = ["embed", "rb-sys"] }
 [build-dependencies]
 rb-sys-env = "0.1.1"
 
+[lib]
+doc-scrape-examples = false
+
 [package.metadata.docs.rs]
 all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
