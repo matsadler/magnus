@@ -288,14 +288,6 @@ impl RBignum {
         Ok(res as usize)
     }
 
-    fn sign(self) -> u64 {
-        debug_assert_value!(self);
-        unsafe {
-            let r_basic = self.r_basic_unchecked();
-            r_basic.as_ref().flags & (ruby_fl_type::RUBY_FL_USER1 as VALUE)
-        }
-    }
-
     /// Check if `self` is positive.
     ///
     /// # Examples
@@ -311,7 +303,11 @@ impl RBignum {
     /// assert!(!num.is_positive());
     /// ```
     pub fn is_positive(self) -> bool {
-        self.sign() != 0
+        debug_assert_value!(self);
+        unsafe {
+            let r_basic = self.r_basic_unchecked();
+            r_basic.as_ref().flags & (ruby_fl_type::RUBY_FL_USER1 as VALUE) != 0
+        }
     }
 
     /// Check if `self` is negative.
