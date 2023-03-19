@@ -10,6 +10,7 @@
 ### Removed
 
 ### Fixed
+- Fixed compilation issue in `RBignum` on 32 bit platforms.
 
 ### Security
 
