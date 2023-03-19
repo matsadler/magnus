@@ -1,7 +1,7 @@
 use magnus::{class, embed, prelude::*, require, Value};
 
-mod word_source;
 mod word_sink;
+mod word_source;
 
 // run with `echo foo bar baz | cargo run --example embed`
 fn main() {
