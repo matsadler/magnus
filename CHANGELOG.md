@@ -10,9 +10,12 @@
 ### Removed
 
 ### Fixed
-- Fixed compilation issue in `RBignum` on 32 bit platforms.
 
 ### Security
+
+## [0.5.2] - 2023-03-19
+### Fixed
+- Fixed compilation issue in `RBignum` on 32 bit platforms.
 
 ## [0.5.1] - 2023-02-18
 ### Fixed
@@ -302,7 +305,8 @@
 - Pre-built bindings for Ruby 2.6 - 3.1 on common platforms, build-time
   generated bindings otherwise.
 
-[Unreleased]: https://github.com/matsadler/magnus/compare/0.5.1...HEAD
+[Unreleased]: https://github.com/matsadler/magnus/compare/0.5.2...HEAD
+[0.5.2]: https://github.com/matsadler/magnus/compare/0.5.1...0.5.2
 [0.5.1]: https://github.com/matsadler/magnus/compare/0.5.0...0.5.1
 [0.5.0]: https://github.com/matsadler/magnus/compare/0.4.4...0.5.0
 [0.4.4]: https://github.com/matsadler/magnus/compare/0.4.3...0.4.4
