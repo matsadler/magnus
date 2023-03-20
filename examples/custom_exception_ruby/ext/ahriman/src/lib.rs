@@ -20,7 +20,7 @@ fn cast_rubric(ruby: &Ruby) -> Result<(), Error> {
     if false {
         Ok(())
     } else {
-        Err(Error::new(RUBRIC_ERROR.get(ruby), "All is dust."))
+        Err(Error::new(ruby.get_inner(&RUBRIC_ERROR), "All is dust."))
     }
 }
 
