@@ -59,8 +59,9 @@ pub unsafe trait IntoValueFromNative: IntoValue {}
 /// Trait for types that can be used as an arguments list when calling Ruby
 /// methods.
 pub trait ArgList {
+    /// The specific Ruby value type.
     type Value: ReprValue;
-    /// The type of the arguments list. Must convert to `&[Value]` with
+    /// The type of the arguments list. Must convert to `&[Self::Value]` with
     /// [`AsRef`].
     type Output: AsRef<[Self::Value]>;
 
