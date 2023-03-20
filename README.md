@@ -388,11 +388,15 @@ use `unsafe`.
 
 ## Compatibility
 
-Ruby versions 2.7, 3.0, 3.1, and 3.2 are fully supported.
+Ruby versions 3.0, 3.1, and 3.2 are fully supported.
 
-Magnus currently works with Ruby 2.6, but as this version of the language is no
-longer supported by the Ruby developers it is not recommended and future
-support in Magnus is not guaranteed.
+Magnus currently works with, and is still tested against, Ruby 2.7, but as this
+version of the language is no longer supported by the Ruby developers it is not
+recommended and future support in Magnus is not guaranteed.
+
+Magnus is no longer tested against Ruby 2.6. Code supporting 2.6 has not been
+removed, but there is no guarantee it will continue to work. Minor patches for
+Ruby 2.6 compatibility will be accepted.
 
 Ruby bindings will be generated at compile time, this may require libclang to
 be installed.
@@ -403,7 +407,8 @@ Support for statically linking Ruby is provided.
 
 Cross-compilation is supported by rb-sys [for the platforms listed here][plat].
 
-Support for 32 bit systems is almost certainly broken, patches are welcome.
+Magnus is not tested on 32 bit systems. Efforts are made to ensure it compiles.
+Patches are welcome.
 
 [plat]: https://github.com/oxidize-rb/rb-sys#supported-platforms
 
