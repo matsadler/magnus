@@ -231,7 +231,7 @@ impl TryConvert for Value {
 /// by removing the ability to do anything with it, making it impossible to
 /// call Ruby's API on non-Ruby threads.
 ///
-/// An `Opaque<T>` can be unwrapped to `T` with [`Ruby::unwrap_opaque`],
+/// An `Opaque<T>` can be unwrapped to `T` with [`Ruby::get_inner`],
 /// as it is only possible to instantiate a [`Ruby`] on a Ruby thread.
 /// # Examples
 ///
@@ -243,7 +243,7 @@ impl TryConvert for Value {
 /// // send to another Ruby thread
 ///
 /// let handle = Ruby::get().unwrap(); // errors on non-Ruby thread
-/// let str = handle.unwrap_opaque(opaque_str);
+/// let str = handle.get_inner(opaque_str);
 /// let res: bool = eval!(r#"str == "example""#, str).unwrap();
 /// assert!(res);
 /// ```
@@ -282,13 +282,30 @@ where
     }
 }
 
+pub trait InnerValue {
+    type Value: ReprValue;
+
+    fn get_inner_with(self, ruby: &Ruby) -> Self::Value;
+}
+
+impl<T> InnerValue for Opaque<T>
+where
+    T: ReprValue,
+{
+    type Value = T;
+
+    fn get_inner_with(self, _: &Ruby) -> Self::Value {
+        self.0
+    }
+}
+
 #[allow(missing_docs)]
 impl Ruby {
-    pub fn unwrap_opaque<T>(&self, val: Opaque<T>) -> T
+    pub fn get_inner<T>(&self, val: impl InnerValue<Value = T>) -> T
     where
         T: ReprValue,
     {
-        val.0
+        val.get_inner_with(self)
     }
 }
 
@@ -315,19 +332,26 @@ where
             inner: UnsafeCell::new(LazyInner { func }),
         }
     }
+}
 
-    pub fn get(&self, handle: &Ruby) -> T {
+unsafe impl<T: ReprValue> Sync for Lazy<T> {}
+
+impl<T> InnerValue for &Lazy<T>
+where
+    T: ReprValue,
+{
+    type Value = T;
+
+    fn get_inner_with(self, ruby: &Ruby) -> Self::Value {
         unsafe {
             self.init.call_once(|| {
                 let inner = self.inner.get();
-                (*inner).value = ((*inner).func)(handle);
+                (*inner).value = ((*inner).func)(ruby);
             });
             (*self.inner.get()).value
         }
     }
 }
-
-unsafe impl<T: ReprValue> Sync for Lazy<T> {}
 
 pub(crate) mod private {
     use super::*;
@@ -1367,7 +1391,7 @@ unsafe impl<T> IntoValueFromNative for BoxValue<T> where T: ReprValue {}
 impl Ruby {
     #[inline]
     pub fn qfalse(&self) -> Qfalse {
-        self.unwrap_opaque(QFALSE)
+        self.get_inner(QFALSE)
     }
 }
 
@@ -1447,7 +1471,7 @@ impl TryConvertOwned for Qfalse {}
 impl Ruby {
     #[inline]
     pub fn qnil(&self) -> Qnil {
-        self.unwrap_opaque(QNIL)
+        self.get_inner(QNIL)
     }
 }
 
@@ -1553,7 +1577,7 @@ impl TryConvertOwned for Qnil {}
 impl Ruby {
     #[inline]
     pub fn qtrue(&self) -> Qtrue {
-        self.unwrap_opaque(QTRUE)
+        self.get_inner(QTRUE)
     }
 }
 
@@ -2680,7 +2704,7 @@ impl LazyId {
     ///
     /// # Panics
     ///
-    /// Panics if the `LazyId` is *poisoned*. See [`LazyId::get`].
+    /// Panics if the `LazyId` is *poisoned*. See [`LazyId`].
     ///
     /// # Examples
     ///
@@ -2693,44 +2717,20 @@ impl LazyId {
     /// fn init(ruby: &Ruby) {
     ///     LazyId::force(&EXAMPLE, ruby);
     ///
-    ///     assert!(LazyId::try_get(&EXAMPLE).is_some());
+    ///     assert!(LazyId::try_get_inner(&EXAMPLE).is_some());
     /// }
     /// # let ruby = unsafe { magnus::embed::init() };
     /// # init(&ruby);
     /// ```
     pub fn force(this: &Self, handle: &Ruby) {
-        Self::get_with(this, handle);
-    }
-
-    /// Get an [`OpaqueId`] from a `LazyId`.
-    ///
-    /// As `LazyId` derefs to `OpaqueId` this function should rarely be needed,
-    /// but it is implemented for completeness of the api.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the first call is from a non-Ruby thread. The `LazyId` will
-    /// then be *poisoned* and all future use of it will panic.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use magnus::{value::{Id, LazyId, OpaqueId}};
-    ///
-    /// static EXAMPLE: LazyId = LazyId::new("example");
-    ///
-    /// # let _cleanup = unsafe { magnus::embed::init() };
-    /// assert!(OpaqueId::from(Id::new("example")) == LazyId::get(&EXAMPLE));
-    /// ```
-    pub fn get(this: &Self) -> OpaqueId {
-        *this.deref()
+        Self::get_inner_with(this, handle);
     }
 
     /// Get a [`Id`] from a `LazyId`.
     ///
     /// # Panics
     ///
-    /// Panics if the `LazyId` is *poisoned*. See [`LazyId::get`].
+    /// Panics if the `LazyId` is *poisoned*. See [`LazyId`].
     ///
     /// # Examples
     ///
@@ -2741,9 +2741,9 @@ impl LazyId {
     ///
     /// # let _cleanup = unsafe { magnus::embed::init() };
     /// let ruby = Ruby::get().unwrap();
-    /// assert!(Id::new("example") == LazyId::get_with(&EXAMPLE, &ruby));
+    /// assert!(Id::new("example") == LazyId::get_inner_with(&EXAMPLE, &ruby));
     /// ```
-    pub fn get_with(this: &Self, handle: &Ruby) -> Id {
+    pub fn get_inner_with(this: &Self, handle: &Ruby) -> Id {
         unsafe {
             this.init.call_once(|| {
                 let inner = this.inner.get();
@@ -2770,13 +2770,13 @@ impl LazyId {
     /// static EXAMPLE: LazyId = LazyId::new("example");
     ///
     /// # let _cleanup = unsafe { magnus::embed::init() };
-    /// assert!(LazyId::try_get(&EXAMPLE).is_none());
+    /// assert!(LazyId::try_get_inner(&EXAMPLE).is_none());
     ///
     /// rb_assert!("val == :example", val = *EXAMPLE);
     ///
-    /// assert!(LazyId::try_get(&EXAMPLE).is_some());
+    /// assert!(LazyId::try_get_inner(&EXAMPLE).is_some());
     /// ```
-    pub fn try_get(this: &Self) -> Option<OpaqueId> {
+    pub fn try_get_inner(this: &Self) -> Option<OpaqueId> {
         unsafe { this.init.is_completed().then(|| (*this.inner.get()).value) }
     }
 }
@@ -2792,7 +2792,7 @@ impl fmt::Debug for LazyId {
 
         f.debug_tuple("LazyId")
             .field(
-                Self::try_get(self)
+                Self::try_get_inner(self)
                     .as_ref()
                     .map(|v| v as &dyn fmt::Debug)
                     .unwrap_or(&uninit()),

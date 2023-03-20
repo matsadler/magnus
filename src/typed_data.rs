@@ -415,7 +415,7 @@ where
     ///             class.undef_default_alloc_func();
     ///             class
     ///         });
-    ///         CLASS.get(ruby)
+    ///         ruby.get_inner(&CLASS)
     ///     }
     ///
     ///     // ...
@@ -487,8 +487,8 @@ where
     ///             class
     ///         });
     ///         match value {
-    ///             Self::A => A.get(ruby),
-    ///             Self::B => B.get(ruby),
+    ///             Self::A => ruby.get_inner(&A),
+    ///             Self::B => ruby.get_inner(&B),
     ///         }
     ///     }
     /// }

@@ -111,7 +111,7 @@ pub fn expand_derive_typed_data(input: DeriveInput) -> Result<TokenStream, Error
                     class.undef_default_alloc_func();
                     class
                 });
-                CLASS.get(ruby)
+                ruby.get_inner(&CLASS)
             };
             arms.push(match variant.fields {
                 Fields::Named(_) => quote! { Self::#ident { .. } => { #fetch_class } },
@@ -162,7 +162,7 @@ pub fn expand_derive_typed_data(input: DeriveInput) -> Result<TokenStream, Error
                     #[inline]
                     fn #ident(&self) -> <#ty as magnus::value::OpaqueVal>::Val {
                         let handle = magnus::Ruby::get().unwrap();
-                        handle.unwrap_opaque(self.#ident)
+                        handle.get_inner(self.#ident)
                     }
                 });
             }
@@ -212,7 +212,7 @@ pub fn expand_derive_typed_data(input: DeriveInput) -> Result<TokenStream, Error
                     class.undef_default_alloc_func();
                     class
                 });
-                CLASS.get(ruby)
+                ruby.get_inner(&CLASS)
             }
 
             fn data_type() -> &'static magnus::DataType {
