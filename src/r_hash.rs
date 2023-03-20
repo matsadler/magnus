@@ -4,7 +4,6 @@ use std::{
     collections::HashMap,
     fmt,
     hash::Hash,
-    marker::PhantomData,
     os::raw::{c_int, c_long},
     panic::AssertUnwindSafe,
 };
@@ -42,32 +41,17 @@ pub enum ForEach {
     Delete,
 }
 
-// Helper type for wrapping a function with type conversions and error
+// Helper trait for wrapping a function with type conversions and error
 // handling for `RHash::foreach`.
-struct ForEachCallback<Func, K, V> {
-    func: Func,
-    key: PhantomData<K>,
-    value: PhantomData<V>,
-}
-
-impl<Func, K, V> ForEachCallback<Func, K, V>
+trait ForEachCallback<Func, K, V>
 where
-    Func: FnMut(K, V) -> Result<ForEach, Error>,
+    Self: Sized + FnMut(K, V) -> Result<ForEach, Error>,
     K: TryConvert,
     V: TryConvert,
 {
     #[inline]
-    fn new(func: Func) -> Self {
-        Self {
-            func,
-            key: Default::default(),
-            value: Default::default(),
-        }
-    }
-
-    #[inline]
     unsafe fn call_convert_value(mut self, key: Value, value: Value) -> Result<ForEach, Error> {
-        (self.func)(
+        (self)(
             TryConvert::try_convert(key)?,
             TryConvert::try_convert(value)?,
         )
@@ -86,6 +70,14 @@ where
             Err(e) => raise(e),
         }
     }
+}
+
+impl<Func, K, V> ForEachCallback<Func, K, V> for Func
+where
+    Func: FnMut(K, V) -> Result<ForEach, Error>,
+    K: TryConvert,
+    V: TryConvert,
+{
 }
 
 #[allow(missing_docs)]
@@ -502,8 +494,7 @@ impl RHash {
             V: TryConvert,
         {
             let closure = &mut *(arg as *mut F);
-            ForEachCallback::new(closure).call_handle_error(Value::new(key), Value::new(value))
-                as c_int
+            closure.call_handle_error(Value::new(key), Value::new(value)) as c_int
         }
 
         unsafe {
