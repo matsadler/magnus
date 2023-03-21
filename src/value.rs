@@ -41,6 +41,7 @@ use crate::{
     encoding::EncodingCapable,
     enumerator::Enumerator,
     error::{protect, Error},
+    gc,
     integer::{Integer, IntegerType},
     into_value::{ArgList, IntoValue, IntoValueFromNative},
     method::{Block, BlockReturn},
@@ -233,17 +234,19 @@ impl TryConvert for Value {
 ///
 /// An `Opaque<T>` can be unwrapped to `T` with [`Ruby::get_inner`],
 /// as it is only possible to instantiate a [`Ruby`] on a Ruby thread.
+///
 /// # Examples
 ///
 /// ```
 /// use magnus::{eval, value::Opaque, RString, Ruby};
 /// # let _cleanup = unsafe { magnus::embed::init() };
+///
 /// let opaque_str = Opaque::from(RString::new("example"));
 ///
 /// // send to another Ruby thread
 ///
-/// let handle = Ruby::get().unwrap(); // errors on non-Ruby thread
-/// let str = handle.get_inner(opaque_str);
+/// let ruby = Ruby::get().unwrap(); // errors on non-Ruby thread
+/// let str = ruby.get_inner(opaque_str);
 /// let res: bool = eval!(r#"str == "example""#, str).unwrap();
 /// assert!(res);
 /// ```
@@ -282,9 +285,46 @@ where
     }
 }
 
+/// Helper trait for [`Ruby::get_inner`].
+///
+/// This trait allows for [`Ruby::get_inner`] to get the inner value of both
+/// [`Opaque`] and [`Lazy`].
 pub trait InnerValue {
+    /// The specific Ruby value type.
     type Value: ReprValue;
 
+    /// Get the inner value from `self`.
+    ///
+    /// `ruby` acts as a token proving this is called from a Ruby thread and
+    /// thus it is safe to return the inner value.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, value::{InnerValue, Opaque}, RString, Ruby};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let opaque_str = Opaque::from(RString::new("example"));
+    ///
+    /// // send to another Ruby thread
+    ///
+    /// let ruby = Ruby::get().unwrap(); // errors on non-Ruby thread
+    /// let str = opaque_str.get_inner_with(&ruby);
+    /// let res: bool = eval!(r#"str == "example""#, str).unwrap();
+    /// assert!(res);
+    /// ```
+    ///
+    /// ```
+    /// use magnus::{eval, value::{InnerValue, Lazy}, RString, Ruby};
+    ///
+    /// static STATIC_STR: Lazy<RString> = Lazy::new(|ruby| ruby.str_new("example"));
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let ruby = Ruby::get().unwrap(); // errors if Ruby not initialised
+    /// let str = STATIC_STR.get_inner_with(&ruby);
+    /// let res: bool = eval!(r#"str == "example""#, str).unwrap();
+    /// assert!(res);
+    /// ```
     fn get_inner_with(self, ruby: &Ruby) -> Self::Value;
 }
 
@@ -299,21 +339,77 @@ where
     }
 }
 
-#[allow(missing_docs)]
 impl Ruby {
-    pub fn get_inner<T>(&self, val: impl InnerValue<Value = T>) -> T
+    /// Get the inner value from `wrapper`.
+    ///
+    /// `self` acts as a token proving this is called from a Ruby thread and
+    /// thus it is safe to return the inner value. See [`Opaque`] and [`Lazy`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, value::Opaque, RString, Ruby};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let opaque_str = Opaque::from(RString::new("example"));
+    ///
+    /// // send to another Ruby thread
+    ///
+    /// let ruby = Ruby::get().unwrap(); // errors on non-Ruby thread
+    /// let str = ruby.get_inner(opaque_str);
+    /// let res: bool = eval!(r#"str == "example""#, str).unwrap();
+    /// assert!(res);
+    /// ```
+    ///
+    /// ```
+    /// use magnus::{eval, value::Lazy, RString, Ruby};
+    ///
+    /// static STATIC_STR: Lazy<RString> = Lazy::new(|ruby| ruby.str_new("example"));
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let ruby = Ruby::get().unwrap(); // errors if Ruby not initialised
+    /// let str = ruby.get_inner(&STATIC_STR);
+    /// let res: bool = eval!(r#"str == "example""#, str).unwrap();
+    /// assert!(res);
+    /// ```
+    pub fn get_inner<T>(&self, wrapper: impl InnerValue<Value = T>) -> T
     where
         T: ReprValue,
     {
-        val.get_inner_with(self)
+        wrapper.get_inner_with(self)
     }
 }
 
 unsafe impl<T: ReprValue> Send for Opaque<T> {}
 unsafe impl<T: ReprValue> Sync for Opaque<T> {}
 
+/// Lazily initialise a Ruby value so it can be assigned to a `static`.
+///
+/// Ruby types require the Ruby VM to be started before they can be initialise,
+/// so can't be assigned to `static`s. They also can't safely be used from
+/// non-Ruby threads, which a `static` Ruby value would allow.
+///
+/// Lazy allows assigning a Ruby value to a static by lazily initialising it
+/// on first use, and by requiring a value of [`Ruby`] to access the inner
+/// value, which it is only possible to obtain once the Ruby VM has started and
+/// on  on a Ruby thread.
+///
+/// # Examples
+///
+/// ```
+/// use magnus::{eval, value::Lazy, RString, Ruby};
+///
+/// static STATIC_STR: Lazy<RString> = Lazy::new(|ruby| ruby.str_new("example"));
+/// # let _cleanup = unsafe { magnus::embed::init() };
+///
+/// let ruby = Ruby::get().unwrap(); // errors if Ruby not initialised
+/// let str = ruby.get_inner(&STATIC_STR);
+/// let res: bool = eval!(r#"str == "example""#, str).unwrap();
+/// assert!(res);
+/// ```
 pub struct Lazy<T: ReprValue> {
     init: Once,
+    mark: bool,
     inner: UnsafeCell<LazyInner<T>>,
 }
 
@@ -326,11 +422,93 @@ impl<T> Lazy<T>
 where
     T: ReprValue,
 {
+    /// Create a new `Lazy<T>`.
+    ///
+    /// This function can be called in a `const` context. `func` is evaluated
+    /// once when the `Lazy<T>` is first accessed (see [`Ruby::get_inner`]).
+    ///
+    /// This function assumes the `Lazy<T>` will be assinged to a `static`, so
+    /// marks the inner Ruby value with Ruby's garbage collector to never be
+    /// garbage collected. See [`Lazy::new_without_mark`] if this is not wanted.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{value::Lazy, RString};
+    ///
+    /// static STATIC_STR: Lazy<RString> = Lazy::new(|ruby| ruby.str_new("example"));
+    /// ```
     pub const fn new(func: fn(&Ruby) -> T) -> Self {
         Self {
             init: Once::new(),
+            mark: true,
             inner: UnsafeCell::new(LazyInner { func }),
         }
+    }
+
+    /// Create a new `Lazy<T>` without protecting the inner value from Ruby's
+    /// garbage collector.
+    ///
+    /// # Safety
+    ///
+    /// The `Lazy<T>` returned from this function must be kept on the stack, or
+    /// the inner value otherwise protected from Ruby's garbage collector.
+    pub const unsafe fn new_without_mark(func: fn(&Ruby) -> T) -> Self {
+        Self {
+            init: Once::new(),
+            mark: false,
+            inner: UnsafeCell::new(LazyInner { func }),
+        }
+    }
+
+    /// Force evaluation of a `Lazy<T>`.
+    ///
+    /// This can be used in, for example, your [`init`](macro@crate::init)
+    /// function to force initialisation of the `Lazy<T>`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{value::Lazy, RString, Ruby};
+    ///
+    /// static STATIC_STR: Lazy<RString> = Lazy::new(|ruby| ruby.str_new("example"));
+    ///
+    /// #[magnus::init]
+    /// fn init(ruby: &Ruby) {
+    ///     Lazy::force(&STATIC_STR, ruby);
+    ///
+    ///     assert!(Lazy::try_get_inner(&STATIC_STR).is_some());
+    /// }
+    /// # let ruby = unsafe { magnus::embed::init() };
+    /// # init(&ruby);
+    /// ```
+    pub fn force(this: &Self, handle: &Ruby) {
+        handle.get_inner(this);
+    }
+
+    /// Get the inner value from a `Lazy<T>`, if it has already been
+    /// initialised.
+    ///
+    /// This function will not call Ruby and will not initialise the inner
+    /// value. If the `Lazy<T>` has not yet been initialised, returns `None`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, value::Lazy, RString, Ruby};
+    ///
+    /// static STATIC_STR: Lazy<RString> = Lazy::new(|ruby| ruby.str_new("example"));
+    ///
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// assert!(Lazy::try_get_inner(&STATIC_STR).is_none());
+    ///
+    /// let ruby = Ruby::get().unwrap();
+    /// rb_assert!(ruby, r#"val == "example""#, val = ruby.get_inner(&STATIC_STR));
+    ///
+    /// assert!(Lazy::try_get_inner(&STATIC_STR).is_some());
+    /// ```
+    pub fn try_get_inner(this: &Self) -> Option<T> {
+        unsafe { this.init.is_completed().then(|| (*this.inner.get()).value) }
     }
 }
 
@@ -346,7 +524,11 @@ where
         unsafe {
             self.init.call_once(|| {
                 let inner = self.inner.get();
-                (*inner).value = ((*inner).func)(ruby);
+                let value = ((*inner).func)(ruby);
+                if self.mark {
+                    gc::register_mark_object(value);
+                }
+                (*inner).value = value;
             });
             (*self.inner.get()).value
         }

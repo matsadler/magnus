@@ -26,7 +26,7 @@ fn cast_rubric(ruby: &Ruby) -> Result<(), Error> {
 
 #[magnus::init]
 fn init(ruby: &Ruby) -> Result<(), Error> {
-    ruby.get_inner(&RUBRIC_ERROR); // ensure error is defined on load
+    Lazy::force(&RUBRIC_ERROR, ruby); // ensure error is defined on load
 
     ruby
         .get_inner(&AHRIMAN)
