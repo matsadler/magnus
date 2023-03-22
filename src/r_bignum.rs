@@ -160,10 +160,28 @@ impl RBignum {
     /// use magnus::{eval, RBignum};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// assert_eq!(eval::<RBignum>("4611686018427387904").unwrap().to_i64().unwrap(), 4611686018427387904);
-    /// assert_eq!(eval::<RBignum>("-4611686018427387905").unwrap().to_i64().unwrap(), -4611686018427387905);
-    /// assert!(eval::<RBignum>("9223372036854775808").unwrap().to_i64().is_err());
-    /// assert!(eval::<RBignum>("-9223372036854775809").unwrap().to_i64().is_err());
+    /// assert_eq!(
+    ///     eval::<RBignum>("4611686018427387904")
+    ///         .unwrap()
+    ///         .to_i64()
+    ///         .unwrap(),
+    ///     4611686018427387904
+    /// );
+    /// assert_eq!(
+    ///     eval::<RBignum>("-4611686018427387905")
+    ///         .unwrap()
+    ///         .to_i64()
+    ///         .unwrap(),
+    ///     -4611686018427387905
+    /// );
+    /// assert!(eval::<RBignum>("9223372036854775808")
+    ///     .unwrap()
+    ///     .to_i64()
+    ///     .is_err());
+    /// assert!(eval::<RBignum>("-9223372036854775809")
+    ///     .unwrap()
+    ///     .to_i64()
+    ///     .is_err());
     /// ```
     pub fn to_i64(self) -> Result<i64, Error> {
         debug_assert_value!(self);
@@ -184,8 +202,20 @@ impl RBignum {
     /// use magnus::{eval, RBignum};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// assert_eq!(eval::<RBignum>("4611686018427387904").unwrap().to_isize().unwrap(), 4611686018427387904);
-    /// assert_eq!(eval::<RBignum>("-4611686018427387905").unwrap().to_isize().unwrap(), -4611686018427387905);
+    /// assert_eq!(
+    ///     eval::<RBignum>("4611686018427387904")
+    ///         .unwrap()
+    ///         .to_isize()
+    ///         .unwrap(),
+    ///     4611686018427387904
+    /// );
+    /// assert_eq!(
+    ///     eval::<RBignum>("-4611686018427387905")
+    ///         .unwrap()
+    ///         .to_isize()
+    ///         .unwrap(),
+    ///     -4611686018427387905
+    /// );
     /// ```
     pub fn to_isize(self) -> Result<isize, Error> {
         debug_assert_value!(self);
@@ -241,8 +271,17 @@ impl RBignum {
     /// use magnus::{eval, RBignum};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// assert_eq!(eval::<RBignum>("4611686018427387904").unwrap().to_u64().unwrap(), 4611686018427387904);
-    /// assert!(eval::<RBignum>("18446744073709551616").unwrap().to_u64().is_err());
+    /// assert_eq!(
+    ///     eval::<RBignum>("4611686018427387904")
+    ///         .unwrap()
+    ///         .to_u64()
+    ///         .unwrap(),
+    ///     4611686018427387904
+    /// );
+    /// assert!(eval::<RBignum>("18446744073709551616")
+    ///     .unwrap()
+    ///     .to_u64()
+    ///     .is_err());
     /// ```
     pub fn to_u64(self) -> Result<u64, Error> {
         debug_assert_value!(self);
@@ -270,8 +309,17 @@ impl RBignum {
     /// use magnus::{eval, RBignum};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// assert_eq!(eval::<RBignum>("4611686018427387904").unwrap().to_usize().unwrap(), 4611686018427387904);
-    /// assert!(eval::<RBignum>("18446744073709551616").unwrap().to_usize().is_err());
+    /// assert_eq!(
+    ///     eval::<RBignum>("4611686018427387904")
+    ///         .unwrap()
+    ///         .to_usize()
+    ///         .unwrap(),
+    ///     4611686018427387904
+    /// );
+    /// assert!(eval::<RBignum>("18446744073709551616")
+    ///     .unwrap()
+    ///     .to_usize()
+    ///     .is_err());
     /// ```
     pub fn to_usize(self) -> Result<usize, Error> {
         debug_assert_value!(self);

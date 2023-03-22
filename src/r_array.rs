@@ -186,13 +186,16 @@ impl RArray {
     /// use magnus::{eval, RArray};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// let val = eval(r#"
+    /// let val = eval(
+    ///     r#"
     /// o = Object.new
     /// def o.to_ary
     ///   "not an array"
     /// end
     /// o
-    /// "#).unwrap();
+    /// "#,
+    /// )
+    /// .unwrap();
     /// assert!(RArray::to_ary(val).is_err());
     /// ```
     pub fn to_ary(val: Value) -> Result<Self, Error> {
@@ -302,11 +305,16 @@ impl RArray {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, prelude::*, Integer, IntoValue, QNIL, RArray, Symbol};
+    /// use magnus::{eval, prelude::*, Integer, IntoValue, RArray, Symbol, QNIL};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let ary = RArray::new();
-    /// ary.cat(&[Symbol::new("a").into_value(), Integer::from_i64(1).into_value(), QNIL.into_value()]).unwrap();
+    /// ary.cat(&[
+    ///     Symbol::new("a").into_value(),
+    ///     Integer::from_i64(1).into_value(),
+    ///     QNIL.into_value(),
+    /// ])
+    /// .unwrap();
     /// let res: bool = eval!("ary == [:a, 1, nil]", ary).unwrap();
     /// assert!(res);
     /// ```
@@ -316,7 +324,8 @@ impl RArray {
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let ary = RArray::new();
-    /// ary.cat(&[Symbol::new("a"), Symbol::new("b"), Symbol::new("c")]).unwrap();
+    /// ary.cat(&[Symbol::new("a"), Symbol::new("b"), Symbol::new("c")])
+    ///     .unwrap();
     /// let res: bool = eval!("ary == [:a, :b, :c]", ary).unwrap();
     /// assert!(res);
     /// ```
@@ -386,10 +395,14 @@ impl RArray {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, Integer, IntoValue, QNIL, RArray, Symbol};
+    /// use magnus::{eval, Integer, IntoValue, RArray, Symbol, QNIL};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// let ary = RArray::from_slice(&[Symbol::new("a").into_value(), Integer::from_i64(1).into_value(), QNIL.into_value()]);
+    /// let ary = RArray::from_slice(&[
+    ///     Symbol::new("a").into_value(),
+    ///     Integer::from_i64(1).into_value(),
+    ///     QNIL.into_value(),
+    /// ]);
     /// let res: bool = eval!("ary == [:a, 1, nil]", ary).unwrap();
     /// assert!(res);
     /// ```
@@ -576,7 +589,7 @@ impl RArray {
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let ary = RArray::from_vec(vec!["a", "b", "c"]);
-    /// let removed: Option::<String> = ary.delete_at(1).unwrap();
+    /// let removed: Option<String> = ary.delete_at(1).unwrap();
     /// assert_eq!(removed, Some(String::from("b")));
     /// let res: bool = eval!(r#"ary == ["a", "c"]"#, ary).unwrap();
     /// assert!(res);
@@ -888,7 +901,11 @@ impl RArray {
     /// use magnus::{eval, Integer, IntoValue, RArray, Symbol, QNIL};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// let ary = RArray::from_slice(&[Symbol::new("a").into_value(), Integer::from_i64(1).into_value(), QNIL.into_value()]);
+    /// let ary = RArray::from_slice(&[
+    ///     Symbol::new("a").into_value(),
+    ///     Integer::from_i64(1).into_value(),
+    ///     QNIL.into_value(),
+    /// ]);
     /// assert_eq!(ary.join(", ").unwrap().to_string().unwrap(), "a, 1, ")
     /// ```
     pub fn join<T>(self, sep: T) -> Result<RString, Error>
@@ -917,7 +934,10 @@ impl RArray {
     ///
     /// assert_eq!(ary.entry::<String>(0).unwrap(), String::from("a"));
     /// assert_eq!(ary.entry::<char>(0).unwrap(), 'a');
-    /// assert_eq!(ary.entry::<Option<String>>(0).unwrap(), Some(String::from("a")));
+    /// assert_eq!(
+    ///     ary.entry::<Option<String>>(0).unwrap(),
+    ///     Some(String::from("a"))
+    /// );
     /// assert_eq!(ary.entry::<String>(1).unwrap(), String::from("b"));
     /// assert_eq!(ary.entry::<String>(-1).unwrap(), String::from("c"));
     /// assert_eq!(ary.entry::<Option<String>>(3).unwrap(), None);
@@ -1096,7 +1116,10 @@ impl RArray {
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let ary = RArray::from_vec(vec![("foo", 1), ("bar", 2), ("baz", 3), ("baz", 4)]);
-    /// assert_eq!(ary.assoc::<_, (String, i64)>("baz").unwrap(), (String::from("baz"), 3));
+    /// assert_eq!(
+    ///     ary.assoc::<_, (String, i64)>("baz").unwrap(),
+    ///     (String::from("baz"), 3)
+    /// );
     /// assert_eq!(ary.assoc::<_, Option<(String, i64)>>("quz").unwrap(), None);
     /// ```
     pub fn assoc<K, T>(self, key: K) -> Result<T, Error>
@@ -1122,7 +1145,10 @@ impl RArray {
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let ary = RArray::from_vec(vec![("foo", 1), ("bar", 2), ("baz", 3), ("qux", 3)]);
-    /// assert_eq!(ary.rassoc::<_, (String, i64)>(3).unwrap(), (String::from("baz"), 3));
+    /// assert_eq!(
+    ///     ary.rassoc::<_, (String, i64)>(3).unwrap(),
+    ///     (String::from("baz"), 3)
+    /// );
     /// assert_eq!(ary.rassoc::<_, Option<(String, i64)>>(4).unwrap(), None);
     /// ```
     pub fn rassoc<K, T>(self, value: K) -> Result<T, Error>
@@ -1146,6 +1172,7 @@ impl RArray {
     ///
     /// ```
     /// use std::cmp::Ordering;
+    ///
     /// use magnus::{eval, IntoValue, RArray, QNIL};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///

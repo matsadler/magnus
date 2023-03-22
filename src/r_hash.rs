@@ -217,8 +217,17 @@ impl RHash {
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let hash = RHash::new();
-    /// hash.bulk_insert(&[Symbol::new("given_name").into_value(), RString::new("Arthur").into_value(), Symbol::new("family_name").into_value(), RString::new("Dent").into_value()]);
-    /// let res: bool = eval!(r#"hash == {given_name: "Arthur", family_name: "Dent"}"#, hash).unwrap();
+    /// hash.bulk_insert(&[
+    ///     Symbol::new("given_name").into_value(),
+    ///     RString::new("Arthur").into_value(),
+    ///     Symbol::new("family_name").into_value(),
+    ///     RString::new("Dent").into_value(),
+    /// ]);
+    /// let res: bool = eval!(
+    ///     r#"hash == {given_name: "Arthur", family_name: "Dent"}"#,
+    ///     hash
+    /// )
+    /// .unwrap();
     /// assert!(res);
     /// ```
     #[cfg(any(ruby_gte_2_7, docsrs))]
@@ -292,11 +301,14 @@ impl RHash {
     /// use magnus::{eval, RHash};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// let hash = eval::<RHash>(r#"
+    /// let hash = eval::<RHash>(
+    ///     r#"
     ///   hash = {"answer" => 42}
     ///   hash.default = 0
     ///   hash
-    /// "#).unwrap();
+    /// "#,
+    /// )
+    /// .unwrap();
     /// assert_eq!(hash.aref::<_, i64>("answer").unwrap(), 42);
     /// assert_eq!(hash.aref::<_, i64>("missing").unwrap(), 0);
     /// assert_eq!(hash.aref::<_, i64>(()).unwrap(), 0);
@@ -322,11 +334,14 @@ impl RHash {
     /// use magnus::{eval, value::Qnil, RHash};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// let hash = eval::<RHash>(r#"
+    /// let hash = eval::<RHash>(
+    ///     r#"
     ///   hash = {"answer" => 42}
     ///   hash.default = 0
     ///   hash
-    /// "#).unwrap();
+    /// "#,
+    /// )
+    /// .unwrap();
     /// assert_eq!(hash.lookup::<_, i64>("answer").unwrap(), 42);
     /// assert!(hash.lookup::<_, Qnil>("missing").is_ok());
     /// assert_eq!(hash.lookup::<_, Option<i64>>("answer").unwrap(), Some(42));
@@ -389,11 +404,14 @@ impl RHash {
     /// use magnus::{eval, value::Qnil, RHash};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// let hash = eval::<RHash>(r#"
+    /// let hash = eval::<RHash>(
+    ///     r#"
     ///   hash = {"answer" => 42}
     ///   hash.default = 0
     ///   hash
-    /// "#).unwrap();
+    /// "#,
+    /// )
+    /// .unwrap();
     /// assert_eq!(hash.fetch::<_, i64>("answer").unwrap(), 42);
     /// assert!(hash.fetch::<_, i64>("missing").is_err());
     /// assert_eq!(hash.fetch::<_, Option<i64>>("answer").unwrap(), Some(42));
@@ -478,7 +496,8 @@ impl RHash {
     ///     } else {
     ///         Ok(ForEach::Continue)
     ///     }
-    /// }).unwrap();
+    /// })
+    /// .unwrap();
     /// assert_eq!(found, Some(String::from("baz")));
     /// ```
     pub fn foreach<F, K, V>(self, mut func: F) -> Result<(), Error>
@@ -524,6 +543,7 @@ impl RHash {
     ///
     /// ```
     /// use std::collections::HashMap;
+    ///
     /// use magnus::{eval, RHash};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
@@ -559,6 +579,7 @@ impl RHash {
     ///
     /// ```
     /// use std::collections::HashMap;
+    ///
     /// use magnus::{eval, RHash};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///

@@ -210,11 +210,15 @@ impl Proc {
     /// assert_eq!(3, result);
     ///
     /// // call with a slice
-    /// let result: i64 = proc.call(&[Integer::from_i64(3), Integer::from_i64(4)][..]).unwrap();
+    /// let result: i64 = proc
+    ///     .call(&[Integer::from_i64(3), Integer::from_i64(4)][..])
+    ///     .unwrap();
     /// assert_eq!(7, result);
     ///
     /// // call with an array
-    /// let result: i64 = proc.call([Integer::from_i64(5), Integer::from_i64(6)]).unwrap();
+    /// let result: i64 = proc
+    ///     .call([Integer::from_i64(5), Integer::from_i64(6)])
+    ///     .unwrap();
     /// assert_eq!(11, result);
     ///
     /// // call with a Ruby array
@@ -266,16 +270,16 @@ impl Proc {
     /// use magnus::{block::Proc, eval};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// let proc = eval::<Proc>("proc {nil}", ).unwrap();
+    /// let proc = eval::<Proc>("proc {nil}").unwrap();
     /// assert_eq!(proc.arity(), 0);
     ///
-    /// let proc = eval::<Proc>("proc {|a| a + 1}", ).unwrap();
+    /// let proc = eval::<Proc>("proc {|a| a + 1}").unwrap();
     /// assert_eq!(proc.arity(), 1);
     ///
-    /// let proc = eval::<Proc>("proc {|a, b| a + b}", ).unwrap();
+    /// let proc = eval::<Proc>("proc {|a, b| a + b}").unwrap();
     /// assert_eq!(proc.arity(), 2);
     ///
-    /// let proc = eval::<Proc>("proc {|*args| args.sum}", ).unwrap();
+    /// let proc = eval::<Proc>("proc {|*args| args.sum}").unwrap();
     /// assert_eq!(proc.arity(), -1);
     /// ```
     pub fn arity(self) -> i64 {
@@ -290,10 +294,10 @@ impl Proc {
     /// use magnus::{block::Proc, eval};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// let proc = eval::<Proc>("proc {|a, b| a + b}", ).unwrap();
+    /// let proc = eval::<Proc>("proc {|a, b| a + b}").unwrap();
     /// assert!(!proc.is_lambda());
     ///
-    /// let proc = eval::<Proc>("lambda {|a, b| a + b}", ).unwrap();
+    /// let proc = eval::<Proc>("lambda {|a, b| a + b}").unwrap();
     /// assert!(proc.is_lambda());
     /// ```
     pub fn is_lambda(self) -> bool {
@@ -602,7 +606,11 @@ where
 /// # Examples
 ///
 /// ```
-/// use magnus::{block::{block_given, Yield}, prelude::*, Value};
+/// use magnus::{
+///     block::{block_given, Yield},
+///     prelude::*,
+///     Value,
+/// };
 ///
 /// fn count_to_3(rb_self: Value) -> Yield<impl Iterator<Item = u8>> {
 ///     if block_given() {

@@ -40,7 +40,7 @@ pub trait AsRawValue {
     /// ```
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// use magnus::{RString, rb_sys::AsRawValue};
+    /// use magnus::{rb_sys::AsRawValue, RString};
     ///
     /// let foo = RString::new("foo");
     /// let bar = RString::new("bar");
@@ -64,7 +64,7 @@ pub trait FromRawValue {
     /// ```
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// use magnus::{RString, Value, rb_sys::FromRawValue};
+    /// use magnus::{rb_sys::FromRawValue, RString, Value};
     ///
     /// let raw_value = unsafe { rb_sys::rb_str_new("foo".as_ptr() as *mut _, 3) };
     ///
@@ -93,7 +93,12 @@ pub trait AsRawId {
     /// Convert [`magnus::value::Id`](Id) to [`rb_sys::ID`](ID).
     ///
     /// ```
-    /// use magnus::{prelude::*, rb_sys::{AsRawId, FromRawId}, value::Id, Symbol};
+    /// use magnus::{
+    ///     prelude::*,
+    ///     rb_sys::{AsRawId, FromRawId},
+    ///     value::Id,
+    ///     Symbol,
+    /// };
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let foo: Id = Symbol::new("foo").into();
@@ -117,7 +122,12 @@ pub trait FromRawId {
     /// Magnus.
     ///
     /// ```
-    /// use magnus::{prelude::*, rb_sys::{AsRawId, FromRawId}, value::Id, Symbol};
+    /// use magnus::{
+    ///     prelude::*,
+    ///     rb_sys::{AsRawId, FromRawId},
+    ///     value::Id,
+    ///     Symbol,
+    /// };
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let foo: Id = Symbol::new("foo").into();

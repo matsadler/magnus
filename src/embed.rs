@@ -175,7 +175,8 @@ impl Ruby {
     ///     let result: i64 = ruby.eval("2 + 2")?;
     ///     assert_eq!(result, 4);
     ///     Ok(())
-    /// }).unwrap()
+    /// })
+    /// .unwrap()
     /// ```
     pub fn init(func: fn(&Ruby) -> Result<(), Error>) -> Result<(), String> {
         func(unsafe { &init() }).map_err(|e| e.to_string())

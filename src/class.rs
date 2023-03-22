@@ -209,7 +209,9 @@ pub trait Class: Module {
     /// use magnus::{exception, prelude::*};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// let s = exception::standard_error().new_instance(("bang!",)).unwrap();
+    /// let s = exception::standard_error()
+    ///     .new_instance(("bang!",))
+    ///     .unwrap();
     /// assert!(s.is_kind_of(exception::standard_error()));
     /// ```
     fn new_instance<T>(self, args: T) -> Result<Self::Instance, Error>
@@ -312,8 +314,8 @@ pub trait Class: Module {
     /// use std::cell::RefCell;
     ///
     /// use magnus::{
-    ///     class, define_class, embed, eval, function, method, prelude::*, typed_data,
-    ///     wrap, Error, RClass, TypedData, Value,
+    ///     class, define_class, embed, eval, function, method, prelude::*, typed_data, wrap, Error,
+    ///     RClass, TypedData, Value,
     /// };
     /// # let _cleanup = unsafe { embed::init() };
     ///
@@ -353,10 +355,18 @@ pub trait Class: Module {
     ///
     /// let class = define_class("Point", class::object()).unwrap();
     /// class.define_alloc_func::<MutPoint>();
-    /// class.define_singleton_method("create", function!(MutPoint::create, 2)).unwrap();
-    /// class.define_singleton_method("call_new", method!(MutPoint::call_new, 2)).unwrap();
-    /// class.define_method("initialize", method!(MutPoint::initialize, 2)).unwrap();
-    /// class.define_method("distance", method!(MutPoint::distance, 1)).unwrap();
+    /// class
+    ///     .define_singleton_method("create", function!(MutPoint::create, 2))
+    ///     .unwrap();
+    /// class
+    ///     .define_singleton_method("call_new", method!(MutPoint::call_new, 2))
+    ///     .unwrap();
+    /// class
+    ///     .define_method("initialize", method!(MutPoint::initialize, 2))
+    ///     .unwrap();
+    /// class
+    ///     .define_method("distance", method!(MutPoint::distance, 1))
+    ///     .unwrap();
     ///
     /// let d: f64 = eval(
     ///     "class OffsetPoint < Point
@@ -367,7 +377,8 @@ pub trait Class: Module {
     ///      a = Point.new(1, 1)
     ///      b = OffsetPoint.new(2, 3, 3)
     ///      a.distance(b).round(2)",
-    /// ).unwrap();
+    /// )
+    /// .unwrap();
     ///
     /// assert_eq!(d, 5.66);
     /// ```
@@ -423,7 +434,10 @@ pub trait Class: Module {
     /// class.undef_default_alloc_func();
     ///
     /// let instance = class.new_instance(());
-    /// assert_eq!("allocator undefined for Point", instance.err().unwrap().to_string());
+    /// assert_eq!(
+    ///     "allocator undefined for Point",
+    ///     instance.err().unwrap().to_string()
+    /// );
     /// ```
     fn undef_default_alloc_func(self) {
         static INIT: std::sync::Once = std::sync::Once::new();

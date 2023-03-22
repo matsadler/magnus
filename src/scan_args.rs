@@ -447,7 +447,9 @@ impl<T> ScanArgsBlock for T where T: private::ScanArgsBlock {}
 /// `TCPServer::new`'s argument handling. This is roughly equivalent to
 /// `def new(hostname=nil, port)`.
 /// ```
-/// use magnus::{prelude::*, class, define_class, error::Error, function, scan_args::scan_args, Value};
+/// use magnus::{
+///     class, define_class, error::Error, function, prelude::*, scan_args::scan_args, Value,
+/// };
 /// # use magnus::IntoValue;
 /// # let _cleanup = unsafe { magnus::embed::init() };
 ///
@@ -468,7 +470,9 @@ impl<T> ScanArgsBlock for T where T: private::ScanArgsBlock {}
 /// }
 ///
 /// let class = define_class("TCPServer", class::object()).unwrap();
-/// class.define_singleton_method("new", function!(tcp_svr_init, -1)).unwrap();
+/// class
+///     .define_singleton_method("new", function!(tcp_svr_init, -1))
+///     .unwrap();
 /// # let res = magnus::eval::<bool>(r#"TCPServer.new("foo", 1) == ["foo", 1]"#).unwrap();
 /// # assert!(res);
 /// # let res = magnus::eval::<bool>(r#"TCPServer.new(2) == [nil, 2]"#).unwrap();
@@ -477,7 +481,9 @@ impl<T> ScanArgsBlock for T where T: private::ScanArgsBlock {}
 ///
 /// The same example as above, specifying the types slightly differently.
 /// ```
-/// use magnus::{prelude::*, class, define_class, error::Error, function, scan_args::scan_args, Value};
+/// use magnus::{
+///     class, define_class, error::Error, function, prelude::*, scan_args::scan_args, Value,
+/// };
 /// # use magnus::IntoValue;
 /// # let _cleanup = unsafe { magnus::embed::init() };
 ///
@@ -494,7 +500,9 @@ impl<T> ScanArgsBlock for T where T: private::ScanArgsBlock {}
 /// }
 ///
 /// let class = define_class("TCPServer", class::object()).unwrap();
-/// class.define_singleton_method("new", function!(tcp_svr_init, -1)).unwrap();
+/// class
+///     .define_singleton_method("new", function!(tcp_svr_init, -1))
+///     .unwrap();
 /// # let res = magnus::eval::<bool>(r#"TCPServer.new("foo", 1) == ["foo", 1]"#).unwrap();
 /// # assert!(res);
 /// # let res = magnus::eval::<bool>(r#"TCPServer.new(2) == [nil, 2]"#).unwrap();
@@ -675,7 +683,14 @@ pub struct KwArgs<Req, Opt, Splat> {
 /// ```
 /// The rough equivalent of `def example(a: "foo")` would be:
 /// ```
-/// use magnus::{prelude::*, class, error::Error, method, scan_args::{get_kwargs, scan_args}, RHash, Value};
+/// use magnus::{
+///     class,
+///     error::Error,
+///     method,
+///     prelude::*,
+///     scan_args::{get_kwargs, scan_args},
+///     RHash, Value,
+/// };
 /// # use magnus::IntoValue;
 /// # let _cleanup = unsafe { magnus::embed::init() };
 ///
@@ -686,13 +701,15 @@ pub struct KwArgs<Req, Opt, Splat> {
 ///     let (a,): (Option<String>,) = args.optional;
 ///     let _: () = args.splat;
 ///
-///     let a  = a.unwrap_or_else(|| String::from("foo"));
+///     let a = a.unwrap_or_else(|| String::from("foo"));
 ///
 ///     // ...
 ///     Ok(a.into_value())
 /// }
 ///
-/// class::object().define_method("example", method!(example, -1)).unwrap();
+/// class::object()
+///     .define_method("example", method!(example, -1))
+///     .unwrap();
 /// # let res = magnus::eval::<bool>(r#"Object.new.example(a: "test") == "test""#).unwrap();
 /// # assert!(res);
 /// # let res = magnus::eval::<bool>(r#"Object.new.example == "foo""#).unwrap();
@@ -700,7 +717,14 @@ pub struct KwArgs<Req, Opt, Splat> {
 /// ```
 /// or, specifying the types slightly differently:
 /// ```
-/// use magnus::{prelude::*, class, error::Error, method, scan_args::{get_kwargs, scan_args}, RHash, Value};
+/// use magnus::{
+///     class,
+///     error::Error,
+///     method,
+///     prelude::*,
+///     scan_args::{get_kwargs, scan_args},
+///     RHash, Value,
+/// };
 /// # use magnus::IntoValue;
 /// # let _cleanup = unsafe { magnus::embed::init() };
 ///
@@ -708,13 +732,15 @@ pub struct KwArgs<Req, Opt, Splat> {
 ///     let args = scan_args::<(), (), (), (), RHash, ()>(args)?;
 ///     let args = get_kwargs::<_, (), (Option<String>,), ()>(args.keywords, &[], &["a"])?;
 ///     let (a,) = args.optional;
-///     let a  = a.unwrap_or_else(|| String::from("foo"));
+///     let a = a.unwrap_or_else(|| String::from("foo"));
 ///
 ///     // ...
 ///     Ok(a.into_value())
 /// }
 ///
-/// class::object().define_method("example", method!(example, -1)).unwrap();
+/// class::object()
+///     .define_method("example", method!(example, -1))
+///     .unwrap();
 /// # let res = magnus::eval::<bool>(r#"Object.new.example(a: "test") == "test""#).unwrap();
 /// # assert!(res);
 /// # let res = magnus::eval::<bool>(r#"Object.new.example == "foo""#).unwrap();
@@ -808,7 +834,10 @@ impl Ruby {
 /// # Examples
 ///
 /// ```
-/// use magnus::{define_global_function, eval, function, scan_args::check_arity, Error, RArray, RString, Value};
+/// use magnus::{
+///     define_global_function, eval, function, scan_args::check_arity, Error, RArray, RString,
+///     Value,
+/// };
 /// # let _cleanup = unsafe { magnus::embed::init() };
 ///
 /// fn example(args: &[Value]) -> Result<RString, Error> {
@@ -818,8 +847,16 @@ impl Ruby {
 ///
 /// define_global_function("example", function!(example, -1));
 ///
-/// assert_eq!(eval::<String>("example(1)").unwrap_err().to_string(), "wrong number of arguments (given 1, expected 2..4)");
-/// assert_eq!(eval::<String>("example(1, 2, 3, 4, 5)").unwrap_err().to_string(), "wrong number of arguments (given 5, expected 2..4)");
+/// assert_eq!(
+///     eval::<String>("example(1)").unwrap_err().to_string(),
+///     "wrong number of arguments (given 1, expected 2..4)"
+/// );
+/// assert_eq!(
+///     eval::<String>("example(1, 2, 3, 4, 5)")
+///         .unwrap_err()
+///         .to_string(),
+///     "wrong number of arguments (given 5, expected 2..4)"
+/// );
 /// ```
 #[cfg(feature = "friendly-api")]
 #[inline]

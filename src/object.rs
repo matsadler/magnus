@@ -110,7 +110,9 @@ pub trait Object: ReprValue + Copy {
     /// }
     ///
     /// let module = RModule::new();
-    /// module.define_method("example", function!(example, 0)).unwrap();
+    /// module
+    ///     .define_method("example", function!(example, 0))
+    ///     .unwrap();
     ///
     /// let obj = RObject::try_convert(class::object().new_instance(()).unwrap()).unwrap();
     /// obj.extend_object(module).unwrap();

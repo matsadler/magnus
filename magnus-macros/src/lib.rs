@@ -168,7 +168,7 @@ pub fn init(attrs: TokenStream, item: TokenStream) -> TokenStream {
 /// ```
 /// use std::f64::consts::PI;
 ///
-/// use magnus::{prelude::*, class, define_class, function, method};
+/// use magnus::{class, define_class, function, method, prelude::*};
 ///
 /// #[magnus::wrap(class = "Shape")]
 /// enum Shape {
@@ -312,6 +312,7 @@ pub fn derive_data_type_functions(input: TokenStream) -> TokenStream {
 ///
 /// ```
 /// use std::mem::size_of_val;
+///
 /// use magnus::{DataTypeFunctions, TypedData};
 ///
 /// #[derive(TypedData)]
@@ -332,7 +333,7 @@ pub fn derive_data_type_functions(input: TokenStream) -> TokenStream {
 ///
 /// ```
 /// use magnus::{
-///     class, define_class, gc, method, function, prelude::*, typed_data::Obj, value::Opaque,
+///     class, define_class, function, gc, method, prelude::*, typed_data::Obj, value::Opaque,
 ///     DataTypeFunctions, TypedData,
 /// };
 ///

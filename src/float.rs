@@ -89,9 +89,17 @@ impl Float {
     /// use magnus::{eval, Float};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// let res: bool = eval!("f == 1.7272337110188893e-77", f = Float::from_f64(1.7272337110188893e-77)).unwrap();
+    /// let res: bool = eval!(
+    ///     "f == 1.7272337110188893e-77",
+    ///     f = Float::from_f64(1.7272337110188893e-77)
+    /// )
+    /// .unwrap();
     /// assert!(res);
-    /// let res: bool = eval!("f == 1.7272337110188890e-77", f = Float::from_f64(1.7272337110188890e-77)).unwrap();
+    /// let res: bool = eval!(
+    ///     "f == 1.7272337110188890e-77",
+    ///     f = Float::from_f64(1.7272337110188890e-77)
+    /// )
+    /// .unwrap();
     /// assert!(res);
     /// ```
     #[cfg(feature = "friendly-api")]
@@ -128,10 +136,22 @@ impl Float {
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let pi = Float::from_f64(3.141592);
-    /// assert_eq!(pi.rationalize_with_prec(Float::from_f64(0.001)).to_string(), "201/64");
-    /// assert_eq!(pi.rationalize_with_prec(Float::from_f64(0.01)).to_string(), "22/7");
-    /// assert_eq!(pi.rationalize_with_prec(Float::from_f64(0.1)).to_string(), "16/5");
-    /// assert_eq!(pi.rationalize_with_prec(Float::from_f64(1.)).to_string(), "3/1");
+    /// assert_eq!(
+    ///     pi.rationalize_with_prec(Float::from_f64(0.001)).to_string(),
+    ///     "201/64"
+    /// );
+    /// assert_eq!(
+    ///     pi.rationalize_with_prec(Float::from_f64(0.01)).to_string(),
+    ///     "22/7"
+    /// );
+    /// assert_eq!(
+    ///     pi.rationalize_with_prec(Float::from_f64(0.1)).to_string(),
+    ///     "16/5"
+    /// );
+    /// assert_eq!(
+    ///     pi.rationalize_with_prec(Float::from_f64(1.)).to_string(),
+    ///     "3/1"
+    /// );
     /// ```
     pub fn rationalize_with_prec(self, prec: Self) -> RRational {
         unsafe {

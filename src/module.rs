@@ -104,19 +104,24 @@ impl RModule {
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// fn greet() -> RString {
-    ///    r_string!("Hello, world!")
+    ///     r_string!("Hello, world!")
     /// }
     ///
     /// let module = define_module("Greeting").unwrap();
-    /// module.define_module_function("greet", function!(greet, 0)).unwrap();
+    /// module
+    ///     .define_module_function("greet", function!(greet, 0))
+    ///     .unwrap();
     ///
     /// let res = eval::<bool>(r#"Greeting.greet == "Hello, world!""#).unwrap();
     /// assert!(res);
     ///
-    /// let res = eval::<bool>(r#"
+    /// let res = eval::<bool>(
+    ///     r#"
     ///     include Greeting
     ///     greet == "Hello, world!"
-    /// "#).unwrap();
+    /// "#,
+    /// )
+    /// .unwrap();
     /// assert!(res);
     /// ```
     pub fn define_module_function<M>(self, name: &str, func: M) -> Result<(), Error>
@@ -239,11 +244,13 @@ pub trait Module: Object + ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{exception, define_module, prelude::*};
+    /// use magnus::{define_module, exception, prelude::*};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let outer = define_module("Outer").unwrap();
-    /// let inner = outer.define_error("InnerError", exception::standard_error()).unwrap();
+    /// let inner = outer
+    ///     .define_error("InnerError", exception::standard_error())
+    ///     .unwrap();
     /// assert!(inner.is_inherited(exception::standard_error()));
     /// ```
     fn define_error<T>(self, name: T, superclass: ExceptionClass) -> Result<ExceptionClass, Error>
@@ -270,7 +277,9 @@ pub trait Module: Object + ReprValue + Copy {
     /// }
     ///
     /// let module = RModule::new();
-    /// module.define_method("example", function!(example, 0)).unwrap();
+    /// module
+    ///     .define_method("example", function!(example, 0))
+    ///     .unwrap();
     ///
     /// let class = RClass::new(class::object()).unwrap();
     /// class.include_module(module);
@@ -306,16 +315,21 @@ pub trait Module: Object + ReprValue + Copy {
     /// }
     ///
     /// let module = RModule::new();
-    /// module.define_method("example", function!(example, 0)).unwrap();
+    /// module
+    ///     .define_method("example", function!(example, 0))
+    ///     .unwrap();
     ///
-    /// let class: RClass = eval(r#"
+    /// let class: RClass = eval(
+    ///     r#"
     ///     class Example
     ///       def example
     ///         40
     ///       end
     ///     end
     ///     Example
-    /// "#).unwrap();
+    /// "#,
+    /// )
+    /// .unwrap();
     /// class.prepend_module(module);
     ///
     /// let obj = class.new_instance(()).unwrap();
@@ -364,11 +378,14 @@ pub trait Module: Object + ReprValue + Copy {
     /// use magnus::{class, eval, Module, RClass, Value};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// eval::<Value>("
+    /// eval::<Value>(
+    ///     "
     ///     class Example
     ///       VALUE = 42
     ///     end
-    /// ").unwrap();
+    /// ",
+    /// )
+    /// .unwrap();
     ///
     /// let class = class::object().const_get::<_, RClass>("Example").unwrap();
     /// assert_eq!(class.const_get::<_, i64>("VALUE").unwrap(), 42);
@@ -423,7 +440,11 @@ pub trait Module: Object + ReprValue + Copy {
     ///
     /// let ary = class::string().ancestors();
     ///
-    /// let res: bool = eval!("ary == [String, Comparable, Object, Kernel, BasicObject]", ary).unwrap();
+    /// let res: bool = eval!(
+    ///     "ary == [String, Comparable, Object, Kernel, BasicObject]",
+    ///     ary
+    /// )
+    /// .unwrap();
     /// assert!(res);
     /// ```
     fn ancestors(self) -> RArray {
@@ -442,9 +463,14 @@ pub trait Module: Object + ReprValue + Copy {
     ///     s.escape_unicode().to_string()
     /// }
     ///
-    /// class::string().define_method("escape_unicode", method!(escape_unicode, 0)).unwrap();
+    /// class::string()
+    ///     .define_method("escape_unicode", method!(escape_unicode, 0))
+    ///     .unwrap();
     ///
-    /// let res = eval::<bool>(r#""🤖\etest".escape_unicode == "\\u{1f916}\\u{1b}\\u{74}\\u{65}\\u{73}\\u{74}""#).unwrap();
+    /// let res = eval::<bool>(
+    ///     r#""🤖\etest".escape_unicode == "\\u{1f916}\\u{1b}\\u{74}\\u{65}\\u{73}\\u{74}""#,
+    /// )
+    /// .unwrap();
     /// assert!(res);
     /// ```
     fn define_method<T, M>(self, name: T, func: M) -> Result<(), Error>
@@ -485,20 +511,27 @@ pub trait Module: Object + ReprValue + Copy {
     ///     }
     /// }
     ///
-    /// class::string().define_private_method("percent_encode_char", function!(percent_encode, 1)).unwrap();
+    /// class::string()
+    ///     .define_private_method("percent_encode_char", function!(percent_encode, 1))
+    ///     .unwrap();
     ///
-    /// eval::<Value>(r#"
+    /// eval::<Value>(
+    ///     r#"
     ///     class String
     ///       def percent_encode
     ///         chars.map {|c| percent_encode_char(c)}.join("")
     ///       end
     ///     end
-    /// "#).unwrap();
+    /// "#,
+    /// )
+    /// .unwrap();
     ///
     /// let res = eval::<bool>(r#""foo bar".percent_encode == "foo%20bar""#).unwrap();
     /// assert!(res);
     ///
-    /// assert!(eval::<bool>(r#"" ".percent_encode_char(" ")"#).unwrap_err().is_kind_of(exception::no_method_error()));
+    /// assert!(eval::<bool>(r#"" ".percent_encode_char(" ")"#)
+    ///     .unwrap_err()
+    ///     .is_kind_of(exception::no_method_error()));
     /// ```
     fn define_private_method<M>(self, name: &str, func: M) -> Result<(), Error>
     where
@@ -536,23 +569,35 @@ pub trait Module: Object + ReprValue + Copy {
     ///     c.is_control() || c.is_whitespace()
     /// }
     ///
-    /// class::string().define_method("escape_unicode", method!(escape_unicode, 0)).unwrap();
-    /// class::string().define_protected_method("invisible?", method!(is_invisible, 0)).unwrap();
+    /// class::string()
+    ///     .define_method("escape_unicode", method!(escape_unicode, 0))
+    ///     .unwrap();
+    /// class::string()
+    ///     .define_protected_method("invisible?", method!(is_invisible, 0))
+    ///     .unwrap();
     ///
-    /// eval::<Value>(r#"
+    /// eval::<Value>(
+    ///     r#"
     ///     class String
     ///       def escape_invisible
     ///         chars.map {|c| c.invisible? ? c.escape_unicode : c}.join("")
     ///       end
     ///     end
-    /// "#).unwrap();
+    /// "#,
+    /// )
+    /// .unwrap();
     ///
-    /// let res: bool = eval!(r#"
+    /// let res: bool = eval!(
+    ///     r#"
     ///     "🤖\tfoo bar".escape_invisible == "🤖\\u{9}foo\\u{20}bar"
-    /// "#).unwrap();
+    /// "#
+    /// )
+    /// .unwrap();
     /// assert!(res);
     ///
-    /// assert!(eval::<bool>(r#"" ".invisible?"#).unwrap_err().is_kind_of(exception::no_method_error()));
+    /// assert!(eval::<bool>(r#"" ".invisible?"#)
+    ///     .unwrap_err()
+    ///     .is_kind_of(exception::no_method_error()));
     /// ```
     fn define_protected_method<M>(self, name: &str, func: M) -> Result<(), Error>
     where
@@ -625,7 +670,9 @@ pub trait Module: Object + ReprValue + Copy {
     /// }
     ///
     /// let class = RClass::new(class::object()).unwrap();
-    /// class.define_method("example", function!(example, 0)).unwrap();
+    /// class
+    ///     .define_method("example", function!(example, 0))
+    ///     .unwrap();
     /// class.define_alias("test", "example").unwrap();
     ///
     /// let obj = class.new_instance(()).unwrap();

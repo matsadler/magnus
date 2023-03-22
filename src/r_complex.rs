@@ -74,7 +74,10 @@ impl RComplex {
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let complex = RComplex::polar(Integer::from_i64(2), Integer::from_i64(3)).unwrap();
-    /// assert_eq!(complex.to_string(), "-1.9799849932008908+0.2822400161197344i");
+    /// assert_eq!(
+    ///     complex.to_string(),
+    ///     "-1.9799849932008908+0.2822400161197344i"
+    /// );
     /// ```
     pub fn polar<T, U>(real: T, imag: U) -> Result<RComplex, Error>
     where
@@ -163,7 +166,8 @@ impl RComplex {
     ///
     /// ```
     /// use std::f64::consts::PI;
-    /// use magnus::{Integer, Float, RComplex};
+    ///
+    /// use magnus::{Float, Integer, RComplex};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let complex = RComplex::polar(Integer::from_i64(3), Float::from_f64(PI / 2.0)).unwrap();

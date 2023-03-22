@@ -76,7 +76,7 @@ impl Encoding {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, encoding::Encoding};
+    /// use magnus::{encoding::Encoding, eval};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// assert!(Encoding::from_value(eval("Encoding::US_ASCII").unwrap()).is_some());
@@ -317,7 +317,7 @@ impl RbEncoding {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, encoding::RbEncoding};
+    /// use magnus::{encoding::RbEncoding, eval};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// assert_eq!(RbEncoding::find("UTF-8").unwrap().name(), "UTF-8");
@@ -338,7 +338,7 @@ impl RbEncoding {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, encoding::RbEncoding};
+    /// use magnus::{encoding::RbEncoding, eval};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// assert_eq!(RbEncoding::utf8().name(), "UTF-8");
@@ -359,7 +359,7 @@ impl RbEncoding {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, encoding::RbEncoding};
+    /// use magnus::{encoding::RbEncoding, eval};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// assert_eq!(RbEncoding::usascii().mbminlen(), 1);
@@ -375,7 +375,7 @@ impl RbEncoding {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, encoding::RbEncoding};
+    /// use magnus::{encoding::RbEncoding, eval};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// assert_eq!(RbEncoding::usascii().mbmaxlen(), 1);
@@ -399,7 +399,10 @@ impl RbEncoding {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, encoding::{EncodingCapable, RbEncoding}, RString};
+    /// use magnus::{
+    ///     encoding::{EncodingCapable, RbEncoding},
+    ///     eval, RString,
+    /// };
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let s = RString::new("🦀 café");
@@ -440,7 +443,10 @@ impl RbEncoding {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, encoding::{EncodingCapable, RbEncoding}, RString};
+    /// use magnus::{
+    ///     encoding::{EncodingCapable, RbEncoding},
+    ///     eval, RString,
+    /// };
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let s = RString::new("🦀 café");
@@ -475,7 +481,10 @@ impl RbEncoding {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, encoding::{EncodingCapable, MbcLen, RbEncoding}, RString};
+    /// use magnus::{
+    ///     encoding::{EncodingCapable, MbcLen, RbEncoding},
+    ///     eval, RString,
+    /// };
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let s = RString::new("🦀 café");
@@ -522,7 +531,10 @@ impl RbEncoding {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, encoding::{EncodingCapable, RbEncoding}, RString};
+    /// use magnus::{
+    ///     encoding::{EncodingCapable, RbEncoding},
+    ///     eval, RString,
+    /// };
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let s = RString::new("example");
@@ -568,7 +580,10 @@ impl RbEncoding {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, encoding::{EncodingCapable, RbEncoding}, RString};
+    /// use magnus::{
+    ///     encoding::{EncodingCapable, RbEncoding},
+    ///     eval, RString,
+    /// };
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let s = RString::new("🦀 café");
@@ -609,7 +624,7 @@ impl RbEncoding {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, encoding::RbEncoding};
+    /// use magnus::{encoding::RbEncoding, eval};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// assert_eq!(RbEncoding::utf8().codelen(97).unwrap(), 1);
@@ -636,7 +651,7 @@ impl RbEncoding {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, encoding::RbEncoding};
+    /// use magnus::{encoding::RbEncoding, eval};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let c = RbEncoding::usascii().chr(97).unwrap();
@@ -645,7 +660,7 @@ impl RbEncoding {
     /// ```
     ///
     /// ```
-    /// use magnus::{eval, encoding::RbEncoding};
+    /// use magnus::{encoding::RbEncoding, eval};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let c = RbEncoding::utf8().chr(129408).unwrap();
@@ -664,7 +679,7 @@ impl RbEncoding {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, encoding::RbEncoding};
+    /// use magnus::{encoding::RbEncoding, eval};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// assert!(RbEncoding::utf8().is_mbc_newline(&[10]));
@@ -684,14 +699,17 @@ impl RbEncoding {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, encoding::{CType, RbEncoding}};
+    /// use magnus::{
+    ///     encoding::{CType, RbEncoding},
+    ///     eval,
+    /// };
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// assert!(RbEncoding::utf8().is_code_ctype(9, CType::Space));   // "\t"
-    /// assert!(RbEncoding::utf8().is_code_ctype(32, CType::Space));  // " "
+    /// assert!(RbEncoding::utf8().is_code_ctype(9, CType::Space)); // "\t"
+    /// assert!(RbEncoding::utf8().is_code_ctype(32, CType::Space)); // " "
     /// assert!(!RbEncoding::utf8().is_code_ctype(65, CType::Space)); // "A"
-    /// assert!(RbEncoding::utf8().is_code_ctype(65, CType::Alnum));  // "A"
-    /// assert!(RbEncoding::utf8().is_code_ctype(65, CType::Upper));  // "A"
+    /// assert!(RbEncoding::utf8().is_code_ctype(65, CType::Alnum)); // "A"
+    /// assert!(RbEncoding::utf8().is_code_ctype(65, CType::Upper)); // "A"
     /// ```
     pub fn is_code_ctype(&self, code: u32, ctype: CType) -> bool {
         unsafe { self.0.as_ref().is_code_ctype.unwrap()(code, ctype as _, self.as_ptr()) != 0 }
@@ -893,7 +911,7 @@ impl Index {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, encoding};
+    /// use magnus::{encoding, eval};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// assert!(encoding::Index::find("UTF-8").is_ok());
@@ -953,7 +971,10 @@ pub trait EncodingCapable: ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{encoding::{self, EncodingCapable}, RString};
+    /// use magnus::{
+    ///     encoding::{self, EncodingCapable},
+    ///     RString,
+    /// };
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// assert!(RString::new("example").enc_get() == encoding::Index::utf8());
@@ -975,7 +996,10 @@ pub trait EncodingCapable: ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{encoding::{self, EncodingCapable}, RString};
+    /// use magnus::{
+    ///     encoding::{self, EncodingCapable},
+    ///     RString,
+    /// };
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let s = RString::new("example");
@@ -1007,7 +1031,10 @@ pub trait EncodingCapable: ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{encoding::{self, EncodingCapable}, RString};
+    /// use magnus::{
+    ///     encoding::{self, EncodingCapable},
+    ///     RString,
+    /// };
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let s = RString::new("example");
@@ -1035,7 +1062,7 @@ pub trait EncodingCapable: ReprValue + Copy {
 /// # Examples
 ///
 /// ```
-/// use magnus::{prelude::*, encoding, RString};
+/// use magnus::{encoding, prelude::*, RString};
 /// # let _cleanup = unsafe { magnus::embed::init() };
 ///
 /// let a = RString::new("a");
@@ -1063,7 +1090,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use magnus::{prelude::*, encoding, RString};
+/// use magnus::{encoding, prelude::*, RString};
 /// # let _cleanup = unsafe { magnus::embed::init() };
 ///
 /// let a = RString::new("a");
@@ -1097,7 +1124,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use magnus::{prelude::*, encoding, RString};
+/// use magnus::{encoding, prelude::*, RString};
 /// # let _cleanup = unsafe { magnus::embed::init() };
 ///
 /// let a = RString::new("a");

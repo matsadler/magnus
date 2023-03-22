@@ -626,7 +626,7 @@ where
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, class, define_class, typed_data};
+    /// use magnus::{class, define_class, prelude::*, typed_data};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// #[magnus::wrap(class = "Point")]
@@ -650,7 +650,9 @@ where
     /// `new` method rather than `initialize`)
     ///
     /// ```
-    /// use magnus::{prelude::*, class, define_class, eval, function, method, typed_data, RClass, Value};
+    /// use magnus::{
+    ///     class, define_class, eval, function, method, prelude::*, typed_data, RClass, Value,
+    /// };
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// #[magnus::wrap(class = "Point")]
@@ -665,14 +667,21 @@ where
     ///     }
     /// }
     /// let point_class = define_class("Point", class::object()).unwrap();
-    /// point_class.define_singleton_method("new", method!(Point::new, 2)).unwrap();
-    /// point_class.define_singleton_method("inherited", function!(RClass::undef_default_alloc_func, 1)).unwrap();
+    /// point_class
+    ///     .define_singleton_method("new", method!(Point::new, 2))
+    ///     .unwrap();
+    /// point_class
+    ///     .define_singleton_method("inherited", function!(RClass::undef_default_alloc_func, 1))
+    ///     .unwrap();
     ///
-    /// let value: Value = eval(r#"
+    /// let value: Value = eval(
+    ///     r#"
     ///     class SubPoint < Point
     ///     end
     ///     SubPoint.new(4, 2)
-    /// "#).unwrap();
+    /// "#,
+    /// )
+    /// .unwrap();
     ///
     /// assert!(value.is_kind_of(class::object().const_get::<_, RClass>("SubPoint").unwrap()));
     /// assert!(value.is_kind_of(point_class));
@@ -805,7 +814,7 @@ where
 /// use std::hash::Hasher;
 ///
 /// use magnus::{
-///     prelude::*, class, define_class, function, gc, method, typed_data, value::Opaque,
+///     class, define_class, function, gc, method, prelude::*, typed_data, value::Opaque,
 ///     DataTypeFunctions, Error, IntoValue, RHash, TypedData, Value,
 /// };
 ///
@@ -820,7 +829,10 @@ where
 ///
 /// impl Pair {
 ///     fn new(a: Value, b: Value) -> Self {
-///         Self { a: a.into(), b: b.into() }
+///         Self {
+///             a: a.into(),
+///             b: b.into(),
+///         }
 ///     }
 /// }
 ///
@@ -914,7 +926,7 @@ where
 /// use std::hash::Hasher;
 ///
 /// use magnus::{
-///     prelude::*, class, define_class, function, gc, method, typed_data, value::Opaque,
+///     class, define_class, function, gc, method, prelude::*, typed_data, value::Opaque,
 ///     DataTypeFunctions, Error, IntoValue, RHash, TypedData, Value,
 /// };
 ///
@@ -929,7 +941,10 @@ where
 ///
 /// impl Pair {
 ///     fn new(a: Value, b: Value) -> Self {
-///         Self { a: a.into(), b: b.into() }
+///         Self {
+///             a: a.into(),
+///             b: b.into(),
+///         }
 ///     }
 /// }
 ///
@@ -1021,8 +1036,8 @@ where
 /// use std::cmp::Ordering;
 ///
 /// use magnus::{
-///     prelude::*, class, define_class, eval, function, gc, method, module, typed_data, value::Opaque,
-///     DataTypeFunctions, Error, IntoValue, Module, TypedData, Value,
+///     class, define_class, eval, function, gc, method, module, prelude::*, typed_data,
+///     value::Opaque, DataTypeFunctions, Error, IntoValue, Module, TypedData, Value,
 /// };
 ///
 /// #[derive(TypedData)]
@@ -1036,7 +1051,10 @@ where
 ///
 /// impl Pair {
 ///     fn new(a: Value, b: Value) -> Self {
-///         Self { a: a.into(), b: b.into() }
+///         Self {
+///             a: a.into(),
+///             b: b.into(),
+///         }
 ///     }
 /// }
 ///
@@ -1055,10 +1073,18 @@ where
 ///
 /// impl PartialOrd for Pair {
 ///     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-///         let a = self.a().funcall("<=>", (other.a(),)).ok().map(|o: i64| o.cmp(&0))?;
+///         let a = self
+///             .a()
+///             .funcall("<=>", (other.a(),))
+///             .ok()
+///             .map(|o: i64| o.cmp(&0))?;
 ///         match a {
 ///             Ordering::Less | Ordering::Greater => Some(a),
-///             Ordering::Equal => self.b().funcall("<=>", (other.b(),)).ok().map(|o: i64| o.cmp(&0)),
+///             Ordering::Equal => self
+///                 .b()
+///                 .funcall("<=>", (other.b(),))
+///                 .ok()
+///                 .map(|o: i64| o.cmp(&0)),
 ///         }
 ///     }
 /// }
@@ -1121,7 +1147,7 @@ where
 /// use std::fmt;
 ///
 /// use magnus::{
-///     prelude::*, class, define_class, eval, function, gc, method, typed_data, value::Opaque,
+///     class, define_class, eval, function, gc, method, prelude::*, typed_data, value::Opaque,
 ///     DataTypeFunctions, IntoValue, TypedData, Value,
 /// };
 ///
@@ -1136,7 +1162,10 @@ where
 ///
 /// impl Pair {
 ///     fn new(a: Value, b: Value) -> Self {
-///         Self { a: a.into(), b: b.into() }
+///         Self {
+///             a: a.into(),
+///             b: b.into(),
+///         }
 ///     }
 /// }
 ///
@@ -1150,9 +1179,9 @@ where
 /// impl fmt::Debug for Pair {
 ///     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 ///         f.debug_struct("Pair")
-///          .field("a", &self.a())
-///          .field("b", &self.b())
-///          .finish()
+///             .field("a", &self.a())
+///             .field("b", &self.b())
+///             .finish()
 ///     }
 /// }
 ///
@@ -1163,7 +1192,10 @@ where
 ///     .define_singleton_method("new", function!(Pair::new, 2))
 ///     .unwrap();
 /// class
-///     .define_method("inspect", method!(<Pair as typed_data::Inspect>::inspect, 0))
+///     .define_method(
+///         "inspect",
+///         method!(<Pair as typed_data::Inspect>::inspect, 0),
+///     )
 ///     .unwrap();
 ///
 /// let pair = Pair::new("foo".into_value(), 1.into_value());
@@ -1196,7 +1228,7 @@ where
 ///
 /// ```
 /// use magnus::{
-///     prelude::*, class, define_class, eval, function, gc, method, typed_data, value::Opaque,
+///     class, define_class, eval, function, gc, method, prelude::*, typed_data, value::Opaque,
 ///     DataTypeFunctions, IntoValue, TypedData, Value,
 /// };
 ///
@@ -1211,7 +1243,10 @@ where
 ///
 /// impl Pair {
 ///     fn new(a: Value, b: Value) -> Self {
-///         Self { a: a.into(), b: b.into() }
+///         Self {
+///             a: a.into(),
+///             b: b.into(),
+///         }
 ///     }
 /// }
 ///

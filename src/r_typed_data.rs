@@ -119,7 +119,7 @@ impl RTypedData {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, class, define_class, RTypedData};
+    /// use magnus::{class, define_class, prelude::*, RTypedData};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// #[magnus::wrap(class = "Point")]
@@ -143,7 +143,9 @@ impl RTypedData {
     /// `new` method rather than `initialize`)
     ///
     /// ```
-    /// use magnus::{prelude::*, class, define_class, eval, function, method, RClass, RTypedData, Value};
+    /// use magnus::{
+    ///     class, define_class, eval, function, method, prelude::*, RClass, RTypedData, Value,
+    /// };
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// #[magnus::wrap(class = "Point")]
@@ -158,16 +160,22 @@ impl RTypedData {
     ///     }
     /// }
     ///
-    ///
     /// let point_class = define_class("Point", class::object()).unwrap();
-    /// point_class.define_singleton_method("new", method!(Point::new, 2)).unwrap();
-    /// point_class.define_singleton_method("inherited", function!(RClass::undef_default_alloc_func, 1)).unwrap();
+    /// point_class
+    ///     .define_singleton_method("new", method!(Point::new, 2))
+    ///     .unwrap();
+    /// point_class
+    ///     .define_singleton_method("inherited", function!(RClass::undef_default_alloc_func, 1))
+    ///     .unwrap();
     ///
-    /// let value: Value = eval(r#"
+    /// let value: Value = eval(
+    ///     r#"
     ///     class SubPoint < Point
     ///     end
     ///     SubPoint.new(4, 2)
-    /// "#).unwrap();
+    /// "#,
+    /// )
+    /// .unwrap();
     ///
     /// assert!(value.is_kind_of(class::object().const_get::<_, RClass>("SubPoint").unwrap()));
     /// assert!(value.is_kind_of(point_class));

@@ -93,6 +93,7 @@ pub trait Numeric: ReprValue + Copy {
     ///
     /// ```
     /// use std::num::NonZeroI64;
+    ///
     /// use magnus::{Float, Numeric, RRational};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
@@ -135,6 +136,7 @@ pub trait Numeric: ReprValue + Copy {
     ///
     /// ```
     /// use std::num::NonZeroI64;
+    ///
     /// use magnus::{Float, Numeric, RRational};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
@@ -177,6 +179,7 @@ pub trait Numeric: ReprValue + Copy {
     ///
     /// ```
     /// use std::num::NonZeroI64;
+    ///
     /// use magnus::{Integer, Numeric};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
@@ -211,7 +214,8 @@ pub trait Numeric: ReprValue + Copy {
 ///
 /// ```
 /// use std::num::NonZeroI64;
-/// use magnus::{prelude::*, numeric::NumericValue, Integer, Float, RRational};
+///
+/// use magnus::{numeric::NumericValue, prelude::*, Float, Integer, RRational};
 /// # let _cleanup = unsafe { magnus::embed::init() };
 ///
 /// let a = Integer::from_i64(1);

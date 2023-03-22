@@ -91,15 +91,30 @@ impl RMatch {
     /// regexp.reg_match("ex").unwrap();
     /// let match_data = backref_get().unwrap();
     /// // 0th group is the whole match
-    /// assert_eq!(match_data.nth_match(0).map(|s| s.to_string().unwrap()), Some(String::from("ex")));
+    /// assert_eq!(
+    ///     match_data.nth_match(0).map(|s| s.to_string().unwrap()),
+    ///     Some(String::from("ex"))
+    /// );
     /// // the `([a-z])` group
-    /// assert_eq!(match_data.nth_match(1).map(|s| s.to_string().unwrap()), Some(String::from("x")));
+    /// assert_eq!(
+    ///     match_data.nth_match(1).map(|s| s.to_string().unwrap()),
+    ///     Some(String::from("x"))
+    /// );
     /// // the `([a-z]*)` group
-    /// assert_eq!(match_data.nth_match(2).map(|s| s.to_string().unwrap()), Some(String::from("")));
+    /// assert_eq!(
+    ///     match_data.nth_match(2).map(|s| s.to_string().unwrap()),
+    ///     Some(String::from(""))
+    /// );
     /// // the `([0-9])?` group
-    /// assert_eq!(match_data.nth_match(3).map(|s| s.to_string().unwrap()), None);
+    /// assert_eq!(
+    ///     match_data.nth_match(3).map(|s| s.to_string().unwrap()),
+    ///     None
+    /// );
     /// // no 4th group
-    /// assert_eq!(match_data.nth_match(4).map(|s| s.to_string().unwrap()), None);
+    /// assert_eq!(
+    ///     match_data.nth_match(4).map(|s| s.to_string().unwrap()),
+    ///     None
+    /// );
     /// ```
     pub fn nth_match(self, n: isize) -> Option<RString> {
         let value = unsafe { Value::new(rb_reg_nth_match(n as c_int, self.as_rb_value())) };

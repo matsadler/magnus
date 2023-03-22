@@ -144,7 +144,10 @@ impl Symbol {
     ///
     /// assert!(eval::<Symbol>(":foo").unwrap().as_static().is_some());
     /// assert!(Symbol::new("bar").as_static().is_none());
-    /// assert!(eval::<Symbol>(r#""baz".to_sym"#).unwrap().as_static().is_none());
+    /// assert!(eval::<Symbol>(r#""baz".to_sym"#)
+    ///     .unwrap()
+    ///     .as_static()
+    ///     .is_none());
     /// ```
     pub fn as_static(self) -> Option<StaticSymbol> {
         self.is_static()

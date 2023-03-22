@@ -108,12 +108,10 @@
 // Currently unimplemented listed here, but not included in doc comments. The
 // plan is to start listing what's planned to implement, what can't/won't be
 // implemented, alternatives, etc.
-//
 //! <details>
 //! <summary>Click to show</summary>
 //!
 //! ## A-N
-//!
 // * `Check_Type`:
 //! * `Data_Get_Struct`: See [`wrap`] and [`TypedData`].
 //! * `Data_Make_Struct`: See [`wrap`] and [`TypedData`].
@@ -191,7 +189,6 @@
 // * `onig_set_verb_warn_func`:
 // * `onig_set_warn_func`:
 // * `onig_version`:
-//
 //! ## `RARRAY`
 //
 //! * `RARRAY`: Similar to [`RArray::from_value`].
@@ -211,7 +208,6 @@
 // * `RARRAY_TRANSIENT_P`:
 //!
 //! ## RB
-//!
 // * `RBASIC`:
 // * `RBASIC_CLASS`:
 //! * `RBIGNUM_NEGATIVE_P`: See [`RBignum::is_negative`].
@@ -219,7 +215,6 @@
 // * `RBIGNUM_SIGN`:
 //!
 //! ## `rb_a`-`rb_arx`
-//!
 // * `rb_absint_numwords`:
 // * `rb_absint_singlebit_p`:
 // * `rb_absint_size`:
@@ -244,7 +239,6 @@
 // * `rb_array_len`:
 //!
 //! ## `rb_ary`
-//!
 // * `rb_ary_aref`:
 //! * `rb_ary_assoc`: [`RArray::assoc`].
 //! * `rb_ary_cat`: [`RArray::cat`].
@@ -518,7 +512,6 @@
 // * `RB_DYNAMIC_SYM_P`:
 //!
 //! ## `rb_e`-`rb_enb`
-//!
 // * `rb_each`:
 // * `rb_econv_append`:
 // * `rb_econv_asciicompat_encoding`:
@@ -547,7 +540,6 @@
 // * `rb_enable_super`:
 //!
 //! ## `rb_enc`
-//!
 // * `RB_ENCODING_CODERANGE_SET`:
 // * `RB_ENCODING_GET`:
 // * `RB_ENCODING_GET_INLINED`:
@@ -648,7 +640,6 @@
 // * `rb_enc_vsprintf`:
 //!
 //! ## `rb_en`-`rb_ez`
-//!
 // * `rb_ensure`:
 //! * `rb_enumeratorize`: See [`Value::enumeratorize`].
 //! * `rb_enumeratorize_with_size`: Simmilar to [`Value::enumeratorize`].
@@ -686,7 +677,6 @@
 // * `rb_ext_ractor_safe`:
 //!
 //! ## `rb_f`
-//!
 // * `rb_fatal`:
 // * `rb_fdopen`:
 // * `rb_fd_clr`:
@@ -863,7 +853,6 @@
 // * `rb_gv_set`:
 //!
 //! # `rb_h`
-//!
 // * `rb_Hash`:
 //! * `rb_hash`: [`Value::hash`].
 //! * `rb_hash_aref`: [`RHash::aref`].
@@ -926,7 +915,6 @@
 // * `rb_invalid_str`:
 //!
 //! ## `rb_io`
-//!
 // * `rb_io_addstr`:
 // * `rb_io_ascii8bit_binmode`:
 // * `rb_io_binmode`:
@@ -974,7 +962,6 @@
 // * `rb_io_write`:
 //!
 //! ## `rb_is`-`rb_iz`
-//!
 // * `rb_isalnum`:
 // * `rb_isalpha`:
 // * `rb_isascii`:
@@ -1012,7 +999,6 @@
 // * `rb_keyword_given_p`:
 //!
 //! ## `rb_l`
-//!
 // * `rb_lastline_get`:
 // * `rb_lastline_set`:
 // * `rb_last_status_get`:
@@ -1039,7 +1025,6 @@
 // * `rb_long2num_inline`:
 //!
 //! ## `rb_m`
-//!
 // * `rb_make_backtrace`:
 // * `rb_make_exception`:
 // * `rb_mark_hash`:
@@ -1107,7 +1092,6 @@
 // * `rb_mutex_unlock`:
 //!
 //! ## `rb_n`
-//!
 // * `rb_name_error`:
 // * `rb_name_error_str`:
 // * `rb_nativethread_lock_destroy`:
@@ -1170,7 +1154,6 @@
 // * `rb_num_zerodiv`:
 //!
 //! ## `rb_o`
-//!
 // * `rb_obj_alloc`:
 //! * `rb_obj_as_string`: [`Value::to_r_string`].
 // * `rb_obj_call_init`:
@@ -1217,7 +1200,6 @@
 // * `rb_out_of_int`:
 //!
 //! ## `rb_p`
-//!
 // * `rb_p`:
 // * `rb_path2class`:
 // * `rb_path_check`:
@@ -1253,7 +1235,6 @@
 // * `rb_provided`:
 //!
 //! ## `rb_r`
-//!
 // * `rb_ractor_local_storage_ptr`:
 // * `rb_ractor_local_storage_ptr_newkey`:
 // * `rb_ractor_local_storage_ptr_set`:
@@ -1372,7 +1353,6 @@
 // * `rb_strlen_lit`:
 //!
 //! # `rb_struct`
-//!
 // * `rb_struct_alloc`: See [`RClass::new_instance`].
 // * `rb_struct_alloc_noinit`:
 //! * `rb_struct_aref`: [`RStruct::aref`].
@@ -1390,7 +1370,6 @@
 // * `rb_struct_s_members`:
 //!
 //! ## `rb_str`
-//!
 // * `rb_str_append`:
 //! * `rb_str_buf_append`: [`RString::buf_append`].
 //! * `rb_str_buf_cat`: [`RString::cat`].
@@ -1464,7 +1443,6 @@
 // * `rb_str_vcatf`:
 //!
 //! # `rb_st_`
-//!
 // * `rb_st_add_direct`:
 // * `rb_st_cleanup_safe`:
 // * `rb_st_clear`:
@@ -1506,7 +1484,6 @@
 // * `rb_st_values_check`:
 //!
 //! ## `rb_sy`-`rb_sz`
-//!
 // * `RB_SYM2ID`:
 //! * `rb_sym2id`: [`std::convert::From`].
 //! * `rb_sym2str`: [`Symbol::name`].
@@ -1602,7 +1579,6 @@
 // * `rb_type_p`:
 //!
 //! ## `rb_u`
-//!
 // * `rb_uint2big`:
 // * `rb_uint2inum`:
 // * `RB_UINT2NUM`:
@@ -1638,7 +1614,6 @@
 // * `rb_uv_to_utf8`:
 //!
 //! ## `rb_v`-`rb_z`
-//!
 // * `rb_vrescue2`:
 // * `rb_vsprintf`:
 // * `rb_w32_fd_copy`:
@@ -1661,7 +1636,6 @@
 // * `RB_ZALLOC_N`:
 //!
 //! ## `rc`-`rt`
-//!
 // * `RCLASS`:
 // * `RCLASS_SUPER`:
 // * `RDATA`:
@@ -1703,7 +1677,6 @@
 // * `RTYPEDDATA_TYPE`:
 //!
 //! ## `ruby_`
-//!
 // * `RUBY_ALIGNAS`:
 // * `RUBY_ALIGNOF`:
 // * `RUBY_ASSERT`:
@@ -1794,7 +1767,6 @@
 // * `ruby_xrealloc2`:
 //!
 //! ## S-Z
-//!
 // * `setproctitle`:
 // * `set_little_endian_p`:
 // * `set_native_size_p`:
@@ -2247,8 +2219,14 @@ where
 /// assert_eq!(result, Some(4));
 ///
 /// let match_data = backref_get().unwrap();
-/// assert_eq!(match_data.matched().to_string().unwrap(), String::from("bar"));
-/// assert_eq!(match_data.nth_match(1).map(|v| v.to_string().unwrap()), Some(String::from("a")));
+/// assert_eq!(
+///     match_data.matched().to_string().unwrap(),
+///     String::from("bar")
+/// );
+/// assert_eq!(
+///     match_data.nth_match(1).map(|v| v.to_string().unwrap()),
+///     Some(String::from("a"))
+/// );
 /// ```
 #[cfg(feature = "friendly-api")]
 #[inline]
