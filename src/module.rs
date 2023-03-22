@@ -282,7 +282,7 @@ pub trait Module: Object + ReprValue + Copy {
     ///     .unwrap();
     ///
     /// let class = RClass::new(class::object()).unwrap();
-    /// class.include_module(module);
+    /// class.include_module(module).unwrap();
     ///
     /// let obj = class.new_instance(()).unwrap();
     /// assert_eq!(obj.funcall::<_, _, i64>("example", ()).unwrap(), 42);
@@ -306,10 +306,6 @@ pub trait Module: Object + ReprValue + Copy {
     /// use magnus::{call_super, eval, function, prelude::*, Error, RClass, RModule};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// fn super_example() -> i64 {
-    ///     40
-    /// }
-    ///
     /// fn example() -> Result<i64, Error> {
     ///     Ok(call_super::<_, i64>(())? + 2)
     /// }
@@ -330,7 +326,7 @@ pub trait Module: Object + ReprValue + Copy {
     /// "#,
     /// )
     /// .unwrap();
-    /// class.prepend_module(module);
+    /// class.prepend_module(module).unwrap();
     ///
     /// let obj = class.new_instance(()).unwrap();
     /// assert_eq!(obj.funcall::<_, _, i64>("example", ()).unwrap(), 42);
@@ -348,7 +344,7 @@ pub trait Module: Object + ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{class, eval, Module, RClass, Value};
+    /// use magnus::{class, eval, Module};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// class::array().const_set("EXAMPLE", 42).unwrap();
@@ -409,7 +405,7 @@ pub trait Module: Object + ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{class, eval, Module, RClass};
+    /// use magnus::{class, Module, RClass};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let a = RClass::new(class::object()).unwrap();

@@ -108,7 +108,7 @@ impl RClass {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{class, eval, prelude::*};
+    /// use magnus::{class, prelude::*};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let klass = class::hash().superclass().unwrap();
@@ -131,7 +131,7 @@ impl RClass {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{class, eval};
+    /// use magnus::class;
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let value = class::hash();
@@ -314,8 +314,7 @@ pub trait Class: Module {
     /// use std::cell::RefCell;
     ///
     /// use magnus::{
-    ///     class, define_class, embed, eval, function, method, prelude::*, typed_data, wrap, Error,
-    ///     RClass, TypedData, Value,
+    ///     class, define_class, embed, eval, function, method, prelude::*, wrap, Error, RClass, Value,
     /// };
     /// # let _cleanup = unsafe { embed::init() };
     ///
@@ -427,7 +426,7 @@ pub trait Class: Module {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{class, eval, Class};
+    /// use magnus::{class, Class};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     /// let class = magnus::define_class("Point", class::object()).unwrap();
     ///

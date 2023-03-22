@@ -168,6 +168,8 @@ impl Symbol {
     ///
     /// let sym = Symbol::new("example");
     /// let static_sym = sym.to_static();
+    /// let res: bool = eval!("sym == static_sym", sym, static_sym).unwrap();
+    /// assert!(res);
     /// ```
     pub fn to_static(self) -> StaticSymbol {
         if let Some(sym) = StaticSymbol::from_value(self.as_value()) {

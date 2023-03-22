@@ -64,7 +64,7 @@ pub trait FromRawValue {
     /// ```
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// use magnus::{rb_sys::FromRawValue, RString, Value};
+    /// use magnus::{rb_sys::FromRawValue, Value};
     ///
     /// let raw_value = unsafe { rb_sys::rb_str_new("foo".as_ptr() as *mut _, 3) };
     ///

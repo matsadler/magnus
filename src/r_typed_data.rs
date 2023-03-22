@@ -204,7 +204,7 @@ impl RTypedData {
     ///     y: isize,
     /// }
     ///
-    /// let point_class = define_class("Point", class::object()).unwrap();
+    /// define_class("Point", class::object()).unwrap();
     /// let value = RTypedData::wrap(Point { x: 4, y: 2 });
     ///
     /// assert_eq!(value.get::<Point>().unwrap(), &Point { x: 4, y: 2 });

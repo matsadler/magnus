@@ -624,7 +624,7 @@ impl RString {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, encoding::RbEncoding, RString};
+    /// use magnus::{encoding::RbEncoding, RString};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// // 156 is invalid for utf-8
@@ -1079,7 +1079,7 @@ impl RString {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, RString};
+    /// use magnus::RString;
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let fstring = RString::new("example").to_interned_str();
@@ -1132,7 +1132,7 @@ impl RString {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, RString};
+    /// use magnus::RString;
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let buf = RString::buf_new(4096);
@@ -1286,11 +1286,11 @@ impl RString {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, RString};
+    /// use magnus::RString;
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let s = RString::new("foobar");
-    /// s.drop_bytes(3);
+    /// s.drop_bytes(3).unwrap();
     /// assert_eq!(s.to_string().unwrap(), "bar");
     /// ```
     pub fn drop_bytes(self, len: usize) -> Result<(), Error> {
@@ -1308,7 +1308,7 @@ impl RString {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, RString};
+    /// use magnus::RString;
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let s = RString::new("🦀 Hello, Ferris");
@@ -1335,7 +1335,7 @@ impl RString {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, RString};
+    /// use magnus::RString;
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let s = RString::new("🦀 Hello, Ferris");
@@ -1350,7 +1350,7 @@ impl RString {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, RString};
+    /// use magnus::RString;
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let s = RString::with_capacity(9);

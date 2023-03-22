@@ -82,7 +82,7 @@ impl Flonum {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, Flonum};
+    /// use magnus::Flonum;
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// assert!(Flonum::from_f64(1.7272337110188893e-77).is_ok());

@@ -317,7 +317,7 @@ impl RbEncoding {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{encoding::RbEncoding, eval};
+    /// use magnus::encoding::RbEncoding;
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// assert_eq!(RbEncoding::find("UTF-8").unwrap().name(), "UTF-8");
@@ -338,7 +338,7 @@ impl RbEncoding {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{encoding::RbEncoding, eval};
+    /// use magnus::encoding::RbEncoding;
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// assert_eq!(RbEncoding::utf8().name(), "UTF-8");
@@ -359,7 +359,7 @@ impl RbEncoding {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{encoding::RbEncoding, eval};
+    /// use magnus::encoding::RbEncoding;
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// assert_eq!(RbEncoding::usascii().mbminlen(), 1);
@@ -375,7 +375,7 @@ impl RbEncoding {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{encoding::RbEncoding, eval};
+    /// use magnus::encoding::RbEncoding;
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// assert_eq!(RbEncoding::usascii().mbmaxlen(), 1);
@@ -401,7 +401,7 @@ impl RbEncoding {
     /// ```
     /// use magnus::{
     ///     encoding::{EncodingCapable, RbEncoding},
-    ///     eval, RString,
+    ///     RString,
     /// };
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
@@ -445,7 +445,7 @@ impl RbEncoding {
     /// ```
     /// use magnus::{
     ///     encoding::{EncodingCapable, RbEncoding},
-    ///     eval, RString,
+    ///     RString,
     /// };
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
@@ -483,7 +483,7 @@ impl RbEncoding {
     /// ```
     /// use magnus::{
     ///     encoding::{EncodingCapable, MbcLen, RbEncoding},
-    ///     eval, RString,
+    ///     RString,
     /// };
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
@@ -533,7 +533,7 @@ impl RbEncoding {
     /// ```
     /// use magnus::{
     ///     encoding::{EncodingCapable, RbEncoding},
-    ///     eval, RString,
+    ///     RString,
     /// };
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
@@ -582,7 +582,7 @@ impl RbEncoding {
     /// ```
     /// use magnus::{
     ///     encoding::{EncodingCapable, RbEncoding},
-    ///     eval, RString,
+    ///     RString,
     /// };
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
@@ -624,7 +624,7 @@ impl RbEncoding {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{encoding::RbEncoding, eval};
+    /// use magnus::encoding::RbEncoding;
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// assert_eq!(RbEncoding::utf8().codelen(97).unwrap(), 1);
@@ -679,7 +679,7 @@ impl RbEncoding {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{encoding::RbEncoding, eval};
+    /// use magnus::encoding::RbEncoding;
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// assert!(RbEncoding::utf8().is_mbc_newline(&[10]));
@@ -699,10 +699,7 @@ impl RbEncoding {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{
-    ///     encoding::{CType, RbEncoding},
-    ///     eval,
-    /// };
+    /// use magnus::encoding::{CType, RbEncoding};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// assert!(RbEncoding::utf8().is_code_ctype(9, CType::Space)); // "\t"
@@ -911,7 +908,7 @@ impl Index {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{encoding, eval};
+    /// use magnus::encoding;
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// assert!(encoding::Index::find("UTF-8").is_ok());
@@ -1004,7 +1001,7 @@ pub trait EncodingCapable: ReprValue + Copy {
     ///
     /// let s = RString::new("example");
     /// assert!(s.enc_get() == encoding::Index::utf8());
-    /// s.enc_set(encoding::Index::usascii());
+    /// s.enc_set(encoding::Index::usascii()).unwrap();
     /// assert!(s.enc_get() == encoding::Index::usascii());
     /// ```
     fn enc_set<T>(self, enc: T) -> Result<(), Error>
@@ -1039,7 +1036,7 @@ pub trait EncodingCapable: ReprValue + Copy {
     ///
     /// let s = RString::new("example");
     /// assert!(s.enc_get() == encoding::Index::utf8());
-    /// s.enc_associate(encoding::Index::usascii());
+    /// s.enc_associate(encoding::Index::usascii()).unwrap();
     /// assert!(s.enc_get() == encoding::Index::usascii());
     /// ```
     fn enc_associate<T>(self, enc: T) -> Result<(), Error>
@@ -1069,7 +1066,7 @@ pub trait EncodingCapable: ReprValue + Copy {
 /// let b = RString::new("b");
 ///
 /// assert!(a.enc_get() == encoding::Index::utf8());
-/// b.enc_set(encoding::Index::usascii());
+/// b.enc_set(encoding::Index::usascii()).unwrap();
 ///
 /// assert_eq!(encoding::compatible(a, b).unwrap().name(), "UTF-8");
 /// ```
@@ -1097,7 +1094,7 @@ where
 /// let b = RString::new("b");
 ///
 /// assert!(a.enc_get() == encoding::Index::utf8());
-/// b.enc_set(encoding::Index::usascii());
+/// b.enc_set(encoding::Index::usascii()).unwrap();
 ///
 /// assert_eq!(encoding::check(a, b).unwrap().name(), "UTF-8");
 /// ```
@@ -1132,7 +1129,7 @@ where
 /// let b = RString::new("b");
 /// assert!(b.enc_get() == encoding::Index::utf8());
 ///
-/// a.enc_set(encoding::Index::usascii());
+/// a.enc_set(encoding::Index::usascii()).unwrap();
 /// encoding::copy(b, a).unwrap();
 ///
 /// assert!(b.enc_get() == encoding::Index::usascii());

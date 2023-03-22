@@ -178,8 +178,6 @@ pub trait Numeric: ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use std::num::NonZeroI64;
-    ///
     /// use magnus::{Integer, Numeric};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///

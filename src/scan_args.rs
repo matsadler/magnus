@@ -514,7 +514,7 @@ impl<T> ScanArgsBlock for T where T: private::ScanArgsBlock {}
 ///
 /// ```
 /// use magnus::{
-///     prelude::*, class, define_class, error::Error, function, scan_args::{scan_args, get_kwargs}, RHash, Symbol, Value,
+///     prelude::*, class, define_class, error::Error, function, scan_args::{scan_args, get_kwargs}, Symbol, Value,
 /// };
 /// # use magnus::IntoValue;
 /// # let _cleanup = unsafe { magnus::embed::init() };
@@ -660,7 +660,7 @@ pub struct KwArgs<Req, Opt, Splat> {
 /// # use magnus::IntoValue;
 /// # let _cleanup = unsafe { magnus::embed::init() };
 ///
-/// fn example(rb_self: Value, kw: RHash) -> Result<Value, Error> {
+/// fn example(_rb_self: Value, kw: RHash) -> Result<Value, Error> {
 ///     let args = get_kwargs(kw, &["a", "b"], &["c"])?;
 ///     let (a, b): (String, usize) = args.required;
 ///     let (c,): (Option<bool>,) = args.optional;
@@ -689,12 +689,12 @@ pub struct KwArgs<Req, Opt, Splat> {
 ///     method,
 ///     prelude::*,
 ///     scan_args::{get_kwargs, scan_args},
-///     RHash, Value,
+///     Value,
 /// };
 /// # use magnus::IntoValue;
 /// # let _cleanup = unsafe { magnus::embed::init() };
 ///
-/// fn example(rb_self: Value, args: &[Value]) -> Result<Value, Error> {
+/// fn example(_rb_self: Value, args: &[Value]) -> Result<Value, Error> {
 ///     let args = scan_args::<(), (), (), (), _, ()>(args)?;
 ///     let args = get_kwargs(args.keywords, &[], &["a"])?;
 ///     let _: () = args.required;
@@ -728,7 +728,7 @@ pub struct KwArgs<Req, Opt, Splat> {
 /// # use magnus::IntoValue;
 /// # let _cleanup = unsafe { magnus::embed::init() };
 ///
-/// fn example(rb_self: Value, args: &[Value]) -> Result<Value, Error> {
+/// fn example(_rb_self: Value, args: &[Value]) -> Result<Value, Error> {
 ///     let args = scan_args::<(), (), (), (), RHash, ()>(args)?;
 ///     let args = get_kwargs::<_, (), (Option<String>,), ()>(args.keywords, &[], &["a"])?;
 ///     let (a,) = args.optional;

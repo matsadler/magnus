@@ -132,7 +132,7 @@ impl Float {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, Float};
+    /// use magnus::Float;
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let pi = Float::from_f64(3.141592);
@@ -167,7 +167,7 @@ impl Float {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, Float};
+    /// use magnus::Float;
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let pi = Float::from_f64(3.141592);

@@ -126,7 +126,7 @@ impl RArray {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, RArray};
+    /// use magnus::RArray;
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let ary = RArray::new();
@@ -148,7 +148,7 @@ impl RArray {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, RArray};
+    /// use magnus::RArray;
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let ary = RArray::with_capacity(16);
@@ -168,7 +168,7 @@ impl RArray {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, IntoValue, RArray, Value};
+    /// use magnus::{eval, IntoValue, RArray};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let ary = RArray::to_ary(1.into_value()).unwrap();
@@ -216,8 +216,8 @@ impl RArray {
     /// let b = a.dup();
     /// let res: bool = eval!("a == b", a, b).unwrap();
     /// assert!(res);
-    /// a.push(4);
-    /// b.push(5);
+    /// a.push(4).unwrap();
+    /// b.push(5).unwrap();
     /// let res: bool = eval!("a == [1, 2, 3, 4]", a).unwrap();
     /// assert!(res);
     /// let res: bool = eval!("b == [1, 2, 3, 5]", b).unwrap();
@@ -263,7 +263,7 @@ impl RArray {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, RArray};
+    /// use magnus::RArray;
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let ary = RArray::new();
@@ -305,7 +305,7 @@ impl RArray {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, prelude::*, Integer, IntoValue, RArray, Symbol, QNIL};
+    /// use magnus::{eval, Integer, IntoValue, RArray, Symbol, QNIL};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let ary = RArray::new();
@@ -345,7 +345,7 @@ impl RArray {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, Integer, RArray, Symbol};
+    /// use magnus::{eval, RArray};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let a = RArray::from_vec(vec![1, 2, 3]);
@@ -367,7 +367,7 @@ impl RArray {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, Integer, RArray, Symbol};
+    /// use magnus::{eval, RArray};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let a = RArray::from_vec(vec![1, 2, 3]);
@@ -496,9 +496,9 @@ impl RArray {
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let ary = RArray::new();
-    /// ary.unshift(Symbol::new("a"));
-    /// ary.unshift(1);
-    /// ary.unshift(());
+    /// ary.unshift(Symbol::new("a")).unwrap();
+    /// ary.unshift(1).unwrap();
+    /// ary.unshift(()).unwrap();
     /// let res: bool = eval!("ary == [nil, 1, :a]", ary).unwrap();
     /// assert!(res);
     /// ```
@@ -898,7 +898,7 @@ impl RArray {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, Integer, IntoValue, RArray, Symbol, QNIL};
+    /// use magnus::{Integer, IntoValue, RArray, Symbol, QNIL};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let ary = RArray::from_slice(&[
@@ -971,10 +971,10 @@ impl RArray {
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let ary = RArray::from_slice(&[Symbol::new("a"), Symbol::new("b"), Symbol::new("c")]);
-    /// ary.store(0, Symbol::new("d"));
-    /// ary.store(5, Symbol::new("e"));
-    /// ary.store(6, Symbol::new("f"));
-    /// ary.store(-1, Symbol::new("g"));
+    /// ary.store(0, Symbol::new("d")).unwrap();
+    /// ary.store(5, Symbol::new("e")).unwrap();
+    /// ary.store(6, Symbol::new("f")).unwrap();
+    /// ary.store(-1, Symbol::new("g")).unwrap();
     /// let res: bool = eval!("ary == [:d, :b, :c, nil, nil, :e, :g]", ary).unwrap();
     /// assert!(res);
     /// ```
@@ -1023,15 +1023,15 @@ impl RArray {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, RArray, Value};
+    /// use magnus::RArray;
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let ary = RArray::from_vec((0..256).collect());
     /// let copy = RArray::new();
-    /// copy.replace(ary);
+    /// copy.replace(ary).unwrap();
     /// assert!(ary.is_shared(copy));
     /// assert!(copy.is_shared(ary));
-    /// copy.push(11);
+    /// copy.push(11).unwrap();
     /// assert!(!ary.is_shared(copy));
     /// assert!(!copy.is_shared(ary));
     /// ```
@@ -1059,14 +1059,14 @@ impl RArray {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, RArray};
+    /// use magnus::RArray;
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let ary = RArray::from_vec((0..256).collect());
     /// let copy = RArray::new();
-    /// copy.replace(ary);
+    /// copy.replace(ary).unwrap();
     /// assert!(copy.is_shared(ary));
-    /// copy.push(11);
+    /// copy.push(11).unwrap();
     /// assert!(!copy.is_shared(ary));
     /// ```
     pub fn replace(self, from: Self) -> Result<(), Error> {
@@ -1082,7 +1082,7 @@ impl RArray {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, RArray, Value};
+    /// use magnus::RArray;
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let ary = RArray::from_vec(vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
@@ -1112,7 +1112,7 @@ impl RArray {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, RArray};
+    /// use magnus::RArray;
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let ary = RArray::from_vec(vec![("foo", 1), ("bar", 2), ("baz", 3), ("baz", 4)]);
@@ -1141,7 +1141,7 @@ impl RArray {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, RArray};
+    /// use magnus::RArray;
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let ary = RArray::from_vec(vec![("foo", 1), ("bar", 2), ("baz", 3), ("qux", 3)]);
@@ -1173,7 +1173,7 @@ impl RArray {
     /// ```
     /// use std::cmp::Ordering;
     ///
-    /// use magnus::{eval, IntoValue, RArray, QNIL};
+    /// use magnus::{IntoValue, RArray, QNIL};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let a = RArray::from_vec(vec![1, 2, 3]);
@@ -1187,7 +1187,7 @@ impl RArray {
     /// assert_eq!(a.cmp(d).unwrap(), Some(Ordering::Less));
     ///
     /// let e = RArray::from_vec(vec![1, 2]);
-    /// e.push(QNIL.into_value());
+    /// e.push(QNIL.into_value()).unwrap();
     /// assert_eq!(a.cmp(e).unwrap(), None);
     /// ```
     ///

@@ -437,7 +437,7 @@ where
     /// struct Example();
     ///
     /// unsafe impl TypedData for Example {
-    /// #   fn class(ruby: &Ruby) -> RClass { unimplemented!() }
+    /// #   fn class(_: &Ruby) -> RClass { unimplemented!() }
     ///     // ...
     ///
     ///     fn data_type() -> &'static DataType {
@@ -471,7 +471,7 @@ where
     /// }
     ///
     /// unsafe impl TypedData for Example {
-    /// #   fn class(ruby: &Ruby) -> RClass { unimplemented!() }
+    /// #   fn class(_: &Ruby) -> RClass { unimplemented!() }
     /// #   fn data_type() -> &'static DataType { unimplemented!() }
     ///     // ...
     ///
@@ -723,7 +723,7 @@ where
     ///     y: isize,
     /// }
     ///
-    /// let point_class = define_class("Point", class::object()).unwrap();
+    /// define_class("Point", class::object()).unwrap();
     /// let value = typed_data::Obj::wrap(Point { x: 4, y: 2 });
     ///
     /// assert_eq!(&*value, &Point { x: 4, y: 2 });
@@ -815,7 +815,7 @@ where
 ///
 /// use magnus::{
 ///     class, define_class, function, gc, method, prelude::*, typed_data, value::Opaque,
-///     DataTypeFunctions, Error, IntoValue, RHash, TypedData, Value,
+///     DataTypeFunctions, IntoValue, RHash, TypedData, Value,
 /// };
 ///
 /// #[derive(TypedData)]
@@ -927,7 +927,7 @@ where
 ///
 /// use magnus::{
 ///     class, define_class, function, gc, method, prelude::*, typed_data, value::Opaque,
-///     DataTypeFunctions, Error, IntoValue, RHash, TypedData, Value,
+///     DataTypeFunctions, IntoValue, RHash, TypedData, Value,
 /// };
 ///
 /// #[derive(TypedData)]
@@ -1037,7 +1037,7 @@ where
 ///
 /// use magnus::{
 ///     class, define_class, eval, function, gc, method, module, prelude::*, typed_data,
-///     value::Opaque, DataTypeFunctions, Error, IntoValue, Module, TypedData, Value,
+///     value::Opaque, DataTypeFunctions, IntoValue, Module, TypedData, Value,
 /// };
 ///
 /// #[derive(TypedData)]

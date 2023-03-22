@@ -1782,6 +1782,8 @@
 
 #![cfg_attr(docsrs, feature(doc_cfg))]
 #![warn(missing_docs)]
+#![doc(test(attr(warn(unused))))]
+#![doc(test(attr(allow(unused_extern_crates))))]
 
 #[macro_use]
 mod macros;

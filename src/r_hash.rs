@@ -159,7 +159,7 @@ impl RHash {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, RHash};
+    /// use magnus::RHash;
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let ary = RHash::with_capacity(16);
@@ -184,7 +184,7 @@ impl RHash {
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let hash = RHash::new();
-    /// hash.aset("answer", 42);
+    /// hash.aset("answer", 42).unwrap();
     /// let res: bool = eval!(r#"hash == {"answer" => 42}"#, hash).unwrap();
     /// assert!(res);
     /// ```
@@ -222,7 +222,8 @@ impl RHash {
     ///     RString::new("Arthur").into_value(),
     ///     Symbol::new("family_name").into_value(),
     ///     RString::new("Dent").into_value(),
-    /// ]);
+    /// ])
+    /// .unwrap();
     /// let res: bool = eval!(
     ///     r#"hash == {given_name: "Arthur", family_name: "Dent"}"#,
     ///     hash
@@ -249,12 +250,12 @@ impl RHash {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, RHash, RString, Symbol};
+    /// use magnus::{eval, RHash};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let a: RHash = eval("{a: 1, b: 2}").unwrap();
     /// let b: RHash = eval("{b: 3, c: 4}").unwrap();
-    /// a.update(b);
+    /// a.update(b).unwrap();
     ///
     /// // a is mutated, in case of conflicts b wins
     /// let res: bool = eval!("a == {a: 1, b: 3, c: 4}", a).unwrap();
@@ -290,7 +291,7 @@ impl RHash {
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let hash = RHash::new();
-    /// hash.aset("answer", 42);
+    /// hash.aset("answer", 42).unwrap();
     /// assert_eq!(hash.aref::<_, i64>("answer").unwrap(), 42);
     /// assert!(hash.aref::<_, Qnil>("missing").is_ok());
     /// assert_eq!(hash.aref::<_, Option<i64>>("answer").unwrap(), Some(42));
@@ -373,7 +374,7 @@ impl RHash {
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let hash = RHash::new();
-    /// hash.aset("answer", 42);
+    /// hash.aset("answer", 42).unwrap();
     /// assert!(hash.get("answer").is_some());
     /// assert!(hash.get("missing").is_none());
     /// ```
@@ -401,7 +402,7 @@ impl RHash {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, value::Qnil, RHash};
+    /// use magnus::{eval, RHash};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let hash = eval::<RHash>(
@@ -578,8 +579,6 @@ impl RHash {
     /// # Examples
     ///
     /// ```
-    /// use std::collections::HashMap;
-    ///
     /// use magnus::{eval, RHash};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
@@ -639,7 +638,7 @@ impl RHash {
     ///
     /// let hash = RHash::new();
     /// assert!(hash.is_empty());
-    /// hash.aset("answer", 42);
+    /// hash.aset("answer", 42).unwrap();
     /// assert!(!hash.is_empty());
     /// ```
     pub fn is_empty(self) -> bool {

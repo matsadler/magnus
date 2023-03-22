@@ -961,7 +961,7 @@ pub trait ReprValue: private::ReprValue {
     /// fn mutate(val: Value) -> Result<(), Error> {
     ///     val.check_frozen()?;
     ///
-    ///     /// ...
+    ///     // ...
     ///     Ok(())
     /// }
     ///
@@ -984,7 +984,7 @@ pub trait ReprValue: private::ReprValue {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, prelude::*, RArray};
+    /// use magnus::{prelude::*, RArray};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let ary = RArray::new();
@@ -1361,7 +1361,7 @@ pub trait ReprValue: private::ReprValue {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, prelude::*, IntoValue, QTRUE};
+    /// use magnus::{prelude::*, IntoValue, QTRUE};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let value = QTRUE.into_value();
@@ -1387,7 +1387,7 @@ pub trait ReprValue: private::ReprValue {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, prelude::*, IntoValue, Symbol, QNIL};
+    /// use magnus::{prelude::*, IntoValue, Symbol, QNIL};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// assert_eq!(QNIL.into_value().inspect(), "nil");
@@ -1420,7 +1420,7 @@ pub trait ReprValue: private::ReprValue {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, prelude::*, RHash};
+    /// use magnus::{prelude::*, RHash};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let value = RHash::new();
@@ -1458,7 +1458,7 @@ pub trait ReprValue: private::ReprValue {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{class, eval, prelude::*, r_string};
+    /// use magnus::{class, prelude::*, r_string};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let s = r_string!("foo\\bar\\baz");
@@ -2042,7 +2042,7 @@ impl Fixnum {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, Fixnum};
+    /// use magnus::Fixnum;
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// assert!(Fixnum::from_i64(0).is_ok());
@@ -2068,7 +2068,7 @@ impl Fixnum {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, Fixnum};
+    /// use magnus::Fixnum;
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// assert!(Fixnum::from_u64(0).is_ok());

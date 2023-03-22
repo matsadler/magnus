@@ -90,7 +90,7 @@ impl RBignum {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, RBignum};
+    /// use magnus::RBignum;
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// assert!(RBignum::from_i64(4611686018427387904).is_ok());
@@ -116,7 +116,7 @@ impl RBignum {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, RBignum};
+    /// use magnus::RBignum;
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// assert!(RBignum::from_u64(4611686018427387904).is_ok());

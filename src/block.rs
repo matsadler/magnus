@@ -200,7 +200,7 @@ impl Proc {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{block::Proc, eval, prelude::*, Integer, RArray};
+    /// use magnus::{block::Proc, eval, Integer, RArray};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let proc: Proc = eval("Proc.new {|a, b| a + b}").unwrap();
@@ -230,7 +230,7 @@ impl Proc {
     /// Ignoring return value:
     ///
     /// ```
-    /// use magnus::{block::Proc, eval, prelude::*, Value};
+    /// use magnus::{block::Proc, eval, Value};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let proc: Proc = eval("Proc.new { $called = true }").unwrap();

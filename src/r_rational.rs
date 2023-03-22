@@ -63,7 +63,7 @@ impl RRational {
     /// ```
     /// use std::num::NonZeroI64;
     ///
-    /// use magnus::{eval, RRational};
+    /// use magnus::RRational;
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let rational = RRational::new(2, NonZeroI64::new(4).unwrap());
@@ -82,7 +82,7 @@ impl RRational {
     /// ```
     /// use std::num::NonZeroI64;
     ///
-    /// use magnus::{eval, RRational};
+    /// use magnus::RRational;
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let rational = RRational::new(6, NonZeroI64::new(9).unwrap());
@@ -99,7 +99,7 @@ impl RRational {
     /// ```
     /// use std::num::NonZeroI64;
     ///
-    /// use magnus::{eval, RRational};
+    /// use magnus::RRational;
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let rational = RRational::new(6, NonZeroI64::new(9).unwrap());
