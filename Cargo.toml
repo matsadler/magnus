@@ -40,3 +40,23 @@ doc-scrape-examples = false
 [package.metadata.docs.rs]
 all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
+
+[[example]]
+name = "embed"
+doc-scrape-examples = false
+
+[[example]]
+name = "fibonacci"
+doc-scrape-examples = false
+
+[[example]]
+name = "hello_world"
+doc-scrape-examples = false
+
+[[example]]
+name = "mut_point"
+doc-scrape-examples = false
+
+[[example]]
+name = "point"
+doc-scrape-examples = false
