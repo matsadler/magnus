@@ -198,7 +198,6 @@ pub trait IntoSymbol: Sized {
     /// # Panics
     ///
     /// Panics if called from a non-Ruby thread.
-    ///
     #[cfg(feature = "friendly-api")]
     #[inline]
     fn into_symbol(self) -> Symbol {

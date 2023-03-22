@@ -502,7 +502,8 @@ impl<T> ScanArgsBlock for T where T: private::ScanArgsBlock {}
 /// ```
 ///
 /// `Addrinfo::getaddrinfo`'s argument handling. This is roughly equivalent to
-/// `def getaddrinfo(nodename, service, family=nil, socktype=nil, protocol=nil, flags=nil, timeout: nil)`.
+/// `def getaddrinfo(nodename, service, family=nil, socktype=nil, protocol=nil, flags=nil, timeout: nil)`:
+///
 /// ```
 /// use magnus::{
 ///     prelude::*, class, define_class, error::Error, function, scan_args::{scan_args, get_kwargs}, RHash, Symbol, Value,

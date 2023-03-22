@@ -32,10 +32,9 @@ mod util;
 /// # Attributes
 ///
 /// * `name = "..."` - sets the name of the init function exported for Ruby.
-///   This default's to the current crate's name.
-///   The name will be prepended with `Init_` and `-` will be replaced with `_`.
-///   This (minus the `Init_` prefix) must match the name of the final
-///   `.so`/`.bundle` file.
+///   This default's to the current crate's name. The name will be prepended
+///   with `Init_` and `-` will be replaced with `_`. This (minus the `Init_`
+///   prefix) must match the name of the final `.so`/`.bundle` file.
 ///
 /// # Examples
 ///
@@ -119,7 +118,7 @@ pub fn init(attrs: TokenStream, item: TokenStream) -> TokenStream {
 /// # Attributes
 ///
 /// * `class = "..."` - required, sets the Ruby class to wrap the Rust type.
-///    Supports module paths, e.g. `Foo::Bar::Baz`.
+///   Supports module paths, e.g. `Foo::Bar::Baz`.
 /// * `name = "..."` - debug name for the type, must be unique. Defaults to the
 ///   class name.
 /// * `free_immediately` - Drop the Rust type as soon as the Ruby object has
@@ -228,7 +227,7 @@ pub fn derive_data_type_functions(input: TokenStream) -> TokenStream {
 /// The `#[magnus(...)]` attribute can be set with the following values:
 ///
 /// * `class = "..."` - required, sets the Ruby class to wrap the Rust type.
-///    Supports module paths, e.g. `Foo::Bar::Baz`.
+///   Supports module paths, e.g. `Foo::Bar::Baz`.
 /// * `name = "..."` - debug name for the type, must be unique. Defaults to the
 ///   class name.
 /// * `free_immediately` - Drop the Rust type as soon as the Ruby object has

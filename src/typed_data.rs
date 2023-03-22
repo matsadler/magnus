@@ -374,8 +374,8 @@ where
     }
 }
 
-/// A trait for Rust types that can be used with the `rb_data_typed_object_wrap`
-/// API.
+/// A trait for Rust types that can be used with the
+/// `rb_data_typed_object_wrap` API.
 ///
 /// # Safety
 ///
@@ -385,8 +385,8 @@ where
 /// can be passed to Ruby and result in safety violations, [`DataType`] is
 /// otherwise safe (but useless) to create.
 ///
-/// The [`TypedData`](`derive@crate::TypedData`) or [`wrap`](`crate::wrap`) macros can
-/// help implementing this trait more safely.
+/// The [`TypedData`](`derive@crate::TypedData`) or [`wrap`](`crate::wrap`)
+/// macros can help implementing this trait more safely.
 pub unsafe trait TypedData
 where
     Self: Send + Sized,

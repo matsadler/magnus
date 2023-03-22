@@ -1,4 +1,5 @@
-//! Types for working with Ruby's VALUE type, representing all objects, and 'immediate' values such as Fixnum.
+//! Types for working with Ruby's VALUE type, representing all objects, and
+//! 'immediate' values such as Fixnum.
 
 #[cfg(ruby_use_flonum)]
 mod flonum;
@@ -584,11 +585,12 @@ pub(crate) mod private {
 
         /// Returns whether `self` is an 'immediate' value.
         ///
-        /// 'immediate' values are encoded directly into the `Value` and require
-        /// no additional lookup. They will never be garbage collected.
+        /// 'immediate' values are encoded directly into the `Value` and
+        /// require no additional lookup. They will never be garbage
+        /// collected.
         ///
-        /// non-immediate values are pointers to other memory holding the data for
-        /// the object.
+        /// non-immediate values are pointers to other memory holding the data
+        /// for the object.
         fn is_immediate(self) -> bool {
             let value_p = self.as_rb_value();
             let immediate_p = value_p & ruby_special_consts::RUBY_IMMEDIATE_MASK as VALUE != 0;
@@ -666,9 +668,9 @@ pub(crate) mod private {
         ///
         /// # Safety
         ///
-        /// This may return a direct view of memory owned and managed by Ruby. Ruby
-        /// may modify or free the memory backing the returned str, the caller must
-        /// ensure this does not happen.
+        /// This may return a direct view of memory owned and managed by Ruby.
+        /// Ruby may modify or free the memory backing the returned
+        /// str, the caller must ensure this does not happen.
         #[allow(clippy::wrong_self_convention)]
         unsafe fn to_s_infallible(&self) -> Cow<str> {
             match self.as_value_ref().to_s() {
@@ -2664,7 +2666,6 @@ pub trait IntoId: Sized {
     /// # Panics
     ///
     /// Panics if called from a non-Ruby thread.
-    ///
     #[cfg(feature = "friendly-api")]
     #[inline]
     fn into_id(self) -> Id {

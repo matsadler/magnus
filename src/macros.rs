@@ -1,5 +1,4 @@
 /// Debug assertation that the Value hasn't been garbage collected.
-///
 // This isn't infallible, if the original object was gc'd and that slot
 // reused already this won't panic like it should, but we're trying our
 // best here.

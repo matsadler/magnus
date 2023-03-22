@@ -2340,8 +2340,8 @@ pub fn require(feature: &str) -> Result<bool, Error> {
 ///
 /// Ruby will use the 'ASCII-8BIT' (aka binary) encoding for any Ruby string
 /// literals in the passed string of Ruby code. See the
-/// [`eval`](macro@crate::eval) macro or [`Binding::eval`] for alternatives that
-/// support utf-8.
+/// [`eval`](macro@crate::eval) macro or [`Binding::eval`] for alternatives
+/// that support utf-8.
 ///
 /// Errors if `s` contains a null byte, the conversion fails, or on an uncaught
 /// Ruby exception.

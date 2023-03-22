@@ -1507,7 +1507,8 @@ seq!(N in 0..=16 {
 /// return value (i.e. return `()`) for a function that returns `nil` to Ruby.
 /// See [`ReturnValue`] for more details on what can be returned.
 ///
-/// See the [`method`](crate::method!) macro for cases where the `self` argument is required.
+/// See the [`method`](crate::method!) macro for cases where the `self`
+/// argument is required.
 ///
 /// # Examples
 ///

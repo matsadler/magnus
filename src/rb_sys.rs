@@ -57,9 +57,9 @@ pub trait FromRawValue {
     /// Convert [`rb_sys::VALUE`](VALUE) to [`magnus::Value`](Value).
     /// # Safety
     ///
-    /// You must only supply a valid [`VALUE`] obtained from [rb-sys](rb_sys) to
-    /// this function. Using a invalid [`Value`] produced from this function will
-    /// void all saftey guarantees provided by Magnus.
+    /// You must only supply a valid [`VALUE`] obtained from [rb-sys](rb_sys)
+    /// to this function. Using a invalid [`Value`] produced from this
+    /// function will void all saftey guarantees provided by Magnus.
     ///
     /// ```
     /// # let _cleanup = unsafe { magnus::embed::init() };
@@ -111,9 +111,10 @@ pub trait FromRawId {
     ///
     /// # Safety
     ///
-    /// You must only supply a valid, non-zero [`ID`] obtained from [rb-sys](rb_sys) to this
-    /// function. Using a invalid [`Id`] produced from this function will void all
-    /// saftey guarantees provided by Magnus.
+    /// You must only supply a valid, non-zero [`ID`] obtained from
+    /// [rb-sys](rb_sys) to this function. Using a invalid [`Id`] produced
+    /// from this function will void all saftey guarantees provided by
+    /// Magnus.
     ///
     /// ```
     /// use magnus::{prelude::*, rb_sys::{AsRawId, FromRawId}, value::Id, Symbol};

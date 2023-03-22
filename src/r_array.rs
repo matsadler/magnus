@@ -1628,7 +1628,6 @@ where
     /// # Panics
     ///
     /// Panics if called from a non-Ruby thread.
-    ///
     fn from_iter<I>(iter: I) -> Self
     where
         I: IntoIterator<Item = T>,
