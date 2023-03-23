@@ -96,6 +96,7 @@ impl RTypedData {
     ///
     /// let value = RTypedData::wrap(Point { x: 4, y: 2 });
     /// assert!(value.is_kind_of(point_class));
+    /// # let _ = Point { x: 1, y: 2 }.x + Point { x: 3, y: 4 }.y;
     /// ```
     #[cfg(feature = "friendly-api")]
     #[inline]
@@ -134,6 +135,7 @@ impl RTypedData {
     /// let value = RTypedData::wrap_as(Point { x: 4, y: 2 }, point_sub_class);
     /// assert!(value.is_kind_of(point_sub_class));
     /// assert!(value.is_kind_of(point_class));
+    /// # let _ = Point { x: 1, y: 2 }.x + Point { x: 3, y: 4 }.y;
     /// ```
     ///
     /// Allowing a wrapped type to be subclassed from Ruby:
@@ -179,6 +181,7 @@ impl RTypedData {
     ///
     /// assert!(value.is_kind_of(class::object().const_get::<_, RClass>("SubPoint").unwrap()));
     /// assert!(value.is_kind_of(point_class));
+    /// # let _ = Point { x: 1, y: 2 }.x + Point { x: 3, y: 4 }.y;
     /// ```
     #[cfg(feature = "friendly-api")]
     #[inline]

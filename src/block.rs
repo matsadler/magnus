@@ -608,9 +608,12 @@ where
 /// ```
 /// use magnus::{
 ///     block::{block_given, Yield},
+///     define_global_function, eval, method,
 ///     prelude::*,
-///     Value,
+///     value::Qnil,
+///     RArray, Value,
 /// };
+/// # let _cleanup = unsafe { magnus::embed::init() };
 ///
 /// fn count_to_3(rb_self: Value) -> Yield<impl Iterator<Item = u8>> {
 ///     if block_given() {
@@ -619,15 +622,19 @@ where
 ///         Yield::Enumerator(rb_self.enumeratorize("count_to_3", ()))
 ///     }
 /// }
-/// ```
-/// Could be called from Ruby like:
-/// ``` text
-/// a = []
-/// count_to_3 {|i| a << i}   #=> nil
-/// a                         #=> [1,2,3]
-/// enumerator = count_to_3
-/// enumerator.next           #=> 1
-/// enumerator.next           #=> 2
+///
+/// define_global_function("count_to_3", method!(count_to_3, 0));
+///
+/// // call Ruby method with a block.
+/// let a = RArray::new();
+/// let _: Qnil = eval!("count_to_3 {|i| a << i}", a).unwrap();
+/// assert_eq!(a.to_vec::<i64>().unwrap(), [1, 2, 3]);
+///
+/// // call Ruby method without a block.
+/// let enumerator: Value = eval("count_to_3").unwrap();
+///
+/// assert_eq!(1, eval!("enumerator.next", enumerator).unwrap());
+/// assert_eq!(2, eval!("enumerator.next", enumerator).unwrap());
 /// ```
 pub enum Yield<I> {
     /// Yields `I::Item` to given block.
