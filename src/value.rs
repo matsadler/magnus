@@ -464,9 +464,17 @@ where
     /// # Examples
     ///
     /// ```
-    /// use magnus::{value::Lazy, RString};
+    /// use magnus::{rb_assert, value::Lazy, RString, Ruby};
     ///
     /// static STATIC_STR: Lazy<RString> = Lazy::new(|ruby| ruby.str_new("example"));
+    ///
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// let ruby = Ruby::get().unwrap();
+    /// rb_assert!(
+    ///     ruby,
+    ///     r#"val == "example""#,
+    ///     val = ruby.get_inner(&STATIC_STR)
+    /// );
     /// ```
     pub const fn new(func: fn(&Ruby) -> T) -> Self {
         Self {
