@@ -56,9 +56,17 @@ impl Exception {
         Self(NonZeroValue::new_unchecked(Value::new(val)))
     }
 
+    /// Returns the class that `self` is an instance of, as an
+    /// [`ExceptionClass`].
+    ///
+    /// See also [`ReprValue::class`].
+    pub fn exception_class(self) -> ExceptionClass {
+        unsafe { ExceptionClass::from_rb_value_unchecked(self.class().as_rb_value()) }
+    }
+
     /// Return the Ruby backtrace for the exception, as a [`RArray`] of
     /// [`RString`](`crate::r_string::RString`)s.
-    pub fn backtrace(&self) -> Result<Option<RArray>, Error> {
+    pub fn backtrace(self) -> Result<Option<RArray>, Error> {
         self.funcall("backtrace", ())
     }
 }

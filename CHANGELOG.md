@@ -21,6 +21,8 @@
 - `RTypedData::wrap_as` & `typed_data::Obj<T>::wrap_as` can be used to
   dynamically set the class when wrapping Rust data in a Ruby object. This can
   be used to allow wrapped data to be subclassed in Ruby.
+- `Exception::exception_class` returns the class of an exception as an
+  `ExceptionClass`.
 
 ### Changed
 - Minimum supported Rust version in now 1.61.
