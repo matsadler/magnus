@@ -369,6 +369,32 @@ where
     }
 }
 
+/// Helper trait for [`Ruby::get_inner_ref`].
+///
+/// This trait allows for [`Ruby::get_inner_ref`] to get a reference to the
+/// inner value of both [`Opaque`] and [`Lazy`].
+pub trait InnerRef {
+    /// The specific Ruby value type.
+    type Value: ReprValue;
+
+    /// Get a reference to the inner value from `self`.
+    ///
+    /// `ruby` acts as a token proving this is called from a Ruby thread and
+    /// thus it is safe to access the inner value.
+    fn get_inner_ref_with<'a>(&'a self, ruby: &Ruby) -> &'a Self::Value;
+}
+
+impl<T> InnerRef for Opaque<T>
+where
+    T: ReprValue,
+{
+    type Value = T;
+
+    fn get_inner_ref_with<'a>(&'a self, _: &Ruby) -> &'a Self::Value {
+        &self.0
+    }
+}
+
 impl Ruby {
     /// Get the inner value from `wrapper`.
     ///
@@ -407,6 +433,17 @@ impl Ruby {
         T: ReprValue,
     {
         wrapper.get_inner_with(self)
+    }
+
+    /// Get a reference to the inner value of `wrapper`.
+    ///
+    /// `self` acts as a token proving this is called from a Ruby thread and
+    /// thus it is safe to access the inner value. See [`Opaque`] and [`Lazy`].
+    pub fn get_inner_ref<'a, T>(&self, wrapper: &'a impl InnerRef<Value = T>) -> &'a T
+    where
+        T: ReprValue,
+    {
+        wrapper.get_inner_ref_with(self)
     }
 }
 
@@ -563,6 +600,17 @@ where
     type Value = T;
 
     fn get_inner_with(self, ruby: &Ruby) -> Self::Value {
+        *self.get_inner_ref_with(ruby)
+    }
+}
+
+impl<T> InnerRef for Lazy<T>
+where
+    T: ReprValue,
+{
+    type Value = T;
+
+    fn get_inner_ref_with<'a>(&'a self, ruby: &Ruby) -> &'a Self::Value {
         unsafe {
             self.init.call_once(|| {
                 let inner = self.inner.get();
@@ -572,7 +620,7 @@ where
                 }
                 (*inner).value = value;
             });
-            (*self.inner.get()).value
+            &(*self.inner.get()).value
         }
     }
 }
