@@ -23,13 +23,6 @@ pub fn expand_derive_data_type_functions(input: DeriveInput) -> TokenStream {
 }
 
 pub fn expand_derive_typed_data(input: DeriveInput) -> Result<TokenStream, Error> {
-    if !input.generics.to_token_stream().is_empty() {
-        return Err(Error::new(
-            input.generics.span(),
-            "TypedData can't be derived for generic types",
-        ));
-    }
-
     let attrs = match util::get_magnus_attrubute(&input.attrs)? {
         Some(v) => v,
         None => return Err(Error::new(input.span(), "missing #[magnus] attribute")),
@@ -43,6 +36,7 @@ pub fn expand_derive_typed_data(input: DeriveInput) -> Result<TokenStream, Error
     let mut free_immediately = false;
     let mut wb_protected = false;
     let mut frozen_shareable = false;
+    let mut unsafe_generics = false;
 
     attrs.parse_nested_meta(|meta| {
         if meta.path.is_ident("class") {
@@ -69,12 +63,31 @@ pub fn expand_derive_typed_data(input: DeriveInput) -> Result<TokenStream, Error
         } else if meta.path.is_ident("frozen_shareable") {
             frozen_shareable = true;
             Ok(())
+        } else if meta.path.is_ident("unsafe_generics") {
+            unsafe_generics = true;
+            Ok(())
         } else if meta.path.is_ident("free_immediatly") {
             Err(meta.error("unsupported attribute (use free_immediately)"))
         } else {
             Err(meta.error("unsupported attribute"))
         }
     })?;
+
+    if !input.generics.to_token_stream().is_empty() && !unsafe_generics {
+        let case = if input.generics.type_params().count() > 0 {
+            "containing generic types"
+        } else if input.generics.lifetimes().count() > 0 {
+            "with lifetimes"
+        } else if input.generics.const_params().count() > 0 {
+            "with const generics"
+        } else {
+            "containing generic types"
+        };
+        return Err(Error::new_spanned(
+            input.generics,
+            format!("deriving TypedData is not guaranteed to be correct for types {}, consider removing them, or use `#[magnus(unsafe_generics)]` to override this error.", case),
+        ));
+    }
 
     let class = match class {
         Some(v) => v,
@@ -83,6 +96,7 @@ pub fn expand_derive_typed_data(input: DeriveInput) -> Result<TokenStream, Error
     let name = name.unwrap_or_else(|| class.clone());
 
     let ident = &input.ident;
+    let generics = &input.generics;
 
     let mut arms = Vec::new();
     if let Data::Enum(DataEnum { ref variants, .. }) = input.data {
@@ -204,7 +218,7 @@ pub fn expand_derive_typed_data(input: DeriveInput) -> Result<TokenStream, Error
     let tokens = quote! {
         #accessor_impl
 
-        unsafe impl magnus::TypedData for #ident {
+        unsafe impl #generics magnus::TypedData for #ident #generics {
             fn class(ruby: &magnus::Ruby) -> magnus::RClass {
                 use magnus::{class, Module, Class, RClass, value::{Lazy, ReprValue}};
                 static CLASS: Lazy<RClass> = Lazy::new(|ruby| {

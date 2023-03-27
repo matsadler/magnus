@@ -126,6 +126,10 @@ pub fn init(attrs: TokenStream, item: TokenStream) -> TokenStream {
 ///   implmentation does not call Ruby.
 /// * `size` - Report the [`std::mem::size_of_val`] of the type to Ruby, used
 ///   to aid in deciding when to run the garbage collector.
+/// * `unsafe_generics` - The derived implementation of [`TypedData`] is not
+///   guaranteed to be correct for types with generics. If you are sure it is
+///   for your type this attribute can be used to override the compile time
+///   error usually generated for types with generics.
 ///
 /// # Variant Attributes
 ///
@@ -238,6 +242,10 @@ pub fn derive_data_type_functions(input: TokenStream) -> TokenStream {
 /// * `compact` - Enable Ruby calling the `DataTypeFunctions::compact` function.
 /// * `wb_protected` - Enable the `wb_protected` flag.
 /// * `frozen_shareable` - Enable the `frozen_shareable` flag.
+/// * `unsafe_generics` - The derived implementation of [`TypedData`] is not
+///   guaranteed to be correct for types with generics. If you are sure it is
+///   for your type this attribute can be used to override the compile time
+///   error usually generated for types with generics.
 ///
 /// # Field Attributes
 ///

@@ -49,6 +49,10 @@
   a `DataTypeBuilder` with a `'static CStr` `name`).
 - All methods on `DataTypeBuilder` are now `const`, so `DataType` can be
   constructed in a `const` context and be assigned to a `static`.
+- The `#[wrap]` and `#[derive(TypedData)]` macros now support setting the
+  `#[magnus(unsafe_generics)]` attribute to allow deriving `TypedData` for
+  types with generics. The derived implementation is not guaranteed to be
+  correct.
 
 ### Deprecated
 - `typed_data::Obj::get` as it is made redundant by the `Deref` implementation
