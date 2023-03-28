@@ -21,13 +21,6 @@ pub fn expand_derive_data_type_functions(input: DeriveInput) -> TokenStream {
 }
 
 pub fn expand_derive_typed_data(input: DeriveInput) -> TokenStream {
-    if !input.generics.to_token_stream().is_empty() {
-        return Error::new(
-            input.generics.span(),
-            "TypedData can't be derived for generic types",
-        )
-        .into_compile_error();
-    }
     let mut attrs = input
         .attrs
         .clone()
@@ -64,6 +57,7 @@ pub fn expand_derive_typed_data(input: DeriveInput) -> TokenStream {
             "free_immediately",
             "wb_protected",
             "frozen_shareable",
+            "unsafe_generics",
         ],
         &vec![("free_immediatly", "free_immediately")]
             .into_iter()
@@ -105,8 +99,21 @@ pub fn expand_derive_typed_data(input: DeriveInput) -> TokenStream {
         Ok(v) => v.is_some(),
         Err(e) => return e.into_compile_error(),
     };
+    let unsafe_generics = match args.extract::<Option<()>>("unsafe_generics") {
+        Ok(v) => v.is_some(),
+        Err(e) => return e.into_compile_error(),
+    };
+
+    if !input.generics.to_token_stream().is_empty() && !unsafe_generics {
+        return Error::new_spanned(
+            input.generics,
+            "TypedData can't be derived for generic types",
+        )
+        .into_compile_error();
+    }
 
     let ident = input.ident;
+    let generics = input.generics;
 
     let mut arms = Vec::new();
     if let Data::Enum(DataEnum { variants, .. }) = input.data {
@@ -195,7 +202,7 @@ pub fn expand_derive_typed_data(input: DeriveInput) -> TokenStream {
     builder.push(quote! { builder.build() });
     let builder = builder.into_iter().collect::<TokenStream>();
     let tokens = quote! {
-        unsafe impl magnus::TypedData for #ident {
+        unsafe impl #generics magnus::TypedData for #ident #generics {
             fn class() -> magnus::RClass {
                 use magnus::{Module, Class, RClass};
                 *magnus::memoize!(RClass: {
