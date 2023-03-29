@@ -73,53 +73,6 @@ impl Value {
     pub(crate) const fn as_rb_value(self) -> VALUE {
         self.0
     }
-
-    /// Convert `self` to the Rust type `T`.
-    ///
-    /// `val.try_convert()` is equivalent to `TryConvert::try_convert(val)`.
-    ///
-    /// See the types that [`TryConvert`] is implemented on for what this
-    /// method can convert to.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use magnus::{eval, Value};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
-    ///
-    /// assert_eq!(
-    ///     eval::<Value>("42").unwrap().try_convert::<i64>().unwrap(),
-    ///     42
-    /// );
-    /// assert_eq!(
-    ///     eval::<Value>("1.23").unwrap().try_convert::<i64>().unwrap(),
-    ///     1
-    /// );
-    /// assert_eq!(
-    ///     eval::<Value>("1").unwrap().try_convert::<f64>().unwrap(),
-    ///     1.0
-    /// );
-    /// assert_eq!(
-    ///     eval::<Value>("nil")
-    ///         .unwrap()
-    ///         .try_convert::<Option<i64>>()
-    ///         .unwrap(),
-    ///     None
-    /// );
-    /// assert_eq!(
-    ///     eval::<Value>("42")
-    ///         .unwrap()
-    ///         .try_convert::<Option<i64>>()
-    ///         .unwrap(),
-    ///     Some(42)
-    /// );
-    /// ```
-    pub fn try_convert<T>(self) -> Result<T, Error>
-    where
-        T: TryConvert,
-    {
-        T::try_convert(self.as_value())
-    }
 }
 
 impl fmt::Display for Value {
