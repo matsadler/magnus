@@ -58,9 +58,10 @@
 - `typed_data::Obj::get` as it is made redundant by the `Deref` implementation
   for `typed_data::Obj`.
 - `Class::undef_alloc_func`. Please use `Class::undef_default_alloc_func`.
+- `Value::try_convert`, prefer `TryConvert::try_convert` or `T::try_convert`.
 
 ### Removed
-- `Into<Value>`/`From<T> for Value`, implementations use `IntoValue`.
+- `Into<Value>`/`From<T> for Value` implementations, use `IntoValue`.
 - `Default` implementations for `Value`, `RClass`, and `ExceptionClass`.
 
 ### Fixed

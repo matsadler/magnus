@@ -73,6 +73,15 @@ impl Value {
     pub(crate) const fn as_rb_value(self) -> VALUE {
         self.0
     }
+
+    #[doc(hidden)]
+    #[deprecated(since = "0.6.0", note = "please use `TryConvert::try_convert` or `T::try_convert` instead")]
+    pub fn try_convert<T>(self) -> Result<T, Error>
+    where
+        T: TryConvert,
+    {
+        T::try_convert(self.as_value())
+    }
 }
 
 impl fmt::Display for Value {
