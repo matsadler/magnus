@@ -1558,7 +1558,24 @@ impl IntoRString for &Path {
     }
 }
 
-#[cfg(not(unix))]
+#[cfg(windows)]
+impl IntoRString for &Path {
+    fn into_r_string_with(self, handle: &Ruby) -> RString {
+        use std::os::windows::ffi::OsStrExt;
+        if let Some(utf16) = handle.find_encoding("UTF-16LE") {
+            let bytes: Vec<u8> = self
+                .as_os_str()
+                .encode_wide()
+                .flat_map(|c| c.to_le_bytes())
+                .collect();
+            handle.enc_str_new(bytes, utf16)
+        } else {
+            handle.str_new(self.to_string_lossy().as_ref())
+        }
+    }
+}
+
+#[cfg(not(any(unix, windows)))]
 impl IntoRString for &Path {
     fn into_r_string_with(self, handle: &Ruby) -> RString {
         handle.str_new(self.to_string_lossy().as_ref())
