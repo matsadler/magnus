@@ -75,7 +75,10 @@ impl Value {
     }
 
     #[doc(hidden)]
-    #[deprecated(since = "0.6.0", note = "please use `TryConvert::try_convert` or `T::try_convert` instead")]
+    #[deprecated(
+        since = "0.6.0",
+        note = "please use `TryConvert::try_convert` or `T::try_convert` instead"
+    )]
     pub fn try_convert<T>(self) -> Result<T, Error>
     where
         T: TryConvert,
