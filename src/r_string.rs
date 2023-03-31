@@ -1550,6 +1550,27 @@ impl IntoRString for String {
     }
 }
 
+#[cfg(unix)]
+impl IntoRString for &Path {
+    fn into_r_string_with(self, handle: &Ruby) -> RString {
+        use std::os::unix::ffi::OsStrExt;
+        handle.str_from_slice(self.as_os_str().as_bytes())
+    }
+}
+
+#[cfg(not(unix))]
+impl IntoRString for &Path {
+    fn into_r_string_with(self, handle: &Ruby) -> RString {
+        handle.str_new(self.to_string_lossy().as_ref())
+    }
+}
+
+impl IntoRString for PathBuf {
+    fn into_r_string_with(self, handle: &Ruby) -> RString {
+        self.as_path().into_r_string_with(handle)
+    }
+}
+
 impl IntoValue for RString {
     fn into_value_with(self, _: &Ruby) -> Value {
         self.0.get()
@@ -1587,22 +1608,9 @@ impl IntoValue for char {
 
 unsafe impl IntoValueFromNative for char {}
 
-#[cfg(unix)]
 impl IntoValue for &Path {
     fn into_value_with(self, handle: &Ruby) -> Value {
-        use std::os::unix::ffi::OsStrExt;
-        handle
-            .str_from_slice(self.as_os_str().as_bytes())
-            .into_value_with(handle)
-    }
-}
-
-#[cfg(not(unix))]
-impl IntoValue for &Path {
-    fn into_value_with(self, handle: &Ruby) -> Value {
-        handle
-            .str_new(self.to_string_lossy().as_ref())
-            .into_value_with(handle)
+        self.into_r_string_with(handle).into_value_with(handle)
     }
 }
 
@@ -1610,7 +1618,9 @@ unsafe impl IntoValueFromNative for &Path {}
 
 impl IntoValue for PathBuf {
     fn into_value_with(self, handle: &Ruby) -> Value {
-        handle.into_value(self.as_path())
+        self.as_path()
+            .into_r_string_with(handle)
+            .into_value_with(handle)
     }
 }
 
