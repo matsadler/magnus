@@ -5,7 +5,7 @@
 
 use std::{
     collections::hash_map::DefaultHasher,
-    ffi::{c_void, CStr, CString},
+    ffi::{c_void, CStr},
     fmt,
     hash::Hasher,
     marker::PhantomData,
@@ -70,14 +70,6 @@ impl DataType {
 
 unsafe impl Send for DataType {}
 unsafe impl Sync for DataType {}
-
-impl Drop for DataType {
-    fn drop(&mut self) {
-        unsafe {
-            drop(CString::from_raw(self.0.wrap_struct_name as *mut _));
-        }
-    }
-}
 
 /// A helper trait used to define functions associated with a [`DataType`].
 pub trait DataTypeFunctions
