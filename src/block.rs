@@ -1,6 +1,11 @@
 //! Types and functions for working with Ruby blocks and Procs.
 
-use std::{fmt, mem::forget, os::raw::c_int};
+use std::{
+    fmt,
+    mem::{forget, size_of},
+    os::raw::c_int,
+    slice,
+};
 
 use rb_sys::{
     rb_block_given_p, rb_block_proc, rb_data_typed_object_wrap, rb_obj_is_proc, rb_proc_arity,
@@ -11,6 +16,7 @@ use crate::{
     data_type_builder,
     enumerator::Enumerator,
     error::{ensure, protect, Error},
+    gc,
     into_value::{ArgList, IntoValue, RArrayArgList},
     method::{Block, BlockReturn},
     object::Object,
@@ -368,23 +374,39 @@ where
     F: FnMut(&[Value], Option<Proc>) -> R,
     R: BlockReturn,
 {
-    struct Closure();
-    impl DataTypeFunctions for Closure {}
+    struct Closure<F>(F, DataType);
+    unsafe impl<F> Send for Closure<F> {}
+    impl<F> DataTypeFunctions for Closure<F> {
+        fn mark(&self) {
+            // Attempt to mark any Ruby values captured in a closure.
+            // Rust's closures are structs that contain all the values they
+            // have captured. This reads that struct as a slice of VALUEs and
+            // calls rb_gc_mark_locations which calls gc_mark_maybe which
+            // marks VALUEs and ignores non-VALUEs
+            gc::mark_slice(unsafe {
+                slice::from_raw_parts(
+                    &self.0 as *const _ as *const Value,
+                    size_of::<F>() / size_of::<Value>(),
+                )
+            });
+        }
+    }
 
-    static DATA_TYPE: DataType = data_type_builder!(Closure, "rust closure")
+    let data_type = data_type_builder!(Closure<F>, "rust closure")
         .free_immediately()
+        .mark()
         .build();
 
-    let boxed = Box::new(func);
+    let boxed = Box::new(Closure(func, data_type));
     let ptr = Box::into_raw(boxed);
     let value = unsafe {
         Value::new(rb_data_typed_object_wrap(
             0, // using 0 for the class will hide the object from ObjectSpace
             ptr as *mut _,
-            DATA_TYPE.as_rb_data_type() as *const _,
+            (*ptr).1.as_rb_data_type() as *const _,
         ))
     };
-    (ptr, value)
+    unsafe { (&mut (*ptr).0 as *mut F, value) }
 }
 
 #[allow(missing_docs)]
