@@ -2122,9 +2122,9 @@ impl Ruby {
             6 => unsafe {
                 let ex = Exception::from_rb_value_unchecked(rb_errinfo());
                 rb_set_errinfo(self.qnil().as_rb_value());
-                Err(Error::Exception(ex))
+                Err(ex.into())
             },
-            other => Err(Error::Jump(unsafe { transmute(other) })),
+            other => Err(Error::from_tag(unsafe { transmute(other) })),
         }
     }
 }

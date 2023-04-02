@@ -64,9 +64,9 @@ impl Ruby {
 /// Shorthand for `std::result::Result<T, Error>`.
 pub type Result<T> = std::result::Result<T, Error>;
 
-/// A Rust representation of a Ruby `Exception` or other interrupt.
+/// The possible types of [`Error`].
 #[derive(Debug)]
-pub enum Error {
+pub enum ErrorType {
     /// An interrupt, such as `break` or `throw`.
     Jump(Tag),
     /// An error generated in Rust code that will raise an exception when
@@ -76,13 +76,21 @@ pub enum Error {
     Exception(Exception),
 }
 
+/// A Rust representation of a Ruby `Exception` or other interrupt.
+#[derive(Debug)]
+pub struct Error(ErrorType);
+
 impl Error {
     /// Create a new `Error` that can be raised as a Ruby `Exception` with `msg`.
     pub fn new<T>(class: ExceptionClass, msg: T) -> Self
     where
         T: Into<Cow<'static, str>>,
     {
-        Self::Error(class, msg.into())
+        Self(ErrorType::Error(class, msg.into()))
+    }
+
+    pub(crate) fn from_tag(tag: Tag) -> Self {
+        Self(ErrorType::Jump(tag))
     }
 
     /// Create a new `RuntimeError` with `msg`.
@@ -95,7 +103,10 @@ impl Error {
     where
         T: Into<Cow<'static, str>>,
     {
-        Self::Error(get_ruby!().exception_runtime_error(), msg.into())
+        Self(ErrorType::Error(
+            get_ruby!().exception_runtime_error(),
+            msg.into(),
+        ))
     }
 
     /// Create a new error that will break from a loop when returned to Ruby.
@@ -118,10 +129,10 @@ impl Error {
     where
         T: ReprValue + Module,
     {
-        match self {
-            Error::Jump(_) => false,
-            Error::Error(c, _) => c.is_inherited(class),
-            Error::Exception(e) => e.is_kind_of(class),
+        match self.0 {
+            ErrorType::Jump(_) => false,
+            ErrorType::Error(c, _) => c.is_inherited(class),
+            ErrorType::Exception(e) => e.is_kind_of(class),
         }
     }
 
@@ -132,13 +143,35 @@ impl Error {
     /// Panics if called on an `Error::Jump`.
     fn exception(self) -> Exception {
         let handle = unsafe { Ruby::get_unchecked() };
-        match self {
-            Error::Jump(_) => panic!("Error::exception() called on {}", self),
-            Error::Error(class, msg) => match class.new_instance((handle.str_new(msg.as_ref()),)) {
-                Ok(e) | Err(Error::Exception(e)) => e,
-                Err(err) => unreachable!("*very* unexpected error: {}", err),
-            },
-            Error::Exception(e) => e,
+        match self.0 {
+            ErrorType::Jump(_) => panic!("Error::exception() called on {}", self),
+            ErrorType::Error(class, msg) => {
+                match class.new_instance((handle.str_new(msg.as_ref()),)) {
+                    Ok(e) | Err(Error(ErrorType::Exception(e))) => e,
+                    Err(err) => unreachable!("*very* unexpected error: {}", err),
+                }
+            }
+            ErrorType::Exception(e) => e,
+        }
+    }
+
+    /// Returns the [`ErrorType`] for self.
+    pub fn error_type(&self) -> &ErrorType {
+        &self.0
+    }
+
+    /// Returns the inner [`Value`] of `self`, if there is one.
+    ///
+    /// The returned `Value` may be a subclass or an instance of `Exception`.
+    ///
+    /// This function is provided for rare cases where the `Error` needs to be
+    /// stored on the heap and the inner value needs to be
+    /// [marked](`crate::gc::mark`) to avoid being garbage collected.
+    pub fn value(&self) -> Option<Value> {
+        match self.0 {
+            ErrorType::Jump(_) => None,
+            ErrorType::Error(c, _) => Some(c.as_value()),
+            ErrorType::Exception(e) => Some(e.as_value()),
         }
     }
 
@@ -154,29 +187,26 @@ impl Error {
         } else {
             "panic".into()
         };
-        Self::Error(unsafe { Ruby::get_unchecked().exception_fatal() }, msg)
+        Self(ErrorType::Error(
+            unsafe { Ruby::get_unchecked().exception_fatal() },
+            msg,
+        ))
     }
 }
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Error::Jump(s) => s.fmt(f),
-            Error::Error(e, m) => write!(f, "{}: {}", e, m),
-            Error::Exception(e) => e.fmt(f),
+        match &self.0 {
+            ErrorType::Jump(s) => s.fmt(f),
+            ErrorType::Error(e, m) => write!(f, "{}: {}", e, m),
+            ErrorType::Exception(e) => e.fmt(f),
         }
-    }
-}
-
-impl From<Tag> for Error {
-    fn from(val: Tag) -> Self {
-        Self::Jump(val)
     }
 }
 
 impl From<Exception> for Error {
     fn from(val: Exception) -> Self {
-        Self::Exception(val)
+        Self(ErrorType::Exception(val))
     }
 }
 
@@ -276,9 +306,9 @@ where
         6 => unsafe {
             let ex = Exception::from_rb_value_unchecked(rb_errinfo());
             rb_set_errinfo(Ruby::get_unchecked().qnil().as_rb_value());
-            Err(Error::Exception(ex))
+            Err(ex.into())
         },
-        other => Err(Error::Jump(unsafe { transmute(other) })),
+        other => Err(Error::from_tag(unsafe { transmute(other) })),
     }
 }
 
@@ -329,10 +359,10 @@ where
 }
 
 pub(crate) fn raise(e: Error) -> ! {
-    match e {
-        Error::Jump(tag) => tag.resume(),
-        err => {
-            unsafe { rb_exc_raise(err.exception().as_rb_value()) }
+    match e.0 {
+        ErrorType::Jump(tag) => tag.resume(),
+        _ => {
+            unsafe { rb_exc_raise(e.exception().as_rb_value()) }
             // friendly reminder: we really never get here, and as such won't
             // drop any values still in scope, make sure everything has been
             // consumed/dropped

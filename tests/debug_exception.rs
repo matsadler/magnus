@@ -1,4 +1,4 @@
-use magnus::Error;
+use magnus::error::ErrorType;
 
 #[test]
 fn it_includes_backtrace_in_debug() {
@@ -28,8 +28,8 @@ fn it_includes_backtrace_in_debug() {
         )
         .unwrap_err();
 
-    let ex = match err {
-        Error::Exception(e) => e,
+    let ex = match err.error_type() {
+        ErrorType::Exception(e) => e,
         _ => panic!(),
     };
 
