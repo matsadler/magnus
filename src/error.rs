@@ -210,6 +210,54 @@ impl From<Exception> for Error {
     }
 }
 
+/// A wrapper to make a [`Error`] [`Send`] + [`Sync`].
+///
+/// [`Error`] is not [`Send`] or [`Sync`] as it provides a way to call some of
+/// Ruby's APIs, which are not safe to call from a non-Ruby thread.
+///
+/// [`Error`] is safe to send between Ruby threads, but Rust's trait system
+/// currently can not model this detail.
+///
+/// To resolve this, the `OpaqueError` type makes an [`Error`] [`Send`] +
+/// [`Sync`] by removing the ability use it with any Ruby APIs.
+///
+/// [`OpaqueError::into_error_with`] provides a way to safely get an [`Error`]
+/// from a `OpaqueError`].
+pub struct OpaqueError(ErrorType);
+
+unsafe impl Send for OpaqueError {}
+unsafe impl Sync for OpaqueError {}
+
+impl OpaqueError {
+    /// Convert an `OpaqueError` into an [`Error`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{error::OpaqueError, Error, Ruby};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let ruby = Ruby::get().unwrap(); // errors on non-Ruby thread
+    /// let opaque_err = OpaqueError::from(Error::new(ruby.exception_runtime_error(), "test"));
+    ///
+    /// // send to another Ruby thread
+    ///
+    /// let ruby = Ruby::get().unwrap(); // errors on non-Ruby thread
+    /// let err = OpaqueError::into_error_with(opaque_err, &ruby);
+    /// assert!(err.is_kind_of(ruby.exception_runtime_error()));
+    /// ```
+    #[allow(unused_variables)]
+    pub fn into_error_with(this: Self, handle: &Ruby) -> Error {
+        Error(this.0)
+    }
+}
+
+impl From<Error> for OpaqueError {
+    fn from(err: Error) -> Self {
+        Self(err.0)
+    }
+}
+
 /// The state of a call to Ruby exiting early, interrupting the normal flow
 /// of code.
 #[derive(Debug)]

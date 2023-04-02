@@ -8,6 +8,7 @@
 - `value::OpaqueId` is a `Send` + `Sync` version of `value::Id`.
 - `value::LazyId` is an `Id` with a `const` constructor so can be assigned to a
   `static` and derefs to `OpaqueId`.
+- `error::OpaqueError` is a `Send` + `Sync` version of `Error`.
 - The `#[magnus(opaque_attr_reader)]` attribute can be set on `Opaque` wrapped
   fields of a struct when deriving `TypedData` to generate a method to return
   the inner value.
