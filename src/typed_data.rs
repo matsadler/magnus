@@ -361,8 +361,9 @@ where
     ///
     /// Set this if your type is thread safe when the Ruby wrapper object is
     /// frozen.
-    pub fn frozen_shareable(&mut self) {
+    pub fn frozen_shareable(mut self) -> Self {
         self.frozen_shareable = true;
+        self
     }
 }
 
