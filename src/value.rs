@@ -4,13 +4,14 @@
 #[cfg(ruby_use_flonum)]
 mod flonum;
 
+#[cfg(not(feature = "deprecated-send-sync-value"))]
+use std::marker::PhantomData;
 use std::{
     borrow::{Borrow, Cow},
     cell::UnsafeCell,
     ffi::CStr,
     fmt,
     hash::{Hash, Hasher},
-    marker::PhantomData,
     mem::transmute,
     num::NonZeroUsize,
     ops::{Deref, DerefMut},
@@ -59,11 +60,28 @@ use crate::{
 ///
 /// Methods for `Value` are implemented on the [`ReprValue`] trait, which is
 /// also implemented for all Ruby types.
+#[cfg(feature = "deprecated-send-sync-value")]
+#[derive(Clone, Copy)]
+#[repr(transparent)]
+pub struct Value(VALUE);
+
+/// Ruby's `VALUE` type, which can represent any Ruby object.
+///
+/// Methods for `Value` are implemented on the [`ReprValue`] trait, which is
+/// also implemented for all Ruby types.
+#[cfg(not(feature = "deprecated-send-sync-value"))]
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct Value(VALUE, PhantomData<*mut RBasic>);
 
 impl Value {
+    #[cfg(feature = "deprecated-send-sync-value")]
+    #[inline]
+    pub(crate) const fn new(val: VALUE) -> Self {
+        Self(val)
+    }
+
+    #[cfg(not(feature = "deprecated-send-sync-value"))]
     #[inline]
     pub(crate) const fn new(val: VALUE) -> Self {
         Self(val, PhantomData)
@@ -1514,11 +1532,24 @@ unsafe impl private::ReprValue for Value {}
 
 impl ReprValue for Value {}
 
+#[cfg(feature = "deprecated-send-sync-value")]
+#[derive(Clone, Copy, Eq, Hash, PartialEq)]
+#[repr(transparent)]
+pub(crate) struct NonZeroValue(NonZeroUsize);
+
+#[cfg(not(feature = "deprecated-send-sync-value"))]
 #[derive(Clone, Copy, Eq, Hash, PartialEq)]
 #[repr(transparent)]
 pub(crate) struct NonZeroValue(NonZeroUsize, PhantomData<ptr::NonNull<RBasic>>);
 
 impl NonZeroValue {
+    #[cfg(feature = "deprecated-send-sync-value")]
+    #[inline]
+    pub(crate) const unsafe fn new_unchecked(val: Value) -> Self {
+        Self(NonZeroUsize::new_unchecked(val.as_rb_value() as usize))
+    }
+
+    #[cfg(not(feature = "deprecated-send-sync-value"))]
     #[inline]
     pub(crate) const unsafe fn new_unchecked(val: Value) -> Self {
         Self(
@@ -2671,6 +2702,13 @@ impl Ruby {
 }
 
 /// The internal value of a Ruby symbol.
+#[cfg(feature = "deprecated-send-sync-value")]
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
+#[repr(transparent)]
+pub struct Id(ID);
+
+/// The internal value of a Ruby symbol.
+#[cfg(not(feature = "deprecated-send-sync-value"))]
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 #[repr(transparent)]
 pub struct Id(ID, PhantomData<*mut u8>);
@@ -2699,6 +2737,12 @@ impl Id {
         get_ruby!().intern(name.as_ref())
     }
 
+    #[cfg(feature = "deprecated-send-sync-value")]
+    pub(crate) fn from_rb_id(id: ID) -> Self {
+        Self(id)
+    }
+
+    #[cfg(not(feature = "deprecated-send-sync-value"))]
     pub(crate) fn from_rb_id(id: ID) -> Self {
         Self(id, PhantomData)
     }

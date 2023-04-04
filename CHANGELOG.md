@@ -29,7 +29,9 @@
 - Minimum supported Rust version in now 1.61.
 - The `bytes-crate` feature has been renamed to `bytes`.
 - The `rb-sys-interop` feature has been renamed to `rb-sys`.
-- Ruby types are no longer `Send` or `Sync`.
+- Ruby types are no longer `Send` or `Sync`. These types can be made `Send` &
+  `Sync` with the `deprecated-send-sync-value` feature. This feature is meant
+  to ease upgrading and will be removed with the next release.
 - `Value`'s methods moved to the `ReprValue` trait.
 - The values of `QTRUE`, `QFALSE`, and `QNIL` are now wrapped in `Opaque`.
 - `typed_data::Obj<T>` derefs to `T` so now `T`'s methods can be called
