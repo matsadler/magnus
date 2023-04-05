@@ -1400,10 +1400,10 @@ pub trait ReprValue: private::ReprValue {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, IntoValue, QTRUE};
+    /// use magnus::{prelude::*, IntoValue};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// let value = QTRUE.into_value();
+    /// let value = true.into_value();
     /// // safe as we never give Ruby a chance to free the string.
     /// let s = unsafe { value.to_s() }.unwrap().into_owned();
     /// assert_eq!(s, "true");
@@ -1426,10 +1426,10 @@ pub trait ReprValue: private::ReprValue {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, IntoValue, Symbol, QNIL};
+    /// use magnus::{prelude::*, IntoValue, Symbol};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// assert_eq!(QNIL.into_value().inspect(), "nil");
+    /// assert_eq!(().into_value().inspect(), "nil");
     /// assert_eq!(Symbol::new("foo").inspect(), ":foo");
     /// ```
     fn inspect(self) -> String {

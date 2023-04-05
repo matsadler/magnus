@@ -213,15 +213,15 @@ impl RHash {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, IntoValue, RHash, RString, Symbol};
+    /// use magnus::{eval, prelude::*, RHash, RString, Symbol};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let hash = RHash::new();
     /// hash.bulk_insert(&[
-    ///     Symbol::new("given_name").into_value(),
-    ///     RString::new("Arthur").into_value(),
-    ///     Symbol::new("family_name").into_value(),
-    ///     RString::new("Dent").into_value(),
+    ///     Symbol::new("given_name").as_value(),
+    ///     RString::new("Arthur").as_value(),
+    ///     Symbol::new("family_name").as_value(),
+    ///     RString::new("Dent").as_value(),
     /// ])
     /// .unwrap();
     /// let res: bool = eval!(
