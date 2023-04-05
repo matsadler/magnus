@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 ### Added
+- `Value::as_value` method that can be called on any Ruby type (as all Ruby
+  types deref to `Value`) as a forward-compatible way to convert a Ruby type to
+  `Value`.
 
 ### Changed
 

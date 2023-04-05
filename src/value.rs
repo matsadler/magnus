@@ -62,6 +62,31 @@ impl Value {
         Self(val)
     }
 
+    /// Return `self` as a [`Value`].
+    ///
+    /// While this may initially look unnecessary, all Ruby types deref to
+    /// `Value` so this method can be used to convert another Ruby typed to
+    /// a `Value`.
+    ///
+    /// This method should be prefered over dereferencing (e.g. `*example`),
+    /// and the `From`/`Into` traits (e.g. `Value::from(example)` and
+    /// `let v: Value = example.into()`) as in future versions of Magnus Ruby
+    /// types will not dereference to `Value` (`Value`'s methods will move to a
+    /// trait) and `From`/`Into` will not be implemented.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{RString, Value};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let s: RString = RString::new("example");
+    /// let v: Value = s.as_value();
+    /// ```
+    pub fn as_value(self) -> Value {
+        self
+    }
+
     #[inline]
     pub(crate) unsafe fn r_basic_unchecked(self) -> ptr::NonNull<RBasic> {
         #[cfg(debug_assertions)]

@@ -291,7 +291,7 @@ impl RArray {
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let ary = RArray::new();
-    /// ary.cat(&[*Symbol::new("a"), *Integer::from_i64(1), *QNIL]).unwrap();
+    /// ary.cat(&[Symbol::new("a").as_value(), Integer::from_i64(1).as_value(), QNIL.as_value()]).unwrap();
     /// let res: bool = eval!("ary == [:a, 1, nil]", ary).unwrap();
     /// assert!(res);
     /// ```
@@ -374,7 +374,7 @@ impl RArray {
     /// use magnus::{eval, Integer, QNIL, RArray, Symbol};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// let ary = RArray::from_slice(&[*Symbol::new("a"), *Integer::from_i64(1), *QNIL]);
+    /// let ary = RArray::from_slice(&[Symbol::new("a").as_value(), Integer::from_i64(1).as_value(), QNIL.as_value()]);
     /// let res: bool = eval!("ary == [:a, 1, nil]", ary).unwrap();
     /// assert!(res);
     /// ```
@@ -882,7 +882,7 @@ impl RArray {
     /// use magnus::{eval, Integer, RArray, Symbol, QNIL};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// let ary = RArray::from_slice(&[*Symbol::new("a"), *Integer::from_i64(1), *QNIL]);
+    /// let ary = RArray::from_slice(&[Symbol::new("a").as_value(), Integer::from_i64(1).as_value(), QNIL.as_value()]);
     /// assert_eq!(ary.join(", ").unwrap().to_string().unwrap(), "a, 1, ")
     /// ```
     pub fn join<T>(self, sep: T) -> Result<RString, Error>

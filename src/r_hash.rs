@@ -218,7 +218,7 @@ impl RHash {
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let hash = RHash::new();
-    /// hash.bulk_insert(&[*Symbol::new("given_name"), *RString::new("Arthur"), *Symbol::new("family_name"), *RString::new("Dent")]);
+    /// hash.bulk_insert(&[Symbol::new("given_name").as_value(), RString::new("Arthur").as_value(), Symbol::new("family_name").as_value(), RString::new("Dent").as_value()]);
     /// let res: bool = eval!(r#"hash == {given_name: "Arthur", family_name: "Dent"}"#, hash).unwrap();
     /// assert!(res);
     /// ```
