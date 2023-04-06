@@ -1905,6 +1905,7 @@ pub use crate::{
     r_struct::RStruct,
     r_typed_data::RTypedData,
     range::Range,
+    ruby_handle::RubyHandle as Ruby,
     symbol::Symbol,
     try_convert::TryConvert,
     typed_data::{DataType, DataTypeFunctions, TypedData},
