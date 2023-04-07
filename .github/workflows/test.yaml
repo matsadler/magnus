@@ -31,7 +31,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - uses: oxidize-rb/actions/setup-ruby-and-rust@v1.0.2
+      - uses: oxidize-rb/actions/setup-ruby-and-rust@v1
         with:
           rustup-toolchain: ${{ matrix.rustup-toolchain }}
           ruby-version: ${{ matrix.ruby-version }}
