@@ -41,11 +41,7 @@ impl Ruby {
     where
         T: IntoValueFromNative,
     {
-        let ary = self.ary_new_capa(vec.len());
-        for v in vec {
-            ary.push(v).unwrap();
-        }
-        ary
+        self.ary_from_iter(vec)
     }
 
     pub fn ary_new_from_values<T>(&self, slice: &[T]) -> RArray
@@ -65,15 +61,23 @@ impl Ruby {
     {
         let iter = iter.into_iter();
         let (lower, _) = iter.size_hint();
-        let array = if lower > 0 {
+        let ary = if lower > 0 {
             self.ary_new_capa(lower)
         } else {
             self.ary_new()
         };
-        for i in iter {
-            array.push(i).expect("array shouldn't be frozen");
+        let mut buffer = [self.into_value(()); 128];
+        let mut i = 0;
+        for v in iter {
+            buffer[i] = self.into_value(v);
+            i += 1;
+            if i >= buffer.len() {
+                i = 0;
+                ary.cat(&buffer).unwrap();
+            }
         }
-        array
+        ary.cat(&buffer[..i]).unwrap();
+        ary
     }
 }
 
