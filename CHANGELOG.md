@@ -2,9 +2,6 @@
 
 ## [Unreleased]
 ### Added
-- `Value::as_value` method that can be called on any Ruby type (as all Ruby
-  types deref to `Value`) as a forward-compatible way to convert a Ruby type to
-  `Value`.
 
 ### Changed
 
@@ -15,6 +12,12 @@
 ### Fixed
 
 ### Security
+
+## [0.5.3] - 2023-04-07
+### Added
+- `Value::as_value` method that can be called on any Ruby type (as all Ruby
+  types deref to `Value`) as a forward-compatible way to convert a Ruby type to
+  `Value`.
 
 ## [0.5.2] - 2023-03-19
 ### Fixed
@@ -308,7 +311,8 @@
 - Pre-built bindings for Ruby 2.6 - 3.1 on common platforms, build-time
   generated bindings otherwise.
 
-[Unreleased]: https://github.com/matsadler/magnus/compare/0.5.2...HEAD
+[Unreleased]: https://github.com/matsadler/magnus/compare/0.5.3...HEAD
+[0.5.3]: https://github.com/matsadler/magnus/compare/0.5.2...0.5.3
 [0.5.2]: https://github.com/matsadler/magnus/compare/0.5.1...0.5.2
 [0.5.1]: https://github.com/matsadler/magnus/compare/0.5.0...0.5.1
 [0.5.0]: https://github.com/matsadler/magnus/compare/0.4.4...0.5.0
