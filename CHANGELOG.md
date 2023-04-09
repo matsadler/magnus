@@ -33,7 +33,6 @@
   `Sync` with the `deprecated-send-sync-value` feature. This feature is meant
   to ease upgrading and will be removed with the next release.
 - `Value`'s methods moved to the `ReprValue` trait.
-- The values of `QTRUE`, `QFALSE`, and `QNIL` are now wrapped in `Opaque`.
 - `typed_data::Obj<T>` derefs to `T` so now `T`'s methods can be called
   directly on `typed_data::Obj<T>`.
 - `ReprValue` and `TryConvert` added to `magnus::prelude`.
@@ -60,6 +59,8 @@
 ### Deprecated
 - `typed_data::Obj::get` as it is made redundant by the `Deref` implementation
   for `typed_data::Obj`.
+- The `QTRUE`, `QFALSE`, and `QNIL constants. Please use `value::qtrue()`,
+  `value::qfalse()`, and `value::qnil()`.
 - `Class::undef_alloc_func`. Please use `Class::undef_default_alloc_func`.
 - `Value::try_convert`, prefer `TryConvert::try_convert` or `T::try_convert`.
 

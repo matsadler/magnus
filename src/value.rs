@@ -1677,13 +1677,14 @@ unsafe impl<T> IntoValueFromNative for BoxValue<T> where T: ReprValue {}
 impl Ruby {
     #[inline]
     pub fn qfalse(&self) -> Qfalse {
-        self.get_inner(QFALSE)
+        #[allow(deprecated)]
+        QFALSE
     }
 }
 
 /// Ruby's `false` value.
 ///
-/// See [`QFALSE`] to obtain a value of this type.
+/// See [`qfalse`] to obtain a value of this type.
 ///
 /// See the [`ReprValue`] trait for additional methods available on this type.
 #[derive(Clone, Copy)]
@@ -1691,7 +1692,33 @@ impl Ruby {
 pub struct Qfalse(Value);
 
 /// Ruby's `false` value.
-pub const QFALSE: Opaque<Qfalse> = Opaque(Qfalse::new());
+#[deprecated(
+    since = "0.6.0",
+    note = "please use `value::qfalse`/`Ruby::qfalse` instead"
+)]
+pub const QFALSE: Qfalse = Qfalse::new();
+
+/// Returns Ruby's `false` value.
+///
+/// This should optimise to a constant reference.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
+///
+/// # Examples
+///
+/// ```
+/// use magnus::{rb_assert, value::qfalse};
+/// # let _cleanup = unsafe { magnus::embed::init() };
+///
+///rb_assert!("val == false", val = qfalse());
+/// ```
+#[cfg(feature = "friendly-api")]
+#[inline]
+pub fn qfalse() -> Qfalse {
+    get_ruby!().qfalse()
+}
 
 impl Qfalse {
     /// Create a new `Qfalse`.
@@ -1757,13 +1784,14 @@ impl TryConvertOwned for Qfalse {}
 impl Ruby {
     #[inline]
     pub fn qnil(&self) -> Qnil {
-        self.get_inner(QNIL)
+        #[allow(deprecated)]
+        QNIL
     }
 }
 
 /// Ruby's `nil` value.
 ///
-/// See [`QNIL`] to obtain a value of this type.
+/// See [`qnil`] to obtain a value of this type.
 ///
 /// See the [`ReprValue`] trait for additional methods available on this type.
 #[derive(Clone, Copy)]
@@ -1771,7 +1799,33 @@ impl Ruby {
 pub struct Qnil(NonZeroValue);
 
 /// Ruby's `nil` value.
-pub const QNIL: Opaque<Qnil> = Opaque(Qnil::new());
+#[deprecated(
+    since = "0.6.0",
+    note = "please use `value::qnil`/`Ruby::qnil` instead"
+)]
+pub const QNIL: Qnil = Qnil::new();
+
+/// Returns Ruby's `nil` value.
+///
+/// This should optimise to a constant reference.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
+///
+/// # Examples
+///
+/// ```
+/// use magnus::{rb_assert, value::qnil};
+/// # let _cleanup = unsafe { magnus::embed::init() };
+///
+///rb_assert!("val == nil", val = qnil());
+/// ```
+#[cfg(feature = "friendly-api")]
+#[inline]
+pub fn qnil() -> Qnil {
+    get_ruby!().qnil()
+}
 
 impl Qnil {
     /// Create a new `Qnil`.
@@ -1863,13 +1917,14 @@ impl TryConvertOwned for Qnil {}
 impl Ruby {
     #[inline]
     pub fn qtrue(&self) -> Qtrue {
-        self.get_inner(QTRUE)
+        #[allow(deprecated)]
+        QTRUE
     }
 }
 
 /// Ruby's `true` value.
 ///
-/// See [`QTRUE`] to obtain a value of this type.
+/// See [`qtrue`] to obtain a value of this type.
 ///
 /// See the [`ReprValue`] trait for additional methods available on this type.
 #[derive(Clone, Copy)]
@@ -1877,7 +1932,33 @@ impl Ruby {
 pub struct Qtrue(NonZeroValue);
 
 /// Ruby's `true` value.
-pub const QTRUE: Opaque<Qtrue> = Opaque(Qtrue::new());
+#[deprecated(
+    since = "0.6.0",
+    note = "please use `value::qtrue`/`Ruby::qtrue` instead"
+)]
+pub const QTRUE: Qtrue = Qtrue::new();
+
+/// Returns Ruby's `true` value.
+///
+/// This should optimise to a constant reference.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
+///
+/// # Examples
+///
+/// ```
+/// use magnus::{rb_assert, value::qtrue};
+/// # let _cleanup = unsafe { magnus::embed::init() };
+///
+///rb_assert!("val == true", val = qtrue());
+/// ```
+#[cfg(feature = "friendly-api")]
+#[inline]
+pub fn qtrue() -> Qtrue {
+    get_ruby!().qtrue()
+}
 
 impl Qtrue {
     /// Create a new `Qtrue`.
@@ -1928,9 +2009,9 @@ impl IntoValue for Qtrue {
 impl IntoValue for bool {
     fn into_value_with(self, handle: &Ruby) -> Value {
         if self {
-            QTRUE.into_value_with(handle)
+            handle.qtrue().as_value()
         } else {
-            QFALSE.into_value_with(handle)
+            handle.qfalse().as_value()
         }
     }
 }
