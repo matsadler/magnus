@@ -34,8 +34,10 @@ impl Ruby {
 /// available on this type.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
+#[deprecated(since = "0.6.0", note = "Please use `Value` instead.")]
 pub struct Binding(NonZeroValue);
 
+#[allow(deprecated)]
 impl Binding {
     /// Create a new `Binding` from the current Ruby execution context.
     ///
@@ -46,6 +48,7 @@ impl Binding {
     /// # Examples
     ///
     /// ```
+    /// # #![allow(deprecated)]
     /// use magnus::Binding;
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
@@ -69,6 +72,7 @@ impl Binding {
     }
 
     /// Return `Some(Binding)` if `val` is a `Binding`, `None` otherwise.
+    #[deprecated(since = "0.6.0")]
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
         unsafe {
@@ -82,12 +86,17 @@ impl Binding {
     /// # Examples
     ///
     /// ```
+    /// # #![allow(deprecated)]
     /// use magnus::{eval, Binding};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let binding = eval::<Binding>("binding").unwrap();
     /// assert_eq!(binding.eval::<_, i64>("1 + 2").unwrap(), 3);
     /// ```
+    #[deprecated(
+        since = "0.6.0",
+        note = "Please use `value.funcall(\"eval\", (s,))` instead."
+    )]
     pub fn eval<T, U>(self, s: T) -> Result<U, Error>
     where
         T: IntoRString,
@@ -105,6 +114,7 @@ impl Binding {
     /// # Examples
     ///
     /// ```
+    /// # #![allow(deprecated)]
     /// use magnus::{eval, Binding, Value};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
@@ -113,6 +123,10 @@ impl Binding {
     /// assert_eq!(binding.local_variable_get::<_, i64>("a").unwrap(), 1);
     /// assert!(binding.local_variable_get::<_, Value>("b").is_err());
     /// ```
+    #[deprecated(
+        since = "0.6.0",
+        note = "Please use `value.funcall(\"local_variable_get\", (name,))` instead."
+    )]
     pub fn local_variable_get<N, T>(self, name: N) -> Result<T, Error>
     where
         N: IntoSymbol,
@@ -129,6 +143,7 @@ impl Binding {
     /// # Examples
     ///
     /// ```
+    /// # #![allow(deprecated)]
     /// use magnus::{eval, Binding};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
@@ -136,6 +151,10 @@ impl Binding {
     /// binding.local_variable_set("a", 1);
     /// assert_eq!(binding.local_variable_get::<_, i64>("a").unwrap(), 1);
     /// ```
+    #[deprecated(
+        since = "0.6.0",
+        note = "Please use `value.funcall(\"local_variable_set\", (name,))` instead."
+    )]
     pub fn local_variable_set<N, T>(self, name: N, val: T)
     where
         N: IntoSymbol,
@@ -149,30 +168,37 @@ impl Binding {
     }
 }
 
+#[allow(deprecated)]
 impl fmt::Display for Binding {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", unsafe { self.to_s_infallible() })
     }
 }
 
+#[allow(deprecated)]
 impl fmt::Debug for Binding {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.inspect())
     }
 }
 
+#[allow(deprecated)]
 impl IntoValue for Binding {
     fn into_value_with(self, _: &Ruby) -> Value {
         self.0.get()
     }
 }
 
+#[allow(deprecated)]
 impl Object for Binding {}
 
+#[allow(deprecated)]
 unsafe impl private::ReprValue for Binding {}
 
+#[allow(deprecated)]
 impl ReprValue for Binding {}
 
+#[allow(deprecated)]
 impl TryConvert for Binding {
     fn try_convert(val: Value) -> Result<Self, Error> {
         Self::from_value(val).ok_or_else(|| {
@@ -219,12 +245,17 @@ macro_rules! eval {
         $crate::eval!($crate::Ruby::get().unwrap(), $str, $($bindings)*)
     }};
     ($ruby:expr, $str:literal) => {{
-        $ruby.eval::<$crate::Binding>("binding").unwrap().eval($crate::r_string!($ruby, $str))
+        use $crate::{r_string::IntoRString, value::ReprValue};
+        $ruby
+            .eval::<$crate::Value>("binding")
+            .unwrap()
+            .funcall("eval", ($str.into_r_string_with(&$ruby),))
     }};
     ($ruby:expr, $str:literal, $($bindings:tt)*) => {{
-        let binding = $ruby.eval::<$crate::Binding>("binding").unwrap();
+        use $crate::{r_string::IntoRString, value::ReprValue};
+        let binding = $ruby.eval::<$crate::Value>("binding").unwrap();
         $crate::bind!(binding, $($bindings)*);
-        binding.eval($crate::r_string!($ruby, $str))
+        binding.funcall("eval", ($str.into_r_string_with(&$ruby),))
     }};
 }
 
@@ -233,17 +264,37 @@ macro_rules! eval {
 macro_rules! bind {
     ($binding:ident,) => {};
     ($binding:ident, $k:ident = $v:expr) => {{
-        $binding.local_variable_set(stringify!($k), $v);
+        use $crate::symbol::IntoSymbol;
+        let _: $crate::Value = $binding.funcall(
+            "local_variable_set",
+            (stringify!($k).into_symbol_with(&$crate::Ruby::get_with($binding)), $v),
+        )
+        .unwrap();
     }};
     ($binding:ident, $k:ident) => {{
-        $binding.local_variable_set(stringify!($k), $k);
+        use $crate::symbol::IntoSymbol;
+        let _: $crate::Value = $binding.funcall(
+            "local_variable_set",
+            (stringify!($k).into_symbol_with(&$crate::Ruby::get_with($binding)), $k),
+        )
+        .unwrap();
     }};
     ($binding:ident, $k:ident = $v:expr, $($rest:tt)*) => {{
-        $binding.local_variable_set(stringify!($k), $v);
+        use $crate::symbol::IntoSymbol;
+        let _: $crate::Value = $binding.funcall(
+            "local_variable_set",
+            (stringify!($k).into_symbol_with(&$crate::Ruby::get_with($binding)), $v),
+        )
+        .unwrap();
         $crate::bind!($binding, $($rest)*);
     }};
     ($binding:ident, $k:ident, $($rest:tt)*) => {{
-        $binding.local_variable_set(stringify!($k), $k);
+        use $crate::symbol::IntoSymbol;
+        let _: $crate::Value = $binding.funcall(
+            "local_variable_set",
+            (stringify!($k).into_symbol_with(&$crate::Ruby::get_with($binding)), $k),
+        )
+        .unwrap();
         $crate::bind!($binding, $($rest)*);
     }};
 }

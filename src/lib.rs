@@ -1853,11 +1853,8 @@ pub use magnus_macros::{init, wrap, DataTypeFunctions, TypedData};
 
 #[cfg(ruby_use_flonum)]
 pub use crate::value::Flonum;
-#[allow(deprecated)]
-pub use crate::value::{QFALSE, QNIL, QTRUE};
 pub use crate::{
     api::Ruby,
-    binding::Binding,
     class::{Class, RClass},
     enumerator::Enumerator,
     error::Error,
@@ -1886,6 +1883,11 @@ pub use crate::{
     try_convert::TryConvert,
     typed_data::{DataType, DataTypeFunctions, TypedData},
     value::{Fixnum, StaticSymbol, Value},
+};
+#[allow(deprecated)]
+pub use crate::{
+    binding::Binding,
+    value::{QFALSE, QNIL, QTRUE},
 };
 use crate::{
     error::protect,

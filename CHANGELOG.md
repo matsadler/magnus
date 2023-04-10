@@ -63,6 +63,8 @@
   `value::qfalse()`, and `value::qnil()`.
 - `Class::undef_alloc_func`. Please use `Class::undef_default_alloc_func`.
 - `Value::try_convert`, prefer `TryConvert::try_convert` or `T::try_convert`.
+- `Binding`. To call methods on Ruby's binding, use `ReprValue::funcall` on a
+  `Value` know to be an instance of Ruby's Binding class.
 
 ### Removed
 - `Into<Value>`/`From<T> for Value` implementations, use `IntoValue`.
