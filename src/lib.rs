@@ -1788,7 +1788,7 @@
 #[macro_use]
 mod macros;
 
-mod aaa_ruby;
+mod api;
 mod binding;
 pub mod block;
 pub mod class;
@@ -1856,7 +1856,7 @@ pub use crate::value::Flonum;
 #[allow(deprecated)]
 pub use crate::value::{QFALSE, QNIL, QTRUE};
 pub use crate::{
-    aaa_ruby::Ruby,
+    api::Ruby,
     binding::Binding,
     class::{Class, RClass},
     enumerator::Enumerator,
