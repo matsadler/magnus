@@ -22,6 +22,7 @@ use crate::{
     Ruby,
 };
 
+/// # `RRegexp`
 #[allow(missing_docs)]
 impl Ruby {
     pub fn reg_new(&self, pattern: &str, opts: Opts) -> Result<RRegexp, Error> {

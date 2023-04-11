@@ -80,6 +80,7 @@ where
 {
 }
 
+/// # `RHash`
 #[allow(missing_docs)]
 impl Ruby {
     pub fn hash_new(&self) -> RHash {

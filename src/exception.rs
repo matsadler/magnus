@@ -224,6 +224,7 @@ impl TryConvert for ExceptionClass {
     }
 }
 
+/// # Core Exceptions
 #[allow(missing_docs)]
 impl Ruby {
     #[inline]

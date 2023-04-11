@@ -21,6 +21,7 @@ use crate::{
     Ruby,
 };
 
+/// # `Range`
 #[allow(missing_docs)]
 impl Ruby {
     pub fn range_new<T, U>(&self, beg: T, end: U, excl: bool) -> Result<Range, Error>

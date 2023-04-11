@@ -16,6 +16,7 @@ use crate::{
     Ruby,
 };
 
+/// # `RTypedData`
 #[allow(missing_docs)]
 impl Ruby {
     #[inline]

@@ -492,6 +492,7 @@ impl Class for RClass {
     }
 }
 
+/// # Core Classes
 #[allow(missing_docs)]
 impl Ruby {
     #[inline]

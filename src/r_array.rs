@@ -27,6 +27,7 @@ use crate::{
     Ruby,
 };
 
+/// # `RArray`
 #[allow(missing_docs)]
 impl Ruby {
     pub fn ary_new(&self) -> RArray {

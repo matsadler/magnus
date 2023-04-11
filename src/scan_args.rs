@@ -797,6 +797,7 @@ where
     })
 }
 
+/// # Argument Parsing
 #[allow(missing_docs)]
 impl Ruby {
     pub fn check_arity<T>(&self, len: usize, bounds: T) -> Result<(), Error>

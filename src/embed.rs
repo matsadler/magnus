@@ -145,6 +145,7 @@ unsafe fn init_options(opts: &[&str]) {
     };
 }
 
+/// # Embedding
 impl Ruby {
     /// Initialises the Ruby VM.
     ///

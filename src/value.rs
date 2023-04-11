@@ -378,6 +378,7 @@ where
     }
 }
 
+/// # Extracting values from `Opaque`/`Lazy`
 impl Ruby {
     /// Get the inner value from `wrapper`.
     ///
@@ -1673,6 +1674,7 @@ where
 
 unsafe impl<T> IntoValueFromNative for BoxValue<T> where T: ReprValue {}
 
+/// # `false`
 #[allow(missing_docs)]
 impl Ruby {
     #[inline]
@@ -1780,6 +1782,7 @@ impl TryConvert for Qfalse {
 }
 impl TryConvertOwned for Qfalse {}
 
+/// # `nil`
 #[allow(missing_docs)]
 impl Ruby {
     #[inline]
@@ -1913,6 +1916,7 @@ impl TryConvert for Qnil {
 }
 impl TryConvertOwned for Qnil {}
 
+/// # `true`
 #[allow(missing_docs)]
 impl Ruby {
     #[inline]
@@ -2095,6 +2099,7 @@ impl Qundef {
     }
 }
 
+/// # `Fixnum`
 #[allow(missing_docs)]
 impl Ruby {
     #[inline]
@@ -2554,6 +2559,7 @@ impl TryConvert for Fixnum {
 }
 impl TryConvertOwned for Fixnum {}
 
+/// # `StaticSymbol`
 #[allow(missing_docs)]
 impl Ruby {
     #[inline]
@@ -2758,6 +2764,7 @@ impl TryConvert for StaticSymbol {
 }
 impl TryConvertOwned for StaticSymbol {}
 
+/// # `Id`
 #[allow(missing_docs)]
 impl Ruby {
     pub fn intern(&self, name: &str) -> Id {

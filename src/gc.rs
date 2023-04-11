@@ -18,9 +18,6 @@ use crate::{
     Ruby,
 };
 
-#[allow(missing_docs)]
-impl Ruby {}
-
 /// Mark an Object.
 ///
 /// Used to mark any stored Ruby objects when implementing
@@ -121,6 +118,7 @@ where
     unsafe { rb_gc_unregister_address(valref as *const _ as *mut VALUE) }
 }
 
+/// # GC
 #[allow(missing_docs)]
 impl Ruby {
     pub fn gc_disable(&self) -> bool {

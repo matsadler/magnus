@@ -6,6 +6,7 @@ use crate::{
     Ruby,
 };
 
+/// # Conversion to `Value`
 #[allow(missing_docs)]
 impl Ruby {
     #[allow(clippy::wrong_self_convention)]

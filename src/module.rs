@@ -27,6 +27,7 @@ use crate::{
     Ruby,
 };
 
+/// # `RModule`
 #[allow(missing_docs)]
 impl Ruby {
     pub fn module_new(&self) -> RModule {
@@ -717,6 +718,7 @@ impl Attr {
     }
 }
 
+/// # Core Modules
 #[allow(missing_docs)]
 impl Ruby {
     #[inline]

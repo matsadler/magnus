@@ -17,6 +17,7 @@ use crate::{
     Ruby,
 };
 
+/// # `RFloat`
 #[allow(missing_docs)]
 impl Ruby {
     #[cfg(ruby_use_flonum)]

@@ -17,6 +17,7 @@ use crate::{
     Ruby,
 };
 
+/// # Symbol
 #[allow(missing_docs)]
 impl Ruby {
     #[inline]

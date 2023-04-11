@@ -20,6 +20,7 @@ pub(crate) enum IntegerType {
     Bignum(RBignum),
 }
 
+/// # `Integer`
 #[allow(missing_docs)]
 impl Ruby {
     #[inline]

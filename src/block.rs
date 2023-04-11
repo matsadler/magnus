@@ -30,6 +30,7 @@ use crate::{
     Ruby,
 };
 
+/// # `Proc`
 #[allow(missing_docs)]
 impl Ruby {
     pub fn proc_new<R>(&self, block: fn(&[Value], Option<Proc>) -> R) -> Proc
@@ -409,6 +410,7 @@ where
     unsafe { (&mut (*ptr).0 as *mut F, value) }
 }
 
+/// # Blocks
 #[allow(missing_docs)]
 impl Ruby {
     pub fn block_given(&self) -> bool {

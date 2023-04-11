@@ -74,8 +74,79 @@ impl RubyGvlState {
 /// This structure allows safe access to Ruby's API as it should only be
 /// possible to aquire an instance in situations where Ruby's API is known to
 /// be available.
+///
+/// Many functions that take Ruby values as arguments are available directly
+/// without having to use a `Ruby` handle, as being able to provide a Ruby
+/// value is 'proof' the function is being called from a Ruby thread. Because
+/// of this most methods defined on `Ruby` deal with creating Ruby objects
+/// from Rust data.
+///
+/// ---
+///
+/// The methods available on `Ruby` are broken up into sections for easier
+/// navigation.
+///
+/// To get a `Ruby` handle see [Accessing `Ruby`](#accessing-ruby).
+///
+/// To get a value from [`Opaque`][crate::value::Opaque] or
+/// [`Lazy`][crate::value::Lazy] see the section on
+/// [Extracting values from `Opaque`/`Lazy`](#extracting-values-from-opaquelazy).
+///
+/// For wrapping Rust data in a Ruby object see the sections on
+/// [`typed_data::Obj`](#typed_dataobj) and [`RTypedData`](#rtypeddata).
+///
+/// To create a Ruby `Module` see the [`RModule`](#rmodule) section.
+///
+/// To get Ruby's `true` / `false` / `nil` see [true](#true) / [false](#false)
+/// / [nil](#nil).
+///
+/// To get references to Ruby's core classes and modules such as `Object`,
+/// `StandardError`, and `Math` see [Core Classes](#core-classes),
+/// [Core Exceptions](#core-exceptions), and [Core Modules](#core-modules).
+///
+/// For creating `Array`s see the [`RArray`](#rarray) section.
+///
+/// To create `Hash`es see [`RHash`](#rhash).
+///
+/// For working with strings see the [`RString`](#rstring),
+/// [`Encoding`](#encoding), [`RbEncoding`](#rbencoding), and
+/// [Encoding Index](#encoding-index) sections.
+///
+/// Functions to create Regular Expressions are in the [`RRegexp`](#rregexp)
+/// section.
+///
+/// The sections for [`Symbol`](#symbol), [`StaticSymbol`](#staticsymbol), and
+/// [`Id`](#id) cover workering with Ruby's `Symbol`s.
+///
+/// Numbers of various types can be created with functions from the following
+/// sections: [`Integer`](#integer), [`Fixnum`](#fixnum), [`RBignum`](#rbignum),
+/// [`Float`](#float), [`Flonum`](#flonum), [`RFloat`](#rfloat), and
+/// [`RRational`](#rrational).
+///
+/// For Ruby `Struct`s see [`Struct`](#struct).
+///
+/// To create a Ruby `Range` see the [`Range`](#range) section.
+///
+/// The sections on [`Proc`](#proc), [blocks](#blocks) and [`break`](#break)
+/// cover working with Ruby's `Proc`s and blocks.
+///
+/// The [Globals](#globals) section contains functions for defining global
+/// variables, constants, etc, as well as accessing current state such as
+/// calling the current `super` method.
+///
+/// The [Argument Parsing](#argument-parsing) section contains functions for
+/// handling argument parsing.
+///
+/// For functions related to Garbage Collection see the [GC](#gc) section.
+///
+/// The [Embedding](#embedding) section contains functions relevant when
+/// embedding Ruby in a Rust program.
 pub struct Ruby(PhantomData<*mut ()>);
 
+/// # Accessing `Ruby`
+///
+/// These functions allow you to obtain a `Ruby` handle only when the current
+/// thread is a Ruby thread.
 impl Ruby {
     /// Get a handle to Ruby's API.
     ///

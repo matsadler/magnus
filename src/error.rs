@@ -37,6 +37,7 @@ impl fmt::Display for RubyUnavailableError {
 
 impl std::error::Error for RubyUnavailableError {}
 
+/// # `break`
 #[allow(missing_docs)]
 impl Ruby {
     pub fn iter_break_value<T>(&self, val: Option<T>) -> Error
@@ -440,6 +441,7 @@ pub fn bug(s: &str) -> ! {
     unreachable!()
 }
 
+/// # Errors
 #[allow(missing_docs)]
 impl Ruby {
     pub fn warning(&self, s: &str) {

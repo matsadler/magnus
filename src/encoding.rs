@@ -49,6 +49,7 @@ use crate::{
     Ruby,
 };
 
+/// # `Encoding`
 #[allow(missing_docs)]
 impl Ruby {
     pub fn enc_default_external(&self) -> Encoding {
@@ -169,6 +170,7 @@ impl TryConvert for Encoding {
     }
 }
 
+/// # `RbEncoding`
 #[allow(missing_docs)]
 impl Ruby {
     pub fn ascii8bit_encoding(&self) -> RbEncoding {
@@ -789,6 +791,7 @@ impl TryConvert for RbEncoding {
     }
 }
 
+/// # Encoding Index
 #[allow(missing_docs)]
 impl Ruby {
     pub fn ascii8bit_encindex(&self) -> Index {

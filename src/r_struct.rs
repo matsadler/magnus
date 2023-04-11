@@ -250,6 +250,7 @@ impl TryConvert for RStruct {
     }
 }
 
+/// # `Struct`
 #[allow(missing_docs)]
 impl Ruby {
     pub fn define_struct<T>(&self, name: Option<&str>, members: T) -> Result<RClass, Error>

@@ -13,6 +13,7 @@ use crate::{
     Error, Float, RFloat, Ruby, TryConvert, Value,
 };
 
+/// # `Flonum`
 #[allow(missing_docs)]
 impl Ruby {
     #[inline]

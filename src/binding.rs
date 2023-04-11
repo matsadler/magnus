@@ -17,17 +17,6 @@ use crate::{
     Ruby,
 };
 
-#[allow(missing_docs)]
-impl Ruby {
-    #[cfg(any(ruby_lte_3_1, docsrs))]
-    #[cfg_attr(docsrs, doc(cfg(ruby_lte_3_1)))]
-    #[deprecated(since = "0.2.0", note = "this will no longer function as of Ruby 3.2")]
-    pub fn binding_new(&self) -> Binding {
-        crate::error::protect(|| unsafe { Binding::from_rb_value_unchecked(rb_binding_new()) })
-            .unwrap()
-    }
-}
-
 /// A Value known to be an instance of Binding.
 ///
 /// See the [`ReprValue`] and [`Object`] traits for additional methods
@@ -61,8 +50,8 @@ impl Binding {
     #[deprecated(since = "0.2.0", note = "this will no longer function as of Ruby 3.2")]
     #[inline]
     pub fn new() -> Self {
-        #[allow(deprecated)]
-        get_ruby!().binding_new()
+        crate::error::protect(|| unsafe { Binding::from_rb_value_unchecked(rb_binding_new()) })
+            .unwrap()
     }
 
     #[cfg(any(ruby_lte_3_1, docsrs))]

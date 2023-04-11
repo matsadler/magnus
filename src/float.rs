@@ -20,6 +20,7 @@ use crate::{
     Ruby,
 };
 
+/// # `Float`
 #[allow(missing_docs)]
 impl Ruby {
     #[inline]

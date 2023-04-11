@@ -1994,6 +1994,7 @@ macro_rules! rb_assert {
     }};
 }
 
+/// # Globals
 #[allow(missing_docs)]
 impl Ruby {
     pub fn define_class(&self, name: &str, superclass: RClass) -> Result<RClass, Error> {

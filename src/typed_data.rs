@@ -551,6 +551,7 @@ where
     }
 }
 
+/// # `typed_data::Obj`
 #[allow(missing_docs)]
 impl Ruby {
     pub fn obj_wrap<T>(&self, data: T) -> Obj<T>
