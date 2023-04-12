@@ -86,61 +86,46 @@ impl RubyGvlState {
 /// The methods available on `Ruby` are broken up into sections for easier
 /// navigation.
 ///
-/// To get a `Ruby` handle see [Accessing `Ruby`](#accessing-ruby).
-///
-/// To get a value from [`Opaque`][crate::value::Opaque] or
-/// [`Lazy`][crate::value::Lazy] see the section on
-/// [Extracting values from `Opaque`/`Lazy`](#extracting-values-from-opaquelazy).
-///
-/// For wrapping Rust data in a Ruby object see the sections on
-/// [`typed_data::Obj`](#typed_dataobj) and [`RTypedData`](#rtypeddata).
-///
-/// To create a Ruby `Module` see the [`RModule`](#rmodule) section.
-///
-/// To get Ruby's `true` / `false` / `nil` see [true](#true) / [false](#false)
-/// / [nil](#nil).
-///
-/// To get references to Ruby's core classes and modules such as `Object`,
-/// `StandardError`, and `Math` see [Core Classes](#core-classes),
-/// [Core Exceptions](#core-exceptions), and [Core Modules](#core-modules).
-///
-/// For creating `Array`s see the [`RArray`](#rarray) section.
-///
-/// To create `Hash`es see [`RHash`](#rhash).
-///
-/// For working with strings see the [`RString`](#rstring),
-/// [`Encoding`](#encoding), [`RbEncoding`](#rbencoding), and
-/// [Encoding Index](#encoding-index) sections.
-///
-/// Functions to create Regular Expressions are in the [`RRegexp`](#rregexp)
-/// section.
-///
-/// The sections for [`Symbol`](#symbol), [`StaticSymbol`](#staticsymbol), and
-/// [`Id`](#id) cover workering with Ruby's `Symbol`s.
-///
-/// Numbers of various types can be created with functions from the following
-/// sections: [`Integer`](#integer), [`Fixnum`](#fixnum), [`RBignum`](#rbignum),
-/// [`Float`](#float), [`Flonum`](#flonum), [`RFloat`](#rfloat), and
-/// [`RRational`](#rrational).
-///
-/// For Ruby `Struct`s see [`Struct`](#struct).
-///
-/// To create a Ruby `Range` see the [`Range`](#range) section.
-///
-/// The sections on [`Proc`](#proc), [blocks](#blocks) and [`break`](#break)
-/// cover working with Ruby's `Proc`s and blocks.
-///
-/// The [Globals](#globals) section contains functions for defining global
-/// variables, constants, etc, as well as accessing current state such as
-/// calling the current `super` method.
-///
-/// The [Argument Parsing](#argument-parsing) section contains functions for
-/// handling argument parsing.
-///
-/// For functions related to Garbage Collection see the [GC](#gc) section.
-///
-/// The [Embedding](#embedding) section contains functions relevant when
-/// embedding Ruby in a Rust program.
+/// * [Accessing `Ruby`](#accessing-ruby) - how to get a `Ruby` handle
+/// * [Argument Parsing](#argument-parsing) - helpers for argument handling
+/// * [Blocks](#blocks) - working with Ruby blocks
+/// * [`break`](#break)
+/// * [Conversion to `Value`](#conversion-to-value)
+/// * [Core Classes](#core-classes) - access built-in classes
+/// * [Core Exceptions](#core-exceptions) - access built-in exceptions
+/// * [Core Modules](#core-modules) - access built-in modules
+/// * [Embedding](#embedding) - functions relevant when embedding Ruby in Rust
+/// * [`Encoding`](#encoding) - string encoding
+/// * [Encoding Index](#encoding-index) - string encoding
+/// * [Errors](#errors)
+/// * [Extracting values from `Opaque`/`Lazy`](#extracting-values-from-opaquelazy)
+/// * [`false`](#false)
+/// * [`Fixnum`](#fixnum) - small/fast integers
+/// * [`Float`](#float)
+/// * [`Flonum`](#flonum) - lower precision/fast floats
+/// * [`GC`](#gc) - Garbage Collection
+/// * [Globals](#globals) - global variables, etc, plus current VM state such
+///   as calling the current `super` method.
+/// * [`Id`](#id) - low-level Symbol representation
+/// * [`Integer`](#integer)
+/// * [`nil`](#nil)
+/// * [`Proc`](#proc) - Ruby's blocks as objects
+/// * [`Range`](#range)
+/// * [`RArray`](#rarray)
+/// * [`RbEncoding`](#rbencoding) - string encoding
+/// * [`RBignum`](#rbignum) - big integers
+/// * [`RFloat`](#rfloat)
+/// * [`RHash`](#rhash)
+/// * [`RModule`](#rmodule)
+/// * [`RRational`](#rrational)
+/// * [`RRegexp`](#rregexp)
+/// * [`RString`](#rstring)
+/// * [`RTypedData`](#rtypeddata) - wrapping Rust data in a Ruby object
+/// * [`StaticSymbol`](#staticsymbol) - non GC'd symbols
+/// * [`Struct`](#struct)
+/// * [`Symbol`](#symbol)
+/// * [`true`](#true)
+/// * [`typed_data::Obj`](#typed_dataobj) - wrapping Rust data in a Ruby object
 pub struct Ruby(PhantomData<*mut ()>);
 
 /// # Accessing `Ruby`
