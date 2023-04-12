@@ -23,6 +23,8 @@ use crate::{
 };
 
 /// # `RRegexp`
+///
+/// See also the [`RRegexp`] type.
 #[allow(missing_docs)]
 impl Ruby {
     pub fn reg_new(&self, pattern: &str, opts: Opts) -> Result<RRegexp, Error> {
@@ -66,7 +68,8 @@ impl RRegexp {
     ///
     /// # Panics
     ///
-    /// Panics if called from a non-Ruby thread.
+    /// Panics if called from a non-Ruby thread. See [`Ruby::reg_new`] for the
+    /// non-panicking version.
     ///
     /// # Examples
     ///

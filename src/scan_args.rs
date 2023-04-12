@@ -798,6 +798,8 @@ where
 }
 
 /// # Argument Parsing
+///
+/// See also the [`scan_args`] module.
 #[allow(missing_docs)]
 impl Ruby {
     pub fn check_arity<T>(&self, len: usize, bounds: T) -> Result<(), Error>
@@ -830,7 +832,8 @@ impl Ruby {
 ///
 /// # Panics
 ///
-/// Panics if called from a non-Ruby thread.
+/// Panics if called from a non-Ruby thread. See [`Ruby::check_arity`] for the
+/// non-panicking version.
 ///
 /// # Examples
 ///

@@ -14,6 +14,8 @@ use crate::{
 };
 
 /// # `Flonum`
+///
+/// See also the [`Flonum`] type.
 #[allow(missing_docs)]
 impl Ruby {
     #[inline]
@@ -78,7 +80,8 @@ impl Flonum {
     ///
     /// # Panics
     ///
-    /// Panics if called from a non-Ruby thread.
+    /// Panics if called from a non-Ruby thread. See [`Ruby::flonum_from_f64`]
+    /// for the non-panicking version.
     ///
     /// # Examples
     ///

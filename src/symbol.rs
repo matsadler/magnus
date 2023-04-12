@@ -18,6 +18,8 @@ use crate::{
 };
 
 /// # Symbol
+///
+/// See also the [`Symbol`] type.
 #[allow(missing_docs)]
 impl Ruby {
     #[inline]
@@ -68,7 +70,8 @@ impl Symbol {
     ///
     /// # Panics
     ///
-    /// Panics if called from a non-Ruby thread.
+    /// Panics if called from a non-Ruby thread. See [`Ruby::to_symbol`] for
+    /// the non-panicking version.
     ///
     /// # Examples
     ///
@@ -203,7 +206,8 @@ pub trait IntoSymbol: Sized {
     ///
     /// # Panics
     ///
-    /// Panics if called from a non-Ruby thread.
+    /// Panics if called from a non-Ruby thread. See
+    /// [`IntoSymbol::into_symbol_with`] for the non-panicking version.
     #[cfg(feature = "friendly-api")]
     #[inline]
     fn into_symbol(self) -> Symbol {

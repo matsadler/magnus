@@ -28,6 +28,8 @@ use crate::{
 };
 
 /// # `RModule`
+///
+/// See also the [`RModule`] type.
 #[allow(missing_docs)]
 impl Ruby {
     pub fn module_new(&self) -> RModule {
@@ -77,7 +79,8 @@ impl RModule {
     ///
     /// # Panics
     ///
-    /// Panics if called from a non-Ruby thread.
+    /// Panics if called from a non-Ruby thread. See [`Ruby::module_new`] for
+    /// the non-panicking version.
     ///
     /// # Examples
     ///
@@ -719,6 +722,8 @@ impl Attr {
 }
 
 /// # Core Modules
+///
+/// See also the [`module`](self) module.
 #[allow(missing_docs)]
 impl Ruby {
     #[inline]
@@ -776,7 +781,8 @@ impl Ruby {
 ///
 /// # Panics
 ///
-/// Panics if called from a non-Ruby thread.
+/// Panics if called from a non-Ruby thread. See [`Ruby::module_comparable`]
+/// for the non-panicking version.
 #[cfg(feature = "friendly-api")]
 #[inline]
 pub fn comparable() -> RModule {
@@ -787,7 +793,8 @@ pub fn comparable() -> RModule {
 ///
 /// # Panics
 ///
-/// Panics if called from a non-Ruby thread.
+/// Panics if called from a non-Ruby thread. See [`Ruby::module_enumerable`]
+/// for the non-panicking version.
 #[cfg(feature = "friendly-api")]
 #[inline]
 pub fn enumerable() -> RModule {
@@ -798,7 +805,8 @@ pub fn enumerable() -> RModule {
 ///
 /// # Panics
 ///
-/// Panics if called from a non-Ruby thread.
+/// Panics if called from a non-Ruby thread. See [`Ruby::module_errno`] for the
+/// non-panicking version.
 #[cfg(feature = "friendly-api")]
 #[inline]
 pub fn errno() -> RModule {
@@ -809,7 +817,8 @@ pub fn errno() -> RModule {
 ///
 /// # Panics
 ///
-/// Panics if called from a non-Ruby thread.
+/// Panics if called from a non-Ruby thread. See [`Ruby::module_file_test`] for
+/// the non-panicking version.
 #[cfg(feature = "friendly-api")]
 #[inline]
 pub fn file_test() -> RModule {
@@ -820,7 +829,8 @@ pub fn file_test() -> RModule {
 ///
 /// # Panics
 ///
-/// Panics if called from a non-Ruby thread.
+/// Panics if called from a non-Ruby thread. See [`Ruby::module_gc`] for the
+/// non-panicking version.
 #[cfg(feature = "friendly-api")]
 #[inline]
 pub fn gc() -> RModule {
@@ -831,7 +841,8 @@ pub fn gc() -> RModule {
 ///
 /// # Panics
 ///
-/// Panics if called from a non-Ruby thread.
+/// Panics if called from a non-Ruby thread. See [`Ruby::module_kernel`] for
+/// the non-panicking version.
 #[cfg(feature = "friendly-api")]
 #[inline]
 pub fn kernel() -> RModule {
@@ -842,7 +853,8 @@ pub fn kernel() -> RModule {
 ///
 /// # Panics
 ///
-/// Panics if called from a non-Ruby thread.
+/// Panics if called from a non-Ruby thread. See [`Ruby::module_math`] for the
+/// non-panicking version.
 #[cfg(feature = "friendly-api")]
 #[inline]
 pub fn math() -> RModule {
@@ -853,7 +865,8 @@ pub fn math() -> RModule {
 ///
 /// # Panics
 ///
-/// Panics if called from a non-Ruby thread.
+/// Panics if called from a non-Ruby thread. See [`Ruby::module_process`] for
+/// the non-panicking version.
 #[cfg(feature = "friendly-api")]
 #[inline]
 pub fn process() -> RModule {
@@ -864,7 +877,8 @@ pub fn process() -> RModule {
 ///
 /// # Panics
 ///
-/// Panics if called from a non-Ruby thread.
+/// Panics if called from a non-Ruby thread. See [`Ruby::module_wait_readable`]
+/// for the non-panicking version.
 #[cfg(feature = "friendly-api")]
 #[inline]
 pub fn wait_readable() -> RModule {
@@ -875,7 +889,8 @@ pub fn wait_readable() -> RModule {
 ///
 /// # Panics
 ///
-/// Panics if called from a non-Ruby thread.
+/// Panics if called from a non-Ruby thread. See [`Ruby::module_wait_writable`]
+/// for the non-panicking version.
 #[cfg(feature = "friendly-api")]
 #[inline]
 pub fn wait_writable() -> RModule {

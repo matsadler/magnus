@@ -22,6 +22,8 @@ use crate::{
 };
 
 /// # `Range`
+///
+/// See also the [`Range`] type.
 #[allow(missing_docs)]
 impl Ruby {
     pub fn range_new<T, U>(&self, beg: T, end: U, excl: bool) -> Result<Range, Error>
@@ -72,7 +74,8 @@ impl Range {
     ///
     /// # Panics
     ///
-    /// Panics if called from a non-Ruby thread.
+    /// Panics if called from a non-Ruby thread. See [`Ruby::range_new`] for
+    /// the non-panicking version.
     ///
     /// # Examples
     ///

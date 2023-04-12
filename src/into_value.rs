@@ -7,6 +7,8 @@ use crate::{
 };
 
 /// # Conversion to `Value`
+///
+/// See also the [`IntoValue`] trait.
 #[allow(missing_docs)]
 impl Ruby {
     #[allow(clippy::wrong_self_convention)]
@@ -24,7 +26,8 @@ pub trait IntoValue: Sized {
     ///
     /// # Panics
     ///
-    /// Panics if called from a non-Ruby thread.
+    /// Panics if called from a non-Ruby thread. See
+    /// [`IntoValue::into_value_with`] for the non-panicking version.
     #[cfg(feature = "friendly-api")]
     #[inline]
     fn into_value(self) -> Value {

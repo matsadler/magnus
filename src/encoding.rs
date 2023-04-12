@@ -50,6 +50,8 @@ use crate::{
 };
 
 /// # `Encoding`
+///
+/// See also the [`Encoding`] type.
 #[allow(missing_docs)]
 impl Ruby {
     pub fn enc_default_external(&self) -> Encoding {
@@ -98,7 +100,8 @@ impl Encoding {
     ///
     /// # Panics
     ///
-    /// Panics if called from a non-Ruby thread.
+    /// Panics if called from a non-Ruby thread. See
+    /// [`Ruby::enc_default_external`] for the non-panicking version.
     #[cfg(feature = "friendly-api")]
     #[inline]
     pub fn default_external() -> Self {
@@ -112,7 +115,8 @@ impl Encoding {
     ///
     /// # Panics
     ///
-    /// Panics if called from a non-Ruby thread.
+    /// Panics if called from a non-Ruby thread. See
+    /// [`Ruby::enc_default_internal`] for the non-panicking version.
     #[cfg(feature = "friendly-api")]
     #[inline]
     pub fn default_internal() -> Option<Self> {
@@ -171,6 +175,8 @@ impl TryConvert for Encoding {
 }
 
 /// # `RbEncoding`
+///
+/// See also the [`RbEncoding`] type.
 #[allow(missing_docs)]
 impl Ruby {
     pub fn ascii8bit_encoding(&self) -> RbEncoding {
@@ -225,7 +231,8 @@ impl RbEncoding {
     ///
     /// # Panics
     ///
-    /// Panics if called from a non-Ruby thread.
+    /// Panics if called from a non-Ruby thread. See
+    /// [`Ruby::ascii8bit_encoding`] for the non-panicking version.
     #[cfg(feature = "friendly-api")]
     #[inline]
     pub fn ascii8bit() -> Self {
@@ -236,7 +243,8 @@ impl RbEncoding {
     ///
     /// # Panics
     ///
-    /// Panics if called from a non-Ruby thread.
+    /// Panics if called from a non-Ruby thread. See [`Ruby::utf8_encoding`]
+    /// for the non-panicking version.
     #[cfg(feature = "friendly-api")]
     #[inline]
     pub fn utf8() -> Self {
@@ -247,7 +255,8 @@ impl RbEncoding {
     ///
     /// # Panics
     ///
-    /// Panics if called from a non-Ruby thread.
+    /// Panics if called from a non-Ruby thread. See [`Ruby::usascii_encoding`]
+    /// for the non-panicking version.
     #[cfg(feature = "friendly-api")]
     #[inline]
     pub fn usascii() -> Self {
@@ -261,7 +270,8 @@ impl RbEncoding {
     ///
     /// # Panics
     ///
-    /// Panics if called from a non-Ruby thread.
+    /// Panics if called from a non-Ruby thread. See [`Ruby::locale_encoding`]
+    /// for the non-panicking version.
     #[cfg(feature = "friendly-api")]
     #[inline]
     pub fn locale() -> Self {
@@ -275,7 +285,8 @@ impl RbEncoding {
     ///
     /// # Panics
     ///
-    /// Panics if called from a non-Ruby thread.
+    /// Panics if called from a non-Ruby thread. See
+    /// [`Ruby::filesystem_encoding`] for the non-panicking version.
     #[cfg(feature = "friendly-api")]
     #[inline]
     pub fn filesystem() -> Self {
@@ -289,7 +300,8 @@ impl RbEncoding {
     ///
     /// # Panics
     ///
-    /// Panics if called from a non-Ruby thread.
+    /// Panics if called from a non-Ruby thread. See
+    /// [`Ruby::default_external_encoding`] for the non-panicking version.
     #[cfg(feature = "friendly-api")]
     #[inline]
     pub fn default_external() -> Self {
@@ -303,7 +315,8 @@ impl RbEncoding {
     ///
     /// # Panics
     ///
-    /// Panics if called from a non-Ruby thread.
+    /// Panics if called from a non-Ruby thread. See
+    /// [`Ruby::default_internal_encoding`] for the non-panicking version.
     #[cfg(feature = "friendly-api")]
     #[inline]
     pub fn default_internal() -> Option<Self> {
@@ -314,7 +327,8 @@ impl RbEncoding {
     ///
     /// # Panics
     ///
-    /// Panics if called from a non-Ruby thread.
+    /// Panics if called from a non-Ruby thread. See [`Ruby::find_encoding`]
+    /// for the non-panicking version.
     ///
     /// # Examples
     ///
@@ -792,6 +806,8 @@ impl TryConvert for RbEncoding {
 }
 
 /// # Encoding Index
+///
+/// See also the [`encoding::Index`](Index) type.
 #[allow(missing_docs)]
 impl Ruby {
     pub fn ascii8bit_encindex(&self) -> Index {
@@ -845,7 +861,8 @@ impl Index {
     ///
     /// # Panics
     ///
-    /// Panics if called from a non-Ruby thread.
+    /// Panics if called from a non-Ruby thread. See [`Ruby::usascii_encindex`]
+    /// for the non-panicking version.
     #[cfg(feature = "friendly-api")]
     #[inline]
     pub fn ascii8bit() -> Self {
@@ -856,7 +873,8 @@ impl Index {
     ///
     /// # Panics
     ///
-    /// Panics if called from a non-Ruby thread.
+    /// Panics if called from a non-Ruby thread. See [`Ruby::utf8_encindex`]
+    /// for the non-panicking version.
     #[cfg(feature = "friendly-api")]
     #[inline]
     pub fn utf8() -> Self {
@@ -867,7 +885,8 @@ impl Index {
     ///
     /// # Panics
     ///
-    /// Panics if called from a non-Ruby thread.
+    /// Panics if called from a non-Ruby thread. See [`Ruby::usascii_encindex`]
+    /// for the non-panicking version.
     #[cfg(feature = "friendly-api")]
     #[inline]
     pub fn usascii() -> Self {
@@ -881,7 +900,8 @@ impl Index {
     ///
     /// # Panics
     ///
-    /// Panics if called from a non-Ruby thread.
+    /// Panics if called from a non-Ruby thread. See [`Ruby::locale_encindex`]
+    /// for the non-panicking version.
     #[cfg(feature = "friendly-api")]
     #[inline]
     pub fn locale() -> Self {
@@ -895,7 +915,8 @@ impl Index {
     ///
     /// # Panics
     ///
-    /// Panics if called from a non-Ruby thread.
+    /// Panics if called from a non-Ruby thread. See
+    /// [`Ruby::filesystem_encindex`] for the non-panicking version.
     #[cfg(feature = "friendly-api")]
     #[inline]
     pub fn filesystem() -> Self {
@@ -906,7 +927,8 @@ impl Index {
     ///
     /// # Panics
     ///
-    /// Panics if called from a non-Ruby thread.
+    /// Panics if called from a non-Ruby thread. See [`Ruby::find_encindex`]
+    /// for the non-panicking version.
     ///
     /// # Examples
     ///

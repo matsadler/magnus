@@ -38,6 +38,8 @@ impl fmt::Display for RubyUnavailableError {
 impl std::error::Error for RubyUnavailableError {}
 
 /// # `break`
+///
+/// See also [`Error::iter_break`].
 #[allow(missing_docs)]
 impl Ruby {
     pub fn iter_break_value<T>(&self, val: Option<T>) -> Error
@@ -114,7 +116,8 @@ impl Error {
     ///
     /// # Panics
     ///
-    /// Panics if called from a non-Ruby thread.
+    /// Panics if called from a non-Ruby thread. See [`Ruby::iter_break_value`]
+    /// for the non-panicking version.
     #[cfg(feature = "friendly-api")]
     #[inline]
     pub fn iter_break<T>(val: Option<T>) -> Self
@@ -442,6 +445,8 @@ pub fn bug(s: &str) -> ! {
 }
 
 /// # Errors
+///
+/// See also the [`error`](self) module.
 #[allow(missing_docs)]
 impl Ruby {
     pub fn warning(&self, s: &str) {
@@ -456,7 +461,8 @@ impl Ruby {
 ///
 /// # Panics
 ///
-/// Panics if called from a non-Ruby thread.
+/// Panics if called from a non-Ruby thread. See [`Ruby::warning`] for the
+/// non-panicking version.
 #[cfg(feature = "friendly-api")]
 #[inline]
 pub fn warning(s: &str) {

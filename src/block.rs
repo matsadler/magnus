@@ -31,6 +31,8 @@ use crate::{
 };
 
 /// # `Proc`
+///
+/// See also the [`Proc`] type.
 #[allow(missing_docs)]
 impl Ruby {
     pub fn proc_new<R>(&self, block: fn(&[Value], Option<Proc>) -> R) -> Proc
@@ -132,7 +134,8 @@ impl Proc {
     ///
     /// # Panics
     ///
-    /// Panics if called from a non-Ruby thread.
+    /// Panics if called from a non-Ruby thread. See [`Ruby::proc_new`] for the
+    /// non-panicking version.
     ///
     /// # Examples
     ///
@@ -168,7 +171,8 @@ impl Proc {
     ///
     /// # Panics
     ///
-    /// Panics if called from a non-Ruby thread.
+    /// Panics if called from a non-Ruby thread. See [`Ruby::proc_from_fn`] for
+    /// the non-panicking version.
     ///
     /// # Examples
     ///
@@ -411,6 +415,8 @@ where
 }
 
 /// # Blocks
+///
+/// See also the [`block`](self) module.
 #[allow(missing_docs)]
 impl Ruby {
     pub fn block_given(&self) -> bool {
@@ -466,7 +472,8 @@ impl Ruby {
 ///
 /// # Panics
 ///
-/// Panics if called from a non-Ruby thread.
+/// Panics if called from a non-Ruby thread. See [`Ruby::block_given`] for the
+/// non-panicking version.
 #[cfg(feature = "friendly-api")]
 #[inline]
 pub fn block_given() -> bool {
@@ -477,7 +484,8 @@ pub fn block_given() -> bool {
 ///
 /// # Panics
 ///
-/// Panics if called from a non-Ruby thread.
+/// Panics if called from a non-Ruby thread. See [`Ruby::block_proc`] for the
+/// non-panicking version.
 #[cfg(feature = "friendly-api")]
 #[inline]
 pub fn block_proc() -> Result<Proc, Error> {
@@ -493,7 +501,8 @@ pub fn block_proc() -> Result<Proc, Error> {
 ///
 /// # Panics
 ///
-/// Panics if called from a non-Ruby thread.
+/// Panics if called from a non-Ruby thread. See [`Ruby::yield_value`] for the
+/// non-panicking version.
 #[cfg(feature = "friendly-api")]
 #[inline]
 pub fn yield_value<T, U>(val: T) -> Result<U, Error>
@@ -513,7 +522,8 @@ where
 ///
 /// # Panics
 ///
-/// Panics if called from a non-Ruby thread.
+/// Panics if called from a non-Ruby thread. See [`Ruby::yield_values`] for the
+/// non-panicking version.
 #[cfg(feature = "friendly-api")]
 #[inline]
 pub fn yield_values<T, U>(vals: T) -> Result<U, Error>
@@ -533,7 +543,8 @@ where
 ///
 /// # Panics
 ///
-/// Panics if called from a non-Ruby thread.
+/// Panics if called from a non-Ruby thread. See [`Ruby::yield_splat`] for the
+/// non-panicking version.
 #[cfg(feature = "friendly-api")]
 #[inline]
 pub fn yield_splat<T>(vals: RArray) -> Result<T, Error>

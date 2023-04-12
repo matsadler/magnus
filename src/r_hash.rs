@@ -81,6 +81,8 @@ where
 }
 
 /// # `RHash`
+///
+/// See also the [`RHash`] type.
 #[allow(missing_docs)]
 impl Ruby {
     pub fn hash_new(&self) -> RHash {
@@ -89,7 +91,7 @@ impl Ruby {
 
     #[cfg(any(ruby_gte_3_2, docsrs))]
     #[cfg_attr(docsrs, doc(cfg(ruby_gte_3_2)))]
-    pub fn with_capacity(&self, n: usize) -> RHash {
+    pub fn hash_new_capa(&self, n: usize) -> RHash {
         unsafe { RHash::from_rb_value_unchecked(rb_hash_new_capa(n as c_long)) }
     }
 }
@@ -133,7 +135,8 @@ impl RHash {
     ///
     /// # Panics
     ///
-    /// Panics if called from a non-Ruby thread.
+    /// Panics if called from a non-Ruby thread. See [`Ruby::hash_new`] for the
+    /// non-panicking version.
     ///
     /// # Examples
     ///
@@ -155,7 +158,8 @@ impl RHash {
     ///
     /// # Panics
     ///
-    /// Panics if called from a non-Ruby thread.
+    /// Panics if called from a non-Ruby thread. See [`Ruby::hash_new_capa`]
+    /// for the non-panicking version.
     ///
     /// # Examples
     ///
@@ -171,7 +175,7 @@ impl RHash {
     #[cfg_attr(docsrs, doc(cfg(ruby_gte_3_2)))]
     #[inline]
     pub fn with_capacity(n: usize) -> Self {
-        get_ruby!().with_capacity(n)
+        get_ruby!().hash_new_capa(n)
     }
 
     /// Set the value `val` for the key `key`.

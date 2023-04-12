@@ -379,6 +379,8 @@ where
 }
 
 /// # Extracting values from `Opaque`/`Lazy`
+///
+/// See also the [`Opaque`] and [`Lazy`] types.
 impl Ruby {
     /// Get the inner value from `wrapper`.
     ///
@@ -1675,6 +1677,8 @@ where
 unsafe impl<T> IntoValueFromNative for BoxValue<T> where T: ReprValue {}
 
 /// # `false`
+///
+/// See also the [`Qfalse`] type.
 #[allow(missing_docs)]
 impl Ruby {
     #[inline]
@@ -1706,7 +1710,8 @@ pub const QFALSE: Qfalse = Qfalse::new();
 ///
 /// # Panics
 ///
-/// Panics if called from a non-Ruby thread.
+/// Panics if called from a non-Ruby thread. See [`Ruby::qfalse`] for the
+/// non-panicking version.
 ///
 /// # Examples
 ///
@@ -1783,6 +1788,8 @@ impl TryConvert for Qfalse {
 impl TryConvertOwned for Qfalse {}
 
 /// # `nil`
+///
+/// See also the [`Qnil`] type.
 #[allow(missing_docs)]
 impl Ruby {
     #[inline]
@@ -1814,7 +1821,8 @@ pub const QNIL: Qnil = Qnil::new();
 ///
 /// # Panics
 ///
-/// Panics if called from a non-Ruby thread.
+/// Panics if called from a non-Ruby thread. See [`Ruby::qnil`] for the
+/// non-panicking version.
 ///
 /// # Examples
 ///
@@ -1917,6 +1925,8 @@ impl TryConvert for Qnil {
 impl TryConvertOwned for Qnil {}
 
 /// # `true`
+///
+/// See also the [`Qtrue`] type.
 #[allow(missing_docs)]
 impl Ruby {
     #[inline]
@@ -1948,7 +1958,8 @@ pub const QTRUE: Qtrue = Qtrue::new();
 ///
 /// # Panics
 ///
-/// Panics if called from a non-Ruby thread.
+/// Panics if called from a non-Ruby thread. See [`Ruby::qtrue`] for the
+/// non-panicking version.
 ///
 /// # Examples
 ///
@@ -2100,6 +2111,8 @@ impl Qundef {
 }
 
 /// # `Fixnum`
+///
+/// See also the [`Fixnum`] type.
 #[allow(missing_docs)]
 impl Ruby {
     #[inline]
@@ -2175,7 +2188,8 @@ impl Fixnum {
     ///
     /// # Panics
     ///
-    /// Panics if called from a non-Ruby thread.
+    /// Panics if called from a non-Ruby thread. See [`Ruby::fixnum_from_i64`]
+    /// for the non-panicking version.
     ///
     /// # Examples
     ///
@@ -2201,7 +2215,8 @@ impl Fixnum {
     ///
     /// # Panics
     ///
-    /// Panics if called from a non-Ruby thread.
+    /// Panics if called from a non-Ruby thread. See [`Ruby::fixnum_from_u64`]
+    /// for the non-panicking version.
     ///
     /// # Examples
     ///
@@ -2560,6 +2575,8 @@ impl TryConvert for Fixnum {
 impl TryConvertOwned for Fixnum {}
 
 /// # `StaticSymbol`
+///
+/// See also the [`StaticSymbol`] type.
 #[allow(missing_docs)]
 impl Ruby {
     #[inline]
@@ -2633,7 +2650,8 @@ impl StaticSymbol {
     ///
     /// # Panics
     ///
-    /// Panics if called from a non-Ruby thread.
+    /// Panics if called from a non-Ruby thread. See [`Ruby::sym_new`] for the
+    /// non-panicking version.
     ///
     /// # Examples
     /// ```
@@ -2657,7 +2675,8 @@ impl StaticSymbol {
     ///
     /// # Panics
     ///
-    /// Panics if called from a non-Ruby thread.
+    /// Panics if called from a non-Ruby thread. See [`Ruby::check_symbol`] for
+    /// the non-panicking version.
     ///
     /// # Examples
     ///
@@ -2765,6 +2784,8 @@ impl TryConvert for StaticSymbol {
 impl TryConvertOwned for StaticSymbol {}
 
 /// # `Id`
+///
+/// See also the [`Id`] type.
 #[allow(missing_docs)]
 impl Ruby {
     pub fn intern(&self, name: &str) -> Id {
@@ -2806,7 +2827,8 @@ impl Id {
     ///
     /// # Panics
     ///
-    /// Panics if called from a non-Ruby thread.
+    /// Panics if called from a non-Ruby thread. See [`Ruby::intern`] for the
+    /// non-panicking version.
     ///
     /// # Examples
     ///
@@ -2843,7 +2865,8 @@ impl Id {
     ///
     /// # Panics
     ///
-    /// Panics if called from a non-Ruby thread.
+    /// Panics if called from a non-Ruby thread. See [`Ruby::check_id`] for the
+    /// non-panicking version.
     ///
     /// # Examples
     ///
@@ -2901,7 +2924,8 @@ pub trait IntoId: Sized {
     ///
     /// # Panics
     ///
-    /// Panics if called from a non-Ruby thread.
+    /// Panics if called from a non-Ruby thread. See [`IntoId::into_id_with`]
+    /// for the non-panicking version.
     #[cfg(feature = "friendly-api")]
     #[inline]
     fn into_id(self) -> Id {

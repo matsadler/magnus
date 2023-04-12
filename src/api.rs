@@ -132,6 +132,11 @@ pub struct Ruby(PhantomData<*mut ()>);
 ///
 /// These functions allow you to obtain a `Ruby` handle only when the current
 /// thread is a Ruby thread.
+///
+/// Methods exposed to Ruby via the [`method`](macro@crate::method),
+/// [`function`](macro@crate::function) or [`init`](macro@crate::init) macros
+/// can also take an optional first argument of `&Ruby` to obtain a `Ruby`
+/// handle.
 impl Ruby {
     /// Get a handle to Ruby's API.
     ///

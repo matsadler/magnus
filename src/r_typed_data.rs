@@ -17,6 +17,8 @@ use crate::{
 };
 
 /// # `RTypedData`
+///
+/// See also the [`RTypedData`] type.
 #[allow(missing_docs)]
 impl Ruby {
     #[inline]
@@ -79,7 +81,8 @@ impl RTypedData {
     ///
     /// # Panics
     ///
-    /// Panics if called from a non-Ruby thread.
+    /// Panics if called from a non-Ruby thread. See [`Ruby::wrap`] for the
+    /// non-panicking version.
     ///
     /// # Examples
     ///
@@ -116,7 +119,9 @@ impl RTypedData {
     /// # Panics
     ///
     /// Panics if `class` is not a subclass of `<T as TypedData>::class()`, or
-    /// if called from a non-Ruby thread.
+    /// if called from a non-Ruby thread. See [`Ruby::wrap_as`] for a version
+    /// that can not be called from a non-Ruby thread, so will not panic for
+    /// that reason.
     ///
     /// # Examples
     ///

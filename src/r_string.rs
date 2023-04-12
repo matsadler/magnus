@@ -43,6 +43,8 @@ use crate::{
 };
 
 /// # `RString`
+///
+/// See also the [`RString`] type.
 #[allow(missing_docs)]
 impl Ruby {
     pub fn str_new(&self, s: &str) -> RString {
@@ -158,7 +160,8 @@ impl RString {
     ///
     /// # Panics
     ///
-    /// Panics if called from a non-Ruby thread.
+    /// Panics if called from a non-Ruby thread. See [`Ruby::str_new`] for the
+    /// non-panicking version.
     ///
     /// # Examples
     ///
@@ -191,7 +194,8 @@ impl RString {
     ///
     /// # Panics
     ///
-    /// Panics if called from a non-Ruby thread.
+    /// Panics if called from a non-Ruby thread. See [`Ruby::str_buf_new`] for
+    /// the non-panicking version.
     ///
     /// # Examples
     ///
@@ -217,7 +221,8 @@ impl RString {
     ///
     /// # Panics
     ///
-    /// Panics if called from a non-Ruby thread.
+    /// Panics if called from a non-Ruby thread. See
+    /// [`Ruby::str_with_capacity`] for the non-panicking version.
     ///
     /// # Examples
     ///
@@ -244,7 +249,8 @@ impl RString {
     ///
     /// # Panics
     ///
-    /// Panics if called from a non-Ruby thread.
+    /// Panics if called from a non-Ruby thread. See [`Ruby::str_from_slice`]
+    /// for the non-panicking version.
     ///
     /// # Examples
     ///
@@ -266,7 +272,8 @@ impl RString {
     ///
     /// # Panics
     ///
-    /// Panics if called from a non-Ruby thread.
+    /// Panics if called from a non-Ruby thread. See [`Ruby::enc_str_new`] for
+    /// the non-panicking version.
     ///
     /// # Examples
     ///
@@ -303,7 +310,8 @@ impl RString {
     ///
     /// # Panics
     ///
-    /// Panics if called from a non-Ruby thread.
+    /// Panics if called from a non-Ruby thread. See [`Ruby::str_from_char`]
+    /// for the non-panicking version.
     ///
     /// # Examples
     ///
@@ -337,7 +345,8 @@ impl RString {
     ///
     /// # Panics
     ///
-    /// Panics if called from a non-Ruby thread.
+    /// Panics if called from a non-Ruby thread. See [`Ruby::chr`] for the
+    /// non-panicking version.
     ///
     /// # Examples
     ///
@@ -1513,7 +1522,8 @@ pub trait IntoRString: Sized {
     ///
     /// # Panics
     ///
-    /// Panics if called from a non-Ruby thread.
+    /// Panics if called from a non-Ruby thread. See
+    /// [`IntoRString::into_r_string_with`] for the non-panicking version.
     #[cfg(feature = "friendly-api")]
     #[inline]
     fn into_r_string(self) -> RString {

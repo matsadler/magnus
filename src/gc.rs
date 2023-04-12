@@ -119,6 +119,8 @@ where
 }
 
 /// # GC
+///
+/// See also the [`gc`](self) module.
 #[allow(missing_docs)]
 impl Ruby {
     pub fn gc_disable(&self) -> bool {
@@ -170,7 +172,8 @@ impl Ruby {
 ///
 /// # Panics
 ///
-/// Panics if called from a non-Ruby thread.
+/// Panics if called from a non-Ruby thread. See [`Ruby::gc_disable`] for the
+/// non-panicking version.
 #[cfg(feature = "friendly-api")]
 #[inline]
 pub fn disable() -> bool {
@@ -186,7 +189,8 @@ pub fn disable() -> bool {
 ///
 /// # Panics
 ///
-/// Panics if called from a non-Ruby thread.
+/// Panics if called from a non-Ruby thread. See [`Ruby::gc_enable`] for the
+/// non-panicking version.
 #[cfg(feature = "friendly-api")]
 #[inline]
 pub fn enable() -> bool {
@@ -205,7 +209,8 @@ pub fn enable() -> bool {
 ///
 /// # Panics
 ///
-/// Panics if called from a non-Ruby thread.
+/// Panics if called from a non-Ruby thread. See [`Ruby::gc_start`] for the
+/// non-panicking version.
 #[cfg(feature = "friendly-api")]
 #[inline]
 pub fn start() {
@@ -223,7 +228,8 @@ pub fn start() {
 ///
 /// # Panics
 ///
-/// Panics if called from a non-Ruby thread.
+/// Panics if called from a non-Ruby thread. See
+/// [`Ruby::gc_adjust_memory_usage`] for the non-panicking version.
 #[cfg(feature = "friendly-api")]
 #[inline]
 pub fn adjust_memory_usage(diff: isize) {
@@ -235,7 +241,8 @@ pub fn adjust_memory_usage(diff: isize) {
 ///
 /// # Panics
 ///
-/// Panics if called from a non-Ruby thread.
+/// Panics if called from a non-Ruby thread. See [`Ruby::gc_count`] for the
+/// non-panicking version.
 #[cfg(feature = "friendly-api")]
 #[inline]
 pub fn count() -> usize {
@@ -246,7 +253,8 @@ pub fn count() -> usize {
 ///
 /// # Panics
 ///
-/// Panics if called from a non-Ruby thread.
+/// Panics if called from a non-Ruby thread. See [`Ruby::gc_stat`] for the
+/// non-panicking version.
 #[cfg(feature = "friendly-api")]
 #[inline]
 pub fn stat<T>(key: T) -> Result<usize, Error>
@@ -261,7 +269,8 @@ where
 ///
 /// # Panics
 ///
-/// Panics if called from a non-Ruby thread.
+/// Panics if called from a non-Ruby thread. See [`Ruby::gc_all_stats`] for the
+/// non-panicking version.
 #[cfg(feature = "friendly-api")]
 #[inline]
 pub fn all_stats() -> RHash {

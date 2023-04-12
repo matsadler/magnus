@@ -1995,6 +1995,8 @@ macro_rules! rb_assert {
 }
 
 /// # Globals
+///
+/// See also [functions in the root module](self#functions).
 #[allow(missing_docs)]
 impl Ruby {
     pub fn define_class(&self, name: &str, superclass: RClass) -> Result<RClass, Error> {
@@ -2138,7 +2140,8 @@ impl Ruby {
 ///
 /// # Panics
 ///
-/// Panics if called from a non-Ruby thread.
+/// Panics if called from a non-Ruby thread. See [`Ruby::define_class`] for the
+/// non-panicking version.
 #[cfg(feature = "friendly-api")]
 #[inline]
 pub fn define_class(name: &str, superclass: RClass) -> Result<RClass, Error> {
@@ -2149,7 +2152,8 @@ pub fn define_class(name: &str, superclass: RClass) -> Result<RClass, Error> {
 ///
 /// # Panics
 ///
-/// Panics if called from a non-Ruby thread.
+/// Panics if called from a non-Ruby thread. See [`Ruby::define_module`] for
+/// the non-panicking version.
 #[cfg(feature = "friendly-api")]
 #[inline]
 pub fn define_module(name: &str) -> Result<RModule, Error> {
@@ -2160,7 +2164,8 @@ pub fn define_module(name: &str) -> Result<RModule, Error> {
 ///
 /// # Panics
 ///
-/// Panics if called from a non-Ruby thread.
+/// Panics if called from a non-Ruby thread. See [`Ruby::define_error`] for the
+/// non-panicking version.
 #[cfg(feature = "friendly-api")]
 #[inline]
 pub fn define_error(name: &str, superclass: ExceptionClass) -> Result<ExceptionClass, Error> {
@@ -2171,7 +2176,8 @@ pub fn define_error(name: &str, superclass: ExceptionClass) -> Result<ExceptionC
 ///
 /// # Panics
 ///
-/// Panics if called from a non-Ruby thread.
+/// Panics if called from a non-Ruby thread. See [`Ruby::define_variable`] for
+/// the non-panicking version.
 #[cfg(feature = "friendly-api")]
 #[inline]
 pub fn define_variable<T>(name: &str, initial: T) -> Result<*mut Value, Error>
@@ -2185,7 +2191,8 @@ where
 ///
 /// # Panics
 ///
-/// Panics if called from a non-Ruby thread.
+/// Panics if called from a non-Ruby thread. See [`Ruby::define_global_const`]
+/// for the non-panicking version.
 #[cfg(feature = "friendly-api")]
 #[inline]
 pub fn define_global_const<T>(name: &str, value: T) -> Result<(), Error>
@@ -2199,7 +2206,8 @@ where
 ///
 /// # Panics
 ///
-/// Panics if called from a non-Ruby thread.
+/// Panics if called from a non-Ruby thread. See
+/// [`Ruby::define_global_function`] for the non-panicking version.
 #[cfg(feature = "friendly-api")]
 #[inline]
 pub fn define_global_function<M>(name: &str, func: M)
@@ -2213,7 +2221,8 @@ where
 ///
 /// # Panics
 ///
-/// Panics if called from a non-Ruby thread.
+/// Panics if called from a non-Ruby thread. See [`Ruby::backref_get`] for the
+/// non-panicking version.
 ///
 /// # Examples
 ///
@@ -2247,7 +2256,8 @@ pub fn backref_get() -> Option<RMatch> {
 ///
 /// # Panics
 ///
-/// Panics if called from a non-Ruby thread.
+/// Panics if called from a non-Ruby thread. See [`Ruby::current_receiver`] for
+/// the non-panicking version.
 #[cfg(feature = "friendly-api")]
 #[inline]
 pub fn current_receiver<T>() -> Result<T, Error>
@@ -2265,7 +2275,8 @@ where
 ///
 /// # Panics
 ///
-/// Panics if called from a non-Ruby thread.
+/// Panics if called from a non-Ruby thread. See [`Ruby::call_super`] for the
+/// non-panicking version.
 #[cfg(feature = "friendly-api")]
 #[inline]
 pub fn call_super<A, T>(args: A) -> Result<T, Error>
@@ -2280,7 +2291,8 @@ where
 ///
 /// # Panics
 ///
-/// Panics if called from a non-Ruby thread.
+/// Panics if called from a non-Ruby thread. See [`Ruby::require`] for the
+/// non-panicking version.
 ///
 /// # Examples
 ///
@@ -2304,7 +2316,8 @@ where
 ///
 /// # Panics
 ///
-/// Panics if called from a non-Ruby thread.
+/// Panics if called from a non-Ruby thread. See [`Ruby::require`] for the
+/// non-panicking version.
 ///
 /// # Examples
 ///
@@ -2333,7 +2346,8 @@ pub fn require(feature: &str) -> Result<bool, Error> {
 ///
 /// # Panics
 ///
-/// Panics if called from a non-Ruby thread.
+/// Panics if called from a non-Ruby thread. See [`Ruby::eval`] for the
+/// non-panicking version.
 ///
 /// # Examples
 ///

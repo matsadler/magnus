@@ -552,6 +552,8 @@ where
 }
 
 /// # `typed_data::Obj`
+///
+/// See also the [`typed_data::Obj`](Obj) type.
 #[allow(missing_docs)]
 impl Ruby {
     pub fn obj_wrap<T>(&self, data: T) -> Obj<T>
@@ -583,7 +585,8 @@ where
     ///
     /// # Panics
     ///
-    /// Panics if called from a non-Ruby thread.
+    /// Panics if called from a non-Ruby thread. See [`Ruby::obj_wrap`] for the
+    /// non-panicking version.
     ///
     /// # Examples
     ///
@@ -617,7 +620,9 @@ where
     /// # Panics
     ///
     /// Panics if `class` is not a subclass of `<T as TypedData>::class()`, or
-    /// if called from a non-Ruby thread.
+    /// if called from a non-Ruby thread. See [`Ruby::obj_wrap_as`] for a
+    /// version that can not be called from a non-Ruby thread, so will not
+    /// panic for that reason.
     ///
     /// # Examples
     ///

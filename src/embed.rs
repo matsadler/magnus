@@ -146,6 +146,8 @@ unsafe fn init_options(opts: &[&str]) {
 }
 
 /// # Embedding
+///
+/// See also the [`embed`](self) module.
 impl Ruby {
     /// Initialises the Ruby VM.
     ///
@@ -197,7 +199,8 @@ impl Ruby {
 ///
 /// # Panics
 ///
-/// Panics if called from a non-Ruby thread.
+/// Panics if called from a non-Ruby thread. See [`Ruby::script`] for the
+/// non-panicking version.
 #[cfg(feature = "friendly-api")]
 #[inline]
 pub fn ruby_script<T>(name: T)

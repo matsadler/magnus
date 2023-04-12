@@ -21,6 +21,8 @@ pub(crate) enum IntegerType {
 }
 
 /// # `Integer`
+///
+/// See also the [`Integer`] type.
 #[allow(missing_docs)]
 impl Ruby {
     #[inline]
@@ -98,7 +100,8 @@ impl Integer {
     ///
     /// # Panics
     ///
-    /// Panics if called from a non-Ruby thread.
+    /// Panics if called from a non-Ruby thread. See [`Ruby::integer_from_i64`]
+    /// for the non-panicking version.
     ///
     /// # Examples
     ///
@@ -131,7 +134,8 @@ impl Integer {
     ///
     /// # Panics
     ///
-    /// Panics if called from a non-Ruby thread.
+    /// Panics if called from a non-Ruby thread. See [`Ruby::integer_from_u64`]
+    /// for the non-panicking version.
     ///
     /// # Examples
     ///

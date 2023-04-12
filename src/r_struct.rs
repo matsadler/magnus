@@ -251,6 +251,8 @@ impl TryConvert for RStruct {
 }
 
 /// # `Struct`
+///
+/// See also the [`struct`](self) module.
 #[allow(missing_docs)]
 impl Ruby {
     pub fn define_struct<T>(&self, name: Option<&str>, members: T) -> Result<RClass, Error>
@@ -265,7 +267,8 @@ impl Ruby {
 ///
 /// # Panics
 ///
-/// Panics if called from a non-Ruby thread.
+/// Panics if called from a non-Ruby thread. See [`Ruby::define_struct`] for
+/// the non-panicking version.
 #[cfg(feature = "friendly-api")]
 #[inline]
 pub fn define_struct<T>(name: Option<&str>, members: T) -> Result<RClass, Error>

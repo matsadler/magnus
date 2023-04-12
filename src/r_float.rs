@@ -18,6 +18,8 @@ use crate::{
 };
 
 /// # `RFloat`
+///
+/// See also the [`RFloat`] type.
 #[allow(missing_docs)]
 impl Ruby {
     #[cfg(ruby_use_flonum)]
@@ -60,12 +62,13 @@ impl RFloat {
 
     /// Create a new `RFloat` from an `f64.`
     ///
-    /// # Panics
-    ///
-    /// Panics if called from a non-Ruby thread.
-    ///
     /// Returns `Ok(RFloat)` if `n` requires a high precision float, otherwise
     /// returns `Err(Fixnum)`.
+    ///
+    /// # Panics
+    ///
+    /// Panics if called from a non-Ruby thread. See [`Ruby::r_float_from_f64`]
+    /// for the non-panicking version.
     #[cfg(feature = "friendly-api")]
     #[cfg(ruby_use_flonum)]
     #[inline]
@@ -77,7 +80,8 @@ impl RFloat {
     ///
     /// # Panics
     ///
-    /// Panics if called from a non-Ruby thread.
+    /// Panics if called from a non-Ruby thread. See [`Ruby::r_float_from_f64`]
+    /// for the non-panicking version.
     #[cfg(feature = "friendly-api")]
     #[cfg(not(ruby_use_flonum))]
     #[inline]

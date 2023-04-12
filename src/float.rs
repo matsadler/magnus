@@ -21,6 +21,8 @@ use crate::{
 };
 
 /// # `Float`
+///
+/// See also the [`Float`] type.
 #[allow(missing_docs)]
 impl Ruby {
     #[inline]
@@ -82,7 +84,8 @@ impl Float {
     ///
     /// # Panics
     ///
-    /// Panics if called from a non-Ruby thread.
+    /// Panics if called from a non-Ruby thread. See [`Ruby::float_from_f64`]
+    /// for the non-panicking version.
     ///
     /// # Examples
     ///

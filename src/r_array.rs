@@ -28,6 +28,8 @@ use crate::{
 };
 
 /// # `RArray`
+///
+/// See also the [`RArray`] type.
 #[allow(missing_docs)]
 impl Ruby {
     pub fn ary_new(&self) -> RArray {
@@ -126,7 +128,8 @@ impl RArray {
     ///
     /// # Panics
     ///
-    /// Panics if called from a non-Ruby thread.
+    /// Panics if called from a non-Ruby thread. See [`Ruby::ary_new`] for the
+    /// non-panicking version.
     ///
     /// # Examples
     ///
@@ -148,7 +151,8 @@ impl RArray {
     ///
     /// # Panics
     ///
-    /// Panics if called from a non-Ruby thread.
+    /// Panics if called from a non-Ruby thread. See [`Ruby::ary_new_capa`] for
+    /// the non-panicking version.
     ///
     /// # Examples
     ///
@@ -395,7 +399,8 @@ impl RArray {
     ///
     /// # Panics
     ///
-    /// Panics if called from a non-Ruby thread.
+    /// Panics if called from a non-Ruby thread. See
+    /// [`Ruby::ary_new_from_values`] for the non-panicking version.
     ///
     /// # Examples
     ///
@@ -736,7 +741,8 @@ impl RArray {
     ///
     /// # Panics
     ///
-    /// Panics if called from a non-Ruby thread.
+    /// Panics if called from a non-Ruby thread. See [`Ruby::ary_from_vec`] for
+    /// the non-panicking version.
     ///
     /// # Examples
     ///
@@ -1659,7 +1665,8 @@ where
     ///
     /// # Panics
     ///
-    /// Panics if called from a non-Ruby thread.
+    /// Panics if called from a non-Ruby thread. See [`Ruby::ary_from_iter`]
+    /// for the non-panicking version.
     fn from_iter<I>(iter: I) -> Self
     where
         I: IntoIterator<Item = T>,
