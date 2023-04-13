@@ -1,4 +1,6 @@
 //! Types and functions for working with Ruby classes.
+//!
+//! See also [`Ruby`](Ruby#core-classes) for more class related methods.
 
 use std::{borrow::Cow, ffi::CStr, fmt, mem::transmute, os::raw::c_int};
 

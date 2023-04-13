@@ -32,6 +32,7 @@ impl Ruby {
 /// struct.
 ///
 /// See the [`ReprValue`] trait for additional methods available on this type.
+/// See [`Ruby`](Ruby#symbol) for methods to create a `Symbol`.
 #[derive(Clone, Copy, Eq, PartialEq)]
 #[repr(transparent)]
 pub struct Symbol(NonZeroValue);

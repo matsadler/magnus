@@ -31,6 +31,7 @@ impl Ruby {
 /// See also `Float`.
 ///
 /// See the [`ReprValue`] trait for additional methods available on this type.
+/// See [`Ruby`](Ruby#flonum) for methods to create a `Flonum`.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct Flonum(NonZeroValue);

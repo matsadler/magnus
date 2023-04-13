@@ -68,7 +68,8 @@ impl Ruby {
 /// This is the representation of an encoding exposed to Ruby code.
 ///
 /// See the [`ReprValue`] and [`Object`] traits for additional methods
-/// available on this type.
+/// available on this type. See [`Ruby`](Ruby#encoding) for methods to get an
+/// `Encoding`.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct Encoding(NonZeroValue);
@@ -219,6 +220,8 @@ impl Ruby {
 /// This type contains the data for an encoding, and is used with operations
 /// such as converting a string from one encoding to another, or reading a
 /// string character by character.
+///
+/// See [`Ruby`](Ruby#rbencoding) for methods to get an `RbEncoding`.
 #[repr(transparent)]
 pub struct RbEncoding(NonNull<rb_encoding>);
 
@@ -852,6 +855,8 @@ impl Ruby {
 ///
 /// This is the type Ruby uses to label encoding capable types, so is used with
 /// operations that require reading or setting that label.
+///
+/// See [`Ruby`](Ruby#encoding-index) for methods to get an `encoding::Index`.
 #[derive(Clone, Copy, Eq, PartialEq)]
 #[repr(transparent)]
 pub struct Index(c_int);

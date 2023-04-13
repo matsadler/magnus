@@ -26,6 +26,8 @@
 //! The [`get_kwargs`] function is used to extract keywords from a Ruby `Hash`
 //! of keywords and implement the behaviour around required and optional
 //! keyword arguments.
+//!
+//! See also [`Ruby`](Ruby#argument-parsing).
 
 use std::{
     ffi::CString,

@@ -45,6 +45,7 @@ impl Ruby {
 /// Value known to be an instance of Float.
 ///
 /// See the [`ReprValue`] trait for additional methods available on this type.
+/// See [`Ruby`](Ruby#float) for methods to create a `Float`.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct Float(NonZeroValue);

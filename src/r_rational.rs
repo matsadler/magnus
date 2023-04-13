@@ -36,6 +36,7 @@ impl Ruby {
 /// rational numbers.
 ///
 /// See the [`ReprValue`] trait for additional methods available on this type.
+/// See [`Ruby`](Ruby#rrational) for methods to create an `RRational`.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct RRational(NonZeroValue);

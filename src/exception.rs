@@ -1,4 +1,6 @@
 //! Types and functions for working with Ruby exceptions.
+//!
+//! See also [`Ruby`](Ruby#core-exceptions) for more exception related methods.
 
 use std::fmt;
 

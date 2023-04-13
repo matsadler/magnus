@@ -88,7 +88,8 @@ impl Ruby {
 /// Array.
 ///
 /// See the [`ReprValue`] and [`Object`] traits for additional methods
-/// available on this type.
+/// available on this type. See [`Ruby`](Ruby#rarray) for methods to create an
+/// `RArray`.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct RArray(NonZeroValue);

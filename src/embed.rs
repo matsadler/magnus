@@ -1,4 +1,6 @@
 //! Helpers for use when embedding Ruby in a Rust project.
+//!
+//! See also [`Ruby`](Ruby#embedding) for more embedding related methods.
 
 use std::{
     ffi::CString,

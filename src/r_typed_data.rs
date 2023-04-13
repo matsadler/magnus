@@ -58,7 +58,8 @@ impl Ruby {
 /// See also [`typed_data::Obj`](crate::typed_data::Obj).
 ///
 /// See the [`ReprValue`] and [`Object`] traits for additional methods
-/// available on this type.
+/// available on this type. See [`Ruby`](Ruby#rtypeddata) for methods to create
+/// an `RTypedData`.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct RTypedData(NonZeroValue);

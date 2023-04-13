@@ -41,6 +41,7 @@ impl Ruby {
 /// high precision floating point numbers.
 ///
 /// See the [`ReprValue`] trait for additional methods available on this type.
+/// See [`Ruby`](Ruby#rfloat) for methods to create an `RFloat`.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct RFloat(NonZeroValue);

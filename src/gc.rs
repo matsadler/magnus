@@ -1,4 +1,6 @@
 //! Functions for working with Ruby's Garbage Collector.
+//!
+//! See also [`Ruby`](Ruby#gc) for more GC related methods.
 
 use std::ops::Range;
 

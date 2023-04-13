@@ -43,6 +43,7 @@ impl Ruby {
 /// regular expressions.
 ///
 /// See the [`ReprValue`] trait for additional methods available on this type.
+/// See [`Ruby`](Ruby#rregexp) for methods to create an `RRegexp`.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct RRegexp(NonZeroValue);

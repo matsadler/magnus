@@ -1,4 +1,6 @@
 //! Types and functions for working with Ruby modules.
+//!
+//! See also [`Ruby`](Ruby#core-modules) for more module related methods.
 
 use std::{ffi::CString, fmt, mem::transmute, os::raw::c_int};
 
@@ -45,6 +47,7 @@ impl Ruby {
 /// See the [`Object`] trait for defining singlton methods (aka class methods).
 ///
 /// See the [`ReprValue`] trait for additional methods available on this type.
+/// See [`Ruby`](Ruby#rmodule) for methods to create an `RModule`.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct RModule(NonZeroValue);

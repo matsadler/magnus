@@ -1,4 +1,6 @@
 //! Types and functions for working with Ruby's Struct class.
+//!
+//! See also [`Ruby`](Ruby#struct) for more Struct related methods.
 
 use std::{
     borrow::Cow,

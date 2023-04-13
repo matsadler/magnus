@@ -44,7 +44,8 @@ impl Ruby {
 /// Wrapper type for a Value known to be an instance of Ruby's Range class.
 ///
 /// See the [`ReprValue`] and [`Object`] traits for additional methods
-/// available on this type.
+/// available on this type. See [`Ruby`](Ruby#range) for methods to create a
+/// `Range`.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct Range(RStruct);

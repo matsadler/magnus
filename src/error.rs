@@ -1,4 +1,6 @@
 //! Rust types for working with Ruby Exceptions and other interrupts.
+//!
+//! See also [`Ruby`](Ruby#errors) for more error related methods.
 
 use std::{any::Any, borrow::Cow, ffi::CString, fmt, mem::transmute, os::raw::c_int};
 

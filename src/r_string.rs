@@ -112,7 +112,8 @@ impl Ruby {
 /// strings.
 ///
 /// See the [`ReprValue`] and [`Object`] traits for additional methods
-/// available on this type.
+/// available on this type. See [`Ruby`](Ruby#rstring) for methods to create an
+/// `RString`.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct RString(NonZeroValue);

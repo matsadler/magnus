@@ -1,4 +1,6 @@
 //! Types and functions for working with Ruby blocks and Procs.
+//!
+//! See also [`Ruby`](Ruby#blocks) for more block related methods.
 
 use std::{
     fmt,
@@ -105,7 +107,8 @@ impl Ruby {
 /// Wrapper type for a Value known to be an instance of Ruby’s Proc class.
 ///
 /// See the [`ReprValue`] and [`Object`] traits for additional methods
-/// available on this type.
+/// available on this type. See [`Ruby`](Ruby#proc) for methods to create a
+/// `Proc`.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct Proc(NonZeroValue);

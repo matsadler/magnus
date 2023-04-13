@@ -49,6 +49,7 @@ impl Ruby {
 /// See also [`Integer`].
 ///
 /// See the [`ReprValue`] trait for additional methods available on this type.
+/// See [`Ruby`](Ruby#rbignum) for methods to create an `RBignum`.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct RBignum(NonZeroValue);

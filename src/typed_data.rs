@@ -533,7 +533,8 @@ where
 /// if types don't match, rather than on [`Obj::get`].
 ///
 /// See the [`ReprValue`] and [`Object`] traits for additional methods
-/// available on this type.
+/// available on this type. See [`Ruby`](Ruby#typed_dataobj) for methods to
+/// create a `typed_data::Obj`.
 #[repr(transparent)]
 pub struct Obj<T> {
     inner: RTypedData,

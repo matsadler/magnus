@@ -1690,7 +1690,7 @@ impl Ruby {
 
 /// Ruby's `false` value.
 ///
-/// See [`qfalse`] to obtain a value of this type.
+/// See [`Ruby::qfalse`]/[`qfalse`] to obtain a value of this type.
 ///
 /// See the [`ReprValue`] trait for additional methods available on this type.
 #[derive(Clone, Copy)]
@@ -1801,7 +1801,7 @@ impl Ruby {
 
 /// Ruby's `nil` value.
 ///
-/// See [`qnil`] to obtain a value of this type.
+/// See [`Ruby::qnil`]/[`qnil`] to obtain a value of this type.
 ///
 /// See the [`ReprValue`] trait for additional methods available on this type.
 #[derive(Clone, Copy)]
@@ -1938,7 +1938,7 @@ impl Ruby {
 
 /// Ruby's `true` value.
 ///
-/// See [`qtrue`] to obtain a value of this type.
+/// See [`Ruby::qtrue`]/[`qtrue`] to obtain a value of this type.
 ///
 /// See the [`ReprValue`] trait for additional methods available on this type.
 #[derive(Clone, Copy)]
@@ -2134,6 +2134,7 @@ impl Ruby {
 /// See also [`Integer`].
 ///
 /// See the [`ReprValue`] trait for additional methods available on this type.
+/// See [`Ruby`](Ruby#fixnum) for methods to create a `Fixnum`.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct Fixnum(NonZeroValue);
@@ -2605,6 +2606,7 @@ impl Ruby {
 /// See also [`Symbol`].
 ///
 /// See the [`ReprValue`] trait for additional methods available on this type.
+/// See [`Ruby`](Ruby#staticsymbol) for methods to create a `StaticSymbol`.
 #[derive(Clone, Copy, Eq, Hash, PartialEq)]
 #[repr(transparent)]
 pub struct StaticSymbol(NonZeroValue);
@@ -2817,6 +2819,8 @@ impl Ruby {
 pub struct Id(ID);
 
 /// The internal value of a Ruby symbol.
+///
+/// See [`Ruby`](Ruby#id) for methods to create an `Id`.
 #[cfg(not(feature = "deprecated-send-sync-value"))]
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 #[repr(transparent)]

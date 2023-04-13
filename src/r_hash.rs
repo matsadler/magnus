@@ -100,7 +100,8 @@ impl Ruby {
 /// objects.
 ///
 /// See the [`ReprValue`] and [`Object`] traits for additional methods
-/// available on this type.
+/// available on this type. See [`Ruby`](Ruby#rhash) for methods to create an
+/// `RHash`.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct RHash(NonZeroValue);

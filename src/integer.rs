@@ -51,6 +51,7 @@ impl Ruby {
 /// A type wrapping either a [`Fixnum`] or a [`RBignum`].
 ///
 /// See the [`ReprValue`] trait for additional methods available on this type.
+/// See [`Ruby`](Ruby#integer) for methods to create an `Integer`.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct Integer(NonZeroValue);
