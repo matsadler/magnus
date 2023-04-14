@@ -149,6 +149,8 @@ unsafe fn init_options(opts: &[&str]) {
 
 /// # Embedding
 ///
+/// Functions relevant when embedding Ruby in Rust.
+///
 /// See also the [`embed`](self) module.
 impl Ruby {
     /// Initialises the Ruby VM.

@@ -22,6 +22,8 @@ use crate::{
 
 /// # `Float`
 ///
+/// Functions that can be used to create instances of [`Float`].
+///
 /// See also the [`Float`] type.
 #[allow(missing_docs)]
 impl Ruby {

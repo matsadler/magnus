@@ -380,6 +380,10 @@ where
 
 /// # Extracting values from `Opaque`/`Lazy`
 ///
+/// Magnus has a number of container types where it is only safe to access the
+/// inner Ruby value when you can provide a `Ruby` handle. The functions here
+/// provide a unified api to access those container types.
+///
 /// See also the [`Opaque`] and [`Lazy`] types.
 impl Ruby {
     /// Get the inner value from `wrapper`.
@@ -1678,6 +1682,8 @@ unsafe impl<T> IntoValueFromNative for BoxValue<T> where T: ReprValue {}
 
 /// # `false`
 ///
+/// Get Ruby's `false` value.
+///
 /// See also the [`Qfalse`] type.
 #[allow(missing_docs)]
 impl Ruby {
@@ -1788,6 +1794,8 @@ impl TryConvert for Qfalse {
 impl TryConvertOwned for Qfalse {}
 
 /// # `nil`
+///
+/// Get Ruby's `nil` value.
 ///
 /// See also the [`Qnil`] type.
 #[allow(missing_docs)]
@@ -1925,6 +1933,8 @@ impl TryConvert for Qnil {
 impl TryConvertOwned for Qnil {}
 
 /// # `true`
+///
+/// Get Ruby's `true` value.
 ///
 /// See also the [`Qtrue`] type.
 #[allow(missing_docs)]
@@ -2111,6 +2121,9 @@ impl Qundef {
 }
 
 /// # `Fixnum`
+///
+/// Functions that can be used to create instances of Ruby's small/fast integer
+/// representation.
 ///
 /// See also the [`Fixnum`] type.
 #[allow(missing_docs)]
@@ -2577,6 +2590,8 @@ impl TryConvertOwned for Fixnum {}
 
 /// # `StaticSymbol`
 ///
+/// Functions to create Ruby `Symbol`s that will never be garbage collected.
+///
 /// See also the [`StaticSymbol`] type.
 #[allow(missing_docs)]
 impl Ruby {
@@ -2786,6 +2801,8 @@ impl TryConvert for StaticSymbol {
 impl TryConvertOwned for StaticSymbol {}
 
 /// # `Id`
+///
+/// Functions to create Ruby's low-level `Symbol` representation.
 ///
 /// See also the [`Id`] type.
 #[allow(missing_docs)]

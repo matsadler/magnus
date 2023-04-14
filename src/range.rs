@@ -23,6 +23,8 @@ use crate::{
 
 /// # `Range`
 ///
+/// Functions that can be used to create Ruby `Range`s.
+///
 /// See also the [`Range`] type.
 #[allow(missing_docs)]
 impl Ruby {

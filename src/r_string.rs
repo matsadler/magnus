@@ -44,6 +44,8 @@ use crate::{
 
 /// # `RString`
 ///
+/// Functions that can be used to create Ruby `String`s.
+///
 /// See also the [`RString`] type.
 #[allow(missing_docs)]
 impl Ruby {

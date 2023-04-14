@@ -554,7 +554,10 @@ where
 
 /// # `typed_data::Obj`
 ///
-/// See also the [`typed_data::Obj`](Obj) type.
+/// Functions to wrap Rust data in a Ruby object.
+///
+/// See also [`RTypedData`](Ruby#rtypeddata) and the [`typed_data::Obj`](Obj)
+/// type.
 #[allow(missing_docs)]
 impl Ruby {
     pub fn obj_wrap<T>(&self, data: T) -> Obj<T>

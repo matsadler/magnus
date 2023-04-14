@@ -1996,6 +1996,10 @@ macro_rules! rb_assert {
 
 /// # Globals
 ///
+/// Functions for defining global variables, constants, etc, as well as
+/// accessing current Ruby execution status such as calling the current `super`
+/// method.
+///
 /// See also [functions in the root module](self#functions).
 #[allow(missing_docs)]
 impl Ruby {

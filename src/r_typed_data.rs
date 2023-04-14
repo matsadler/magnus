@@ -18,7 +18,10 @@ use crate::{
 
 /// # `RTypedData`
 ///
-/// See also the [`RTypedData`] type.
+/// Functions to wrap Rust data in a Ruby object.
+///
+/// See also [`typed_data::Obj`](Ruby#typed_dataobj) and the [`RTypedData`]
+/// type.
 #[allow(missing_docs)]
 impl Ruby {
     #[inline]

@@ -17,6 +17,8 @@ use crate::{
 
 /// # `RRational`
 ///
+/// Functions that can be used to create Ruby `Rational`s.
+///
 /// See also the [`RRational`] type.
 #[allow(missing_docs)]
 impl Ruby {

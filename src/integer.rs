@@ -22,6 +22,8 @@ pub(crate) enum IntegerType {
 
 /// # `Integer`
 ///
+/// Functions that can be used to create instances of [`Integer`].
+///
 /// See also the [`Integer`] type.
 #[allow(missing_docs)]
 impl Ruby {

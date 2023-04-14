@@ -31,6 +31,8 @@ use crate::{
 
 /// # `RModule`
 ///
+/// Functions that can be used to create Ruby modules.
+///
 /// See also the [`RModule`] type.
 #[allow(missing_docs)]
 impl Ruby {
@@ -726,7 +728,9 @@ impl Attr {
 
 /// # Core Modules
 ///
-/// See also the [`module`](self) module.
+/// Functions to access Ruby's built-in modules.
+///
+/// See also [`Ruby::define_module`] and the [`module`](self) module.
 #[allow(missing_docs)]
 impl Ruby {
     #[inline]

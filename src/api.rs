@@ -89,7 +89,6 @@ impl RubyGvlState {
 /// * [Accessing `Ruby`](#accessing-ruby) - how to get a `Ruby` handle
 /// * [Argument Parsing](#argument-parsing) - helpers for argument handling
 /// * [Blocks](#blocks) - working with Ruby blocks
-/// * [`break`](#break)
 /// * [Conversion to `Value`](#conversion-to-value)
 /// * [Core Classes](#core-classes) - access built-in classes
 /// * [Core Exceptions](#core-exceptions) - access built-in exceptions

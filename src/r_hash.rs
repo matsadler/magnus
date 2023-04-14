@@ -82,6 +82,8 @@ where
 
 /// # `RHash`
 ///
+/// Functions that can be used to create Ruby `Hash`es.
+///
 /// See also the [`RHash`] type.
 #[allow(missing_docs)]
 impl Ruby {

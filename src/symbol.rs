@@ -19,6 +19,8 @@ use crate::{
 
 /// # Symbol
 ///
+/// Functions that can be used to create Ruby `Symbol`s.
+///
 /// See also the [`Symbol`] type.
 #[allow(missing_docs)]
 impl Ruby {

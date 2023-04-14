@@ -24,6 +24,8 @@ use crate::{
 
 /// # `RRegexp`
 ///
+/// Functions that can be used to create Ruby `Regexp`s.
+///
 /// See also the [`RRegexp`] type.
 #[allow(missing_docs)]
 impl Ruby {

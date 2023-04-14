@@ -19,6 +19,8 @@ use crate::{
 
 /// # `RFloat`
 ///
+/// Functions that can be used to create Ruby `Float`s.
+///
 /// See also the [`RFloat`] type.
 #[allow(missing_docs)]
 impl Ruby {

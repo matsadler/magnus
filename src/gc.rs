@@ -122,6 +122,8 @@ where
 
 /// # GC
 ///
+/// Functions for working with Ruby's Garbage Collector.
+///
 /// See also the [`gc`](self) module.
 #[allow(missing_docs)]
 impl Ruby {

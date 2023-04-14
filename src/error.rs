@@ -39,9 +39,11 @@ impl fmt::Display for RubyUnavailableError {
 
 impl std::error::Error for RubyUnavailableError {}
 
-/// # `break`
+/// # Errors
 ///
-/// See also [`Error::iter_break`].
+/// Functions for working with errors and flow control encoded as an [`Error`].
+///
+/// See also [`Error`] and the [`error`](self) module.
 #[allow(missing_docs)]
 impl Ruby {
     pub fn iter_break_value<T>(&self, val: Option<T>) -> Error
@@ -63,6 +65,11 @@ impl Ruby {
             })
             .unwrap_err(),
         }
+    }
+
+    pub fn warning(&self, s: &str) {
+        let s = CString::new(s).unwrap();
+        unsafe { rb_warning(s.as_ptr()) };
     }
 }
 
@@ -444,17 +451,6 @@ pub fn bug(s: &str) -> ! {
     // as we never get here `s` isn't dropped, technically this is a memory
     // leak, in practice we don't care because we just hard crashed
     unreachable!()
-}
-
-/// # Errors
-///
-/// See also the [`error`](self) module.
-#[allow(missing_docs)]
-impl Ruby {
-    pub fn warning(&self, s: &str) {
-        let s = CString::new(s).unwrap();
-        unsafe { rb_warning(s.as_ptr()) };
-    }
 }
 
 /// Outputs `s` to Ruby's stderr if Ruby is configured to output warnings.

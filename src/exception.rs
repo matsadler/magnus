@@ -228,6 +228,8 @@ impl TryConvert for ExceptionClass {
 
 /// # Core Exceptions
 ///
+/// Functions to access Ruby's built-in exception classes.
+///
 /// See also the [`exception`](self) module.
 #[allow(missing_docs)]
 impl Ruby {

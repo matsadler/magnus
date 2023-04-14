@@ -8,6 +8,8 @@ use crate::{
 
 /// # Conversion to `Value`
 ///
+/// Helpers for the [`IntoValue`] trait.
+///
 /// See also the [`IntoValue`] trait.
 #[allow(missing_docs)]
 impl Ruby {

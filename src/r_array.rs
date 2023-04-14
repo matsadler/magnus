@@ -29,6 +29,8 @@ use crate::{
 
 /// # `RArray`
 ///
+/// Functions that can be used to create Ruby `Array`s.
+///
 /// See also the [`RArray`] type.
 #[allow(missing_docs)]
 impl Ruby {

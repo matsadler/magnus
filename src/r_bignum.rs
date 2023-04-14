@@ -23,6 +23,9 @@ use crate::{
 
 /// # `RBignum`
 ///
+/// Functions that can be used to create instances of Ruby's large interger
+/// representation.
+///
 /// See also the [`RBignum`] type.
 #[allow(missing_docs)]
 impl Ruby {

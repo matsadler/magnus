@@ -15,6 +15,9 @@ use crate::{
 
 /// # `Flonum`
 ///
+/// Functions that can be used to create instances of Ruby's lower precision
+/// floating point representation.
+///
 /// See also the [`Flonum`] type.
 #[allow(missing_docs)]
 impl Ruby {

@@ -254,6 +254,8 @@ impl TryConvert for RStruct {
 
 /// # `Struct`
 ///
+/// Functions that can be used to create Ruby `Struct` classes.
+///
 /// See also the [`struct`](self) module.
 #[allow(missing_docs)]
 impl Ruby {

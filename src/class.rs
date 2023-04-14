@@ -496,6 +496,8 @@ impl Class for RClass {
 
 /// # Core Classes
 ///
+/// Functions to access Ruby's built-in classes.
+///
 /// See also the [`class`](self) module.
 #[allow(missing_docs)]
 impl Ruby {

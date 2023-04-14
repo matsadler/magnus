@@ -801,6 +801,8 @@ where
 
 /// # Argument Parsing
 ///
+/// Functions for handling argument parsing.
+///
 /// See also the [`scan_args`] module.
 #[allow(missing_docs)]
 impl Ruby {

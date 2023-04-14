@@ -51,6 +51,8 @@ use crate::{
 
 /// # `Encoding`
 ///
+/// Functions to access pre-defined Encodings.
+///
 /// See also the [`Encoding`] type.
 #[allow(missing_docs)]
 impl Ruby {
@@ -176,6 +178,8 @@ impl TryConvert for Encoding {
 }
 
 /// # `RbEncoding`
+///
+/// Functions to access pre-defined encodings.
 ///
 /// See also the [`RbEncoding`] type.
 #[allow(missing_docs)]
@@ -809,6 +813,8 @@ impl TryConvert for RbEncoding {
 }
 
 /// # Encoding Index
+///
+/// Functions to access pre-defined encodings.
 ///
 /// See also the [`encoding::Index`](Index) type.
 #[allow(missing_docs)]

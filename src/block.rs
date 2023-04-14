@@ -34,6 +34,9 @@ use crate::{
 
 /// # `Proc`
 ///
+/// Functions that can be used to create instances of [`Proc`], Ruby's
+/// representation of a block as an object.
+///
 /// See also the [`Proc`] type.
 #[allow(missing_docs)]
 impl Ruby {
@@ -418,6 +421,8 @@ where
 }
 
 /// # Blocks
+///
+/// Functions to enable working with Ruby blocks.
 ///
 /// See also the [`block`](self) module.
 #[allow(missing_docs)]
