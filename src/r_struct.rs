@@ -270,10 +270,45 @@ impl Ruby {
 
 /// Define a Ruby Struct class.
 ///
+/// `members` is a tuple of `&str`, of between lengths 1 to 12 inclusive.
+///
 /// # Panics
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::define_struct`] for
 /// the non-panicking version.
+///
+/// # Examples
+///
+/// When providing `None` for the `name` the struct class's name will be taken
+/// from the first constant it is assigned to:
+///
+/// ```
+/// use magnus::{define_global_const, prelude::*, r_struct::define_struct};
+/// # let _cleanup = unsafe { magnus::embed::init() };
+///
+/// let struct_class = define_struct(None, ("foo", "bar")).unwrap();
+/// define_global_const("Example", struct_class).unwrap();
+///
+/// assert_eq!(unsafe { struct_class.name().to_owned() }, "Example");
+///
+/// let instance = struct_class.new_instance((1, 2)).unwrap();
+/// assert_eq!(instance.inspect(), "#<struct Example foo=1, bar=2>")
+/// ```
+///
+/// When providing `Some("Name")` for the `name` the struct will be defined
+/// under `Struct`:
+///
+/// ```
+/// use magnus::{prelude::*, r_struct::define_struct};
+/// # let _cleanup = unsafe { magnus::embed::init() };
+///
+/// let struct_class = define_struct(Some("Example"), ("foo", "bar")).unwrap();
+///
+/// assert_eq!(unsafe { struct_class.name().to_owned() }, "Struct::Example");
+///
+/// let instance = struct_class.new_instance((1, 2)).unwrap();
+/// assert_eq!(instance.inspect(), "#<struct Struct::Example foo=1, bar=2>")
+/// ```
 #[cfg(feature = "friendly-api")]
 #[inline]
 pub fn define_struct<T>(name: Option<&str>, members: T) -> Result<RClass, Error>
