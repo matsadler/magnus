@@ -1725,7 +1725,7 @@ pub const QFALSE: Qfalse = Qfalse::new();
 /// use magnus::{rb_assert, value::qfalse};
 /// # let _cleanup = unsafe { magnus::embed::init() };
 ///
-///rb_assert!("val == false", val = qfalse());
+/// rb_assert!("val == false", val = qfalse());
 /// ```
 #[cfg(feature = "friendly-api")]
 #[inline]
@@ -1838,7 +1838,7 @@ pub const QNIL: Qnil = Qnil::new();
 /// use magnus::{rb_assert, value::qnil};
 /// # let _cleanup = unsafe { magnus::embed::init() };
 ///
-///rb_assert!("val == nil", val = qnil());
+/// rb_assert!("val == nil", val = qnil());
 /// ```
 #[cfg(feature = "friendly-api")]
 #[inline]
@@ -1977,7 +1977,7 @@ pub const QTRUE: Qtrue = Qtrue::new();
 /// use magnus::{rb_assert, value::qtrue};
 /// # let _cleanup = unsafe { magnus::embed::init() };
 ///
-///rb_assert!("val == true", val = qtrue());
+/// rb_assert!("val == true", val = qtrue());
 /// ```
 #[cfg(feature = "friendly-api")]
 #[inline]
