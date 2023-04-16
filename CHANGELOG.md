@@ -71,6 +71,8 @@
 - `Default` implementations for `Value`, `RClass`, and `ExceptionClass`.
 - `Error` can no longer be directly constructed, must use `Error::new` or
   `Error::from`/`Exception::into`.
+- `RString::append` (use `RString::buf_append`).
+- `Error::runtime_error` (use `Error::new(exception::runtime_error(), msg)`).
 
 ### Fixed
 

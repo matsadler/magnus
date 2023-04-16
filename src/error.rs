@@ -105,22 +105,6 @@ impl Error {
         Self(ErrorType::Jump(tag))
     }
 
-    /// Create a new `RuntimeError` with `msg`.
-    #[deprecated(
-        since = "0.5.0",
-        note = "Please use `Error::new(exception::runtime_error(), msg)` instead"
-    )]
-    #[cfg(feature = "friendly-api")]
-    pub fn runtime_error<T>(msg: T) -> Self
-    where
-        T: Into<Cow<'static, str>>,
-    {
-        Self(ErrorType::Error(
-            get_ruby!().exception_runtime_error(),
-            msg.into(),
-        ))
-    }
-
     /// Create a new error that will break from a loop when returned to Ruby.
     ///
     /// # Panics

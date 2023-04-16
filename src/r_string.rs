@@ -1129,12 +1129,6 @@ impl RString {
         Ok(())
     }
 
-    #[doc(hidden)]
-    #[deprecated(since = "0.5.0", note = "please use `buf_append` instead")]
-    pub fn append(self, other: Self) -> Result<(), Error> {
-        self.buf_append(other)
-    }
-
     /// Mutate `self`, adding `buf` to the end.
     ///
     /// Note: This ignore's `self`'s encoding, and may result in `self`
