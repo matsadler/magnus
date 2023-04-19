@@ -414,7 +414,7 @@ pub trait Module: Object + ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{class, Module, RClass};
+    /// use magnus::{class, prelude::*, Module, RClass};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let a = RClass::new(class::object()).unwrap();

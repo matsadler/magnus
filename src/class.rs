@@ -33,6 +33,7 @@ use crate::{
 /// A Value pointer to a RClass struct, Ruby's internal representation of
 /// classes.
 ///
+/// See the [`Class`] trait for methods available on classes.
 /// See the [`Module`] trait for defining instance methods and nested
 /// classes/modules.
 /// See the [`Object`] trait for defining singlton methods (aka class methods).
@@ -66,83 +67,6 @@ impl RClass {
     #[inline]
     pub(crate) unsafe fn from_rb_value_unchecked(val: VALUE) -> Self {
         Self(NonZeroValue::new_unchecked(Value::new(val)))
-    }
-
-    /// Create a new anonymous class.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use magnus::{class, prelude::*, RClass};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
-    ///
-    /// let class = RClass::new(class::object()).unwrap();
-    /// assert!(class.is_kind_of(class::class()));
-    /// ```
-    pub fn new(superclass: RClass) -> Result<RClass, Error> {
-        Class::new(superclass)
-    }
-
-    /// Create a new object, an instance of `self`, passing the arguments
-    /// `args` to the initialiser.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use magnus::{class, prelude::*};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
-    ///
-    /// let s = class::string().new_instance(()).unwrap();
-    /// assert!(s.is_kind_of(class::string()));
-    /// assert_eq!(s.to_string(), "");
-    /// ```
-    pub fn new_instance<T>(self, args: T) -> Result<Value, Error>
-    where
-        T: ArgList,
-    {
-        Class::new_instance(self, args)
-    }
-
-    /// Returns the parent class of `self`.
-    ///
-    /// Returns `Err` if `self` can not have a parent class.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use magnus::{class, prelude::*};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
-    ///
-    /// let klass = class::hash().superclass().unwrap();
-    /// assert!(klass.equal(class::object()).unwrap());
-    /// ```
-    pub fn superclass(self) -> Result<Self, Error> {
-        Class::superclass(self)
-    }
-
-    /// Return the name of `self`.
-    ///
-    /// # Safety
-    ///
-    /// Ruby may modify or free the memory backing the returned str, the caller
-    /// must ensure this does not happen.
-    ///
-    /// This can be used safely by immediately calling
-    /// [`into_owned`](Cow::into_owned) on the return value.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use magnus::class;
-    /// # let _cleanup = unsafe { magnus::embed::init() };
-    ///
-    /// let value = class::hash();
-    /// // safe as we neve give Ruby a chance to free the string.
-    /// let s = unsafe { value.name() }.into_owned();
-    /// assert_eq!(s, "Hash");
-    /// ```
-    pub unsafe fn name(&self) -> Cow<str> {
-        Class::name(self)
     }
 }
 
@@ -195,6 +119,14 @@ pub trait Class: Module {
     /// # Examples
     ///
     /// ```
+    /// use magnus::{class, prelude::*, RClass};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let class = RClass::new(class::object()).unwrap();
+    /// assert!(class.is_kind_of(class::class()));
+    /// ```
+    ///
+    /// ```
     /// use magnus::{exception, prelude::*, ExceptionClass};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
@@ -206,6 +138,15 @@ pub trait Class: Module {
     /// `args` to the initialiser.
     ///
     /// # Examples
+    ///
+    /// ```
+    /// use magnus::{class, prelude::*};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let s = class::string().new_instance(()).unwrap();
+    /// assert!(s.is_kind_of(class::string()));
+    /// assert_eq!(s.to_string(), "");
+    /// ```
     ///
     /// ```
     /// use magnus::{exception, prelude::*};
@@ -226,6 +167,14 @@ pub trait Class: Module {
     /// # Examples
     ///
     /// ```
+    /// use magnus::{class, prelude::*};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let s = class::string().obj_alloc().unwrap();
+    /// assert!(s.is_kind_of(class::string()));
+    /// ```
+    ///
+    /// ```
     /// use magnus::{exception, prelude::*};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
@@ -239,6 +188,14 @@ pub trait Class: Module {
     /// Returns `Err` if `self` can not have a parent class.
     ///
     /// # Examples
+    ///
+    /// ```
+    /// use magnus::{class, prelude::*};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let klass = class::hash().superclass().unwrap();
+    /// assert!(klass.equal(class::object()).unwrap());
+    /// ```
     ///
     /// ```
     /// use magnus::{class, exception, prelude::*};
@@ -264,6 +221,16 @@ pub trait Class: Module {
     /// [`into_owned`](Cow::into_owned) on the return value.
     ///
     /// # Examples
+    ///
+    /// ```
+    /// use magnus::{class, prelude::*};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let value = class::hash();
+    /// // safe as we neve give Ruby a chance to free the string.
+    /// let s = unsafe { value.name() }.into_owned();
+    /// assert_eq!(s, "Hash");
+    /// ```
     ///
     /// ```
     /// use magnus::{exception, prelude::*};

@@ -67,6 +67,8 @@
   `Value` know to be an instance of Ruby's Binding class.
 
 ### Removed
+- Inherent methods on `RClass`, import `magnus::Class` trait or
+  `magnus::prelude::*`.
 - `Into<Value>`/`From<T> for Value` implementations, use `IntoValue`.
 - `Default` implementations for `Value`, `RClass`, and `ExceptionClass`.
 - `Error` can no longer be directly constructed, must use `Error::new` or
