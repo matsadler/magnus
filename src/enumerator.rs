@@ -16,14 +16,45 @@ use crate::{
 
 /// Wrapper type for a Value known to be an instance of Ruby's Enumerator class.
 ///
+/// `Enumerator` implements [`Iterator`], however Rust's iterators are a pull
+/// based model, whereas Ruby's enumerators are a push based model. Bridging
+/// these two models incurs a performance penalty, so `Enumerator` may not be
+/// the most performant way of iterating a collection.
+///
 /// See the [`ReprValue`] and [`Object`] traits for additional methods
 /// available on this type.
+///
+/// # Examples
+///
+/// ```
+/// use magnus::{prelude::*, rb_assert, RArray, RString};
+/// # let _cleanup = unsafe { magnus::embed::init() };
+///
+/// let s = RString::new("foo\nbar\nbaz");
+/// let results = RArray::new();
+///
+/// // `enumeratorize` returns `Enumerator`
+/// for line in s.enumeratorize("each_line", ()) {
+///     results.push(line.unwrap()).unwrap();
+/// }
+/// rb_assert!(r#"results == ["foo\n", "bar\n", "baz"]"#, results);
+/// ```
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct Enumerator(NonZeroValue);
 
 impl Enumerator {
     /// Return `Some(Enumerator)` if `val` is an `Enumerator`, `None` otherwise.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, Enumerator};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// assert!(Enumerator::from_value(eval("[1, 2, 3].each").unwrap()).is_some());
+    /// assert!(Enumerator::from_value(eval("[1, 2, 3]").unwrap()).is_none());
+    /// ```
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
         unsafe {
