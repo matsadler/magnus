@@ -5,8 +5,8 @@
 use std::{any::Any, borrow::Cow, ffi::CString, fmt, mem::transmute, os::raw::c_int};
 
 use rb_sys::{
-    rb_bug, rb_ensure, rb_errinfo, rb_exc_raise, rb_iter_break, rb_iter_break_value, rb_jump_tag,
-    rb_protect, rb_set_errinfo, rb_warning, ruby_special_consts, VALUE,
+    rb_bug, rb_ensure, rb_errinfo, rb_exc_raise, rb_iter_break_value, rb_jump_tag, rb_protect,
+    rb_set_errinfo, rb_warning, ruby_special_consts, VALUE,
 };
 
 use crate::{
@@ -46,25 +46,16 @@ impl std::error::Error for RubyUnavailableError {}
 /// See also [`Error`] and the [`error`](self) module.
 #[allow(missing_docs)]
 impl Ruby {
-    pub fn iter_break_value<T>(&self, val: Option<T>) -> Error
+    pub fn iter_break_value<T>(&self, val: T) -> Error
     where
         T: IntoValue,
     {
-        match val {
-            Some(val) => {
-                let val = self.into_value(val);
-                protect(|| {
-                    unsafe { rb_iter_break_value(val.as_rb_value()) };
-                    self.qnil()
-                })
-                .unwrap_err()
-            }
-            None => protect(|| {
-                unsafe { rb_iter_break() };
-                self.qnil()
-            })
-            .unwrap_err(),
-        }
+        let val = self.into_value(val);
+        protect(|| {
+            unsafe { rb_iter_break_value(val.as_rb_value()) };
+            self.qnil()
+        })
+        .unwrap_err()
     }
 
     pub fn warning(&self, s: &str) {
@@ -73,7 +64,7 @@ impl Ruby {
     }
 }
 
-/// Shorthand for `std::result::Result<T, Error>`.
+/// Shorthand for `std::result::Result<T, magnus::Error>`.
 pub type Result<T> = std::result::Result<T, Error>;
 
 /// The possible types of [`Error`].
@@ -88,12 +79,40 @@ pub enum ErrorType {
     Exception(Exception),
 }
 
-/// A Rust representation of a Ruby `Exception` or other interrupt.
+/// Wrapper type for Ruby `Exception`s or other interrupts.
 #[derive(Debug)]
 pub struct Error(ErrorType);
 
 impl Error {
-    /// Create a new `Error` that can be raised as a Ruby `Exception` with `msg`.
+    /// Create a new `Error` that can be raised as a Ruby `Exception` with
+    /// `msg`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{define_global_function, eval, exception, function, prelude::*, Error, Exception};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// fn bang() -> Result<(), Error> {
+    ///     Err(Error::new(exception::runtime_error(), "BANG"))
+    /// }
+    /// define_global_function("bang", function!(bang, 0));
+    ///
+    /// let error: Exception = eval(
+    ///     "
+    ///       begin
+    ///         bang
+    ///       rescue => e
+    ///         e
+    ///       end
+    ///     ",
+    /// )
+    /// .unwrap();
+    ///
+    /// assert!(error.is_kind_of(exception::runtime_error()));
+    /// let msg: String = error.funcall("message", ()).unwrap();
+    /// assert_eq!(msg, "BANG")
+    /// ```
     pub fn new<T>(class: ExceptionClass, msg: T) -> Self
     where
         T: Into<Cow<'static, str>>,
@@ -111,9 +130,30 @@ impl Error {
     ///
     /// Panics if called from a non-Ruby thread. See [`Ruby::iter_break_value`]
     /// for the non-panicking version.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{prelude::*, Error};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let i: i64 = magnus::Range::new(1, 100, false)
+    ///     .unwrap()
+    ///     .block_call("each", (), |args, _block| {
+    ///         let i = i64::try_convert(*args.get(0).unwrap())?;
+    ///         if i % 3 == 0 && i % 5 == 0 {
+    ///             Err(Error::iter_break(i))
+    ///         } else {
+    ///             Ok(())
+    ///         }
+    ///     })
+    ///     .unwrap();
+    ///
+    /// assert_eq!(i, 15);
+    /// ```
     #[cfg(feature = "friendly-api")]
     #[inline]
-    pub fn iter_break<T>(val: Option<T>) -> Self
+    pub fn iter_break<T>(val: T) -> Self
     where
         T: IntoValue,
     {
@@ -122,6 +162,41 @@ impl Error {
 
     /// Matches the internal `Exception` against `class` with same semantics as
     /// Ruby's `rescue`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{
+    ///     class, eval, exception::ExceptionClass, prelude::*, Error, RModule, TryConvert, Value,
+    /// };
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let err: Error = eval::<Value>(
+    ///     "
+    ///       class ExampleError < StandardError
+    ///       end
+    ///       module Tag
+    ///       end
+    ///       class SpecificError < ExampleError
+    ///         include Tag
+    ///       end
+    ///       raise SpecificError
+    ///     ",
+    /// )
+    /// .unwrap_err();
+    ///
+    /// fn get<T: TryConvert>(name: &str) -> T {
+    ///     class::object().const_get::<_, T>(name).unwrap()
+    /// }
+    /// assert!(err.is_kind_of(get::<ExceptionClass>("SpecificError")));
+    /// assert!(err.is_kind_of(get::<ExceptionClass>("ExampleError")));
+    /// assert!(err.is_kind_of(get::<ExceptionClass>("StandardError")));
+    /// assert!(err.is_kind_of(get::<ExceptionClass>("Exception")));
+    /// assert!(err.is_kind_of(get::<RModule>("Tag")));
+    ///
+    /// assert!(!err.is_kind_of(get::<ExceptionClass>("NoMethodError")));
+    /// assert!(!err.is_kind_of(get::<RModule>("Math")));
+    /// ```
     pub fn is_kind_of<T>(&self, class: T) -> bool
     where
         T: ReprValue + Module,
@@ -220,6 +295,10 @@ impl From<Exception> for Error {
 ///
 /// [`OpaqueError::into_error_with`] provides a way to safely get an [`Error`]
 /// from a `OpaqueError`].
+///
+/// Note that `OpaqueError` contains a Ruby value, so must be kept on the stack
+/// of a Ruby thread to prevent it from being Garbage Collected (or otherwise
+/// protected from premature GC).
 pub struct OpaqueError(ErrorType);
 
 unsafe impl Send for OpaqueError {}

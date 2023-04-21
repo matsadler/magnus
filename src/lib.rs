@@ -983,8 +983,8 @@
 // * `rb_is_instance_id`:
 // * `rb_is_junk_id`:
 // * `rb_is_local_id`:
-// * `rb_iter_break`:
-// * `rb_iter_break_value`:
+//! * `rb_iter_break`: See [`Error::iter_break`].
+//! * `rb_iter_break_value`: [`Error::iter_break`].
 // * `rb_ivar_count`:
 // * `rb_ivar_defined`:
 // * `rb_ivar_foreach`:
