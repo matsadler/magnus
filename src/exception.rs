@@ -43,6 +43,16 @@ pub struct Exception(NonZeroValue);
 
 impl Exception {
     /// Return `Some(Exception)` if `val` is an `Exception`, `None` otherwise.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, Exception};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// assert!(Exception::from_value(eval(r#"StandardError.new("example")"#).unwrap()).is_some());
+    /// assert!(Exception::from_value(eval("Object.new").unwrap()).is_none());
+    /// ```
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
         debug_assert_value!(val);
@@ -62,6 +72,18 @@ impl Exception {
     /// [`ExceptionClass`].
     ///
     /// See also [`ReprValue::class`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, prelude::*, Exception};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let e: Exception = eval(r#"StandardError.new("example")"#).unwrap();
+    /// let ec = e.exception_class();
+    /// // safe as we immediately create an owned String and drop the reference
+    /// assert_eq!(unsafe { ec.name().to_owned() }, "StandardError");
+    /// ```
     pub fn exception_class(self) -> ExceptionClass {
         unsafe { ExceptionClass::from_rb_value_unchecked(self.class().as_rb_value()) }
     }
@@ -144,6 +166,17 @@ pub struct ExceptionClass(NonZeroValue);
 impl ExceptionClass {
     /// Return `Some(ExceptionClass)` if `val` is an `ExceptionClass`, `None`
     /// otherwise.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, ExceptionClass};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// assert!(ExceptionClass::from_value(eval("StandardError").unwrap()).is_some());
+    /// assert!(ExceptionClass::from_value(eval(r#"StandardError.new("example")"#).unwrap()).is_none());
+    /// assert!(ExceptionClass::from_value(eval("Object").unwrap()).is_none());
+    /// ```
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
         debug_assert_value!(val);
