@@ -300,6 +300,7 @@
 - `Value::leak`, use `gc::register_mark_object` instead.
 - `define_global_variable` (use `define_variable`) to better match Ruby C API
   naming.
+- `Exception::backtrace`, use `ex.funcall("backtrace", ())` instead.
 
 ### Removed
 - `error::protect` removed as it should not be needed when using Magnus. For

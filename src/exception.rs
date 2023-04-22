@@ -66,8 +66,11 @@ impl Exception {
         unsafe { ExceptionClass::from_rb_value_unchecked(self.class().as_rb_value()) }
     }
 
-    /// Return the Ruby backtrace for the exception, as a [`RArray`] of
-    /// [`RString`](`crate::r_string::RString`)s.
+    #[doc(hidden)]
+    #[deprecated(
+        since = "0.6.0",
+        note = "Please use `ex.funcall(\"backtrace\", ())` instead."
+    )]
     pub fn backtrace(self) -> Result<Option<RArray>, Error> {
         self.funcall("backtrace", ())
     }
@@ -84,7 +87,7 @@ impl fmt::Debug for Exception {
         if f.alternate() {
             unsafe {
                 writeln!(f, "{}: {}", self.classname(), self)?;
-                if let Ok(Some(backtrace)) = self.backtrace() {
+                if let Ok(Some(backtrace)) = self.funcall::<_, _, Option<RArray>>("backtrace", ()) {
                     for line in backtrace.each() {
                         if let Ok(line) = line {
                             writeln!(f, "{}", line)?;
