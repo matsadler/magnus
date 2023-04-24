@@ -21,6 +21,7 @@ bytes = ["dep:bytes"]
 embed = ["rb-sys/link-ruby"]
 old-api = []
 rb-sys = []
+integer-traits = []
 
 [dependencies]
 bytes = { version = "1", optional = true }
@@ -29,7 +30,7 @@ rb-sys = { version = "0.9.81", default-features = false, features = ["bindgen-rb
 seq-macro = "0.3"
 
 [dev-dependencies]
-magnus = { path = ".", features = ["embed", "rb-sys"] }
+magnus = { path = ".", features = ["embed", "rb-sys", "integer-traits"] }
 rb-sys = { version = "*", default-features = false, features = ["stable-api-compiled-fallback"] }
 
 [build-dependencies]

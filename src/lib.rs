@@ -1802,6 +1802,9 @@ pub mod exception;
 mod float;
 pub mod gc;
 mod integer;
+#[cfg(feature = "integer-traits")]
+#[cfg_attr(docsrs, doc(cfg(feature = "integer-traits")))]
+pub mod integer_traits;
 mod into_value;
 pub mod method;
 pub mod module;
