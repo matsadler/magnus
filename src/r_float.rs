@@ -39,8 +39,10 @@ impl Ruby {
     }
 }
 
-/// A Value pointer to a RFloat struct, Ruby's internal representation of
+/// A Value pointer to an RFloat struct, Ruby's internal representation of
 /// high precision floating point numbers.
+///
+/// See also [`Float`] and [`Flonum`].
 ///
 /// See the [`ReprValue`] trait for additional methods available on this type.
 /// See [`Ruby`](Ruby#rfloat) for methods to create an `RFloat`.
@@ -50,11 +52,25 @@ pub struct RFloat(NonZeroValue);
 
 impl RFloat {
     /// Return `Some(RFloat)` if `val` is a `RFloat`, `None` otherwise.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RFloat};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// assert!(RFloat::from_value(eval("1.7272337110188890e-77").unwrap()).is_some());
+    /// // can fit within a Flonum, so does not require an RFloat
+    /// assert!(RFloat::from_value(eval("1.7272337110188893e-77").unwrap()).is_none());
+    /// // not an RFloat
+    /// assert!(RFloat::from_value(eval("1").unwrap()).is_none());
+    /// ```
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
         unsafe {
-            (val.rb_type() == ruby_value_type::RUBY_T_FLOAT)
-                .then(|| Self(NonZeroValue::new_unchecked(val)))
+            (val.rb_type() == ruby_value_type::RUBY_T_FLOAT
+                && (!cfg!(ruby_use_flonum) || !val.is_flonum()))
+            .then(|| Self(NonZeroValue::new_unchecked(val)))
         }
     }
 
@@ -66,12 +82,25 @@ impl RFloat {
     /// Create a new `RFloat` from an `f64.`
     ///
     /// Returns `Ok(RFloat)` if `n` requires a high precision float, otherwise
-    /// returns `Err(Fixnum)`.
+    /// returns `Err(Flonum)`.
     ///
     /// # Panics
     ///
     /// Panics if called from a non-Ruby thread. See [`Ruby::r_float_from_f64`]
     /// for the non-panicking version.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, RFloat};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let f = RFloat::from_f64(1.7272337110188890e-77).unwrap();
+    /// rb_assert!("f == 1.7272337110188890e-77", f);
+    ///
+    /// // can fit within a Flonum, so does not require an RFloat
+    /// assert!(RFloat::from_f64(1.7272337110188893e-77).is_err());
+    /// ```
     #[cfg(feature = "friendly-api")]
     #[cfg(ruby_use_flonum)]
     #[inline]
@@ -85,6 +114,19 @@ impl RFloat {
     ///
     /// Panics if called from a non-Ruby thread. See [`Ruby::r_float_from_f64`]
     /// for the non-panicking version.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, RFloat};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let f = RFloat::from_f64(1.7272337110188893e-77).unwrap();
+    /// rb_assert!("f == 1.7272337110188893e-77", f);
+    ///
+    /// let f = RFloat::from_f64(1.7272337110188890e-77).unwrap();
+    /// rb_assert!("f == 1.7272337110188890e-77", f);
+    /// ```
     #[cfg(feature = "friendly-api")]
     #[cfg(not(ruby_use_flonum))]
     #[inline]
@@ -93,6 +135,16 @@ impl RFloat {
     }
 
     /// Convert `self` to a `f64`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RFloat};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let f: RFloat = eval("1.7272337110188890e-77").unwrap();
+    /// assert_eq!(f.to_f64(), 1.7272337110188890e-77);
+    /// ```
     pub fn to_f64(self) -> f64 {
         debug_assert_value!(self);
         unsafe { rb_float_value(self.as_rb_value()) }

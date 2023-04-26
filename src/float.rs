@@ -2,7 +2,7 @@ use std::fmt;
 
 use rb_sys::{
     rb_float_new_in_heap, rb_float_value, rb_flt_rationalize, rb_flt_rationalize_with_prec,
-    rb_to_float, ruby_special_consts, ruby_value_type, VALUE,
+    rb_to_float, ruby_value_type, VALUE,
 };
 
 #[cfg(ruby_use_flonum)]
@@ -43,8 +43,8 @@ impl Ruby {
     }
 }
 
-/// A type wrapping either a [`Flonum`](`crate::value::Flonum`) value or a
-/// Value known to be an instance of Float.
+/// A type wrapping either a [`Flonum`](crate::value::Flonum) or an
+/// [`RFloat`](crate::r_float::RFloat) value.
 ///
 /// See the [`ReprValue`] trait for additional methods available on this type.
 /// See [`Ruby`](Ruby#float) for methods to create a `Float`.
@@ -63,13 +63,12 @@ impl Float {
     ///
     /// assert!(Float::from_value(eval("1.7272337110188893e-77").unwrap()).is_some());
     /// assert!(Float::from_value(eval("1.7272337110188890e-77").unwrap()).is_some());
+    /// assert!(Float::from_value(eval("1").unwrap()).is_none());
     /// ```
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
         unsafe {
-            if val.as_rb_value() & ruby_special_consts::RUBY_FLONUM_MASK as VALUE
-                == ruby_special_consts::RUBY_FLONUM_FLAG as VALUE
-            {
+            if cfg!(ruby_use_flonum) && val.is_flonum() {
                 return Some(Self(NonZeroValue::new_unchecked(val)));
             }
             debug_assert_value!(val);
@@ -93,21 +92,14 @@ impl Float {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, Float};
+    /// use magnus::{rb_assert, Float};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// let res: bool = eval!(
-    ///     "f == 1.7272337110188893e-77",
-    ///     f = Float::from_f64(1.7272337110188893e-77)
-    /// )
-    /// .unwrap();
-    /// assert!(res);
-    /// let res: bool = eval!(
-    ///     "f == 1.7272337110188890e-77",
-    ///     f = Float::from_f64(1.7272337110188890e-77)
-    /// )
-    /// .unwrap();
-    /// assert!(res);
+    /// let f = Float::from_f64(1.7272337110188893e-77);
+    /// rb_assert!("f == 1.7272337110188893e-77", f);
+    ///
+    /// let f = Float::from_f64(1.7272337110188890e-77);
+    /// rb_assert!("f == 1.7272337110188890e-77", f);
     /// ```
     #[cfg(feature = "friendly-api")]
     #[inline]
@@ -123,7 +115,8 @@ impl Float {
     /// use magnus::{eval, Float};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// assert_eq!(eval::<Float>("2.0").unwrap().to_f64(), 2.0);
+    /// let f: Float = eval("2.0").unwrap();
+    /// assert_eq!(f.to_f64(), 2.0);
     /// ```
     #[inline]
     pub fn to_f64(self) -> f64 {
@@ -139,26 +132,22 @@ impl Float {
     /// # Examples
     ///
     /// ```
-    /// use magnus::Float;
+    /// use magnus::{rb_assert, Float};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let pi = Float::from_f64(3.141592);
-    /// assert_eq!(
-    ///     pi.rationalize_with_prec(Float::from_f64(0.001)).to_string(),
-    ///     "201/64"
-    /// );
-    /// assert_eq!(
-    ///     pi.rationalize_with_prec(Float::from_f64(0.01)).to_string(),
-    ///     "22/7"
-    /// );
-    /// assert_eq!(
-    ///     pi.rationalize_with_prec(Float::from_f64(0.1)).to_string(),
-    ///     "16/5"
-    /// );
-    /// assert_eq!(
-    ///     pi.rationalize_with_prec(Float::from_f64(1.)).to_string(),
-    ///     "3/1"
-    /// );
+    ///
+    /// let r = pi.rationalize_with_prec(Float::from_f64(0.001));
+    /// rb_assert!("r == 201/64r", r);
+    ///
+    /// let r = pi.rationalize_with_prec(Float::from_f64(0.01));
+    /// rb_assert!("r == 22/7r", r);
+    ///
+    /// let r = pi.rationalize_with_prec(Float::from_f64(0.1));
+    /// rb_assert!("r == 16/5r", r);
+    ///
+    /// let r = pi.rationalize_with_prec(Float::from_f64(1.));
+    /// rb_assert!("r == 3/1r", r);
     /// ```
     pub fn rationalize_with_prec(self, prec: Self) -> RRational {
         unsafe {
@@ -174,11 +163,11 @@ impl Float {
     /// # Examples
     ///
     /// ```
-    /// use magnus::Float;
+    /// use magnus::{rb_assert, Float};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let pi = Float::from_f64(3.141592);
-    /// assert_eq!(pi.rationalize().to_string(), "392699/125000");
+    /// rb_assert!("r = 392699/125000r", r = pi.rationalize());
     /// ```
     pub fn rationalize(self) -> RRational {
         unsafe { RRational::from_rb_value_unchecked(rb_flt_rationalize(self.as_rb_value())) }

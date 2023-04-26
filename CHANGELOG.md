@@ -77,6 +77,7 @@
 - `Error::runtime_error` (use `Error::new(exception::runtime_error(), msg)`).
 
 ### Fixed
+- `RFloat::from_value` now returns `None` when value is a `Flonum`.
 
 ### Security
 

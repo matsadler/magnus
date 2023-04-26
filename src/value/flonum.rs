@@ -31,7 +31,7 @@ impl Ruby {
 /// A Value known to be a flonum, Ruby's internal representation of lower
 /// precision floating point numbers.
 ///
-/// See also `Float`.
+/// See also [`Float`] and [`RFloat`].
 ///
 /// See the [`ReprValue`] trait for additional methods available on this type.
 /// See [`Ruby`](Ruby#flonum) for methods to create a `Flonum`.
@@ -51,6 +51,8 @@ impl Flonum {
     /// assert!(Flonum::from_value(eval("1.7272337110188893e-77").unwrap()).is_some());
     /// // representable as a Float, but Flonum does not have enough precision
     /// assert!(Flonum::from_value(eval("1.7272337110188890e-77").unwrap()).is_none());
+    /// // not a Flonum
+    /// assert!(Flonum::from_value(eval("1").unwrap()).is_none());
     /// ```
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
@@ -90,10 +92,12 @@ impl Flonum {
     /// # Examples
     ///
     /// ```
-    /// use magnus::Flonum;
+    /// use magnus::{rb_assert, Flonum};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// assert!(Flonum::from_f64(1.7272337110188893e-77).is_ok());
+    /// let f = Flonum::from_f64(1.7272337110188893e-77).unwrap();
+    /// rb_assert!("f == 1.7272337110188893e-77", f);
+    ///
     /// // representable as a Float, but Flonum does not have enough precision
     /// assert!(Flonum::from_f64(1.7272337110188890e-77).is_err());
     /// ```
@@ -111,7 +115,8 @@ impl Flonum {
     /// use magnus::{eval, Flonum};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// assert_eq!(eval::<Flonum>("2.0").unwrap().to_f64(), 2.0);
+    /// let f: Flonum = eval("2.0").unwrap();
+    /// assert_eq!(f.to_f64(), 2.0);
     /// ```
     #[inline]
     pub fn to_f64(self) -> f64 {
