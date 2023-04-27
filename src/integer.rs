@@ -1,6 +1,11 @@
-use std::fmt;
+use std::{
+    fmt,
+    ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign},
+};
 
-use rb_sys::{rb_ll2inum, rb_to_int, rb_ull2inum, ruby_special_consts, ruby_value_type, VALUE};
+use rb_sys::{
+    rb_big_norm, rb_ll2inum, rb_to_int, rb_ull2inum, ruby_special_consts, ruby_value_type, VALUE,
+};
 
 use crate::{
     error::{protect, Error},
@@ -477,6 +482,18 @@ impl Integer {
             IntegerType::Bignum(big) => big.to_usize(),
         }
     }
+
+    /// Normalize `self`. If `self` is a `Fixnum`, returns `self`. If `self` is
+    /// a `Bignum`, if it is small enough to fit in a `Fixnum`, returns a
+    /// `Fixnum` with the same value. Otherwise, returns `self`.
+    pub fn norm(&self) -> Self {
+        match self.integer_type() {
+            IntegerType::Fixnum(_) => *self,
+            IntegerType::Bignum(big) => unsafe {
+                Integer::from_rb_value_unchecked(rb_big_norm(big.as_rb_value()))
+            },
+        }
+    }
 }
 
 impl fmt::Display for Integer {
@@ -513,5 +530,181 @@ impl TryConvert for Integer {
                 unsafe { Self::from_rb_value_unchecked(rb_to_int(val.as_rb_value())) }
             }),
         }
+    }
+}
+
+impl PartialEq for Integer {
+    fn eq(&self, other: &Self) -> bool {
+        match self.integer_type() {
+            IntegerType::Bignum(a) => unsafe {
+                rb_sys::rb_big_eq(a.as_rb_value(), other.as_rb_value()) == rb_sys::Qtrue.into()
+            },
+            IntegerType::Fixnum(a) => a.as_rb_value() == other.norm().as_rb_value(),
+        }
+    }
+}
+
+impl PartialOrd for Integer {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        match (self.integer_type(), other.integer_type()) {
+            (IntegerType::Fixnum(a), IntegerType::Fixnum(b)) => {
+                (a.as_rb_value() as i64).partial_cmp(&(b.as_rb_value() as i64))
+            }
+            (IntegerType::Fixnum(a), IntegerType::Bignum(b)) => unsafe {
+                let a = rb_sys::rb_int2big(a.to_isize());
+                let result = rb_sys::rb_big_cmp(a, b.as_rb_value());
+                Integer::from_rb_value_unchecked(result)
+                    .to_i8()
+                    .unwrap()
+                    .partial_cmp(&0)
+            },
+            (IntegerType::Bignum(a), _) => unsafe {
+                let result = rb_sys::rb_big_cmp(a.as_rb_value(), other.as_rb_value());
+                Integer::from_rb_value_unchecked(result)
+                    .to_i8()
+                    .unwrap()
+                    .partial_cmp(&0)
+            },
+        }
+    }
+}
+
+impl Add for Integer {
+    type Output = Self;
+
+    fn add(self, other: Self) -> Self {
+        match (self.integer_type(), other.integer_type()) {
+            (IntegerType::Fixnum(a), IntegerType::Fixnum(b)) => {
+                let raw_a = a.as_rb_value() as i64;
+                let raw_b = b.as_rb_value() as i64;
+                let result = raw_a.checked_add(raw_b).and_then(|i| i.checked_sub(1));
+                if let Some(result) = result {
+                    unsafe { Integer::from_rb_value_unchecked(result as u64) }
+                } else {
+                    let a = unsafe { rb_sys::rb_int2big(a.to_isize()) };
+                    let result = unsafe { rb_sys::rb_big_plus(a, b.as_rb_value()) };
+                    unsafe { Integer::from_rb_value_unchecked(result) }
+                }
+            }
+            (IntegerType::Fixnum(a), IntegerType::Bignum(b)) => {
+                let a = unsafe { rb_sys::rb_int2big(a.to_isize()) };
+                let result = unsafe { rb_sys::rb_big_plus(a, b.as_rb_value()) };
+                unsafe { Integer::from_rb_value_unchecked(result) }
+            }
+            (IntegerType::Bignum(a), _) => {
+                let result = unsafe { rb_sys::rb_big_plus(a.as_rb_value(), other.as_rb_value()) };
+                unsafe { Integer::from_rb_value_unchecked(result) }
+            }
+        }
+    }
+}
+
+impl AddAssign for Integer {
+    fn add_assign(&mut self, other: Self) {
+        *self = *self + other;
+    }
+}
+
+impl Sub for Integer {
+    type Output = Self;
+
+    fn sub(self, other: Self) -> Self {
+        match (self.integer_type(), other.integer_type()) {
+            (IntegerType::Fixnum(a), IntegerType::Fixnum(b)) => {
+                let raw_a = a.as_rb_value() as i64;
+                let raw_b = b.as_rb_value() as i64;
+                let result = raw_a.checked_sub(raw_b).and_then(|i| i.checked_add(1));
+                if let Some(result) = result {
+                    unsafe { Integer::from_rb_value_unchecked(result as u64) }
+                } else {
+                    let a = unsafe { rb_sys::rb_int2big(a.to_isize()) };
+                    let result = unsafe { rb_sys::rb_big_minus(a, b.as_rb_value()) };
+                    unsafe { Integer::from_rb_value_unchecked(result) }
+                }
+            }
+            (IntegerType::Fixnum(a), IntegerType::Bignum(b)) => {
+                let a = unsafe { rb_sys::rb_int2big(a.to_isize()) };
+                let result = unsafe { rb_sys::rb_big_minus(a, b.as_rb_value()) };
+                unsafe { Integer::from_rb_value_unchecked(result) }
+            }
+            (IntegerType::Bignum(a), _) => {
+                let result = unsafe { rb_sys::rb_big_minus(a.as_rb_value(), other.as_rb_value()) };
+                unsafe { Integer::from_rb_value_unchecked(result) }
+            }
+        }
+    }
+}
+
+impl SubAssign for Integer {
+    fn sub_assign(&mut self, other: Self) {
+        *self = *self - other;
+    }
+}
+
+impl Mul for Integer {
+    type Output = Self;
+
+    fn mul(self, other: Self) -> Self {
+        match (self.integer_type(), other.integer_type()) {
+            (IntegerType::Fixnum(a), IntegerType::Fixnum(b)) => {
+                let raw_a = a.to_i64();
+                let raw_b = b.to_i64();
+                let result = raw_a.checked_mul(raw_b);
+                if let Some(result) = result {
+                    Integer::from_i64(result)
+                } else {
+                    let a = unsafe { rb_sys::rb_int2big(a.to_isize()) };
+                    let result = unsafe { rb_sys::rb_big_mul(a, b.as_rb_value()) };
+                    unsafe { Integer::from_rb_value_unchecked(result) }
+                }
+            }
+            (IntegerType::Fixnum(a), IntegerType::Bignum(b)) => {
+                let a = unsafe { rb_sys::rb_int2big(a.to_isize()) };
+                let result = unsafe { rb_sys::rb_big_mul(a, b.as_rb_value()) };
+                unsafe { Integer::from_rb_value_unchecked(result) }
+            }
+            (IntegerType::Bignum(a), _) => {
+                let result = unsafe { rb_sys::rb_big_mul(a.as_rb_value(), other.as_rb_value()) };
+                unsafe { Integer::from_rb_value_unchecked(result) }
+            }
+        }
+    }
+}
+
+impl MulAssign for Integer {
+    fn mul_assign(&mut self, other: Self) {
+        *self = *self * other;
+    }
+}
+
+impl Div for Integer {
+    type Output = Self;
+
+    fn div(self, other: Self) -> Self {
+        match (self.integer_type(), other.integer_type()) {
+            (IntegerType::Fixnum(a), IntegerType::Fixnum(b)) => {
+                let raw_a = a.to_i64();
+                let raw_b = b.to_i64();
+                // the only case when division can overflow is when dividing
+                // i64::MIN by -1, but Fixnum can't represent that I64::MIN
+                // so we can safely not use checked_div here
+                Integer::from_i64(raw_a / raw_b)
+            }
+            (IntegerType::Fixnum(a), IntegerType::Bignum(b)) => {
+                let a = unsafe { rb_sys::rb_int2big(a.to_isize()) };
+                let result = unsafe { rb_sys::rb_big_div(a, b.as_rb_value()) };
+                unsafe { Integer::from_rb_value_unchecked(result) }
+            }
+            (IntegerType::Bignum(a), _) => {
+                let result = unsafe { rb_sys::rb_big_div(a.as_rb_value(), other.as_rb_value()) };
+                unsafe { Integer::from_rb_value_unchecked(result) }
+            }
+        }
+    }
+}
+
+impl DivAssign for Integer {
+    fn div_assign(&mut self, other: Self) {
+        *self = *self / other;
     }
 }
