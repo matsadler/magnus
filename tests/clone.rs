@@ -22,9 +22,9 @@ impl Pair {
 }
 
 impl DataTypeFunctions for Pair {
-    fn mark(&self) {
-        gc::mark(self.a());
-        gc::mark(self.b());
+    fn mark(&self, marker: &gc::Marker) {
+        marker.mark(self.a);
+        marker.mark(self.b);
     }
 }
 

@@ -41,6 +41,8 @@
   wrapped structs.
 - Wrapped data must be `Sync` to enable `frozen_shareable` flag.
 - `TypedData::class` and `TypedData::class_for` now take a `&Ruby` argument.
+- `DataTypeFunctions::mark` and `DataTypeFunctions::compact` now take
+  `&gc::Marker` and `&gc::Compactor` arguments respectively.
 - Init function marked with `#[magnus::init]` optionally takes a `&Ruby`
   argument.
 - Functions bound as Ruby methods with `method!()` and `function!()` optionally
@@ -65,6 +67,8 @@
 - `Value::try_convert`, prefer `TryConvert::try_convert` or `T::try_convert`.
 - `Binding`. To call methods on Ruby's binding, use `ReprValue::funcall` on a
   `Value` know to be an instance of Ruby's Binding class.
+- `gc::{mark, mark_slice, mark_movable, location}`, instead use
+  `gc::Marker::{mark, mark_slice, mark_movable}` and `Compactor::location`
 
 ### Removed
 - Inherent methods on `RClass`, import `magnus::Class` trait or

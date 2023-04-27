@@ -377,9 +377,9 @@ pub fn derive_data_type_functions(input: TokenStream) -> TokenStream {
 /// }
 ///
 /// impl DataTypeFunctions for Line {
-///     fn mark(&self) {
-///         gc::mark(self.start());
-///         gc::mark(self.end());
+///     fn mark(&self, marker: &gc::Marker) {
+///         marker.mark(self.start);
+///         marker.mark(self.end);
 ///     }
 /// }
 ///

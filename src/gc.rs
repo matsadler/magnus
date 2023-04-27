@@ -2,7 +2,7 @@
 //!
 //! See also [`Ruby`](Ruby#gc) for more GC related methods.
 
-use std::ops::Range;
+use std::{marker::PhantomData, ops::Range};
 
 use rb_sys::{
     rb_gc_adjust_memory_usage, rb_gc_count, rb_gc_disable, rb_gc_enable, rb_gc_mark,
@@ -20,70 +20,207 @@ use crate::{
     Ruby,
 };
 
-/// Mark an Object.
+mod private {
+    use super::*;
+
+    pub trait Mark {
+        fn raw(self) -> VALUE;
+    }
+
+    pub trait Locate {
+        fn raw(self) -> VALUE;
+
+        fn from_raw(val: VALUE) -> Self;
+    }
+}
+
+/// Trait indicating types that can be passed to GC marking functions.
 ///
-/// Used to mark any stored Ruby objects when implementing
+/// See [`Marker`].
+pub trait Mark: private::Mark {}
+
+impl<T> private::Mark for T
+where
+    T: ReprValue,
+{
+    fn raw(self) -> VALUE {
+        self.as_rb_value()
+    }
+}
+impl<T> Mark for T where T: ReprValue {}
+
+impl<T> private::Mark for crate::value::Opaque<T>
+where
+    T: ReprValue,
+{
+    fn raw(self) -> VALUE {
+        unsafe { Ruby::get_unchecked() }
+            .get_inner(self)
+            .as_rb_value()
+    }
+}
+impl<T> Mark for crate::value::Opaque<T> where T: ReprValue {}
+
+/// A handle to GC marking functions.
+///
+/// See also
 /// [`DataTypeFunctions::mark`](`crate::typed_data::DataTypeFunctions::mark`).
+pub struct Marker(PhantomData<*mut ()>);
+
+impl Marker {
+    pub(crate) fn new() -> Self {
+        Self(PhantomData)
+    }
+
+    /// Mark an Object.
+    ///
+    /// Used to mark any stored Ruby objects when implementing
+    /// [`DataTypeFunctions::mark`](`crate::typed_data::DataTypeFunctions::mark`).
+    pub fn mark<T>(&self, value: T)
+    where
+        T: Mark,
+    {
+        unsafe { rb_gc_mark(value.raw()) };
+    }
+
+    /// Mark multiple Objects.
+    ///
+    /// Used to mark any stored Ruby objects when implementing
+    /// [`DataTypeFunctions::mark`](`crate::typed_data::DataTypeFunctions::mark`).
+    pub fn mark_slice<T>(&self, values: &[T])
+    where
+        T: Mark,
+    {
+        let Range { start, end } = values.as_ptr_range();
+        unsafe { rb_gc_mark_locations(start as *const VALUE, end as *const VALUE) }
+    }
+
+    /// Mark an Object and let Ruby know it is moveable.
+    ///
+    /// The [`Value`] type is effectly a pointer to a Ruby object. Ruby's
+    /// garbage collector will avoid moving objects exposed to extensions,
+    /// unless you use this function to mark them during the GC marking phase.
+    ///
+    /// Used to mark any stored Ruby objects when implementing
+    /// [`DataTypeFunctions::mark`](`crate::typed_data::DataTypeFunctions::mark`)
+    /// and you have also implemented
+    /// [`DataTypeFunctions::compact`](`crate::typed_data::DataTypeFunctions::compact`).
+    ///
+    /// Beware that any Ruby object passed to this function may later become
+    /// invalid to use from Rust when GC is run, you must update any stored
+    /// objects with [`Compactor::location`] inside your implementation of
+    /// [`DataTypeFunctions::compact`](`crate::typed_data::DataTypeFunctions::compact`).
+    #[cfg(any(ruby_gte_2_7, docsrs))]
+    #[cfg_attr(docsrs, doc(cfg(ruby_gte_2_7)))]
+    pub fn mark_movable<T>(&self, value: T)
+    where
+        T: Mark,
+    {
+        unsafe { rb_gc_mark_movable(value.raw()) };
+    }
+}
+
+/// Trait indicating types that can given to [`Compactor::location`].
+pub trait Locate: private::Locate {}
+
+impl<T> private::Locate for T
+where
+    T: ReprValue,
+{
+    fn raw(self) -> VALUE {
+        self.as_rb_value()
+    }
+
+    fn from_raw(val: VALUE) -> Self {
+        unsafe { Self::from_value_unchecked(Value::new(val)) }
+    }
+}
+impl<T> Locate for T where T: ReprValue {}
+
+impl<T> private::Locate for crate::value::Opaque<T>
+where
+    T: ReprValue,
+{
+    fn raw(self) -> VALUE {
+        unsafe { Ruby::get_unchecked() }
+            .get_inner(self)
+            .as_rb_value()
+    }
+
+    fn from_raw(val: VALUE) -> Self {
+        unsafe { T::from_value_unchecked(Value::new(val)) }.into()
+    }
+}
+impl<T> Locate for crate::value::Opaque<T> where T: ReprValue {}
+
+/// A handle to functions relating to GC compaction.
+///
+/// See also
+/// [`DataTypeFunctions::compact`](`crate::typed_data::DataTypeFunctions::compact`).
+pub struct Compactor(PhantomData<*mut ()>);
+
+impl Compactor {
+    pub(crate) fn new() -> Self {
+        Self(PhantomData)
+    }
+
+    /// Get the new location of an object.
+    ///
+    /// The [`Value`] type is effectly a pointer to a Ruby object. Ruby's
+    /// garbage collector will avoid moving objects exposed to extensions,
+    /// unless the object has been marked with [`mark_movable`]. When
+    /// implementing
+    /// [`DataTypeFunctions::compact`](`crate::typed_data::DataTypeFunctions::compact`)
+    /// you will need to update any Ruby objects you are storing.
+    ///
+    /// Returns a new `T` that is pointing to the object that `value` used to
+    /// point to. If `value` hasn't moved, simply returns `value`.
+    #[cfg(any(ruby_gte_2_7, docsrs))]
+    #[cfg_attr(docsrs, doc(cfg(ruby_gte_2_7)))]
+    pub fn location<T>(&self, value: T) -> T
+    where
+        T: Locate,
+    {
+        unsafe { T::from_raw(rb_gc_location(value.raw())) }
+    }
+}
+
+#[doc(hidden)]
+#[deprecated(since = "0.6.0", note = "please use `Marker::mark` instead")]
 pub fn mark<T>(value: T)
 where
     T: ReprValue,
 {
-    unsafe { rb_gc_mark(value.as_rb_value()) };
+    Marker::new().mark(value)
 }
 
-/// Mark multiple Objects.
-///
-/// Used to mark any stored Ruby objects when implementing
-/// [`DataTypeFunctions::mark`](`crate::typed_data::DataTypeFunctions::mark`).
+#[doc(hidden)]
+#[deprecated(since = "0.6.0", note = "please use `Marker::mark_slice` instead")]
 pub fn mark_slice<T>(values: &[T])
 where
     T: ReprValue,
 {
-    let Range { start, end } = values.as_ptr_range();
-    unsafe { rb_gc_mark_locations(start as *const VALUE, end as *const VALUE) }
+    Marker::new().mark_slice(values)
 }
 
-/// Mark an Object and let Ruby know it is moveable.
-///
-/// The [`Value`] type is effectly a pointer to a Ruby object. Ruby's garbage
-/// collector will avoid moving objects exposed to extensions, unless you use
-/// this function to mark them during the GC marking phase.
-///
-/// Used to mark any stored Ruby objects when implementing
-/// [`DataTypeFunctions::mark`](`crate::typed_data::DataTypeFunctions::mark`)
-/// and you have also implemented
-/// [`DataTypeFunctions::compact`](`crate::typed_data::DataTypeFunctions::compact`).
-///
-/// Beware that any Ruby object passed to this function may later become
-/// invalid to use from Rust when GC is run, you must update any stored objects
-/// with [`location`] inside your implementation of
-/// [`DataTypeFunctions::compact`](`crate::typed_data::DataTypeFunctions::compact`).
+#[doc(hidden)]
+#[deprecated(since = "0.6.0", note = "please use `Marker::mark_movable` instead")]
 #[cfg(any(ruby_gte_2_7, docsrs))]
 #[cfg_attr(docsrs, doc(cfg(ruby_gte_2_7)))]
 pub fn mark_movable<T>(value: T)
 where
     T: ReprValue,
 {
-    unsafe { rb_gc_mark_movable(value.as_rb_value()) };
+    Marker::new().mark_movable(value)
 }
 
-/// Get the new location of an object.
-///
-/// The [`Value`] type is effectly a pointer to a Ruby object. Ruby's garbage
-/// collector will avoid moving objects exposed to extensions, unless the
-/// object has been marked with [`mark_movable`]. When implementing
-/// [`DataTypeFunctions::compact`](`crate::typed_data::DataTypeFunctions::compact`)
-/// you will need to update any Ruby objects you are storing.
-///
-/// Returns a new `Value` that is pointing to the object that `value` used to
-/// point to. If `value` hasn't moved, simply returns `value`.
-#[cfg(any(ruby_gte_2_7, docsrs))]
-#[cfg_attr(docsrs, doc(cfg(ruby_gte_2_7)))]
+#[doc(hidden)]
+#[deprecated(since = "0.6.0", note = "please use `Compactor::location` instead")]
 pub fn location<T>(value: T) -> T
 where
     T: ReprValue,
 {
-    unsafe { T::from_value_unchecked(Value::new(rb_gc_location(value.as_rb_value()))) }
+    Compactor::new().location(value)
 }
 
 /// Registers `value` to never be garbage collected.

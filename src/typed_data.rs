@@ -31,6 +31,7 @@ const RUBY_TYPED_WB_PROTECTED: u32 = rb_sys::ruby_fl_type::RUBY_FL_WB_PROTECTED 
 use crate::{
     class::RClass,
     error::{bug_from_panic, Error},
+    gc,
     into_value::IntoValue,
     object::Object,
     r_typed_data::RTypedData,
@@ -109,7 +110,7 @@ where
     ///
     /// This function **must not** panic. The process will abort if this
     /// function panics.
-    fn mark(&self) {}
+    fn mark(&self, #[allow(unused_variables)] marker: &gc::Marker) {}
 
     /// Called by Ruby to establish the memory size of this data, to optimise
     /// when garbage collection happens.
@@ -130,18 +131,16 @@ where
     ///
     /// If your type contains any Ruby values that you have marked as moveable
     /// in your [`mark`](Self::mark) function, you must update them in this
-    /// function using [`gc::location`](crate::gc::location).
+    /// function using [`gc::Compactor::location`].
     ///
     /// Ruby values would be concidered moveable if marked with the
-    /// [`gc::mark_movable`](crate::gc::mark_movable) function. Other marking
-    /// functions such as [`gc::mark`](crate::gc::mark) will prevent values
-    /// being moved.
+    /// [`gc::Marker::mark_movable`] function. Other marking functions such as
+    /// [`gc::Marker::mark`] will prevent values being moved.
     ///
     /// As it is only safe for this function to receive a shared `&self`
     /// reference, you must implement interior mutablility to be able to update
     /// values. This is very hard to do correctly, and it is recommended to
-    /// simply avoid using [`gc::mark_movable`](crate::gc::mark_movable) and
-    /// `compact`.
+    /// simply avoid using [`gc::Marker::mark_movable`] and `compact`.
     ///
     /// This function is only called when the `compact` flag is set with the
     /// [`wrap`](macro@crate::wrap)/[`TypedData`](macro@crate::TypedData)
@@ -151,7 +150,7 @@ where
     ///
     /// This function **must not** panic. The process will abort if this
     /// function panics.
-    fn compact(&self) {}
+    fn compact(&self, #[allow(unused_variables)] compactor: &gc::Compactor) {}
 
     /// Extern wrapper for `free`. Don't define or call.
     ///
@@ -177,7 +176,8 @@ where
     /// This function must not panic.
     #[doc(hidden)]
     unsafe extern "C" fn extern_mark(ptr: *mut c_void) {
-        if let Err(e) = catch_unwind(|| Self::mark(&*(ptr as *mut Self))) {
+        let marker = gc::Marker::new();
+        if let Err(e) = catch_unwind(|| Self::mark(&*(ptr as *mut Self), &marker)) {
             bug_from_panic(e, "panic in DataTypeFunctions::mark")
         }
     }
@@ -206,7 +206,8 @@ where
     /// This function must not panic.
     #[doc(hidden)]
     unsafe extern "C" fn extern_compact(ptr: *mut c_void) {
-        if let Err(e) = catch_unwind(|| Self::compact(&*(ptr as *mut Self))) {
+        let compactor = gc::Compactor::new();
+        if let Err(e) = catch_unwind(|| Self::compact(&*(ptr as *mut Self), &compactor)) {
             bug_from_panic(e, "panic in DataTypeFunctions::compact")
         }
     }
@@ -844,9 +845,9 @@ where
 /// }
 ///
 /// impl DataTypeFunctions for Pair {
-///     fn mark(&self) {
-///         gc::mark(self.a());
-///         gc::mark(self.b());
+///     fn mark(&self, marker: &gc::Marker) {
+///         marker.mark(self.a);
+///         marker.mark(self.b);
 ///     }
 /// }
 ///
@@ -956,9 +957,9 @@ where
 /// }
 ///
 /// impl DataTypeFunctions for Pair {
-///     fn mark(&self) {
-///         gc::mark(self.a());
-///         gc::mark(self.b());
+///     fn mark(&self, marker: &gc::Marker) {
+///         marker.mark(self.a);
+///         marker.mark(self.b);
 ///     }
 /// }
 ///
@@ -1066,9 +1067,9 @@ where
 /// }
 ///
 /// impl DataTypeFunctions for Pair {
-///     fn mark(&self) {
-///         gc::mark(self.a());
-///         gc::mark(self.b());
+///     fn mark(&self, marker: &gc::Marker) {
+///         marker.mark(self.a);
+///         marker.mark(self.b);
 ///     }
 /// }
 ///
@@ -1177,9 +1178,9 @@ where
 /// }
 ///
 /// impl DataTypeFunctions for Pair {
-///     fn mark(&self) {
-///         gc::mark(self.a());
-///         gc::mark(self.b());
+///     fn mark(&self, marker: &gc::Marker) {
+///         marker.mark(self.a);
+///         marker.mark(self.b);
 ///     }
 /// }
 ///
@@ -1258,9 +1259,9 @@ where
 /// }
 ///
 /// impl DataTypeFunctions for Pair {
-///     fn mark(&self) {
-///         gc::mark(self.a());
-///         gc::mark(self.b());
+///     fn mark(&self, marker: &gc::Marker) {
+///         marker.mark(self.a);
+///         marker.mark(self.b);
 ///     }
 /// }
 ///

@@ -399,13 +399,13 @@ where
     struct Closure<F>(F, DataType);
     unsafe impl<F> Send for Closure<F> {}
     impl<F> DataTypeFunctions for Closure<F> {
-        fn mark(&self) {
+        fn mark(&self, marker: &gc::Marker) {
             // Attempt to mark any Ruby values captured in a closure.
             // Rust's closures are structs that contain all the values they
             // have captured. This reads that struct as a slice of VALUEs and
             // calls rb_gc_mark_locations which calls gc_mark_maybe which
             // marks VALUEs and ignores non-VALUEs
-            gc::mark_slice(unsafe {
+            marker.mark_slice(unsafe {
                 slice::from_raw_parts(
                     &self.0 as *const _ as *const Value,
                     size_of::<F>() / size_of::<Value>(),
