@@ -226,11 +226,26 @@ where
 /// Registers `value` to never be garbage collected.
 ///
 /// This is essentially a deliberate memory leak.
+///
+/// # Examples
+///
+/// ```
+/// use magnus::{gc, RArray, RString};
+/// # let _cleanup = unsafe { magnus::embed::init() };
+///
+/// // will never be collected
+/// let root = RArray::new();
+/// gc::register_mark_object(root);
+///
+/// // won't be collected while it is in out `root` array
+/// let s = RString::new("example");
+/// root.push(s).unwrap();
+/// ```
 pub fn register_mark_object<T>(value: T)
 where
-    T: ReprValue,
+    T: Mark,
 {
-    unsafe { rb_gc_register_mark_object(value.as_rb_value()) }
+    unsafe { rb_gc_register_mark_object(value.raw()) }
 }
 
 /// Inform Ruby's garbage collector that `valref` points to a live Ruby object.
@@ -240,9 +255,28 @@ where
 /// constants/globals to allways refrence the value.
 ///
 /// See also [`BoxValue`](crate::value::BoxValue).
+///
+/// # Examples
+///
+/// ```
+/// use magnus::{gc, RString};
+/// # let _cleanup = unsafe { magnus::embed::init() };
+///
+/// let s = RString::new("example");
+///
+/// // s won't be collected even though it's on the heap
+/// let boxed = Box::new(s);
+/// gc::register_address(&*boxed);
+///
+/// // ...
+///
+/// // allow s to be collected
+/// gc::unregister_address(&*boxed);
+/// drop(boxed);
+/// ```
 pub fn register_address<T>(valref: &T)
 where
-    T: ReprValue,
+    T: Mark,
 {
     unsafe { rb_gc_register_address(valref as *const _ as *mut VALUE) }
 }
@@ -250,9 +284,28 @@ where
 /// Inform Ruby's garbage collector that `valref` that was previously
 /// registered with [`register_address`] no longer points to a live Ruby
 /// object.
+///
+/// # Examples
+///
+/// ```
+/// use magnus::{gc, RString};
+/// # let _cleanup = unsafe { magnus::embed::init() };
+///
+/// let s = RString::new("example");
+///
+/// // s won't be collected even though it's on the heap
+/// let boxed = Box::new(s);
+/// gc::register_address(&*boxed);
+///
+/// // ...
+///
+/// // allow s to be collected
+/// gc::unregister_address(&*boxed);
+/// drop(boxed);
+/// ```
 pub fn unregister_address<T>(valref: &T)
 where
-    T: ReprValue,
+    T: Mark,
 {
     unsafe { rb_gc_unregister_address(valref as *const _ as *mut VALUE) }
 }
@@ -315,6 +368,22 @@ impl Ruby {
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::gc_disable`] for the
 /// non-panicking version.
+///
+/// # Examples
+///
+/// ```
+/// use magnus::gc;
+/// # let _cleanup = unsafe { magnus::embed::init() };
+///
+/// let was_disabled = gc::disable();
+///
+/// // GC is off
+///
+/// // return GC to previous state
+/// if !was_disabled {
+///     gc::enable();
+/// }
+/// ```
 #[cfg(feature = "friendly-api")]
 #[inline]
 pub fn disable() -> bool {
@@ -332,6 +401,22 @@ pub fn disable() -> bool {
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::gc_enable`] for the
 /// non-panicking version.
+///
+/// # Examples
+///
+/// ```
+/// use magnus::gc;
+/// # let _cleanup = unsafe { magnus::embed::init() };
+///
+/// let was_disabled = gc::enable();
+///
+/// // GC is on
+///
+/// // return GC to previous state
+/// if was_disabled {
+///     gc::disable();
+/// }
+/// ```
 #[cfg(feature = "friendly-api")]
 #[inline]
 pub fn enable() -> bool {
@@ -352,6 +437,15 @@ pub fn enable() -> bool {
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::gc_start`] for the
 /// non-panicking version.
+///
+/// # Examples
+///
+/// ```
+/// use magnus::gc;
+/// # let _cleanup = unsafe { magnus::embed::init() };
+///
+/// gc::start();
+/// ```
 #[cfg(feature = "friendly-api")]
 #[inline]
 pub fn start() {
@@ -371,6 +465,22 @@ pub fn start() {
 ///
 /// Panics if called from a non-Ruby thread. See
 /// [`Ruby::gc_adjust_memory_usage`] for the non-panicking version.
+///
+/// # Examples
+///
+/// ```
+/// use magnus::gc;
+/// # let _cleanup = unsafe { magnus::embed::init() };
+///
+/// let buf = Vec::<u8>::with_capacity(1024 * 1024);
+/// let mem_size = buf.capacity() * std::mem::size_of::<u8>();
+/// gc::adjust_memory_usage(mem_size as isize);
+///
+/// // ...
+///
+/// drop(buf);
+/// gc::adjust_memory_usage(-(mem_size as isize));
+/// ```
 #[cfg(feature = "friendly-api")]
 #[inline]
 pub fn adjust_memory_usage(diff: isize) {
@@ -384,6 +494,17 @@ pub fn adjust_memory_usage(diff: isize) {
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::gc_count`] for the
 /// non-panicking version.
+///
+/// # Examples
+///
+/// ```
+/// use magnus::gc;
+/// # let _cleanup = unsafe { magnus::embed::init() };
+///
+/// let before = gc::count();
+/// gc::start();
+/// assert!(gc::count() > before);
+/// ```
 #[cfg(feature = "friendly-api")]
 #[inline]
 pub fn count() -> usize {
@@ -396,6 +517,15 @@ pub fn count() -> usize {
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::gc_stat`] for the
 /// non-panicking version.
+///
+/// # Examples
+///
+/// ```
+/// use magnus::gc;
+/// # let _cleanup = unsafe { magnus::embed::init() };
+///
+/// assert!(gc::stat("heap_live_slots").unwrap() > 1);
+/// ```
 #[cfg(feature = "friendly-api")]
 #[inline]
 pub fn stat<T>(key: T) -> Result<usize, Error>
@@ -412,6 +542,17 @@ where
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::gc_all_stats`] for the
 /// non-panicking version.
+///
+/// # Examples
+///
+/// ```
+/// use magnus::{gc, Symbol};
+/// # let _cleanup = unsafe { magnus::embed::init() };
+///
+/// let stats = gc::all_stats();
+/// let live_slots: usize = stats.fetch(Symbol::new("heap_live_slots")).unwrap();
+/// assert!(live_slots > 1);
+/// ```
 #[cfg(feature = "friendly-api")]
 #[inline]
 pub fn all_stats() -> RHash {
