@@ -1,4 +1,9 @@
+use std::ffi::{c_long, c_ulong};
+
 use magnus::{eval, Integer};
+
+const RUBY_FIXNUM_MAX: c_ulong = (c_long::MAX / 2) as c_ulong;
+const RUBY_FIXNUM_MIN: c_long = c_long::MIN / 2;
 
 #[test]
 fn test_all() {
@@ -28,12 +33,12 @@ fn test_add() {
         Integer::from_i64(1)
     );
     assert_eq!(
-        Integer::from_u64(rb_sys::RUBY_FIXNUM_MAX) + Integer::from_i64(1),
-        Integer::from_u64(rb_sys::RUBY_FIXNUM_MAX + 1)
+        Integer::from_u64(RUBY_FIXNUM_MAX) + Integer::from_i64(1),
+        Integer::from_u64(RUBY_FIXNUM_MAX + 1)
     );
     assert_eq!(
-        Integer::from_i64(rb_sys::RUBY_FIXNUM_MIN) + Integer::from_i64(-1),
-        Integer::from_i64(rb_sys::RUBY_FIXNUM_MIN - 1)
+        Integer::from_i64(RUBY_FIXNUM_MIN) + Integer::from_i64(-1),
+        Integer::from_i64(RUBY_FIXNUM_MIN - 1)
     );
     let a = Integer::from_value(eval("2**1000").unwrap()).unwrap();
     let b = Integer::from_value(eval("2**1000").unwrap()).unwrap();
@@ -73,12 +78,12 @@ fn test_sub() {
         Integer::from_i64(-3)
     );
     assert_eq!(
-        Integer::from_u64(rb_sys::RUBY_FIXNUM_MAX) - Integer::from_i64(-1),
-        Integer::from_u64(rb_sys::RUBY_FIXNUM_MAX + 1)
+        Integer::from_u64(RUBY_FIXNUM_MAX) - Integer::from_i64(-1),
+        Integer::from_u64(RUBY_FIXNUM_MAX + 1)
     );
     assert_eq!(
-        Integer::from_i64(rb_sys::RUBY_FIXNUM_MIN) - Integer::from_i64(1),
-        Integer::from_i64(rb_sys::RUBY_FIXNUM_MIN - 1)
+        Integer::from_i64(RUBY_FIXNUM_MIN) - Integer::from_i64(1),
+        Integer::from_i64(RUBY_FIXNUM_MIN - 1)
     );
     let a = Integer::from_value(eval("2**1000").unwrap()).unwrap();
     let b = Integer::from_value(eval("2**999").unwrap()).unwrap();
@@ -118,12 +123,12 @@ fn test_mul() {
         Integer::from_i64(-2)
     );
     assert_eq!(
-        Integer::from_u64(rb_sys::RUBY_FIXNUM_MAX) * Integer::from_i64(4),
-        Integer::from_value(eval(&format!("{} * 4", rb_sys::RUBY_FIXNUM_MAX)).unwrap()).unwrap()
+        Integer::from_u64(RUBY_FIXNUM_MAX) * Integer::from_i64(4),
+        Integer::from_value(eval(&format!("{} * 4", RUBY_FIXNUM_MAX)).unwrap()).unwrap()
     );
     assert_eq!(
-        Integer::from_i64(rb_sys::RUBY_FIXNUM_MIN) * Integer::from_i64(4),
-        Integer::from_value(eval(&format!("{} * 4", rb_sys::RUBY_FIXNUM_MIN)).unwrap()).unwrap()
+        Integer::from_i64(RUBY_FIXNUM_MIN) * Integer::from_i64(4),
+        Integer::from_value(eval(&format!("{} * 4", RUBY_FIXNUM_MIN)).unwrap()).unwrap()
     );
 
     let a = Integer::from_value(eval("2**1000").unwrap()).unwrap();

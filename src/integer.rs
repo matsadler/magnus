@@ -494,6 +494,24 @@ impl Integer {
             },
         }
     }
+
+    fn binary_operation_visit<T>(
+        &self,
+        other: &Self,
+        rust_op: fn(Fixnum, Fixnum) -> T,
+        ruby_op: fn(rb_sys::VALUE, rb_sys::VALUE) -> T,
+    ) -> T {
+        match self.integer_type() {
+            IntegerType::Bignum(a) => ruby_op(a.as_rb_value(), other.as_rb_value()),
+            IntegerType::Fixnum(a) => match other.integer_type() {
+                IntegerType::Bignum(b) => {
+                    let a = unsafe { rb_sys::rb_int2big(a.to_isize()) };
+                    ruby_op(a, b.as_rb_value())
+                }
+                IntegerType::Fixnum(b) => rust_op(a, b),
+            },
+        }
+    }
 }
 
 impl fmt::Display for Integer {
@@ -546,26 +564,17 @@ impl PartialEq for Integer {
 
 impl PartialOrd for Integer {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        match (self.integer_type(), other.integer_type()) {
-            (IntegerType::Fixnum(a), IntegerType::Fixnum(b)) => {
-                (a.as_rb_value() as i64).partial_cmp(&(b.as_rb_value() as i64))
-            }
-            (IntegerType::Fixnum(a), IntegerType::Bignum(b)) => unsafe {
-                let a = rb_sys::rb_int2big(a.to_isize());
-                let result = rb_sys::rb_big_cmp(a, b.as_rb_value());
+        self.binary_operation_visit(
+            other,
+            |a, b| (a.as_rb_value() as i64).partial_cmp(&(b.as_rb_value() as i64)),
+            |a, b| unsafe {
+                let result = rb_sys::rb_big_cmp(a, b);
                 Integer::from_rb_value_unchecked(result)
-                    .to_i8()
+                    .to_i64()
                     .unwrap()
                     .partial_cmp(&0)
             },
-            (IntegerType::Bignum(a), _) => unsafe {
-                let result = rb_sys::rb_big_cmp(a.as_rb_value(), other.as_rb_value());
-                Integer::from_rb_value_unchecked(result)
-                    .to_i8()
-                    .unwrap()
-                    .partial_cmp(&0)
-            },
-        }
+        )
     }
 }
 
@@ -573,8 +582,9 @@ impl Add for Integer {
     type Output = Self;
 
     fn add(self, other: Self) -> Self {
-        match (self.integer_type(), other.integer_type()) {
-            (IntegerType::Fixnum(a), IntegerType::Fixnum(b)) => {
+        self.binary_operation_visit(
+            &other,
+            |a, b| {
                 let raw_a = a.as_rb_value() as i64;
                 let raw_b = b.as_rb_value() as i64;
                 let result = raw_a.checked_add(raw_b).and_then(|i| i.checked_sub(1));
@@ -585,17 +595,12 @@ impl Add for Integer {
                     let result = unsafe { rb_sys::rb_big_plus(a, b.as_rb_value()) };
                     unsafe { Integer::from_rb_value_unchecked(result) }
                 }
-            }
-            (IntegerType::Fixnum(a), IntegerType::Bignum(b)) => {
-                let a = unsafe { rb_sys::rb_int2big(a.to_isize()) };
-                let result = unsafe { rb_sys::rb_big_plus(a, b.as_rb_value()) };
+            },
+            |a, b| {
+                let result = unsafe { rb_sys::rb_big_plus(a, b) };
                 unsafe { Integer::from_rb_value_unchecked(result) }
-            }
-            (IntegerType::Bignum(a), _) => {
-                let result = unsafe { rb_sys::rb_big_plus(a.as_rb_value(), other.as_rb_value()) };
-                unsafe { Integer::from_rb_value_unchecked(result) }
-            }
-        }
+            },
+        )
     }
 }
 
@@ -609,8 +614,9 @@ impl Sub for Integer {
     type Output = Self;
 
     fn sub(self, other: Self) -> Self {
-        match (self.integer_type(), other.integer_type()) {
-            (IntegerType::Fixnum(a), IntegerType::Fixnum(b)) => {
+        self.binary_operation_visit(
+            &other,
+            |a, b| {
                 let raw_a = a.as_rb_value() as i64;
                 let raw_b = b.as_rb_value() as i64;
                 let result = raw_a.checked_sub(raw_b).and_then(|i| i.checked_add(1));
@@ -621,17 +627,12 @@ impl Sub for Integer {
                     let result = unsafe { rb_sys::rb_big_minus(a, b.as_rb_value()) };
                     unsafe { Integer::from_rb_value_unchecked(result) }
                 }
-            }
-            (IntegerType::Fixnum(a), IntegerType::Bignum(b)) => {
-                let a = unsafe { rb_sys::rb_int2big(a.to_isize()) };
-                let result = unsafe { rb_sys::rb_big_minus(a, b.as_rb_value()) };
+            },
+            |a, b| {
+                let result = unsafe { rb_sys::rb_big_minus(a, b) };
                 unsafe { Integer::from_rb_value_unchecked(result) }
-            }
-            (IntegerType::Bignum(a), _) => {
-                let result = unsafe { rb_sys::rb_big_minus(a.as_rb_value(), other.as_rb_value()) };
-                unsafe { Integer::from_rb_value_unchecked(result) }
-            }
-        }
+            },
+        )
     }
 }
 
@@ -645,8 +646,9 @@ impl Mul for Integer {
     type Output = Self;
 
     fn mul(self, other: Self) -> Self {
-        match (self.integer_type(), other.integer_type()) {
-            (IntegerType::Fixnum(a), IntegerType::Fixnum(b)) => {
+        self.binary_operation_visit(
+            &other,
+            |a, b| {
                 let raw_a = a.to_i64();
                 let raw_b = b.to_i64();
                 let result = raw_a.checked_mul(raw_b);
@@ -657,17 +659,12 @@ impl Mul for Integer {
                     let result = unsafe { rb_sys::rb_big_mul(a, b.as_rb_value()) };
                     unsafe { Integer::from_rb_value_unchecked(result) }
                 }
-            }
-            (IntegerType::Fixnum(a), IntegerType::Bignum(b)) => {
-                let a = unsafe { rb_sys::rb_int2big(a.to_isize()) };
-                let result = unsafe { rb_sys::rb_big_mul(a, b.as_rb_value()) };
+            },
+            |a, b| {
+                let result = unsafe { rb_sys::rb_big_mul(a, b) };
                 unsafe { Integer::from_rb_value_unchecked(result) }
-            }
-            (IntegerType::Bignum(a), _) => {
-                let result = unsafe { rb_sys::rb_big_mul(a.as_rb_value(), other.as_rb_value()) };
-                unsafe { Integer::from_rb_value_unchecked(result) }
-            }
-        }
+            },
+        )
     }
 }
 
@@ -681,25 +678,21 @@ impl Div for Integer {
     type Output = Self;
 
     fn div(self, other: Self) -> Self {
-        match (self.integer_type(), other.integer_type()) {
-            (IntegerType::Fixnum(a), IntegerType::Fixnum(b)) => {
+        self.binary_operation_visit(
+            &other,
+            |a, b| {
                 let raw_a = a.to_i64();
                 let raw_b = b.to_i64();
                 // the only case when division can overflow is when dividing
                 // i64::MIN by -1, but Fixnum can't represent that I64::MIN
                 // so we can safely not use checked_div here
                 Integer::from_i64(raw_a / raw_b)
-            }
-            (IntegerType::Fixnum(a), IntegerType::Bignum(b)) => {
-                let a = unsafe { rb_sys::rb_int2big(a.to_isize()) };
-                let result = unsafe { rb_sys::rb_big_div(a, b.as_rb_value()) };
+            },
+            |a, b| {
+                let result = unsafe { rb_sys::rb_big_div(a, b) };
                 unsafe { Integer::from_rb_value_unchecked(result) }
-            }
-            (IntegerType::Bignum(a), _) => {
-                let result = unsafe { rb_sys::rb_big_div(a.as_rb_value(), other.as_rb_value()) };
-                unsafe { Integer::from_rb_value_unchecked(result) }
-            }
-        }
+            },
+        )
     }
 }
 
