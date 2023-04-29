@@ -1,4 +1,4 @@
-use std::ffi::{c_long, c_ulong};
+use std::os::raw::{c_long, c_ulong};
 
 use magnus::{eval, Integer};
 
