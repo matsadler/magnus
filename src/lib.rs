@@ -1979,15 +1979,15 @@ macro_rules! rb_assert {
         $crate::rb_assert!($crate::Ruby::get().unwrap(), $expr, $($bindings)*)
     }};
     ($ruby:expr, $expr:literal) => {{
-        $crate::rb_assert!($ruby, $expr, __exp__ = ())
+        $crate::rb_assert!($ruby, $expr,)
     }};
     ($ruby:expr, $expr:literal, $($bindings:tt)*) => {{
         let msg: Option<String> = $crate::eval!($ruby, r#"
             require "power_assert"
-            PowerAssert.start(__exp__, source_binding: binding) do |pa|
+            PowerAssert.start(__assert_exp__, source_binding: binding) do |pa|
               "\n#{pa.message}" unless pa.yield
             end
-        "#, $($bindings)*, __exp__ = $expr).unwrap();
+        "#, __assert_exp__ = $expr, $($bindings)*).unwrap();
         if let Some(msg) = msg {
             panic!("{}", msg)
         };
