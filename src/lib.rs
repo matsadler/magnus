@@ -93,6 +93,8 @@
 //!     module.define_module_function("distance", function!(distance, 2))?;
 //!     Ok(())
 //! }
+//! # let _cleanup = unsafe { magnus::embed::init() };
+//! # init().unwrap();
 //! ```
 //!
 //! # Crates that work with Magnus
@@ -2146,6 +2148,16 @@ impl Ruby {
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::define_class`] for the
 /// non-panicking version.
+///
+/// # Examples
+///
+/// ```
+/// use magnus::{class, define_class, rb_assert};
+/// # let _cleanup = unsafe { magnus::embed::init() };
+///
+/// define_class("Example", class::object()).unwrap();
+/// rb_assert!("Example.is_a?(Class)");
+/// ```
 #[cfg(feature = "friendly-api")]
 #[inline]
 pub fn define_class(name: &str, superclass: RClass) -> Result<RClass, Error> {
@@ -2158,6 +2170,17 @@ pub fn define_class(name: &str, superclass: RClass) -> Result<RClass, Error> {
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::define_module`] for
 /// the non-panicking version.
+///
+/// # Examples
+///
+/// ```
+/// use magnus::{define_module, rb_assert};
+/// # let _cleanup = unsafe { magnus::embed::init() };
+///
+/// define_module("Example").unwrap();
+/// rb_assert!("Example.is_a?(Module)");
+/// rb_assert!("!Example.is_a?(Class)");
+/// ```
 #[cfg(feature = "friendly-api")]
 #[inline]
 pub fn define_module(name: &str) -> Result<RModule, Error> {
@@ -2170,6 +2193,17 @@ pub fn define_module(name: &str) -> Result<RModule, Error> {
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::define_error`] for the
 /// non-panicking version.
+///
+/// # Examples
+///
+/// ```
+/// use magnus::{define_error, exception, rb_assert};
+/// # let _cleanup = unsafe { magnus::embed::init() };
+///
+/// define_error("ExampleError", exception::standard_error()).unwrap();
+/// rb_assert!("ExampleError.is_a?(Class)");
+/// rb_assert!("ExampleError < Exception");
+/// ```
 #[cfg(feature = "friendly-api")]
 #[inline]
 pub fn define_error(name: &str, superclass: ExceptionClass) -> Result<ExceptionClass, Error> {
@@ -2182,6 +2216,22 @@ pub fn define_error(name: &str, superclass: ExceptionClass) -> Result<ExceptionC
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::define_variable`] for
 /// the non-panicking version.
+///
+/// # Examples
+///
+/// ```
+/// use magnus::{define_variable, prelude::*, rb_assert, RString};
+/// # let _cleanup = unsafe { magnus::embed::init() };
+///
+/// let v = define_variable("example", 42).unwrap();
+/// rb_assert!("$example == 42");
+///
+/// // safe as long as another thread isn't modifying v
+/// unsafe {
+///     *v = RString::new("answer").as_value();
+/// }
+/// rb_assert!(r#"$example == "answer""#);
+/// ```
 #[cfg(feature = "friendly-api")]
 #[inline]
 pub fn define_variable<T>(name: &str, initial: T) -> Result<*mut Value, Error>
@@ -2197,6 +2247,16 @@ where
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::define_global_const`]
 /// for the non-panicking version.
+///
+/// # Examples
+///
+/// ```
+/// use magnus::{define_global_const, rb_assert};
+/// # let _cleanup = unsafe { magnus::embed::init() };
+///
+/// define_global_const("EXAMPLE", 42).unwrap();
+/// rb_assert!("EXAMPLE == 42");
+/// ```
 #[cfg(feature = "friendly-api")]
 #[inline]
 pub fn define_global_const<T>(name: &str, value: T) -> Result<(), Error>
@@ -2212,6 +2272,20 @@ where
 ///
 /// Panics if called from a non-Ruby thread. See
 /// [`Ruby::define_global_function`] for the non-panicking version.
+///
+/// # Examples
+///
+/// ```
+/// use magnus::{define_global_function, function, rb_assert};
+/// # let _cleanup = unsafe { magnus::embed::init() };
+///
+/// fn greet(subject: String) -> String {
+///     format!("Hello, {}!", subject)
+/// }
+///
+/// define_global_function("greet", function!(greet, 1));
+/// rb_assert!(r#"greet("world") == "Hello, world!""#);
+/// ```
 #[cfg(feature = "friendly-api")]
 #[inline]
 pub fn define_global_function<M>(name: &str, func: M)
@@ -2262,6 +2336,22 @@ pub fn backref_get() -> Option<RMatch> {
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::current_receiver`] for
 /// the non-panicking version.
+///
+/// # Examples
+///
+/// ```
+/// use magnus::{
+///     current_receiver, define_global_function, method, prelude::*, rb_assert, Error, Value,
+/// };
+/// # let _cleanup = unsafe { magnus::embed::init() };
+///
+/// fn example(rb_self: Value) -> Result<bool, Error> {
+///     rb_self.equal(current_receiver::<Value>()?)
+/// }
+/// define_global_function("example", method!(example, 0));
+///
+/// rb_assert!("example");
+/// ```
 #[cfg(feature = "friendly-api")]
 #[inline]
 pub fn current_receiver<T>() -> Result<T, Error>
@@ -2281,6 +2371,34 @@ where
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::call_super`] for the
 /// non-panicking version.
+///
+/// # Examples
+///
+/// ```
+/// use magnus::{call_super, define_class, eval, function, prelude::*, rb_assert, Error};
+/// # let _cleanup = unsafe { magnus::embed::init() };
+///
+/// let a = eval(
+///     r#"
+///       class A
+///         def example
+///           "Hello from A"
+///         end
+///       end
+///       A
+///     "#,
+/// )
+/// .unwrap();
+///
+/// let b = define_class("B", a).unwrap();
+/// fn example() -> Result<String, Error> {
+///     let s: String = call_super(())?;
+///     Ok(format!("{}, and hello from B", s))
+/// }
+/// b.define_method("example", function!(example, 0)).unwrap();
+///
+/// rb_assert!(r#"B.new.example == "Hello from A, and hello from B""#)
+/// ```
 #[cfg(feature = "friendly-api")]
 #[inline]
 pub fn call_super<A, T>(args: A) -> Result<T, Error>
@@ -2357,7 +2475,6 @@ pub fn require(feature: &str) -> Result<bool, Error> {
 ///
 /// ```
 /// # let _cleanup = unsafe { magnus::embed::init() };
-///
 /// assert_eq!(magnus::eval::<i64>("1 + 2").unwrap(), 3);
 /// ```
 #[cfg(feature = "friendly-api")]
