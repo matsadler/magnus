@@ -109,23 +109,18 @@ impl Integer {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, Integer};
+    /// use magnus::{rb_assert, Integer};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// let res: bool = eval!("i == 0", i = Integer::from_i64(0)).unwrap();
-    /// assert!(res);
-    /// let res: bool = eval!(
+    /// rb_assert("i == 0", i = Integer::from_i64(0));
+    /// rb_assert(
     ///     "i == 4611686018427387904",
-    ///     i = Integer::from_i64(4611686018427387904)
-    /// )
-    /// .unwrap();
-    /// assert!(res);
-    /// let res: bool = eval!(
+    ///     i = Integer::from_i64(4611686018427387904),
+    /// );
+    /// rb_assert(
     ///     "i == -4611686018427387905",
-    ///     i = Integer::from_i64(-4611686018427387905)
-    /// )
-    /// .unwrap();
-    /// assert!(res);
+    ///     i = Integer::from_i64(-4611686018427387905),
+    /// );
     /// ```
     #[cfg(feature = "friendly-api")]
     #[inline]
@@ -146,14 +141,8 @@ impl Integer {
     /// use magnus::{eval, Integer};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// let res: bool = eval!("i == 0", i = Integer::from_u64(0)).unwrap();
-    /// assert!(res);
-    /// let res: bool = eval!(
-    ///     "i == 4611686018427387904",
-    ///     i = Integer::from_u64(4611686018427387904)
-    /// )
-    /// .unwrap();
-    /// assert!(res);
+    /// rb_assert("i == 0", i = Integer::from_u64(0));
+    /// rb_assert("i == 4611686018427387904", i = Integer::from_u64(4611686018427387904));
     /// ```
     #[cfg(feature = "friendly-api")]
     #[inline]
