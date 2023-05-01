@@ -21,6 +21,48 @@ pub trait Object: ReprValue + Copy {
     ///
     /// Singleton methods defined on a class are Ruby's method for implementing
     /// 'class' methods.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{define_module, function, prelude::*, rb_assert};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// fn example() -> i64 {
+    ///     42
+    /// }
+    ///
+    /// let module = define_module("Example").unwrap();
+    /// module
+    ///     .define_singleton_method("example", function!(example, 0))
+    ///     .unwrap();
+    /// rb_assert!("Example.example == 42");
+    /// ```
+    ///
+    /// ```
+    /// use magnus::{class, define_class, function, prelude::*, rb_assert};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// #[magnus::wrap(class = "Point", free_immediately, size)]
+    /// struct Point {
+    ///     x: isize,
+    ///     y: isize,
+    /// }
+    ///
+    /// impl Point {
+    ///     fn new(x: isize, y: isize) -> Self {
+    ///         Self { x, y }
+    ///     }
+    /// }
+    ///
+    /// let class = define_class("Point", class::object()).unwrap();
+    /// class
+    ///     .define_singleton_method("new", function!(Point::new, 2))
+    ///     .unwrap();
+    ///
+    /// rb_assert!("Point.new(1, 2).is_a?(Point)");
+    /// # let _ = Point { x: 1, y: 2 }.x + Point { x: 3, y: 4 }.y;
+    /// ```
     fn define_singleton_method<M>(self, name: &str, func: M) -> Result<(), Error>
     where
         M: Method,
@@ -43,7 +85,30 @@ pub trait Object: ReprValue + Copy {
 
     /// Get the value for the instance variable `name` within `self`'s scope.
     ///
-    /// Note, the `@` is part of the name.
+    /// Note, the `@` is part of the name. An instance variable can be set and
+    /// retrieved without a preceding `@` and it will work, but the instance
+    /// variable will be invisible to Ruby code.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, prelude::*, RObject};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let val: RObject = eval(
+    ///     r#"
+    ///       class Example
+    ///         def initialize(value)
+    ///           @value = value
+    ///         end
+    ///       end
+    ///       Example.new("foo")
+    ///     "#,
+    /// )
+    /// .unwrap();
+    ///
+    /// assert_eq!(val.ivar_get::<_, String>("@value").unwrap(), "foo");
+    /// ```
     fn ivar_get<T, U>(self, name: T) -> Result<U, Error>
     where
         T: IntoId,
@@ -57,7 +122,35 @@ pub trait Object: ReprValue + Copy {
 
     /// Set the value for the instance variable `name` within `self`'s scope.
     ///
-    /// Note, the `@` is part of the name.
+    /// Note, the `@` is part of the name. Setting an instance variable without
+    /// a preceding `@` will work, but the instance variable will be invisible
+    /// to Ruby code.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, prelude::*, rb_assert, RObject};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let obj: RObject = eval(
+    ///     r#"
+    ///       class Example
+    ///         def initialize(value)
+    ///           @value = value
+    ///         end
+    ///
+    ///         def value
+    ///           @value
+    ///         end
+    ///       end
+    ///       Example.new("foo")
+    ///     "#,
+    /// )
+    /// .unwrap();
+    ///
+    /// obj.ivar_set("@value", "bar").unwrap();
+    /// rb_assert!(r#"obj.value == "bar""#, obj);
+    /// ```
     fn ivar_set<T, U>(self, name: T, value: U) -> Result<(), Error>
     where
         T: IntoId,
@@ -86,7 +179,7 @@ pub trait Object: ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{Object, RString};
+    /// use magnus::{prelude::*, RString};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// assert!(RString::new("example").singleton_class().is_ok());
@@ -102,7 +195,7 @@ pub trait Object: ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{class, function, prelude::*, RModule, RObject};
+    /// use magnus::{class, function, prelude::*, rb_assert, RModule, RObject};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// fn example() -> i64 {
@@ -116,7 +209,7 @@ pub trait Object: ReprValue + Copy {
     ///
     /// let obj = RObject::try_convert(class::object().new_instance(()).unwrap()).unwrap();
     /// obj.extend_object(module).unwrap();
-    /// assert_eq!(obj.funcall::<_, _, i64>("example", ()).unwrap(), 42);
+    /// rb_assert!("obj.example == 42", obj);
     /// ```
     fn extend_object(self, module: RModule) -> Result<(), Error> {
         protect(|| {

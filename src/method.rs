@@ -744,6 +744,8 @@ seq!(N in 0..=16 {
 ///     class.define_method("blank?", method!(rb_is_blank, 0))?;
 ///     Ok(())
 /// }
+/// # let _cleanup = unsafe { magnus::embed::init() };
+/// # init().unwrap();
 /// ```
 #[macro_export]
 macro_rules! method {
@@ -1521,6 +1523,8 @@ seq!(N in 0..=16 {
 /// fn init() {
 ///     magnus::define_global_function("distance", magnus::function!(distance, 2));
 /// }
+/// # let _cleanup = unsafe { magnus::embed::init() };
+/// # init();
 /// ```
 #[macro_export]
 macro_rules! function {

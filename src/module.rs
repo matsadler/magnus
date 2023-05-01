@@ -109,7 +109,7 @@ impl RModule {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{define_module, eval, function, r_string, RString};
+    /// use magnus::{define_module, function, r_string, rb_assert, RString};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// fn greet() -> RString {
@@ -121,17 +121,14 @@ impl RModule {
     ///     .define_module_function("greet", function!(greet, 0))
     ///     .unwrap();
     ///
-    /// let res = eval::<bool>(r#"Greeting.greet == "Hello, world!""#).unwrap();
-    /// assert!(res);
+    /// rb_assert!(r#"Greeting.greet == "Hello, world!""#);
     ///
-    /// let res = eval::<bool>(
+    /// rb_assert!(
     ///     r#"
     ///     include Greeting
     ///     greet == "Hello, world!"
     /// "#,
-    /// )
-    /// .unwrap();
-    /// assert!(res);
+    /// );
     /// ```
     pub fn define_module_function<M>(self, name: &str, func: M) -> Result<(), Error>
     where
@@ -199,12 +196,12 @@ pub trait Module: Object + ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{class, define_module, prelude::*};
+    /// use magnus::{class, define_module, prelude::*, rb_assert};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let outer = define_module("Outer").unwrap();
     /// let inner = outer.define_class("Inner", class::object()).unwrap();
-    /// assert!(inner.is_kind_of(class::class()));
+    /// rb_assert!("Outer::Inner.is_a?(Class)");
     /// ```
     fn define_class<T>(self, name: T, superclass: RClass) -> Result<RClass, Error>
     where
@@ -228,12 +225,13 @@ pub trait Module: Object + ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{class, define_module, prelude::*};
+    /// use magnus::{class, define_module, prelude::*, rb_assert};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let outer = define_module("Outer").unwrap();
     /// let inner = outer.define_module("Inner").unwrap();
-    /// assert!(inner.is_kind_of(class::module()));
+    /// rb_assert!("Outer::Inner.is_a?(Module)");
+    /// rb_assert!("!Outer::Inner.is_a?(Class)");
     /// ```
     fn define_module<T>(self, name: T) -> Result<RModule, Error>
     where
@@ -253,14 +251,15 @@ pub trait Module: Object + ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{define_module, exception, prelude::*};
+    /// use magnus::{define_module, exception, prelude::*, rb_assert};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let outer = define_module("Outer").unwrap();
     /// let inner = outer
     ///     .define_error("InnerError", exception::standard_error())
     ///     .unwrap();
-    /// assert!(inner.is_inherited(exception::standard_error()));
+    /// rb_assert!("Outer::InnerError.is_a?(Class)");
+    /// rb_assert!("Outer::InnerError < Exception");
     /// ```
     fn define_error<T>(self, name: T, superclass: ExceptionClass) -> Result<ExceptionClass, Error>
     where
@@ -278,7 +277,7 @@ pub trait Module: Object + ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{class, function, prelude::*, RClass, RModule};
+    /// use magnus::{class, function, prelude::*, rb_assert, RClass, RModule};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// fn example() -> i64 {
@@ -294,7 +293,7 @@ pub trait Module: Object + ReprValue + Copy {
     /// class.include_module(module).unwrap();
     ///
     /// let obj = class.new_instance(()).unwrap();
-    /// assert_eq!(obj.funcall::<_, _, i64>("example", ()).unwrap(), 42);
+    /// rb_assert!("obj.example == 42", obj);
     /// ```
     fn include_module(self, module: RModule) -> Result<(), Error> {
         protect(|| {
@@ -312,7 +311,7 @@ pub trait Module: Object + ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{call_super, eval, function, prelude::*, Error, RClass, RModule};
+    /// use magnus::{call_super, eval, function, prelude::*, rb_assert, Error, RClass, RModule};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// fn example() -> Result<i64, Error> {
@@ -338,7 +337,7 @@ pub trait Module: Object + ReprValue + Copy {
     /// class.prepend_module(module).unwrap();
     ///
     /// let obj = class.new_instance(()).unwrap();
-    /// assert_eq!(obj.funcall::<_, _, i64>("example", ()).unwrap(), 42);
+    /// rb_assert!("obj.example == 42", obj);
     /// ```
     fn prepend_module(self, module: RModule) -> Result<(), Error> {
         protect(|| {
@@ -353,12 +352,12 @@ pub trait Module: Object + ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{class, eval, Module};
+    /// use magnus::{class, rb_assert, Module};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// class::array().const_set("EXAMPLE", 42).unwrap();
     ///
-    /// assert_eq!(eval::<i64>("Array::EXAMPLE").unwrap(), 42);
+    /// rb_assert!("Array::EXAMPLE == 42");
     /// ```
     fn const_set<T, U>(self, name: T, value: U) -> Result<(), Error>
     where
@@ -380,7 +379,7 @@ pub trait Module: Object + ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{class, eval, Module, RClass, Value};
+    /// use magnus::{class, eval, rb_assert, Module, RClass, Value};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// eval::<Value>(
@@ -393,7 +392,7 @@ pub trait Module: Object + ReprValue + Copy {
     /// .unwrap();
     ///
     /// let class = class::object().const_get::<_, RClass>("Example").unwrap();
-    /// assert_eq!(class.const_get::<_, i64>("VALUE").unwrap(), 42);
+    /// rb_assert!("klass::VALUE == 42", klass = class);
     /// ```
     fn const_get<T, U>(self, name: T) -> Result<U, Error>
     where
@@ -440,17 +439,15 @@ pub trait Module: Object + ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{class, eval, Module};
+    /// use magnus::{class, rb_assert, Module};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let ary = class::string().ancestors();
     ///
-    /// let res: bool = eval!(
+    /// rb_assert!(
     ///     "ary == [String, Comparable, Object, Kernel, BasicObject]",
-    ///     ary
-    /// )
-    /// .unwrap();
-    /// assert!(res);
+    ///     ary,
+    /// );
     /// ```
     fn ancestors(self) -> RArray {
         unsafe { RArray::from_rb_value_unchecked(rb_mod_ancestors(self.as_rb_value())) }
@@ -461,7 +458,7 @@ pub trait Module: Object + ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{class, eval, method, Module};
+    /// use magnus::{class, rb_assert, method, Module};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// fn escape_unicode(s: String) -> String {
@@ -472,11 +469,9 @@ pub trait Module: Object + ReprValue + Copy {
     ///     .define_method("escape_unicode", method!(escape_unicode, 0))
     ///     .unwrap();
     ///
-    /// let res = eval::<bool>(
+    /// rb_assert!(
     ///     r#""🤖\etest".escape_unicode == "\\u{1f916}\\u{1b}\\u{74}\\u{65}\\u{73}\\u{74}""#,
-    /// )
-    /// .unwrap();
-    /// assert!(res);
+    /// );
     /// ```
     fn define_method<T, M>(self, name: T, func: M) -> Result<(), Error>
     where
@@ -505,7 +500,7 @@ pub trait Module: Object + ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{class, eval, exception, function, Module, Value};
+    /// use magnus::{class, eval, exception, function, rb_assert, Module, Value};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// fn percent_encode(c: char) -> String {
@@ -531,8 +526,7 @@ pub trait Module: Object + ReprValue + Copy {
     /// )
     /// .unwrap();
     ///
-    /// let res = eval::<bool>(r#""foo bar".percent_encode == "foo%20bar""#).unwrap();
-    /// assert!(res);
+    /// rb_assert!(r#""foo bar".percent_encode == "foo%20bar""#);
     ///
     /// assert!(eval::<bool>(r#"" ".percent_encode_char(" ")"#)
     ///     .unwrap_err()
@@ -563,7 +557,7 @@ pub trait Module: Object + ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{class, eval, exception, method, Module, Value};
+    /// use magnus::{class, eval, exception, method, rb_assert, Module, Value};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// fn escape_unicode(s: String) -> String {
@@ -592,13 +586,11 @@ pub trait Module: Object + ReprValue + Copy {
     /// )
     /// .unwrap();
     ///
-    /// let res: bool = eval!(
+    /// rb_assert!(
     ///     r#"
-    ///     "🤖\tfoo bar".escape_invisible == "🤖\\u{9}foo\\u{20}bar"
-    /// "#
-    /// )
-    /// .unwrap();
-    /// assert!(res);
+    ///       "🤖\tfoo bar".escape_invisible == "🤖\\u{9}foo\\u{20}bar"
+    ///     "#,
+    /// );
     ///
     /// assert!(eval::<bool>(r#"" ".invisible?"#)
     ///     .unwrap_err()
@@ -631,15 +623,15 @@ pub trait Module: Object + ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{class, prelude::*, Attr, Module, RClass, Value};
+    /// use magnus::{class, eval, prelude::*, rb_assert, Attr, Module, RClass, Value};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let class = RClass::new(class::object()).unwrap();
     /// class.define_attr("example", Attr::ReadWrite).unwrap();
     ///
     /// let obj = class.new_instance(()).unwrap();
-    /// let _: Value = obj.funcall("example=", (42,)).unwrap();
-    /// assert_eq!(obj.funcall::<_, _, i64>("example", ()).unwrap(), 42);
+    /// let _: Value = eval!("obj.example = 42", obj).unwrap();
+    /// rb_assert!("obj.example == 42", obj);
     /// ```
     fn define_attr<T>(self, name: T, rw: Attr) -> Result<(), Error>
     where
@@ -667,7 +659,7 @@ pub trait Module: Object + ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{class, function, prelude::*, Module, RClass};
+    /// use magnus::{class, function, prelude::*, rb_assert, Module, RClass};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// fn example() -> i64 {
@@ -681,7 +673,7 @@ pub trait Module: Object + ReprValue + Copy {
     /// class.define_alias("test", "example").unwrap();
     ///
     /// let obj = class.new_instance(()).unwrap();
-    /// assert_eq!(obj.funcall::<_, _, i64>("test", ()).unwrap(), 42);
+    /// rb_assert!("obj.test == 42", obj);
     /// ```
     fn define_alias<T, U>(self, dst: T, src: U) -> Result<(), Error>
     where
