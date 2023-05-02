@@ -1,10 +1,13 @@
 use std::{
     fmt,
     ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign},
+    os::raw::c_long,
 };
 
 use rb_sys::{
-    rb_big_norm, rb_ll2inum, rb_to_int, rb_ull2inum, ruby_special_consts, ruby_value_type, VALUE,
+    rb_big_cmp, rb_big_div, rb_big_eq, rb_big_minus, rb_big_mul, rb_big_norm, rb_big_plus,
+    rb_int2big, rb_ll2inum, rb_to_int, rb_ull2inum, ruby_special_consts, ruby_value_type, Qtrue,
+    VALUE,
 };
 
 use crate::{
@@ -499,13 +502,13 @@ impl Integer {
         &self,
         other: &Self,
         rust_op: fn(Fixnum, Fixnum) -> T,
-        ruby_op: fn(rb_sys::VALUE, rb_sys::VALUE) -> T,
+        ruby_op: fn(VALUE, VALUE) -> T,
     ) -> T {
         match self.integer_type() {
             IntegerType::Bignum(a) => ruby_op(a.as_rb_value(), other.as_rb_value()),
             IntegerType::Fixnum(a) => match other.integer_type() {
                 IntegerType::Bignum(b) => {
-                    let a = unsafe { rb_sys::rb_int2big(a.to_isize()) };
+                    let a = unsafe { rb_int2big(a.to_isize()) };
                     ruby_op(a, b.as_rb_value())
                 }
                 IntegerType::Fixnum(b) => rust_op(a, b),
@@ -555,7 +558,7 @@ impl PartialEq for Integer {
     fn eq(&self, other: &Self) -> bool {
         match self.integer_type() {
             IntegerType::Bignum(a) => unsafe {
-                rb_sys::rb_big_eq(a.as_rb_value(), other.as_rb_value()) == rb_sys::Qtrue.into()
+                rb_big_eq(a.as_rb_value(), other.as_rb_value()) == Qtrue.into()
             },
             IntegerType::Fixnum(a) => a.as_rb_value() == other.norm().as_rb_value(),
         }
@@ -566,9 +569,9 @@ impl PartialOrd for Integer {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         self.binary_operation_visit(
             other,
-            |a, b| (a.as_rb_value() as i64).partial_cmp(&(b.as_rb_value() as i64)),
+            |a, b| (a.as_rb_value() as c_long).partial_cmp(&(b.as_rb_value() as c_long)),
             |a, b| unsafe {
-                let result = rb_sys::rb_big_cmp(a, b);
+                let result = rb_big_cmp(a, b);
                 Integer::from_rb_value_unchecked(result)
                     .to_i64()
                     .unwrap()
@@ -585,19 +588,19 @@ impl Add for Integer {
         self.binary_operation_visit(
             &other,
             |a, b| {
-                let raw_a = a.as_rb_value() as i64;
-                let raw_b = b.as_rb_value() as i64;
+                let raw_a = a.as_rb_value() as c_long;
+                let raw_b = b.as_rb_value() as c_long;
                 let result = raw_a.checked_add(raw_b).and_then(|i| i.checked_sub(1));
                 if let Some(result) = result {
-                    unsafe { Integer::from_rb_value_unchecked(result as u64) }
+                    unsafe { Integer::from_rb_value_unchecked(result as VALUE) }
                 } else {
-                    let a = unsafe { rb_sys::rb_int2big(a.to_isize()) };
-                    let result = unsafe { rb_sys::rb_big_plus(a, b.as_rb_value()) };
+                    let a = unsafe { rb_int2big(a.to_isize()) };
+                    let result = unsafe { rb_big_plus(a, b.as_rb_value()) };
                     unsafe { Integer::from_rb_value_unchecked(result) }
                 }
             },
             |a, b| {
-                let result = unsafe { rb_sys::rb_big_plus(a, b) };
+                let result = unsafe { rb_big_plus(a, b) };
                 unsafe { Integer::from_rb_value_unchecked(result) }
             },
         )
@@ -617,19 +620,19 @@ impl Sub for Integer {
         self.binary_operation_visit(
             &other,
             |a, b| {
-                let raw_a = a.as_rb_value() as i64;
-                let raw_b = b.as_rb_value() as i64;
+                let raw_a = a.as_rb_value() as c_long;
+                let raw_b = b.as_rb_value() as c_long;
                 let result = raw_a.checked_sub(raw_b).and_then(|i| i.checked_add(1));
                 if let Some(result) = result {
-                    unsafe { Integer::from_rb_value_unchecked(result as u64) }
+                    unsafe { Integer::from_rb_value_unchecked(result as VALUE) }
                 } else {
-                    let a = unsafe { rb_sys::rb_int2big(a.to_isize()) };
-                    let result = unsafe { rb_sys::rb_big_minus(a, b.as_rb_value()) };
+                    let a = unsafe { rb_int2big(a.to_isize()) };
+                    let result = unsafe { rb_big_minus(a, b.as_rb_value()) };
                     unsafe { Integer::from_rb_value_unchecked(result) }
                 }
             },
             |a, b| {
-                let result = unsafe { rb_sys::rb_big_minus(a, b) };
+                let result = unsafe { rb_big_minus(a, b) };
                 unsafe { Integer::from_rb_value_unchecked(result) }
             },
         )
@@ -655,13 +658,13 @@ impl Mul for Integer {
                 if let Some(result) = result {
                     Integer::from_i64(result)
                 } else {
-                    let a = unsafe { rb_sys::rb_int2big(a.to_isize()) };
-                    let result = unsafe { rb_sys::rb_big_mul(a, b.as_rb_value()) };
+                    let a = unsafe { rb_int2big(a.to_isize()) };
+                    let result = unsafe { rb_big_mul(a, b.as_rb_value()) };
                     unsafe { Integer::from_rb_value_unchecked(result) }
                 }
             },
             |a, b| {
-                let result = unsafe { rb_sys::rb_big_mul(a, b) };
+                let result = unsafe { rb_big_mul(a, b) };
                 unsafe { Integer::from_rb_value_unchecked(result) }
             },
         )
@@ -689,7 +692,7 @@ impl Div for Integer {
                 Integer::from_i64(raw_a / raw_b)
             },
             |a, b| {
-                let result = unsafe { rb_sys::rb_big_div(a, b) };
+                let result = unsafe { rb_big_div(a, b) };
                 unsafe { Integer::from_rb_value_unchecked(result) }
             },
         )
