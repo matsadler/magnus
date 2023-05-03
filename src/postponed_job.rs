@@ -3,7 +3,7 @@
 use crate::Ruby;
 
 use rb_sys::rb_postponed_job_register;
-use std::ffi::{c_uint, c_void};
+use std::ffi::c_void;
 
 impl Ruby {
     /// Registers a function to be executed when the Ruby VM is safe to access
@@ -35,7 +35,7 @@ impl Ruby {
     /// assert_eq!(1, COUNTER.load(Ordering::SeqCst));
     /// ```
     pub fn postponed_job_register<F: FnOnce()>(func: F) -> Result<(), RegistrationError> {
-        let flags = 0 as c_uint;
+        let flags = 0;
         let trampoline = trampoline::<F> as unsafe extern "C" fn(*mut c_void);
         let boxed_func = Box::new(func);
         let boxed_func_ptr = Box::into_raw(boxed_func) as *mut c_void;

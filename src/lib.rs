@@ -1809,6 +1809,7 @@ pub mod method;
 pub mod module;
 pub mod numeric;
 mod object;
+#[cfg(ruby_gte_3_0)]
 pub mod postponed_job;
 /// Traits that commonly should be in scope.
 pub mod prelude {
