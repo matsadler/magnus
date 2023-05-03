@@ -28,6 +28,16 @@ pub struct RComplex(NonZeroValue);
 
 impl RComplex {
     /// Return `Some(RComplex)` if `val` is a `RComplex`, `None` otherwise.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RComplex};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// assert!(RComplex::from_value(eval("2+1i").unwrap()).is_some());
+    /// assert!(RComplex::from_value(eval("3").unwrap()).is_none());
+    /// ```
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
         unsafe {

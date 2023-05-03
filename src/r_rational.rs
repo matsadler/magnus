@@ -45,6 +45,16 @@ pub struct RRational(NonZeroValue);
 
 impl RRational {
     /// Return `Some(RRational)` if `val` is a `RRational`, `None` otherwise.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RRational};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// assert!(RRational::from_value(eval("1/2r").unwrap()).is_some());
+    /// assert!(RRational::from_value(eval("0.5").unwrap()).is_none());
+    /// ```
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
         unsafe {

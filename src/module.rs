@@ -200,7 +200,7 @@ pub trait Module: Object + ReprValue + Copy {
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let outer = define_module("Outer").unwrap();
-    /// let inner = outer.define_class("Inner", class::object()).unwrap();
+    /// outer.define_class("Inner", class::object()).unwrap();
     /// rb_assert!("Outer::Inner.is_a?(Class)");
     /// ```
     fn define_class<T>(self, name: T, superclass: RClass) -> Result<RClass, Error>
@@ -225,11 +225,11 @@ pub trait Module: Object + ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{class, define_module, prelude::*, rb_assert};
+    /// use magnus::{define_module, prelude::*, rb_assert};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let outer = define_module("Outer").unwrap();
-    /// let inner = outer.define_module("Inner").unwrap();
+    /// outer.define_module("Inner").unwrap();
     /// rb_assert!("Outer::Inner.is_a?(Module)");
     /// rb_assert!("!Outer::Inner.is_a?(Class)");
     /// ```
@@ -255,7 +255,7 @@ pub trait Module: Object + ReprValue + Copy {
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let outer = define_module("Outer").unwrap();
-    /// let inner = outer
+    /// outer
     ///     .define_error("InnerError", exception::standard_error())
     ///     .unwrap();
     /// rb_assert!("Outer::InnerError.is_a?(Class)");

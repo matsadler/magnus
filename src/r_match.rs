@@ -29,6 +29,16 @@ pub struct RMatch(NonZeroValue);
 
 impl RMatch {
     /// Return `Some(RMatch)` if `val` is a `RMatch`, `None` otherwise.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RMatch};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// assert!(RMatch::from_value(eval(r#""foo".match(/o/)"#).unwrap()).is_some());
+    /// assert!(RMatch::from_value(eval(r#""o""#).unwrap()).is_none());
+    /// ```
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
         unsafe {

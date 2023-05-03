@@ -188,13 +188,12 @@ impl RHash {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, RHash};
+    /// use magnus::{rb_assert, RHash};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let hash = RHash::new();
     /// hash.aset("answer", 42).unwrap();
-    /// let res: bool = eval!(r#"hash == {"answer" => 42}"#, hash).unwrap();
-    /// assert!(res);
+    /// rb_assert!(r#"hash == {"answer" => 42}"#, hash);
     /// ```
     pub fn aset<K, V>(self, key: K, val: V) -> Result<(), Error>
     where
@@ -221,7 +220,7 @@ impl RHash {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, prelude::*, RHash, RString, Symbol};
+    /// use magnus::{prelude::*, rb_assert, RHash, RString, Symbol};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let hash = RHash::new();
@@ -232,12 +231,10 @@ impl RHash {
     ///     RString::new("Dent").as_value(),
     /// ])
     /// .unwrap();
-    /// let res: bool = eval!(
+    /// rb_assert!(
     ///     r#"hash == {given_name: "Arthur", family_name: "Dent"}"#,
-    ///     hash
-    /// )
-    /// .unwrap();
-    /// assert!(res);
+    ///     hash,
+    /// );
     /// ```
     #[cfg(any(ruby_gte_2_7, docsrs))]
     #[cfg_attr(docsrs, doc(cfg(ruby_gte_2_7)))]
@@ -258,7 +255,7 @@ impl RHash {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, RHash};
+    /// use magnus::{eval, rb_assert, RHash};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let a: RHash = eval("{a: 1, b: 2}").unwrap();
@@ -266,12 +263,10 @@ impl RHash {
     /// a.update(b).unwrap();
     ///
     /// // a is mutated, in case of conflicts b wins
-    /// let res: bool = eval!("a == {a: 1, b: 3, c: 4}", a).unwrap();
-    /// assert!(res);
+    /// rb_assert!("a == {a: 1, b: 3, c: 4}", a);
     ///
     /// // b is unmodified
-    /// let res: bool = eval!("b == {b: 3, c: 4}", b).unwrap();
-    /// assert!(res);
+    /// rb_assert!("b == {b: 3, c: 4}", b);
     /// ```
     //
     // Implementation note: `rb_hash_update_by` takes a third optional argument,
@@ -310,12 +305,12 @@ impl RHash {
     /// use magnus::{eval, RHash};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// let hash = eval::<RHash>(
+    /// let hash: RHash = eval(
     ///     r#"
-    ///   hash = {"answer" => 42}
-    ///   hash.default = 0
-    ///   hash
-    /// "#,
+    ///       hash = {"answer" => 42}
+    ///       hash.default = 0
+    ///       hash
+    ///     "#,
     /// )
     /// .unwrap();
     /// assert_eq!(hash.aref::<_, i64>("answer").unwrap(), 42);
@@ -343,12 +338,12 @@ impl RHash {
     /// use magnus::{eval, value::Qnil, RHash};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// let hash = eval::<RHash>(
+    /// let hash: RHash = eval(
     ///     r#"
-    ///   hash = {"answer" => 42}
-    ///   hash.default = 0
-    ///   hash
-    /// "#,
+    ///       hash = {"answer" => 42}
+    ///       hash.default = 0
+    ///       hash
+    ///     "#,
     /// )
     /// .unwrap();
     /// assert_eq!(hash.lookup::<_, i64>("answer").unwrap(), 42);
@@ -413,12 +408,12 @@ impl RHash {
     /// use magnus::{eval, RHash};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// let hash = eval::<RHash>(
+    /// let hash: RHash = eval(
     ///     r#"
-    ///   hash = {"answer" => 42}
-    ///   hash.default = 0
-    ///   hash
-    /// "#,
+    ///       hash = {"answer" => 42}
+    ///       hash.default = 0
+    ///       hash
+    ///     "#,
     /// )
     /// .unwrap();
     /// assert_eq!(hash.fetch::<_, i64>("answer").unwrap(), 42);
@@ -447,7 +442,7 @@ impl RHash {
     /// use magnus::{eval, value::Qnil, RHash};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// let hash = eval::<RHash>(r#"hash = {"answer" => 42}"#).unwrap();
+    /// let hash: RHash = eval(r#"hash = {"answer" => 42}"#).unwrap();
     /// assert_eq!(hash.delete::<_, i64>("answer").unwrap(), 42);
     /// assert!(hash.delete::<_, Qnil>("answer").is_ok());
     /// ```
@@ -496,7 +491,7 @@ impl RHash {
     /// use magnus::{eval, r_hash::ForEach, RHash};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// let hash = eval::<RHash>(r#"{"foo" => 1, "bar" => 2, "baz" => 4, "qux" => 8}"#).unwrap();
+    /// let hash: RHash = eval(r#"{"foo" => 1, "bar" => 2, "baz" => 4, "qux" => 8}"#).unwrap();
     /// let mut found = None;
     /// hash.foreach(|key: String, value: i64| {
     ///     if value > 3 {
@@ -556,7 +551,7 @@ impl RHash {
     /// use magnus::{eval, RHash};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// let r_hash = eval::<RHash>(r#"{"answer" => 42}"#).unwrap();
+    /// let r_hash: RHash = eval(r#"{"answer" => 42}"#).unwrap();
     /// let mut hash_map = HashMap::new();
     /// hash_map.insert(String::from("answer"), 42);
     /// assert_eq!(r_hash.to_hash_map().unwrap(), hash_map);
@@ -590,7 +585,7 @@ impl RHash {
     /// use magnus::{eval, RHash};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// let r_hash = eval::<RHash>(r#"{"answer" => 42}"#).unwrap();
+    /// let r_hash: RHash = eval(r#"{"answer" => 42}"#).unwrap();
     /// assert_eq!(r_hash.to_vec().unwrap(), vec![(String::from("answer"), 42)]);
     /// ```
     pub fn to_vec<K, V>(self) -> Result<Vec<(K, V)>, Error>
@@ -614,7 +609,7 @@ impl RHash {
     /// use magnus::{eval, RHash};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// let hash = eval::<RHash>(r#"{"foo" => 1, "bar" => 2, "baz" => 4}"#).unwrap();
+    /// let hash: RHash = eval(r#"{"foo" => 1, "bar" => 2, "baz" => 4}"#).unwrap();
     /// assert_eq!(hash.size().to_i64(), 3);
     /// ```
     pub fn size(self) -> Fixnum {
@@ -629,7 +624,7 @@ impl RHash {
     /// use magnus::{eval, RHash};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// let hash = eval::<RHash>(r#"{"foo" => 1, "bar" => 2, "baz" => 4}"#).unwrap();
+    /// let hash: RHash = eval(r#"{"foo" => 1, "bar" => 2, "baz" => 4}"#).unwrap();
     /// assert_eq!(hash.len(), 3);
     /// ```
     pub fn len(self) -> usize {

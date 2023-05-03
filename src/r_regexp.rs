@@ -52,6 +52,16 @@ pub struct RRegexp(NonZeroValue);
 
 impl RRegexp {
     /// Return `Some(RRegexp)` if `val` is a `RRegexp`, `None` otherwise.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RRegexp};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// assert!(RRegexp::from_value(eval("/f(.)o/").unwrap()).is_some());
+    /// assert!(RRegexp::from_value(eval(r#""f*""#).unwrap()).is_none());
+    /// ```
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
         unsafe {
@@ -77,12 +87,11 @@ impl RRegexp {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, r_regexp::Opts, RRegexp};
+    /// use magnus::{r_regexp::Opts, rb_assert, RRegexp};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let regexp = RRegexp::new("foo", Opts::new().ignorecase()).unwrap();
-    /// let res: bool = eval!(r#"regexp == /foo/i"#, regexp).unwrap();
-    /// assert!(res);
+    /// rb_assert!(r#"regexp == /foo/i"#, regexp);
     /// ```
     #[cfg(feature = "friendly-api")]
     #[inline]
@@ -95,12 +104,11 @@ impl RRegexp {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, r_regexp::Opts, RRegexp, RString};
+    /// use magnus::{r_regexp::Opts, rb_assert, RRegexp, RString};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let regexp = RRegexp::new_str(RString::new("foo"), Opts::new().ignorecase()).unwrap();
-    /// let res: bool = eval!(r#"regexp == /foo/i"#, regexp).unwrap();
-    /// assert!(res);
+    /// rb_assert!(r#"regexp == /foo/i"#, regexp);
     /// ```
     pub fn new_str(pattern: RString, opts: Opts) -> Result<Self, Error> {
         protect(|| unsafe {

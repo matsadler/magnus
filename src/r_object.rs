@@ -25,6 +25,21 @@ pub struct RObject(NonZeroValue);
 
 impl RObject {
     /// Return `Some(RObject)` if `val` is a `RObject`, `None` otherwise.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RObject};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// assert!(RObject::from_value(eval("Object.new").unwrap()).is_some());
+    ///
+    /// // many built-in types have specialised implementations and are not
+    /// // RObjects
+    /// assert!(RObject::from_value(eval(r#""example""#).unwrap()).is_none());
+    /// assert!(RObject::from_value(eval("1").unwrap()).is_none());
+    /// assert!(RObject::from_value(eval("[]").unwrap()).is_none());
+    /// ```
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
         unsafe {
