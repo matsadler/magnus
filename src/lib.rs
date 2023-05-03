@@ -1208,7 +1208,7 @@
 // * `rb_path_to_class`:
 // * `rb_pipe`:
 // * `RB_POSFIXABLE`:
-// * `rb_postponed_job_register`:
+// * `rb_postponed_job_register`: [`Ruby::postponed_job_register`]
 // * `rb_postponed_job_register_one`:
 // * `rb_prepend_module`: [`Module::prepend_module`].
 //! * `rb_proc_arity`: [`Proc::arity`](block::Proc::arity).
@@ -1809,6 +1809,7 @@ pub mod method;
 pub mod module;
 pub mod numeric;
 mod object;
+pub mod postponed_job;
 /// Traits that commonly should be in scope.
 pub mod prelude {
     pub use crate::{
