@@ -56,7 +56,7 @@ impl Ruby {
 #[derive(Debug)]
 pub enum RegistrationError {
     /// The postponed job queue is full, so the job could not be registered.
-    BufferFull,
+    BufferFull = 0,
 }
 
 impl std::fmt::Display for RegistrationError {
