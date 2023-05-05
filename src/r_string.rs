@@ -169,12 +169,11 @@ impl RString {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, RString};
+    /// use magnus::{rb_assert, RString};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let val = RString::new("example");
-    /// let res: bool = eval!(r#"val == "example""#, val).unwrap();
-    /// assert!(res);
+    /// rb_assert!(r#"val == "example""#, val);
     /// ```
     #[cfg(feature = "friendly-api")]
     #[inline]
@@ -203,13 +202,12 @@ impl RString {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, RString};
+    /// use magnus::{rb_assert, RString};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let buf = RString::buf_new(4096);
     /// buf.cat(&[13, 14, 10, 13, 11, 14, 14, 15]);
-    /// let res: bool = eval!(r#"buf == "\r\x0E\n\r\v\x0E\x0E\x0F""#, buf).unwrap();
-    /// assert!(res);
+    /// rb_assert!(r#"buf == "\r\x0E\n\r\v\x0E\x0E\x0F""#, buf);
     /// ```
     #[cfg(feature = "friendly-api")]
     #[inline]
@@ -230,15 +228,14 @@ impl RString {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, RString};
+    /// use magnus::{rb_assert, RString};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let s = RString::with_capacity(9);
     /// s.cat("foo");
     /// s.cat("bar");
     /// s.cat("baz");
-    /// let res: bool = eval!(r#"s == "foobarbaz""#, s).unwrap();
-    /// assert!(res);
+    /// rb_assert!(r#"s == "foobarbaz""#, s);
     /// ```
     #[cfg(feature = "friendly-api")]
     #[inline]
@@ -258,12 +255,11 @@ impl RString {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, RString};
+    /// use magnus::{rb_assert, RString};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let buf = RString::from_slice(&[13, 14, 10, 13, 11, 14, 14, 15]);
-    /// let res: bool = eval!(r#"buf == "\r\x0E\n\r\v\x0E\x0E\x0F""#, buf).unwrap();
-    /// assert!(res);
+    /// rb_assert!(r#"buf == "\r\x0E\n\r\v\x0E\x0E\x0F""#, buf);
     /// ```
     #[cfg(feature = "friendly-api")]
     #[inline]
@@ -281,21 +277,19 @@ impl RString {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{encoding::RbEncoding, eval, RString};
+    /// use magnus::{encoding::RbEncoding, rb_assert, RString};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let val = RString::enc_new("example", RbEncoding::usascii());
-    /// let res: bool = eval!(r#"val == "example""#, val).unwrap();
-    /// assert!(res);
+    /// rb_assert!(r#"val == "example""#, val);
     /// ```
     ///
     /// ```
-    /// use magnus::{encoding::RbEncoding, eval, RString};
+    /// use magnus::{encoding::RbEncoding, rb_assert, RString};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let val = RString::enc_new([255, 128, 128], RbEncoding::ascii8bit());
-    /// let res: bool = eval!(r#"val == "\xFF\x80\x80".force_encoding("BINARY")"#, val).unwrap();
-    /// assert!(res);
+    /// rb_assert!(r#"val == "\xFF\x80\x80".force_encoding("BINARY")"#, val);
     /// ```
     #[cfg(feature = "friendly-api")]
     #[inline]
@@ -319,21 +313,19 @@ impl RString {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, RString};
+    /// use magnus::{rb_assert, RString};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let c = RString::from_char('a');
-    /// let res: bool = eval!(r#"c == "a""#, c).unwrap();
-    /// assert!(res);
+    /// rb_assert!(r#"c == "a""#, c);
     /// ```
     ///
     /// ```
-    /// use magnus::{eval, RString};
+    /// use magnus::{rb_assert, RString};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let c = RString::from_char('🦀');
-    /// let res: bool = eval!(r#"c == "🦀""#, c).unwrap();
-    /// assert!(res);
+    /// rb_assert!(r#"c == "🦀""#, c);
     /// ```
     #[cfg(feature = "friendly-api")]
     #[inline]
@@ -354,21 +346,19 @@ impl RString {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{encoding::RbEncoding, eval, RString};
+    /// use magnus::{encoding::RbEncoding, rb_assert, RString};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let c = RString::chr(97, RbEncoding::usascii()).unwrap();
-    /// let res: bool = eval!(r#"c == "a""#, c).unwrap();
-    /// assert!(res);
+    /// rb_assert!(r#"c == "a""#, c);
     /// ```
     ///
     /// ```
-    /// use magnus::{encoding::RbEncoding, eval, RString};
+    /// use magnus::{encoding::RbEncoding, rb_assert, RString};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let c = RString::chr(129408, RbEncoding::utf8()).unwrap();
-    /// let res: bool = eval!(r#"c == "🦀""#, c).unwrap();
-    /// assert!(res);
+    /// rb_assert!(r#"c == "🦀""#, c);
     /// ```
     #[cfg(feature = "friendly-api")]
     #[inline]
@@ -389,17 +379,15 @@ impl RString {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, RString};
+    /// use magnus::{rb_assert, RString};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let s = RString::new("example");
     /// let dup = RString::new_shared(s);
-    /// let res: bool = eval!("s == dup", s, dup).unwrap();
-    /// assert!(res);
+    /// rb_assert!("s == dup", s, dup);
     /// // mutating one doesn't mutate both
     /// dup.cat("foo");
-    /// let res: bool = eval!("s != dup", s, dup).unwrap();
-    /// assert!(res);
+    /// rb_assert!("s != dup", s, dup);
     /// ```
     pub fn new_shared(s: Self) -> Self {
         unsafe { Self::from_rb_value_unchecked(rb_str_new_shared(s.as_rb_value())) }
@@ -413,17 +401,15 @@ impl RString {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, RString};
+    /// use magnus::{rb_assert, RString};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let orig = RString::new("example");
     /// let frozen = RString::new_frozen(orig);
-    /// let res: bool = eval!(r#"frozen == "example""#, frozen).unwrap();
-    /// assert!(res);
+    /// rb_assert!(r#"frozen == "example""#, frozen);
     /// // mutating original doesn't impact the frozen copy
     /// orig.cat("foo");
-    /// let res: bool = eval!(r#"frozen == "example""#, frozen).unwrap();
-    /// assert!(res);
+    /// rb_assert!(r#"frozen == "example""#, frozen);
     /// ```
     pub fn new_frozen(s: Self) -> Self {
         unsafe { Self::from_rb_value_unchecked(rb_str_new_frozen(s.as_rb_value())) }
@@ -1028,10 +1014,10 @@ impl RString {
     ///
     /// let s: RString = eval!(
     ///     r#"
-    /// ## frozen_string_literal: true
+    ///       ## frozen_string_literal: true
     ///
-    /// "example"
-    /// "#
+    ///       "example"
+    ///     "#
     /// )
     /// .unwrap();
     /// assert!(s.is_interned());
@@ -1066,10 +1052,10 @@ impl RString {
     ///
     /// let s: RString = eval!(
     ///     r#"
-    /// ## frozen_string_literal: true
+    ///       ## frozen_string_literal: true
     ///
-    /// "example"
-    /// "#
+    ///       "example"
+    ///     "#
     /// )
     /// .unwrap();
     /// assert!(s.as_interned_str().is_some());
@@ -1695,10 +1681,10 @@ impl FString {
     ///
     /// let s: RString = eval!(
     ///     r#"
-    /// ## frozen_string_literal: true
+    ///       ## frozen_string_literal: true
     ///
-    /// "example"
-    /// "#
+    ///       "example"
+    ///     "#
     /// )
     /// .unwrap();
     /// let fstring = s.as_interned_str().unwrap();
@@ -1718,9 +1704,11 @@ impl FString {
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let s: RString = eval!(
-    ///     r#"# frozen_string_literal: true
-    /// "example"
-    /// "#
+    ///     r#"
+    ///       ## frozen_string_literal: true
+    ///
+    ///       "example"
+    ///     "#
     /// )
     /// .unwrap();
     /// let fstring = s.as_interned_str().unwrap();
@@ -1740,9 +1728,11 @@ impl FString {
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let s: RString = eval!(
-    ///     r#"# frozen_string_literal: true
-    /// "example"
-    /// "#
+    ///     r#"
+    ///       ## frozen_string_literal: true
+    ///
+    ///       "example"
+    ///     "#
     /// )
     /// .unwrap();
     /// let fstring = s.as_interned_str().unwrap();
@@ -1764,10 +1754,10 @@ impl FString {
     ///
     /// let s: RString = eval!(
     ///     r#"
-    /// ## frozen_string_literal: true
+    ///       ## frozen_string_literal: true
     ///
-    /// "example"
-    /// "#
+    ///       "example"
+    ///     "#
     /// )
     /// .unwrap();
     /// let fstring = s.as_interned_str().unwrap();
@@ -1855,12 +1845,11 @@ impl<'a> Iterator for CharBytes<'a> {
 /// # Examples
 ///
 /// ```
-/// use magnus::{eval, r_string};
+/// use magnus::{r_string, rb_assert};
 /// # let _cleanup = unsafe { magnus::embed::init() };
 ///
 /// let s = r_string!("Hello, world!");
-/// let res: bool = eval!(r#"s == "Hello, world!""#, s).unwrap();
-/// assert!(res);
+/// rb_assert!(r#"s == "Hello, world!""#, s);
 /// ```
 #[macro_export]
 macro_rules! r_string {
