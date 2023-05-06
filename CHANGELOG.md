@@ -68,7 +68,8 @@
 - `Binding`. To call methods on Ruby's binding, use `ReprValue::funcall` on a
   `Value` know to be an instance of Ruby's Binding class.
 - `gc::{mark, mark_slice, mark_movable, location}`, instead use
-  `gc::Marker::{mark, mark_slice, mark_movable}` and `Compactor::location`
+  `gc::Marker::{mark, mark_slice, mark_movable}` and `Compactor::location`.
+- `RStruct::as_slice`.
 
 ### Removed
 - Inherent methods on `RClass`, import `magnus::Class` trait or

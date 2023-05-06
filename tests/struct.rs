@@ -21,14 +21,8 @@ fn it_defines_a_struct() {
     );
 
     let obj = RStruct::from_value(obj).unwrap();
-    unsafe {
-        if let &[bar, baz] = obj.as_slice() {
-            assert_eq!(1, usize::try_convert(bar).unwrap());
-            assert_eq!(2, usize::try_convert(baz).unwrap());
-        } else {
-            panic!()
-        }
-    }
+    assert_eq!(1, obj.get(0).unwrap());
+    assert_eq!(2, obj.get(1).unwrap());
 
     assert_eq!(&["bar", "baz"], obj.members().unwrap().as_slice())
 }

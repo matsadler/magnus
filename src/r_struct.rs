@@ -106,6 +106,7 @@ impl RStruct {
     ///
     /// Ruby may modify or free the memory backing the returned slice, the
     /// caller must ensure this does not happen.
+    #[deprecated(since = "0.6.0")]
     pub unsafe fn as_slice(&self) -> &[Value] {
         self.as_slice_unconstrained()
     }
@@ -128,6 +129,7 @@ impl RStruct {
 
     /// Return the value for the member at `index`, where members are ordered
     /// as per the member names when the struct class was defined.
+    #[allow(deprecated)]
     pub fn get<T>(self, index: usize) -> Result<T, Error>
     where
         T: TryConvert,
