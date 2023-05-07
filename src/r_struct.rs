@@ -81,6 +81,19 @@ pub struct RStruct(NonZeroValue);
 
 impl RStruct {
     /// Return `Some(RStruct)` if `val` is a `RStruct`, `None` otherwise.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{define_global_const, eval, r_struct::define_struct, RStruct};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let struct_class = define_struct(None, ("foo", "bar")).unwrap();
+    /// define_global_const("Example", struct_class).unwrap();
+    ///
+    /// assert!(RStruct::from_value(eval(r#"Example.new(1, 2)"#).unwrap()).is_some());
+    /// assert!(RStruct::from_value(eval(r#"Object.new"#).unwrap()).is_none());
+    /// ```
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
         unsafe {
@@ -111,7 +124,7 @@ impl RStruct {
         self.as_slice_unconstrained()
     }
 
-    pub(crate) unsafe fn as_slice_unconstrained<'a>(self) -> &'a [Value] {
+    unsafe fn as_slice_unconstrained<'a>(self) -> &'a [Value] {
         debug_assert_value!(self);
         let r_basic = self.r_basic_unchecked();
         let flags = r_basic.as_ref().flags;
@@ -129,6 +142,18 @@ impl RStruct {
 
     /// Return the value for the member at `index`, where members are ordered
     /// as per the member names when the struct class was defined.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{prelude::*, r_struct::define_struct, RStruct};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let struct_class = define_struct(None, ("foo", "bar")).unwrap();
+    /// let instance = RStruct::from_value(struct_class.new_instance((1, 2)).unwrap()).unwrap();
+    /// assert_eq!(instance.get::<i64>(0).unwrap(), 1);
+    /// assert_eq!(instance.get::<i64>(1).unwrap(), 2);
+    /// ```
     #[allow(deprecated)]
     pub fn get<T>(self, index: usize) -> Result<T, Error>
     where
@@ -156,6 +181,19 @@ impl RStruct {
     /// Return the value for the member at `index`.
     ///
     /// `index` may be an integer, string, or [`Symbol`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{prelude::*, r_struct::define_struct, RStruct, Symbol};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let struct_class = define_struct(None, ("foo", "bar", "baz")).unwrap();
+    /// let instance = RStruct::from_value(struct_class.new_instance((1, 2, 3)).unwrap()).unwrap();
+    /// assert_eq!(instance.aref::<_, i64>(0).unwrap(), 1);
+    /// assert_eq!(instance.aref::<_, i64>("bar").unwrap(), 2);
+    /// assert_eq!(instance.aref::<_, i64>(Symbol::new("baz")).unwrap(), 3);
+    /// ```
     pub fn aref<T, U>(self, index: T) -> Result<U, Error>
     where
         T: IntoValue,
@@ -166,9 +204,28 @@ impl RStruct {
             .and_then(TryConvert::try_convert)
     }
 
-    /// Return the value for the member at `index`.
+    /// Set the value for the member at `index`.
     ///
     /// `index` may be an integer, string, or [`Symbol`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{prelude::*, r_struct::define_struct, rb_assert, RStruct, Symbol};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let struct_class = define_struct(None, ("foo", "bar", "baz")).unwrap();
+    /// let instance = RStruct::from_value(struct_class.new_instance((1, 2, 3)).unwrap()).unwrap();
+    ///
+    /// instance.aset(0, 4).unwrap();
+    /// rb_assert!("instance.foo == 4", instance);
+    ///
+    /// instance.aset("bar", 5).unwrap();
+    /// rb_assert!("instance.bar == 5", instance);
+    ///
+    /// instance.aset(Symbol::new("baz"), 6).unwrap();
+    /// rb_assert!("instance.baz == 6", instance);
+    /// ```
     pub fn aset<T, U>(self, index: T, val: U) -> Result<(), Error>
     where
         T: IntoValue,
@@ -190,11 +247,35 @@ impl RStruct {
     }
 
     /// Returns the count of members this struct has.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{prelude::*, r_struct::define_struct, RStruct};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let struct_class = define_struct(None, ("foo", "bar", "baz")).unwrap();
+    /// let instance = RStruct::from_value(struct_class.new_instance(()).unwrap()).unwrap();
+    ///
+    /// assert_eq!(instance.size(), 3);
+    /// ```
     pub fn size(self) -> usize {
         unsafe { usize::try_convert(Value::new(rb_struct_size(self.as_rb_value()))).unwrap() }
     }
 
-    /// Returns the member names for this struct as [`Symbol`]s.
+    /// Returns the member names for this struct.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{prelude::*, r_struct::define_struct, RStruct};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let struct_class = define_struct(None, ("foo", "bar", "baz")).unwrap();
+    /// let instance = RStruct::from_value(struct_class.new_instance(()).unwrap()).unwrap();
+    ///
+    /// assert_eq!(instance.members().unwrap(), &["foo", "bar", "baz"]);
+    /// ```
     pub fn members(self) -> Result<Vec<Cow<'static, str>>, Error> {
         unsafe {
             let array = RArray::from_rb_value_unchecked(rb_struct_members(self.as_rb_value()));
@@ -207,6 +288,18 @@ impl RStruct {
     }
 
     /// Return the value for the member named `id`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{prelude::*, r_struct::define_struct, RStruct};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let struct_class = define_struct(None, ("foo", "bar")).unwrap();
+    /// let instance = RStruct::from_value(struct_class.new_instance((1, 2)).unwrap()).unwrap();
+    /// assert_eq!(instance.getmember::<_, i64>("foo").unwrap(), 1);
+    /// assert_eq!(instance.getmember::<_, i64>("bar").unwrap(), 2);
+    /// ```
     pub fn getmember<T, U>(self, id: T) -> Result<U, Error>
     where
         T: IntoId,
