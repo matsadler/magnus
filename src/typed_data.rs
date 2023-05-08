@@ -683,10 +683,10 @@ where
     ///
     /// let value: Value = eval(
     ///     r#"
-    ///     class SubPoint < Point
-    ///     end
-    ///     SubPoint.new(4, 2)
-    /// "#,
+    ///       class SubPoint < Point
+    ///       end
+    ///       SubPoint.new(4, 2)
+    ///     "#,
     /// )
     /// .unwrap();
     ///
@@ -1044,7 +1044,7 @@ where
 /// use std::cmp::Ordering;
 ///
 /// use magnus::{
-///     class, define_class, eval, function, gc, method, module, prelude::*, typed_data,
+///     class, define_class, function, gc, method, module, prelude::*, rb_assert, typed_data,
 ///     value::Opaque, DataTypeFunctions, IntoValue, Module, TypedData, Value,
 /// };
 ///
@@ -1110,18 +1110,15 @@ where
 ///
 /// let a = Pair::new("foo".into_value(), 1.into_value());
 /// let b = Pair::new("foo".into_value(), 2.into_value());
-/// let res: bool = eval!("a < b", a, b).unwrap();
-/// assert!(res);
+/// rb_assert!("a < b", a, b);
 ///
 /// let b = Pair::new("foo".into_value(), 2.into_value());
 /// let c = Pair::new("bar".into_value(), 3.into_value());
-/// let res: bool = eval!("b > c", b, c).unwrap();
-/// assert!(res);
+/// rb_assert!("b > c", b, c);
 ///
 /// let a = Pair::new("foo".into_value(), 1.into_value());
 /// let b = Pair::new("foo".into_value(), 2.into_value());
-/// let res: i64 = eval!("a <=> b", a, b).unwrap();
-/// assert_eq!(res, -1);
+/// rb_assert!("(a <=> b) == -1", a, b);
 /// ```
 pub trait Cmp {
     // Docs at trait level.
@@ -1155,8 +1152,8 @@ where
 /// use std::fmt;
 ///
 /// use magnus::{
-///     class, define_class, eval, function, gc, method, prelude::*, typed_data, value::Opaque,
-///     DataTypeFunctions, IntoValue, TypedData, Value,
+///     class, define_class, function, gc, method, prelude::*, rb_assert, typed_data,
+///     value::Opaque, DataTypeFunctions, IntoValue, TypedData, Value,
 /// };
 ///
 /// #[derive(TypedData)]
@@ -1207,8 +1204,7 @@ where
 ///     .unwrap();
 ///
 /// let pair = Pair::new("foo".into_value(), 1.into_value());
-/// let res: bool = eval!(r#"pair.inspect == "Pair { a: \"foo\", b: 1 }""#, pair).unwrap();
-/// assert!(res);
+/// rb_assert!(r#"pair.inspect == "Pair { a: \"foo\", b: 1 }""#, pair);
 /// ```
 pub trait Inspect {
     // Docs at trait level.
@@ -1236,16 +1232,14 @@ where
 ///
 /// ```
 /// use magnus::{
-///     class, define_class, eval, function, gc, method, prelude::*, typed_data, value::Opaque,
-///     DataTypeFunctions, IntoValue, TypedData, Value,
+///     class, define_class, function, gc, method, prelude::*, rb_assert, typed_data,
+///     value::Opaque, DataTypeFunctions, IntoValue, TypedData, Value,
 /// };
 ///
 /// #[derive(TypedData, Clone)]
 /// #[magnus(class = "Pair", free_immediately, mark)]
 /// struct Pair {
-///     #[magnus(opaque_attr_reader)]
 ///     a: Opaque<Value>,
-///     #[magnus(opaque_attr_reader)]
 ///     b: Opaque<Value>,
 /// }
 ///
@@ -1279,8 +1273,7 @@ where
 ///     .unwrap();
 ///
 /// let a = Pair::new("foo".into_value(), 1.into_value());
-/// let res: bool = eval!("b = a.dup; a.object_id != b.object_id", a).unwrap();
-/// assert!(res);
+/// rb_assert!("b = a.dup; a.object_id != b.object_id", a);
 /// ```
 pub trait Dup: Sized {
     // Docs at trait level.

@@ -79,12 +79,11 @@ impl Symbol {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, Symbol};
+    /// use magnus::{rb_assert, Symbol};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let sym = Symbol::new("example");
-    /// let result: bool = eval!(":example == sym", sym).unwrap();
-    /// assert!(result);
+    /// rb_assert!(":example == sym", sym);
     /// ```
     #[cfg(feature = "friendly-api")]
     #[inline]
@@ -170,13 +169,12 @@ impl Symbol {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, Symbol};
+    /// use magnus::{rb_assert, Symbol};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let sym = Symbol::new("example");
     /// let static_sym = sym.to_static();
-    /// let res: bool = eval!("sym == static_sym", sym, static_sym).unwrap();
-    /// assert!(res);
+    /// rb_assert!("sym == static_sym", sym, static_sym);
     /// ```
     pub fn to_static(self) -> StaticSymbol {
         if let Some(sym) = StaticSymbol::from_value(self.as_value()) {
@@ -211,6 +209,16 @@ pub trait IntoSymbol: Sized {
     ///
     /// Panics if called from a non-Ruby thread. See
     /// [`IntoSymbol::into_symbol_with`] for the non-panicking version.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, symbol::IntoSymbol};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let sym = "example".into_symbol();
+    /// rb_assert!("sym == :example", sym);
+    /// ```
     #[cfg(feature = "friendly-api")]
     #[inline]
     fn into_symbol(self) -> Symbol {
@@ -222,11 +230,33 @@ pub trait IntoSymbol: Sized {
     /// # Safety
     ///
     /// This method should only be called from a Ruby thread.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, symbol::IntoSymbol};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// // only safe when called from a Ruby thread
+    /// let sym = unsafe { "example".into_symbol_unchecked() };
+    /// rb_assert!("sym == :example", sym);
+    /// ```
     unsafe fn into_symbol_unchecked(self) -> Symbol {
         self.into_symbol_with(&Ruby::get_unchecked())
     }
 
     /// Convert `self` into [`Symbol`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, symbol::IntoSymbol, Ruby};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let ruby = Ruby::get().unwrap();
+    /// let sym = "example".into_symbol_with(&ruby);
+    /// rb_assert!(ruby, "sym == :example", sym);
+    /// ```
     fn into_symbol_with(self, handle: &Ruby) -> Symbol;
 }
 

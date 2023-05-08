@@ -83,21 +83,19 @@ impl Range {
     /// # Examples
     ///
     /// ```
-    /// use magnus::eval;
+    /// use magnus::rb_assert;
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let range = magnus::Range::new(2, 7, false).unwrap();
-    /// let res: bool = eval!("range == (2..7)", range).unwrap();
-    /// assert!(res);
+    /// rb_assert!("range == (2..7)", range);
     /// ```
     ///
     /// ```
-    /// use magnus::eval;
+    /// use magnus::rb_assert;
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let range = magnus::Range::new(2, 7, true).unwrap();
-    /// let res: bool = eval!("range == (2...7)", range).unwrap();
-    /// assert!(res);
+    /// rb_assert!("range == (2...7)", range);
     /// ```
     #[cfg(feature = "friendly-api")]
     #[inline]
@@ -120,7 +118,7 @@ impl Range {
     /// use magnus::eval;
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// let range = eval::<magnus::Range>("2..7").unwrap();
+    /// let range: magnus::Range = eval("2..7").unwrap();
     /// assert_eq!(range.beg::<i64>().unwrap(), 2);
     /// ```
     pub fn beg<T>(self) -> Result<T, Error>
@@ -141,7 +139,7 @@ impl Range {
     /// use magnus::eval;
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// let range = eval::<magnus::Range>("2..7").unwrap();
+    /// let range: magnus::Range = eval("2..7").unwrap();
     /// assert_eq!(range.end::<i64>().unwrap(), 7);
     /// ```
     pub fn end<T>(self) -> Result<T, Error>
@@ -160,7 +158,7 @@ impl Range {
     /// use magnus::eval;
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// let range = eval::<magnus::Range>("2..7").unwrap();
+    /// let range: magnus::Range = eval("2..7").unwrap();
     /// assert_eq!(range.excl(), false);
     /// ```
     pub fn excl(self) -> bool {
@@ -179,7 +177,7 @@ impl Range {
     /// use magnus::eval;
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// let range = eval::<magnus::Range>("2..").unwrap();
+    /// let range: magnus::Range = eval("2..").unwrap();
     /// assert_eq!(range.beg_len(10).unwrap(), (2, 8));
     /// ```
     ///
@@ -188,7 +186,7 @@ impl Range {
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// # #[cfg(ruby_gte_2_7)]
-    /// let range = eval::<magnus::Range>("..7").unwrap();
+    /// let range: magnus::Range = eval("..7").unwrap();
     /// # #[cfg(ruby_gte_2_7)]
     /// assert_eq!(range.beg_len(10).unwrap(), (0, 8));
     /// ```
@@ -197,7 +195,7 @@ impl Range {
     /// use magnus::eval;
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// let range = eval::<magnus::Range>("-3..-1").unwrap();
+    /// let range: magnus::Range = eval("-3..-1").unwrap();
     /// assert_eq!(range.beg_len(10).unwrap(), (7, 3));
     /// ```
     pub fn beg_len(self, length: usize) -> Result<(usize, usize), Error> {
@@ -231,7 +229,7 @@ impl Range {
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// // Ruby's .. range is inclusive
-    /// let range = eval::<magnus::Range>("2..7").unwrap();
+    /// let range: magnus::Range = eval("2..7").unwrap();
     /// // Rust's .. range in exclusive
     /// assert_eq!(range.to_range_with_len(10).unwrap(), 2..8);
     /// ```
@@ -240,7 +238,7 @@ impl Range {
     /// use magnus::eval;
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// let range = eval::<magnus::Range>("2..").unwrap();
+    /// let range: magnus::Range = eval("2..").unwrap();
     /// assert_eq!(range.to_range_with_len(10).unwrap(), 2..10);
     /// ```
     ///
@@ -249,7 +247,7 @@ impl Range {
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// # #[cfg(ruby_gte_2_7)]
-    /// let range = eval::<magnus::Range>("..7").unwrap();
+    /// let range: magnus::Range = eval("..7").unwrap();
     /// # #[cfg(ruby_gte_2_7)]
     /// assert_eq!(range.to_range_with_len(10).unwrap(), 0..8);
     /// ```
@@ -258,7 +256,7 @@ impl Range {
     /// use magnus::eval;
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// let range = eval::<magnus::Range>("-3..-1").unwrap();
+    /// let range: magnus::Range = eval("-3..-1").unwrap();
     /// assert_eq!(range.to_range_with_len(10).unwrap(), 7..10);
     /// ```
     pub fn to_range_with_len(self, length: usize) -> Result<StdRange<usize>, Error> {

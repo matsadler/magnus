@@ -69,6 +69,28 @@ pub struct RTypedData(NonZeroValue);
 
 impl RTypedData {
     /// Return `Some(RTypedData)` if `val` is a `RTypedData`, `None` otherwise.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{class, define_class, eval, function, prelude::*, RTypedData};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// #[magnus::wrap(class = "Point")]
+    /// struct Point {
+    ///     x: isize,
+    ///     y: isize,
+    /// }
+    ///
+    /// let point_class = define_class("Point", class::object()).unwrap();
+    /// point_class
+    ///     .define_singleton_method("new", function!(|x, y| Point { x, y }, 2))
+    ///     .unwrap();
+    ///
+    /// assert!(RTypedData::from_value(eval(r#"Point.new(1, 2)"#).unwrap()).is_some());
+    /// assert!(RTypedData::from_value(eval(r#"Object.new"#).unwrap()).is_none());
+    /// # let _ = Point { x: 1, y: 2 }.x + Point { x: 3, y: 4 }.y;
+    /// ```
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
         unsafe {

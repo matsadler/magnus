@@ -142,7 +142,7 @@ impl Binding {
     /// ```
     #[deprecated(
         since = "0.6.0",
-        note = "Please use `value.funcall(\"local_variable_set\", (name,))` instead."
+        note = "Please use `value.funcall(\"local_variable_set\", (name, val))` instead."
     )]
     pub fn local_variable_set<N, T>(self, name: N, val: T)
     where
