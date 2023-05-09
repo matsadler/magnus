@@ -243,17 +243,17 @@ impl TryConvert for Value {
 /// # Examples
 ///
 /// ```
-/// use magnus::{eval, value::Opaque, RString, Ruby};
+/// use magnus::{rb_assert, value::Opaque, Ruby};
 /// # let _cleanup = unsafe { magnus::embed::init() };
 ///
-/// let opaque_str = Opaque::from(RString::new("example"));
+/// let ruby = Ruby::get().unwrap();
+/// let opaque_str = Opaque::from(ruby.str_new("example"));
 ///
 /// // send to another Ruby thread
 ///
 /// let ruby = Ruby::get().unwrap(); // errors on non-Ruby thread
 /// let str = ruby.get_inner(opaque_str);
-/// let res: bool = eval!(r#"str == "example""#, str).unwrap();
-/// assert!(res);
+/// rb_assert!(ruby, r#"str == "example""#, str);
 /// ```
 #[derive(Clone, Copy)]
 #[repr(transparent)]
@@ -307,25 +307,25 @@ pub trait InnerValue {
     ///
     /// ```
     /// use magnus::{
-    ///     eval,
+    ///     rb_assert,
     ///     value::{InnerValue, Opaque},
-    ///     RString, Ruby,
+    ///     Ruby,
     /// };
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// let opaque_str = Opaque::from(RString::new("example"));
+    /// let ruby = Ruby::get().unwrap();
+    /// let opaque_str = Opaque::from(ruby.str_new("example"));
     ///
     /// // send to another Ruby thread
     ///
     /// let ruby = Ruby::get().unwrap(); // errors on non-Ruby thread
     /// let str = opaque_str.get_inner_with(&ruby);
-    /// let res: bool = eval!(r#"str == "example""#, str).unwrap();
-    /// assert!(res);
+    /// rb_assert!(ruby, r#"str == "example""#, str);
     /// ```
     ///
     /// ```
     /// use magnus::{
-    ///     eval,
+    ///     rb_assert,
     ///     value::{InnerValue, Lazy},
     ///     RString, Ruby,
     /// };
@@ -335,8 +335,7 @@ pub trait InnerValue {
     ///
     /// let ruby = Ruby::get().unwrap(); // errors if Ruby not initialised
     /// let str = STATIC_STR.get_inner_with(&ruby);
-    /// let res: bool = eval!(r#"str == "example""#, str).unwrap();
-    /// assert!(res);
+    /// rb_assert!(ruby, r#"str == "example""#, str);
     /// ```
     fn get_inner_with(self, ruby: &Ruby) -> Self::Value;
 }
@@ -394,29 +393,28 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, value::Opaque, RString, Ruby};
+    /// use magnus::{rb_assert, value::Opaque, Ruby};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// let opaque_str = Opaque::from(RString::new("example"));
+    /// let ruby = Ruby::get().unwrap();
+    /// let opaque_str = Opaque::from(ruby.str_new("example"));
     ///
     /// // send to another Ruby thread
     ///
     /// let ruby = Ruby::get().unwrap(); // errors on non-Ruby thread
     /// let str = ruby.get_inner(opaque_str);
-    /// let res: bool = eval!(r#"str == "example""#, str).unwrap();
-    /// assert!(res);
+    /// rb_assert!(ruby, r#"str == "example""#, str);
     /// ```
     ///
     /// ```
-    /// use magnus::{eval, value::Lazy, RString, Ruby};
+    /// use magnus::{rb_assert, value::Lazy, RString, Ruby};
     ///
     /// static STATIC_STR: Lazy<RString> = Lazy::new(|ruby| ruby.str_new("example"));
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let ruby = Ruby::get().unwrap(); // errors if Ruby not initialised
     /// let str = ruby.get_inner(&STATIC_STR);
-    /// let res: bool = eval!(r#"str == "example""#, str).unwrap();
-    /// assert!(res);
+    /// rb_assert!(ruby, r#"str == "example""#, str);
     /// ```
     pub fn get_inner<T>(&self, wrapper: impl InnerValue<Value = T>) -> T
     where
@@ -454,15 +452,14 @@ unsafe impl<T: ReprValue> Sync for Opaque<T> {}
 /// # Examples
 ///
 /// ```
-/// use magnus::{eval, value::Lazy, RString, Ruby};
+/// use magnus::{rb_assert, value::Lazy, RString, Ruby};
 ///
 /// static STATIC_STR: Lazy<RString> = Lazy::new(|ruby| ruby.str_new("example"));
 /// # let _cleanup = unsafe { magnus::embed::init() };
 ///
 /// let ruby = Ruby::get().unwrap(); // errors if Ruby not initialised
 /// let str = ruby.get_inner(&STATIC_STR);
-/// let res: bool = eval!(r#"str == "example""#, str).unwrap();
-/// assert!(res);
+/// rb_assert!(ruby, r#"str == "example""#, str);
 /// ```
 pub struct Lazy<T: ReprValue> {
     init: Once,
@@ -497,11 +494,8 @@ where
     ///
     /// # let _cleanup = unsafe { magnus::embed::init() };
     /// let ruby = Ruby::get().unwrap();
-    /// rb_assert!(
-    ///     ruby,
-    ///     r#"val == "example""#,
-    ///     val = ruby.get_inner(&STATIC_STR)
-    /// );
+    /// let str = ruby.get_inner(&STATIC_STR);
+    /// rb_assert!(ruby, r#"str == "example""#, str);
     /// ```
     pub const fn new(func: fn(&Ruby) -> T) -> Self {
         Self {
@@ -551,8 +545,8 @@ where
         handle.get_inner(this);
     }
 
-    /// Get the inner value from a `Lazy<T>`, if it has already been
-    /// initialised.
+    /// Get the inner value as an [`Opaque<T>`](Opaque) from a `Lazy<T>`, if
+    /// it has already been initialised.
     ///
     /// This function will not call Ruby and will not initialise the inner
     /// value. If the `Lazy<T>` has not yet been initialised, returns `None`.
@@ -568,16 +562,17 @@ where
     /// assert!(Lazy::try_get_inner(&STATIC_STR).is_none());
     ///
     /// let ruby = Ruby::get().unwrap();
-    /// rb_assert!(
-    ///     ruby,
-    ///     r#"val == "example""#,
-    ///     val = ruby.get_inner(&STATIC_STR)
-    /// );
+    /// let str = ruby.get_inner(&STATIC_STR);
+    /// rb_assert!(ruby, r#"str == "example""#, str);
     ///
     /// assert!(Lazy::try_get_inner(&STATIC_STR).is_some());
     /// ```
-    pub fn try_get_inner(this: &Self) -> Option<T> {
-        unsafe { this.init.is_completed().then(|| (*this.inner.get()).value) }
+    pub fn try_get_inner(this: &Self) -> Option<Opaque<T>> {
+        unsafe {
+            this.init
+                .is_completed()
+                .then(|| (*this.inner.get()).value.into())
+        }
     }
 }
 
@@ -876,13 +871,13 @@ pub trait ReprValue: private::ReprValue {
     ///
     /// let (a, b): (Value, Value) = eval!(
     ///     "
-    ///     class Example
-    ///       def eql?(other)
-    ///         raise
+    ///       class Example
+    ///         def eql?(other)
+    ///           raise
+    ///         end
     ///       end
-    ///     end
-    ///     [Example.new, Example.new]
-    /// "
+    ///       [Example.new, Example.new]
+    ///     "
     /// )
     /// .unwrap();
     ///
@@ -1103,7 +1098,7 @@ pub trait ReprValue: private::ReprValue {
         }
     }
 
-    /// Call the ic method named `method` on `self` with `args`.
+    /// Call the public method named `method` on `self` with `args`.
     ///
     /// Returns `Ok(T)` if the method returns without error and the return
     /// value converts to a `T`, or returns `Err` if the method raises or the
@@ -2672,12 +2667,11 @@ impl StaticSymbol {
     ///
     /// # Examples
     /// ```
-    /// use magnus::{eval, StaticSymbol};
+    /// use magnus::{rb_assert, StaticSymbol};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let sym = StaticSymbol::new("example");
-    /// let result: bool = eval!(":example == sym", sym).unwrap();
-    /// assert!(result);
+    /// rb_assert!(":example == sym", sym);
     /// ```
     #[cfg(feature = "friendly-api")]
     #[inline]
@@ -2702,7 +2696,7 @@ impl StaticSymbol {
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// assert!(StaticSymbol::check("example").is_none());
-    /// eval::<StaticSymbol>(":example").unwrap();
+    /// let _: StaticSymbol = eval(":example").unwrap();
     /// assert!(StaticSymbol::check("example").is_some());
     /// ```
     #[cfg(feature = "friendly-api")]
