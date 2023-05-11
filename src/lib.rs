@@ -1794,6 +1794,8 @@ mod api;
 mod binding;
 pub mod block;
 pub mod class;
+#[cfg(ruby_gte_3_0)]
+pub mod debug;
 #[cfg(feature = "embed")]
 #[cfg_attr(docsrs, doc(cfg(feature = "embed")))]
 pub mod embed;
@@ -1809,8 +1811,6 @@ pub mod method;
 pub mod module;
 pub mod numeric;
 mod object;
-#[cfg(ruby_gte_3_0)]
-pub mod postponed_job;
 /// Traits that commonly should be in scope.
 pub mod prelude {
     pub use crate::{
