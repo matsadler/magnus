@@ -27,7 +27,7 @@ deprecated-send-sync-value = []
 [dependencies]
 bytes = { version = "1", optional = true }
 magnus-macros = { version = "0.4.0", path = "magnus-macros" }
-rb-sys = { version = "0.9.56", default-features = false, features = ["bindgen-rbimpls", "bindgen-deprecated-types"] }
+rb-sys = { version = "0.9.77", default-features = false, features = ["bindgen-rbimpls", "bindgen-deprecated-types"] }
 seq-macro = "0.3"
 
 [dev-dependencies]

@@ -216,6 +216,7 @@ where
 
 #[doc(hidden)]
 #[deprecated(since = "0.6.0", note = "please use `Compactor::location` instead")]
+#[cfg(any(ruby_gte_2_7, docsrs))]
 pub fn location<T>(value: T) -> T
 where
     T: ReprValue,

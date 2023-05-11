@@ -824,6 +824,9 @@ impl Ruby {
             };
             protect(|| {
                 unsafe { rb_error_arity(len as c_int, min, max) };
+                // we never get here, but this is needed to satisfy the type
+                // system
+                #[allow(unreachable_code)]
                 self.qnil()
             })?;
         }

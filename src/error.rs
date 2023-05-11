@@ -53,6 +53,8 @@ impl Ruby {
         let val = self.into_value(val);
         protect(|| {
             unsafe { rb_iter_break_value(val.as_rb_value()) };
+            // we never get here, but this is needed to satisfy the type system
+            #[allow(unreachable_code)]
             self.qnil()
         })
         .unwrap_err()
@@ -361,7 +363,6 @@ pub enum Tag {
 impl Tag {
     fn resume(self) -> ! {
         unsafe { rb_jump_tag(self as c_int) };
-        unreachable!()
     }
 }
 
@@ -490,7 +491,6 @@ pub(crate) fn raise(e: Error) -> ! {
             // friendly reminder: we really never get here, and as such won't
             // drop any values still in scope, make sure everything has been
             // consumed/dropped
-            unreachable!()
         }
     };
 }
@@ -513,7 +513,6 @@ pub fn bug(s: &str) -> ! {
     unsafe { rb_bug(s.as_ptr()) };
     // as we never get here `s` isn't dropped, technically this is a memory
     // leak, in practice we don't care because we just hard crashed
-    unreachable!()
 }
 
 /// Outputs `s` to Ruby's stderr if Ruby is configured to output warnings.
