@@ -38,8 +38,33 @@ use crate::{
 /// representation of a block as an object.
 ///
 /// See also the [`Proc`] type.
-#[allow(missing_docs)]
 impl Ruby {
+    /// Create a new `Proc`.
+    ///
+    /// As `block` is a function pointer, only functions and closures that do
+    /// not capture any variables are permitted. For more flexibility (at the
+    /// cost of allocating) see [`proc_from_fn`](Ruby::proc_from_fn).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{prelude::*, rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let proc = ruby.proc_new(|args, _block| {
+    ///         let acc = i64::try_convert(*args.get(0).unwrap())?;
+    ///         let i = i64::try_convert(*args.get(1).unwrap())?;
+    ///         Ok(acc + i)
+    ///     });
+    ///
+    ///     rb_assert!(ruby, "proc.call(1, 2) == 3", proc);
+    ///
+    ///     rb_assert!(ruby, "[1, 2, 3, 4, 5].inject(&proc) == 15", proc);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     pub fn proc_new<R>(&self, block: fn(&[Value], Option<Proc>) -> R) -> Proc
     where
         R: BlockReturn,
@@ -70,6 +95,33 @@ impl Ruby {
         }
     }
 
+    /// Create a new `Proc`.
+    ///
+    /// See also [`proc_new`](Ruby::proc_new), which is more efficient when
+    /// `block` is a function or closure that does not capture any variables.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{prelude::*, rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let mut count = 0;
+    ///
+    ///     let proc = ruby.proc_from_fn(move |args, _block| {
+    ///         let step = i64::try_convert(*args.get(0).unwrap())?;
+    ///         count += step;
+    ///         Ok(count)
+    ///     });
+    ///
+    ///     rb_assert!(ruby, "proc.call(1) == 1", proc);
+    ///     rb_assert!(ruby, "proc.call(1) == 2", proc);
+    ///     rb_assert!(ruby, "proc.call(2) == 4", proc);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     pub fn proc_from_fn<F, R>(&self, block: F) -> Proc
     where
         F: 'static + Send + FnMut(&[Value], Option<Proc>) -> R,
@@ -436,17 +488,94 @@ where
 /// Functions to enable working with Ruby blocks.
 ///
 /// See also the [`block`](self) module.
-#[allow(missing_docs)]
 impl Ruby {
+    /// Returns whether a Ruby block has been supplied to the current method.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{function, rb_assert, Error, Ruby};
+    ///
+    /// fn got_block(ruby: &Ruby) -> bool {
+    ///     ruby.block_given()
+    /// }
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     ruby.define_global_function("got_block?", function!(got_block, 0));
+    ///
+    ///     rb_assert!(ruby, "got_block? {} == true");
+    ///     rb_assert!(ruby, "got_block? == false");
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     pub fn block_given(&self) -> bool {
         unsafe { rb_block_given_p() != 0 }
     }
 
+    /// Returns the block given to the current method as a [`Proc`] instance.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{block::Proc, function, rb_assert, Error, Ruby};
+    ///
+    /// fn make_proc(ruby: &Ruby) -> Result<Proc, Error> {
+    ///     ruby.block_proc()
+    /// }
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     ruby.define_global_function("make_proc", function!(make_proc, 0));
+    ///
+    ///     rb_assert!(ruby, "make_proc {}.is_a?(Proc)");
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     pub fn block_proc(&self) -> Result<Proc, Error> {
         let val = unsafe { protect(|| Value::new(rb_block_proc()))? };
         Ok(Proc::from_value(val).unwrap())
     }
 
+    /// Yields a value to the block given to the current method.
+    ///
+    /// **Note:** A method using `yield_value` converted to an Enumerator with
+    /// `to_enum`/[`Value::enumeratorize`] will result in a non-functional
+    /// Enumerator on versions of Ruby before 3.1. See [`Yield`] for an
+    /// alternative.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{function, rb_assert, Error, Ruby, Value};
+    ///
+    /// fn metasyntactic_variables(ruby: &Ruby) -> Result<(), Error> {
+    ///     let _: Value = ruby.yield_value("foo")?;
+    ///     let _: Value = ruby.yield_value("bar")?;
+    ///     let _: Value = ruby.yield_value("baz")?;
+    ///     Ok(())
+    /// }
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     ruby.define_global_function(
+    ///         "metasyntactic_variables",
+    ///         function!(metasyntactic_variables, 0),
+    ///     );
+    ///
+    ///     let vars = ruby.ary_new();
+    ///     rb_assert!(
+    ///         ruby,
+    ///         "metasyntactic_variables {|var| vars << var} == nil",
+    ///         vars
+    ///     );
+    ///     rb_assert!(ruby, r#"vars == ["foo", "bar", "baz"]"#, vars);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     pub fn yield_value<T, U>(&self, val: T) -> Result<U, Error>
     where
         T: IntoValue,
@@ -458,6 +587,47 @@ impl Ruby {
         }
     }
 
+    /// Yields multiple values to the block given to the current method.
+    ///
+    /// **Note:** A method using `yield_values` converted to an Enumerator with
+    /// `to_enum`/[`Value::enumeratorize`] will result in a non-functional
+    /// Enumerator on versions of Ruby before 3.1. See [`YieldValues`] for an
+    /// alternative.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{function, rb_assert, Error, Ruby, Value};
+    ///
+    /// fn metasyntactic_variables(ruby: &Ruby) -> Result<(), Error> {
+    ///     let _: Value = ruby.yield_values((0, "foo"))?;
+    ///     let _: Value = ruby.yield_values((1, "bar"))?;
+    ///     let _: Value = ruby.yield_values((2, "baz"))?;
+    ///     Ok(())
+    /// }
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     ruby.define_global_function(
+    ///         "metasyntactic_variables",
+    ///         function!(metasyntactic_variables, 0),
+    ///     );
+    ///
+    ///     let vars = ruby.ary_new();
+    ///     rb_assert!(
+    ///         ruby,
+    ///         "metasyntactic_variables {|pos, var| vars << [pos, var]} == nil",
+    ///         vars
+    ///     );
+    ///     rb_assert!(
+    ///         ruby,
+    ///         r#"vars == [[0, "foo"], [1, "bar"], [2, "baz"]]"#,
+    ///         vars
+    ///     );
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     pub fn yield_values<T, U>(&self, vals: T) -> Result<U, Error>
     where
         T: ArgList,
@@ -476,6 +646,56 @@ impl Ruby {
         }
     }
 
+    /// Yields a Ruby Array to the block given to the current method.
+    ///
+    /// **Note:** A method using `yield_splat` converted to an Enumerator with
+    /// `to_enum`/[`Value::enumeratorize`] will result in a non-functional
+    /// Enumerator on versions of Ruby before 3.1. See [`YieldSplat`] for an
+    /// alternative.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{function, rb_assert, Error, Ruby, Value};
+    ///
+    /// fn metasyntactic_variables(ruby: &Ruby) -> Result<(), Error> {
+    ///     let ary = ruby.ary_new();
+    ///     ary.push(0)?;
+    ///     ary.push("foo")?;
+    ///     let _: Value = ruby.yield_splat(ary)?;
+    ///     let ary = ruby.ary_new();
+    ///     ary.push(1)?;
+    ///     ary.push("bar")?;
+    ///     let _: Value = ruby.yield_splat(ary)?;
+    ///     let ary = ruby.ary_new();
+    ///     ary.push(2)?;
+    ///     ary.push("baz")?;
+    ///     let _: Value = ruby.yield_splat(ary)?;
+    ///     Ok(())
+    /// }
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     ruby.define_global_function(
+    ///         "metasyntactic_variables",
+    ///         function!(metasyntactic_variables, 0),
+    ///     );
+    ///
+    ///     let vars = ruby.ary_new();
+    ///     rb_assert!(
+    ///         ruby,
+    ///         "metasyntactic_variables {|pos, var| vars << [pos, var]} == nil",
+    ///         vars
+    ///     );
+    ///     rb_assert!(
+    ///         ruby,
+    ///         r#"vars == [[0, "foo"], [1, "bar"], [2, "baz"]]"#,
+    ///         vars
+    ///     );
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     pub fn yield_splat<T>(&self, vals: RArray) -> Result<T, Error>
     where
         T: TryConvert,
