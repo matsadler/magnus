@@ -27,10 +27,13 @@ use crate::{
     typed_data::{DataType, DataTypeFunctions},
     value::{
         private::{self, ReprValue as _},
-        NonZeroValue, ReprValue, Value,
+        LazyId, NonZeroValue, ReprValue, Value,
     },
     Ruby,
 };
+
+// ivar without @ prefix is invisible from Ruby
+pub(crate) static RUST_CLOSURE_IVAR_ID: LazyId = LazyId::new("__rust_closure");
 
 /// # `Proc`
 ///
@@ -101,8 +104,7 @@ impl Ruby {
         let proc = unsafe {
             Proc::from_rb_value_unchecked(rb_proc_new(Some(call_func), closure as VALUE))
         };
-        // ivar without @ prefix is invisible from Ruby
-        proc.ivar_set("__rust_closure", keepalive).unwrap();
+        proc.ivar_set(*RUST_CLOSURE_IVAR_ID, keepalive).unwrap();
         proc
     }
 }
@@ -391,7 +393,7 @@ impl TryConvert for Proc {
 ///
 /// This effectivly makes the closure's lifetime managed by Ruby. It will be
 /// dropped when the returned `Value` is garbage collected.
-fn wrap_closure<F, R>(func: F) -> (*mut F, Value)
+pub(crate) fn wrap_closure<F, R>(func: F) -> (*mut F, Value)
 where
     F: FnMut(&[Value], Option<Proc>) -> R,
     R: BlockReturn,

@@ -695,7 +695,7 @@
 // * `rb_fd_term`:
 // * `rb_fd_zero`:
 // * `rb_feature_provided`:
-// * `rb_fiber_alive_p`:
+//! * `rb_fiber_alive_p`: : [`cont::Fiber::is_alive`].
 // * `rb_fiber_current`:
 // * `rb_fiber_new`:
 // * `rb_fiber_raise`:
@@ -1794,6 +1794,7 @@ mod api;
 mod binding;
 pub mod block;
 pub mod class;
+pub mod cont;
 #[cfg(feature = "embed")]
 #[cfg_attr(docsrs, doc(cfg(feature = "embed")))]
 pub mod embed;
