@@ -22,7 +22,7 @@ impl Fiber {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{fiber::Fiber, eval, Value};
+    /// use magnus::{cont::Fiber, eval, Value};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let val: Value = eval("Fiber.new { :foo }").unwrap();
@@ -46,7 +46,7 @@ impl Fiber {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{fiber::Fiber, eval, Value};
+    /// use magnus::{cont::Fiber, eval, Value};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let val: Value = eval("Fiber.new { :foo }").unwrap();
