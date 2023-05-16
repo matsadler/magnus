@@ -7,7 +7,7 @@ use std::{marker::PhantomData, ops::Range};
 use rb_sys::{
     rb_gc_adjust_memory_usage, rb_gc_count, rb_gc_disable, rb_gc_enable, rb_gc_mark,
     rb_gc_mark_locations, rb_gc_register_address, rb_gc_register_mark_object, rb_gc_start,
-    rb_gc_stat, rb_gc_unregister_address, VALUE,
+    rb_gc_stat, rb_gc_unregister_address, rb_gc_writebarrier, VALUE,
 };
 #[cfg(ruby_gte_2_7)]
 use rb_sys::{rb_gc_location, rb_gc_mark_movable};
@@ -17,7 +17,7 @@ use crate::{
     r_hash::RHash,
     symbol::IntoSymbol,
     value::{private::ReprValue as _, ReprValue, Value},
-    Ruby,
+    IntoValue, Ruby,
 };
 
 mod private {
@@ -356,6 +356,10 @@ impl Ruby {
         unsafe { rb_gc_stat(res.as_rb_value()) };
         res
     }
+
+    pub fn gc_writebarrier(&self, old: Value, young: Value) {
+        unsafe { rb_gc_writebarrier(old.as_rb_value(), young.as_rb_value()) };
+    }
 }
 
 /// Disable automatic GC runs.
@@ -558,4 +562,43 @@ where
 #[inline]
 pub fn all_stats() -> RHash {
     get_ruby!().gc_all_stats()
+}
+
+/// Declares a write barrier between `old` and `young` objects.
+///
+/// This means that the a `young` generation object was written to `old`
+/// generation object. This is neccessary `young` objects do not get GC'd when
+/// you have a `wb_protected` object and that holds a pointer to a `young`
+/// Ruby object.
+///
+/// # Examples
+///
+/// ```
+/// #![allow(unused)]
+/// use magnus::{Value, typed_data::Obj, gc::writebarrier};
+/// use std::cell::RefCell;
+/// # let _cleanup = unsafe { magnus::embed::init() };
+///
+/// #[magnus::wrap(class = "MyVec", wb_protected)]
+/// struct MyVec {
+///     refs: RefCell<Vec<Value>>,
+/// }
+///
+/// unsafe impl Send for MyVec {}
+///
+/// impl MyVec {
+///     fn push_value(rb_self: Obj<Self>, val: Value) {
+///         rb_self.refs.borrow_mut().push(val);
+///         writebarrier(rb_self, val);
+///     }
+/// }
+/// ```
+pub fn writebarrier<O, Y>(old: O, young: Y)
+where
+    O: IntoValue,
+    Y: IntoValue,
+{
+    let old = old.into_value();
+    let handle = Ruby::get_with(old);
+    handle.gc_writebarrier(old, young.into_value());
 }
