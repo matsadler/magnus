@@ -1794,8 +1794,6 @@ mod api;
 mod binding;
 pub mod block;
 pub mod class;
-#[cfg(any(ruby_gte_3_0, docsrs))]
-#[cfg_attr(docsrs, doc(cfg(ruby_gte_3_0)))]
 pub mod cont;
 #[cfg(feature = "embed")]
 #[cfg_attr(docsrs, doc(cfg(feature = "embed")))]

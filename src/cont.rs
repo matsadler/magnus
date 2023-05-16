@@ -2,15 +2,21 @@
 
 use std::fmt;
 
-use rb_sys::{rb_fiber_alive_p, rb_obj_is_fiber, Qtrue, VALUE};
+use rb_sys::{rb_fiber_alive_p, Qtrue, VALUE};
 
 use crate::{
     value::{private, NonZeroValue, ReprValue},
     Error, IntoValue, Object, Ruby, TryConvert, Value,
 };
 
+#[cfg(ruby_lte_3_0)]
+use crate::{RClass, RTypedData};
+
+#[cfg(ruby_gt_3_0)]
+use rb_sys::rb_obj_is_fiber;
+
 /// See the [`ReprValue`] and [`Object`] traits for additional methods
-/// available on this type. See [`Ruby`](Ruby#proc) for methods to create a
+/// available on this type. See [`Ruby`](Ruby#proc) for methods to eate a
 /// `Proc`.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
@@ -33,12 +39,25 @@ impl Fiber {
     /// ```
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
-        let val = val.as_rb_value();
-        unsafe {
-            Value::new(rb_obj_is_fiber(val))
-                .to_bool()
-                .then(|| Self::from_rb_value_unchecked(val))
+        #[cfg(ruby_lte_3_0)]
+        let is_fiber = {
+            let handle = Ruby::get_with(val);
+            let typed_data = RTypedData::from_value(val)?;
+            let fiber_class: RClass = handle
+                .class_object()
+                .funcall("const_get", ("Fiber",))
+                .ok()?;
+            typed_data.is_kind_of(fiber_class)
+        };
+
+        #[cfg(ruby_gt_3_0)]
+        let is_fiber = unsafe { rb_obj_is_fiber(val.as_rb_value()) == Qtrue as _ };
+
+        if !is_fiber {
+            return None;
         }
+
+        Some(unsafe { Self::from_rb_value_unchecked(val.as_rb_value()) })
     }
 
     /// Check whether the fiber is alive and can be resumed.
