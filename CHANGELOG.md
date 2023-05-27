@@ -4,6 +4,8 @@
 ### Added
 
 ### Changed
+- `try_convert` module is now public so that `TryConvertOwned` can be
+  named/implemented.
 
 ### Deprecated
 
