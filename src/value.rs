@@ -1786,7 +1786,7 @@ impl TryConvert for Qfalse {
         })
     }
 }
-impl TryConvertOwned for Qfalse {}
+unsafe impl TryConvertOwned for Qfalse {}
 
 /// # `nil`
 ///
@@ -1925,7 +1925,7 @@ impl TryConvert for Qnil {
         })
     }
 }
-impl TryConvertOwned for Qnil {}
+unsafe impl TryConvertOwned for Qnil {}
 
 /// # `true`
 ///
@@ -2054,7 +2054,7 @@ impl TryConvert for Qtrue {
         })
     }
 }
-impl TryConvertOwned for Qtrue {}
+unsafe impl TryConvertOwned for Qtrue {}
 
 /// A placeholder value that represents an undefined value. Not exposed to
 /// Ruby level code.
@@ -2581,7 +2581,7 @@ impl TryConvert for Fixnum {
         }
     }
 }
-impl TryConvertOwned for Fixnum {}
+unsafe impl TryConvertOwned for Fixnum {}
 
 /// # `StaticSymbol`
 ///
@@ -2792,7 +2792,7 @@ impl TryConvert for StaticSymbol {
         Symbol::try_convert(val).map(|s| s.to_static())
     }
 }
-impl TryConvertOwned for StaticSymbol {}
+unsafe impl TryConvertOwned for StaticSymbol {}
 
 /// # `Id`
 ///

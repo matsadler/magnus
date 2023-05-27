@@ -813,12 +813,7 @@ impl RArray {
     where
         T: TryConvertOwned,
     {
-        unsafe {
-            self.as_slice()
-                .iter()
-                .map(|v| T::try_convert_owned(*v))
-                .collect()
-        }
+        unsafe { self.as_slice().iter().map(|v| T::try_convert(*v)).collect() }
     }
 
     /// Convert `self` to a Rust array of [`Value`]s, of length `N`.

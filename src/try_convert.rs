@@ -1,3 +1,5 @@
+//! Traits for converting from Ruby [`Value`]s to Rust types.
+
 use std::path::PathBuf;
 
 use rb_sys::{rb_get_path, rb_num2dbl};
@@ -21,20 +23,16 @@ pub trait TryConvert: Sized {
     fn try_convert(val: Value) -> Result<Self, Error>;
 }
 
-/// Only implemented on Rust types. TryConvert may convert from a
-/// Value to another Ruby type. Use this when you need a Rust value that's
-/// divorced from the Ruby runtime, safe to put on the heap, etc.
-pub trait TryConvertOwned: TryConvert {
-    /// Convert `val` into `Self`.
-    fn try_convert_owned(val: Value) -> Result<Self, Error> {
-        Self::try_convert(val)
-    }
-}
-
-pub trait TryConvertForArg: Sized {
-    /// Convert `val` into `Self`.
-    fn try_convert_for_arg(val: Value) -> Result<Self, Error>;
-}
+/// Conversions from [`Value`] to Rust types that do not contain [`Value`].
+///
+/// This trait is used as a bound on some implementations of [`TryConvert`]
+/// (for example, for [`Vec`]) to prevent heap allocated datastructures
+/// containing `Value`, as it is not safe to store a `Value` on the heap.
+///
+/// # Safety
+///
+/// This trait must not be implemented for types that contain `Value`.
+pub unsafe trait TryConvertOwned: TryConvert {}
 
 impl<T> TryConvert for Option<T>
 where
@@ -45,100 +43,91 @@ where
     }
 }
 
-impl<T> TryConvertOwned for Option<T>
-where
-    T: TryConvertOwned,
-{
-    fn try_convert_owned(val: Value) -> Result<Self, Error> {
-        (!val.is_nil())
-            .then(|| T::try_convert_owned(val))
-            .transpose()
-    }
-}
+unsafe impl<T> TryConvertOwned for Option<T> where T: TryConvertOwned {}
 
 impl TryConvert for bool {
     fn try_convert(val: Value) -> Result<Self, Error> {
         Ok(val.to_bool())
     }
 }
-impl TryConvertOwned for bool {}
+unsafe impl TryConvertOwned for bool {}
 
 impl TryConvert for i8 {
     fn try_convert(val: Value) -> Result<Self, Error> {
         Integer::try_convert(val)?.to_i8()
     }
 }
-impl TryConvertOwned for i8 {}
+unsafe impl TryConvertOwned for i8 {}
 
 impl TryConvert for i16 {
     fn try_convert(val: Value) -> Result<Self, Error> {
         Integer::try_convert(val)?.to_i16()
     }
 }
-impl TryConvertOwned for i16 {}
+unsafe impl TryConvertOwned for i16 {}
 
 impl TryConvert for i32 {
     fn try_convert(val: Value) -> Result<Self, Error> {
         Integer::try_convert(val)?.to_i32()
     }
 }
-impl TryConvertOwned for i32 {}
+unsafe impl TryConvertOwned for i32 {}
 
 impl TryConvert for i64 {
     fn try_convert(val: Value) -> Result<Self, Error> {
         Integer::try_convert(val)?.to_i64()
     }
 }
-impl TryConvertOwned for i64 {}
+unsafe impl TryConvertOwned for i64 {}
 
 impl TryConvert for isize {
     fn try_convert(val: Value) -> Result<Self, Error> {
         Integer::try_convert(val)?.to_isize()
     }
 }
-impl TryConvertOwned for isize {}
+unsafe impl TryConvertOwned for isize {}
 
 impl TryConvert for u8 {
     fn try_convert(val: Value) -> Result<Self, Error> {
         Integer::try_convert(val)?.to_u8()
     }
 }
-impl TryConvertOwned for u8 {}
+unsafe impl TryConvertOwned for u8 {}
 
 impl TryConvert for u16 {
     fn try_convert(val: Value) -> Result<Self, Error> {
         Integer::try_convert(val)?.to_u16()
     }
 }
-impl TryConvertOwned for u16 {}
+unsafe impl TryConvertOwned for u16 {}
 
 impl TryConvert for u32 {
     fn try_convert(val: Value) -> Result<Self, Error> {
         Integer::try_convert(val)?.to_u32()
     }
 }
-impl TryConvertOwned for u32 {}
+unsafe impl TryConvertOwned for u32 {}
 
 impl TryConvert for u64 {
     fn try_convert(val: Value) -> Result<Self, Error> {
         Integer::try_convert(val)?.to_u64()
     }
 }
-impl TryConvertOwned for u64 {}
+unsafe impl TryConvertOwned for u64 {}
 
 impl TryConvert for usize {
     fn try_convert(val: Value) -> Result<Self, Error> {
         Integer::try_convert(val)?.to_usize()
     }
 }
-impl TryConvertOwned for usize {}
+unsafe impl TryConvertOwned for usize {}
 
 impl TryConvert for f32 {
     fn try_convert(val: Value) -> Result<Self, Error> {
         f64::try_convert(val).map(|f| f as f32)
     }
 }
-impl TryConvertOwned for f32 {}
+unsafe impl TryConvertOwned for f32 {}
 
 impl TryConvert for f64 {
     fn try_convert(val: Value) -> Result<Self, Error> {
@@ -158,7 +147,7 @@ impl TryConvert for f64 {
         Ok(res)
     }
 }
-impl TryConvertOwned for f64 {}
+unsafe impl TryConvertOwned for f64 {}
 
 impl TryConvert for String {
     fn try_convert(val: Value) -> Result<Self, Error> {
@@ -166,7 +155,7 @@ impl TryConvert for String {
         RString::try_convert(val)?.to_string()
     }
 }
-impl TryConvertOwned for String {}
+unsafe impl TryConvertOwned for String {}
 
 #[cfg(feature = "bytes")]
 impl TryConvert for bytes::Bytes {
@@ -177,7 +166,7 @@ impl TryConvert for bytes::Bytes {
 }
 
 #[cfg(feature = "bytes")]
-impl TryConvertOwned for bytes::Bytes {}
+unsafe impl TryConvertOwned for bytes::Bytes {}
 
 impl TryConvert for char {
     fn try_convert(val: Value) -> Result<Self, Error> {
@@ -185,7 +174,7 @@ impl TryConvert for char {
         RString::try_convert(val)?.to_char()
     }
 }
-impl TryConvertOwned for char {}
+unsafe impl TryConvertOwned for char {}
 
 impl<T> TryConvert for Vec<T>
 where
@@ -196,7 +185,7 @@ where
         RArray::try_convert(val)?.to_vec()
     }
 }
-impl<T> TryConvertOwned for Vec<T> where T: TryConvertOwned {}
+unsafe impl<T> TryConvertOwned for Vec<T> where T: TryConvertOwned {}
 
 impl<T, const N: usize> TryConvert for [T; N]
 where
@@ -207,7 +196,7 @@ where
         RArray::try_convert(val)?.to_array()
     }
 }
-impl<T, const N: usize> TryConvertOwned for [T; N] where T: TryConvert {}
+unsafe impl<T, const N: usize> TryConvertOwned for [T; N] where T: TryConvert {}
 
 macro_rules! impl_try_convert {
     ($n:literal) => {
@@ -231,7 +220,7 @@ macro_rules! impl_try_convert {
                     ))
                 }
             }
-            impl<#(T~N,)*> TryConvertOwned for (#(T~N,)*)
+            unsafe impl<#(T~N,)*> TryConvertOwned for (#(T~N,)*)
             where
                 #(T~N: TryConvert,)*
             {
@@ -254,7 +243,7 @@ where
         RHash::try_convert(val)?.to_hash_map()
     }
 }
-impl<K, V> TryConvertOwned for std::collections::HashMap<K, V>
+unsafe impl<K, V> TryConvertOwned for std::collections::HashMap<K, V>
 where
     K: TryConvertOwned + Eq + std::hash::Hash,
     V: TryConvertOwned,
@@ -284,4 +273,4 @@ impl TryConvert for PathBuf {
     }
 }
 
-impl TryConvertOwned for PathBuf {}
+unsafe impl TryConvertOwned for PathBuf {}

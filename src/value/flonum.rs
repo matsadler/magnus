@@ -167,4 +167,4 @@ impl TryConvert for Flonum {
         }
     }
 }
-impl TryConvertOwned for Flonum {}
+unsafe impl TryConvertOwned for Flonum {}
