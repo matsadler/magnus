@@ -467,133 +467,482 @@ impl Class for RClass {
 /// Functions to access Ruby's built-in classes.
 ///
 /// See also the [`class`](self) module.
-#[allow(missing_docs)]
 impl Ruby {
+    /// Return Ruby's `Array` class.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(ruby, "klass == Array", klass = ruby.class_array());
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn class_array(&self) -> RClass {
         unsafe { RClass::from_rb_value_unchecked(rb_cArray) }
     }
 
+    /// Return Ruby's `BasicObject` class.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(
+    ///         ruby,
+    ///         "klass == BasicObject",
+    ///         klass = ruby.class_basic_object()
+    ///     );
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn class_basic_object(&self) -> RClass {
         unsafe { RClass::from_rb_value_unchecked(rb_cBasicObject) }
     }
 
+    /// Return Ruby's `Binding` class.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(ruby, "klass == Binding", klass = ruby.class_binding());
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn class_binding(&self) -> RClass {
         unsafe { RClass::from_rb_value_unchecked(rb_cBinding) }
     }
 
+    /// Return Ruby's `Class` class.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(ruby, "klass == Class", klass = ruby.class_class());
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn class_class(&self) -> RClass {
         unsafe { RClass::from_rb_value_unchecked(rb_cClass) }
     }
 
+    /// Return Ruby's `Complex` class.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(ruby, "klass == Complex", klass = ruby.class_complex());
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn class_complex(&self) -> RClass {
         unsafe { RClass::from_rb_value_unchecked(rb_cComplex) }
     }
 
+    /// Return Ruby's `Dir` class.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(ruby, "klass == Dir", klass = ruby.class_dir());
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn class_dir(&self) -> RClass {
         unsafe { RClass::from_rb_value_unchecked(rb_cDir) }
     }
 
+    /// Return Ruby's `Encoding` class.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(ruby, "klass == Encoding", klass = ruby.class_encoding());
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn class_encoding(&self) -> RClass {
         unsafe { RClass::from_rb_value_unchecked(rb_cEncoding) }
     }
 
+    /// Return Ruby's `Enumerator` class.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(ruby, "klass == Enumerator", klass = ruby.class_enumerator());
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn class_enumerator(&self) -> RClass {
         unsafe { RClass::from_rb_value_unchecked(rb_cEnumerator) }
     }
 
+    /// Return Ruby's `FalseClass` class.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(
+    ///         ruby,
+    ///         "klass == FalseClass",
+    ///         klass = ruby.class_false_class()
+    ///     );
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn class_false_class(&self) -> RClass {
         unsafe { RClass::from_rb_value_unchecked(rb_cFalseClass) }
     }
 
+    /// Return Ruby's `File` class.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(ruby, "klass == File", klass = ruby.class_file());
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn class_file(&self) -> RClass {
         unsafe { RClass::from_rb_value_unchecked(rb_cFile) }
     }
 
+    /// Return Ruby's `Float` class.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(ruby, "klass == Float", klass = ruby.class_float());
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn class_float(&self) -> RClass {
         unsafe { RClass::from_rb_value_unchecked(rb_cFloat) }
     }
 
+    /// Return Ruby's `Hash` class.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(ruby, "klass == Hash", klass = ruby.class_hash());
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn class_hash(&self) -> RClass {
         unsafe { RClass::from_rb_value_unchecked(rb_cHash) }
     }
 
+    /// Return Ruby's `IO` class.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(ruby, "klass == IO", klass = ruby.class_io());
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn class_io(&self) -> RClass {
         unsafe { RClass::from_rb_value_unchecked(rb_cIO) }
     }
 
+    /// Return Ruby's `Integer` class.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(ruby, "klass == Integer", klass = ruby.class_integer());
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn class_integer(&self) -> RClass {
         unsafe { RClass::from_rb_value_unchecked(rb_cInteger) }
     }
 
+    /// Return Ruby's `MatchData` class.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(ruby, "klass == MatchData", klass = ruby.class_match());
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
-    pub fn class_match_class(&self) -> RClass {
+    pub fn class_match(&self) -> RClass {
         unsafe { RClass::from_rb_value_unchecked(rb_cMatch) }
     }
 
+    /// Return Ruby's `Method` class.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(ruby, "klass == Method", klass = ruby.class_method());
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn class_method(&self) -> RClass {
         unsafe { RClass::from_rb_value_unchecked(rb_cMethod) }
     }
 
+    /// Return Ruby's `Module` class.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(ruby, "klass == Module", klass = ruby.class_module());
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn class_module(&self) -> RClass {
         unsafe { RClass::from_rb_value_unchecked(rb_cModule) }
     }
 
+    /// Return Ruby's `NameError::message` class.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(
+    ///         ruby,
+    ///         r#"klass.name == "NameError::message""#,
+    ///         klass = ruby.class_name_error_mesg()
+    ///     );
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn class_name_error_mesg(&self) -> RClass {
         unsafe { RClass::from_rb_value_unchecked(rb_cNameErrorMesg) }
     }
 
+    /// Return Ruby's `NilClass` class.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(ruby, "klass == NilClass", klass = ruby.class_nil_class());
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn class_nil_class(&self) -> RClass {
         unsafe { RClass::from_rb_value_unchecked(rb_cNilClass) }
     }
 
+    /// Return Ruby's `Numeric` class.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(ruby, "klass == Numeric", klass = ruby.class_numeric());
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn class_numeric(&self) -> RClass {
         unsafe { RClass::from_rb_value_unchecked(rb_cNumeric) }
     }
 
+    /// Return Ruby's `Object` class.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(ruby, "klass == Object", klass = ruby.class_object());
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn class_object(&self) -> RClass {
         unsafe { RClass::from_rb_value_unchecked(rb_cObject) }
     }
 
+    /// Return Ruby's `Proc` class.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(ruby, "klass == Proc", klass = ruby.class_proc());
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn class_proc(&self) -> RClass {
         unsafe { RClass::from_rb_value_unchecked(rb_cProc) }
     }
 
+    /// Return Ruby's `Random` class.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(ruby, "klass == Random", klass = ruby.class_random());
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn class_random(&self) -> RClass {
         unsafe { RClass::from_rb_value_unchecked(rb_cRandom) }
     }
 
+    /// Return Ruby's `Range` class.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(ruby, "klass == Range", klass = ruby.class_range());
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn class_range(&self) -> RClass {
         unsafe { RClass::from_rb_value_unchecked(rb_cRange) }
     }
 
+    /// Return Ruby's `Rational` class.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(ruby, "klass == Rational", klass = ruby.class_rational());
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn class_rational(&self) -> RClass {
         unsafe { RClass::from_rb_value_unchecked(rb_cRational) }
     }
 
+    /// Return Ruby's `Refinement` class.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(ruby, "klass == Refinement", klass = ruby.class_refinement());
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[cfg(any(ruby_gte_3_1, docsrs))]
     #[cfg_attr(docsrs, doc(cfg(ruby_gte_3_1)))]
     #[inline]
@@ -601,46 +950,167 @@ impl Ruby {
         unsafe { RClass::from_rb_value_unchecked(rb_cRefinement) }
     }
 
+    /// Return Ruby's `Regexp` class.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(ruby, "klass == Regexp", klass = ruby.class_regexp());
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn class_regexp(&self) -> RClass {
         unsafe { RClass::from_rb_value_unchecked(rb_cRegexp) }
     }
 
+    /// Return Ruby's `File::Stat` class.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(ruby, "klass == File::Stat", klass = ruby.class_stat());
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn class_stat(&self) -> RClass {
         unsafe { RClass::from_rb_value_unchecked(rb_cStat) }
     }
 
+    /// Return Ruby's `String` class.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(ruby, "klass == String", klass = ruby.class_string());
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn class_string(&self) -> RClass {
         unsafe { RClass::from_rb_value_unchecked(rb_cString) }
     }
 
+    /// Return Ruby's `Struct` class.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(ruby, "klass == Struct", klass = ruby.class_struct());
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
-    pub fn class_struct_class(&self) -> RClass {
+    pub fn class_struct(&self) -> RClass {
         unsafe { RClass::from_rb_value_unchecked(rb_cStruct) }
     }
 
+    /// Return Ruby's `Symbol` class.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(ruby, "klass == Symbol", klass = ruby.class_symbol());
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn class_symbol(&self) -> RClass {
         unsafe { RClass::from_rb_value_unchecked(rb_cSymbol) }
     }
 
+    /// Return Ruby's `Thread` class.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(ruby, "klass == Thread", klass = ruby.class_thread());
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn class_thread(&self) -> RClass {
         unsafe { RClass::from_rb_value_unchecked(rb_cThread) }
     }
 
+    /// Return Ruby's `Time` class.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(ruby, "klass == Time", klass = ruby.class_time());
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn class_time(&self) -> RClass {
         unsafe { RClass::from_rb_value_unchecked(rb_cTime) }
     }
 
+    /// Return Ruby's `TrueClass` class.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(ruby, "klass == TrueClass", klass = ruby.class_true_class());
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn class_true_class(&self) -> RClass {
         unsafe { RClass::from_rb_value_unchecked(rb_cTrueClass) }
     }
 
+    /// Return Ruby's `UnboundMethod` class.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(
+    ///         ruby,
+    ///         "klass == UnboundMethod",
+    ///         klass = ruby.class_unbound_method()
+    ///     );
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn class_unbound_method(&self) -> RClass {
         unsafe { RClass::from_rb_value_unchecked(rb_cUnboundMethod) }
@@ -819,12 +1289,12 @@ pub fn integer() -> RClass {
 ///
 /// # Panics
 ///
-/// Panics if called from a non-Ruby thread. See [`Ruby::class_match_class`]
+/// Panics if called from a non-Ruby thread. See [`Ruby::class_match`]
 /// for the non-panicking version.
 #[cfg(feature = "friendly-api")]
 #[inline]
 pub fn match_class() -> RClass {
-    get_ruby!().class_match_class()
+    get_ruby!().class_match()
 }
 
 /// Return Ruby's `Method` class.
@@ -851,7 +1321,7 @@ pub fn module() -> RClass {
     get_ruby!().class_module()
 }
 
-/// Return Ruby's `NameError::Message` class.
+/// Return Ruby's `NameError::message` class.
 ///
 /// # Panics
 ///
@@ -1001,12 +1471,12 @@ pub fn string() -> RClass {
 ///
 /// # Panics
 ///
-/// Panics if called from a non-Ruby thread. See [`Ruby::class_struct_class`]
+/// Panics if called from a non-Ruby thread. See [`Ruby::class_struct`]
 /// for the non-panicking version.
 #[cfg(feature = "friendly-api")]
 #[inline]
 pub fn struct_class() -> RClass {
-    get_ruby!().class_struct_class()
+    get_ruby!().class_struct()
 }
 
 /// Return Ruby's `Symbol` class.
