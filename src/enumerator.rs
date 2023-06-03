@@ -94,6 +94,7 @@ impl fmt::Debug for Enumerator {
 }
 
 impl IntoValue for Enumerator {
+    #[inline]
     fn into_value_with(self, _: &Ruby) -> Value {
         self.0.get()
     }

@@ -140,6 +140,7 @@ impl fmt::Debug for RRational {
 }
 
 impl IntoValue for RRational {
+    #[inline]
     fn into_value_with(self, _: &Ruby) -> Value {
         self.0.get()
     }

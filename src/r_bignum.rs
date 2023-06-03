@@ -407,6 +407,7 @@ impl fmt::Debug for RBignum {
 }
 
 impl IntoValue for RBignum {
+    #[inline]
     fn into_value_with(self, _: &Ruby) -> Value {
         self.0.get()
     }

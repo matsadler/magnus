@@ -127,6 +127,7 @@ impl fmt::Debug for Exception {
 }
 
 impl IntoValue for Exception {
+    #[inline]
     fn into_value_with(self, _: &Ruby) -> Value {
         self.0.get()
     }
@@ -208,6 +209,7 @@ impl fmt::Debug for ExceptionClass {
 }
 
 impl IntoValue for ExceptionClass {
+    #[inline]
     fn into_value_with(self, _: &Ruby) -> Value {
         self.0.get()
     }

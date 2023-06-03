@@ -173,6 +173,7 @@ impl fmt::Debug for Binding {
 
 #[allow(deprecated)]
 impl IntoValue for Binding {
+    #[inline]
     fn into_value_with(self, _: &Ruby) -> Value {
         self.0.get()
     }

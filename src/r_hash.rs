@@ -662,6 +662,7 @@ impl fmt::Debug for RHash {
 }
 
 impl IntoValue for RHash {
+    #[inline]
     fn into_value_with(self, _: &Ruby) -> Value {
         self.0.get()
     }

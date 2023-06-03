@@ -164,6 +164,7 @@ impl fmt::Debug for RFloat {
 }
 
 impl IntoValue for RFloat {
+    #[inline]
     fn into_value_with(self, _: &Ruby) -> Value {
         self.0.get()
     }

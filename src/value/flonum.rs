@@ -143,6 +143,7 @@ impl fmt::Debug for Flonum {
 }
 
 impl IntoValue for Flonum {
+    #[inline]
     fn into_value_with(self, _: &Ruby) -> Value {
         self.0.get()
     }

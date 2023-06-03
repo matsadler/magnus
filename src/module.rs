@@ -164,6 +164,7 @@ impl fmt::Debug for RModule {
 }
 
 impl IntoValue for RModule {
+    #[inline]
     fn into_value_with(self, _: &Ruby) -> Value {
         self.0.get()
     }

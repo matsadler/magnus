@@ -64,6 +64,7 @@ impl DataType {
         DataTypeBuilder::new(name)
     }
 
+    #[inline]
     pub(crate) fn as_rb_data_type(&self) -> &rb_data_type_t {
         &self.0
     }
@@ -521,6 +522,7 @@ impl<T> IntoValue for T
 where
     T: TypedData,
 {
+    #[inline]
     fn into_value_with(self, handle: &Ruby) -> Value {
         handle.wrap(self).into_value_with(handle)
     }
@@ -763,6 +765,7 @@ impl<T> IntoValue for Obj<T>
 where
     T: TypedData,
 {
+    #[inline]
     fn into_value_with(self, handle: &Ruby) -> Value {
         self.inner.into_value_with(handle)
     }

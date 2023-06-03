@@ -118,12 +118,14 @@ impl fmt::Debug for Value {
 }
 
 impl IntoValue for Value {
+    #[inline]
     fn into_value_with(self, _: &Ruby) -> Value {
         self
     }
 }
 
 impl IntoValue for i8 {
+    #[inline]
     fn into_value_with(self, handle: &Ruby) -> Value {
         handle.integer_from_i64(self as i64).into_value_with(handle)
     }
@@ -132,6 +134,7 @@ impl IntoValue for i8 {
 unsafe impl IntoValueFromNative for i8 {}
 
 impl IntoValue for i16 {
+    #[inline]
     fn into_value_with(self, handle: &Ruby) -> Value {
         handle.integer_from_i64(self as i64).into_value_with(handle)
     }
@@ -140,6 +143,7 @@ impl IntoValue for i16 {
 unsafe impl IntoValueFromNative for i16 {}
 
 impl IntoValue for i32 {
+    #[inline]
     fn into_value_with(self, handle: &Ruby) -> Value {
         handle.integer_from_i64(self as i64).into_value_with(handle)
     }
@@ -148,6 +152,7 @@ impl IntoValue for i32 {
 unsafe impl IntoValueFromNative for i32 {}
 
 impl IntoValue for i64 {
+    #[inline]
     fn into_value_with(self, handle: &Ruby) -> Value {
         handle.integer_from_i64(self).into_value_with(handle)
     }
@@ -156,6 +161,7 @@ impl IntoValue for i64 {
 unsafe impl IntoValueFromNative for i64 {}
 
 impl IntoValue for isize {
+    #[inline]
     fn into_value_with(self, handle: &Ruby) -> Value {
         handle.integer_from_i64(self as i64).into_value_with(handle)
     }
@@ -164,6 +170,7 @@ impl IntoValue for isize {
 unsafe impl IntoValueFromNative for isize {}
 
 impl IntoValue for u8 {
+    #[inline]
     fn into_value_with(self, handle: &Ruby) -> Value {
         handle.integer_from_u64(self as u64).into_value_with(handle)
     }
@@ -172,6 +179,7 @@ impl IntoValue for u8 {
 unsafe impl IntoValueFromNative for u8 {}
 
 impl IntoValue for u16 {
+    #[inline]
     fn into_value_with(self, handle: &Ruby) -> Value {
         handle.integer_from_u64(self as u64).into_value_with(handle)
     }
@@ -180,6 +188,7 @@ impl IntoValue for u16 {
 unsafe impl IntoValueFromNative for u16 {}
 
 impl IntoValue for u32 {
+    #[inline]
     fn into_value_with(self, handle: &Ruby) -> Value {
         handle.integer_from_u64(self as u64).into_value_with(handle)
     }
@@ -188,6 +197,7 @@ impl IntoValue for u32 {
 unsafe impl IntoValueFromNative for u32 {}
 
 impl IntoValue for u64 {
+    #[inline]
     fn into_value_with(self, handle: &Ruby) -> Value {
         handle.integer_from_u64(self).into_value_with(handle)
     }
@@ -196,6 +206,7 @@ impl IntoValue for u64 {
 unsafe impl IntoValueFromNative for u64 {}
 
 impl IntoValue for usize {
+    #[inline]
     fn into_value_with(self, handle: &Ruby) -> Value {
         handle.integer_from_u64(self as u64).into_value_with(handle)
     }
@@ -204,6 +215,7 @@ impl IntoValue for usize {
 unsafe impl IntoValueFromNative for usize {}
 
 impl IntoValue for f32 {
+    #[inline]
     fn into_value_with(self, handle: &Ruby) -> Value {
         handle.float_from_f64(self as f64).into_value_with(handle)
     }
@@ -212,6 +224,7 @@ impl IntoValue for f32 {
 unsafe impl IntoValueFromNative for f32 {}
 
 impl IntoValue for f64 {
+    #[inline]
     fn into_value_with(self, handle: &Ruby) -> Value {
         handle.float_from_f64(self).into_value_with(handle)
     }
@@ -220,6 +233,7 @@ impl IntoValue for f64 {
 unsafe impl IntoValueFromNative for f64 {}
 
 impl TryConvert for Value {
+    #[inline]
     fn try_convert(val: Value) -> Result<Self, Error> {
         Ok(val)
     }
@@ -276,6 +290,7 @@ impl<T> From<T> for Opaque<T>
 where
     T: ReprValue,
 {
+    #[inline]
     fn from(val: T) -> Self {
         Self(val)
     }
@@ -285,6 +300,7 @@ impl<T> IntoValue for Opaque<T>
 where
     T: IntoValue,
 {
+    #[inline]
     fn into_value_with(self, handle: &Ruby) -> Value {
         self.0.into_value_with(handle)
     }
@@ -346,6 +362,7 @@ where
 {
     type Value = T;
 
+    #[inline]
     fn get_inner_with(self, _: &Ruby) -> Self::Value {
         self.0
     }
@@ -372,6 +389,7 @@ where
 {
     type Value = T;
 
+    #[inline]
     fn get_inner_ref_with<'a>(&'a self, _: &Ruby) -> &'a Self::Value {
         &self.0
     }
@@ -416,6 +434,7 @@ impl Ruby {
     /// let str = ruby.get_inner(&STATIC_STR);
     /// rb_assert!(ruby, r#"str == "example""#, str);
     /// ```
+    #[inline]
     pub fn get_inner<T>(&self, wrapper: impl InnerValue<Value = T>) -> T
     where
         T: ReprValue,
@@ -427,6 +446,7 @@ impl Ruby {
     ///
     /// `self` acts as a token proving this is called from a Ruby thread and
     /// thus it is safe to access the inner value. See [`Opaque`] and [`Lazy`].
+    #[inline]
     pub fn get_inner_ref<'a, T>(&self, wrapper: &'a impl InnerRef<Value = T>) -> &'a T
     where
         T: ReprValue,
@@ -541,6 +561,7 @@ where
     /// # let ruby = unsafe { magnus::embed::init() };
     /// # init(&ruby);
     /// ```
+    #[inline]
     pub fn force(this: &Self, handle: &Ruby) {
         handle.get_inner(this);
     }
@@ -584,6 +605,7 @@ where
 {
     type Value = T;
 
+    #[inline]
     fn get_inner_with(self, ruby: &Ruby) -> Self::Value {
         *self.get_inner_ref_with(ruby)
     }
@@ -629,26 +651,31 @@ pub(crate) mod private {
         ///
         /// This should only be used when `val` is known to uphold all the
         // invariants of `Self`. It is recommended not to use this method.
+        #[inline]
         unsafe fn from_value_unchecked(val: Value) -> Self {
             *(&val as *const Value as *const Self)
         }
 
+        #[inline]
         fn copy_as_value(self) -> Value {
             // This trait is only ever implemented for things with the same
             // representation as Value
             unsafe { *(&self as *const Self as *const Value) }
         }
 
+        #[inline]
         fn as_value_ref(&self) -> &Value {
             // This trait is only ever implemented for things with the same
             // representation as Value
             unsafe { &*(self as *const Self as *const Value) }
         }
 
+        #[inline]
         fn as_rb_value(self) -> VALUE {
             self.copy_as_value().0
         }
 
+        #[inline]
         unsafe fn r_basic_unchecked(self) -> ptr::NonNull<RBasic> {
             #[cfg(debug_assertions)]
             if self.is_immediate() {
@@ -665,6 +692,7 @@ pub(crate) mod private {
         ///
         /// non-immediate values are pointers to other memory holding the data
         /// for the object.
+        #[inline]
         fn is_immediate(self) -> bool {
             let value_p = self.as_rb_value();
             let immediate_p = value_p & ruby_special_consts::RUBY_IMMEDIATE_MASK as VALUE != 0;
@@ -672,31 +700,38 @@ pub(crate) mod private {
             immediate_p || !test // special_const_p
         }
 
+        #[inline]
         fn r_basic(self) -> Option<ptr::NonNull<RBasic>> {
             unsafe { (!self.is_immediate()).then(|| self.r_basic_unchecked()) }
         }
 
+        #[inline]
         fn is_false(self) -> bool {
             self.as_rb_value() == ruby_special_consts::RUBY_Qfalse as VALUE
         }
 
+        #[inline]
         fn is_true(self) -> bool {
             self.as_rb_value() == ruby_special_consts::RUBY_Qtrue as VALUE
         }
 
+        #[inline]
         fn is_undef(self) -> bool {
             self.as_rb_value() == ruby_special_consts::RUBY_Qundef as VALUE
         }
 
+        #[inline]
         fn is_fixnum(self) -> bool {
             self.as_rb_value() & ruby_special_consts::RUBY_FIXNUM_FLAG as VALUE != 0
         }
 
+        #[inline]
         fn is_static_symbol(self) -> bool {
             const MASK: usize = !(usize::MAX << ruby_special_consts::RUBY_SPECIAL_SHIFT as usize);
             self.as_rb_value() as usize & MASK == ruby_special_consts::RUBY_SYMBOL_FLAG as usize
         }
 
+        #[inline]
         fn is_flonum(self) -> bool {
             self.as_rb_value() & ruby_special_consts::RUBY_FLONUM_MASK as VALUE
                 == ruby_special_consts::RUBY_FLONUM_FLAG as VALUE
@@ -704,6 +739,7 @@ pub(crate) mod private {
 
         // derefs a raw pointer that under GC compaction may be outside the
         // process's memory space if the Value has been allowed to get GC'd
+        #[inline]
         fn rb_type(self) -> ruby_value_type {
             match self.r_basic() {
                 Some(r_basic) => {
@@ -766,6 +802,7 @@ use private::ReprValue as _;
 /// Types that are `ReprValue` can be safely transmuted to Value.
 pub trait ReprValue: private::ReprValue {
     /// Return `self` as a [`Value`].
+    #[inline]
     fn as_value(self) -> Value {
         // This trait is only ever implemented for things with the same
         // representation as Value
@@ -785,6 +822,7 @@ pub trait ReprValue: private::ReprValue {
     /// assert!(!eval::<Value>("0").unwrap().is_nil());
     /// assert!(!eval::<Value>("[]").unwrap().is_nil());
     /// ```
+    #[inline]
     fn is_nil(self) -> bool {
         self.as_rb_value() == ruby_special_consts::RUBY_Qnil as VALUE
     }
@@ -1055,6 +1093,7 @@ pub trait ReprValue: private::ReprValue {
     /// assert!(eval::<Value>(":foo").unwrap().to_bool());
     /// assert!(eval::<Value>("Object.new").unwrap().to_bool());
     /// ```
+    #[inline]
     fn to_bool(self) -> bool {
         self.as_rb_value() & !(ruby_special_consts::RUBY_Qnil as VALUE) != 0
     }
@@ -1560,6 +1599,7 @@ impl NonZeroValue {
         )
     }
 
+    #[inline]
     pub(crate) const fn get(self) -> Value {
         Value::new(self.0.get() as VALUE)
     }
@@ -1621,12 +1661,14 @@ impl<T> Drop for BoxValue<T> {
 }
 
 impl<T> AsRef<T> for BoxValue<T> {
+    #[inline]
     fn as_ref(&self) -> &T {
         &self.0
     }
 }
 
 impl<T> AsMut<T> for BoxValue<T> {
+    #[inline]
     fn as_mut(&mut self) -> &mut T {
         &mut self.0
     }
@@ -1635,12 +1677,14 @@ impl<T> AsMut<T> for BoxValue<T> {
 impl<T> Deref for BoxValue<T> {
     type Target = T;
 
+    #[inline]
     fn deref(&self) -> &Self::Target {
         &self.0
     }
 }
 
 impl<T> DerefMut for BoxValue<T> {
+    #[inline]
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.0
     }
@@ -1668,6 +1712,7 @@ impl<T> IntoValue for BoxValue<T>
 where
     T: ReprValue,
 {
+    #[inline]
     fn into_value_with(self, _: &Ruby) -> Value {
         self.as_value()
     }
@@ -1765,6 +1810,7 @@ impl fmt::Debug for Qfalse {
 }
 
 impl IntoValue for Qfalse {
+    #[inline]
     fn into_value_with(self, _: &Ruby) -> Value {
         self.0
     }
@@ -1882,12 +1928,14 @@ impl fmt::Debug for Qnil {
 }
 
 impl IntoValue for Qnil {
+    #[inline]
     fn into_value_with(self, _: &Ruby) -> Value {
         self.0.get()
     }
 }
 
 impl IntoValue for () {
+    #[inline]
     fn into_value_with(self, handle: &Ruby) -> Value {
         handle.qnil().as_value()
     }
@@ -1899,6 +1947,7 @@ impl<T> IntoValue for Option<T>
 where
     T: IntoValue,
 {
+    #[inline]
     fn into_value_with(self, handle: &Ruby) -> Value {
         match self {
             Some(t) => handle.into_value(t),
@@ -2021,12 +2070,14 @@ impl fmt::Debug for Qtrue {
 }
 
 impl IntoValue for Qtrue {
+    #[inline]
     fn into_value_with(self, _: &Ruby) -> Value {
         self.0.get()
     }
 }
 
 impl IntoValue for bool {
+    #[inline]
     fn into_value_with(self, handle: &Ruby) -> Value {
         if self {
             handle.qtrue().as_value()
@@ -2559,6 +2610,7 @@ impl fmt::Debug for Fixnum {
 }
 
 impl IntoValue for Fixnum {
+    #[inline]
     fn into_value_with(self, _: &Ruby) -> Value {
         self.0.get()
     }
@@ -2718,6 +2770,7 @@ impl StaticSymbol {
     /// let sym = StaticSymbol::new("example");
     /// assert_eq!(sym.name().unwrap(), "example");
     /// ```
+    #[inline]
     pub fn name(self) -> Result<&'static str, Error> {
         Id::from(self).name()
     }
@@ -2750,18 +2803,21 @@ impl From<Id> for StaticSymbol {
 }
 
 impl IntoValue for StaticSymbol {
+    #[inline]
     fn into_value_with(self, _: &Ruby) -> Value {
         self.0.get()
     }
 }
 
 impl PartialEq<Id> for StaticSymbol {
+    #[inline]
     fn eq(&self, other: &Id) -> bool {
         self.into_id_with(&Ruby::get_with(*self)) == *other
     }
 }
 
 impl PartialEq<OpaqueId> for StaticSymbol {
+    #[inline]
     fn eq(&self, other: &OpaqueId) -> bool {
         self.into_id_with(&Ruby::get_with(*self)).0 == other.0
     }
@@ -2772,12 +2828,14 @@ impl PartialEq<LazyId> for StaticSymbol {
     ///
     /// Panics if the first call is from a non-Ruby thread. The `LazyId` will
     /// then be *poisoned* and all future use of it will panic.
+    #[inline]
     fn eq(&self, other: &LazyId) -> bool {
         self.into_id_with(&Ruby::get_with(*self)).0 == other.0
     }
 }
 
 impl PartialEq<Symbol> for StaticSymbol {
+    #[inline]
     fn eq(&self, other: &Symbol) -> bool {
         other.as_static().map(|o| *self == o).unwrap_or(false)
     }
@@ -2868,10 +2926,12 @@ impl Id {
     }
 
     #[cfg(not(feature = "deprecated-send-sync-value"))]
+    #[inline]
     pub(crate) fn from_rb_id(id: ID) -> Self {
         Self(id, PhantomData)
     }
 
+    #[inline]
     pub(crate) fn as_rb_id(self) -> ID {
         self.0
     }
@@ -2952,6 +3012,7 @@ pub trait IntoId: Sized {
     /// # Safety
     ///
     /// This method should only be called from a Ruby thread.
+    #[inline]
     unsafe fn into_id_unchecked(self) -> Id {
         self.into_id_with(&Ruby::get_unchecked())
     }
@@ -2961,36 +3022,42 @@ pub trait IntoId: Sized {
 }
 
 impl IntoId for Id {
+    #[inline]
     fn into_id_with(self, _: &Ruby) -> Id {
         self
     }
 }
 
 impl IntoId for &str {
+    #[inline]
     fn into_id_with(self, handle: &Ruby) -> Id {
         handle.intern(self)
     }
 }
 
 impl IntoId for String {
+    #[inline]
     fn into_id_with(self, handle: &Ruby) -> Id {
         self.as_str().into_id_with(handle)
     }
 }
 
 impl IntoId for StaticSymbol {
+    #[inline]
     fn into_id_with(self, handle: &Ruby) -> Id {
         self.into_symbol_with(handle).into_id_with(handle)
     }
 }
 
 impl From<StaticSymbol> for Id {
+    #[inline]
     fn from(sym: StaticSymbol) -> Self {
         sym.into_id_with(&Ruby::get_with(sym))
     }
 }
 
 impl IntoId for Symbol {
+    #[inline]
     fn into_id_with(self, _: &Ruby) -> Id {
         if self.is_static_symbol() {
             Id::from_rb_id(self.as_rb_value() >> ruby_special_consts::RUBY_SPECIAL_SHIFT as VALUE)
@@ -3001,36 +3068,42 @@ impl IntoId for Symbol {
 }
 
 impl IntoValue for Id {
+    #[inline]
     fn into_value_with(self, handle: &Ruby) -> Value {
         StaticSymbol::from(self).into_value_with(handle)
     }
 }
 
 impl From<Symbol> for Id {
+    #[inline]
     fn from(sym: Symbol) -> Self {
         sym.into_id_with(&Ruby::get_with(sym))
     }
 }
 
 impl PartialEq<OpaqueId> for Id {
+    #[inline]
     fn eq(&self, other: &OpaqueId) -> bool {
         self.0 == other.0
     }
 }
 
 impl PartialEq<LazyId> for Id {
+    #[inline]
     fn eq(&self, other: &LazyId) -> bool {
         self.0 == other.0
     }
 }
 
 impl PartialEq<StaticSymbol> for Id {
+    #[inline]
     fn eq(&self, other: &StaticSymbol) -> bool {
         *self == other.into_id_with(&Ruby::get_with(*other))
     }
 }
 
 impl PartialEq<Symbol> for Id {
+    #[inline]
     fn eq(&self, other: &Symbol) -> bool {
         other.as_static().map(|o| *self == o).unwrap_or(false)
     }
@@ -3059,60 +3132,70 @@ impl PartialEq<Symbol> for Id {
 pub struct OpaqueId(ID);
 
 impl From<Id> for OpaqueId {
+    #[inline]
     fn from(id: Id) -> Self {
         Self(id.0)
     }
 }
 
 impl From<StaticSymbol> for OpaqueId {
+    #[inline]
     fn from(sym: StaticSymbol) -> Self {
         sym.into_id_with(&Ruby::get_with(sym)).into()
     }
 }
 
 impl From<Symbol> for OpaqueId {
+    #[inline]
     fn from(sym: Symbol) -> Self {
         sym.into_id_with(&Ruby::get_with(sym)).into()
     }
 }
 
 impl IntoId for OpaqueId {
+    #[inline]
     fn into_id_with(self, _: &Ruby) -> Id {
         Id::from_rb_id(self.0)
     }
 }
 
 impl IntoSymbol for OpaqueId {
+    #[inline]
     fn into_symbol_with(self, handle: &Ruby) -> Symbol {
         self.into_id_with(handle).into_symbol_with(handle)
     }
 }
 
 impl IntoValue for OpaqueId {
+    #[inline]
     fn into_value_with(self, handle: &Ruby) -> Value {
         self.into_symbol_with(handle).into_value_with(handle)
     }
 }
 
 impl PartialEq<Id> for OpaqueId {
+    #[inline]
     fn eq(&self, other: &Id) -> bool {
         self.0 == other.0
     }
 }
 
 impl PartialEq<LazyId> for OpaqueId {
+    #[inline]
     fn eq(&self, other: &LazyId) -> bool {
         *self == **other
     }
 }
 
 impl PartialEq<StaticSymbol> for OpaqueId {
+    #[inline]
     fn eq(&self, other: &StaticSymbol) -> bool {
         *self == other.into_id_with(&Ruby::get_with(*other))
     }
 }
 
 impl PartialEq<Symbol> for OpaqueId {
+    #[inline]
     fn eq(&self, other: &Symbol) -> bool {
         other.as_static().map(|o| *self == o).unwrap_or(false)
     }
@@ -3180,6 +3263,7 @@ impl LazyId {
     /// # let ruby = unsafe { magnus::embed::init() };
     /// # init(&ruby);
     /// ```
+    #[inline]
     pub fn force(this: &Self, handle: &Ruby) {
         Self::get_inner_with(this, handle);
     }
@@ -3204,6 +3288,7 @@ impl LazyId {
     /// let ruby = Ruby::get().unwrap();
     /// assert!(Id::new("example") == LazyId::get_inner_with(&EXAMPLE, &ruby));
     /// ```
+    #[inline]
     pub fn get_inner_with(this: &Self, handle: &Ruby) -> Id {
         unsafe {
             this.init.call_once(|| {
@@ -3285,6 +3370,7 @@ impl Hash for LazyId {
     ///
     /// Panics if the first call is from a non-Ruby thread. This `LazyId` will
     /// then be *poisoned* and all future use of it will panic.
+    #[inline]
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.deref().hash(state);
     }
@@ -3295,6 +3381,7 @@ impl PartialEq for LazyId {
     ///
     /// Panics if the first call is from a non-Ruby thread. This `LazyId` will
     /// then be *poisoned* and all future use of it will panic.
+    #[inline]
     fn eq(&self, other: &Self) -> bool {
         self.deref() == other.deref()
     }
@@ -3306,6 +3393,7 @@ impl PartialEq<Id> for LazyId {
     ///
     /// Panics if the first call is from a non-Ruby thread. This `LazyId` will
     /// then be *poisoned* and all future use of it will panic.
+    #[inline]
     fn eq(&self, other: &Id) -> bool {
         *self.deref() == *other
     }
@@ -3316,6 +3404,7 @@ impl PartialEq<StaticSymbol> for LazyId {
     ///
     /// Panics if the first call is from a non-Ruby thread. This `LazyId` will
     /// then be *poisoned* and all future use of it will panic.
+    #[inline]
     fn eq(&self, other: &StaticSymbol) -> bool {
         *self == other.into_id_with(&Ruby::get_with(*other))
     }
@@ -3326,6 +3415,7 @@ impl PartialEq<Symbol> for LazyId {
     ///
     /// Panics if the first call is from a non-Ruby thread. This `LazyId` will
     /// then be *poisoned* and all future use of it will panic.
+    #[inline]
     fn eq(&self, other: &Symbol) -> bool {
         other.as_static().map(|o| *self == o).unwrap_or(false)
     }

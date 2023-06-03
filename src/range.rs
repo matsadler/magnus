@@ -278,6 +278,7 @@ impl fmt::Debug for Range {
 }
 
 impl IntoValue for Range {
+    #[inline]
     fn into_value_with(self, handle: &Ruby) -> Value {
         self.0.into_value_with(handle)
     }
@@ -287,6 +288,7 @@ impl<T> IntoValue for StdRange<T>
 where
     T: IntoValue,
 {
+    #[inline]
     fn into_value_with(self, handle: &Ruby) -> Value {
         handle
             .range_new(self.start, self.end, true)
@@ -301,6 +303,7 @@ impl<T> IntoValue for RangeFrom<T>
 where
     T: IntoValue,
 {
+    #[inline]
     fn into_value_with(self, handle: &Ruby) -> Value {
         handle
             .range_new(self.start, handle.qnil(), false)
@@ -312,6 +315,7 @@ where
 unsafe impl<T> IntoValueFromNative for RangeFrom<T> where T: IntoValueFromNative {}
 
 impl IntoValue for RangeFull {
+    #[inline]
     fn into_value_with(self, handle: &Ruby) -> Value {
         handle
             .range_new(handle.qnil(), handle.qnil(), false)
@@ -326,6 +330,7 @@ impl<T> IntoValue for RangeInclusive<T>
 where
     T: IntoValue,
 {
+    #[inline]
     fn into_value_with(self, handle: &Ruby) -> Value {
         let (start, end) = self.into_inner();
         handle
@@ -341,6 +346,7 @@ impl<T> IntoValue for RangeTo<T>
 where
     T: IntoValue,
 {
+    #[inline]
     fn into_value_with(self, handle: &Ruby) -> Value {
         handle
             .range_new(handle.qnil(), self.end, true)
@@ -355,6 +361,7 @@ impl<T> IntoValue for RangeToInclusive<T>
 where
     T: IntoValue,
 {
+    #[inline]
     fn into_value_with(self, handle: &Ruby) -> Value {
         handle
             .range_new(handle.qnil(), self.end, false)

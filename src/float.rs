@@ -187,6 +187,7 @@ impl fmt::Debug for Float {
 }
 
 impl IntoValue for Float {
+    #[inline]
     fn into_value_with(self, _: &Ruby) -> Value {
         self.0.get()
     }

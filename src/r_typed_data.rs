@@ -244,6 +244,7 @@ impl RTypedData {
     ///
     /// assert_eq!(value.get::<Point>().unwrap(), &Point { x: 4, y: 2 });
     /// ```
+    #[inline]
     pub fn get<T>(&self) -> Result<&T, Error>
     where
         T: TypedData,
@@ -257,6 +258,7 @@ impl RTypedData {
     ///
     /// This method can magic any lifetime needed out of thin air, even
     /// `'static`.
+    #[inline]
     pub(crate) unsafe fn get_unconstrained<'a, T>(self) -> Result<&'a T, Error>
     where
         T: TypedData,
@@ -298,6 +300,7 @@ impl fmt::Debug for RTypedData {
 }
 
 impl IntoValue for RTypedData {
+    #[inline]
     fn into_value_with(self, _: &Ruby) -> Value {
         self.0.get()
     }

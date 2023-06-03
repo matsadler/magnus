@@ -445,6 +445,7 @@ impl fmt::Debug for Integer {
 }
 
 impl IntoValue for Integer {
+    #[inline]
     fn into_value_with(self, _: &Ruby) -> Value {
         self.0.get()
     }

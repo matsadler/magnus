@@ -157,6 +157,7 @@ impl From<Encoding> for RbEncoding {
 }
 
 impl IntoValue for Encoding {
+    #[inline]
     fn into_value_with(self, _: &Ruby) -> Value {
         self.0.get()
     }
@@ -796,6 +797,7 @@ impl From<RbEncoding> for Index {
 }
 
 impl IntoValue for RbEncoding {
+    #[inline]
     fn into_value_with(self, handle: &Ruby) -> Value {
         Encoding::from(self).into_value_with(handle)
     }

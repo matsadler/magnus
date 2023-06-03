@@ -71,7 +71,7 @@ impl Ruby {
         } else {
             self.ary_new()
         };
-        let mut buffer = [self.into_value(()); 128];
+        let mut buffer = [self.qnil().as_value(); 128];
         let mut i = 0;
         for v in iter {
             buffer[i] = self.into_value(v);
@@ -1207,6 +1207,7 @@ impl fmt::Debug for RArray {
 }
 
 impl IntoValue for RArray {
+    #[inline]
     fn into_value_with(self, _: &Ruby) -> Value {
         self.0.get()
     }
@@ -1627,6 +1628,7 @@ impl<T> IntoValue for Vec<T>
 where
     T: IntoValueFromNative,
 {
+    #[inline]
     fn into_value_with(self, handle: &Ruby) -> Value {
         handle.ary_from_vec(self).into_value_with(handle)
     }

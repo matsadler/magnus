@@ -1583,12 +1583,14 @@ impl IntoRString for PathBuf {
 }
 
 impl IntoValue for RString {
+    #[inline]
     fn into_value_with(self, _: &Ruby) -> Value {
         self.0.get()
     }
 }
 
 impl IntoValue for &str {
+    #[inline]
     fn into_value_with(self, handle: &Ruby) -> Value {
         handle.str_new(self).into_value_with(handle)
     }
@@ -1598,12 +1600,14 @@ unsafe impl IntoValueFromNative for &str {}
 
 #[cfg(feature = "bytes")]
 impl IntoValue for bytes::Bytes {
+    #[inline]
     fn into_value_with(self, handle: &Ruby) -> Value {
         handle.str_from_slice(self.as_ref()).into()
     }
 }
 
 impl IntoValue for String {
+    #[inline]
     fn into_value_with(self, handle: &Ruby) -> Value {
         handle.str_new(self.as_str()).into_value_with(handle)
     }
@@ -1612,6 +1616,7 @@ impl IntoValue for String {
 unsafe impl IntoValueFromNative for String {}
 
 impl IntoValue for char {
+    #[inline]
     fn into_value_with(self, handle: &Ruby) -> Value {
         handle.str_from_char(self).into_value_with(handle)
     }
@@ -1620,6 +1625,7 @@ impl IntoValue for char {
 unsafe impl IntoValueFromNative for char {}
 
 impl IntoValue for &Path {
+    #[inline]
     fn into_value_with(self, handle: &Ruby) -> Value {
         self.into_r_string_with(handle).into_value_with(handle)
     }
@@ -1628,6 +1634,7 @@ impl IntoValue for &Path {
 unsafe impl IntoValueFromNative for &Path {}
 
 impl IntoValue for PathBuf {
+    #[inline]
     fn into_value_with(self, handle: &Ruby) -> Value {
         self.as_path()
             .into_r_string_with(handle)
@@ -1781,6 +1788,7 @@ impl fmt::Debug for FString {
 }
 
 impl IntoValue for FString {
+    #[inline]
     fn into_value_with(self, handle: &Ruby) -> Value {
         self.as_r_string().into_value_with(handle)
     }

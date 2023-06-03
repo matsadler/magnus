@@ -398,6 +398,7 @@ impl fmt::Debug for Proc {
 }
 
 impl IntoValue for Proc {
+    #[inline]
     fn into_value_with(self, _: &Ruby) -> Value {
         self.0.get()
     }

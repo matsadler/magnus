@@ -201,6 +201,7 @@ impl fmt::Debug for RComplex {
 }
 
 impl IntoValue for RComplex {
+    #[inline]
     fn into_value_with(self, _: &Ruby) -> Value {
         self.0.get()
     }

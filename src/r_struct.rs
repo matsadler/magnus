@@ -324,6 +324,7 @@ impl fmt::Debug for RStruct {
 }
 
 impl IntoValue for RStruct {
+    #[inline]
     fn into_value_with(self, _: &Ruby) -> Value {
         self.0.get()
     }

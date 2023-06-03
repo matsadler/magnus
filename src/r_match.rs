@@ -250,6 +250,7 @@ impl fmt::Debug for RMatch {
 }
 
 impl IntoValue for RMatch {
+    #[inline]
     fn into_value_with(self, _: &Ruby) -> Value {
         self.0.get()
     }

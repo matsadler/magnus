@@ -14,6 +14,7 @@ use crate::{
 #[allow(missing_docs)]
 impl Ruby {
     #[allow(clippy::wrong_self_convention)]
+    #[inline]
     pub fn into_value<T>(&self, val: T) -> Value
     where
         T: IntoValue,
@@ -41,6 +42,7 @@ pub trait IntoValue: Sized {
     /// # Safety
     ///
     /// This method should only be called from a Ruby thread.
+    #[inline]
     unsafe fn into_value_unchecked(self) -> Value {
         self.into_value_with(&Ruby::get_unchecked())
     }
