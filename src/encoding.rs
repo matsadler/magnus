@@ -54,12 +54,19 @@ use crate::{
 /// Functions to access pre-defined Encodings.
 ///
 /// See also the [`Encoding`] type.
-#[allow(missing_docs)]
 impl Ruby {
+    /// Returns the default internal encoding as a Ruby object.
+    ///
+    /// This is the encoding used for anything out-of-process, such as reading
+    /// from files or sockets.
     pub fn enc_default_external(&self) -> Encoding {
         Encoding::from_value(Value::new(unsafe { rb_enc_default_external() })).unwrap()
     }
 
+    /// Returns the default external encoding as a Ruby object.
+    ///
+    /// If set, any out-of-process data is transcoded from the default external
+    /// encoding to the default internal encoding.
     pub fn enc_default_internal(&self) -> Option<Encoding> {
         Encoding::from_value(Value::new(unsafe { rb_enc_default_internal() }))
     }
@@ -183,36 +190,104 @@ impl TryConvert for Encoding {
 /// Functions to access pre-defined encodings.
 ///
 /// See also the [`RbEncoding`] type.
-#[allow(missing_docs)]
 impl Ruby {
+    /// Returns the encoding that represents ASCII-8BIT a.k.a. binary.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     assert_eq!(ruby.ascii8bit_encoding().name(), "ASCII-8BIT");
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     pub fn ascii8bit_encoding(&self) -> RbEncoding {
         RbEncoding::new(unsafe { rb_ascii8bit_encoding() }).unwrap()
     }
 
+    /// Returns the encoding that represents UTF-8.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     assert_eq!(ruby.utf8_encoding().name(), "UTF-8");
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     pub fn utf8_encoding(&self) -> RbEncoding {
         RbEncoding::new(unsafe { rb_utf8_encoding() }).unwrap()
     }
 
+    /// Returns the encoding that represents US-ASCII.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     assert_eq!(ruby.usascii_encoding().name(), "US-ASCII");
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     pub fn usascii_encoding(&self) -> RbEncoding {
         RbEncoding::new(unsafe { rb_usascii_encoding() }).unwrap()
     }
 
+    /// Returns the encoding that represents the process' current locale.
+    ///
+    /// This is dynamic. If you change the process' locale that should also
+    /// change the return value of this function.
     pub fn locale_encoding(&self) -> RbEncoding {
         RbEncoding::new(unsafe { rb_locale_encoding() }).unwrap()
     }
 
+    /// Returns the filesystem encoding.
+    ///
+    /// This is the encoding that Ruby expects data from the OS' file system
+    /// to be encoded as, such as directory names.
     pub fn filesystem_encoding(&self) -> RbEncoding {
         RbEncoding::new(unsafe { rb_filesystem_encoding() }).unwrap()
     }
 
+    /// Returns the default external encoding.
+    ///
+    /// This is the encoding used for anything out-of-process, such as reading
+    /// from files or sockets.
     pub fn default_external_encoding(&self) -> RbEncoding {
         RbEncoding::new(unsafe { rb_default_external_encoding() }).unwrap()
     }
 
+    /// Returns the default internal encoding.
+    ///
+    /// If set, any out-of-process data is transcoded from the default external
+    /// encoding to the default internal encoding.
     pub fn default_internal_encoding(&self) -> Option<RbEncoding> {
         RbEncoding::new(unsafe { rb_default_internal_encoding() })
     }
 
+    /// Returns the encoding with the name or alias `name`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     assert_eq!(ruby.find_encoding("BINARY").unwrap().name(), "ASCII-8BIT");
+    ///     assert_eq!(ruby.find_encoding("UTF-8").unwrap().name(), "UTF-8");
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     pub fn find_encoding(&self, name: &str) -> Option<RbEncoding> {
         let name = CString::new(name).unwrap();
         let ptr = unsafe { rb_enc_find(name.as_ptr()) };
@@ -819,39 +894,63 @@ impl TryConvert for RbEncoding {
 /// Functions to access pre-defined encodings.
 ///
 /// See also the [`encoding::Index`](Index) type.
-#[allow(missing_docs)]
 impl Ruby {
+    /// Returns the index for ASCII-8BIT a.k.a. binary.
     pub fn ascii8bit_encindex(&self) -> Index {
         Index(unsafe { rb_ascii8bit_encindex() })
     }
 
+    /// Returns the index for UTF-8.
     pub fn utf8_encindex(&self) -> Index {
         Index(unsafe { rb_utf8_encindex() })
     }
 
+    /// Returns the index for US-ASCII.
     pub fn usascii_encindex(&self) -> Index {
         Index(unsafe { rb_usascii_encindex() })
     }
 
+    /// Returns the index for the process' current locale encoding.
+    ///
+    /// This is dynamic. If you change the process' locale that should also
+    /// change the return value of this function.
     pub fn locale_encindex(&self) -> Index {
         Index(unsafe { rb_locale_encindex() })
     }
 
+    /// Returns the index for filesystem encoding.
+    ///
+    /// This is the encoding that Ruby expects data from the OS' file system
+    /// to be encoded as, such as directory names.
     pub fn filesystem_encindex(&self) -> Index {
         Index(unsafe { rb_filesystem_encindex() })
     }
 
+    /// Returns the index for the encoding with the name or alias `name`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     assert!(ruby.find_encindex("UTF-8").is_ok());
+    ///     assert!(ruby.find_encindex("BINARY").is_ok());
+    ///     assert!(ruby.find_encindex("none").is_err());
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     pub fn find_encindex(&self, name: &str) -> Result<Index, Error> {
-        let handle = unsafe { Ruby::get_unchecked() };
         let name = CString::new(name).unwrap();
         let mut i = 0;
         protect(|| {
             unsafe { i = rb_enc_find_index(name.as_ptr()) };
-            handle.qnil()
+            self.qnil()
         })?;
         if i == -1 {
             return Err(Error::new(
-                handle.exception_runtime_error(),
+                self.exception_runtime_error(),
                 format!("Encoding {:?} exists, but can not be loaded", name),
             ));
         }
@@ -874,8 +973,8 @@ impl Index {
     ///
     /// # Panics
     ///
-    /// Panics if called from a non-Ruby thread. See [`Ruby::usascii_encindex`]
-    /// for the non-panicking version.
+    /// Panics if called from a non-Ruby thread. See
+    /// [`Ruby::ascii8bit_encindex`] for the non-panicking version.
     #[cfg(feature = "friendly-api")]
     #[inline]
     pub fn ascii8bit() -> Self {
