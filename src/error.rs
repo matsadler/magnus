@@ -44,8 +44,39 @@ impl std::error::Error for RubyUnavailableError {}
 /// Functions for working with errors and flow control encoded as an [`Error`].
 ///
 /// See also [`Error`] and the [`error`](self) module.
-#[allow(missing_docs)]
 impl Ruby {
+    /// Create a new error that will break from a loop when returned to Ruby.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{prelude::*, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let i: i64 = ruby
+    ///         .range_new(1, 100, false)
+    ///         .unwrap()
+    ///         .block_call("each", (), |args, _block| {
+    ///             let i = i64::try_convert(*args.get(0).unwrap())?;
+    ///             if i % 3 == 0 && i % 5 == 0 {
+    ///                 // `block_call` takes a function pointer, not a
+    ///                 // closure, so can't capture `ruby`. As we know this
+    ///                 // will always be called from Ruby it's safe to get
+    ///                 // `Ruby` without the checks that we're on a Ruby
+    ///                 // thread.
+    ///                 let ruby = unsafe { Ruby::get_unchecked() };
+    ///                 Err(ruby.iter_break_value(i))
+    ///             } else {
+    ///                 Ok(())
+    ///             }
+    ///         })
+    ///         .unwrap();
+    ///
+    ///     assert_eq!(i, 15);
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     pub fn iter_break_value<T>(&self, val: T) -> Error
     where
         T: IntoValue,
@@ -60,6 +91,7 @@ impl Ruby {
         .unwrap_err()
     }
 
+    /// Outputs `s` to Ruby's stderr if Ruby is configured to output warnings.
     pub fn warning(&self, s: &str) {
         let s = CString::new(s).unwrap();
         unsafe { rb_warning(s.as_ptr()) };
