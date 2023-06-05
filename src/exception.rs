@@ -269,88 +269,372 @@ impl TryConvert for ExceptionClass {
 /// Functions to access Ruby's built-in exception classes.
 ///
 /// See also the [`exception`](self) module.
-#[allow(missing_docs)]
 impl Ruby {
+    /// Return Ruby's `ArgumentError` class.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(
+    ///         ruby,
+    ///         "klass == ArgumentError",
+    ///         klass = ruby.exception_arg_error()
+    ///     );
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn exception_arg_error(&self) -> ExceptionClass {
         unsafe { ExceptionClass::from_rb_value_unchecked(rb_eArgError) }
     }
 
+    /// Return Ruby's `EOFError` class.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(
+    ///         ruby,
+    ///         "klass == EOFError",
+    ///         klass = ruby.exception_eof_error()
+    ///     );
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn exception_eof_error(&self) -> ExceptionClass {
         unsafe { ExceptionClass::from_rb_value_unchecked(rb_eEOFError) }
     }
 
+    /// Return Ruby's `Encoding::CompatibilityError` class.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(
+    ///         ruby,
+    ///         "klass == Encoding::CompatibilityError",
+    ///         klass = ruby.exception_enc_compat_error()
+    ///     );
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn exception_enc_compat_error(&self) -> ExceptionClass {
         unsafe { ExceptionClass::from_rb_value_unchecked(rb_eEncCompatError) }
     }
 
+    /// Return Ruby's `EncodingError` class.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(
+    ///         ruby,
+    ///         "klass == EncodingError",
+    ///         klass = ruby.exception_encoding_error()
+    ///     );
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn exception_encoding_error(&self) -> ExceptionClass {
         unsafe { ExceptionClass::from_rb_value_unchecked(rb_eEncodingError) }
     }
 
+    /// Return Ruby's `Exception` class.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(
+    ///         ruby,
+    ///         "klass == Exception",
+    ///         klass = ruby.exception_exception()
+    ///     );
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn exception_exception(&self) -> ExceptionClass {
         unsafe { ExceptionClass::from_rb_value_unchecked(rb_eException) }
     }
 
+    /// Return Ruby's `fatal` class.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(
+    ///         ruby,
+    ///         r#"klass.name == "fatal""#,
+    ///         klass = ruby.exception_fatal()
+    ///     );
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn exception_fatal(&self) -> ExceptionClass {
         unsafe { ExceptionClass::from_rb_value_unchecked(rb_eFatal) }
     }
 
+    /// Return Ruby's `FloatDomainError` class.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(
+    ///         ruby,
+    ///         "klass == FloatDomainError",
+    ///         klass = ruby.exception_float_domain_error()
+    ///     );
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn exception_float_domain_error(&self) -> ExceptionClass {
         unsafe { ExceptionClass::from_rb_value_unchecked(rb_eFloatDomainError) }
     }
 
+    /// Return Ruby's `FrozenError` class.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(
+    ///         ruby,
+    ///         "klass == FrozenError",
+    ///         klass = ruby.exception_frozen_error()
+    ///     );
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn exception_frozen_error(&self) -> ExceptionClass {
         unsafe { ExceptionClass::from_rb_value_unchecked(rb_eFrozenError) }
     }
 
+    /// Return Ruby's `IOError` class.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(ruby, "klass == IOError", klass = ruby.exception_io_error());
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn exception_io_error(&self) -> ExceptionClass {
         unsafe { ExceptionClass::from_rb_value_unchecked(rb_eIOError) }
     }
 
+    /// Return Ruby's `IndexError` class.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(
+    ///         ruby,
+    ///         "klass == IndexError",
+    ///         klass = ruby.exception_index_error()
+    ///     );
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn exception_index_error(&self) -> ExceptionClass {
         unsafe { ExceptionClass::from_rb_value_unchecked(rb_eIndexError) }
     }
 
+    /// Return Ruby's `Interrupt` class.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(
+    ///         ruby,
+    ///         "klass == Interrupt",
+    ///         klass = ruby.exception_interrupt()
+    ///     );
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn exception_interrupt(&self) -> ExceptionClass {
         unsafe { ExceptionClass::from_rb_value_unchecked(rb_eInterrupt) }
     }
 
+    /// Return Ruby's `KeyError` class.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(
+    ///         ruby,
+    ///         "klass == KeyError",
+    ///         klass = ruby.exception_key_error()
+    ///     );
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn exception_key_error(&self) -> ExceptionClass {
         unsafe { ExceptionClass::from_rb_value_unchecked(rb_eKeyError) }
     }
 
+    /// Return Ruby's `LoadError` class.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(
+    ///         ruby,
+    ///         "klass == LoadError",
+    ///         klass = ruby.exception_load_error()
+    ///     );
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn exception_load_error(&self) -> ExceptionClass {
         unsafe { ExceptionClass::from_rb_value_unchecked(rb_eLoadError) }
     }
 
+    /// Return Ruby's `LocalJumpError` class.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(
+    ///         ruby,
+    ///         "klass == LocalJumpError",
+    ///         klass = ruby.exception_local_jump_error()
+    ///     );
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn exception_local_jump_error(&self) -> ExceptionClass {
         unsafe { ExceptionClass::from_rb_value_unchecked(rb_eLocalJumpError) }
     }
 
+    /// Return Ruby's `Math::DomainError` class.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(
+    ///         ruby,
+    ///         "klass == Math::DomainError",
+    ///         klass = ruby.exception_math_domain_error()
+    ///     );
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn exception_math_domain_error(&self) -> ExceptionClass {
         unsafe { ExceptionClass::from_rb_value_unchecked(rb_eMathDomainError) }
     }
 
+    /// Return Ruby's `NameError` class.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(
+    ///         ruby,
+    ///         "klass == NameError",
+    ///         klass = ruby.exception_name_error()
+    ///     );
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn exception_name_error(&self) -> ExceptionClass {
         unsafe { ExceptionClass::from_rb_value_unchecked(rb_eNameError) }
     }
 
+    /// Return Ruby's `NoMatchingPatternError` class.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(
+    ///         ruby,
+    ///         "klass == NoMatchingPatternError",
+    ///         klass = ruby.exception_no_matching_pattern_error()
+    ///     );
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[cfg(any(ruby_gte_2_7, docsrs))]
     #[cfg_attr(docsrs, doc(cfg(ruby_gte_2_7)))]
     #[inline]
@@ -358,6 +642,23 @@ impl Ruby {
         unsafe { ExceptionClass::from_rb_value_unchecked(rb_eNoMatchingPatternError) }
     }
 
+    /// Return Ruby's `NoMatchingPatternKeyError` class.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(
+    ///         ruby,
+    ///         "klass == NoMatchingPatternKeyError",
+    ///         klass = ruby.exception_no_matching_pattern_key_error()
+    ///     );
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[cfg(any(ruby_gte_3_1, docsrs))]
     #[cfg_attr(docsrs, doc(cfg(ruby_gte_3_1)))]
     #[inline]
@@ -365,91 +666,397 @@ impl Ruby {
         unsafe { ExceptionClass::from_rb_value_unchecked(rb_eNoMatchingPatternKeyError) }
     }
 
+    /// Return Ruby's `NoMemoryError` class.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(
+    ///         ruby,
+    ///         "klass == NoMemoryError",
+    ///         klass = ruby.exception_no_mem_error()
+    ///     );
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn exception_no_mem_error(&self) -> ExceptionClass {
         unsafe { ExceptionClass::from_rb_value_unchecked(rb_eNoMemError) }
     }
 
+    /// Return Ruby's `NoMethodError` class.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(
+    ///         ruby,
+    ///         "klass == NoMethodError",
+    ///         klass = ruby.exception_no_method_error()
+    ///     );
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn exception_no_method_error(&self) -> ExceptionClass {
         unsafe { ExceptionClass::from_rb_value_unchecked(rb_eNoMethodError) }
     }
 
+    /// Return Ruby's `NotImplementedError` class.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(
+    ///         ruby,
+    ///         "klass == NotImplementedError",
+    ///         klass = ruby.exception_not_imp_error()
+    ///     );
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn exception_not_imp_error(&self) -> ExceptionClass {
         unsafe { ExceptionClass::from_rb_value_unchecked(rb_eNotImpError) }
     }
 
+    /// Return Ruby's `RangeError` class.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(
+    ///         ruby,
+    ///         "klass == RangeError",
+    ///         klass = ruby.exception_range_error()
+    ///     );
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn exception_range_error(&self) -> ExceptionClass {
         unsafe { ExceptionClass::from_rb_value_unchecked(rb_eRangeError) }
     }
 
+    /// Return Ruby's `RegexpError` class.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(
+    ///         ruby,
+    ///         "klass == RegexpError",
+    ///         klass = ruby.exception_regexp_error()
+    ///     );
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn exception_regexp_error(&self) -> ExceptionClass {
         unsafe { ExceptionClass::from_rb_value_unchecked(rb_eRegexpError) }
     }
 
+    /// Return Ruby's `RuntimeError` class.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(
+    ///         ruby,
+    ///         "klass == RuntimeError",
+    ///         klass = ruby.exception_runtime_error()
+    ///     );
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn exception_runtime_error(&self) -> ExceptionClass {
         unsafe { ExceptionClass::from_rb_value_unchecked(rb_eRuntimeError) }
     }
 
+    /// Return Ruby's `ScriptError` class.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(
+    ///         ruby,
+    ///         "klass == ScriptError",
+    ///         klass = ruby.exception_script_error()
+    ///     );
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn exception_script_error(&self) -> ExceptionClass {
         unsafe { ExceptionClass::from_rb_value_unchecked(rb_eScriptError) }
     }
 
+    /// Return Ruby's `SecurityError` class.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(
+    ///         ruby,
+    ///         "klass == SecurityError",
+    ///         klass = ruby.exception_security_error()
+    ///     );
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn exception_security_error(&self) -> ExceptionClass {
         unsafe { ExceptionClass::from_rb_value_unchecked(rb_eSecurityError) }
     }
 
+    /// Return Ruby's `SignalException` class.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(
+    ///         ruby,
+    ///         "klass == SignalException",
+    ///         klass = ruby.exception_signal()
+    ///     );
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn exception_signal(&self) -> ExceptionClass {
         unsafe { ExceptionClass::from_rb_value_unchecked(rb_eSignal) }
     }
 
+    /// Return Ruby's `StandardError` class.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(
+    ///         ruby,
+    ///         "klass == StandardError",
+    ///         klass = ruby.exception_standard_error()
+    ///     );
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn exception_standard_error(&self) -> ExceptionClass {
         unsafe { ExceptionClass::from_rb_value_unchecked(rb_eStandardError) }
     }
 
+    /// Return Ruby's `StopIteration` class.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(
+    ///         ruby,
+    ///         "klass == StopIteration",
+    ///         klass = ruby.exception_stop_iteration()
+    ///     );
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn exception_stop_iteration(&self) -> ExceptionClass {
         unsafe { ExceptionClass::from_rb_value_unchecked(rb_eStopIteration) }
     }
 
+    /// Return Ruby's `SyntaxError` class.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(
+    ///         ruby,
+    ///         "klass == SyntaxError",
+    ///         klass = ruby.exception_syntax_error()
+    ///     );
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn exception_syntax_error(&self) -> ExceptionClass {
         unsafe { ExceptionClass::from_rb_value_unchecked(rb_eSyntaxError) }
     }
 
+    /// Return Ruby's `SystemStackError` class.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(
+    ///         ruby,
+    ///         "klass == SystemStackError",
+    ///         klass = ruby.exception_sys_stack_error()
+    ///     );
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn exception_sys_stack_error(&self) -> ExceptionClass {
         unsafe { ExceptionClass::from_rb_value_unchecked(rb_eSysStackError) }
     }
 
+    /// Return Ruby's `SystemCallError` class.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(
+    ///         ruby,
+    ///         "klass == SystemCallError",
+    ///         klass = ruby.exception_system_call_error()
+    ///     );
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn exception_system_call_error(&self) -> ExceptionClass {
         unsafe { ExceptionClass::from_rb_value_unchecked(rb_eSystemCallError) }
     }
 
+    /// Return Ruby's `SystemExit` class.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(
+    ///         ruby,
+    ///         "klass == SystemExit",
+    ///         klass = ruby.exception_system_exit()
+    ///     );
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn exception_system_exit(&self) -> ExceptionClass {
         unsafe { ExceptionClass::from_rb_value_unchecked(rb_eSystemExit) }
     }
 
+    /// Return Ruby's `ThreadError` class.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(
+    ///         ruby,
+    ///         "klass == ThreadError",
+    ///         klass = ruby.exception_thread_error()
+    ///     );
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn exception_thread_error(&self) -> ExceptionClass {
         unsafe { ExceptionClass::from_rb_value_unchecked(rb_eThreadError) }
     }
 
+    /// Return Ruby's `TypeError` class.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(
+    ///         ruby,
+    ///         "klass == TypeError",
+    ///         klass = ruby.exception_type_error()
+    ///     );
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn exception_type_error(&self) -> ExceptionClass {
         unsafe { ExceptionClass::from_rb_value_unchecked(rb_eTypeError) }
     }
 
+    /// Return Ruby's `ZeroDivisionError` class.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(
+    ///         ruby,
+    ///         "klass == ZeroDivisionError",
+    ///         klass = ruby.exception_zero_div_error()
+    ///     );
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn exception_zero_div_error(&self) -> ExceptionClass {
         unsafe { ExceptionClass::from_rb_value_unchecked(rb_eZeroDivError) }
@@ -701,7 +1308,7 @@ pub fn no_method_error() -> ExceptionClass {
     get_ruby!().exception_no_method_error()
 }
 
-/// Return Ruby's `NotImpError` class.
+/// Return Ruby's `NotImplementedError` class.
 ///
 /// # Panics
 ///
