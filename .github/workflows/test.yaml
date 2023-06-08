@@ -27,6 +27,9 @@ jobs:
           - os: windows-latest
             ruby-version: mswin
             rustup-toolchain: stable
+        exclude:
+          - os: windows-latest
+            ruby-version: head
 
     steps:
       - uses: actions/checkout@v3

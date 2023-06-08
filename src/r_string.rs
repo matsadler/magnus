@@ -457,9 +457,9 @@ impl RString {
         let f = r_basic.as_ref().flags;
         if (f & ruby_rstring_flags::RSTRING_NOEMBED as VALUE) != 0 {
             let h = self.as_internal().as_ref().as_.heap;
-            slice::from_raw_parts(h.ptr as *const u8, h.len as usize)
+            slice::from_raw_parts(h.ptr as *const u8, self.len())
         } else {
-            slice::from_raw_parts(embedded_ary_ptr(self), embed_len(self, f) as usize)
+            slice::from_raw_parts(embedded_ary_ptr(self), self.len())
         }
     }
 
@@ -1307,6 +1307,26 @@ impl RString {
     /// let s = RString::new("🦀 Hello, Ferris");
     /// assert_eq!(s.len(), 18);
     /// ```
+    #[cfg(ruby_gte_3_3)]
+    pub fn len(self) -> usize {
+        debug_assert_value!(self);
+        unsafe { self.as_internal().as_ref().len as usize }
+    }
+
+    /// Returns the number of bytes in `self`.
+    ///
+    /// See also [`length`](RString::length).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RString};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let s = RString::new("🦀 Hello, Ferris");
+    /// assert_eq!(s.len(), 18);
+    /// ```
+    #[cfg(ruby_lte_3_2)]
     pub fn len(self) -> usize {
         debug_assert_value!(self);
         unsafe {
@@ -1461,7 +1481,7 @@ impl RString {
     }
 }
 
-#[cfg(ruby_gte_3_2)]
+#[cfg(ruby_3_2)]
 unsafe fn embed_len(value: RString, _: VALUE) -> c_long {
     value.as_internal().as_ref().as_.embed.len
 }
