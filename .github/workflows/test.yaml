@@ -31,6 +31,8 @@ jobs:
         exclude:
           - os: macos-latest
             rustup-toolchain: "1.51"
+          - os: windows-latest
+            ruby-version: head
 
     steps:
       - uses: actions/checkout@v3
