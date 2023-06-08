@@ -4,8 +4,6 @@
 ### Added
 
 ### Changed
-- `try_convert` module is now public so that `TryConvertOwned` can be
-  named/implemented.
 
 ### Deprecated
 
@@ -14,6 +12,11 @@
 ### Fixed
 
 ### Security
+
+## [0.5.4] - 2023-06-07
+### Changed
+- `try_convert` module is now public so that `TryConvertOwned` can be
+  named/implemented.
 
 ## [0.5.3] - 2023-04-07
 ### Added
@@ -313,7 +316,8 @@
 - Pre-built bindings for Ruby 2.6 - 3.1 on common platforms, build-time
   generated bindings otherwise.
 
-[Unreleased]: https://github.com/matsadler/magnus/compare/0.5.3...HEAD
+[Unreleased]: https://github.com/matsadler/magnus/compare/0.5.4...HEAD
+[0.5.4]: https://github.com/matsadler/magnus/compare/0.5.3...0.5.4
 [0.5.3]: https://github.com/matsadler/magnus/compare/0.5.2...0.5.3
 [0.5.2]: https://github.com/matsadler/magnus/compare/0.5.1...0.5.2
 [0.5.1]: https://github.com/matsadler/magnus/compare/0.5.0...0.5.1
