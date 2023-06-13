@@ -25,8 +25,31 @@ pub(crate) enum IntegerType {
 /// Functions that can be used to create instances of [`Integer`].
 ///
 /// See also the [`Integer`] type.
-#[allow(missing_docs)]
 impl Ruby {
+    /// Create a new `Integer` from an `i64.`
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(ruby, "i == 0", i = ruby.integer_from_i64(0));
+    ///     rb_assert!(
+    ///         ruby,
+    ///         "i == 4611686018427387904",
+    ///         i = ruby.integer_from_i64(4611686018427387904),
+    ///     );
+    ///     rb_assert!(
+    ///         ruby,
+    ///         "i == -4611686018427387905",
+    ///         i = ruby.integer_from_i64(-4611686018427387905),
+    ///     );
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn integer_from_i64(&self, n: i64) -> Integer {
         unsafe {
@@ -38,6 +61,24 @@ impl Ruby {
         }
     }
 
+    /// Create a new `Integer` from a `u64.`
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!("i == 0", i = ruby.integer_from_u64(0));
+    ///     rb_assert!(
+    ///         "i == 4611686018427387904",
+    ///         i = ruby.integer_from_u64(4611686018427387904),
+    ///     );
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn integer_from_u64(&self, n: u64) -> Integer {
         unsafe {

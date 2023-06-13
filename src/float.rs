@@ -25,8 +25,25 @@ use crate::{
 /// Functions that can be used to create instances of [`Float`].
 ///
 /// See also the [`Float`] type.
-#[allow(missing_docs)]
 impl Ruby {
+    /// Create a new `Float` from an `f64`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let f = ruby.float_from_f64(1.7272337110188893e-77);
+    ///     rb_assert!(ruby, "f == 1.7272337110188893e-77", f);
+    ///
+    ///     let f = ruby.float_from_f64(1.7272337110188890e-77);
+    ///     rb_assert!(ruby, "f == 1.7272337110188890e-77", f);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn float_from_f64(&self, n: f64) -> Float {
         unsafe {

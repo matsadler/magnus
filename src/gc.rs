@@ -316,28 +316,160 @@ where
 /// Functions for working with Ruby's Garbage Collector.
 ///
 /// See also the [`gc`](self) module.
-#[allow(missing_docs)]
 impl Ruby {
+    /// Disable automatic GC runs.
+    ///
+    /// This could result in other Ruby api functions unexpectedly raising
+    /// `NoMemError`.
+    ///
+    /// Returns `true` if GC was already disabled, `false` otherwise.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let was_disabled = ruby.gc_disable();
+    ///
+    ///     // GC is off
+    ///
+    ///     // return GC to previous state
+    ///     if !was_disabled {
+    ///         ruby.gc_enable();
+    ///     }
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     pub fn gc_disable(&self) -> bool {
         unsafe { Value::new(rb_gc_disable()).to_bool() }
     }
 
+    /// Enable automatic GC run.
+    ///
+    /// Garbage Collection is enabled by default, calling this function only
+    /// makes sense if [`disable`] was previously called.
+    ///
+    /// Returns `true` if GC was previously disabled, `false` otherwise.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let was_disabled = ruby.gc_enable();
+    ///
+    ///     // GC is on
+    ///
+    ///     // return GC to previous state
+    ///     if was_disabled {
+    ///         ruby.gc_disable();
+    ///     }
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     pub fn gc_enable(&self) -> bool {
         unsafe { Value::new(rb_gc_enable()).to_bool() }
     }
 
+    /// Trigger a "full" GC run.
+    ///
+    /// This will perform a full mark phase and a complete sweep phase, but may
+    /// not run every single proceess associated with garbage collection.
+    ///
+    /// Finalisers will be deferred to run later.
+    ///
+    /// Currently (with versions of Ruby that support compaction) it will not
+    /// trigger compaction.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     ruby.gc_start();
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     pub fn gc_start(&self) {
         unsafe { rb_gc_start() };
     }
 
+    /// Inform Ruby of external memory usage.
+    ///
+    /// The Ruby GC is run when Ruby thinks it's running out of memory, but
+    /// won't take into account any memory allocated outside of Ruby api
+    /// functions. This function can be used to give Ruby a more accurate idea
+    /// of how much memory the process is using.
+    ///
+    /// Pass negative numbers to indicate memory has been freed.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let buf = Vec::<u8>::with_capacity(1024 * 1024);
+    ///     let mem_size = buf.capacity() * std::mem::size_of::<u8>();
+    ///     ruby.gc_adjust_memory_usage(mem_size as isize);
+    ///
+    ///     // ...
+    ///
+    ///     drop(buf);
+    ///     ruby.gc_adjust_memory_usage(-(mem_size as isize));
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     pub fn gc_adjust_memory_usage(&self, diff: isize) {
         unsafe { rb_gc_adjust_memory_usage(diff as _) };
     }
 
+    /// Returns the number of garbage collections that have been run since the
+    /// start of the process.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let before = ruby.gc_count();
+    ///     ruby.gc_start();
+    ///     assert!(ruby.gc_count() > before);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     pub fn gc_count(&self) -> usize {
         unsafe { rb_gc_count() as usize }
     }
 
+    /// Returns the GC profiling value for `key`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     assert!(ruby.gc_stat("heap_live_slots").unwrap() > 1);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     pub fn gc_stat<T>(&self, key: T) -> Result<usize, Error>
     where
         T: IntoSymbol,
@@ -351,6 +483,22 @@ impl Ruby {
         Ok(res)
     }
 
+    /// Returns all possible key/value pairs for [`stat`] as a Ruby Hash.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let stats = ruby.gc_all_stats();
+    ///     let live_slots: usize = stats.fetch(ruby.to_symbol("heap_live_slots")).unwrap();
+    ///     assert!(live_slots > 1);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     pub fn gc_all_stats(&self) -> RHash {
         let res = self.hash_new();
         unsafe { rb_gc_stat(res.as_rb_value()) };

@@ -11,8 +11,8 @@ use crate::{
 /// Helpers for the [`IntoValue`] trait.
 ///
 /// See also the [`IntoValue`] trait.
-#[allow(missing_docs)]
 impl Ruby {
+    /// Convert `val` into [`Value`].
     #[allow(clippy::wrong_self_convention)]
     #[inline]
     pub fn into_value<T>(&self, val: T) -> Value
