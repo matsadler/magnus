@@ -464,7 +464,7 @@ impl Ruby {
     /// use magnus::{Error, Ruby};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
-    ///     assert!(ruby.gc_stat("heap_live_slots").unwrap() > 1);
+    ///     assert!(ruby.gc_stat("heap_live_slots")? > 1);
     ///
     ///     Ok(())
     /// }
@@ -492,7 +492,7 @@ impl Ruby {
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let stats = ruby.gc_all_stats();
-    ///     let live_slots: usize = stats.fetch(ruby.to_symbol("heap_live_slots")).unwrap();
+    ///     let live_slots: usize = stats.fetch(ruby.to_symbol("heap_live_slots"))?;
     ///     assert!(live_slots > 1);
     ///
     ///     Ok(())

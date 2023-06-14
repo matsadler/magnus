@@ -2003,8 +2003,22 @@ macro_rules! rb_assert {
 /// method.
 ///
 /// See also [functions in the root module](self#functions).
-#[allow(missing_docs)]
 impl Ruby {
+    /// Define a class in the root scope.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     ruby.define_class("Example", ruby.class_object())?;
+    ///     rb_assert!(ruby, "Example.is_a?(Class)");
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     pub fn define_class(&self, name: &str, superclass: RClass) -> Result<RClass, Error> {
         debug_assert_value!(superclass);
         let name = CString::new(name).unwrap();
@@ -2014,11 +2028,43 @@ impl Ruby {
         })
     }
 
+    /// Define a module in the root scope.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     ruby.define_module("Example")?;
+    ///     rb_assert!(ruby, "Example.is_a?(Module)");
+    ///     rb_assert!(ruby, "!Example.is_a?(Class)");
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     pub fn define_module(&self, name: &str) -> Result<RModule, Error> {
         let name = CString::new(name).unwrap();
         protect(|| unsafe { RModule::from_rb_value_unchecked(rb_define_module(name.as_ptr())) })
     }
 
+    /// Define an exception class in the root scope.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     ruby.define_error("ExampleError", ruby.exception_standard_error())?;
+    ///     rb_assert!(ruby, "ExampleError.is_a?(Class)");
+    ///     rb_assert!(ruby, "ExampleError < Exception");
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     pub fn define_error(
         &self,
         name: &str,
@@ -2028,6 +2074,27 @@ impl Ruby {
             .map(|c| unsafe { ExceptionClass::from_value_unchecked(c.as_value()) })
     }
 
+    /// Define a global variable.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{prelude::*, rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let v = ruby.define_variable("example", 42)?;
+    ///     rb_assert!(ruby, "$example == 42");
+    ///
+    ///     // safe as long as another thread isn't modifying v
+    ///     unsafe {
+    ///         *v = ruby.str_new("answer").as_value();
+    ///     }
+    ///     rb_assert!(ruby, r#"$example == "answer""#);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     pub fn define_variable<T>(&self, name: &str, initial: T) -> Result<*mut Value, Error>
     where
         T: IntoValue,
@@ -2042,6 +2109,21 @@ impl Ruby {
         Ok(ptr)
     }
 
+    /// Define a global constant.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     ruby.define_global_const("EXAMPLE", 42)?;
+    ///     rb_assert!(ruby, "EXAMPLE == 42");
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     pub fn define_global_const<T>(&self, name: &str, value: T) -> Result<(), Error>
     where
         T: IntoValue,
@@ -2057,6 +2139,25 @@ impl Ruby {
         Ok(())
     }
 
+    /// Define a method in the root scope.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{function, rb_assert, Error, Ruby};
+    ///
+    /// fn greet(subject: String) -> String {
+    ///     format!("Hello, {}!", subject)
+    /// }
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     ruby.define_global_function("greet", function!(greet, 1));
+    ///     rb_assert!(ruby, r#"greet("world") == "Hello, world!""#);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     pub fn define_global_function<M>(&self, name: &str, func: M)
     where
         M: Method,
@@ -2067,6 +2168,29 @@ impl Ruby {
         }
     }
 
+    /// Returns the result of the most recent regexp match.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let regexp = ruby.reg_new("b(.)r", Default::default())?;
+    ///     let result = regexp.reg_match("foo bar baz")?;
+    ///     assert_eq!(result, Some(4));
+    ///
+    ///     let match_data = ruby.backref_get().unwrap();
+    ///     assert_eq!(match_data.matched().to_string()?, String::from("bar"));
+    ///     assert_eq!(
+    ///         match_data.nth_match(1).map(|v| v.to_string().unwrap()),
+    ///         Some(String::from("a"))
+    ///     );
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     pub fn backref_get(&self) -> Option<RMatch> {
         unsafe {
             let value = Value::new(rb_backref_get());
@@ -2074,6 +2198,29 @@ impl Ruby {
         }
     }
 
+    /// Return the Ruby `self` of the current method context.
+    ///
+    /// Returns `Err` if called outside a method context or the conversion
+    /// fails.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{method, prelude::*, rb_assert, Error, Ruby, Value};
+    ///
+    /// fn test(ruby: &Ruby, rb_self: Value) -> Result<bool, Error> {
+    ///     rb_self.equal(ruby.current_receiver::<Value>()?)
+    /// }
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     ruby.define_global_function("test", method!(test, 0));
+    ///
+    ///     rb_assert!(ruby, "test");
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     pub fn current_receiver<T>(&self) -> Result<T, Error>
     where
         T: TryConvert,
@@ -2081,6 +2228,42 @@ impl Ruby {
         protect(|| unsafe { Value::new(rb_current_receiver()) }).and_then(TryConvert::try_convert)
     }
 
+    /// Call the super method of the current method context.
+    ///
+    /// Returns `Ok(T)` if the super method exists and returns without error,
+    /// and the return value converts to a `T`, or returns `Err` if there is no
+    /// super method, the super method raises or the conversion fails.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{function, prelude::*, rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let a = ruby.eval(
+    ///         r#"
+    ///           class A
+    ///             def test
+    ///               "Hello from A"
+    ///             end
+    ///           end
+    ///           A
+    ///         "#,
+    ///     )?;
+    ///
+    ///     let b = ruby.define_class("B", a)?;
+    ///     fn test(ruby: &Ruby) -> Result<String, Error> {
+    ///         let s: String = ruby.call_super(())?;
+    ///         Ok(format!("{}, and hello from B", s))
+    ///     }
+    ///     b.define_method("test", function!(test, 0))?;
+    ///
+    ///     rb_assert!(ruby, r#"B.new.test == "Hello from A, and hello from B""#);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     pub fn call_super<A, T>(&self, args: A) -> Result<T, Error>
     where
         A: ArgList,
@@ -2099,6 +2282,20 @@ impl Ruby {
         }
     }
 
+    /// Finds and loads the given feature if not already loaded.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     assert!(ruby.require("net/http")?);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[cfg(ruby_gte_2_7)]
     pub fn require<T>(&self, feature: T) -> Result<bool, Error>
     where
@@ -2109,6 +2306,20 @@ impl Ruby {
             .and_then(TryConvert::try_convert)
     }
 
+    /// Finds and loads the given feature if not already loaded.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     assert!(ruby.require("net/http")?);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[cfg(ruby_lt_2_7)]
     pub fn require(&self, feature: &str) -> Result<bool, Error> {
         let feature = CString::new(feature).unwrap();
@@ -2116,6 +2327,28 @@ impl Ruby {
             .and_then(TryConvert::try_convert)
     }
 
+    /// Evaluate a string of Ruby code, converting the result to a `T`.
+    ///
+    /// Ruby will use the 'ASCII-8BIT' (aka binary) encoding for any Ruby
+    /// string literals in the passed string of Ruby code. See the
+    /// [`eval`](macro@crate::eval) macro or [`Binding::eval`] for an
+    /// alternative that supports utf-8.
+    ///
+    /// Errors if `s` contains a null byte, the conversion fails, or on an
+    /// uncaught Ruby exception.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     assert_eq!(ruby.eval::<i64>("1 + 2")?, 3);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     pub fn eval<T>(&self, s: &str) -> Result<T, Error>
     where
         T: TryConvert,
@@ -2460,8 +2693,7 @@ pub fn require(feature: &str) -> Result<bool, Error> {
 ///
 /// Ruby will use the 'ASCII-8BIT' (aka binary) encoding for any Ruby string
 /// literals in the passed string of Ruby code. See the
-/// [`eval`](macro@crate::eval) macro or [`Binding::eval`] for alternatives
-/// that support utf-8.
+/// [`eval`](macro@crate::eval) macro for an alternative that supports utf-8.
 ///
 /// Errors if `s` contains a null byte, the conversion fails, or on an uncaught
 /// Ruby exception.

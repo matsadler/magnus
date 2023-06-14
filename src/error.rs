@@ -54,8 +54,7 @@ impl Ruby {
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let i: i64 = ruby
-    ///         .range_new(1, 100, false)
-    ///         .unwrap()
+    ///         .range_new(1, 100, false)?
     ///         .block_call("each", (), |args, _block| {
     ///             let i = i64::try_convert(*args.get(0).unwrap())?;
     ///             if i % 3 == 0 && i % 5 == 0 {
@@ -69,8 +68,7 @@ impl Ruby {
     ///             } else {
     ///                 Ok(())
     ///             }
-    ///         })
-    ///         .unwrap();
+    ///         })?;
     ///
     ///     assert_eq!(i, 15);
     ///     Ok(())
