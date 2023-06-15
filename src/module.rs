@@ -34,8 +34,22 @@ use crate::{
 /// Functions that can be used to create Ruby modules.
 ///
 /// See also the [`RModule`] type.
-#[allow(missing_docs)]
 impl Ruby {
+    /// Create a new anonymous module.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{prelude::*, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let module = ruby.module_new();
+    ///     assert!(module.is_kind_of(ruby.class_module()));
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     pub fn module_new(&self) -> RModule {
         unsafe { RModule::from_rb_value_unchecked(rb_module_new()) }
     }
@@ -724,53 +738,200 @@ impl Attr {
 /// Functions to access Ruby's built-in modules.
 ///
 /// See also [`Ruby::define_module`] and the [`module`](self) module.
-#[allow(missing_docs)]
 impl Ruby {
+    /// Return Ruby's `Comparable` module.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(ruby, "md == Comparable", md = ruby.module_comparable());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn module_comparable(&self) -> RModule {
         unsafe { RModule::from_rb_value_unchecked(rb_mComparable) }
     }
 
+    /// Return Ruby's `Enumerable` module.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(ruby, "md == Enumerable", md = ruby.module_enumerable());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn module_enumerable(&self) -> RModule {
         unsafe { RModule::from_rb_value_unchecked(rb_mEnumerable) }
     }
 
+    /// Return Ruby's `Errno` module.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(ruby, "md == Errno", md = ruby.module_errno());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn module_errno(&self) -> RModule {
         unsafe { RModule::from_rb_value_unchecked(rb_mErrno) }
     }
 
+    /// Return Ruby's `FileTest` module.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(ruby, "md == FileTest", md = ruby.module_file_test());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn module_file_test(&self) -> RModule {
         unsafe { RModule::from_rb_value_unchecked(rb_mFileTest) }
     }
 
+    /// Return Ruby's `GC` module.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(ruby, "md == GC", md = ruby.module_gc());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn module_gc(&self) -> RModule {
         unsafe { RModule::from_rb_value_unchecked(rb_mGC) }
     }
 
+    /// Return Ruby's `Kernel` module.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(ruby, "md == Kernel", md = ruby.module_kernel());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn module_kernel(&self) -> RModule {
         unsafe { RModule::from_rb_value_unchecked(rb_mKernel) }
     }
 
+    /// Return Ruby's `Math` module.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(ruby, "md == Math", md = ruby.module_math());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn module_math(&self) -> RModule {
         unsafe { RModule::from_rb_value_unchecked(rb_mMath) }
     }
 
+    /// Return Ruby's `Process` module.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(ruby, "md == Process", md = ruby.module_process());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn module_process(&self) -> RModule {
         unsafe { RModule::from_rb_value_unchecked(rb_mProcess) }
     }
 
+    /// Return Ruby's `IO::WaitReadable` module.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(
+    ///         ruby,
+    ///         "md == IO::WaitReadable",
+    ///         md = ruby.module_wait_readable()
+    ///     );
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn module_wait_readable(&self) -> RModule {
         unsafe { RModule::from_rb_value_unchecked(rb_mWaitReadable) }
     }
 
+    /// Return Ruby's `IO::WaitWritable` module.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(
+    ///         ruby,
+    ///         "md == IO::WaitWritable",
+    ///         md = ruby.module_wait_writable()
+    ///     );
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn module_wait_writable(&self) -> RModule {
         unsafe { RModule::from_rb_value_unchecked(rb_mWaitWritable) }
