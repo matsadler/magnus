@@ -27,8 +27,24 @@ use crate::{
 /// Functions that can be used to create Ruby `Regexp`s.
 ///
 /// See also the [`RRegexp`] type.
-#[allow(missing_docs)]
 impl Ruby {
+    /// Create a new `Regexp` from the Rust string `pattern`.
+    ///
+    /// The encoding of the Ruby regexp will be UTF-8.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{r_regexp::Opts, rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let regexp = ruby.reg_new("foo", Opts::new().ignorecase())?;
+    ///     rb_assert!(ruby, r#"regexp == /foo/i"#, regexp);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     pub fn reg_new(&self, pattern: &str, opts: Opts) -> Result<RRegexp, Error> {
         protect(|| unsafe {
             RRegexp::from_rb_value_unchecked(rb_enc_reg_new(

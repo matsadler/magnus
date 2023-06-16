@@ -32,16 +32,61 @@ use crate::{
 /// Functions that can be used to create Ruby `Array`s.
 ///
 /// See also the [`RArray`] type.
-#[allow(missing_docs)]
 impl Ruby {
+    /// Create a new empty `RArray`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let ary = ruby.ary_new();
+    ///     assert!(ary.is_empty());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     pub fn ary_new(&self) -> RArray {
         unsafe { RArray::from_rb_value_unchecked(rb_ary_new()) }
     }
 
+    /// Create a new empty `RArray` with capacity for `n` elements
+    /// pre-allocated.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let ary = ruby.ary_new_capa(16);
+    ///     assert!(ary.is_empty());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     pub fn ary_new_capa(&self, n: usize) -> RArray {
         unsafe { RArray::from_rb_value_unchecked(rb_ary_new_capa(n as c_long)) }
     }
 
+    /// Create a new `RArray` from a Rust vector.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let ary = ruby.ary_from_vec(vec![1, 2, 3]);
+    ///     rb_assert!(ruby, "ary == [1, 2, 3]", ary);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     pub fn ary_from_vec<T>(&self, vec: Vec<T>) -> RArray
     where
         T: IntoValueFromNative,
@@ -49,6 +94,41 @@ impl Ruby {
         self.ary_from_iter(vec)
     }
 
+    /// Create a new `RArray` containing the elements in `slice`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{prelude::*, rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let ary = ruby.ary_new_from_values(&[
+    ///         ruby.to_symbol("a").as_value(),
+    ///         ruby.integer_from_i64(1).as_value(),
+    ///         ruby.qnil().as_value(),
+    ///     ]);
+    ///     rb_assert!(ruby, "ary == [:a, 1, nil]", ary);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let ary = ruby.ary_new_from_values(&[
+    ///         ruby.to_symbol("a"),
+    ///         ruby.to_symbol("b"),
+    ///         ruby.to_symbol("c"),
+    ///     ]);
+    ///     rb_assert!(ruby, "ary == [:a, :b, :c]", ary);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     pub fn ary_new_from_values<T>(&self, slice: &[T]) -> RArray
     where
         T: ReprValue,
@@ -59,6 +139,21 @@ impl Ruby {
         }
     }
 
+    /// Create a new `RArray` from a Rust iterator.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let ary = ruby.ary_from_iter((1..4).map(|i| i * 10));
+    ///     rb_assert!(ruby, "ary == [10, 20, 30]", ary);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     pub fn ary_from_iter<I, T>(&self, iter: I) -> RArray
     where
         I: IntoIterator<Item = T>,
@@ -714,12 +809,6 @@ impl RArray {
     }
 
     /// Create a new `RArray` from a Rust vector.
-    ///
-    /// # Safety
-    ///
-    /// Note that this function is intended to convert from a vector of Rust
-    /// values to a `RArray`.
-    /// [Ruby values should never be put into a `Vec`](crate#safety).
     ///
     /// # Panics
     ///

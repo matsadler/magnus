@@ -22,8 +22,28 @@ use crate::{
 /// Functions that can be used to create Ruby `Float`s.
 ///
 /// See also the [`RFloat`] type.
-#[allow(missing_docs)]
 impl Ruby {
+    /// Create a new `RFloat` from an `f64.`
+    ///
+    /// Returns `Ok(RFloat)` if `n` requires a high precision float, otherwise
+    /// returns `Err(Flonum)`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let f = ruby.r_float_from_f64(1.7272337110188890e-77).unwrap();
+    ///     rb_assert!(ruby, "f == 1.7272337110188890e-77", f);
+    ///
+    ///     // can fit within a Flonum, so does not require an RFloat
+    ///     assert!(ruby.r_float_from_f64(1.7272337110188893e-77).is_err());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[cfg(ruby_use_flonum)]
     pub fn r_float_from_f64(&self, n: f64) -> Result<RFloat, Flonum> {
         unsafe {
@@ -33,6 +53,24 @@ impl Ruby {
         }
     }
 
+    /// Create a new `RFloat` from an `f64.`
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let f = ruby.r_float_from_f64(1.7272337110188893e-77).unwrap();
+    ///     rb_assert!(ruby, "f == 1.7272337110188893e-77", f);
+    ///
+    ///     let f = ruby.r_float_from_f64(1.7272337110188890e-77).unwrap();
+    ///     rb_assert!(ruby, "f == 1.7272337110188890e-77", f);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[cfg(not(ruby_use_flonum))]
     pub fn r_float_from_f64(&self, n: f64) -> Result<RFloat, RFloat> {
         unsafe { Ok(RFloat::from_rb_value_unchecked(rb_float_new(n))) }

@@ -85,12 +85,41 @@ where
 /// Functions that can be used to create Ruby `Hash`es.
 ///
 /// See also the [`RHash`] type.
-#[allow(missing_docs)]
 impl Ruby {
+    /// Create a new empty `RHash`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let hash = ruby.hash_new();
+    ///     assert!(hash.is_empty());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     pub fn hash_new(&self) -> RHash {
         unsafe { RHash::from_rb_value_unchecked(rb_hash_new()) }
     }
 
+    /// Create a new empty `RHash` with capacity for `n` elements pre-allocated.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let ary = ruby.hash_new_capa(16);
+    ///     assert!(ary.is_empty());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[cfg(any(ruby_gte_3_2, docsrs))]
     #[cfg_attr(docsrs, doc(cfg(ruby_gte_3_2)))]
     pub fn hash_new_capa(&self, n: usize) -> RHash {

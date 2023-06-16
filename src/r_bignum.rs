@@ -27,8 +27,27 @@ use crate::{
 /// representation.
 ///
 /// See also the [`RBignum`] type.
-#[allow(missing_docs)]
 impl Ruby {
+    /// Create a new `RBignum` from an `i64.`
+    ///
+    /// Returns `Ok(RBignum)` if `n` is large enough to require a bignum,
+    /// otherwise returns `Err(Fixnum)`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     assert!(ruby.bignum_from_i64(4611686018427387904).is_ok());
+    ///     assert!(ruby.bignum_from_i64(-4611686018427387905).is_ok());
+    ///     // too small
+    ///     assert!(ruby.bignum_from_i64(0).is_err());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     pub fn bignum_from_i64(&self, n: i64) -> Result<RBignum, Fixnum> {
         unsafe {
             let val = Value::new(rb_ll2inum(n));
@@ -37,6 +56,25 @@ impl Ruby {
         }
     }
 
+    /// Create a new `RBignum` from an `u64.`
+    ///
+    /// Returns `Ok(RBignum)` if `n` is large enough to require a bignum,
+    /// otherwise returns `Err(Fixnum)`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     assert!(ruby.bignum_from_u64(4611686018427387904).is_ok());
+    ///     // too small
+    ///     assert!(ruby.bignum_from_u64(0).is_err());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     pub fn bignum_from_u64(&self, n: u64) -> Result<RBignum, Fixnum> {
         unsafe {
             let val = Value::new(rb_ull2inum(n));

@@ -20,8 +20,24 @@ use crate::{
 /// Functions that can be used to create Ruby `Rational`s.
 ///
 /// See also the [`RRational`] type.
-#[allow(missing_docs)]
 impl Ruby {
+    /// Create a new `RRational`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use std::num::NonZeroI64;
+    ///
+    /// use magnus::{Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let rational = ruby.rational_new(2, NonZeroI64::new(4).unwrap());
+    ///     assert_eq!(rational.to_string(), "1/2");
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     pub fn rational_new(&self, num: i64, den: NonZeroI64) -> RRational {
         let num = self.into_value(num);
         let den = self.into_value(den.get());
