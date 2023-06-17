@@ -804,8 +804,38 @@ where
 /// Functions for handling argument parsing.
 ///
 /// See also the [`scan_args`] module.
-#[allow(missing_docs)]
 impl Ruby {
+    /// Returns `Err` containing a Ruby `ArgumentError` if `len` is not within
+    /// `bounds`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{function, Error, RString, Ruby, Value};
+    ///
+    /// fn test(ruby: &Ruby, args: &[Value]) -> Result<RString, Error> {
+    ///     ruby.check_arity(args.len(), 2..5)?;
+    ///     ruby.ary_new_from_values(args).join(", ")
+    /// }
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     ruby.define_global_function("test", function!(test, -1));
+    ///
+    ///     assert_eq!(
+    ///         ruby.eval::<String>("test(1)").unwrap_err().to_string(),
+    ///         "wrong number of arguments (given 1, expected 2..4)"
+    ///     );
+    ///     assert_eq!(
+    ///         ruby.eval::<String>("test(1, 2, 3, 4, 5)")
+    ///             .unwrap_err()
+    ///             .to_string(),
+    ///         "wrong number of arguments (given 5, expected 2..4)"
+    ///     );
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     pub fn check_arity<T>(&self, len: usize, bounds: T) -> Result<(), Error>
     where
         T: RangeBounds<usize>,

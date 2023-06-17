@@ -26,8 +26,36 @@ use crate::{
 /// Functions that can be used to create Ruby `Range`s.
 ///
 /// See also the [`Range`] type.
-#[allow(missing_docs)]
 impl Ruby {
+    /// Create a new `Range`.
+    ///
+    /// Returns `Err` if `beg` and `end` are not comparable.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let range = ruby.range_new(2, 7, false)?;
+    ///     rb_assert!(ruby, "range == (2..7)", range);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let range = ruby.range_new(2, 7, true)?;
+    ///     rb_assert!(ruby, "range == (2...7)", range);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     pub fn range_new<T, U>(&self, beg: T, end: U, excl: bool) -> Result<Range, Error>
     where
         T: IntoValue,

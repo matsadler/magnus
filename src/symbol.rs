@@ -22,8 +22,22 @@ use crate::{
 /// Functions that can be used to create Ruby `Symbol`s.
 ///
 /// See also the [`Symbol`] type.
-#[allow(missing_docs)]
 impl Ruby {
+    /// Create a new `Symbol` from `name`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let sym = ruby.to_symbol("example");
+    ///     rb_assert!(ruby, ":example == sym", sym);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn to_symbol<T: AsRef<str>>(&self, name: T) -> Symbol {
         name.as_ref().into_symbol_with(self)

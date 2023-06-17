@@ -354,8 +354,51 @@ impl TryConvert for RStruct {
 /// Functions that can be used to create Ruby `Struct` classes.
 ///
 /// See also the [`struct`](self) module.
-#[allow(missing_docs)]
 impl Ruby {
+    /// Define a Ruby Struct class.
+    ///
+    /// `members` is a tuple of `&str`, of between lengths 1 to 12 inclusive.
+    ///
+    /// # Examples
+    ///
+    /// When providing `None` for the `name` the struct class's name will be
+    /// taken from the first constant it is assigned to:
+    ///
+    /// ```
+    /// use magnus::{prelude::*, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let struct_class = ruby.define_struct(None, ("foo", "bar"))?;
+    ///     ruby.define_global_const("Example", struct_class)?;
+    ///
+    ///     assert_eq!(unsafe { struct_class.name().to_owned() }, "Example");
+    ///
+    ///     let instance = struct_class.new_instance((1, 2))?;
+    ///     assert_eq!(instance.inspect(), "#<struct Example foo=1, bar=2>");
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
+    ///
+    /// When providing `Some("Name")` for the `name` the struct will be defined
+    /// under `Struct`:
+    ///
+    /// ```
+    /// use magnus::{prelude::*, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let struct_class = ruby.define_struct(Some("Example"), ("foo", "bar"))?;
+    ///
+    ///     assert_eq!(unsafe { struct_class.name().to_owned() }, "Struct::Example");
+    ///
+    ///     let instance = struct_class.new_instance((1, 2))?;
+    ///     assert_eq!(instance.inspect(), "#<struct Struct::Example foo=1, bar=2>");
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     pub fn define_struct<T>(&self, name: Option<&str>, members: T) -> Result<RClass, Error>
     where
         T: StructMembers,

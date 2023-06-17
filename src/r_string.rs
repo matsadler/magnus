@@ -47,8 +47,24 @@ use crate::{
 /// Functions that can be used to create Ruby `String`s.
 ///
 /// See also the [`RString`] type.
-#[allow(missing_docs)]
 impl Ruby {
+    /// Create a new Ruby string from the Rust string `s`.
+    ///
+    /// The encoding of the Ruby string will be UTF-8.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let val = ruby.str_new("example");
+    ///     rb_assert!(ruby, r#"val == "example""#, val);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     pub fn str_new(&self, s: &str) -> RString {
         let len = s.len();
         let ptr = s.as_ptr();
@@ -64,22 +80,110 @@ impl Ruby {
         RString::from_rb_value_unchecked(rb_utf8_str_new_static(ptr, len))
     }
 
+    /// Create a new Ruby string with capacity `n`.
+    ///
+    /// The encoding will be set to ASCII-8BIT (aka BINARY). See also
+    /// [`with_capacity`](RString::with_capacity).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let buf = ruby.str_buf_new(4096);
+    ///     buf.cat(&[13, 14, 10, 13, 11, 14, 14, 15]);
+    ///     rb_assert!(ruby, r#"buf == "\r\x0E\n\r\v\x0E\x0E\x0F""#, buf);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     pub fn str_buf_new(&self, n: usize) -> RString {
         unsafe { RString::from_rb_value_unchecked(rb_str_buf_new(n as c_long)) }
     }
 
+    /// Create a new Ruby string with capacity `n`.
+    ///
+    /// The encoding will be set to UTF-8. See also
+    /// [`buf_new`](RString::buf_new).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let s = ruby.str_with_capacity(9);
+    ///     s.cat("foo");
+    ///     s.cat("bar");
+    ///     s.cat("baz");
+    ///     rb_assert!(ruby, r#"s == "foobarbaz""#, s);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     pub fn str_with_capacity(&self, n: usize) -> RString {
         let s = self.str_buf_new(n);
         s.enc_associate(self.utf8_encindex()).unwrap();
         s
     }
 
+    /// Create a new Ruby string from the Rust slice `s`.
+    ///
+    /// The encoding of the Ruby string will be set to ASCII-8BIT (aka BINARY).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let buf = ruby.str_from_slice(&[13, 14, 10, 13, 11, 14, 14, 15]);
+    ///     rb_assert!(ruby, r#"buf == "\r\x0E\n\r\v\x0E\x0E\x0F""#, buf);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     pub fn str_from_slice(&self, s: &[u8]) -> RString {
         let len = s.len();
         let ptr = s.as_ptr();
         unsafe { RString::from_rb_value_unchecked(rb_str_new(ptr as *const c_char, len as c_long)) }
     }
 
+    /// Create a new Ruby string from the value `s` with the encoding `enc`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let val = ruby.enc_str_new("example", ruby.usascii_encoding());
+    ///     rb_assert!(ruby, r#"val == "example""#, val);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let val = ruby.enc_str_new([255, 128, 128], ruby.ascii8bit_encoding());
+    ///     rb_assert!(
+    ///         ruby,
+    ///         r#"val == "\xFF\x80\x80".force_encoding("BINARY")"#,
+    ///         val
+    ///     );
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     pub fn enc_str_new<T, E>(&self, s: T, enc: E) -> RString
     where
         T: AsRef<[u8]>,
@@ -97,11 +201,70 @@ impl Ruby {
         }
     }
 
+    /// Create a new Ruby string from the Rust char `c`.
+    ///
+    /// The encoding of the Ruby string will be UTF-8.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let c = ruby.str_from_char('a');
+    ///     rb_assert!(ruby, r#"c == "a""#, c);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let c = ruby.str_from_char('🦀');
+    ///     rb_assert!(ruby, r#"c == "🦀""#, c);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     pub fn str_from_char(&self, c: char) -> RString {
         let mut buf = [0; 4];
         self.str_new(c.encode_utf8(&mut buf[..]))
     }
 
+    /// Create a new Ruby string containing the codepoint `code` in the
+    /// encoding `enc`.
+    ///
+    /// The encoding of the Ruby string will be the passed encoding `enc`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let c = ruby.chr(97, ruby.usascii_encoding())?;
+    ///     rb_assert!(ruby, r#"c == "a""#, c);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let c = ruby.chr(129408, ruby.utf8_encoding())?;
+    ///     rb_assert!(ruby, r#"c == "🦀""#, c);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     pub fn chr<T>(&self, code: u32, enc: T) -> Result<RString, Error>
     where
         T: Into<RbEncoding>,
