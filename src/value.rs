@@ -1725,8 +1725,21 @@ unsafe impl<T> IntoValueFromNative for BoxValue<T> where T: ReprValue {}
 /// Get Ruby's `false` value.
 ///
 /// See also the [`Qfalse`] type.
-#[allow(missing_docs)]
 impl Ruby {
+    /// Returns Ruby's `false` value.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(ruby, "val == false", val = ruby.qfalse());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn qfalse(&self) -> Qfalse {
         #[allow(deprecated)]
@@ -1839,8 +1852,23 @@ unsafe impl TryConvertOwned for Qfalse {}
 /// Get Ruby's `nil` value.
 ///
 /// See also the [`Qnil`] type.
-#[allow(missing_docs)]
 impl Ruby {
+    /// Returns Ruby's `nil` value.
+    ///
+    /// This should optimise to a constant reference.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(ruby, "val == nil", val = ruby.qnil());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn qnil(&self) -> Qnil {
         #[allow(deprecated)]
@@ -1981,8 +2009,23 @@ unsafe impl TryConvertOwned for Qnil {}
 /// Get Ruby's `true` value.
 ///
 /// See also the [`Qtrue`] type.
-#[allow(missing_docs)]
 impl Ruby {
+    /// Returns Ruby's `true` value.
+    ///
+    /// This should optimise to a constant reference.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(ruby, "val == true", val = ruby.qtrue());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn qtrue(&self) -> Qtrue {
         #[allow(deprecated)]
@@ -2172,14 +2215,52 @@ impl Qundef {
 /// representation.
 ///
 /// See also the [`Fixnum`] type.
-#[allow(missing_docs)]
 impl Ruby {
+    /// Create a new `Fixnum` from an `i64.`
+    ///
+    /// Returns `Ok(Fixnum)` if `n` is in range for `Fixnum`, otherwise returns
+    /// `Err(RBignum)`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     assert!(ruby.fixnum_from_i64(0).is_ok());
+    ///     // too big
+    ///     assert!(ruby.fixnum_from_i64(4611686018427387904).is_err());
+    ///     assert!(ruby.fixnum_from_i64(-4611686018427387905).is_err());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn fixnum_from_i64(&self, n: i64) -> Result<Fixnum, RBignum> {
         Fixnum::from_i64_impl(n)
             .ok_or_else(|| unsafe { RBignum::from_rb_value_unchecked(rb_ll2inum(n)) })
     }
 
+    /// Create a new `Fixnum` from a `u64.`
+    ///
+    /// Returns `Ok(Fixnum)` if `n` is in range for `Fixnum`, otherwise returns
+    /// `Err(RBignum)`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     assert!(ruby.fixnum_from_u64(0).is_ok());
+    ///     // too big
+    ///     assert!(ruby.fixnum_from_u64(4611686018427387904).is_err());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn fixnum_from_u64(&self, n: u64) -> Result<Fixnum, RBignum> {
         Fixnum::from_i64_impl(i64::try_from(n).unwrap_or(i64::MAX))
@@ -2640,8 +2721,22 @@ unsafe impl TryConvertOwned for Fixnum {}
 /// Functions to create Ruby `Symbol`s that will never be garbage collected.
 ///
 /// See also the [`StaticSymbol`] type.
-#[allow(missing_docs)]
 impl Ruby {
+    /// Create a new StaticSymbol.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let sym = ruby.sym_new("example");
+    ///     rb_assert!(ruby, ":example == sym", sym);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn sym_new<T>(&self, name: T) -> StaticSymbol
     where
@@ -2650,6 +2745,22 @@ impl Ruby {
         name.into_id_with(self).into()
     }
 
+    /// Return the `StaticSymbol` for `name`, if one exists.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Error, Ruby, StaticSymbol};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     assert!(ruby.check_symbol("example").is_none());
+    ///     let _: StaticSymbol = ruby.eval(":example")?;
+    ///     assert!(ruby.check_symbol("example").is_some());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     pub fn check_symbol(&self, name: &str) -> Option<StaticSymbol> {
         unsafe {
             let res = Value::new(rb_check_symbol_cstr(
@@ -2734,7 +2845,7 @@ impl StaticSymbol {
         get_ruby!().sym_new(name)
     }
 
-    /// Return the `Id` for `name`, if one exists.
+    /// Return the `StaticSymbol` for `name`, if one exists.
     ///
     /// # Panics
     ///
@@ -2857,8 +2968,22 @@ unsafe impl TryConvertOwned for StaticSymbol {}
 /// Functions to create Ruby's low-level `Symbol` representation.
 ///
 /// See also the [`Id`] type.
-#[allow(missing_docs)]
 impl Ruby {
+    /// Create a new `Id` for `name`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let id = ruby.intern("example");
+    ///     assert_eq!(id.name()?, "example");
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     pub fn intern(&self, name: &str) -> Id {
         Id::from_rb_id(unsafe {
             rb_intern3(
@@ -2869,6 +2994,22 @@ impl Ruby {
         })
     }
 
+    /// Return the `Id` for `name`, if one exists.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     assert!(ruby.check_id("example").is_none());
+    ///     ruby.intern("example");
+    ///     assert!(ruby.check_id("example").is_some());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     pub fn check_id(&self, name: &str) -> Option<Id> {
         let res = unsafe {
             rb_check_id_cstr(

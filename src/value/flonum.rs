@@ -19,8 +19,28 @@ use crate::{
 /// floating point representation.
 ///
 /// See also the [`Flonum`] type.
-#[allow(missing_docs)]
 impl Ruby {
+    /// Create a new `Flonum` from a `f64.`
+    ///
+    /// Returns `Ok(Flonum)` if `n` can be represented as a `Flonum`, otherwise
+    /// returns `Err(RFloat)`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let f = ruby.flonum_from_f64(1.7272337110188893e-77).unwrap();
+    ///     rb_assert!(ruby, "f == 1.7272337110188893e-77", f);
+    ///
+    ///     // representable as a Float, but Flonum does not have enough precision
+    ///     assert!(ruby.flonum_from_f64(1.7272337110188890e-77).is_err());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[inline]
     pub fn flonum_from_f64(&self, n: f64) -> Result<Flonum, RFloat> {
         Flonum::from_f64_impl(n)
