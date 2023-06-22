@@ -9,23 +9,19 @@ use std::{
     mem::transmute,
     os::raw::{c_char, c_long},
     path::{Path, PathBuf},
-    ptr::{self, NonNull},
+    ptr::{self},
     slice, str,
 };
 
 #[cfg(ruby_gte_3_0)]
 use rb_sys::rb_str_to_interned_str;
-#[cfg(all(ruby_gte_3_0, ruby_lt_3_2))]
-use rb_sys::ruby_rstring_consts::RSTRING_EMBED_LEN_SHIFT;
-#[cfg(ruby_lt_3_0)]
-use rb_sys::ruby_rstring_flags::RSTRING_EMBED_LEN_SHIFT;
 use rb_sys::{
     self, rb_enc_str_coderange, rb_enc_str_new, rb_str_buf_append, rb_str_buf_new, rb_str_capacity,
     rb_str_cat, rb_str_cmp, rb_str_comparable, rb_str_conv_enc, rb_str_drop_bytes, rb_str_dump,
     rb_str_ellipsize, rb_str_new, rb_str_new_frozen, rb_str_new_shared, rb_str_offset, rb_str_plus,
     rb_str_replace, rb_str_scrub, rb_str_shared_replace, rb_str_split, rb_str_strlen, rb_str_times,
     rb_str_to_str, rb_str_update, rb_utf8_str_new, rb_utf8_str_new_static, ruby_coderange_type,
-    ruby_rstring_flags, ruby_value_type, VALUE,
+    ruby_rstring_flags, ruby_value_type, RSTRING_LEN, RSTRING_PTR, VALUE,
 };
 
 use crate::{
@@ -313,11 +309,6 @@ impl RString {
     #[inline]
     pub(crate) unsafe fn from_rb_value_unchecked(val: VALUE) -> Self {
         Self(NonZeroValue::new_unchecked(Value::new(val)))
-    }
-
-    fn as_internal(self) -> NonNull<rb_sys::RString> {
-        // safe as inner value is NonZero
-        unsafe { NonNull::new_unchecked(self.0.get().as_rb_value() as *mut _) }
     }
 
     /// Create a new Ruby string from the Rust string `s`.
@@ -625,25 +616,11 @@ impl RString {
     }
 
     unsafe fn as_slice_unconstrained<'a>(self) -> &'a [u8] {
-        #[cfg(ruby_gte_3_1)]
-        unsafe fn embedded_ary_ptr(rstring: RString) -> *const u8 {
-            &rstring.as_internal().as_ref().as_.embed.ary as *const _ as *const u8
-        }
-
-        #[cfg(ruby_lt_3_1)]
-        unsafe fn embedded_ary_ptr(rstring: RString) -> *const u8 {
-            &rstring.as_internal().as_ref().as_.ary as *const _ as *const u8
-        }
-
         debug_assert_value!(self);
-        let r_basic = self.r_basic_unchecked();
-        let f = r_basic.as_ref().flags;
-        if (f & ruby_rstring_flags::RSTRING_NOEMBED as VALUE) != 0 {
-            let h = self.as_internal().as_ref().as_.heap;
-            slice::from_raw_parts(h.ptr as *const u8, self.len())
-        } else {
-            slice::from_raw_parts(embedded_ary_ptr(self), self.len())
-        }
+        slice::from_raw_parts(
+            RSTRING_PTR(self.as_rb_value()) as *const u8,
+            RSTRING_LEN(self.as_rb_value()) as _,
+        )
     }
 
     /// Return an iterator over `self`'s codepoints.
@@ -1490,38 +1467,9 @@ impl RString {
     /// let s = RString::new("🦀 Hello, Ferris");
     /// assert_eq!(s.len(), 18);
     /// ```
-    #[cfg(ruby_gte_3_3)]
     pub fn len(self) -> usize {
         debug_assert_value!(self);
-        unsafe { self.as_internal().as_ref().len as usize }
-    }
-
-    /// Returns the number of bytes in `self`.
-    ///
-    /// See also [`length`](RString::length).
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use magnus::RString;
-    /// # let _cleanup = unsafe { magnus::embed::init() };
-    ///
-    /// let s = RString::new("🦀 Hello, Ferris");
-    /// assert_eq!(s.len(), 18);
-    /// ```
-    #[cfg(ruby_lte_3_2)]
-    pub fn len(self) -> usize {
-        debug_assert_value!(self);
-        unsafe {
-            let r_basic = self.r_basic_unchecked();
-            let f = r_basic.as_ref().flags;
-            if (f & ruby_rstring_flags::RSTRING_NOEMBED as VALUE) != 0 {
-                let h = self.as_internal().as_ref().as_.heap;
-                h.len as usize
-            } else {
-                embed_len(self, f) as usize
-            }
-        }
+        unsafe { RSTRING_LEN(self.as_rb_value()) as usize }
     }
 
     /// Returns the number of characters in `self`.
@@ -1664,16 +1612,12 @@ impl RString {
     }
 }
 
-#[cfg(ruby_3_2)]
-unsafe fn embed_len(value: RString, _: VALUE) -> c_long {
-    value.as_internal().as_ref().as_.embed.len
-}
+impl Deref for RString {
+    type Target = Value;
 
-#[cfg(ruby_lt_3_2)]
-unsafe fn embed_len(_: RString, mut f: VALUE) -> VALUE {
-    f &= ruby_rstring_flags::RSTRING_EMBED_LEN_MASK as VALUE;
-    f >>= RSTRING_EMBED_LEN_SHIFT as VALUE;
-    f
+    fn deref(&self) -> &Self::Target {
+        self.0.get_ref()
+    }
 }
 
 impl fmt::Display for RString {
