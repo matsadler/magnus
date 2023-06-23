@@ -25,10 +25,10 @@ pub use flonum::Flonum;
 use rb_sys::{
     rb_any_to_s, rb_block_call, rb_check_funcall, rb_check_id, rb_check_id_cstr,
     rb_check_symbol_cstr, rb_enumeratorize_with_size, rb_eql, rb_equal, rb_funcall_with_block,
-    rb_funcallv, rb_funcallv_public, rb_gc_register_address, rb_gc_unregister_address, rb_hash,
-    rb_id2name, rb_id2sym, rb_inspect, rb_intern3, rb_ll2inum, rb_obj_as_string, rb_obj_classname,
-    rb_obj_freeze, rb_obj_is_kind_of, rb_obj_respond_to, rb_sym2id, rb_ull2inum, ruby_fl_type,
-    ruby_special_consts, ruby_value_type, RBasic, ID, VALUE,
+    rb_funcallv, rb_funcallv_kw, rb_funcallv_public, rb_gc_register_address,
+    rb_gc_unregister_address, rb_hash, rb_id2name, rb_id2sym, rb_inspect, rb_intern3, rb_ll2inum,
+    rb_obj_as_string, rb_obj_classname, rb_obj_freeze, rb_obj_is_kind_of, rb_obj_respond_to,
+    rb_sym2id, rb_ull2inum, ruby_fl_type, ruby_special_consts, ruby_value_type, RBasic, ID, VALUE,
 };
 
 // These don't seem to appear consistently in bindgen output, not sure if they
@@ -45,7 +45,7 @@ use crate::{
     error::{protect, Error},
     gc,
     integer::{Integer, IntegerType},
-    into_value::{ArgList, IntoValue, IntoValueFromNative},
+    into_value::{ArgList, IntoValue, IntoValueFromNative, KwArgList},
     method::{Block, BlockReturn},
     module::Module,
     numeric::Numeric,
@@ -1131,6 +1131,60 @@ pub trait ReprValue: private::ReprValue {
                     id.as_rb_id(),
                     slice.len() as c_int,
                     slice.as_ptr() as *const VALUE,
+                ))
+            })
+            .and_then(TryConvert::try_convert)
+        }
+    }
+
+    /// Call the method named `method` on `self` with `args`.
+    ///
+    /// Returns `Ok(T)` if the method returns without error and the return
+    /// value converts to a `T`, or returns `Err` if the method raises or the
+    /// conversion fails.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, prelude::*, RHash, RObject, Symbol};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let object: RObject = eval!(
+    ///     r#"
+    ///     class Foo
+    ///       def bar(b:)
+    ///         b
+    ///       end
+    ///     end
+    ///
+    ///     Foo.new
+    /// "#
+    /// )
+    /// .unwrap();
+    /// let kwargs = eval::<RHash>(r#"{b: "val"}"#).unwrap();
+    ///
+    /// let result: String = object.funcall_kw("bar", kwargs).unwrap();
+    /// assert_eq!(result, "val");
+    /// ```
+    fn funcall_kw<M, A, T>(self, method: M, args: A) -> Result<T, Error>
+    where
+        M: IntoId,
+        A: KwArgList,
+        T: TryConvert,
+    {
+        let handle = Ruby::get_with(self);
+        let id = method.into_id_with(&handle);
+        let kw_splat = args.kw_splat();
+        let args = args.into_arg_list_with(&handle);
+        let slice = args.as_ref();
+        unsafe {
+            protect(|| {
+                Value::new(rb_funcallv_kw(
+                    self.as_rb_value(),
+                    id.as_rb_id(),
+                    slice.len() as c_int,
+                    slice.as_ptr() as *const VALUE,
+                    kw_splat as c_int,
                 ))
             })
             .and_then(TryConvert::try_convert)

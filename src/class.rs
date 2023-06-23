@@ -12,13 +12,14 @@ use rb_sys::{
     rb_cInteger, rb_cMatch, rb_cMethod, rb_cModule, rb_cNameErrorMesg, rb_cNilClass, rb_cNumeric,
     rb_cObject, rb_cProc, rb_cRandom, rb_cRange, rb_cRational, rb_cRegexp, rb_cStat, rb_cString,
     rb_cStruct, rb_cSymbol, rb_cThread, rb_cTime, rb_cTrueClass, rb_cUnboundMethod, rb_class2name,
-    rb_class_new, rb_class_new_instance, rb_class_superclass, rb_define_alloc_func,
-    rb_get_alloc_func, rb_obj_alloc, rb_undef_alloc_func, ruby_value_type, VALUE,
+    rb_class_new, rb_class_new_instance, rb_class_new_instance_kw, rb_class_superclass,
+    rb_define_alloc_func, rb_get_alloc_func, rb_obj_alloc, rb_undef_alloc_func, ruby_value_type,
+    VALUE,
 };
 
 use crate::{
     error::{protect, Error},
-    into_value::{ArgList, IntoValue},
+    into_value::{ArgList, IntoValue, KwArgList},
     module::Module,
     object::Object,
     try_convert::TryConvert,
@@ -161,6 +162,61 @@ pub trait Class: Module {
     fn new_instance<T>(self, args: T) -> Result<Self::Instance, Error>
     where
         T: ArgList;
+
+    /// Create a new object, an instance of `self`, passing the keyword
+    /// arguments `args` to the initialiser.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{class, eval, prelude::*, RClass, RHash};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let cls: RClass = eval!(
+    ///     r#"
+    ///     class Foo
+    ///       def initialize(bar:)
+    ///         @bar = bar
+    ///       end
+    ///
+    ///       attr_reader(:bar)
+    ///     end
+    ///
+    ///     Object.const_get(:Foo)
+    /// "#
+    /// )
+    /// .unwrap();
+    /// let kwargs = eval::<RHash>(r#"{bar: "val"}"#).unwrap();
+    /// let instance = cls.new_instance_kw(kwargs).unwrap();
+    /// assert!(instance.is_kind_of(cls));
+    /// let bar: String = instance.funcall("bar", ()).unwrap();
+    /// assert_eq!(bar, "val");
+    /// ```
+    ///
+    /// ```
+    /// use magnus::{eval, ExceptionClass, prelude::*, RHash};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let exc: ExceptionClass = eval!(
+    ///     r#"
+    ///     class MyError < StandardError
+    ///       def initialize(message:)
+    ///         super(message)
+    ///       end
+    ///     end
+    ///
+    ///     Object.const_get(:MyError)
+    /// "#
+    /// ).unwrap();
+    /// let kwargs = eval::<RHash>(r#"{message: "bang!"}"#).unwrap();
+    /// let s = exc.new_instance_kw(kwargs).unwrap();
+    /// assert!(s.is_kind_of(exc));
+    /// let message: String = s.funcall("message", ()).unwrap();
+    /// assert_eq!(message, "bang!");
+    /// ```
+    fn new_instance_kw<T>(self, args: T) -> Result<Self::Instance, Error>
+    where
+        T: KwArgList;
 
     /// Create a new object, an instance of `self`, without calling the class's
     /// `initialize` method.
@@ -448,6 +504,25 @@ impl Class for RClass {
                     slice.len() as c_int,
                     slice.as_ptr() as *const VALUE,
                     self.as_rb_value(),
+                ))
+            })
+        }
+    }
+
+    fn new_instance_kw<T>(self, args: T) -> Result<Self::Instance, Error>
+    where
+        T: KwArgList,
+    {
+        let kw_splat = args.kw_splat();
+        let args = args.into_arg_list_with(&Ruby::get_with(self));
+        let slice = args.as_ref();
+        unsafe {
+            protect(|| {
+                Value::new(rb_class_new_instance_kw(
+                    slice.len() as c_int,
+                    slice.as_ptr() as *const VALUE,
+                    self.as_rb_value(),
+                    kw_splat as c_int,
                 ))
             })
         }

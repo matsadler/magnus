@@ -2,6 +2,7 @@ use seq_macro::seq;
 
 use crate::{
     r_array::RArray,
+    r_hash::RHash,
     value::{ReprValue, Value},
     Ruby,
 };
@@ -148,5 +149,44 @@ where
 {
     fn into_array_arg_list_with(self, handle: &Ruby) -> RArray {
         handle.ary_new_from_values(self.into_arg_list_with(handle).as_ref())
+    }
+}
+
+/// Trait for types that can be used as keyword arguments when calling Ruby
+/// methods.
+pub trait KwArgList {
+    /// The specific Ruby value type.
+    type Value: ReprValue;
+    /// The type of the arguments list. Must convert to `&[Self::Value]` with
+    /// [`AsRef`]
+    type Output: AsRef<[Self::Value]>;
+
+    /// Convert `self` into a type that can be used as a Ruby argument list.
+    fn into_arg_list_with(self, handle: &Ruby) -> Self::Output;
+
+    /// Whether the argument list contains keyword arguments. If true, the
+    /// last element of the `&[Self::Value]` produced by
+    /// `Self::into_arg_list_with` and [`AsRef`]
+    fn contains_kw_args(&self) -> bool;
+
+    fn kw_splat(&self) -> u32 {
+        if self.contains_kw_args() {
+            rb_sys::RB_PASS_KEYWORDS
+        } else {
+            rb_sys::RB_NO_KEYWORDS
+        }
+    }
+}
+
+impl KwArgList for RHash {
+    type Value = RHash;
+    type Output = [RHash; 1];
+
+    fn into_arg_list_with(self, _: &Ruby) -> Self::Output {
+        [self]
+    }
+
+    fn contains_kw_args(&self) -> bool {
+        true
     }
 }
