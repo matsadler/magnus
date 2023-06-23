@@ -1483,7 +1483,7 @@ impl RString {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, RString};
+    /// use magnus::RString;
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let s = RString::new("🦀 Hello, Ferris");
