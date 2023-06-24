@@ -899,7 +899,10 @@ impl Ruby {
 ///     "wrong number of arguments (given 5, expected 2..4)"
 /// );
 /// ```
-#[cfg(feature = "friendly-api")]
+#[cfg_attr(
+    not(feature = "friendly-api"),
+    deprecated(note = "please use `Ruby::check_arity` instead")
+)]
 #[inline]
 pub fn check_arity<T>(len: usize, bounds: T) -> Result<(), Error>
 where

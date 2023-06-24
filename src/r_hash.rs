@@ -179,7 +179,10 @@ impl RHash {
     /// let hash = RHash::new();
     /// assert!(hash.is_empty());
     /// ```
-    #[cfg(feature = "friendly-api")]
+    #[cfg_attr(
+        not(feature = "friendly-api"),
+        deprecated(note = "please use `Ruby::hash_new` instead")
+    )]
     #[inline]
     pub fn new() -> RHash {
         get_ruby!().hash_new()
@@ -202,7 +205,10 @@ impl RHash {
     /// let ary = RHash::with_capacity(16);
     /// assert!(ary.is_empty());
     /// ```
-    #[cfg(feature = "friendly-api")]
+    #[cfg_attr(
+        not(feature = "friendly-api"),
+        deprecated(note = "please use `Ruby::hash_new_capa` instead")
+    )]
     #[cfg(any(ruby_gte_3_2, docsrs))]
     #[cfg_attr(docsrs, doc(cfg(ruby_gte_3_2)))]
     #[inline]

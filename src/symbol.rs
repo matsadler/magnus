@@ -99,7 +99,10 @@ impl Symbol {
     /// let sym = Symbol::new("example");
     /// rb_assert!(":example == sym", sym);
     /// ```
-    #[cfg(feature = "friendly-api")]
+    #[cfg_attr(
+        not(feature = "friendly-api"),
+        deprecated(note = "please use `Ruby::to_symbol` instead")
+    )]
     #[inline]
     pub fn new<T: AsRef<str>>(name: T) -> Self {
         get_ruby!().to_symbol(name)
@@ -233,7 +236,10 @@ pub trait IntoSymbol: Sized {
     /// let sym = "example".into_symbol();
     /// rb_assert!("sym == :example", sym);
     /// ```
-    #[cfg(feature = "friendly-api")]
+    #[cfg_attr(
+        not(feature = "friendly-api"),
+        deprecated(note = "please use `IntoSymbol::into_symbol_with` instead")
+    )]
     #[inline]
     fn into_symbol(self) -> Symbol {
         self.into_symbol_with(&get_ruby!())

@@ -1780,7 +1780,10 @@ pub const QFALSE: Qfalse = Qfalse::new();
 ///
 /// rb_assert!("val == false", val = qfalse());
 /// ```
-#[cfg(feature = "friendly-api")]
+#[cfg_attr(
+    not(feature = "friendly-api"),
+    deprecated(note = "please use `Ruby::qfalse` instead")
+)]
 #[inline]
 pub fn qfalse() -> Qfalse {
     get_ruby!().qfalse()
@@ -1909,7 +1912,10 @@ pub const QNIL: Qnil = Qnil::new();
 ///
 /// rb_assert!("val == nil", val = qnil());
 /// ```
-#[cfg(feature = "friendly-api")]
+#[cfg_attr(
+    not(feature = "friendly-api"),
+    deprecated(note = "please use `Ruby::qnil` instead")
+)]
 #[inline]
 pub fn qnil() -> Qnil {
     get_ruby!().qnil()
@@ -2066,7 +2072,10 @@ pub const QTRUE: Qtrue = Qtrue::new();
 ///
 /// rb_assert!("val == true", val = qtrue());
 /// ```
-#[cfg(feature = "friendly-api")]
+#[cfg_attr(
+    not(feature = "friendly-api"),
+    deprecated(note = "please use `Ruby::qtrue` instead")
+)]
 #[inline]
 pub fn qtrue() -> Qtrue {
     get_ruby!().qtrue()
@@ -2343,7 +2352,10 @@ impl Fixnum {
     /// assert!(Fixnum::from_i64(4611686018427387904).is_err());
     /// assert!(Fixnum::from_i64(-4611686018427387905).is_err());
     /// ```
-    #[cfg(feature = "friendly-api")]
+    #[cfg_attr(
+        not(feature = "friendly-api"),
+        deprecated(note = "please use `Ruby::fixnum_from_i64` instead")
+    )]
     #[inline]
     pub fn from_i64(n: i64) -> Result<Self, RBignum> {
         get_ruby!().fixnum_from_i64(n)
@@ -2369,7 +2381,10 @@ impl Fixnum {
     /// // too big
     /// assert!(Fixnum::from_u64(4611686018427387904).is_err());
     /// ```
-    #[cfg(feature = "friendly-api")]
+    #[cfg_attr(
+        not(feature = "friendly-api"),
+        deprecated(note = "please use `Ruby::fixnum_from_u64` instead")
+    )]
     #[inline]
     pub fn from_u64(n: u64) -> Result<Self, RBignum> {
         get_ruby!().fixnum_from_u64(n)
@@ -2836,7 +2851,10 @@ impl StaticSymbol {
     /// let sym = StaticSymbol::new("example");
     /// rb_assert!(":example == sym", sym);
     /// ```
-    #[cfg(feature = "friendly-api")]
+    #[cfg_attr(
+        not(feature = "friendly-api"),
+        deprecated(note = "please use `Ruby::sym_new` instead")
+    )]
     #[inline]
     pub fn new<T>(name: T) -> Self
     where
@@ -2862,7 +2880,10 @@ impl StaticSymbol {
     /// let _: StaticSymbol = eval(":example").unwrap();
     /// assert!(StaticSymbol::check("example").is_some());
     /// ```
-    #[cfg(feature = "friendly-api")]
+    #[cfg_attr(
+        not(feature = "friendly-api"),
+        deprecated(note = "please use `Ruby::check_symbol` instead")
+    )]
     #[inline]
     pub fn check(name: &str) -> Option<Self> {
         get_ruby!().check_symbol(name)
@@ -3053,7 +3074,10 @@ impl Id {
     /// let id = Id::new("example");
     /// assert_eq!(id.name().unwrap(), "example");
     /// ```
-    #[cfg(feature = "friendly-api")]
+    #[cfg_attr(
+        not(feature = "friendly-api"),
+        deprecated(note = "please use `Ruby::intern` instead")
+    )]
     pub fn new<T>(name: T) -> Self
     where
         T: AsRef<str>,
@@ -3094,7 +3118,10 @@ impl Id {
     /// StaticSymbol::new("example");
     /// assert!(Id::check("example").is_some());
     /// ```
-    #[cfg(feature = "friendly-api")]
+    #[cfg_attr(
+        not(feature = "friendly-api"),
+        deprecated(note = "please use `Ruby::check_id` instead")
+    )]
     #[inline]
     pub fn check(name: &str) -> Option<Self> {
         get_ruby!().check_id(name)
@@ -3142,7 +3169,10 @@ pub trait IntoId: Sized {
     ///
     /// Panics if called from a non-Ruby thread. See [`IntoId::into_id_with`]
     /// for the non-panicking version.
-    #[cfg(feature = "friendly-api")]
+    #[cfg_attr(
+        not(feature = "friendly-api"),
+        deprecated(note = "please use `IntoId::into_id_with` instead")
+    )]
     #[inline]
     fn into_id(self) -> Id {
         self.into_id_with(&get_ruby!())

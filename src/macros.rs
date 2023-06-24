@@ -32,7 +32,6 @@ macro_rules! debug_assert_value {
 /// The check is currently not performed in release mode as the Ruby API
 /// hasn't been finalised and there isn't an alternative to this that avoids
 /// the check and the associated perfomance hit.
-#[cfg(feature = "friendly-api")]
 macro_rules! get_ruby {
     () => {
         if cfg!(debug_assertions) {

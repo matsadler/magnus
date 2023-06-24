@@ -224,7 +224,10 @@ impl Proc {
     ///
     /// rb_assert!("[1, 2, 3, 4, 5].inject(&proc) == 15", proc);
     /// ```
-    #[cfg(feature = "friendly-api")]
+    #[cfg_attr(
+        not(feature = "friendly-api"),
+        deprecated(note = "please use `Ruby::proc_new` instead")
+    )]
     #[inline]
     pub fn new<R>(block: fn(&[Value], Option<Proc>) -> R) -> Self
     where
@@ -261,7 +264,10 @@ impl Proc {
     /// rb_assert!("proc.call(1) == 2", proc);
     /// rb_assert!("proc.call(2) == 4", proc);
     /// ```
-    #[cfg(feature = "friendly-api")]
+    #[cfg_attr(
+        not(feature = "friendly-api"),
+        deprecated(note = "please use `Ruby::proc_from_fn` instead")
+    )]
     #[inline]
     pub fn from_fn<F, R>(block: F) -> Self
     where
@@ -730,7 +736,10 @@ impl Ruby {
 /// rb_assert!("got_block? {} == true");
 /// rb_assert!("got_block? == false");
 /// ```
-#[cfg(feature = "friendly-api")]
+#[cfg_attr(
+    not(feature = "friendly-api"),
+    deprecated(note = "please use `Ruby::block_given` instead")
+)]
 #[inline]
 pub fn block_given() -> bool {
     get_ruby!().block_given()
@@ -760,7 +769,10 @@ pub fn block_given() -> bool {
 ///
 /// rb_assert!("make_proc {}.is_a?(Proc)");
 /// ```
-#[cfg(feature = "friendly-api")]
+#[cfg_attr(
+    not(feature = "friendly-api"),
+    deprecated(note = "please use `Ruby::block_proc` instead")
+)]
 #[inline]
 pub fn block_proc() -> Result<Proc, Error> {
     get_ruby!().block_proc()
@@ -802,7 +814,10 @@ pub fn block_proc() -> Result<Proc, Error> {
 /// rb_assert!("metasyntactic_variables {|var| vars << var} == nil", vars);
 /// rb_assert!(r#"vars == ["foo", "bar", "baz"]"#, vars);
 /// ```
-#[cfg(feature = "friendly-api")]
+#[cfg_attr(
+    not(feature = "friendly-api"),
+    deprecated(note = "please use `Ruby::yield_value` instead")
+)]
 #[inline]
 pub fn yield_value<T, U>(val: T) -> Result<U, Error>
 where
@@ -851,7 +866,10 @@ where
 /// );
 /// rb_assert!(r#"vars == [[0, "foo"], [1, "bar"], [2, "baz"]]"#, vars);
 /// ```
-#[cfg(feature = "friendly-api")]
+#[cfg_attr(
+    not(feature = "friendly-api"),
+    deprecated(note = "please use `Ruby::yield_values` instead")
+)]
 #[inline]
 pub fn yield_values<T, U>(vals: T) -> Result<U, Error>
 where
@@ -909,7 +927,10 @@ where
 /// );
 /// rb_assert!(r#"vars == [[0, "foo"], [1, "bar"], [2, "baz"]]"#, vars);
 /// ```
-#[cfg(feature = "friendly-api")]
+#[cfg_attr(
+    not(feature = "friendly-api"),
+    deprecated(note = "please use `Ruby::yield_splat` instead")
+)]
 #[inline]
 pub fn yield_splat<T>(vals: RArray) -> Result<T, Error>
 where

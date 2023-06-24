@@ -125,7 +125,10 @@ impl Range {
     /// let range = magnus::Range::new(2, 7, true).unwrap();
     /// rb_assert!("range == (2...7)", range);
     /// ```
-    #[cfg(feature = "friendly-api")]
+    #[cfg_attr(
+        not(feature = "friendly-api"),
+        deprecated(note = "please use `Ruby::range_new` instead")
+    )]
     #[inline]
     pub fn new<T, U>(beg: T, end: U, excl: bool) -> Result<Self, Error>
     where

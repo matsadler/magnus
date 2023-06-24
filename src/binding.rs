@@ -44,7 +44,6 @@ impl Binding {
     /// let binding = Binding::new();
     /// ```
     #[allow(clippy::new_without_default)]
-    #[cfg(feature = "friendly-api")]
     #[cfg(any(ruby_lte_3_1, docsrs))]
     #[cfg_attr(docsrs, doc(cfg(ruby_lte_3_1)))]
     #[deprecated(since = "0.2.0", note = "this will no longer function as of Ruby 3.2")]

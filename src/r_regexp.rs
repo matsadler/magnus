@@ -109,7 +109,10 @@ impl RRegexp {
     /// let regexp = RRegexp::new("foo", Opts::new().ignorecase()).unwrap();
     /// rb_assert!(r#"regexp == /foo/i"#, regexp);
     /// ```
-    #[cfg(feature = "friendly-api")]
+    #[cfg_attr(
+        not(feature = "friendly-api"),
+        deprecated(note = "please use `Ruby::reg_new` instead")
+    )]
     #[inline]
     pub fn new(pattern: &str, opts: Opts) -> Result<Self, Error> {
         get_ruby!().reg_new(pattern, opts)

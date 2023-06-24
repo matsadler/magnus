@@ -205,7 +205,10 @@ impl Ruby {
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::script`] for the
 /// non-panicking version.
-#[cfg(feature = "friendly-api")]
+#[cfg_attr(
+    not(feature = "friendly-api"),
+    deprecated(note = "please use `Ruby::script` instead")
+)]
 #[inline]
 pub fn ruby_script<T>(name: T)
 where

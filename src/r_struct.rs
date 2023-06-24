@@ -448,7 +448,10 @@ impl Ruby {
 /// let instance = struct_class.new_instance((1, 2)).unwrap();
 /// assert_eq!(instance.inspect(), "#<struct Struct::Example foo=1, bar=2>")
 /// ```
-#[cfg(feature = "friendly-api")]
+#[cfg_attr(
+    not(feature = "friendly-api"),
+    deprecated(note = "please use `Ruby::define_struct` instead")
+)]
 #[inline]
 pub fn define_struct<T>(name: Option<&str>, members: T) -> Result<RClass, Error>
 where

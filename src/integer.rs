@@ -163,7 +163,10 @@ impl Integer {
     ///     i = Integer::from_i64(-4611686018427387905),
     /// );
     /// ```
-    #[cfg(feature = "friendly-api")]
+    #[cfg_attr(
+        not(feature = "friendly-api"),
+        deprecated(note = "please use `Ruby::integer_from_i64` instead")
+    )]
     #[inline]
     pub fn from_i64(n: i64) -> Self {
         get_ruby!().integer_from_i64(n)
@@ -188,7 +191,10 @@ impl Integer {
     ///     i = Integer::from_u64(4611686018427387904),
     /// );
     /// ```
-    #[cfg(feature = "friendly-api")]
+    #[cfg_attr(
+        not(feature = "friendly-api"),
+        deprecated(note = "please use `Ruby::integer_from_u64` instead")
+    )]
     #[inline]
     pub fn from_u64(n: u64) -> Self {
         get_ruby!().integer_from_u64(n)

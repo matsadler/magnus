@@ -338,14 +338,16 @@ impl RString {
     /// let val = RString::new("example");
     /// rb_assert!(r#"val == "example""#, val);
     /// ```
-    #[cfg(feature = "friendly-api")]
+    #[cfg_attr(
+        not(feature = "friendly-api"),
+        deprecated(note = "please use `Ruby::str_new` instead")
+    )]
     #[inline]
     pub fn new(s: &str) -> Self {
         get_ruby!().str_new(s)
     }
 
     /// Implementation detail of [`r_string`].
-    #[cfg(feature = "friendly-api")]
     #[doc(hidden)]
     #[inline]
     pub unsafe fn new_lit(ptr: *const c_char, len: c_long) -> Self {
@@ -372,7 +374,10 @@ impl RString {
     /// buf.cat(&[13, 14, 10, 13, 11, 14, 14, 15]);
     /// rb_assert!(r#"buf == "\r\x0E\n\r\v\x0E\x0E\x0F""#, buf);
     /// ```
-    #[cfg(feature = "friendly-api")]
+    #[cfg_attr(
+        not(feature = "friendly-api"),
+        deprecated(note = "please use `Ruby::str_buf_new` instead")
+    )]
     #[inline]
     pub fn buf_new(n: usize) -> Self {
         get_ruby!().str_buf_new(n)
@@ -400,7 +405,10 @@ impl RString {
     /// s.cat("baz");
     /// rb_assert!(r#"s == "foobarbaz""#, s);
     /// ```
-    #[cfg(feature = "friendly-api")]
+    #[cfg_attr(
+        not(feature = "friendly-api"),
+        deprecated(note = "please use `Ruby::str_with_capacity` instead")
+    )]
     #[inline]
     pub fn with_capacity(n: usize) -> Self {
         get_ruby!().str_with_capacity(n)
@@ -424,7 +432,10 @@ impl RString {
     /// let buf = RString::from_slice(&[13, 14, 10, 13, 11, 14, 14, 15]);
     /// rb_assert!(r#"buf == "\r\x0E\n\r\v\x0E\x0E\x0F""#, buf);
     /// ```
-    #[cfg(feature = "friendly-api")]
+    #[cfg_attr(
+        not(feature = "friendly-api"),
+        deprecated(note = "please use `Ruby::str_from_slice` instead")
+    )]
     #[inline]
     pub fn from_slice(s: &[u8]) -> Self {
         get_ruby!().str_from_slice(s)
@@ -454,7 +465,10 @@ impl RString {
     /// let val = RString::enc_new([255, 128, 128], RbEncoding::ascii8bit());
     /// rb_assert!(r#"val == "\xFF\x80\x80".force_encoding("BINARY")"#, val);
     /// ```
-    #[cfg(feature = "friendly-api")]
+    #[cfg_attr(
+        not(feature = "friendly-api"),
+        deprecated(note = "please use `Ruby::enc_str_new` instead")
+    )]
     #[inline]
     pub fn enc_new<T, E>(s: T, enc: E) -> Self
     where
@@ -490,7 +504,10 @@ impl RString {
     /// let c = RString::from_char('🦀');
     /// rb_assert!(r#"c == "🦀""#, c);
     /// ```
-    #[cfg(feature = "friendly-api")]
+    #[cfg_attr(
+        not(feature = "friendly-api"),
+        deprecated(note = "please use `Ruby::str_from_char` instead")
+    )]
     #[inline]
     pub fn from_char(c: char) -> Self {
         get_ruby!().str_from_char(c)
@@ -523,7 +540,10 @@ impl RString {
     /// let c = RString::chr(129408, RbEncoding::utf8()).unwrap();
     /// rb_assert!(r#"c == "🦀""#, c);
     /// ```
-    #[cfg(feature = "friendly-api")]
+    #[cfg_attr(
+        not(feature = "friendly-api"),
+        deprecated(note = "please use `Ruby::chr` instead")
+    )]
     #[inline]
     pub fn chr<T>(code: u32, enc: T) -> Result<Self, Error>
     where
@@ -1690,7 +1710,10 @@ pub trait IntoRString: Sized {
     ///
     /// Panics if called from a non-Ruby thread. See
     /// [`IntoRString::into_r_string_with`] for the non-panicking version.
-    #[cfg(feature = "friendly-api")]
+    #[cfg_attr(
+        not(feature = "friendly-api"),
+        deprecated(note = "please use `IntoRString::into_r_string_with` instead")
+    )]
     #[inline]
     fn into_r_string(self) -> RString {
         self.into_r_string_with(&get_ruby!())

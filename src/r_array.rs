@@ -238,7 +238,10 @@ impl RArray {
     /// let ary = RArray::new();
     /// assert!(ary.is_empty());
     /// ```
-    #[cfg(feature = "friendly-api")]
+    #[cfg_attr(
+        not(feature = "friendly-api"),
+        deprecated(note = "please use `Ruby::ary_new` instead")
+    )]
     #[inline]
     pub fn new() -> Self {
         get_ruby!().ary_new()
@@ -261,7 +264,10 @@ impl RArray {
     /// let ary = RArray::with_capacity(16);
     /// assert!(ary.is_empty());
     /// ```
-    #[cfg(feature = "friendly-api")]
+    #[cfg_attr(
+        not(feature = "friendly-api"),
+        deprecated(note = "please use `Ruby::ary_new_capa` instead")
+    )]
     #[inline]
     pub fn with_capacity(n: usize) -> Self {
         get_ruby!().ary_new_capa(n)
@@ -512,7 +518,10 @@ impl RArray {
     /// let ary = RArray::from_slice(&[Symbol::new("a"), Symbol::new("b"), Symbol::new("c")]);
     /// rb_assert!("ary == [:a, :b, :c]", ary);
     /// ```
-    #[cfg(feature = "friendly-api")]
+    #[cfg_attr(
+        not(feature = "friendly-api"),
+        deprecated(note = "please use `Ruby::ary_new_from_values` instead")
+    )]
     #[inline]
     pub fn from_slice<T>(slice: &[T]) -> Self
     where
@@ -824,7 +833,10 @@ impl RArray {
     /// let ary = RArray::from_vec(vec![1, 2, 3]);
     /// rb_assert!("ary == [1, 2, 3]", ary);
     /// ```
-    #[cfg(feature = "friendly-api")]
+    #[cfg_attr(
+        not(feature = "friendly-api"),
+        deprecated(note = "please use `Ruby::ary_from_vec` instead")
+    )]
     #[inline]
     pub fn from_vec<T>(vec: Vec<T>) -> Self
     where

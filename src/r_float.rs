@@ -139,7 +139,10 @@ impl RFloat {
     /// // can fit within a Flonum, so does not require an RFloat
     /// assert!(RFloat::from_f64(1.7272337110188893e-77).is_err());
     /// ```
-    #[cfg(feature = "friendly-api")]
+    #[cfg_attr(
+        not(feature = "friendly-api"),
+        deprecated(note = "please use `Ruby::r_float_from_f64` instead")
+    )]
     #[cfg(ruby_use_flonum)]
     #[inline]
     pub fn from_f64(n: f64) -> Result<Self, Flonum> {
@@ -165,7 +168,10 @@ impl RFloat {
     /// let f = RFloat::from_f64(1.7272337110188890e-77).unwrap();
     /// rb_assert!("f == 1.7272337110188890e-77", f);
     /// ```
-    #[cfg(feature = "friendly-api")]
+    #[cfg_attr(
+        not(feature = "friendly-api"),
+        deprecated(note = "please use `Ruby::r_float_from_f64` instead")
+    )]
     #[cfg(not(ruby_use_flonum))]
     #[inline]
     pub fn from_f64(n: f64) -> Result<Self, Self> {

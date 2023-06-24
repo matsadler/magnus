@@ -228,7 +228,10 @@ impl RTypedData {
     /// assert!(value.is_kind_of(point_class));
     /// # let _ = Point { x: 1, y: 2 }.x + Point { x: 3, y: 4 }.y;
     /// ```
-    #[cfg(feature = "friendly-api")]
+    #[cfg_attr(
+        not(feature = "friendly-api"),
+        deprecated(note = "please use `Ruby::wrap` instead")
+    )]
     #[inline]
     pub fn wrap<T>(data: T) -> Self
     where
@@ -315,7 +318,10 @@ impl RTypedData {
     /// assert!(value.is_kind_of(point_class));
     /// # let _ = Point { x: 1, y: 2 }.x + Point { x: 3, y: 4 }.y;
     /// ```
-    #[cfg(feature = "friendly-api")]
+    #[cfg_attr(
+        not(feature = "friendly-api"),
+        deprecated(note = "please use `Ruby::wrap_as` instead")
+    )]
     #[inline]
     pub fn wrap_as<T>(data: T, class: RClass) -> Self
     where

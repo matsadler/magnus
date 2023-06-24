@@ -1069,7 +1069,10 @@ impl Ruby {
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::exception_arg_error`]
 /// for the non-panicking version.
-#[cfg(feature = "friendly-api")]
+#[cfg_attr(
+    not(feature = "friendly-api"),
+    deprecated(note = "please use `Ruby::exception_arg_error` instead")
+)]
 #[inline]
 pub fn arg_error() -> ExceptionClass {
     get_ruby!().exception_arg_error()
@@ -1081,7 +1084,10 @@ pub fn arg_error() -> ExceptionClass {
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::exception_eof_error`]
 /// for the non-panicking version.
-#[cfg(feature = "friendly-api")]
+#[cfg_attr(
+    not(feature = "friendly-api"),
+    deprecated(note = "please use `Ruby::exception_eof_error` instead")
+)]
 #[inline]
 pub fn eof_error() -> ExceptionClass {
     get_ruby!().exception_eof_error()
@@ -1093,7 +1099,10 @@ pub fn eof_error() -> ExceptionClass {
 ///
 /// Panics if called from a non-Ruby thread. See
 /// [`Ruby::exception_enc_compat_error`] for the non-panicking version.
-#[cfg(feature = "friendly-api")]
+#[cfg_attr(
+    not(feature = "friendly-api"),
+    deprecated(note = "please use `Ruby::exception_enc_compat_error` instead")
+)]
 #[inline]
 pub fn enc_compat_error() -> ExceptionClass {
     get_ruby!().exception_enc_compat_error()
@@ -1105,7 +1114,10 @@ pub fn enc_compat_error() -> ExceptionClass {
 ///
 /// Panics if called from a non-Ruby thread. See
 /// [`Ruby::exception_encoding_error`] for the non-panicking version.
-#[cfg(feature = "friendly-api")]
+#[cfg_attr(
+    not(feature = "friendly-api"),
+    deprecated(note = "please use `Ruby::exception_encoding_error` instead")
+)]
 #[inline]
 pub fn encoding_error() -> ExceptionClass {
     get_ruby!().exception_encoding_error()
@@ -1117,7 +1129,10 @@ pub fn encoding_error() -> ExceptionClass {
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::exception_exception`]
 /// for the non-panicking version.
-#[cfg(feature = "friendly-api")]
+#[cfg_attr(
+    not(feature = "friendly-api"),
+    deprecated(note = "please use `Ruby::exception_exception` instead")
+)]
 #[inline]
 pub fn exception() -> ExceptionClass {
     get_ruby!().exception_exception()
@@ -1129,7 +1144,10 @@ pub fn exception() -> ExceptionClass {
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::exception_fatal`] for
 /// the non-panicking version.
-#[cfg(feature = "friendly-api")]
+#[cfg_attr(
+    not(feature = "friendly-api"),
+    deprecated(note = "please use `Ruby::exception_fatal` instead")
+)]
 #[inline]
 pub fn fatal() -> ExceptionClass {
     get_ruby!().exception_fatal()
@@ -1141,7 +1159,10 @@ pub fn fatal() -> ExceptionClass {
 ///
 /// Panics if called from a non-Ruby thread. See
 /// [`Ruby::exception_float_domain_error`] for the non-panicking version.
-#[cfg(feature = "friendly-api")]
+#[cfg_attr(
+    not(feature = "friendly-api"),
+    deprecated(note = "please use `Ruby::exception_float_domain_error` instead")
+)]
 #[inline]
 pub fn float_domain_error() -> ExceptionClass {
     get_ruby!().exception_float_domain_error()
@@ -1153,7 +1174,10 @@ pub fn float_domain_error() -> ExceptionClass {
 ///
 /// Panics if called from a non-Ruby thread. See
 /// [`Ruby::exception_frozen_error`] for the non-panicking version.
-#[cfg(feature = "friendly-api")]
+#[cfg_attr(
+    not(feature = "friendly-api"),
+    deprecated(note = "please use `Ruby::exception_frozen_error` instead")
+)]
 #[inline]
 pub fn frozen_error() -> ExceptionClass {
     get_ruby!().exception_frozen_error()
@@ -1165,7 +1189,10 @@ pub fn frozen_error() -> ExceptionClass {
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::exception_io_error`]
 /// for the non-panicking version.
-#[cfg(feature = "friendly-api")]
+#[cfg_attr(
+    not(feature = "friendly-api"),
+    deprecated(note = "please use `Ruby::exception_io_error` instead")
+)]
 #[inline]
 pub fn io_error() -> ExceptionClass {
     get_ruby!().exception_io_error()
@@ -1177,7 +1204,10 @@ pub fn io_error() -> ExceptionClass {
 ///
 /// Panics if called from a non-Ruby thread. See
 /// [`Ruby::exception_index_error`] for the non-panicking version.
-#[cfg(feature = "friendly-api")]
+#[cfg_attr(
+    not(feature = "friendly-api"),
+    deprecated(note = "please use `Ruby::exception_index_error` instead")
+)]
 #[inline]
 pub fn index_error() -> ExceptionClass {
     get_ruby!().exception_index_error()
@@ -1189,7 +1219,10 @@ pub fn index_error() -> ExceptionClass {
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::exception_interrupt`]
 /// for the non-panicking version.
-#[cfg(feature = "friendly-api")]
+#[cfg_attr(
+    not(feature = "friendly-api"),
+    deprecated(note = "please use `Ruby::exception_interrupt` instead")
+)]
 #[inline]
 pub fn interrupt() -> ExceptionClass {
     get_ruby!().exception_interrupt()
@@ -1201,7 +1234,10 @@ pub fn interrupt() -> ExceptionClass {
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::exception_key_error`]
 /// for the non-panicking version.
-#[cfg(feature = "friendly-api")]
+#[cfg_attr(
+    not(feature = "friendly-api"),
+    deprecated(note = "please use `Ruby::exception_key_error` instead")
+)]
 #[inline]
 pub fn key_error() -> ExceptionClass {
     get_ruby!().exception_key_error()
@@ -1213,7 +1249,10 @@ pub fn key_error() -> ExceptionClass {
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::exception_load_error`]
 /// for the non-panicking version.
-#[cfg(feature = "friendly-api")]
+#[cfg_attr(
+    not(feature = "friendly-api"),
+    deprecated(note = "please use `Ruby::exception_load_error` instead")
+)]
 #[inline]
 pub fn load_error() -> ExceptionClass {
     get_ruby!().exception_load_error()
@@ -1225,7 +1264,10 @@ pub fn load_error() -> ExceptionClass {
 ///
 /// Panics if called from a non-Ruby thread. See
 /// [`Ruby::exception_local_jump_error`] for the non-panicking version.
-#[cfg(feature = "friendly-api")]
+#[cfg_attr(
+    not(feature = "friendly-api"),
+    deprecated(note = "please use `Ruby::exception_local_jump_error` instead")
+)]
 #[inline]
 pub fn local_jump_error() -> ExceptionClass {
     get_ruby!().exception_local_jump_error()
@@ -1237,7 +1279,10 @@ pub fn local_jump_error() -> ExceptionClass {
 ///
 /// Panics if called from a non-Ruby thread. See
 /// [`Ruby::exception_math_domain_error`] for the non-panicking version.
-#[cfg(feature = "friendly-api")]
+#[cfg_attr(
+    not(feature = "friendly-api"),
+    deprecated(note = "please use `Ruby::exception_math_domain_error` instead")
+)]
 #[inline]
 pub fn math_domain_error() -> ExceptionClass {
     get_ruby!().exception_math_domain_error()
@@ -1249,7 +1294,10 @@ pub fn math_domain_error() -> ExceptionClass {
 ///
 /// Panics if called from a non-Ruby thread. See
 /// [`Ruby::exception_name_error`] for the non-panicking version.
-#[cfg(feature = "friendly-api")]
+#[cfg_attr(
+    not(feature = "friendly-api"),
+    deprecated(note = "please use `Ruby::exception_name_error` instead")
+)]
 #[inline]
 pub fn name_error() -> ExceptionClass {
     get_ruby!().exception_name_error()
@@ -1263,7 +1311,10 @@ pub fn name_error() -> ExceptionClass {
 /// [`Ruby::exception_no_matching_pattern_error`] for the non-panicking version.
 #[cfg(any(ruby_gte_2_7, docsrs))]
 #[cfg_attr(docsrs, doc(cfg(ruby_gte_2_7)))]
-#[cfg(feature = "friendly-api")]
+#[cfg_attr(
+    not(feature = "friendly-api"),
+    deprecated(note = "please use `Ruby::exception_no_matching_pattern_error` instead")
+)]
 #[inline]
 pub fn no_matching_pattern_error() -> ExceptionClass {
     get_ruby!().exception_no_matching_pattern_error()
@@ -1278,7 +1329,10 @@ pub fn no_matching_pattern_error() -> ExceptionClass {
 /// version.
 #[cfg(any(ruby_gte_3_1, docsrs))]
 #[cfg_attr(docsrs, doc(cfg(ruby_gte_3_1)))]
-#[cfg(feature = "friendly-api")]
+#[cfg_attr(
+    not(feature = "friendly-api"),
+    deprecated(note = "please use `Ruby::exception_no_matching_pattern_key_error` instead")
+)]
 #[inline]
 pub fn no_matching_pattern_key_error() -> ExceptionClass {
     get_ruby!().exception_no_matching_pattern_key_error()
@@ -1290,7 +1344,10 @@ pub fn no_matching_pattern_key_error() -> ExceptionClass {
 ///
 /// Panics if called from a non-Ruby thread. See
 /// [`Ruby::exception_no_mem_error`] for the non-panicking version.
-#[cfg(feature = "friendly-api")]
+#[cfg_attr(
+    not(feature = "friendly-api"),
+    deprecated(note = "please use `Ruby::exception_no_mem_error` instead")
+)]
 #[inline]
 pub fn no_mem_error() -> ExceptionClass {
     get_ruby!().exception_no_mem_error()
@@ -1302,7 +1359,10 @@ pub fn no_mem_error() -> ExceptionClass {
 ///
 /// Panics if called from a non-Ruby thread. See
 /// [`Ruby::exception_no_method_error`] for the non-panicking version.
-#[cfg(feature = "friendly-api")]
+#[cfg_attr(
+    not(feature = "friendly-api"),
+    deprecated(note = "please use `Ruby::exception_no_method_error` instead")
+)]
 #[inline]
 pub fn no_method_error() -> ExceptionClass {
     get_ruby!().exception_no_method_error()
@@ -1314,7 +1374,10 @@ pub fn no_method_error() -> ExceptionClass {
 ///
 /// Panics if called from a non-Ruby thread. See
 /// [`Ruby::exception_not_imp_error`] for the non-panicking version.
-#[cfg(feature = "friendly-api")]
+#[cfg_attr(
+    not(feature = "friendly-api"),
+    deprecated(note = "please use `Ruby::exception_not_imp_error` instead")
+)]
 #[inline]
 pub fn not_imp_error() -> ExceptionClass {
     get_ruby!().exception_not_imp_error()
@@ -1326,7 +1389,10 @@ pub fn not_imp_error() -> ExceptionClass {
 ///
 /// Panics if called from a non-Ruby thread. See
 /// [`Ruby::exception_range_error`] for the non-panicking version.
-#[cfg(feature = "friendly-api")]
+#[cfg_attr(
+    not(feature = "friendly-api"),
+    deprecated(note = "please use `Ruby::exception_range_error` instead")
+)]
 #[inline]
 pub fn range_error() -> ExceptionClass {
     get_ruby!().exception_range_error()
@@ -1338,7 +1404,10 @@ pub fn range_error() -> ExceptionClass {
 ///
 /// Panics if called from a non-Ruby thread. See
 /// [`Ruby::exception_regexp_error`] for the non-panicking version.
-#[cfg(feature = "friendly-api")]
+#[cfg_attr(
+    not(feature = "friendly-api"),
+    deprecated(note = "please use `Ruby::exception_regexp_error` instead")
+)]
 #[inline]
 pub fn regexp_error() -> ExceptionClass {
     get_ruby!().exception_regexp_error()
@@ -1350,7 +1419,10 @@ pub fn regexp_error() -> ExceptionClass {
 ///
 /// Panics if called from a non-Ruby thread. See
 /// [`Ruby::exception_runtime_error`] for the non-panicking version.
-#[cfg(feature = "friendly-api")]
+#[cfg_attr(
+    not(feature = "friendly-api"),
+    deprecated(note = "please use `Ruby::exception_runtime_error` instead")
+)]
 #[inline]
 pub fn runtime_error() -> ExceptionClass {
     get_ruby!().exception_runtime_error()
@@ -1362,7 +1434,10 @@ pub fn runtime_error() -> ExceptionClass {
 ///
 /// Panics if called from a non-Ruby thread. See
 /// [`Ruby::exception_script_error`] for the non-panicking version.
-#[cfg(feature = "friendly-api")]
+#[cfg_attr(
+    not(feature = "friendly-api"),
+    deprecated(note = "please use `Ruby::exception_script_error` instead")
+)]
 #[inline]
 pub fn script_error() -> ExceptionClass {
     get_ruby!().exception_script_error()
@@ -1374,7 +1449,10 @@ pub fn script_error() -> ExceptionClass {
 ///
 /// Panics if called from a non-Ruby thread. See
 /// [`Ruby::exception_security_error`] for the non-panicking version.
-#[cfg(feature = "friendly-api")]
+#[cfg_attr(
+    not(feature = "friendly-api"),
+    deprecated(note = "please use `Ruby::exception_security_error` instead")
+)]
 #[inline]
 pub fn security_error() -> ExceptionClass {
     get_ruby!().exception_security_error()
@@ -1386,7 +1464,10 @@ pub fn security_error() -> ExceptionClass {
 ///
 /// Panics if called from a non-Ruby thread. See
 /// [`Ruby::exception_signal`] for the non-panicking version.
-#[cfg(feature = "friendly-api")]
+#[cfg_attr(
+    not(feature = "friendly-api"),
+    deprecated(note = "please use `Ruby::exception_signal` instead")
+)]
 #[inline]
 pub fn signal() -> ExceptionClass {
     get_ruby!().exception_signal()
@@ -1398,7 +1479,10 @@ pub fn signal() -> ExceptionClass {
 ///
 /// Panics if called from a non-Ruby thread. See
 /// [`Ruby::exception_standard_error`] for the non-panicking version.
-#[cfg(feature = "friendly-api")]
+#[cfg_attr(
+    not(feature = "friendly-api"),
+    deprecated(note = "please use `Ruby::exception_standard_error` instead")
+)]
 #[inline]
 pub fn standard_error() -> ExceptionClass {
     get_ruby!().exception_standard_error()
@@ -1410,7 +1494,10 @@ pub fn standard_error() -> ExceptionClass {
 ///
 /// Panics if called from a non-Ruby thread. See
 /// [`Ruby::exception_stop_iteration`] for the non-panicking version.
-#[cfg(feature = "friendly-api")]
+#[cfg_attr(
+    not(feature = "friendly-api"),
+    deprecated(note = "please use `Ruby::exception_stop_iteration` instead")
+)]
 #[inline]
 pub fn stop_iteration() -> ExceptionClass {
     get_ruby!().exception_stop_iteration()
@@ -1422,7 +1509,10 @@ pub fn stop_iteration() -> ExceptionClass {
 ///
 /// Panics if called from a non-Ruby thread. See
 /// [`Ruby::exception_syntax_error`] for the non-panicking version.
-#[cfg(feature = "friendly-api")]
+#[cfg_attr(
+    not(feature = "friendly-api"),
+    deprecated(note = "please use `Ruby::exception_syntax_error` instead")
+)]
 #[inline]
 pub fn syntax_error() -> ExceptionClass {
     get_ruby!().exception_syntax_error()
@@ -1434,7 +1524,10 @@ pub fn syntax_error() -> ExceptionClass {
 ///
 /// Panics if called from a non-Ruby thread. See
 /// [`Ruby::exception_sys_stack_error`] for the non-panicking version.
-#[cfg(feature = "friendly-api")]
+#[cfg_attr(
+    not(feature = "friendly-api"),
+    deprecated(note = "please use `Ruby::exception_sys_stack_error` instead")
+)]
 #[inline]
 pub fn sys_stack_error() -> ExceptionClass {
     get_ruby!().exception_sys_stack_error()
@@ -1446,7 +1539,10 @@ pub fn sys_stack_error() -> ExceptionClass {
 ///
 /// Panics if called from a non-Ruby thread. See
 /// [`Ruby::exception_system_call_error`] for the non-panicking version.
-#[cfg(feature = "friendly-api")]
+#[cfg_attr(
+    not(feature = "friendly-api"),
+    deprecated(note = "please use `Ruby::exception_system_call_error` instead")
+)]
 #[inline]
 pub fn system_call_error() -> ExceptionClass {
     get_ruby!().exception_system_call_error()
@@ -1458,7 +1554,10 @@ pub fn system_call_error() -> ExceptionClass {
 ///
 /// Panics if called from a non-Ruby thread. See
 /// [`Ruby::exception_system_exit`] for the non-panicking version.
-#[cfg(feature = "friendly-api")]
+#[cfg_attr(
+    not(feature = "friendly-api"),
+    deprecated(note = "please use `Ruby::exception_system_exit` instead")
+)]
 #[inline]
 pub fn system_exit() -> ExceptionClass {
     get_ruby!().exception_system_exit()
@@ -1470,7 +1569,10 @@ pub fn system_exit() -> ExceptionClass {
 ///
 /// Panics if called from a non-Ruby thread. See
 /// [`Ruby::exception_thread_error`] for the non-panicking version.
-#[cfg(feature = "friendly-api")]
+#[cfg_attr(
+    not(feature = "friendly-api"),
+    deprecated(note = "please use `Ruby::exception_thread_error` instead")
+)]
 #[inline]
 pub fn thread_error() -> ExceptionClass {
     get_ruby!().exception_thread_error()
@@ -1482,7 +1584,10 @@ pub fn thread_error() -> ExceptionClass {
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::exception_type_error`]
 /// for the non-panicking version.
-#[cfg(feature = "friendly-api")]
+#[cfg_attr(
+    not(feature = "friendly-api"),
+    deprecated(note = "please use `Ruby::exception_type_error` instead")
+)]
 #[inline]
 pub fn type_error() -> ExceptionClass {
     get_ruby!().exception_type_error()
@@ -1494,7 +1599,10 @@ pub fn type_error() -> ExceptionClass {
 ///
 /// Panics if called from a non-Ruby thread. See
 /// [`Ruby::exception_zero_div_error`] for the non-panicking version.
-#[cfg(feature = "friendly-api")]
+#[cfg_attr(
+    not(feature = "friendly-api"),
+    deprecated(note = "please use `Ruby::exception_zero_div_error` instead")
+)]
 #[inline]
 pub fn zero_div_error() -> ExceptionClass {
     get_ruby!().exception_zero_div_error()

@@ -533,7 +533,10 @@ impl Ruby {
 ///     gc::enable();
 /// }
 /// ```
-#[cfg(feature = "friendly-api")]
+#[cfg_attr(
+    not(feature = "friendly-api"),
+    deprecated(note = "please use `Ruby::gc_disable` instead")
+)]
 #[inline]
 pub fn disable() -> bool {
     get_ruby!().gc_disable()
@@ -566,7 +569,10 @@ pub fn disable() -> bool {
 ///     gc::disable();
 /// }
 /// ```
-#[cfg(feature = "friendly-api")]
+#[cfg_attr(
+    not(feature = "friendly-api"),
+    deprecated(note = "please use `Ruby::gc_enable` instead")
+)]
 #[inline]
 pub fn enable() -> bool {
     get_ruby!().gc_enable()
@@ -595,7 +601,10 @@ pub fn enable() -> bool {
 ///
 /// gc::start();
 /// ```
-#[cfg(feature = "friendly-api")]
+#[cfg_attr(
+    not(feature = "friendly-api"),
+    deprecated(note = "please use `Ruby::gc_start` instead")
+)]
 #[inline]
 pub fn start() {
     get_ruby!().gc_start()
@@ -630,7 +639,10 @@ pub fn start() {
 /// drop(buf);
 /// gc::adjust_memory_usage(-(mem_size as isize));
 /// ```
-#[cfg(feature = "friendly-api")]
+#[cfg_attr(
+    not(feature = "friendly-api"),
+    deprecated(note = "please use `Ruby::gc_adjust_memory_usage` instead")
+)]
 #[inline]
 pub fn adjust_memory_usage(diff: isize) {
     get_ruby!().gc_adjust_memory_usage(diff)
@@ -654,7 +666,10 @@ pub fn adjust_memory_usage(diff: isize) {
 /// gc::start();
 /// assert!(gc::count() > before);
 /// ```
-#[cfg(feature = "friendly-api")]
+#[cfg_attr(
+    not(feature = "friendly-api"),
+    deprecated(note = "please use `Ruby::gc_count` instead")
+)]
 #[inline]
 pub fn count() -> usize {
     get_ruby!().gc_count()
@@ -675,7 +690,10 @@ pub fn count() -> usize {
 ///
 /// assert!(gc::stat("heap_live_slots").unwrap() > 1);
 /// ```
-#[cfg(feature = "friendly-api")]
+#[cfg_attr(
+    not(feature = "friendly-api"),
+    deprecated(note = "please use `Ruby::gc_stat` instead")
+)]
 #[inline]
 pub fn stat<T>(key: T) -> Result<usize, Error>
 where
@@ -702,7 +720,10 @@ where
 /// let live_slots: usize = stats.fetch(Symbol::new("heap_live_slots")).unwrap();
 /// assert!(live_slots > 1);
 /// ```
-#[cfg(feature = "friendly-api")]
+#[cfg_attr(
+    not(feature = "friendly-api"),
+    deprecated(note = "please use `Ruby::gc_all_stats` instead")
+)]
 #[inline]
 pub fn all_stats() -> RHash {
     get_ruby!().gc_all_stats()

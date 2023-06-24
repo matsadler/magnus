@@ -183,7 +183,10 @@ impl Error {
     ///
     /// assert_eq!(i, 15);
     /// ```
-    #[cfg(feature = "friendly-api")]
+    #[cfg_attr(
+        not(feature = "friendly-api"),
+        deprecated(note = "please use `Ruby::iter_break_value` instead")
+    )]
     #[inline]
     pub fn iter_break<T>(val: T) -> Self
     where
@@ -553,7 +556,10 @@ pub fn bug(s: &str) -> ! {
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::warning`] for the
 /// non-panicking version.
-#[cfg(feature = "friendly-api")]
+#[cfg_attr(
+    not(feature = "friendly-api"),
+    deprecated(note = "please use `Ruby::warning` instead")
+)]
 #[inline]
 pub fn warning(s: &str) {
     get_ruby!().warning(s)
