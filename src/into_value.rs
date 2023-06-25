@@ -75,6 +75,73 @@ pub trait ArgList {
 
     /// Convert `self` into a type that can be used as a Ruby argument list.
     fn into_arg_list_with(self, handle: &Ruby) -> Self::Output;
+
+    /// Whether the argument list contains keyword arguments. If true, the
+    /// last element of the `&[Self::Value]` produced by
+    /// `Self::into_arg_list_with` and [`AsRef`]
+    fn contains_kw_args(&self) -> bool;
+}
+
+pub(crate) fn kw_splat(args: &impl ArgList) -> u32 {
+    if args.contains_kw_args() {
+        rb_sys::RB_PASS_KEYWORDS
+    } else {
+        rb_sys::RB_NO_KEYWORDS
+    }
+}
+
+/// Wrapper for [`RHash`] intended for use in the tuple implementations of
+/// [`ArgList`] to indicate that the last argument in the tuple is to be
+/// passed as keyword arguments.
+#[repr(transparent)]
+pub struct KwArgs(pub RHash);
+
+/// Create a [`KwArgs`] from Rust key-value mappings. Keys must be string
+/// literals, while values can be anything that implements [`IntoValue`].
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
+///
+/// # Examples
+///
+/// ```
+/// use magnus::{eval, kwargs, KwArgs, prelude::*, RObject};
+/// # let _cleanup = unsafe { magnus::embed::init() };
+///
+/// let kwargs = kwargs!("a" => 1, "b" => 2);
+/// let object: RObject = eval!(
+///     r#"
+///     class Adder
+///       def add(a:, b:)
+///         a + b
+///       end
+///     end
+///
+///     Adder.new
+/// "#
+/// )
+/// .unwrap();
+///
+/// let result: i32 = object.funcall("add", (kwargs,)).unwrap();
+/// assert_eq!(3, result);
+/// ```
+#[macro_export]
+macro_rules! kwargs {
+    ($ruby:expr, $($k:literal => $v:expr),+) => {{
+        use $crate::IntoValue;
+        let h = $ruby.hash_new();
+        $(
+            h.aset(
+                $ruby.to_symbol($k),
+                $v.into_value_with($ruby),
+            ).unwrap();
+        )+
+        $crate::KwArgs(h)
+    }};
+    ($($k:literal => $v:expr),+) => {{
+        $crate::kwargs!(&$crate::Ruby::get().unwrap(), $($k => $v),+)
+    }};
 }
 
 /// # Safety
@@ -92,6 +159,10 @@ where
     fn into_arg_list_with(self, _: &Ruby) -> Self::Output {
         self
     }
+
+    fn contains_kw_args(&self) -> bool {
+        false
+    }
 }
 
 macro_rules! impl_arg_list {
@@ -108,6 +179,10 @@ macro_rules! impl_arg_list {
                 fn into_arg_list_with(self, handle: &Ruby) -> Self::Output {
                     [#(handle.into_value(self.N),)*]
                 }
+
+                fn contains_kw_args(&self) -> bool {
+                    false
+                }
             }
         });
     }
@@ -115,6 +190,33 @@ macro_rules! impl_arg_list {
 
 seq!(N in 0..=12 {
     impl_arg_list!(N);
+});
+
+macro_rules! impl_arg_list_kw {
+    ($n:literal) => {
+        seq!(N in 0..$n {
+            impl<#(T~N,)*> ArgList for (#(T~N,)* KwArgs,)
+            where
+                #(T~N: IntoValue,)*
+            {
+                type Value = Value;
+                type Output = [Self::Value; { $n + 1 }];
+
+                #[allow(unused_variables)]
+                fn into_arg_list_with(self, handle: &Ruby) -> Self::Output {
+                    [#(handle.into_value(self.N),)* handle.into_value(self.$n.0)]
+                }
+
+                fn contains_kw_args(&self) -> bool {
+                    true
+                }
+            }
+        });
+    }
+}
+
+seq!(N in 0..=12 {
+    impl_arg_list_kw!(N);
 });
 
 impl<T, const N: usize> ArgList for [T; N]
@@ -126,6 +228,10 @@ where
 
     fn into_arg_list_with(self, _: &Ruby) -> Self::Output {
         self
+    }
+
+    fn contains_kw_args(&self) -> bool {
+        false
     }
 }
 
@@ -149,44 +255,5 @@ where
 {
     fn into_array_arg_list_with(self, handle: &Ruby) -> RArray {
         handle.ary_new_from_values(self.into_arg_list_with(handle).as_ref())
-    }
-}
-
-/// Trait for types that can be used as keyword arguments when calling Ruby
-/// methods.
-pub trait KwArgList {
-    /// The specific Ruby value type.
-    type Value: ReprValue;
-    /// The type of the arguments list. Must convert to `&[Self::Value]` with
-    /// [`AsRef`]
-    type Output: AsRef<[Self::Value]>;
-
-    /// Convert `self` into a type that can be used as a Ruby argument list.
-    fn into_arg_list_with(self, handle: &Ruby) -> Self::Output;
-
-    /// Whether the argument list contains keyword arguments. If true, the
-    /// last element of the `&[Self::Value]` produced by
-    /// `Self::into_arg_list_with` and [`AsRef`]
-    fn contains_kw_args(&self) -> bool;
-
-    fn kw_splat(&self) -> u32 {
-        if self.contains_kw_args() {
-            rb_sys::RB_PASS_KEYWORDS
-        } else {
-            rb_sys::RB_NO_KEYWORDS
-        }
-    }
-}
-
-impl KwArgList for RHash {
-    type Value = RHash;
-    type Output = [RHash; 1];
-
-    fn into_arg_list_with(self, _: &Ruby) -> Self::Output {
-        [self]
-    }
-
-    fn contains_kw_args(&self) -> bool {
-        true
     }
 }

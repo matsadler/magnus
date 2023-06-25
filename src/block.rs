@@ -11,7 +11,8 @@ use std::{
 
 use rb_sys::{
     rb_block_given_p, rb_block_proc, rb_data_typed_object_wrap, rb_obj_is_proc, rb_proc_arity,
-    rb_proc_call, rb_proc_lambda_p, rb_proc_new, rb_yield, rb_yield_splat, rb_yield_values2, VALUE,
+    rb_proc_call, rb_proc_lambda_p, rb_proc_new, rb_yield, rb_yield_splat, rb_yield_values_kw,
+    VALUE,
 };
 
 use crate::{
@@ -19,7 +20,7 @@ use crate::{
     enumerator::Enumerator,
     error::{ensure, protect, Error},
     gc,
-    into_value::{ArgList, IntoValue, RArrayArgList},
+    into_value::{kw_splat, ArgList, IntoValue, RArrayArgList},
     method::{Block, BlockReturn},
     object::Object,
     r_array::RArray,
@@ -598,12 +599,12 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{function, rb_assert, Error, Ruby, Value};
+    /// use magnus::{function, kwargs, rb_assert, Error, Ruby, Value};
     ///
     /// fn metasyntactic_variables(ruby: &Ruby) -> Result<(), Error> {
-    ///     let _: Value = ruby.yield_values((0, "foo"))?;
-    ///     let _: Value = ruby.yield_values((1, "bar"))?;
-    ///     let _: Value = ruby.yield_values((2, "baz"))?;
+    ///     let _: Value = ruby.yield_values((0, kwargs!("var" => "foo")))?;
+    ///     let _: Value = ruby.yield_values((1, kwargs!("var" => "bar")))?;
+    ///     let _: Value = ruby.yield_values((2, kwargs!("var" => "baz")))?;
     ///     Ok(())
     /// }
     ///
@@ -616,7 +617,7 @@ impl Ruby {
     ///     let vars = ruby.ary_new();
     ///     rb_assert!(
     ///         ruby,
-    ///         "metasyntactic_variables {|pos, var| vars << [pos, var]} == nil",
+    ///         "metasyntactic_variables {|pos, var:| vars << [pos, var]} == nil",
     ///         vars
     ///     );
     ///     rb_assert!(
@@ -634,13 +635,15 @@ impl Ruby {
         T: ArgList,
         U: TryConvert,
     {
+        let kw_splat = kw_splat(&vals);
         let vals = vals.into_arg_list_with(self);
         let slice = vals.as_ref();
         unsafe {
             protect(|| {
-                Value::new(rb_yield_values2(
+                Value::new(rb_yield_values_kw(
                     slice.len() as c_int,
                     slice.as_ptr() as *const VALUE,
+                    kw_splat as c_int,
                 ))
             })
             .and_then(TryConvert::try_convert)
@@ -965,9 +968,14 @@ where
     ensure(
         || {
             for val in &mut *ptr {
+                let kw_splat = kw_splat(&val);
                 let vals = val.into_arg_list_with(&handle);
                 let slice = vals.as_ref();
-                rb_yield_values2(slice.len() as c_int, slice.as_ptr() as *const VALUE);
+                rb_yield_values_kw(
+                    slice.len() as c_int,
+                    slice.as_ptr() as *const VALUE,
+                    kw_splat as c_int,
+                );
             }
             handle.qnil()
         },

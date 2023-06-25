@@ -21,7 +21,7 @@ use rb_sys::{
 use crate::{
     class::{Class, RClass},
     error::Error,
-    into_value::{ArgList, IntoValue, KwArgList},
+    into_value::{ArgList, IntoValue},
     module::Module,
     object::Object,
     r_array::RArray,
@@ -232,15 +232,6 @@ impl Class for ExceptionClass {
     {
         self.as_r_class()
             .new_instance(args)
-            .map(|ins| unsafe { Exception::from_value_unchecked(ins) })
-    }
-
-    fn new_instance_kw<T>(self, args: T) -> Result<Self::Instance, Error>
-    where
-        T: KwArgList,
-    {
-        self.as_r_class()
-            .new_instance_kw(args)
             .map(|ins| unsafe { Exception::from_value_unchecked(ins) })
     }
 
