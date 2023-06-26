@@ -1847,7 +1847,7 @@ use ::rb_sys::rb_require;
 #[cfg(ruby_gte_2_7)]
 use ::rb_sys::rb_require_string;
 use ::rb_sys::{
-    rb_backref_get, rb_call_super, rb_current_receiver, rb_define_class, rb_define_global_const,
+    rb_backref_get, rb_call_super_kw, rb_current_receiver, rb_define_class, rb_define_global_const,
     rb_define_global_function, rb_define_module, rb_define_variable, rb_errinfo,
     rb_eval_string_protect, rb_set_errinfo, VALUE,
 };
@@ -1863,7 +1863,7 @@ pub use crate::{
     exception::{Exception, ExceptionClass},
     float::Float,
     integer::Integer,
-    into_value::{ArgList, IntoValue, IntoValueFromNative, RArrayArgList},
+    into_value::{ArgList, IntoValue, IntoValueFromNative, KwArgs, RArrayArgList},
     module::{Attr, Module, RModule},
     numeric::Numeric,
     object::Object,
@@ -2270,12 +2270,14 @@ impl Ruby {
         T: TryConvert,
     {
         unsafe {
+            let kw_splat = into_value::kw_splat(&args);
             let args = args.into_arg_list_with(self);
             let slice = args.as_ref();
             protect(|| {
-                Value::new(rb_call_super(
+                Value::new(rb_call_super_kw(
                     slice.len() as c_int,
                     slice.as_ptr() as *const VALUE,
+                    kw_splat as c_int,
                 ))
             })
             .and_then(TryConvert::try_convert)

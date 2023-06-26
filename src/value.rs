@@ -23,12 +23,12 @@ use std::{
 #[cfg(ruby_use_flonum)]
 pub use flonum::Flonum;
 use rb_sys::{
-    rb_any_to_s, rb_block_call, rb_check_funcall, rb_check_id, rb_check_id_cstr,
-    rb_check_symbol_cstr, rb_enumeratorize_with_size, rb_eql, rb_equal, rb_funcall_with_block,
-    rb_funcallv, rb_funcallv_public, rb_gc_register_address, rb_gc_unregister_address, rb_hash,
-    rb_id2name, rb_id2sym, rb_inspect, rb_intern3, rb_ll2inum, rb_obj_as_string, rb_obj_classname,
-    rb_obj_freeze, rb_obj_is_kind_of, rb_obj_respond_to, rb_sym2id, rb_ull2inum, ruby_fl_type,
-    ruby_special_consts, ruby_value_type, RBasic, ID, VALUE,
+    rb_any_to_s, rb_block_call_kw, rb_check_funcall_kw, rb_check_id, rb_check_id_cstr,
+    rb_check_symbol_cstr, rb_enumeratorize_with_size_kw, rb_eql, rb_equal,
+    rb_funcall_with_block_kw, rb_funcallv_kw, rb_funcallv_public_kw, rb_gc_register_address,
+    rb_gc_unregister_address, rb_hash, rb_id2name, rb_id2sym, rb_inspect, rb_intern3, rb_ll2inum,
+    rb_obj_as_string, rb_obj_classname, rb_obj_freeze, rb_obj_is_kind_of, rb_obj_respond_to,
+    rb_sym2id, rb_ull2inum, ruby_fl_type, ruby_special_consts, ruby_value_type, RBasic, ID, VALUE,
 };
 
 // These don't seem to appear consistently in bindgen output, not sure if they
@@ -45,7 +45,7 @@ use crate::{
     error::{protect, Error},
     gc,
     integer::{Integer, IntegerType},
-    into_value::{ArgList, IntoValue, IntoValueFromNative},
+    into_value::{kw_splat, ArgList, IntoValue, IntoValueFromNative},
     method::{Block, BlockReturn},
     module::Module,
     numeric::Numeric,
@@ -1114,6 +1114,27 @@ pub trait ReprValue: private::ReprValue {
     /// let result: String = values.funcall("join", (" & ",)).unwrap();
     /// assert_eq!(result, "foo & 1 & bar");
     /// ```
+    ///
+    /// ```
+    /// use magnus::{eval, kwargs, prelude::*, RHash, RObject, Symbol};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let object: RObject = eval!(
+    ///     r#"
+    ///     class Adder
+    ///       def add(a, b, c:)
+    ///         a + b + c
+    ///       end
+    ///     end
+    ///
+    ///     Adder.new
+    /// "#
+    /// )
+    /// .unwrap();
+    ///
+    /// let result: i32 = object.funcall("add", (1, 2, kwargs!("c" => 3))).unwrap();
+    /// assert_eq!(result, 6);
+    /// ```
     fn funcall<M, A, T>(self, method: M, args: A) -> Result<T, Error>
     where
         M: IntoId,
@@ -1122,15 +1143,17 @@ pub trait ReprValue: private::ReprValue {
     {
         let handle = Ruby::get_with(self);
         let id = method.into_id_with(&handle);
+        let kw_splat = kw_splat(&args);
         let args = args.into_arg_list_with(&handle);
         let slice = args.as_ref();
         unsafe {
             protect(|| {
-                Value::new(rb_funcallv(
+                Value::new(rb_funcallv_kw(
                     self.as_rb_value(),
                     id.as_rb_id(),
                     slice.len() as c_int,
                     slice.as_ptr() as *const VALUE,
+                    kw_splat as c_int,
                 ))
             })
             .and_then(TryConvert::try_convert)
@@ -1182,15 +1205,17 @@ pub trait ReprValue: private::ReprValue {
     {
         let handle = Ruby::get_with(self);
         let id = method.into_id_with(&handle);
+        let kw_splat = kw_splat(&args);
         let args = args.into_arg_list_with(&handle);
         let slice = args.as_ref();
         unsafe {
             protect(|| {
-                Value::new(rb_funcallv_public(
+                Value::new(rb_funcallv_public_kw(
                     self.as_rb_value(),
                     id.as_rb_id(),
                     slice.len() as c_int,
                     slice.as_ptr() as *const VALUE,
+                    kw_splat as c_int,
                 ))
             })
             .and_then(TryConvert::try_convert)
@@ -1224,15 +1249,17 @@ pub trait ReprValue: private::ReprValue {
     {
         let handle = Ruby::get_with(self);
         let id = method.into_id_with(&handle);
+        let kw_splat = kw_splat(&args);
         let args = args.into_arg_list_with(&handle);
         let slice = args.as_ref();
         unsafe {
             let result = protect(|| {
-                Value::new(rb_check_funcall(
+                Value::new(rb_check_funcall_kw(
                     self.as_rb_value(),
                     id.as_rb_id(),
                     slice.len() as c_int,
                     slice.as_ptr() as *const VALUE,
+                    kw_splat as c_int,
                 ))
             });
             match result {
@@ -1269,16 +1296,18 @@ pub trait ReprValue: private::ReprValue {
     {
         let handle = Ruby::get_with(self);
         let id = method.into_id_with(&handle);
+        let kw_splat = kw_splat(&args);
         let args = args.into_arg_list_with(&handle);
         let slice = args.as_ref();
         unsafe {
             protect(|| {
-                Value::new(rb_funcall_with_block(
+                Value::new(rb_funcall_with_block_kw(
                     self.as_rb_value(),
                     id.as_rb_id(),
                     slice.len() as c_int,
                     slice.as_ptr() as *const VALUE,
                     block.as_rb_value(),
+                    kw_splat as c_int,
                 ))
             })
             .and_then(TryConvert::try_convert)
@@ -1346,6 +1375,7 @@ pub trait ReprValue: private::ReprValue {
 
         let handle = Ruby::get_with(self);
         let id = method.into_id_with(&handle);
+        let kw_splat = kw_splat(&args);
         let args = args.into_arg_list_with(&handle);
         let slice = args.as_ref();
         let call_func =
@@ -1355,13 +1385,14 @@ pub trait ReprValue: private::ReprValue {
 
         protect(|| unsafe {
             #[allow(clippy::fn_to_numeric_cast)]
-            Value::new(rb_block_call(
+            Value::new(rb_block_call_kw(
                 self.as_rb_value(),
                 id.as_rb_id(),
                 slice.len() as c_int,
                 slice.as_ptr() as *const VALUE,
                 Some(call_func),
                 block as VALUE,
+                kw_splat as c_int,
             ))
         })
         .and_then(TryConvert::try_convert)
@@ -1555,15 +1586,17 @@ pub trait ReprValue: private::ReprValue {
         A: ArgList,
     {
         let handle = Ruby::get_with(self);
+        let kw_splat = kw_splat(&args);
         let args = args.into_arg_list_with(&handle);
         let slice = args.as_ref();
         unsafe {
-            Enumerator::from_rb_value_unchecked(rb_enumeratorize_with_size(
+            Enumerator::from_rb_value_unchecked(rb_enumeratorize_with_size_kw(
                 self.as_rb_value(),
                 method.into_symbol_with(&handle).as_rb_value(),
                 slice.len() as c_int,
                 slice.as_ptr() as *const VALUE,
                 None,
+                kw_splat as c_int,
             ))
         }
     }
