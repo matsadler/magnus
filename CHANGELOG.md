@@ -24,6 +24,8 @@
   be used to allow wrapped data to be subclassed in Ruby.
 - `Exception::exception_class` returns the class of an exception as an
   `ExceptionClass`.
+- The `kwargs!()` macro and `KwArgs` type can be used to pass keyword arguments
+  to `ReprValue::funcall`, et al.
 
 ### Changed
 - Minimum supported Rust version in now 1.61.

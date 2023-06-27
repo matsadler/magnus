@@ -336,8 +336,8 @@
 // * `rb_big_unpack`:
 // * `rb_big_xor`:
 //! * `rb_binding_new`: [`Binding::new`]. Unimplemented >= Ruby 3.2.
-//! * `rb_block_call`: [`Value::block_call`].
-// * `rb_block_call_kw`:
+//! * `rb_block_call`: See [`Value::block_call`].
+//! * `rb_block_call_kw`: [`Value::block_call`].
 //! * `rb_block_given_p`: [`block::block_given`].
 // * `rb_block_lambda`:
 //! * `rb_block_proc`: [`block::block_proc`].
@@ -347,8 +347,8 @@
 //!
 //! ## `rb_c`
 //!
-//! * `rb_call_super`: [`call_super`].
-// * `rb_call_super_kw`:
+//! * `rb_call_super`: See [`call_super`].
+//! * `rb_call_super_kw`: [`call_super`].
 // * `rb_catch`:
 // * `rb_catch_obj`:
 // * `rb_category_compile_warn`:
@@ -361,8 +361,8 @@
 // * `rb_check_copyable`:
 // * `rb_check_frozen`:
 // * `rb_check_frozen_inline`:
-//! * `rb_check_funcall`: [`Value::check_funcall`].
-// * `rb_check_funcall_kw`:
+//! * `rb_check_funcall`: See [`Value::check_funcall`].
+//! * `rb_check_funcall_kw`:  [`Value::check_funcall`].
 //! * `rb_check_hash_type`: See [`TryConvert`] and [`Value::try_convert`].
 //! * `rb_check_id`: Similar to [`Id::check`](value::Id::check).
 //! * `rb_check_id_cstr`: [`Id::check`](value::Id::check).
@@ -384,8 +384,8 @@
 // * `rb_class_instance_methods`:
 //! * `rb_class_name`: Simmilar to [`Value::classname`].
 //! * `rb_class_new`: [`RClass::new`].
-//! * `rb_class_new_instance`: [`RClass::new_instance`].
-// * `rb_class_new_instance_kw`:
+//! * `rb_class_new_instance`: See [`RClass::new_instance`].
+//! * `rb_class_new_instance_kw`: [`RClass::new_instance`].
 // * `rb_class_new_instance_pass_kw`:
 // * `rb_class_of`:
 // * `rb_class_path`:
@@ -644,8 +644,8 @@
 //! ## `rb_en`-`rb_ez`
 // * `rb_ensure`:
 //! * `rb_enumeratorize`: See [`Value::enumeratorize`].
-//! * `rb_enumeratorize_with_size`: Simmilar to [`Value::enumeratorize`].
-// * `rb_enumeratorize_with_size_kw`:
+//! * `rb_enumeratorize_with_size`: See [`Value::enumeratorize`].
+//! * `rb_enumeratorize_with_size_kw`: [`Value::enumeratorize`].
 // * `rb_enum_values_pack`:
 // * `rb_env_clear`:
 // * `rb_eof_error`:
@@ -791,14 +791,14 @@
 // * `rb_frozen_class_p`:
 // * `rb_frozen_error_raise`:
 //! * `rb_funcall`: See [`Value::funcall`].
-//! * `rb_funcallv`: [`Value::funcall`].
-// * `rb_funcallv_kw`:
-//! * `rb_funcallv_public`: [`Value::funcall_public`].
-// * `rb_funcallv_public_kw`:
+//! * `rb_funcallv`: See [`Value::funcall`].
+//! * `rb_funcallv_kw`: [`Value::funcall`].
+//! * `rb_funcallv_public`: See [`Value::funcall_public`].
+//! * `rb_funcallv_public_kw`: [`Value::funcall_public`].
 // * `rb_funcall_passing_block`:
 // * `rb_funcall_passing_block_kw`:
-//! * `rb_funcall_with_block`: [`Value::funcall_with_block`].
-// * `rb_funcall_with_block_kw`:
+//! * `rb_funcall_with_block`: See [`Value::funcall_with_block`].
+//! * `rb_funcall_with_block_kw`: [`Value::funcall_with_block`].
 // * `rb_f_abort`:
 // * `rb_f_exec`:
 // * `rb_f_exit`:
@@ -1632,8 +1632,9 @@
 //! * `rb_yield_values`:
 //!   See [`block::yield_values`] / return [`block::YieldValues`].
 //! * `rb_yield_values2`:
+//!   See [`block::yield_values`] / return [`block::YieldValues`].
+//! * `rb_yield_values_kw`:
 //!   [`block::yield_values`] / return [`block::YieldValues`].
-// * `rb_yield_values_kw`:
 // * `RB_ZALLOC`:
 // * `RB_ZALLOC_N`:
 //!

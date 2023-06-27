@@ -150,7 +150,7 @@ pub trait Class: Module {
     /// ```
     ///
     /// ```
-    /// use magnus::{class, eval, kwargs, prelude::*, RClass, RHash};
+    /// use magnus::{eval, kwargs, prelude::*, RClass};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let cls: RClass = eval!(
@@ -187,7 +187,7 @@ pub trait Class: Module {
     /// ```
     ///
     /// ```
-    /// use magnus::{eval, ExceptionClass, kwargs, prelude::*, RHash};
+    /// use magnus::{eval, ExceptionClass, kwargs, prelude::*};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let exc: ExceptionClass = eval!(

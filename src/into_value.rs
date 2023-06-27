@@ -109,7 +109,7 @@ pub struct KwArgs(pub RHash);
 /// # Examples
 ///
 /// ```
-/// use magnus::{eval, kwargs, KwArgs, prelude::*, RObject};
+/// use magnus::{eval, kwargs, prelude::*, RObject};
 /// # let _cleanup = unsafe { magnus::embed::init() };
 ///
 /// let kwargs = kwargs!("a" => 1, "b" => 2);

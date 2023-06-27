@@ -1116,7 +1116,7 @@ pub trait ReprValue: private::ReprValue {
     /// ```
     ///
     /// ```
-    /// use magnus::{eval, kwargs, prelude::*, RHash, RObject, Symbol};
+    /// use magnus::{eval, kwargs, prelude::*, RObject};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let object: RObject = eval!(
