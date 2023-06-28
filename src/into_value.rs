@@ -85,7 +85,7 @@ pub trait ArgList {
     fn contains_kw_args(&self) -> bool;
 }
 
-pub(crate) fn kw_splat(args: &impl ArgList) -> u32 {
+pub(crate) fn kw_splat(args: &impl RArrayArgList) -> u32 {
     if args.contains_kw_args() {
         rb_sys::RB_PASS_KEYWORDS
     } else {
@@ -244,11 +244,20 @@ pub trait RArrayArgList {
     /// Convert `self` into a type that can be used as a Ruby Proc argument
     /// list.
     fn into_array_arg_list_with(self, handle: &Ruby) -> RArray;
+
+    /// Whether the argument list contains keyword arguments. If true, the
+    /// last element of the `RArray` produced by
+    /// `Self::into_array_arg_list_with`
+    fn contains_kw_args(&self) -> bool;
 }
 
 impl RArrayArgList for RArray {
     fn into_array_arg_list_with(self, _: &Ruby) -> RArray {
         self
+    }
+
+    fn contains_kw_args(&self) -> bool {
+        false
     }
 }
 
@@ -258,5 +267,9 @@ where
 {
     fn into_array_arg_list_with(self, handle: &Ruby) -> RArray {
         handle.ary_new_from_values(self.into_arg_list_with(handle).as_ref())
+    }
+
+    fn contains_kw_args(&self) -> bool {
+        <Self as ArgList>::contains_kw_args(self)
     }
 }

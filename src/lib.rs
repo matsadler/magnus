@@ -1212,8 +1212,8 @@
 // * `rb_postponed_job_register_one`:
 // * `rb_prepend_module`: [`Module::prepend_module`].
 //! * `rb_proc_arity`: [`Proc::arity`](block::Proc::arity).
-//! * `rb_proc_call`: [`Proc::call`](block::Proc::call).
-// * `rb_proc_call_kw`:
+//! * `rb_proc_call`: See [`Proc::call`](block::Proc::call).
+//! * `rb_proc_call_kw`: [`Proc::call`](block::Proc::call).
 // * `rb_proc_call_with_block`:
 // * `rb_proc_call_with_block_kw`:
 // * `rb_proc_exec`:

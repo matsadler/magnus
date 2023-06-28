@@ -11,7 +11,7 @@ use std::{
 
 use rb_sys::{
     rb_block_given_p, rb_block_proc, rb_data_typed_object_wrap, rb_obj_is_proc, rb_proc_arity,
-    rb_proc_call, rb_proc_lambda_p, rb_proc_new, rb_yield, rb_yield_splat, rb_yield_values_kw,
+    rb_proc_call_kw, rb_proc_lambda_p, rb_proc_new, rb_yield, rb_yield_splat, rb_yield_values_kw,
     VALUE,
 };
 
@@ -314,6 +314,18 @@ impl Proc {
     /// assert_eq!(15, result);
     /// ```
     ///
+    /// With keyword arguments:
+    ///
+    /// ```
+    /// use magnus::{block::Proc, eval, kwargs};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let proc: Proc = eval("Proc.new {|a, b:, c:| a + b + c}").unwrap();
+    ///
+    /// let result: i64 = proc.call((1, kwargs!("b" => 2, "c" => 3))).unwrap();
+    /// assert_eq!(6, result);
+    /// ```
+    ///
     /// Ignoring return value:
     ///
     /// ```
@@ -331,10 +343,17 @@ impl Proc {
         A: RArrayArgList,
         T: TryConvert,
     {
+        let kw_splat = kw_splat(&args);
         let args = args.into_array_arg_list_with(&Ruby::get_with(self));
         unsafe {
-            protect(|| Value::new(rb_proc_call(self.as_rb_value(), args.as_rb_value())))
-                .and_then(TryConvert::try_convert)
+            protect(|| {
+                Value::new(rb_proc_call_kw(
+                    self.as_rb_value(),
+                    args.as_rb_value(),
+                    kw_splat as c_int,
+                ))
+            })
+            .and_then(TryConvert::try_convert)
         }
     }
 
