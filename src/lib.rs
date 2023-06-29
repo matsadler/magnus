@@ -2745,10 +2745,6 @@ pub fn require(feature: &str) -> Result<bool, Error> {
 /// # let _cleanup = unsafe { magnus::embed::init() };
 /// assert_eq!(magnus::eval::<i64>("1 + 2").unwrap(), 3);
 /// ```
-#[cfg_attr(
-    not(feature = "friendly-api"),
-    deprecated(note = "please use `Ruby::eval` instead")
-)]
 #[inline]
 pub fn eval<T>(s: &str) -> Result<T, Error>
 where
