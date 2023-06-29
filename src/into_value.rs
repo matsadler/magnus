@@ -81,7 +81,7 @@ pub trait ArgList {
 
     /// Whether the argument list contains keyword arguments. If true, the
     /// last element of the `&[Self::Value]` produced by
-    /// `Self::into_arg_list_with` and [`AsRef`]
+    /// `Self::into_arg_list_with` and [`AsRef`] must be a [`RHash`]
     fn contains_kw_args(&self) -> bool;
 }
 
@@ -247,7 +247,7 @@ pub trait RArrayArgList {
 
     /// Whether the argument list contains keyword arguments. If true, the
     /// last element of the `RArray` produced by
-    /// `Self::into_array_arg_list_with`
+    /// `Self::into_array_arg_list_with` must be a [`RHash`]
     fn contains_kw_args(&self) -> bool;
 }
 
