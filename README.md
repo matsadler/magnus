@@ -320,14 +320,6 @@ and `magnus::ArgList` for some additional details.
 
 \*\* see the `wrap` macro.
 
-### Conversions via Serde
-
-Rust types can also be converted to Ruby, and vice versa, using [Serde] with
-the [`serde_magnus`] crate.
-
-[Serde]: https://github.com/serde-rs/serde
-[`serde_magnus`]: https://github.com/georgeclaghorn/serde-magnus
-
 ### Manual Conversions
 
 There may be cases where you want to bypass the automatic type conversions, to
