@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 ### Added
+
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Security
+
+## [0.6.0] - Unreleased
+### Added
 - `value::Opaque` can be used to wrap a Ruby type to make it `Send` + `Sync`.
 - `value::Lazy` lazily initialises a Ruby value so it can be assigned to a
   `static`.
@@ -85,8 +98,6 @@
 
 ### Fixed
 - `RFloat::from_value` now returns `None` when value is a `Flonum`.
-
-### Security
 
 ## [0.5.3] - 2023-04-07
 ### Added
@@ -387,7 +398,8 @@
 - Pre-built bindings for Ruby 2.6 - 3.1 on common platforms, build-time
   generated bindings otherwise.
 
-[Unreleased]: https://github.com/matsadler/magnus/compare/0.5.3...HEAD
+[Unreleased]: https://github.com/matsadler/magnus/compare/0.6.0...HEAD
+[0.6.0]: https://github.com/matsadler/magnus/compare/0.5.3...0.6.0
 [0.5.3]: https://github.com/matsadler/magnus/compare/0.5.2...0.5.3
 [0.5.2]: https://github.com/matsadler/magnus/compare/0.5.1...0.5.2
 [0.5.1]: https://github.com/matsadler/magnus/compare/0.5.0...0.5.1
