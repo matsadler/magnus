@@ -13,7 +13,7 @@
 
 ### Security
 
-## [0.6.0] - Unreleased
+## [0.6.0] - 2023-07-28
 ### Added
 - `value::Opaque` can be used to wrap a Ruby type to make it `Send` + `Sync`.
 - `value::Lazy` lazily initialises a Ruby value so it can be assigned to a
