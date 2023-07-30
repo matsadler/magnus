@@ -1382,7 +1382,7 @@ impl RString {
     /// values offset from the end of the string.
     /// `len` is the length of the portion of `self` to replace. It does not
     /// need to match the length of `other`, `self` will be expanded or
-    /// contracted as needed to accomdate `other`.
+    /// contracted as needed to accommodate `other`.
     ///
     /// # Examples
     ///
