@@ -145,7 +145,7 @@ impl RBignum {
     /// assert!(RBignum::from_i64(0).is_err());
     /// ```
     #[cfg_attr(
-        not(feature = "friendly-api"),
+        not(feature = "old-api"),
         deprecated(note = "please use `Ruby::bignum_from_i64` instead")
     )]
     #[inline]
@@ -174,7 +174,7 @@ impl RBignum {
     /// assert!(RBignum::from_u64(0).is_err());
     /// ```
     #[cfg_attr(
-        not(feature = "friendly-api"),
+        not(feature = "old-api"),
         deprecated(note = "please use `Ruby::bignum_from_u64` instead")
     )]
     #[inline]

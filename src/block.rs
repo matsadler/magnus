@@ -226,7 +226,7 @@ impl Proc {
     /// rb_assert!("[1, 2, 3, 4, 5].inject(&proc) == 15", proc);
     /// ```
     #[cfg_attr(
-        not(feature = "friendly-api"),
+        not(feature = "old-api"),
         deprecated(note = "please use `Ruby::proc_new` instead")
     )]
     #[inline]
@@ -266,7 +266,7 @@ impl Proc {
     /// rb_assert!("proc.call(2) == 4", proc);
     /// ```
     #[cfg_attr(
-        not(feature = "friendly-api"),
+        not(feature = "old-api"),
         deprecated(note = "please use `Ruby::proc_from_fn` instead")
     )]
     #[inline]
@@ -759,7 +759,7 @@ impl Ruby {
 /// rb_assert!("got_block? == false");
 /// ```
 #[cfg_attr(
-    not(feature = "friendly-api"),
+    not(feature = "old-api"),
     deprecated(note = "please use `Ruby::block_given` instead")
 )]
 #[inline]
@@ -792,7 +792,7 @@ pub fn block_given() -> bool {
 /// rb_assert!("make_proc {}.is_a?(Proc)");
 /// ```
 #[cfg_attr(
-    not(feature = "friendly-api"),
+    not(feature = "old-api"),
     deprecated(note = "please use `Ruby::block_proc` instead")
 )]
 #[inline]
@@ -837,7 +837,7 @@ pub fn block_proc() -> Result<Proc, Error> {
 /// rb_assert!(r#"vars == ["foo", "bar", "baz"]"#, vars);
 /// ```
 #[cfg_attr(
-    not(feature = "friendly-api"),
+    not(feature = "old-api"),
     deprecated(note = "please use `Ruby::yield_value` instead")
 )]
 #[inline]
@@ -889,7 +889,7 @@ where
 /// rb_assert!(r#"vars == [[0, "foo"], [1, "bar"], [2, "baz"]]"#, vars);
 /// ```
 #[cfg_attr(
-    not(feature = "friendly-api"),
+    not(feature = "old-api"),
     deprecated(note = "please use `Ruby::yield_values` instead")
 )]
 #[inline]
@@ -950,7 +950,7 @@ where
 /// rb_assert!(r#"vars == [[0, "foo"], [1, "bar"], [2, "baz"]]"#, vars);
 /// ```
 #[cfg_attr(
-    not(feature = "friendly-api"),
+    not(feature = "old-api"),
     deprecated(note = "please use `Ruby::yield_splat` instead")
 )]
 #[inline]

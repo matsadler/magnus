@@ -449,7 +449,7 @@ impl Ruby {
 /// assert_eq!(instance.inspect(), "#<struct Struct::Example foo=1, bar=2>")
 /// ```
 #[cfg_attr(
-    not(feature = "friendly-api"),
+    not(feature = "old-api"),
     deprecated(note = "please use `Ruby::define_struct` instead")
 )]
 #[inline]

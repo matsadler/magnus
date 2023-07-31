@@ -900,7 +900,7 @@ impl Ruby {
 /// );
 /// ```
 #[cfg_attr(
-    not(feature = "friendly-api"),
+    not(feature = "old-api"),
     deprecated(note = "please use `Ruby::check_arity` instead")
 )]
 #[inline]

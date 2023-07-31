@@ -103,7 +103,7 @@ impl RRational {
     /// assert_eq!(rational.to_string(), "1/2");
     /// ```
     #[cfg_attr(
-        not(feature = "friendly-api"),
+        not(feature = "old-api"),
         deprecated(note = "please use `Ruby::rational_new` instead")
     )]
     #[inline]

@@ -33,7 +33,7 @@ pub trait IntoValue: Sized {
     /// Panics if called from a non-Ruby thread. See
     /// [`IntoValue::into_value_with`] for the non-panicking version.
     #[cfg_attr(
-        not(feature = "friendly-api"),
+        not(feature = "old-api"),
         deprecated(note = "please use `IntoValue::into_value_with` instead")
     )]
     #[inline]

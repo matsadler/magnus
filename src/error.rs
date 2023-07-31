@@ -184,7 +184,7 @@ impl Error {
     /// assert_eq!(i, 15);
     /// ```
     #[cfg_attr(
-        not(feature = "friendly-api"),
+        not(feature = "old-api"),
         deprecated(note = "please use `Ruby::iter_break_value` instead")
     )]
     #[inline]
@@ -557,7 +557,7 @@ pub fn bug(s: &str) -> ! {
 /// Panics if called from a non-Ruby thread. See [`Ruby::warning`] for the
 /// non-panicking version.
 #[cfg_attr(
-    not(feature = "friendly-api"),
+    not(feature = "old-api"),
     deprecated(note = "please use `Ruby::warning` instead")
 )]
 #[inline]

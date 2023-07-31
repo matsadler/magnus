@@ -111,7 +111,7 @@ impl RModule {
     /// assert!(module.is_kind_of(class::module()));
     /// ```
     #[cfg_attr(
-        not(feature = "friendly-api"),
+        not(feature = "old-api"),
         deprecated(note = "please use `Ruby::module_new` instead")
     )]
     #[inline]
@@ -948,7 +948,7 @@ impl Ruby {
 /// Panics if called from a non-Ruby thread. See [`Ruby::module_comparable`]
 /// for the non-panicking version.
 #[cfg_attr(
-    not(feature = "friendly-api"),
+    not(feature = "old-api"),
     deprecated(note = "please use `Ruby::module_comparable` instead")
 )]
 #[inline]
@@ -963,7 +963,7 @@ pub fn comparable() -> RModule {
 /// Panics if called from a non-Ruby thread. See [`Ruby::module_enumerable`]
 /// for the non-panicking version.
 #[cfg_attr(
-    not(feature = "friendly-api"),
+    not(feature = "old-api"),
     deprecated(note = "please use `Ruby::module_enumerable` instead")
 )]
 #[inline]
@@ -978,7 +978,7 @@ pub fn enumerable() -> RModule {
 /// Panics if called from a non-Ruby thread. See [`Ruby::module_errno`] for the
 /// non-panicking version.
 #[cfg_attr(
-    not(feature = "friendly-api"),
+    not(feature = "old-api"),
     deprecated(note = "please use `Ruby::module_errno` instead")
 )]
 #[inline]
@@ -993,7 +993,7 @@ pub fn errno() -> RModule {
 /// Panics if called from a non-Ruby thread. See [`Ruby::module_file_test`] for
 /// the non-panicking version.
 #[cfg_attr(
-    not(feature = "friendly-api"),
+    not(feature = "old-api"),
     deprecated(note = "please use `Ruby::module_file_test` instead")
 )]
 #[inline]
@@ -1008,7 +1008,7 @@ pub fn file_test() -> RModule {
 /// Panics if called from a non-Ruby thread. See [`Ruby::module_gc`] for the
 /// non-panicking version.
 #[cfg_attr(
-    not(feature = "friendly-api"),
+    not(feature = "old-api"),
     deprecated(note = "please use `Ruby::module_gc` instead")
 )]
 #[inline]
@@ -1023,7 +1023,7 @@ pub fn gc() -> RModule {
 /// Panics if called from a non-Ruby thread. See [`Ruby::module_kernel`] for
 /// the non-panicking version.
 #[cfg_attr(
-    not(feature = "friendly-api"),
+    not(feature = "old-api"),
     deprecated(note = "please use `Ruby::module_kernel` instead")
 )]
 #[inline]
@@ -1038,7 +1038,7 @@ pub fn kernel() -> RModule {
 /// Panics if called from a non-Ruby thread. See [`Ruby::module_math`] for the
 /// non-panicking version.
 #[cfg_attr(
-    not(feature = "friendly-api"),
+    not(feature = "old-api"),
     deprecated(note = "please use `Ruby::module_math` instead")
 )]
 #[inline]
@@ -1053,7 +1053,7 @@ pub fn math() -> RModule {
 /// Panics if called from a non-Ruby thread. See [`Ruby::module_process`] for
 /// the non-panicking version.
 #[cfg_attr(
-    not(feature = "friendly-api"),
+    not(feature = "old-api"),
     deprecated(note = "please use `Ruby::module_process` instead")
 )]
 #[inline]
@@ -1068,7 +1068,7 @@ pub fn process() -> RModule {
 /// Panics if called from a non-Ruby thread. See [`Ruby::module_wait_readable`]
 /// for the non-panicking version.
 #[cfg_attr(
-    not(feature = "friendly-api"),
+    not(feature = "old-api"),
     deprecated(note = "please use `Ruby::module_wait_readable` instead")
 )]
 #[inline]
@@ -1083,7 +1083,7 @@ pub fn wait_readable() -> RModule {
 /// Panics if called from a non-Ruby thread. See [`Ruby::module_wait_writable`]
 /// for the non-panicking version.
 #[cfg_attr(
-    not(feature = "friendly-api"),
+    not(feature = "old-api"),
     deprecated(note = "please use `Ruby::module_wait_writable` instead")
 )]
 #[inline]

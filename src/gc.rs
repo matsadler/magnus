@@ -534,7 +534,7 @@ impl Ruby {
 /// }
 /// ```
 #[cfg_attr(
-    not(feature = "friendly-api"),
+    not(feature = "old-api"),
     deprecated(note = "please use `Ruby::gc_disable` instead")
 )]
 #[inline]
@@ -570,7 +570,7 @@ pub fn disable() -> bool {
 /// }
 /// ```
 #[cfg_attr(
-    not(feature = "friendly-api"),
+    not(feature = "old-api"),
     deprecated(note = "please use `Ruby::gc_enable` instead")
 )]
 #[inline]
@@ -602,7 +602,7 @@ pub fn enable() -> bool {
 /// gc::start();
 /// ```
 #[cfg_attr(
-    not(feature = "friendly-api"),
+    not(feature = "old-api"),
     deprecated(note = "please use `Ruby::gc_start` instead")
 )]
 #[inline]
@@ -640,7 +640,7 @@ pub fn start() {
 /// gc::adjust_memory_usage(-(mem_size as isize));
 /// ```
 #[cfg_attr(
-    not(feature = "friendly-api"),
+    not(feature = "old-api"),
     deprecated(note = "please use `Ruby::gc_adjust_memory_usage` instead")
 )]
 #[inline]
@@ -667,7 +667,7 @@ pub fn adjust_memory_usage(diff: isize) {
 /// assert!(gc::count() > before);
 /// ```
 #[cfg_attr(
-    not(feature = "friendly-api"),
+    not(feature = "old-api"),
     deprecated(note = "please use `Ruby::gc_count` instead")
 )]
 #[inline]
@@ -691,7 +691,7 @@ pub fn count() -> usize {
 /// assert!(gc::stat("heap_live_slots").unwrap() > 1);
 /// ```
 #[cfg_attr(
-    not(feature = "friendly-api"),
+    not(feature = "old-api"),
     deprecated(note = "please use `Ruby::gc_stat` instead")
 )]
 #[inline]
@@ -721,7 +721,7 @@ where
 /// assert!(live_slots > 1);
 /// ```
 #[cfg_attr(
-    not(feature = "friendly-api"),
+    not(feature = "old-api"),
     deprecated(note = "please use `Ruby::gc_all_stats` instead")
 )]
 #[inline]

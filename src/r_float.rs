@@ -140,7 +140,7 @@ impl RFloat {
     /// assert!(RFloat::from_f64(1.7272337110188893e-77).is_err());
     /// ```
     #[cfg_attr(
-        not(feature = "friendly-api"),
+        not(feature = "old-api"),
         deprecated(note = "please use `Ruby::r_float_from_f64` instead")
     )]
     #[cfg(ruby_use_flonum)]
@@ -169,7 +169,7 @@ impl RFloat {
     /// rb_assert!("f == 1.7272337110188890e-77", f);
     /// ```
     #[cfg_attr(
-        not(feature = "friendly-api"),
+        not(feature = "old-api"),
         deprecated(note = "please use `Ruby::r_float_from_f64` instead")
     )]
     #[cfg(not(ruby_use_flonum))]

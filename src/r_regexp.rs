@@ -110,7 +110,7 @@ impl RRegexp {
     /// rb_assert!(r#"regexp == /foo/i"#, regexp);
     /// ```
     #[cfg_attr(
-        not(feature = "friendly-api"),
+        not(feature = "old-api"),
         deprecated(note = "please use `Ruby::reg_new` instead")
     )]
     #[inline]

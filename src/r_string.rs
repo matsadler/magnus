@@ -339,7 +339,7 @@ impl RString {
     /// rb_assert!(r#"val == "example""#, val);
     /// ```
     #[cfg_attr(
-        not(feature = "friendly-api"),
+        not(feature = "old-api"),
         deprecated(note = "please use `Ruby::str_new` instead")
     )]
     #[inline]
@@ -375,7 +375,7 @@ impl RString {
     /// rb_assert!(r#"buf == "\r\x0E\n\r\v\x0E\x0E\x0F""#, buf);
     /// ```
     #[cfg_attr(
-        not(feature = "friendly-api"),
+        not(feature = "old-api"),
         deprecated(note = "please use `Ruby::str_buf_new` instead")
     )]
     #[inline]
@@ -406,7 +406,7 @@ impl RString {
     /// rb_assert!(r#"s == "foobarbaz""#, s);
     /// ```
     #[cfg_attr(
-        not(feature = "friendly-api"),
+        not(feature = "old-api"),
         deprecated(note = "please use `Ruby::str_with_capacity` instead")
     )]
     #[inline]
@@ -433,7 +433,7 @@ impl RString {
     /// rb_assert!(r#"buf == "\r\x0E\n\r\v\x0E\x0E\x0F""#, buf);
     /// ```
     #[cfg_attr(
-        not(feature = "friendly-api"),
+        not(feature = "old-api"),
         deprecated(note = "please use `Ruby::str_from_slice` instead")
     )]
     #[inline]
@@ -466,7 +466,7 @@ impl RString {
     /// rb_assert!(r#"val == "\xFF\x80\x80".force_encoding("BINARY")"#, val);
     /// ```
     #[cfg_attr(
-        not(feature = "friendly-api"),
+        not(feature = "old-api"),
         deprecated(note = "please use `Ruby::enc_str_new` instead")
     )]
     #[inline]
@@ -505,7 +505,7 @@ impl RString {
     /// rb_assert!(r#"c == "🦀""#, c);
     /// ```
     #[cfg_attr(
-        not(feature = "friendly-api"),
+        not(feature = "old-api"),
         deprecated(note = "please use `Ruby::str_from_char` instead")
     )]
     #[inline]
@@ -541,7 +541,7 @@ impl RString {
     /// rb_assert!(r#"c == "🦀""#, c);
     /// ```
     #[cfg_attr(
-        not(feature = "friendly-api"),
+        not(feature = "old-api"),
         deprecated(note = "please use `Ruby::chr` instead")
     )]
     #[inline]
@@ -1711,7 +1711,7 @@ pub trait IntoRString: Sized {
     /// Panics if called from a non-Ruby thread. See
     /// [`IntoRString::into_r_string_with`] for the non-panicking version.
     #[cfg_attr(
-        not(feature = "friendly-api"),
+        not(feature = "old-api"),
         deprecated(note = "please use `IntoRString::into_r_string_with` instead")
     )]
     #[inline]

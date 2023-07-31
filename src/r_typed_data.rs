@@ -229,7 +229,7 @@ impl RTypedData {
     /// # let _ = Point { x: 1, y: 2 }.x + Point { x: 3, y: 4 }.y;
     /// ```
     #[cfg_attr(
-        not(feature = "friendly-api"),
+        not(feature = "old-api"),
         deprecated(note = "please use `Ruby::wrap` instead")
     )]
     #[inline]
@@ -319,7 +319,7 @@ impl RTypedData {
     /// # let _ = Point { x: 1, y: 2 }.x + Point { x: 3, y: 4 }.y;
     /// ```
     #[cfg_attr(
-        not(feature = "friendly-api"),
+        not(feature = "old-api"),
         deprecated(note = "please use `Ruby::wrap_as` instead")
     )]
     #[inline]

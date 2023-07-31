@@ -100,7 +100,7 @@ impl Symbol {
     /// rb_assert!(":example == sym", sym);
     /// ```
     #[cfg_attr(
-        not(feature = "friendly-api"),
+        not(feature = "old-api"),
         deprecated(note = "please use `Ruby::to_symbol` instead")
     )]
     #[inline]
@@ -237,7 +237,7 @@ pub trait IntoSymbol: Sized {
     /// rb_assert!("sym == :example", sym);
     /// ```
     #[cfg_attr(
-        not(feature = "friendly-api"),
+        not(feature = "old-api"),
         deprecated(note = "please use `IntoSymbol::into_symbol_with` instead")
     )]
     #[inline]

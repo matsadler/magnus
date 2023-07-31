@@ -239,7 +239,7 @@ impl RArray {
     /// assert!(ary.is_empty());
     /// ```
     #[cfg_attr(
-        not(feature = "friendly-api"),
+        not(feature = "old-api"),
         deprecated(note = "please use `Ruby::ary_new` instead")
     )]
     #[inline]
@@ -265,7 +265,7 @@ impl RArray {
     /// assert!(ary.is_empty());
     /// ```
     #[cfg_attr(
-        not(feature = "friendly-api"),
+        not(feature = "old-api"),
         deprecated(note = "please use `Ruby::ary_new_capa` instead")
     )]
     #[inline]
@@ -519,7 +519,7 @@ impl RArray {
     /// rb_assert!("ary == [:a, :b, :c]", ary);
     /// ```
     #[cfg_attr(
-        not(feature = "friendly-api"),
+        not(feature = "old-api"),
         deprecated(note = "please use `Ruby::ary_new_from_values` instead")
     )]
     #[inline]
@@ -834,7 +834,7 @@ impl RArray {
     /// rb_assert!("ary == [1, 2, 3]", ary);
     /// ```
     #[cfg_attr(
-        not(feature = "friendly-api"),
+        not(feature = "old-api"),
         deprecated(note = "please use `Ruby::ary_from_vec` instead")
     )]
     #[inline]
@@ -1735,7 +1735,7 @@ where
     }
 }
 
-#[cfg(feature = "friendly-api")]
+#[cfg(feature = "old-api")]
 impl<T> FromIterator<T> for RArray
 where
     T: IntoValue,

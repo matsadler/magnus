@@ -180,7 +180,7 @@ impl RHash {
     /// assert!(hash.is_empty());
     /// ```
     #[cfg_attr(
-        not(feature = "friendly-api"),
+        not(feature = "old-api"),
         deprecated(note = "please use `Ruby::hash_new` instead")
     )]
     #[inline]
@@ -206,7 +206,7 @@ impl RHash {
     /// assert!(ary.is_empty());
     /// ```
     #[cfg_attr(
-        not(feature = "friendly-api"),
+        not(feature = "old-api"),
         deprecated(note = "please use `Ruby::hash_new_capa` instead")
     )]
     #[cfg(any(ruby_gte_3_2, docsrs))]
@@ -717,7 +717,7 @@ where
     }
 }
 
-#[cfg(feature = "friendly-api")]
+#[cfg(feature = "old-api")]
 impl<K, V> FromIterator<(K, V)> for RHash
 where
     K: IntoValue,

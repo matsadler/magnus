@@ -113,7 +113,7 @@ impl Encoding {
     /// Panics if called from a non-Ruby thread. See
     /// [`Ruby::enc_default_external`] for the non-panicking version.
     #[cfg_attr(
-        not(feature = "friendly-api"),
+        not(feature = "old-api"),
         deprecated(note = "please use `Ruby::enc_default_external` instead")
     )]
     #[inline]
@@ -131,7 +131,7 @@ impl Encoding {
     /// Panics if called from a non-Ruby thread. See
     /// [`Ruby::enc_default_internal`] for the non-panicking version.
     #[cfg_attr(
-        not(feature = "friendly-api"),
+        not(feature = "old-api"),
         deprecated(note = "please use `Ruby::enc_default_internal` instead")
     )]
     #[inline]
@@ -323,7 +323,7 @@ impl RbEncoding {
     /// Panics if called from a non-Ruby thread. See
     /// [`Ruby::ascii8bit_encoding`] for the non-panicking version.
     #[cfg_attr(
-        not(feature = "friendly-api"),
+        not(feature = "old-api"),
         deprecated(note = "please use `Ruby::ascii8bit_encoding` instead")
     )]
     #[inline]
@@ -338,7 +338,7 @@ impl RbEncoding {
     /// Panics if called from a non-Ruby thread. See [`Ruby::utf8_encoding`]
     /// for the non-panicking version.
     #[cfg_attr(
-        not(feature = "friendly-api"),
+        not(feature = "old-api"),
         deprecated(note = "please use `Ruby::utf8_encoding` instead")
     )]
     #[inline]
@@ -353,7 +353,7 @@ impl RbEncoding {
     /// Panics if called from a non-Ruby thread. See [`Ruby::usascii_encoding`]
     /// for the non-panicking version.
     #[cfg_attr(
-        not(feature = "friendly-api"),
+        not(feature = "old-api"),
         deprecated(note = "please use `Ruby::usascii_encoding` instead")
     )]
     #[inline]
@@ -371,7 +371,7 @@ impl RbEncoding {
     /// Panics if called from a non-Ruby thread. See [`Ruby::locale_encoding`]
     /// for the non-panicking version.
     #[cfg_attr(
-        not(feature = "friendly-api"),
+        not(feature = "old-api"),
         deprecated(note = "please use `Ruby::locale_encoding` instead")
     )]
     #[inline]
@@ -389,7 +389,7 @@ impl RbEncoding {
     /// Panics if called from a non-Ruby thread. See
     /// [`Ruby::filesystem_encoding`] for the non-panicking version.
     #[cfg_attr(
-        not(feature = "friendly-api"),
+        not(feature = "old-api"),
         deprecated(note = "please use `Ruby::filesystem_encoding` instead")
     )]
     #[inline]
@@ -407,7 +407,7 @@ impl RbEncoding {
     /// Panics if called from a non-Ruby thread. See
     /// [`Ruby::default_external_encoding`] for the non-panicking version.
     #[cfg_attr(
-        not(feature = "friendly-api"),
+        not(feature = "old-api"),
         deprecated(note = "please use `Ruby::default_external_encoding` instead")
     )]
     #[inline]
@@ -425,7 +425,7 @@ impl RbEncoding {
     /// Panics if called from a non-Ruby thread. See
     /// [`Ruby::default_internal_encoding`] for the non-panicking version.
     #[cfg_attr(
-        not(feature = "friendly-api"),
+        not(feature = "old-api"),
         deprecated(note = "please use `Ruby::default_internal_encoding` instead")
     )]
     #[inline]
@@ -450,7 +450,7 @@ impl RbEncoding {
     /// assert_eq!(RbEncoding::find("BINARY").unwrap().name(), "ASCII-8BIT");
     /// ```
     #[cfg_attr(
-        not(feature = "friendly-api"),
+        not(feature = "old-api"),
         deprecated(note = "please use `Ruby::find_encoding` instead")
     )]
     #[inline]
@@ -1006,7 +1006,7 @@ impl Index {
     /// Panics if called from a non-Ruby thread. See
     /// [`Ruby::ascii8bit_encindex`] for the non-panicking version.
     #[cfg_attr(
-        not(feature = "friendly-api"),
+        not(feature = "old-api"),
         deprecated(note = "please use `Ruby::ascii8bit_encindex` instead")
     )]
     #[inline]
@@ -1021,7 +1021,7 @@ impl Index {
     /// Panics if called from a non-Ruby thread. See [`Ruby::utf8_encindex`]
     /// for the non-panicking version.
     #[cfg_attr(
-        not(feature = "friendly-api"),
+        not(feature = "old-api"),
         deprecated(note = "please use `Ruby::utf8_encindex` instead")
     )]
     #[inline]
@@ -1036,7 +1036,7 @@ impl Index {
     /// Panics if called from a non-Ruby thread. See [`Ruby::usascii_encindex`]
     /// for the non-panicking version.
     #[cfg_attr(
-        not(feature = "friendly-api"),
+        not(feature = "old-api"),
         deprecated(note = "please use `Ruby::usascii_encindex` instead")
     )]
     #[inline]
@@ -1054,7 +1054,7 @@ impl Index {
     /// Panics if called from a non-Ruby thread. See [`Ruby::locale_encindex`]
     /// for the non-panicking version.
     #[cfg_attr(
-        not(feature = "friendly-api"),
+        not(feature = "old-api"),
         deprecated(note = "please use `Ruby::locale_encindex` instead")
     )]
     #[inline]
@@ -1072,7 +1072,7 @@ impl Index {
     /// Panics if called from a non-Ruby thread. See
     /// [`Ruby::filesystem_encindex`] for the non-panicking version.
     #[cfg_attr(
-        not(feature = "friendly-api"),
+        not(feature = "old-api"),
         deprecated(note = "please use `Ruby::filesystem_encindex` instead")
     )]
     #[inline]
@@ -1098,7 +1098,7 @@ impl Index {
     /// assert!(encoding::Index::find("none").is_err());
     /// ```
     #[cfg_attr(
-        not(feature = "friendly-api"),
+        not(feature = "old-api"),
         deprecated(note = "please use `Ruby::find_encindex` instead")
     )]
     #[inline]

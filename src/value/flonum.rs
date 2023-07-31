@@ -122,7 +122,7 @@ impl Flonum {
     /// assert!(Flonum::from_f64(1.7272337110188890e-77).is_err());
     /// ```
     #[cfg_attr(
-        not(feature = "friendly-api"),
+        not(feature = "old-api"),
         deprecated(note = "please use `Ruby::flonum_from_f64` instead")
     )]
     #[inline]

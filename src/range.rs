@@ -126,7 +126,7 @@ impl Range {
     /// rb_assert!("range == (2...7)", range);
     /// ```
     #[cfg_attr(
-        not(feature = "friendly-api"),
+        not(feature = "old-api"),
         deprecated(note = "please use `Ruby::range_new` instead")
     )]
     #[inline]

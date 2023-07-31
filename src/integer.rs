@@ -164,7 +164,7 @@ impl Integer {
     /// );
     /// ```
     #[cfg_attr(
-        not(feature = "friendly-api"),
+        not(feature = "old-api"),
         deprecated(note = "please use `Ruby::integer_from_i64` instead")
     )]
     #[inline]
@@ -192,7 +192,7 @@ impl Integer {
     /// );
     /// ```
     #[cfg_attr(
-        not(feature = "friendly-api"),
+        not(feature = "old-api"),
         deprecated(note = "please use `Ruby::integer_from_u64` instead")
     )]
     #[inline]
