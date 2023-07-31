@@ -334,7 +334,6 @@
 // * `rb_big_sign`:
 // * `rb_big_unpack`:
 // * `rb_big_xor`:
-//! * `rb_binding_new`: [`Binding::new`]. Unimplemented >= Ruby 3.2.
 //! * `rb_block_call`: See [`Value::block_call`].
 //! * `rb_block_call_kw`: [`Value::block_call`].
 //! * `rb_block_given_p`: [`block::block_given`].
@@ -1791,7 +1790,6 @@
 mod macros;
 
 mod api;
-mod binding;
 pub mod block;
 pub mod class;
 #[cfg(feature = "embed")]
@@ -1886,11 +1884,6 @@ pub use crate::{
     typed_data::{DataType, DataTypeFunctions, TypedData},
     value::{Fixnum, StaticSymbol, Value},
 };
-#[allow(deprecated)]
-pub use crate::{
-    binding::Binding,
-    value::{QFALSE, QNIL, QTRUE},
-};
 use crate::{
     error::protect,
     method::Method,
@@ -1898,22 +1891,90 @@ use crate::{
     value::{private::ReprValue as _, ReprValue},
 };
 
-#[doc(hidden)]
-#[deprecated(
-    since = "0.6.0",
-    note = "please use `value::Lazy` or `DataType::builder` `const` constructors to set a `static` instead"
-)]
+/// Evaluate a literal string of Ruby code with the given local variables.
+///
+/// Any type that implements [`IntoValue`] can be passed to Ruby.
+///
+/// See also the [`eval`](fn@crate::eval) function.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread.
+///
+/// # Examples
+///
+/// ```
+/// # let _cleanup = unsafe { magnus::embed::init() };
+/// let result: i64 = magnus::eval!("a + b", a = 1, b = 2).unwrap();
+/// assert_eq!(result, 3)
+/// ```
+/// ```
+/// # let _cleanup = unsafe { magnus::embed::init() };
+/// let a = 1;
+/// let b = 2;
+/// let result: i64 = magnus::eval!("a + b", a, b).unwrap();
+/// assert_eq!(result, 3);
+/// ```
 #[macro_export]
-macro_rules! memoize {
-    ($type:ty: $val:expr) => {{
-        static INIT: std::sync::Once = std::sync::Once::new();
-        static mut VALUE: Option<$type> = None;
-        unsafe {
-            INIT.call_once(|| {
-                VALUE = Some($val);
-            });
-            VALUE.as_ref().unwrap()
-        }
+macro_rules! eval {
+    ($str:literal) => {{
+        $crate::eval!($crate::Ruby::get().unwrap(), $str)
+    }};
+    ($str:literal, $($bindings:tt)*) => {{
+        $crate::eval!($crate::Ruby::get().unwrap(), $str, $($bindings)*)
+    }};
+    ($ruby:expr, $str:literal) => {{
+        use $crate::{r_string::IntoRString, value::ReprValue};
+        $ruby
+            .eval::<$crate::Value>("binding")
+            .unwrap()
+            .funcall("eval", ($str.into_r_string_with(&$ruby),))
+    }};
+    ($ruby:expr, $str:literal, $($bindings:tt)*) => {{
+        use $crate::{r_string::IntoRString, value::ReprValue};
+        let binding = $ruby.eval::<$crate::Value>("binding").unwrap();
+        $crate::bind!(binding, $($bindings)*);
+        binding.funcall("eval", ($str.into_r_string_with(&$ruby),))
+    }};
+}
+
+#[doc(hidden)]
+#[macro_export]
+macro_rules! bind {
+    ($binding:ident,) => {};
+    ($binding:ident, $k:ident = $v:expr) => {{
+        use $crate::symbol::IntoSymbol;
+        let _: $crate::Value = $binding.funcall(
+            "local_variable_set",
+            (stringify!($k).into_symbol_with(&$crate::Ruby::get_with($binding)), $v),
+        )
+        .unwrap();
+    }};
+    ($binding:ident, $k:ident) => {{
+        use $crate::symbol::IntoSymbol;
+        let _: $crate::Value = $binding.funcall(
+            "local_variable_set",
+            (stringify!($k).into_symbol_with(&$crate::Ruby::get_with($binding)), $k),
+        )
+        .unwrap();
+    }};
+    ($binding:ident, $k:ident = $v:expr, $($rest:tt)*) => {{
+        use $crate::symbol::IntoSymbol;
+        let _: $crate::Value = $binding.funcall(
+            "local_variable_set",
+            (stringify!($k).into_symbol_with(&$crate::Ruby::get_with($binding)), $v),
+        )
+        .unwrap();
+        $crate::bind!($binding, $($rest)*);
+    }};
+    ($binding:ident, $k:ident, $($rest:tt)*) => {{
+        use $crate::symbol::IntoSymbol;
+        let _: $crate::Value = $binding.funcall(
+            "local_variable_set",
+            (stringify!($k).into_symbol_with(&$crate::Ruby::get_with($binding)), $k),
+        )
+        .unwrap();
+        $crate::bind!($binding, $($rest)*);
     }};
 }
 
@@ -2333,8 +2394,8 @@ impl Ruby {
     ///
     /// Ruby will use the 'ASCII-8BIT' (aka binary) encoding for any Ruby
     /// string literals in the passed string of Ruby code. See the
-    /// [`eval`](macro@crate::eval) macro or [`Binding::eval`] for an
-    /// alternative that supports utf-8.
+    /// [`eval`](macro@crate::eval) macro for an alternative that supports
+    /// utf-8.
     ///
     /// Errors if `s` contains a null byte, the conversion fails, or on an
     /// uncaught Ruby exception.

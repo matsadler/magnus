@@ -807,15 +807,6 @@ where
     pub fn wrap_as(data: T, class: RClass) -> Self {
         get_ruby!().obj_wrap_as(data, class)
     }
-
-    #[doc(hidden)]
-    #[deprecated(
-        since = "0.6.0",
-        note = "Obj::get() is unnecessary, Obj<T> derefs to T"
-    )]
-    pub fn get(&self) -> &T {
-        self.inner.get().unwrap()
-    }
 }
 
 impl<T> Deref for Obj<T>

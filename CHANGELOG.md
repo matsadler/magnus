@@ -11,6 +11,14 @@
 - `deprecated-send-sync-value` feature.
 - `ruby-static` feature. Instead enable the feature for `rb-sys` in your
   Cargo.toml like so: `rb-sys = { version = "*", features = ["ruby-static"] }`
+- `typed_data::Obj::get`.
+- The `QTRUE`, `QFALSE`, and `QNIL constants.
+- `Class::undef_alloc_func`.
+- `Value::try_convert`.
+- `Binding`.
+- `gc::{mark, mark_slice, mark_movable, location}`.
+- `RStruct::as_slice`.
+- `Exception::backtrace`.
 
 ### Fixed
 

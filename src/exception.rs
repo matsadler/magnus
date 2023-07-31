@@ -87,15 +87,6 @@ impl Exception {
     pub fn exception_class(self) -> ExceptionClass {
         unsafe { ExceptionClass::from_rb_value_unchecked(self.class().as_rb_value()) }
     }
-
-    #[doc(hidden)]
-    #[deprecated(
-        since = "0.6.0",
-        note = "Please use `ex.funcall(\"backtrace\", ())` instead."
-    )]
-    pub fn backtrace(self) -> Result<Option<RArray>, Error> {
-        self.funcall("backtrace", ())
-    }
 }
 
 impl fmt::Display for Exception {

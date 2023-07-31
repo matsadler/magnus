@@ -119,8 +119,7 @@ impl RStruct {
     ///
     /// Ruby may modify or free the memory backing the returned slice, the
     /// caller must ensure this does not happen.
-    #[deprecated(since = "0.6.0")]
-    pub unsafe fn as_slice(&self) -> &[Value] {
+    unsafe fn as_slice(&self) -> &[Value] {
         self.as_slice_unconstrained()
     }
 
@@ -154,7 +153,6 @@ impl RStruct {
     /// assert_eq!(instance.get::<i64>(0).unwrap(), 1);
     /// assert_eq!(instance.get::<i64>(1).unwrap(), 2);
     /// ```
-    #[allow(deprecated)]
     pub fn get<T>(self, index: usize) -> Result<T, Error>
     where
         T: TryConvert,

@@ -185,45 +185,6 @@ impl Compactor {
     }
 }
 
-#[doc(hidden)]
-#[deprecated(since = "0.6.0", note = "please use `Marker::mark` instead")]
-pub fn mark<T>(value: T)
-where
-    T: ReprValue,
-{
-    Marker::new().mark(value)
-}
-
-#[doc(hidden)]
-#[deprecated(since = "0.6.0", note = "please use `Marker::mark_slice` instead")]
-pub fn mark_slice<T>(values: &[T])
-where
-    T: ReprValue,
-{
-    Marker::new().mark_slice(values)
-}
-
-#[doc(hidden)]
-#[deprecated(since = "0.6.0", note = "please use `Marker::mark_movable` instead")]
-#[cfg(any(ruby_gte_2_7, docsrs))]
-#[cfg_attr(docsrs, doc(cfg(ruby_gte_2_7)))]
-pub fn mark_movable<T>(value: T)
-where
-    T: ReprValue,
-{
-    Marker::new().mark_movable(value)
-}
-
-#[doc(hidden)]
-#[deprecated(since = "0.6.0", note = "please use `Compactor::location` instead")]
-#[cfg(any(ruby_gte_2_7, docsrs))]
-pub fn location<T>(value: T) -> T
-where
-    T: ReprValue,
-{
-    Compactor::new().location(value)
-}
-
 /// Registers `value` to never be garbage collected.
 ///
 /// This is essentially a deliberate memory leak.

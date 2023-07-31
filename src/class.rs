@@ -424,15 +424,6 @@ pub trait Class: Module {
         }
     }
 
-    #[doc(hidden)]
-    #[deprecated(
-        since = "0.6.0",
-        note = "please use `undef_default_alloc_func` instead"
-    )]
-    fn undef_alloc_func(self) {
-        unsafe { rb_undef_alloc_func(self.as_rb_value()) }
-    }
-
     /// Remove the allocator function of a class if it is Ruby's default
     /// allocator function.
     ///

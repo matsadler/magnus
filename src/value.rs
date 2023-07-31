@@ -73,18 +73,6 @@ impl Value {
     pub(crate) const fn as_rb_value(self) -> VALUE {
         self.0
     }
-
-    #[doc(hidden)]
-    #[deprecated(
-        since = "0.6.0",
-        note = "please use `TryConvert::try_convert` or `T::try_convert` instead"
-    )]
-    pub fn try_convert<T>(self) -> Result<T, Error>
-    where
-        T: TryConvert,
-    {
-        T::try_convert(self.as_value())
-    }
 }
 
 impl fmt::Display for Value {
@@ -1744,7 +1732,6 @@ impl Ruby {
     /// ```
     #[inline]
     pub fn qfalse(&self) -> Qfalse {
-        #[allow(deprecated)]
         QFALSE
     }
 }
@@ -1759,11 +1746,7 @@ impl Ruby {
 pub struct Qfalse(Value);
 
 /// Ruby's `false` value.
-#[deprecated(
-    since = "0.6.0",
-    note = "please use `value::qfalse`/`Ruby::qfalse` instead"
-)]
-pub const QFALSE: Qfalse = Qfalse::new();
+const QFALSE: Qfalse = Qfalse::new();
 
 /// Returns Ruby's `false` value.
 ///
@@ -1876,7 +1859,6 @@ impl Ruby {
     /// ```
     #[inline]
     pub fn qnil(&self) -> Qnil {
-        #[allow(deprecated)]
         QNIL
     }
 }
@@ -1891,11 +1873,7 @@ impl Ruby {
 pub struct Qnil(NonZeroValue);
 
 /// Ruby's `nil` value.
-#[deprecated(
-    since = "0.6.0",
-    note = "please use `value::qnil`/`Ruby::qnil` instead"
-)]
-pub const QNIL: Qnil = Qnil::new();
+const QNIL: Qnil = Qnil::new();
 
 /// Returns Ruby's `nil` value.
 ///
@@ -2036,7 +2014,6 @@ impl Ruby {
     /// ```
     #[inline]
     pub fn qtrue(&self) -> Qtrue {
-        #[allow(deprecated)]
         QTRUE
     }
 }
@@ -2051,11 +2028,7 @@ impl Ruby {
 pub struct Qtrue(NonZeroValue);
 
 /// Ruby's `true` value.
-#[deprecated(
-    since = "0.6.0",
-    note = "please use `value::qtrue`/`Ruby::qtrue` instead"
-)]
-pub const QTRUE: Qtrue = Qtrue::new();
+const QTRUE: Qtrue = Qtrue::new();
 
 /// Returns Ruby's `true` value.
 ///
@@ -2211,12 +2184,6 @@ impl Qundef {
     #[inline]
     pub unsafe fn as_value(self) -> Value {
         self.0.get()
-    }
-
-    #[doc(hidden)]
-    #[deprecated(since = "0.6.0", note = "please use `as_value` instead")]
-    pub unsafe fn to_value(self) -> Value {
-        self.as_value()
     }
 }
 
