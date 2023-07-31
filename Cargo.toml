@@ -21,7 +21,6 @@ bytes = ["dep:bytes"]
 embed = ["rb-sys/link-ruby"]
 friendly-api = []
 rb-sys = []
-ruby-static = ["rb-sys/ruby-static"]
 
 [dependencies]
 bytes = { version = "1", optional = true }

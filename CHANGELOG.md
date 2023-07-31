@@ -9,6 +9,8 @@
 
 ### Removed
 - `deprecated-send-sync-value` feature.
+- `ruby-static` feature. Instead enable the feature for `rb-sys` in your
+  Cargo.toml like so: `rb-sys = { version = "*", features = ["ruby-static"] }`
 
 ### Fixed
 
