@@ -8,6 +8,7 @@
 ### Deprecated
 
 ### Removed
+- `deprecated-send-sync-value` feature.
 
 ### Fixed
 
