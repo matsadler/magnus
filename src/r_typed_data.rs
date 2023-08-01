@@ -1,6 +1,6 @@
 use std::{fmt, ptr::NonNull};
 
-use rb_sys::{self, rb_check_typeddata, rb_data_typed_object_wrap, ruby_value_type};
+use rb_sys::{self, rb_check_typeddata, rb_data_typed_object_wrap, ruby_value_type, VALUE};
 
 use crate::{
     class::RClass,
@@ -201,6 +201,11 @@ impl RTypedData {
                         .then(|| Self(NonZeroValue::new_unchecked(val)))
                 })
         }
+    }
+
+    #[inline]
+    pub(crate) unsafe fn from_rb_value_unchecked(val: VALUE) -> Self {
+        Self(NonZeroValue::new_unchecked(Value::new(val)))
     }
 
     /// Wrap the Rust type `T` in a Ruby object.

@@ -403,6 +403,41 @@ where
 {
 }
 
+/// Helper trait for wrapping a function with type conversions and error
+/// handling, when creating a thread.
+///
+/// See the [`Ruby::thread_create`] function.
+#[doc(hidden)]
+pub trait Thread<Res>
+where
+    Self: Sized + FnOnce() -> Res,
+    Res: BlockReturn,
+{
+    #[inline]
+    unsafe fn call_convert_value(self) -> Result<Value, Error> {
+        (self)().into_block_return()
+    }
+
+    #[inline]
+    unsafe fn call_handle_error(self) -> Value {
+        let res = match std::panic::catch_unwind(AssertUnwindSafe(|| self.call_convert_value())) {
+            Ok(v) => v,
+            Err(e) => Err(Error::from_panic(e)),
+        };
+        match res {
+            Ok(v) => v,
+            Err(e) => raise(e),
+        }
+    }
+}
+
+impl<Func, Res> Thread<Res> for Func
+where
+    Func: FnMut() -> Res,
+    Res: BlockReturn,
+{
+}
+
 /// Helper trait for wrapping a function as a Ruby method taking self and a
 /// Ruby array of arguments, with type conversions and error handling.
 ///

@@ -1512,7 +1512,7 @@
 // * `rb_thread_call_without_gvl2`:
 // * `rb_thread_call_with_gvl`:
 // * `rb_thread_check_ints`:
-// * `rb_thread_create`:
+//! * `rb_thread_create`: [`Ruby::thread_create`].
 // * `rb_thread_current`:
 // * `rb_thread_fd_close`:
 // * `rb_thread_fd_select`:
@@ -1834,6 +1834,7 @@ mod range;
 pub mod rb_sys;
 pub mod scan_args;
 pub mod symbol;
+mod thread;
 pub mod try_convert;
 pub mod typed_data;
 pub mod value;
@@ -1880,6 +1881,7 @@ pub use crate::{
     r_typed_data::RTypedData,
     range::Range,
     symbol::Symbol,
+    thread::Thread,
     try_convert::TryConvert,
     typed_data::{DataType, DataTypeFunctions, TypedData},
     value::{Fixnum, StaticSymbol, Value},
