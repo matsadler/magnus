@@ -433,7 +433,7 @@ where
 
 impl<Func, Res> Thread<Res> for Func
 where
-    Func: FnMut() -> Res,
+    Func: FnOnce() -> Res,
     Res: BlockReturn,
 {
 }
