@@ -410,12 +410,12 @@ where
 #[doc(hidden)]
 pub trait Thread<Res>
 where
-    Self: Sized + FnOnce() -> Res,
+    Self: Sized + FnOnce(&Ruby) -> Res,
     Res: BlockReturn,
 {
     #[inline]
     unsafe fn call_convert_value(self) -> Result<Value, Error> {
-        (self)().into_block_return()
+        (self)(&Ruby::get_unchecked()).into_block_return()
     }
 
     #[inline]
@@ -433,7 +433,7 @@ where
 
 impl<Func, Res> Thread<Res> for Func
 where
-    Func: FnOnce() -> Res,
+    Func: FnOnce(&Ruby) -> Res,
     Res: BlockReturn,
 {
 }

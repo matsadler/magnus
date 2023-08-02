@@ -38,14 +38,14 @@ impl Ruby {
     /// use magnus::{rb_assert, Error, Ruby};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
-    ///     let t = ruby.thread_create(|| 1 + 2);
+    ///     let t = ruby.thread_create(|_ruby| 1 + 2);
     ///     rb_assert!("t.value == 3", t);
     ///
     ///     Ok(())
     /// }
     /// # Ruby::init(example).unwrap()
     /// ```
-    pub fn thread_create<R>(&self, func: fn() -> R) -> Thread
+    pub fn thread_create<R>(&self, func: fn(&Ruby) -> R) -> Thread
     where
         R: BlockReturn,
     {
@@ -53,7 +53,7 @@ impl Ruby {
         where
             R: BlockReturn,
         {
-            let func = std::mem::transmute::<*mut c_void, fn() -> R>(arg);
+            let func = std::mem::transmute::<*mut c_void, fn(&Ruby) -> R>(arg);
             func.call_handle_error().as_rb_value()
         }
 
@@ -83,7 +83,7 @@ impl Ruby {
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let i = 1;
-    ///     let t = ruby.thread_create_from_fn(move || {
+    ///     let t = ruby.thread_create_from_fn(move |_ruby| {
     ///         i + 2
     ///     });
     ///     rb_assert!("t.value == 3", t);
@@ -94,12 +94,12 @@ impl Ruby {
     /// ```
     pub fn thread_create_from_fn<F, R>(&self, func: F) -> Thread
     where
-        F: 'static + Send + FnOnce() -> R,
+        F: 'static + Send + FnOnce(&Ruby) -> R,
         R: BlockReturn,
     {
         unsafe extern "C" fn call<F, R>(arg: *mut c_void) -> VALUE
         where
-            F: FnOnce() -> R,
+            F: FnOnce(&Ruby) -> R,
             R: BlockReturn,
         {
             let closure = (*(arg as *mut Option<F>)).take().unwrap();
@@ -202,7 +202,7 @@ impl TryConvert for Thread {
 /// dropped when the returned `Value` is garbage collected.
 fn wrap_closure<F, R>(func: F) -> (*mut Option<F>, Value)
 where
-    F: FnOnce() -> R,
+    F: FnOnce(&Ruby) -> R,
     R: BlockReturn,
 {
     struct Closure<F>(Option<F>, DataType);
