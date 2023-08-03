@@ -168,8 +168,8 @@ impl Compactor {
     ///
     /// The [`Value`] type is effectly a pointer to a Ruby object. Ruby's
     /// garbage collector will avoid moving objects exposed to extensions,
-    /// unless the object has been marked with [`mark_movable`]. When
-    /// implementing
+    /// unless the object has been marked with
+    /// [`mark_movable`](Marker::mark_movable). When implementing
     /// [`DataTypeFunctions::compact`](`crate::typed_data::DataTypeFunctions::compact`)
     /// you will need to update any Ruby objects you are storing.
     ///

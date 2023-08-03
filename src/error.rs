@@ -273,7 +273,7 @@ impl Error {
     ///
     /// This function is provided for rare cases where the `Error` needs to be
     /// stored on the heap and the inner value needs to be
-    /// [marked](`crate::gc::mark`) to avoid being garbage collected.
+    /// [marked](`crate::gc::Marker::mark`) to avoid being garbage collected.
     pub fn value(&self) -> Option<Value> {
         match self.0 {
             ErrorType::Jump(_) => None,

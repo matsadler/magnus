@@ -533,7 +533,7 @@ where
 /// This is a Value pointer to a RTypedData struct, Ruby’s internal
 /// representation of objects that wrap foreign types. Unlike [`RTypedData`] it
 /// tracks the Rust type it should contains and errors early in [`TryConvert`]
-/// if types don't match, rather than on [`Obj::get`].
+/// if types don't match.
 ///
 /// See the [`ReprValue`] and [`Object`] traits for additional methods
 /// available on this type. See [`Ruby`](Ruby#typed_dataobj) for methods to

@@ -83,9 +83,7 @@ impl Ruby {
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let i = 1;
-    ///     let t = ruby.thread_create_from_fn(move |_ruby| {
-    ///         i + 2
-    ///     });
+    ///     let t = ruby.thread_create_from_fn(move |_ruby| i + 2);
     ///     rb_assert!("t.value == 3", t);
     ///
     ///     Ok(())

@@ -819,11 +819,11 @@
 //! * `rb_gc_enable`: [`gc::enable`].
 // * `RB_GC_GUARD`:
 // * `rb_gc_latest_gc_info`:
-//! * `rb_gc_location`: [`gc::location`].
-//! * `rb_gc_mark`: [`gc::mark`].
-//! * `rb_gc_mark_locations`: [`gc::mark_slice`].
+//! * `rb_gc_location`: [`gc::Compactor::location`].
+//! * `rb_gc_mark`: [`gc::Marker::mark`].
+//! * `rb_gc_mark_locations`: [`gc::Marker::mark_slice`].
 // * `rb_gc_mark_maybe`:
-//! * `rb_gc_mark_movable`: [`gc::mark_movable`].
+//! * `rb_gc_mark_movable`: [`gc::Marker::mark_movable`].
 //! * `rb_gc_register_address`: [`gc::register_address`] or
 //!   [`BoxValue`](value::BoxValue).
 //! * `rb_gc_register_mark_object`: [`gc::register_mark_object`].
@@ -1512,7 +1512,7 @@
 // * `rb_thread_call_without_gvl2`:
 // * `rb_thread_call_with_gvl`:
 // * `rb_thread_check_ints`:
-//! * `rb_thread_create`: [`Ruby::thread_create`].
+//! * `rb_thread_create`: [`Ruby::thread_create`] & [`Ruby::thread_create_from_fn`].
 // * `rb_thread_current`:
 // * `rb_thread_fd_close`:
 // * `rb_thread_fd_select`:
