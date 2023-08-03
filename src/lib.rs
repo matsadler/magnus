@@ -1513,7 +1513,7 @@
 // * `rb_thread_call_with_gvl`:
 // * `rb_thread_check_ints`:
 //! * `rb_thread_create`: [`Ruby::thread_create`] & [`Ruby::thread_create_from_fn`].
-// * `rb_thread_current`:
+//! * `rb_thread_current`: [`Ruby::thread_current`].
 // * `rb_thread_fd_close`:
 // * `rb_thread_fd_select`:
 // * `rb_thread_fd_writable`:
@@ -1521,11 +1521,11 @@
 // * `rb_thread_kill`:
 // * `rb_thread_local_aref`:
 // * `rb_thread_local_aset`:
-// * `rb_thread_main`:
+//! * `rb_thread_main`: [`Ruby::thread_main`].
 // * `rb_thread_remove_event_hook`:
 // * `rb_thread_remove_event_hook_with_data`:
 // * `rb_thread_run`:
-// * `rb_thread_schedule`:
+//! * `rb_thread_schedule`: [`Ruby::thread_schedule`].
 // * `rb_thread_sleep`:
 // * `rb_thread_sleep_deadly`:
 // * `rb_thread_sleep_forever`:

@@ -1,6 +1,9 @@
 use std::{ffi::c_void, fmt, mem::size_of, slice};
 
-use rb_sys::{rb_data_typed_object_wrap, rb_thread_create, VALUE};
+use rb_sys::{
+    rb_data_typed_object_wrap, rb_thread_create, rb_thread_current, rb_thread_main,
+    rb_thread_schedule, VALUE,
+};
 
 use crate::{
     api::Ruby,
@@ -119,6 +122,51 @@ impl Ruby {
         // ivar without @ prefix is invisible from Ruby
         t.ivar_set("__rust_closure", keepalive).unwrap();
         t
+    }
+
+    /// Return the currently executing thread.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{prelude::*, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let t = ruby.thread_current();
+    ///     t.is_kind_of(ruby.class_thread());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
+    pub fn thread_current(&self) -> Thread {
+        unsafe { Thread::from_rb_value_unchecked(rb_thread_current()) }
+    }
+
+    /// Return the 'main' thread.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{prelude::*, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let t = ruby.thread_main();
+    ///     t.is_kind_of(ruby.class_thread());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
+    pub fn thread_main(&self) -> Thread {
+        unsafe { Thread::from_rb_value_unchecked(rb_thread_main()) }
+    }
+
+    /// Attempt to schedule another thread.
+    ///
+    /// This function blocks until the current thread is re-scheduled.
+    pub fn thread_schedule(&self) {
+        unsafe { rb_thread_schedule() };
     }
 }
 
