@@ -1,4 +1,4 @@
-use std::{cmp::Ordering, fmt, os::raw::c_long, ptr::NonNull, slice};
+use std::{cmp::Ordering, convert::Infallible, fmt, os::raw::c_long, ptr::NonNull, slice};
 
 #[cfg(ruby_gte_3_0)]
 use rb_sys::ruby_rarray_consts::RARRAY_EMBED_LEN_SHIFT;
@@ -159,6 +159,49 @@ impl Ruby {
         I: IntoIterator<Item = T>,
         T: IntoValue,
     {
+        self.ary_try_from_iter(iter.into_iter().map(|v| Result::<_, Infallible>::Ok(v)))
+            .unwrap()
+    }
+
+    /// Create a new `RArray` from a fallible Rust iterator.
+    ///
+    /// Returns `Ok(RArray)` on sucess or `Err(E)` with the first error
+    /// encountered.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let ary = ruby
+    ///         .ary_try_from_iter("1,2,3,4".split(',').map(|s| s.parse::<i64>()))
+    ///         .map_err(|e| Error::new(ruby.exception_runtime_error(), e.to_string()))?;
+    ///     rb_assert!(ruby, "ary == [1, 2, 3, 4]", ary);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
+    ///
+    /// ```
+    /// use magnus::{Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let err = ruby
+    ///         .ary_try_from_iter("1,2,foo,4".split(',').map(|s| s.parse::<i64>()))
+    ///         .unwrap_err();
+    ///     assert_eq!(err.to_string(), "invalid digit found in string");
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
+    pub fn ary_try_from_iter<I, T, E>(&self, iter: I) -> Result<RArray, E>
+    where
+        I: IntoIterator<Item = Result<T, E>>,
+        T: IntoValue,
+    {
         let iter = iter.into_iter();
         let (lower, _) = iter.size_hint();
         let ary = if lower > 0 {
@@ -169,7 +212,7 @@ impl Ruby {
         let mut buffer = [self.qnil().as_value(); 128];
         let mut i = 0;
         for v in iter {
-            buffer[i] = self.into_value(v);
+            buffer[i] = self.into_value(v?);
             i += 1;
             if i >= buffer.len() {
                 i = 0;
@@ -177,7 +220,7 @@ impl Ruby {
             }
         }
         ary.cat(&buffer[..i]).unwrap();
-        ary
+        Ok(ary)
     }
 }
 
