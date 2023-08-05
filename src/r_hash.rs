@@ -9,14 +9,12 @@ use std::{
     panic::AssertUnwindSafe,
 };
 
-#[cfg(ruby_gte_2_7)]
-use rb_sys::rb_hash_bulk_insert;
 #[cfg(ruby_gte_3_2)]
 use rb_sys::rb_hash_new_capa;
 use rb_sys::{
-    rb_check_hash_type, rb_hash_aref, rb_hash_aset, rb_hash_clear, rb_hash_delete, rb_hash_fetch,
-    rb_hash_foreach, rb_hash_lookup, rb_hash_lookup2, rb_hash_new, rb_hash_size, rb_hash_size_num,
-    rb_hash_update_by, ruby_value_type, VALUE,
+    rb_check_hash_type, rb_hash_aref, rb_hash_aset, rb_hash_bulk_insert, rb_hash_clear,
+    rb_hash_delete, rb_hash_fetch, rb_hash_foreach, rb_hash_lookup, rb_hash_lookup2, rb_hash_new,
+    rb_hash_size, rb_hash_size_num, rb_hash_update_by, ruby_value_type, VALUE,
 };
 
 use crate::{
@@ -378,8 +376,6 @@ impl RHash {
     ///     hash,
     /// );
     /// ```
-    #[cfg(any(ruby_gte_2_7, docsrs))]
-    #[cfg_attr(docsrs, doc(cfg(ruby_gte_2_7)))]
     pub fn bulk_insert<T>(self, slice: &[T]) -> Result<(), Error>
     where
         T: ReprValue,
@@ -666,8 +662,6 @@ impl RHash {
             let arg = &mut func as *mut F as VALUE;
             protect(|| {
                 let fptr = iter::<F, K, V> as unsafe extern "C" fn(VALUE, VALUE, VALUE) -> c_int;
-                #[cfg(ruby_lt_2_7)]
-                let fptr: unsafe extern "C" fn() -> c_int = std::mem::transmute(fptr);
                 rb_hash_foreach(self.as_rb_value(), Some(fptr), arg);
                 Ruby::get_with(self).qnil()
             })?;

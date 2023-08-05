@@ -5,12 +5,10 @@
 use std::{marker::PhantomData, ops::Range};
 
 use rb_sys::{
-    rb_gc_adjust_memory_usage, rb_gc_count, rb_gc_disable, rb_gc_enable, rb_gc_mark,
-    rb_gc_mark_locations, rb_gc_register_address, rb_gc_register_mark_object, rb_gc_start,
-    rb_gc_stat, rb_gc_unregister_address, VALUE,
+    rb_gc_adjust_memory_usage, rb_gc_count, rb_gc_disable, rb_gc_enable, rb_gc_location,
+    rb_gc_mark, rb_gc_mark_locations, rb_gc_mark_movable, rb_gc_register_address,
+    rb_gc_register_mark_object, rb_gc_start, rb_gc_stat, rb_gc_unregister_address, VALUE,
 };
-#[cfg(ruby_gte_2_7)]
-use rb_sys::{rb_gc_location, rb_gc_mark_movable};
 
 use crate::{
     error::{protect, Error},
@@ -110,8 +108,6 @@ impl Marker {
     /// invalid to use from Rust when GC is run, you must update any stored
     /// objects with [`Compactor::location`] inside your implementation of
     /// [`DataTypeFunctions::compact`](`crate::typed_data::DataTypeFunctions::compact`).
-    #[cfg(any(ruby_gte_2_7, docsrs))]
-    #[cfg_attr(docsrs, doc(cfg(ruby_gte_2_7)))]
     pub fn mark_movable<T>(&self, value: T)
     where
         T: Mark,
@@ -175,8 +171,6 @@ impl Compactor {
     ///
     /// Returns a new `T` that is pointing to the object that `value` used to
     /// point to. If `value` hasn't moved, simply returns `value`.
-    #[cfg(any(ruby_gte_2_7, docsrs))]
-    #[cfg_attr(docsrs, doc(cfg(ruby_gte_2_7)))]
     pub fn location<T>(&self, value: T) -> T
     where
         T: Locate,

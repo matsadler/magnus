@@ -216,9 +216,7 @@ impl Range {
     /// use magnus::eval;
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// # #[cfg(ruby_gte_2_7)]
     /// let range: magnus::Range = eval("..7").unwrap();
-    /// # #[cfg(ruby_gte_2_7)]
     /// assert_eq!(range.beg_len(10).unwrap(), (0, 8));
     /// ```
     ///
@@ -277,9 +275,7 @@ impl Range {
     /// use magnus::eval;
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// # #[cfg(ruby_gte_2_7)]
     /// let range: magnus::Range = eval("..7").unwrap();
-    /// # #[cfg(ruby_gte_2_7)]
     /// assert_eq!(range.to_range_with_len(10).unwrap(), 0..8);
     /// ```
     ///

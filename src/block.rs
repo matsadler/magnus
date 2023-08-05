@@ -87,8 +87,6 @@ impl Ruby {
 
         let call_func =
             call::<R> as unsafe extern "C" fn(VALUE, VALUE, c_int, *const VALUE, VALUE) -> VALUE;
-        #[cfg(ruby_lt_2_7)]
-        let call_func: unsafe extern "C" fn() -> VALUE = unsafe { std::mem::transmute(call_func) };
 
         unsafe {
             #[allow(clippy::fn_to_numeric_cast)]
@@ -148,8 +146,6 @@ impl Ruby {
         let (closure, keepalive) = wrap_closure(block);
         let call_func =
             call::<F, R> as unsafe extern "C" fn(VALUE, VALUE, c_int, *const VALUE, VALUE) -> VALUE;
-        #[cfg(ruby_lt_2_7)]
-        let call_func: unsafe extern "C" fn() -> VALUE = unsafe { std::mem::transmute(call_func) };
 
         let proc = unsafe {
             Proc::from_rb_value_unchecked(rb_proc_new(Some(call_func), closure as VALUE))

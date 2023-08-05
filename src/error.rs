@@ -496,13 +496,9 @@ where
 
     let result = unsafe {
         let call_func_ptr = call_func::<F1, T> as unsafe extern "C" fn(VALUE) -> VALUE;
-        #[cfg(ruby_lt_2_7)]
-        let call_func_ptr: unsafe extern "C" fn() -> VALUE = std::mem::transmute(call_func_ptr);
         let mut some_func = Some(func);
         let func_closure = &mut some_func as *mut Option<F1> as VALUE;
         let call_ensure_ptr = call_ensure::<F2> as unsafe extern "C" fn(VALUE) -> VALUE;
-        #[cfg(ruby_lt_2_7)]
-        let call_ensure_ptr: unsafe extern "C" fn() -> VALUE = std::mem::transmute(call_ensure_ptr);
         let mut some_ensure = Some(ensure);
         let ensure_closure = &mut some_ensure as *mut Option<F2> as VALUE;
         rb_ensure(

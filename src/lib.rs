@@ -1841,14 +1841,10 @@ pub mod value;
 
 use std::{ffi::CString, mem::transmute, os::raw::c_int};
 
-#[cfg(ruby_lt_2_7)]
-use ::rb_sys::rb_require;
-#[cfg(ruby_gte_2_7)]
-use ::rb_sys::rb_require_string;
 use ::rb_sys::{
     rb_backref_get, rb_call_super_kw, rb_current_receiver, rb_define_class, rb_define_global_const,
     rb_define_global_function, rb_define_module, rb_define_variable, rb_errinfo,
-    rb_eval_string_protect, rb_set_errinfo, VALUE,
+    rb_eval_string_protect, rb_require_string, rb_set_errinfo, VALUE,
 };
 pub use magnus_macros::{init, wrap, DataTypeFunctions, TypedData};
 
@@ -2361,34 +2357,12 @@ impl Ruby {
     /// }
     /// # Ruby::init(example).unwrap()
     /// ```
-    #[cfg(ruby_gte_2_7)]
     pub fn require<T>(&self, feature: T) -> Result<bool, Error>
     where
         T: IntoRString,
     {
         let feature = feature.into_r_string_with(self);
         protect(|| unsafe { Value::new(rb_require_string(feature.as_rb_value())) })
-            .and_then(TryConvert::try_convert)
-    }
-
-    /// Finds and loads the given feature if not already loaded.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
-    ///
-    /// fn example(ruby: &Ruby) -> Result<(), Error> {
-    ///     assert!(ruby.require("net/http")?);
-    ///
-    ///     Ok(())
-    /// }
-    /// # Ruby::init(example).unwrap()
-    /// ```
-    #[cfg(ruby_lt_2_7)]
-    pub fn require(&self, feature: &str) -> Result<bool, Error> {
-        let feature = CString::new(feature).unwrap();
-        protect(|| unsafe { Value::new(rb_require(feature.as_ptr())) })
             .and_then(TryConvert::try_convert)
     }
 
@@ -2753,37 +2727,11 @@ where
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::require` instead")
 )]
-#[cfg(ruby_gte_2_7)]
 #[inline]
 pub fn require<T>(feature: T) -> Result<bool, Error>
 where
     T: IntoRString,
 {
-    get_ruby!().require(feature)
-}
-
-/// Finds and loads the given feature if not already loaded.
-///
-/// # Panics
-///
-/// Panics if called from a non-Ruby thread. See [`Ruby::require`] for the
-/// non-panicking version.
-///
-/// # Examples
-///
-/// ```
-/// # let _cleanup = unsafe { magnus::embed::init() };
-/// use magnus::require;
-///
-/// assert!(require("net/http").unwrap());
-/// ```
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::require` instead")
-)]
-#[cfg(ruby_lt_2_7)]
-#[inline]
-pub fn require(feature: &str) -> Result<bool, Error> {
     get_ruby!().require(feature)
 }
 

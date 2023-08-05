@@ -1350,8 +1350,6 @@ pub trait ReprValue: private::ReprValue {
         let slice = args.as_ref();
         let call_func =
             call::<R> as unsafe extern "C" fn(VALUE, VALUE, c_int, *const VALUE, VALUE) -> VALUE;
-        #[cfg(ruby_lt_2_7)]
-        let call_func: unsafe extern "C" fn() -> VALUE = unsafe { std::mem::transmute(call_func) };
 
         protect(|| unsafe {
             #[allow(clippy::fn_to_numeric_cast)]

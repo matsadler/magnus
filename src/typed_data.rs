@@ -329,7 +329,6 @@ where
         } else {
             None
         };
-        #[cfg(ruby_gte_2_7)]
         let dcompact = if self.compact {
             Some(T::extern_compact as _)
         } else {
@@ -341,12 +340,8 @@ where
                 dmark,
                 dfree,
                 dsize,
-                #[cfg(ruby_gte_2_7)]
                 dcompact,
-                #[cfg(ruby_gte_2_7)]
                 reserved: [ptr::null_mut(); 1],
-                #[cfg(ruby_lt_2_7)]
-                reserved: [ptr::null_mut(); 2],
             },
             parent: ptr::null(),
             data: ptr::null_mut(),
