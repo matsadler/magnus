@@ -7,6 +7,7 @@
   `thread_main`, and `thread_schedule`.
 - `Ruby::ary_try_from_iter` is an efficient way to create a Ruby array from a
   fallible Rust iterator.
+- `Ruby::hash_from_iter` and `Ruby::hash_try_from_iter`.
 
 ### Changed
 

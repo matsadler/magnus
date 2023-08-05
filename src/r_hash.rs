@@ -2,6 +2,7 @@
 
 use std::{
     collections::HashMap,
+    convert::Infallible,
     fmt,
     hash::Hash,
     os::raw::{c_int, c_long},
@@ -124,6 +125,112 @@ impl Ruby {
     #[cfg_attr(docsrs, doc(cfg(ruby_gte_3_2)))]
     pub fn hash_new_capa(&self, n: usize) -> RHash {
         unsafe { RHash::from_rb_value_unchecked(rb_hash_new_capa(n as c_long)) }
+    }
+
+    /// Create a new `RHash` from a Rust iterator.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let hash = ruby.hash_from_iter(["a", "b", "c"].into_iter().zip(1..4));
+    ///     rb_assert!(ruby, r#"hash == {"a" => 1, "b" => 2, "c" => 3}"#, hash);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
+    pub fn hash_from_iter<I, K, V>(&self, iter: I) -> RHash
+    where
+        I: IntoIterator<Item = (K, V)>,
+        K: IntoValue,
+        V: IntoValue,
+    {
+        self.hash_try_from_iter(iter.into_iter().map(|v| Result::<_, Infallible>::Ok(v)))
+            .unwrap()
+    }
+
+    /// Create a new `RHash` from a fallible Rust iterator.
+    ///
+    /// Returns `Ok(RHash)` on sucess or `Err(E)` with the first error
+    /// encountered.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let hash = ruby.hash_try_from_iter("a,1;b,2;c,3".split(';').map(|s| {
+    ///         s.split_once(',')
+    ///             .ok_or_else(|| Error::new(ruby.exception_runtime_error(), "bad format"))
+    ///     }))?;
+    ///     rb_assert!(
+    ///         ruby,
+    ///         r#"hash == {"a" => "1", "b" => "2", "c" => "3"}"#,
+    ///         hash
+    ///     );
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
+    ///
+    /// ```
+    /// use magnus::{Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let err = ruby
+    ///         .hash_try_from_iter("a,1;b 2;c,3".split(';').map(|s| {
+    ///             s.split_once(',')
+    ///                 .ok_or_else(|| Error::new(ruby.exception_runtime_error(), "bad format"))
+    ///         }))
+    ///         .unwrap_err();
+    ///     assert_eq!(err.to_string(), "RuntimeError: bad format");
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
+    pub fn hash_try_from_iter<I, K, V, E>(&self, iter: I) -> Result<RHash, E>
+    where
+        I: IntoIterator<Item = Result<(K, V), E>>,
+        K: IntoValue,
+        V: IntoValue,
+    {
+        #[cfg(ruby_gte_3_2)]
+        pub fn hash_maybe_capa(n: usize) -> RHash {
+            unsafe { Ruby::get_unchecked() }.hash_new_capa(n)
+        }
+
+        #[cfg(ruby_lt_3_2)]
+        pub fn hash_maybe_capa(_: usize) -> RHash {
+            unsafe { Ruby::get_unchecked() }.hash_new()
+        }
+
+        let iter = iter.into_iter();
+        let (lower, _) = iter.size_hint();
+        let hash = if lower > 0 {
+            hash_maybe_capa(lower)
+        } else {
+            self.hash_new()
+        };
+        let mut buffer = [self.qnil().as_value(); 128];
+        let mut i = 0;
+        for r in iter {
+            let (k, v) = r?;
+            buffer[i] = self.into_value(k);
+            buffer[i + 1] = self.into_value(v);
+            i += 2;
+            if i >= buffer.len() {
+                i = 0;
+                hash.bulk_insert(&buffer).unwrap();
+            }
+        }
+        hash.bulk_insert(&buffer[..i]).unwrap();
+        Ok(hash)
     }
 }
 
@@ -727,11 +834,7 @@ where
     where
         I: IntoIterator<Item = (K, V)>,
     {
-        let hash = RHash::new();
-        for (k, v) in iter {
-            let _ = hash.aset(k, v);
-        }
-        hash
+        get_ruby!().hash_from_iter(iter)
     }
 }
 
