@@ -2,9 +2,7 @@
 
 ## [Unreleased]
 ### Added
-- `Thread` and `Ruby::thread_create`/`thread_create_from_fn`.
-- Other threading related functions added to `Ruby` are `thread_current`,
-  `thread_main`, and `thread_schedule`.
+- `Thread`, `Ruby::thread_create`/`thread_create_from_fn` and other thread APIs.
 - `Ruby::ary_try_from_iter` is an efficient way to create a Ruby array from a
   fallible Rust iterator.
 - `Ruby::hash_from_iter` and `Ruby::hash_try_from_iter`.

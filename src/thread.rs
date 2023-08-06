@@ -1,8 +1,16 @@
-use std::{ffi::c_void, fmt, mem::size_of, slice};
+use std::{
+    fmt,
+    mem::size_of,
+    os::raw::{c_int, c_void},
+    slice,
+    time::Duration,
+};
 
 use rb_sys::{
-    rb_data_typed_object_wrap, rb_thread_create, rb_thread_current, rb_thread_main,
-    rb_thread_schedule, VALUE,
+    rb_data_typed_object_wrap, rb_thread_alone, rb_thread_create, rb_thread_current,
+    rb_thread_kill, rb_thread_main, rb_thread_run, rb_thread_schedule, rb_thread_sleep,
+    rb_thread_sleep_deadly, rb_thread_sleep_forever, rb_thread_wakeup, rb_thread_wakeup_alive,
+    VALUE,
 };
 
 use crate::{
@@ -168,6 +176,99 @@ impl Ruby {
     pub fn thread_schedule(&self) {
         unsafe { rb_thread_schedule() };
     }
+
+    /// Checks if the current thread is the only thread currently alive.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use std::time::Duration;
+    ///
+    /// use magnus::{Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     assert!(ruby.thread_alone());
+    ///
+    ///     ruby.thread_create_from_fn(|ruby| ruby.thread_sleep(Duration::from_secs(1)));
+    ///
+    ///     assert!(!ruby.thread_alone());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
+    pub fn thread_alone(&self) -> bool {
+        unsafe { rb_thread_alone() != 0 }
+    }
+
+    /// Blocks for the given period of time.
+    ///
+    /// Returns an error if sleep is intrrupted by a signal.
+    ///
+    /// The resolution of `duration` in the underlying Ruby API is in seconds.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use std::time::{Duration, Instant};
+    ///
+    /// use magnus::{Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let now = Instant::now();
+    ///     ruby.thread_sleep(Duration::from_secs(1))?;
+    ///     assert_eq!(1, now.elapsed().as_secs());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
+    pub fn thread_sleep(&self, duration: Duration) -> Result<(), Error> {
+        protect(|| {
+            unsafe { rb_thread_sleep(duration.as_secs() as c_int) };
+            self.qnil()
+        })?;
+        Ok(())
+    }
+
+    /// Blocks indefinitely.
+    ///
+    /// Returns an error if sleep is intrrupted by a signal.
+    pub fn thread_sleep_forever(&self) -> Result<(), Error> {
+        protect(|| {
+            unsafe { rb_thread_sleep_forever() };
+            self.qnil()
+        })?;
+        Ok(())
+    }
+
+    /// Blocks indefinitely.
+    ///
+    /// The  thread  calling  this function is considered "dead" when Ruby's
+    /// deadlock checker is triggered.
+    /// See also [`thread_sleep_forever`](Ruby::thread_sleep_forever).
+    ///
+    /// Returns an error if sleep is intrrupted by a signal.
+    pub fn rb_thread_sleep_deadly(&self) -> Result<(), Error> {
+        protect(|| {
+            unsafe { rb_thread_sleep_deadly() };
+            self.qnil()
+        })?;
+        Ok(())
+    }
+
+    /// Stop the current thread.
+    ///
+    /// The thread can later be woken up, see [`Thread::wakeup`].
+    ///
+    /// Returns an error if stopping the current thread would deadlock.
+    pub fn thread_stop(&self) -> Result<(), Error> {
+        protect(|| {
+            unsafe { rb_thread_sleep_forever() };
+            self.qnil()
+        })?;
+        Ok(())
+    }
 }
 
 /// Wrapper type for a Value known to be an instance of Ruby's Thread class.
@@ -201,6 +302,62 @@ impl Thread {
     #[inline]
     pub(crate) unsafe fn from_rb_value_unchecked(val: VALUE) -> Self {
         Self(RTypedData::from_rb_value_unchecked(val))
+    }
+
+    /// Mark `self` as eligible for scheduling.
+    ///
+    /// See also [`Thread::wakeup_alive`] and [`Thread::run`].
+    ///
+    /// The thread is not scheduled immediately, simply marked as available.
+    /// The thread may also remain blocked on IO.
+    ///
+    /// Returns an error `self` is dead.
+    pub fn wakeup(self) -> Result<(), Error> {
+        let ruby = Ruby::get_with(self);
+        protect(|| {
+            unsafe { rb_thread_wakeup(self.as_rb_value()) };
+            ruby.qnil()
+        })?;
+        Ok(())
+    }
+
+    /// Mark `self` as eligible for scheduling.
+    ///
+    /// See also [`Thread::wakeup`] and [`Thread::run`].
+    ///
+    /// The thread is not scheduled immediately, simply marked as available.
+    /// The thread may also remain blocked on IO.
+    pub fn wakeup_alive(self) {
+        unsafe { rb_thread_wakeup_alive(self.as_rb_value()) };
+    }
+
+    /// Mark `self` as eligible for scheduling and invoke the thread schedular.
+    ///
+    /// See also [`Thread::wakeup`] and [`Thread::wakeup_alive`].
+    ///
+    /// There is not gurantee that `self` will be the next thread scheduled.
+    ///
+    /// Returns an error `self` is dead.
+    pub fn run(self) -> Result<(), Error> {
+        let ruby = Ruby::get_with(self);
+        protect(|| {
+            unsafe { rb_thread_run(self.as_rb_value()) };
+            ruby.qnil()
+        })?;
+        Ok(())
+    }
+
+    /// Terminates `self`.
+    ///
+    /// Returns an error if the `self` is the current or main thread, returning
+    /// this error to Ruby will end the process.
+    pub fn kill(self) -> Result<(), Error> {
+        let ruby = Ruby::get_with(self);
+        protect(|| {
+            unsafe { rb_thread_kill(self.as_rb_value()) };
+            ruby.qnil()
+        })?;
+        Ok(())
     }
 }
 
