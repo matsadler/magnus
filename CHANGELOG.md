@@ -16,7 +16,7 @@
 - `ruby-static` feature. Instead enable the feature for `rb-sys` in your
   Cargo.toml like so: `rb-sys = { version = "*", features = ["ruby-static"] }`
 - `typed_data::Obj::get`.
-- The `QTRUE`, `QFALSE`, and `QNIL constants.
+- The `QTRUE`, `QFALSE`, and `QNIL` constants.
 - `Class::undef_alloc_func`.
 - `Value::try_convert`.
 - `Binding`.
@@ -91,7 +91,7 @@
 ### Deprecated
 - `typed_data::Obj::get` as it is made redundant by the `Deref` implementation
   for `typed_data::Obj`.
-- The `QTRUE`, `QFALSE`, and `QNIL constants. Please use `value::qtrue()`,
+- The `QTRUE`, `QFALSE`, and `QNIL` constants. Please use `value::qtrue()`,
   `value::qfalse()`, and `value::qnil()`.
 - `Class::undef_alloc_func`. Please use `Class::undef_default_alloc_func`.
 - `Value::try_convert`, prefer `TryConvert::try_convert` or `T::try_convert`.
