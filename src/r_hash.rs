@@ -146,7 +146,7 @@ impl Ruby {
         K: IntoValue,
         V: IntoValue,
     {
-        self.hash_try_from_iter(iter.into_iter().map(|v| Result::<_, Infallible>::Ok(v)))
+        self.hash_try_from_iter(iter.into_iter().map(Result::<_, Infallible>::Ok))
             .unwrap()
     }
 

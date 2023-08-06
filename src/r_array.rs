@@ -159,7 +159,7 @@ impl Ruby {
         I: IntoIterator<Item = T>,
         T: IntoValue,
     {
-        self.ary_try_from_iter(iter.into_iter().map(|v| Result::<_, Infallible>::Ok(v)))
+        self.ary_try_from_iter(iter.into_iter().map(Result::<_, Infallible>::Ok))
             .unwrap()
     }
 
