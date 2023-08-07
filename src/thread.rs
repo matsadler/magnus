@@ -8,9 +8,9 @@ use std::{
 
 use rb_sys::{
     rb_data_typed_object_wrap, rb_thread_alone, rb_thread_create, rb_thread_current,
-    rb_thread_kill, rb_thread_main, rb_thread_run, rb_thread_schedule, rb_thread_sleep,
-    rb_thread_sleep_deadly, rb_thread_sleep_forever, rb_thread_wakeup, rb_thread_wakeup_alive,
-    VALUE,
+    rb_thread_kill, rb_thread_local_aref, rb_thread_local_aset, rb_thread_main, rb_thread_run,
+    rb_thread_schedule, rb_thread_sleep, rb_thread_sleep_deadly, rb_thread_sleep_forever,
+    rb_thread_wakeup, rb_thread_wakeup_alive, VALUE,
 };
 
 use crate::{
@@ -26,7 +26,7 @@ use crate::{
     typed_data::{DataType, DataTypeFunctions},
     value::{
         private::{self, ReprValue as _},
-        ReprValue, Value,
+        IntoId, ReprValue, Value,
     },
 };
 
@@ -355,6 +355,111 @@ impl Thread {
         let ruby = Ruby::get_with(self);
         protect(|| {
             unsafe { rb_thread_kill(self.as_rb_value()) };
+            ruby.qnil()
+        })?;
+        Ok(())
+    }
+
+    /// Get the value for `key` from the Fiber-local storage of the Fiber
+    /// currently executing on the thread `self`.
+    ///
+    /// When Fibers were added to Ruby this method became Fiber-local. If only
+    /// a single Fiber is run on a thread then this acts exactly like
+    /// thread-local storage. Ruby's C API does not expose true thread local
+    /// storage.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let current = ruby.thread_current();
+    ///     let val: Option<String> = current.local_aref("example")?;
+    ///     assert!(val.is_none());
+    ///
+    ///     let other = ruby.thread_create(|ruby| {
+    ///         ruby.thread_stop()?;
+    ///
+    ///         let val: String = ruby.thread_current().local_aref("example")?;
+    ///         assert_eq!(val, "test");
+    ///
+    ///         Ok(())
+    ///     });
+    ///
+    ///     current.local_aset("example", "foo")?;
+    ///     other.local_aset("example", "test")?;
+    ///
+    ///     let val: String = current.local_aref("example")?;
+    ///     assert_eq!(val, "foo");
+    ///
+    ///     other.run()?;
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
+    pub fn local_aref<I, T>(self, key: I) -> Result<T, Error>
+    where
+        I: IntoId,
+        T: TryConvert,
+    {
+        T::try_convert(Value::new(unsafe {
+            rb_thread_local_aref(self.as_rb_value(), key.into_id().as_rb_id())
+        }))
+    }
+
+    /// Set the value for `key` from the Fiber-local storage of the Fiber
+    /// currently executing on the thread `self`.
+    ///
+    /// Returns `Err` if `self` is frozen.
+    ///
+    /// When Fibers were added to Ruby this method became Fiber-local. If only
+    /// a single Fiber is run on a thread then this acts exactly like
+    /// thread-local storage. Ruby's C API does not expose true thread local
+    /// storage.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let current = ruby.thread_current();
+    ///     let val: Option<String> = current.local_aref("example")?;
+    ///     assert!(val.is_none());
+    ///
+    ///     let other = ruby.thread_create(|ruby| {
+    ///         ruby.thread_stop()?;
+    ///
+    ///         let val: String = ruby.thread_current().local_aref("example")?;
+    ///         assert_eq!(val, "test");
+    ///
+    ///         Ok(())
+    ///     });
+    ///
+    ///     current.local_aset("example", "foo")?;
+    ///     other.local_aset("example", "test")?;
+    ///
+    ///     let val: String = current.local_aref("example")?;
+    ///     assert_eq!(val, "foo");
+    ///
+    ///     other.run()?;
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
+    pub fn local_aset<I, T>(self, key: I, val: T) -> Result<(), Error>
+    where
+        I: IntoId,
+        T: IntoValue,
+    {
+        let ruby = Ruby::get_with(self);
+        let key = key.into_id();
+        let val = val.into_value();
+        protect(|| {
+            unsafe { rb_thread_local_aset(self.as_rb_value(), key.as_rb_id(), val.as_rb_value()) };
             ruby.qnil()
         })?;
         Ok(())

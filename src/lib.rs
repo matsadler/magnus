@@ -1505,7 +1505,7 @@
 //! * `RB_TEST`: [`Value::to_bool`] / [`TryConvert`] / [`Value::try_convert`].
 // * `rb_thread_add_event_hook`:
 // * `rb_thread_add_event_hook2`:
-// * `rb_thread_alone`:
+//! * `rb_thread_alone`: [`Thread::thread_alone`].
 // * `rb_thread_atfork`:
 // * `rb_thread_atfork_before_exec`:
 // * `rb_thread_call_without_gvl`:
@@ -1518,22 +1518,22 @@
 // * `rb_thread_fd_select`:
 // * `rb_thread_fd_writable`:
 // * `rb_thread_interrupted`:
-// * `rb_thread_kill`:
-// * `rb_thread_local_aref`:
-// * `rb_thread_local_aset`:
+//! * `rb_thread_kill`: [`Thread::thread_kill`].
+//! * `rb_thread_local_aref`: [`Thread::local_aref`].
+//! * `rb_thread_local_aset`: [`Thread::local_aset`].
 //! * `rb_thread_main`: [`Ruby::thread_main`].
 // * `rb_thread_remove_event_hook`:
 // * `rb_thread_remove_event_hook_with_data`:
-// * `rb_thread_run`:
+//! * `rb_thread_run`: [`Thread::thread_run`].
 //! * `rb_thread_schedule`: [`Ruby::thread_schedule`].
-// * `rb_thread_sleep`:
-// * `rb_thread_sleep_deadly`:
-// * `rb_thread_sleep_forever`:
-// * `rb_thread_stop`:
+//! * `rb_thread_sleep`: [`Thread::thread_sleep`].
+//! * `rb_thread_sleep_deadly`: [`Thread::thread_sleep_deadly`].
+//! * `rb_thread_sleep_forever`: [`Thread::thread_sleep_forever`].
+//! * `rb_thread_stop`: [`Thread::thread_stop`].
 // * `rb_thread_wait_fd`:
 // * `rb_thread_wait_for`:
-// * `rb_thread_wakeup`:
-// * `rb_thread_wakeup_alive`:
+//! * `rb_thread_wakeup`: [`Thread::thread_wakeup`].
+//! * `rb_thread_wakeup_alive`: [`Thread::thread_wakeup_alive`].
 // * `rb_throw`:
 // * `rb_throw_obj`:
 // * `rb_timespec_now`:
