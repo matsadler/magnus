@@ -7,10 +7,10 @@ use std::{
 };
 
 use rb_sys::{
-    rb_data_typed_object_wrap, rb_thread_alone, rb_thread_create, rb_thread_current,
-    rb_thread_kill, rb_thread_local_aref, rb_thread_local_aset, rb_thread_main, rb_thread_run,
-    rb_thread_schedule, rb_thread_sleep, rb_thread_sleep_deadly, rb_thread_sleep_forever,
-    rb_thread_wakeup, rb_thread_wakeup_alive, VALUE,
+    rb_data_typed_object_wrap, rb_thread_alone, rb_thread_check_ints, rb_thread_create,
+    rb_thread_current, rb_thread_kill, rb_thread_local_aref, rb_thread_local_aset, rb_thread_main,
+    rb_thread_run, rb_thread_schedule, rb_thread_sleep, rb_thread_sleep_deadly,
+    rb_thread_sleep_forever, rb_thread_wakeup, rb_thread_wakeup_alive, VALUE,
 };
 
 use crate::{
@@ -265,6 +265,26 @@ impl Ruby {
     pub fn thread_stop(&self) -> Result<(), Error> {
         protect(|| {
             unsafe { rb_thread_sleep_forever() };
+            self.qnil()
+        })?;
+        Ok(())
+    }
+
+    /// Check for, and run, pending interrupts.
+    ///
+    /// While Ruby is running a native extension function (such as one written
+    /// in Rust with Magnus) it can't process interrupts (e.g. signals or
+    /// `Thread#raise` called from another thread). Periodically calling this
+    /// function in any long running function will check for *and run* any
+    /// queued interrupts. This will allow your long running function to be
+    /// interrupted with say ctrl-c or `Timeout::timeout`.
+    ///
+    /// If any interrupt raises an error it will be returned as `Err`.
+    ///
+    /// Calling this function may execute code on another thread.
+    pub fn thread_check_ints(&self) -> Result<(), Error> {
+        protect(|| {
+            unsafe { rb_thread_check_ints() };
             self.qnil()
         })?;
         Ok(())
