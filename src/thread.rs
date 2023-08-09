@@ -1,17 +1,11 @@
-use std::{
-    fmt,
-    mem::size_of,
-    os::raw::{c_int, c_void},
-    slice,
-    time::Duration,
-};
+use std::{fmt, mem::size_of, os::raw::c_void, slice, time::Duration};
 
 use rb_sys::{
     rb_data_typed_object_wrap, rb_thread_alone, rb_thread_check_ints, rb_thread_create,
     rb_thread_current, rb_thread_interrupted, rb_thread_kill, rb_thread_local_aref,
-    rb_thread_local_aset, rb_thread_main, rb_thread_run, rb_thread_schedule, rb_thread_sleep,
-    rb_thread_sleep_deadly, rb_thread_sleep_forever, rb_thread_wakeup, rb_thread_wakeup_alive,
-    VALUE,
+    rb_thread_local_aset, rb_thread_main, rb_thread_run, rb_thread_schedule,
+    rb_thread_sleep_deadly, rb_thread_sleep_forever, rb_thread_wait_for, rb_thread_wakeup,
+    rb_thread_wakeup_alive, timeval, VALUE,
 };
 
 use crate::{
@@ -206,8 +200,6 @@ impl Ruby {
     ///
     /// Returns an error if sleep is intrrupted by a signal.
     ///
-    /// The resolution of `duration` in the underlying Ruby API is in seconds.
-    ///
     /// # Examples
     ///
     /// ```
@@ -217,16 +209,22 @@ impl Ruby {
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let now = Instant::now();
-    ///     ruby.thread_sleep(Duration::from_secs(1))?;
-    ///     assert_eq!(1, now.elapsed().as_secs());
+    ///     ruby.thread_sleep(Duration::from_millis(100))?;
+    ///     let elapsed = now.elapsed();
+    ///     assert!(elapsed.as_millis() > 90);
+    ///     assert!(elapsed.as_secs() < 1);
     ///
     ///     Ok(())
     /// }
     /// # Ruby::init(example).unwrap()
     /// ```
     pub fn thread_sleep(&self, duration: Duration) -> Result<(), Error> {
+        let t = timeval {
+            tv_sec: duration.as_secs() as _,
+            tv_usec: duration.as_micros() as _,
+        };
         protect(|| {
-            unsafe { rb_thread_sleep(duration.as_secs() as c_int) };
+            unsafe { rb_thread_wait_for(t) };
             self.qnil()
         })?;
         Ok(())

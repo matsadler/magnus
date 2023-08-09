@@ -1526,12 +1526,12 @@
 // * `rb_thread_remove_event_hook_with_data`:
 //! * `rb_thread_run`: [`Thread::thread_run`].
 //! * `rb_thread_schedule`: [`Ruby::thread_schedule`].
-//! * `rb_thread_sleep`: [`Thread::thread_sleep`].
+//! * `rb_thread_sleep`: See [`Thread::thread_sleep`].
 //! * `rb_thread_sleep_deadly`: [`Thread::thread_sleep_deadly`].
 //! * `rb_thread_sleep_forever`: [`Thread::thread_sleep_forever`].
 //! * `rb_thread_stop`: [`Thread::thread_stop`].
 // * `rb_thread_wait_fd`:
-// * `rb_thread_wait_for`:
+//! * `rb_thread_wait_for`: [`Thread::thread_sleep`].
 //! * `rb_thread_wakeup`: [`Thread::thread_wakeup`].
 //! * `rb_thread_wakeup_alive`: [`Thread::thread_wakeup_alive`].
 // * `rb_throw`:
