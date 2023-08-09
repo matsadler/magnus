@@ -8,9 +8,10 @@ use std::{
 
 use rb_sys::{
     rb_data_typed_object_wrap, rb_thread_alone, rb_thread_check_ints, rb_thread_create,
-    rb_thread_current, rb_thread_kill, rb_thread_local_aref, rb_thread_local_aset, rb_thread_main,
-    rb_thread_run, rb_thread_schedule, rb_thread_sleep, rb_thread_sleep_deadly,
-    rb_thread_sleep_forever, rb_thread_wakeup, rb_thread_wakeup_alive, VALUE,
+    rb_thread_current, rb_thread_interrupted, rb_thread_kill, rb_thread_local_aref,
+    rb_thread_local_aset, rb_thread_main, rb_thread_run, rb_thread_schedule, rb_thread_sleep,
+    rb_thread_sleep_deadly, rb_thread_sleep_forever, rb_thread_wakeup, rb_thread_wakeup_alive,
+    VALUE,
 };
 
 use crate::{
@@ -483,6 +484,14 @@ impl Thread {
             ruby.qnil()
         })?;
         Ok(())
+    }
+
+    /// Check if `self` has been interrupted.
+    ///
+    /// Returns true if the thread was interrupted, false otherwise. This can
+    /// be used to detect spurious wakeups.
+    pub fn interrupted(self) -> bool {
+        unsafe { rb_thread_interrupted(self.as_rb_value()) != 0 }
     }
 }
 

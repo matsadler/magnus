@@ -1517,7 +1517,7 @@
 // * `rb_thread_fd_close`:
 // * `rb_thread_fd_select`:
 // * `rb_thread_fd_writable`:
-// * `rb_thread_interrupted`:
+//! * `rb_thread_interrupted`: [`Thread::interrupted`].
 //! * `rb_thread_kill`: [`Thread::thread_kill`].
 //! * `rb_thread_local_aref`: [`Thread::local_aref`].
 //! * `rb_thread_local_aset`: [`Thread::local_aset`].
