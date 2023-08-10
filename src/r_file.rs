@@ -1,4 +1,4 @@
-use std::fmt;
+use std::{fmt, ptr::NonNull};
 
 use rb_sys::ruby_value_type;
 
@@ -30,6 +30,11 @@ impl RFile {
             (val.rb_type() == ruby_value_type::RUBY_T_FILE)
                 .then(|| Self(NonZeroValue::new_unchecked(val)))
         }
+    }
+
+    fn as_internal(self) -> NonNull<rb_sys::RFile> {
+        // safe as inner value is NonZero
+        unsafe { NonNull::new_unchecked(self.0.get().as_rb_value() as *mut _) }
     }
 }
 
