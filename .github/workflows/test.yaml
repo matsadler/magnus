@@ -22,17 +22,12 @@ jobs:
           - "3.2"
           - head
         rustup-toolchain:
-          - "1.51"
+          - "1.60"
           - stable
         include:
           - os: windows-latest
             ruby-version: mswin
             rustup-toolchain: stable
-        exclude:
-          - os: macos-latest
-            rustup-toolchain: "1.51"
-          - os: windows-latest
-            ruby-version: head
 
     steps:
       - uses: actions/checkout@v3
@@ -41,7 +36,7 @@ jobs:
         with:
           rustup-toolchain: ${{ matrix.rustup-toolchain }}
           ruby-version: ${{ matrix.ruby-version }}
-          cache-version: v2
+          cache-version: v3
           bundler-cache: true
           cargo-cache: true
           cargo-cache-extra-path: |
@@ -52,15 +47,19 @@ jobs:
 
       - name: Example gem tests (blank?)
         working-directory: examples/rust_blank
+        env:
+          RB_SYS_STABLE_API_COMPILED_FALLBACK: "1"
         run: bundle exec rake test
 
       - name: Example gem tests (custom exception defined in Ruby)
-        if: matrix.ruby-version != 'head'
+        env:
+          RB_SYS_STABLE_API_COMPILED_FALLBACK: "1"
         working-directory: examples/custom_exception_ruby
         run: bundle exec rake test
 
       - name: Example gem tests (custom exception defined in Rust)
-        if: matrix.ruby-version != 'head'
+        env:
+          RB_SYS_STABLE_API_COMPILED_FALLBACK: "1"
         working-directory: examples/custom_exception_rust
         run: bundle exec rake test
 

@@ -1,19 +1,14 @@
 use std::{
-    cmp::Ordering, convert::TryInto, fmt, iter::FromIterator, ops::Deref, os::raw::c_long,
-    ptr::NonNull, slice,
+    cmp::Ordering, convert::TryInto, fmt, iter::FromIterator, ops::Deref, os::raw::c_long, slice,
 };
 
-#[cfg(ruby_gte_3_0)]
-use rb_sys::ruby_rarray_consts::RARRAY_EMBED_LEN_SHIFT;
-#[cfg(ruby_lt_3_0)]
-use rb_sys::ruby_rarray_flags::RARRAY_EMBED_LEN_SHIFT;
 use rb_sys::{
     self, rb_ary_assoc, rb_ary_cat, rb_ary_clear, rb_ary_cmp, rb_ary_concat, rb_ary_delete,
     rb_ary_delete_at, rb_ary_entry, rb_ary_includes, rb_ary_join, rb_ary_new, rb_ary_new_capa,
     rb_ary_new_from_values, rb_ary_plus, rb_ary_pop, rb_ary_push, rb_ary_rassoc, rb_ary_replace,
     rb_ary_resize, rb_ary_reverse, rb_ary_rotate, rb_ary_shared_with_p, rb_ary_shift,
     rb_ary_sort_bang, rb_ary_store, rb_ary_subseq, rb_ary_to_ary, rb_ary_unshift,
-    rb_check_array_type, ruby_rarray_flags, ruby_value_type, VALUE,
+    rb_check_array_type, ruby_value_type, RARRAY_CONST_PTR, RARRAY_LEN, VALUE,
 };
 
 use crate::{
@@ -92,11 +87,6 @@ impl RArray {
     #[inline]
     pub(crate) unsafe fn from_rb_value_unchecked(val: VALUE) -> Self {
         Self(NonZeroValue::new_unchecked(Value::new(val)))
-    }
-
-    fn as_internal(self) -> NonNull<rb_sys::RArray> {
-        // safe as inner value is NonZero
-        unsafe { NonNull::new_unchecked(self.0.get().as_rb_value() as *mut _) }
     }
 
     /// Create a new empty `RArray`.
@@ -221,18 +211,7 @@ impl RArray {
     /// ```
     pub fn len(self) -> usize {
         debug_assert_value!(self);
-        unsafe {
-            let r_basic = self.r_basic_unchecked();
-            let flags = r_basic.as_ref().flags;
-            if (flags & ruby_rarray_flags::RARRAY_EMBED_FLAG as VALUE) != 0 {
-                let len = (flags >> RARRAY_EMBED_LEN_SHIFT as VALUE)
-                    & (ruby_rarray_flags::RARRAY_EMBED_LEN_MASK as VALUE
-                        >> RARRAY_EMBED_LEN_SHIFT as VALUE);
-                len.try_into().unwrap()
-            } else {
-                self.as_internal().as_ref().as_.heap.len.try_into().unwrap()
-            }
-        }
+        unsafe { RARRAY_LEN(self.as_rb_value()) as usize }
     }
 
     /// Return whether self contains any entries or not.
@@ -764,20 +743,9 @@ impl RArray {
 
     pub(crate) unsafe fn as_slice_unconstrained<'a>(self) -> &'a [Value] {
         debug_assert_value!(self);
-        let r_basic = self.r_basic_unchecked();
-        let flags = r_basic.as_ref().flags;
-        if (flags & ruby_rarray_flags::RARRAY_EMBED_FLAG as VALUE) != 0 {
-            let len = (flags >> RARRAY_EMBED_LEN_SHIFT as VALUE)
-                & (ruby_rarray_flags::RARRAY_EMBED_LEN_MASK as VALUE
-                    >> RARRAY_EMBED_LEN_SHIFT as VALUE);
-            slice::from_raw_parts(
-                &self.as_internal().as_ref().as_.ary as *const VALUE as *const Value,
-                len as usize,
-            )
-        } else {
-            let h = self.as_internal().as_ref().as_.heap;
-            slice::from_raw_parts(h.ptr as *const Value, h.len as usize)
-        }
+        let ptr = RARRAY_CONST_PTR(self.as_rb_value());
+        let len = RARRAY_LEN(self.as_rb_value());
+        slice::from_raw_parts(ptr as *const Value, len as _)
     }
 
     /// Convert `self` to a Rust vector of `T`s. Errors if converting any

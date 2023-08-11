@@ -13,6 +13,14 @@
 
 ### Security
 
+## [0.5.5] - 2023-08-11
+### Changed
+- Integrated the `rb-sys/stable-api` feature to fix compatibility issues with
+ruby-head. This has the following caveats:
+  * The minimum supported version of Rust (MSRV) is now 1.60.
+  * Ruby 2.6 and older will require the `rb-sys/stable-api-compiled-fallback`
+    feature to be enabled.
+
 ## [0.5.4] - 2023-06-07
 ### Changed
 - `try_convert` module is now public so that `TryConvertOwned` can be
