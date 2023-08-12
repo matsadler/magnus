@@ -178,6 +178,8 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
+    /// # #[cfg(unix)]
+    /// # {
     /// use std::{
     ///     io::{Read, Write},
     ///     net::Shutdown,
@@ -186,8 +188,6 @@ impl Ruby {
     ///
     /// use magnus::{Error, Ruby};
     ///
-    /// # #[cfg(unix)]
-    /// # {
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let (mut a, mut b) = UnixStream::pair().unwrap();
     ///     a.write_all(b"hello, world!").unwrap();
