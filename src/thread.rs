@@ -266,7 +266,7 @@ impl Ruby {
     pub fn thread_sleep(&self, duration: Duration) -> Result<(), Error> {
         let t = timeval {
             tv_sec: duration.as_secs() as _,
-            tv_usec: duration.as_micros() as _,
+            tv_usec: duration.subsec_micros() as _,
         };
         protect(|| {
             unsafe { rb_thread_wait_for(t) };
