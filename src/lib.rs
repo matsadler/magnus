@@ -1516,7 +1516,7 @@
 //! * `rb_thread_current`: [`Ruby::thread_current`].
 // * `rb_thread_fd_close`:
 // * `rb_thread_fd_select`:
-// * `rb_thread_fd_writable`:
+//! * `rb_thread_fd_writable`: [`Ruby::thread_fd_writable`].
 //! * `rb_thread_interrupted`: [`Thread::interrupted`].
 //! * `rb_thread_kill`: [`Thread::kill`].
 //! * `rb_thread_local_aref`: [`Thread::local_aref`].

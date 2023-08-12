@@ -2,8 +2,8 @@ use std::{fmt, mem::size_of, os::raw::c_void, slice, time::Duration};
 
 use rb_sys::{
     rb_data_typed_object_wrap, rb_thread_alone, rb_thread_check_ints, rb_thread_create,
-    rb_thread_current, rb_thread_interrupted, rb_thread_kill, rb_thread_local_aref,
-    rb_thread_local_aset, rb_thread_main, rb_thread_run, rb_thread_schedule,
+    rb_thread_current, rb_thread_fd_writable, rb_thread_interrupted, rb_thread_kill,
+    rb_thread_local_aref, rb_thread_local_aset, rb_thread_main, rb_thread_run, rb_thread_schedule,
     rb_thread_sleep_deadly, rb_thread_sleep_forever, rb_thread_wait_fd, rb_thread_wait_for,
     rb_thread_wakeup, rb_thread_wakeup_alive, timeval, VALUE,
 };
@@ -212,6 +212,50 @@ impl Ruby {
         let fd = fd.as_raw_fd();
         protect(|| {
             unsafe { rb_thread_wait_fd(fd) };
+            self.qnil()
+        })?;
+        Ok(())
+    }
+
+    /// Blocks until the given file descriptor is writable.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # #[cfg(unix)]
+    /// # {
+    /// use std::{
+    ///     io::{Read, Write},
+    ///     net::Shutdown,
+    ///     os::unix::net::UnixStream,
+    /// };
+    ///
+    /// use magnus::{Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let (mut a, mut b) = UnixStream::pair().unwrap();
+    ///
+    ///     a.set_nonblocking(true).unwrap();
+    ///     ruby.thread_fd_writable(&a)?;
+    ///     a.write_all(b"hello, world!").unwrap();
+    ///     a.shutdown(Shutdown::Both).unwrap();
+    ///
+    ///     let mut s = String::new();
+    ///     b.read_to_string(&mut s).unwrap();
+    ///     assert_eq!(s, "hello, world!");
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// # }
+    /// ```
+    pub fn thread_fd_writable<T>(&self, fd: &T) -> Result<(), Error>
+    where
+        T: AsRawFd,
+    {
+        let fd = fd.as_raw_fd();
+        protect(|| {
+            unsafe { rb_thread_fd_writable(fd) };
             self.qnil()
         })?;
         Ok(())
