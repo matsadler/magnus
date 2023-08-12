@@ -1,6 +1,6 @@
 [package]
 name = "magnus"
-version = "0.5.4"
+version = "0.5.5"
 authors = ["Mat Sadler <mat@sourcetagsandcodes.com>"]
 edition = "2018"
 resolver = "2"
@@ -15,7 +15,11 @@ exclude = [".github", ".gitignore"]
 
 [workspace]
 members = ["magnus-macros"]
-exclude = ["examples/rust_blank/ext/rust_blank", "examples/custom_exception_ruby/ext/ahriman", "examples/custom_exception_rust/ext/ahriman"]
+exclude = [
+  "examples/rust_blank/ext/rust_blank",
+  "examples/custom_exception_ruby/ext/ahriman",
+  "examples/custom_exception_rust/ext/ahriman",
+]
 
 [features]
 embed = ["rb-sys/link-ruby"]
@@ -25,11 +29,20 @@ bytes-crate = ["bytes"]
 
 [dependencies]
 magnus-macros = { version = "0.4.0", path = "magnus-macros" }
-rb-sys = { version = "~0.9.81", default-features = false, features = ["bindgen-rbimpls", "bindgen-deprecated-types", "stable-api"] }
+rb-sys = { version = "~0.9.81", default-features = false, features = [
+  "bindgen-rbimpls",
+  "bindgen-deprecated-types",
+  "stable-api",
+] }
 bytes = { version = "1", optional = true }
 
 [dev-dependencies]
-rb-sys = { version = "~0.9.81", default-features = false, features = ["bindgen-rbimpls", "bindgen-deprecated-types", "stable-api", "stable-api-compiled-fallback"] }
+rb-sys = { version = "~0.9.81", default-features = false, features = [
+  "bindgen-rbimpls",
+  "bindgen-deprecated-types",
+  "stable-api",
+  "stable-api-compiled-fallback",
+] }
 magnus = { path = ".", features = ["embed", "rb-sys-interop"] }
 
 [build-dependencies]
