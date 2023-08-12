@@ -1530,7 +1530,7 @@
 //! * `rb_thread_sleep_deadly`: [`Ruby::thread_sleep_deadly`].
 //! * `rb_thread_sleep_forever`: [`Ruby::thread_sleep_forever`].
 //! * `rb_thread_stop`: [`Ruby::thread_stop`].
-// * `rb_thread_wait_fd`:
+//! * `rb_thread_wait_fd`: [`Ruby::thread_wait_fd`].
 //! * `rb_thread_wait_for`: [`Ruby::thread_sleep`].
 //! * `rb_thread_wakeup`: [`Thread::wakeup`].
 //! * `rb_thread_wakeup_alive`: [`Thread::wakeup_alive`].

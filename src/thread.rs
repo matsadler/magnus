@@ -4,8 +4,8 @@ use rb_sys::{
     rb_data_typed_object_wrap, rb_thread_alone, rb_thread_check_ints, rb_thread_create,
     rb_thread_current, rb_thread_interrupted, rb_thread_kill, rb_thread_local_aref,
     rb_thread_local_aset, rb_thread_main, rb_thread_run, rb_thread_schedule,
-    rb_thread_sleep_deadly, rb_thread_sleep_forever, rb_thread_wait_for, rb_thread_wakeup,
-    rb_thread_wakeup_alive, timeval, VALUE,
+    rb_thread_sleep_deadly, rb_thread_sleep_forever, rb_thread_wait_fd, rb_thread_wait_for,
+    rb_thread_wakeup, rb_thread_wakeup_alive, timeval, VALUE,
 };
 
 use crate::{
@@ -16,6 +16,7 @@ use crate::{
     into_value::IntoValue,
     method::{BlockReturn, Thread as _},
     object::Object,
+    r_file::fd::AsRawFd,
     r_typed_data::RTypedData,
     try_convert::TryConvert,
     typed_data::{DataType, DataTypeFunctions},
@@ -172,6 +173,50 @@ impl Ruby {
         unsafe { rb_thread_schedule() };
     }
 
+    /// Blocks until the given file descriptor is readable.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use std::{
+    ///     io::{Read, Write},
+    ///     net::Shutdown,
+    ///     os::unix::net::UnixStream,
+    /// };
+    ///
+    /// use magnus::{Error, Ruby};
+    ///
+    /// # #[cfg(unix)]
+    /// # {
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let (mut a, mut b) = UnixStream::pair().unwrap();
+    ///     a.write_all(b"hello, world!").unwrap();
+    ///     a.shutdown(Shutdown::Both).unwrap();
+    ///
+    ///     b.set_nonblocking(true).unwrap();
+    ///     ruby.thread_wait_fd(&b)?;
+    ///
+    ///     let mut s = String::new();
+    ///     b.read_to_string(&mut s).unwrap();
+    ///     assert_eq!(s, "hello, world!");
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// # }
+    /// ```
+    pub fn thread_wait_fd<T>(&self, fd: &T) -> Result<(), Error>
+    where
+        T: AsRawFd,
+    {
+        let fd = fd.as_raw_fd();
+        protect(|| {
+            unsafe { rb_thread_wait_fd(fd) };
+            self.qnil()
+        })?;
+        Ok(())
+    }
+
     /// Checks if the current thread is the only thread currently alive.
     ///
     /// # Examples
@@ -248,7 +293,7 @@ impl Ruby {
     /// See also [`thread_sleep_forever`](Ruby::thread_sleep_forever).
     ///
     /// Returns an error if sleep is intrrupted by a signal.
-    pub fn rb_thread_sleep_deadly(&self) -> Result<(), Error> {
+    pub fn thread_sleep_deadly(&self) -> Result<(), Error> {
         protect(|| {
             unsafe { rb_thread_sleep_deadly() };
             self.qnil()

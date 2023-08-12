@@ -75,3 +75,23 @@ impl TryConvert for RFile {
         })
     }
 }
+
+#[cfg(not(unix))]
+pub mod fd {
+    use std::os::raw::c_int;
+
+    pub type RawFd = c_int;
+
+    pub trait AsRawFd {
+        fn as_raw_fd(&self) -> RawFd;
+    }
+}
+
+#[cfg(unix)]
+pub use std::os::unix::io as fd;
+
+impl fd::AsRawFd for RFile {
+    fn as_raw_fd(&self) -> fd::RawFd {
+        unsafe { (*self.as_internal().as_ref().fptr).fd }
+    }
+}
