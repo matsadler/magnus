@@ -1514,7 +1514,7 @@
 //! * `rb_thread_check_ints`: [`Ruby::thread_check_ints`].
 //! * `rb_thread_create`: [`Ruby::thread_create`] & [`Ruby::thread_create_from_fn`].
 //! * `rb_thread_current`: [`Ruby::thread_current`].
-// * `rb_thread_fd_close`:
+//! * `rb_thread_fd_close`: [`Ruby::thread_fd_close`].
 // * `rb_thread_fd_select`:
 //! * `rb_thread_fd_writable`: [`Ruby::thread_fd_writable`].
 //! * `rb_thread_interrupted`: [`Thread::interrupted`].
