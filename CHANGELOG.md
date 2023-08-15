@@ -7,6 +7,10 @@
   fallible Rust iterator.
 - `Ruby::hash_from_iter` and `Ruby::hash_try_from_iter`.
 - `RFile` implements `AsRawFd`.
+- `TypedArray<T>`, a Ruby Array that may only contain elements of type `T`.
+  On creation the Array is hidden from Ruby, and must be consumed to pass it
+  to Ruby (where it reverts to a regular untyped Array). It is then
+  inaccessible to Rust.
 
 ### Changed
 

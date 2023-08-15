@@ -18,7 +18,7 @@ use crate::{
     Ruby,
 };
 
-mod private {
+pub(crate) mod private {
     use super::*;
 
     pub trait Mark {

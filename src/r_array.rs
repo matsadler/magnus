@@ -1,5 +1,14 @@
-use std::{cmp::Ordering, convert::Infallible, fmt, os::raw::c_long, ptr::NonNull, slice};
+//! Types and functions for working with Ruby’s Array class.
 
+use std::{
+    cmp::Ordering, convert::Infallible, fmt, marker::PhantomData, os::raw::c_long, ptr::NonNull,
+    slice,
+};
+
+#[cfg(ruby_gte_3_2)]
+use rb_sys::rb_ary_hidden_new;
+#[cfg(ruby_lt_3_2)]
+use rb_sys::rb_ary_tmp_new as rb_ary_hidden_new;
 #[cfg(ruby_gte_3_0)]
 use rb_sys::ruby_rarray_consts::RARRAY_EMBED_LEN_SHIFT;
 #[cfg(ruby_lt_3_0)]
@@ -10,13 +19,14 @@ use rb_sys::{
     rb_ary_new_from_values, rb_ary_plus, rb_ary_pop, rb_ary_push, rb_ary_rassoc, rb_ary_replace,
     rb_ary_resize, rb_ary_reverse, rb_ary_rotate, rb_ary_shared_with_p, rb_ary_shift,
     rb_ary_sort_bang, rb_ary_store, rb_ary_subseq, rb_ary_to_ary, rb_ary_unshift,
-    rb_check_array_type, ruby_rarray_flags, ruby_value_type, VALUE,
+    rb_check_array_type, rb_obj_hide, rb_obj_reveal, ruby_rarray_flags, ruby_value_type, VALUE,
 };
 use seq_macro::seq;
 
 use crate::{
     enumerator::Enumerator,
     error::{protect, Error},
+    gc,
     into_value::{IntoValue, IntoValueFromNative},
     object::Object,
     r_string::{IntoRString, RString},
@@ -223,6 +233,34 @@ impl Ruby {
         ary.cat(&buffer[..i]).unwrap();
         Ok(ary)
     }
+
+    /// Create a new Ruby Array that may only contain elements of type `T`.
+    ///
+    /// On creation this Array is hidden from Ruby, and must be consumed to
+    /// pass it to Ruby (where it reverts to a regular untyped Array). It is
+    /// then inaccessible to Rust.
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let ary = ruby.typed_ary_new::<f64>();
+    ///     ary.push("1".parse().unwrap())?;
+    ///     ary.push("2.3".parse().unwrap())?;
+    ///     ary.push("4.5".parse().unwrap())?;
+    ///     rb_assert!(ruby, "ary == [1.0, 2.3, 4.5]", ary);
+    ///     // ary has moved and can no longer be used.
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
+    pub fn typed_ary_new<T>(&self) -> TypedArray<T> {
+        unsafe {
+            let ary = rb_ary_hidden_new(0);
+            TypedArray(NonZeroValue::new_unchecked(Value::new(ary)), PhantomData)
+        }
+    }
 }
 
 /// A Value pointer to a RArray struct, Ruby's internal representation of an
@@ -355,6 +393,73 @@ impl RArray {
     /// ```
     pub fn to_ary(val: Value) -> Result<Self, Error> {
         protect(|| unsafe { Self::from_rb_value_unchecked(rb_ary_to_ary(val.as_rb_value())) })
+    }
+
+    /// Iterates though `self` and checks each element is convertable to a `T`.
+    ///
+    /// Returns a typed copy of `self`. Mutating the returned copy will not
+    /// mutate `self`.
+    ///
+    /// This makes most sense when `T` is a Ruby type, although that is not
+    /// enforced. If `T` is a Rust type then see [`RArray::to_vec`] for an
+    /// alternative.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{function, prelude::*, typed_data, Error, RArray, Ruby};
+    ///
+    /// #[magnus::wrap(class = "Point")]
+    /// struct Point {
+    ///     x: isize,
+    ///     y: isize,
+    /// }
+    ///
+    /// impl Point {
+    ///     fn new(x: isize, y: isize) -> Self {
+    ///         Self { x, y }
+    ///     }
+    /// }
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let point_class = ruby.define_class("Point", ruby.class_object())?;
+    ///     point_class.define_singleton_method("new", function!(Point::new, 2))?;
+    ///
+    ///     let ary: RArray = ruby.eval(
+    ///         r#"
+    ///           [
+    ///             Point.new(1, 2),
+    ///             Point.new(3, 4),
+    ///             Point.new(5, 6),
+    ///           ]
+    ///         "#,
+    ///     )?;
+    ///
+    ///     let typed = ary.typecheck::<typed_data::Obj<Point>>()?;
+    ///     let point = typed.pop()?;
+    ///     assert_eq!(point.x, 5);
+    ///     assert_eq!(point.y, 6);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap();
+    /// # let _ = Point { x: 1, y: 2 }.x + Point { x: 3, y: 4 }.y;
+    /// ```
+    pub fn typecheck<T>(self) -> Result<TypedArray<T>, Error>
+    where
+        T: TryConvert,
+    {
+        for r in self.each() {
+            T::try_convert(r?)?;
+        }
+        unsafe {
+            let ary = rb_ary_hidden_new(0);
+            rb_ary_replace(ary, self.as_rb_value());
+            Ok(TypedArray(
+                NonZeroValue::new_unchecked(Value::new(ary)),
+                PhantomData,
+            ))
+        }
     }
 
     /// Create a new `RArray` that is a duplicate of `self`.
@@ -1434,3 +1539,184 @@ impl TryConvert for RArray {
         }
     }
 }
+
+/// A Ruby Array that may only contain elements of type `T`.
+///
+/// On creation this Array is hidden from Ruby, and must be consumed to
+/// pass it to Ruby (where it reverts to a regular untyped Array). It is
+/// then inaccessible to Rust.
+///
+/// See [`Ruby::typed_ary_new`] or [`RArray::typecheck`] for how to get a value
+/// of `TypedArray`.
+//
+// Very deliberately not Copy or Clone so that values of this type are consumed
+// when TypedArray::to_array is called, so you can either have typed access
+// from Rust *or* expose it to Ruby.
+#[repr(transparent)]
+pub struct TypedArray<T>(NonZeroValue, PhantomData<T>);
+
+macro_rules! proxy {
+    ($method:ident($($arg:ident: $typ:ty),*) -> $ret:ty) => {
+        #[doc=concat!("See [`RArray::", stringify!($method), "`].")]
+        pub fn $method(&self, $($arg: $typ),*) -> $ret {
+            unsafe { RArray::from_value_unchecked(self.0.get()) }.$method($($arg),*)
+        }
+    };
+}
+
+impl<T> TypedArray<T> {
+    /// Consume `self`, returning it as an [`RArray`].
+    pub fn to_r_array(self) -> RArray {
+        let val = self.0.get();
+        let ruby = Ruby::get_with(val);
+        unsafe {
+            rb_obj_reveal(val.as_rb_value(), ruby.class_array().as_rb_value());
+            RArray::from_value_unchecked(val)
+        }
+    }
+
+    proxy!(len() -> usize);
+    proxy!(is_empty() -> bool);
+    proxy!(clear() -> Result<(), Error>);
+    proxy!(resize(len: usize) -> Result<(), Error>);
+    proxy!(reverse() -> Result<(), Error>);
+    proxy!(rotate(rot: isize) -> Result<(), Error>);
+    proxy!(sort() -> Result<(), Error>);
+
+    /// See [`RArray::dup`].
+    pub fn dup(&self) -> Self {
+        unsafe {
+            let dup = RArray::from_value_unchecked(self.0.get()).dup();
+            rb_obj_hide(dup.as_rb_value());
+            TypedArray(NonZeroValue::new_unchecked(dup.as_value()), PhantomData)
+        }
+    }
+
+    /// See [`RArray::concat`].
+    pub fn concat(&self, other: Self) -> Result<(), Error> {
+        unsafe {
+            RArray::from_value_unchecked(self.0.get())
+                .concat(RArray::from_value_unchecked(other.0.get()))
+        }
+    }
+
+    /// See [`RArray::plus`].
+    pub fn plus(&self, other: Self) -> Self {
+        unsafe {
+            let new_ary = RArray::from_value_unchecked(self.0.get())
+                .plus(RArray::from_value_unchecked(other.0.get()));
+            rb_obj_hide(new_ary.as_rb_value());
+            TypedArray(NonZeroValue::new_unchecked(new_ary.as_value()), PhantomData)
+        }
+    }
+
+    /// See [`RArray::as_slice`].
+    pub unsafe fn as_slice(&self) -> &[Value] {
+        RArray::from_value_unchecked(self.0.get()).as_slice_unconstrained()
+    }
+
+    /// See [`RArray::to_value_array`].
+    pub fn to_value_array<const N: usize>(&self) -> Result<[Value; N], Error> {
+        unsafe { RArray::from_value_unchecked(self.0.get()).to_value_array() }
+    }
+
+    /// See [`RArray::join`].
+    pub fn join<S>(&self, sep: S) -> Result<RString, Error>
+    where
+        S: IntoRString,
+    {
+        unsafe { RArray::from_value_unchecked(self.0.get()).join(sep) }
+    }
+
+    // TODO is_shared
+
+    /// See [`RArray::replace`].
+    pub fn replace(&self, from: Self) -> Result<(), Error> {
+        unsafe {
+            RArray::from_value_unchecked(self.0.get())
+                .replace(RArray::from_value_unchecked(from.0.get()))
+        }
+    }
+
+    /// See [`RArray::subseq`].
+    pub fn subseq(&self, offset: usize, length: usize) -> Option<Self> {
+        unsafe {
+            RArray::from_value_unchecked(self.0.get())
+                .subseq(offset, length)
+                .map(|ary| {
+                    rb_obj_hide(ary.as_rb_value());
+                    TypedArray(NonZeroValue::new_unchecked(ary.as_value()), PhantomData)
+                })
+        }
+    }
+
+    /// See [`RArray::subseq`].
+    #[allow(clippy::should_implement_trait)]
+    pub fn cmp(&self, other: Self) -> Result<Option<Ordering>, Error> {
+        unsafe {
+            RArray::from_value_unchecked(self.0.get())
+                .cmp(RArray::from_value_unchecked(other.0.get()))
+        }
+    }
+}
+
+impl<T> TypedArray<T>
+where
+    T: IntoValue,
+{
+    proxy!(includes(val: T) -> bool);
+    proxy!(push(item: T) -> Result<(), Error>);
+    proxy!(unshift(item: T) -> Result<(), Error>);
+    proxy!(delete(item: T) -> Result<(), Error>);
+    proxy!(store(offset: isize, val: T) -> Result<(), Error>);
+}
+
+impl<T> TypedArray<T>
+where
+    T: ReprValue,
+{
+    proxy!(cat(s: &[T]) -> Result<(), Error>);
+}
+
+impl<T> TypedArray<T>
+where
+    T: TryConvert,
+{
+    proxy!(pop() -> Result<T, Error>);
+    proxy!(shift() -> Result<T, Error>);
+    proxy!(delete_at(index: isize) -> Result<T, Error>);
+    proxy!(entry(offset: isize) -> Result<T, Error>);
+
+    /// See [`RArray::to_array`].
+    pub fn to_array<const N: usize>(&self) -> Result<[T; N], Error> {
+        unsafe { RArray::from_value_unchecked(self.0.get()).to_array() }
+    }
+
+    // TODO? assoc & rassoc
+}
+
+impl<T> TypedArray<T>
+where
+    T: TryConvertOwned,
+{
+    /// See [`RArray::to_vec`].
+    pub fn to_vec(&self) -> Vec<T> {
+        unsafe { RArray::from_value_unchecked(self.0.get()).to_vec().unwrap() }
+    }
+}
+
+impl<T> IntoValue for TypedArray<T>
+where
+    T: IntoValue,
+{
+    fn into_value_with(self, _: &Ruby) -> Value {
+        self.to_r_array().as_value()
+    }
+}
+
+impl<T> gc::private::Mark for TypedArray<T> {
+    fn raw(self) -> VALUE {
+        self.0.get().as_rb_value()
+    }
+}
+impl<T> gc::Mark for TypedArray<T> {}
