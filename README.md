@@ -397,8 +397,7 @@ support in Magnus is not guaranteed.
 Ruby bindings will be generated at compile time, this may require libclang to
 be installed.
 
-The Minimum supported Rust version is currently Rust 1.51 (Rust 1.54 on macOS
-with Xcode 14).
+The Minimum supported Rust version is currently Rust 1.60.
 
 Support for statically linking Ruby is provided.
 
