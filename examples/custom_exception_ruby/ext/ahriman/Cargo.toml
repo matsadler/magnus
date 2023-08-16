@@ -8,3 +8,6 @@ crate-type = ["cdylib"]
 
 [dependencies]
 magnus = { path = "../../../.." }
+# enable rb-sys feature to test against Ruby head. This is only needed if you
+# want to work with the unreleased, in-development, next version of Ruby
+rb-sys = { version = "*", default-features = false, features = ["stable-api-compiled-fallback"] }
