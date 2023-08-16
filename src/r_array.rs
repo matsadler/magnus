@@ -1,8 +1,6 @@
 //! Types and functions for working with Ruby’s Array class.
 
-use std::{
-    cmp::Ordering, convert::Infallible, fmt, marker::PhantomData, os::raw::c_long,
-    slice};
+use std::{cmp::Ordering, convert::Infallible, fmt, marker::PhantomData, os::raw::c_long, slice};
 
 #[cfg(ruby_gte_3_2)]
 use rb_sys::rb_ary_hidden_new;
@@ -13,13 +11,13 @@ use rb_sys::ruby_rarray_consts::RARRAY_EMBED_LEN_SHIFT;
 #[cfg(ruby_lt_3_0)]
 use rb_sys::ruby_rarray_flags::RARRAY_EMBED_LEN_SHIFT;
 use rb_sys::{
-    self, RARRAY_CONST_PTR, RARRAY_LEN, rb_ary_assoc, rb_ary_cat, rb_ary_clear, rb_ary_cmp,
-    rb_ary_concat, rb_ary_delete, rb_ary_delete_at, rb_ary_entry, rb_ary_includes, rb_ary_join,
-    rb_ary_new, rb_ary_new_capa, rb_ary_new_from_values, rb_ary_plus, rb_ary_pop, rb_ary_push,
-    rb_ary_rassoc, rb_ary_replace, rb_ary_resize, rb_ary_reverse, rb_ary_rotate,
-    rb_ary_shared_with_p, rb_ary_shift, rb_ary_sort_bang, rb_ary_store, rb_ary_subseq,
-    rb_ary_to_ary, rb_ary_unshift, rb_check_array_type, rb_obj_hide, rb_obj_reveal,
-    ruby_rarray_flags, ruby_value_type, VALUE,
+    self, rb_ary_assoc, rb_ary_cat, rb_ary_clear, rb_ary_cmp, rb_ary_concat, rb_ary_delete,
+    rb_ary_delete_at, rb_ary_entry, rb_ary_includes, rb_ary_join, rb_ary_new, rb_ary_new_capa,
+    rb_ary_new_from_values, rb_ary_plus, rb_ary_pop, rb_ary_push, rb_ary_rassoc, rb_ary_replace,
+    rb_ary_resize, rb_ary_reverse, rb_ary_rotate, rb_ary_shared_with_p, rb_ary_shift,
+    rb_ary_sort_bang, rb_ary_store, rb_ary_subseq, rb_ary_to_ary, rb_ary_unshift,
+    rb_check_array_type, rb_obj_hide, rb_obj_reveal, ruby_rarray_flags, ruby_value_type,
+    RARRAY_CONST_PTR, RARRAY_LEN, VALUE,
 };
 use seq_macro::seq;
 
