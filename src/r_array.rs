@@ -264,14 +264,14 @@ impl Ruby {
     /// use magnus::{r_array::TypedFrozenRArray, Error, RString, Ruby};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
-    ///     let typed_ary: TypedFrozenRArray<RString> = ruby.typed_frozen_r_array_empty();
+    ///     let typed_ary: TypedFrozenRArray<RString> = ruby.typed_frozen_ary_new();
     ///     assert!(typed_ary.is_empty());
     ///
     ///     Ok(())
     /// }
     /// # Ruby::init(example).unwrap()
     /// ```
-    pub fn typed_frozen_r_array_empty<T>(&self) -> TypedFrozenRArray<T>
+    pub fn typed_frozen_ary_new<T>(&self) -> TypedFrozenRArray<T>
     where
         T: TryConvert + Copy,
     {
@@ -288,14 +288,14 @@ impl Ruby {
     /// use magnus::{rb_assert, Error, Ruby};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
-    ///     let typed_ary = ruby.typed_frozen_r_array_from_iter((1..4).map(|i| i * 10));
+    ///     let typed_ary = ruby.typed_frozen_ary_from_iter((1..4).map(|i| i * 10));
     ///     rb_assert!(ruby, "ary == [10, 20, 30]", ary = typed_ary.as_value());
     ///
     ///     Ok(())
     /// }
     /// # Ruby::init(example).unwrap()
     /// ```
-    pub fn typed_frozen_r_array_from_iter<I, T>(&self, iter: I) -> TypedFrozenRArray<T>
+    pub fn typed_frozen_ary_from_iter<I, T>(&self, iter: I) -> TypedFrozenRArray<T>
     where
         I: IntoIterator<Item = T>,
         T: IntoValue,
@@ -1264,7 +1264,12 @@ impl RArray {
         self.enumeratorize("each", ())
     }
 
-    /// Returns an [`Iter`] over `self`.
+    /// Returns an [`Iter`] over `self`, without duplicating. Intended for cases where performance is critical.
+    /// Otherwise use `IntoIterator::into_iter`.
+    ///
+    /// # Safety
+    /// Mutating `self` while iterating over it will lead to undefined behavior, such as skipping items or iterating
+    /// an item multiple times. To avoid this, use `IntoIterator::into_iter` instead.
     ///
     /// # Examples
     ///
@@ -1274,16 +1279,16 @@ impl RArray {
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let ary = ruby.ary_from_iter(1..4);
     ///
-    ///     let res: Vec<usize> = ary.iter().map(TryConvert::try_convert).collect::<Result<Vec<usize>, Error>>().unwrap();
+    ///     let res: Vec<usize> = unsafe { ary.iter() }.map(TryConvert::try_convert).collect::<Result<Vec<usize>, Error>>().unwrap();
     ///
     ///     assert_eq!(res, vec![1, 2, 3]);
     ///
-    ///    Ok(())
+    ///     Ok(())
     /// }
     /// # Ruby::init(example).unwrap()
     /// ```
-    pub fn iter(&self) -> Iter<'_, Value> {
-        Iter::new(self)
+    pub unsafe fn iter(&self) -> Iter<Value> {
+        Iter::new(*self)
     }
 
     /// Returns true if both `self` and `other` share the same backing storage.
@@ -1480,6 +1485,45 @@ impl RArray {
         protect(|| unsafe { Value::new(rb_ary_cmp(self.as_rb_value(), other.as_rb_value())) })
             .and_then(<Option<i64>>::try_convert)
             .map(|opt| opt.map(|i| i.cmp(&0)))
+    }
+}
+
+impl IntoIterator for RArray {
+    type Item = Value;
+    type IntoIter = Iter<Value>;
+
+    /// Returns an [`Iter`] over a copy of `self` (unless `self` is frozen), meaning that if `self` is mutated after
+    /// `into_iter` is called, that change will not be reflected in the iterator.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Error, Ruby, TryConvert};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let ary = ruby.ary_from_iter(1..4);
+    ///
+    ///     let iter = ary.into_iter();
+    ///
+    ///     ary.push(4)?;
+    ///
+    ///     let res: Vec<usize> = iter.map(TryConvert::try_convert).collect::<Result<Vec<usize>, Error>>().unwrap();
+    ///
+    ///     assert_eq!(res, vec![1, 2, 3]);
+    ///
+    ///    Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
+    fn into_iter(self) -> Self::IntoIter {
+        let ary = if self.is_frozen() {
+            self
+        } else {
+            let dup = self.dup();
+            dup.freeze();
+            dup
+        };
+        Iter::new(ary)
     }
 }
 
@@ -1760,6 +1804,39 @@ impl<T> gc::private::Mark for TypedArray<T> {
 }
 impl<T> gc::Mark for TypedArray<T> {}
 
+impl<T> IntoIterator for TypedArray<T>
+where
+    T: TryConvert,
+{
+    type Item = T;
+    type IntoIter = Iter<T>;
+
+    /// Returns an [`Iter`] over `self`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Error, Ruby, TryConvert};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let ary = ruby.typed_ary_new::<usize>();
+    ///     ary.push(1)?;
+    ///     ary.push(2)?;
+    ///     ary.push(3)?;
+    ///
+    ///     let res: Vec<usize> = ary.into_iter().collect();
+    ///
+    ///     assert_eq!(res, vec![1, 2, 3]);
+    ///
+    ///    Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
+    fn into_iter(self) -> Self::IntoIter {
+        Iter::new(self.to_r_array())
+    }
+}
+
 /// An iterator over the elements of an array.
 ///
 /// If the array is mutated during iteration, the iterator will not error, but
@@ -1767,13 +1844,13 @@ impl<T> gc::Mark for TypedArray<T> {}
 /// the mutations made.
 ///
 /// See [`RArray::iter`] for details.
-pub struct Iter<'a, T> {
-    data: &'a RArray,
+pub struct Iter<T> {
+    data: RArray,
     idx: usize,
     item_type: PhantomData<T>,
 }
 
-impl<T> Iterator for Iter<'_, T>
+impl<T> Iterator for Iter<T>
 where
     T: TryConvert,
 {
@@ -1795,8 +1872,8 @@ where
     }
 }
 
-impl<'a, T> Iter<'a, T> {
-    fn new(data: &'a RArray) -> Self {
+impl<T> Iter<T> {
+    fn new(data: RArray) -> Self {
         Self {
             data,
             idx: 0,
@@ -1814,49 +1891,6 @@ impl<'a, T> Iter<'a, T> {
 pub struct TypedFrozenRArray<T>(RArray, PhantomData<T>);
 
 impl<T> TypedFrozenRArray<T> {
-    /// Creates a new typed frozen array from the given Ruby array. Will freeze the array.
-    ///
-    /// # Errors
-    ///
-    /// If any of the elements are not of the specified type.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use magnus::{rb_assert, r_array::TypedFrozenRArray, Error, Ruby};
-    ///
-    /// fn example(ruby: &Ruby) -> Result<(), Error> {
-    ///     let ary = ruby.ary_from_iter(1..4);
-    ///     let typed_ary: TypedFrozenRArray<i64> = TypedFrozenRArray::new(ary)?;
-    ///     rb_assert!(ruby, "ary == [1, 2, 3]", ary = typed_ary.as_value());
-    ///
-    ///     Ok(())
-    /// }
-    /// # Ruby::init(example).unwrap()
-    /// ```
-    ///
-    /// ```
-    /// use magnus::{r_array::TypedFrozenRArray, Error, RString, Ruby};
-    ///
-    /// fn example(ruby: &Ruby) -> Result<(), Error> {
-    ///     let ary = ruby.ary_from_iter(1..4);
-    ///     let error = TypedFrozenRArray::<RString>::new(ary).unwrap_err();
-    ///     assert_eq!(error.to_string(), "no implicit conversion of Integer into String");
-    ///
-    ///     Ok(())
-    /// }
-    /// # Ruby::init(example).unwrap()
-    /// ```
-    pub fn new(data: RArray) -> Result<Self, Error>
-    where
-        T: TryConvert,
-    {
-        data.freeze();
-        data.iter()
-            .try_for_each(|el| T::try_convert(el).map(|_| ()))?;
-        Ok(Self(data, PhantomData))
-    }
-
     /// Return the number of entries in `self` as a Rust [`usize`].
     ///
     /// # Examples
@@ -1865,7 +1899,7 @@ impl<T> TypedFrozenRArray<T> {
     /// use magnus::{r_array::TypedFrozenRArray, Error, Ruby};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
-    ///     let ary: TypedFrozenRArray<usize> = ruby.typed_frozen_r_array_from_iter(1..4);
+    ///     let ary: TypedFrozenRArray<usize> = ruby.typed_frozen_ary_from_iter(1..4);
     ///     assert_eq!(ary.len(), 3);
     ///
     ///     Ok(())
@@ -1884,10 +1918,10 @@ impl<T> TypedFrozenRArray<T> {
     /// use magnus::{r_array::TypedFrozenRArray, Error, Ruby};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
-    ///     let ary: TypedFrozenRArray<usize> = ruby.typed_frozen_r_array_from_iter(1..4);
+    ///     let ary: TypedFrozenRArray<usize> = ruby.typed_frozen_ary_from_iter(1..4);
     ///     assert!(!ary.is_empty());
     ///
-    ///     let ary: TypedFrozenRArray<usize> = ruby.typed_frozen_r_array_empty();
+    ///     let ary: TypedFrozenRArray<usize> = ruby.typed_frozen_ary_new();
     ///     assert!(ary.is_empty());
     ///
     ///     Ok(())
@@ -1897,6 +1931,14 @@ impl<T> TypedFrozenRArray<T> {
     pub fn is_empty(&self) -> bool {
         self.0.is_empty()
     }
+}
+
+impl<T> IntoIterator for TypedFrozenRArray<T>
+where
+    T: TryConvert + Copy,
+{
+    type Item = T;
+    type IntoIter = Iter<T>;
 
     /// Returns an [`Iter`] over `self`.
     ///
@@ -1906,9 +1948,9 @@ impl<T> TypedFrozenRArray<T> {
     /// use magnus::{Error, r_array::TypedFrozenRArray, Ruby};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
-    ///     let ary: TypedFrozenRArray<usize> = ruby.typed_frozen_r_array_from_iter(1..4);
+    ///     let ary: TypedFrozenRArray<usize> = ruby.typed_frozen_ary_from_iter(1..4);
     ///
-    ///     let res: Vec<usize> = ary.iter().collect();
+    ///     let res: Vec<usize> = ary.into_iter().collect();
     ///
     ///     assert_eq!(res, vec![1, 2, 3]);
     ///
@@ -1916,8 +1958,8 @@ impl<T> TypedFrozenRArray<T> {
     /// }
     /// # Ruby::init(example).unwrap()
     /// ```
-    pub fn iter(&self) -> Iter<'_, T> {
-        Iter::new(&self.0)
+    fn into_iter(self) -> Self::IntoIter {
+        Iter::new(self.0)
     }
 }
 
@@ -1927,12 +1969,51 @@ unsafe impl<T> private::ReprValue for TypedFrozenRArray<T> where T: TryConvert +
 
 impl<T> ReprValue for TypedFrozenRArray<T> where T: TryConvert + Copy {}
 
-impl<T> TryConvert for TypedFrozenRArray<T>
+impl<T> TryFrom<RArray> for TypedFrozenRArray<T>
 where
     T: TryConvert + Copy,
 {
-    fn try_convert(val: Value) -> Result<Self, Error> {
-        RArray::try_convert(val).and_then(Self::new)
+    type Error = Error;
+
+    /// Creates a new typed frozen array from the given Ruby array. Will freeze the array.
+    ///
+    /// # Errors
+    ///
+    /// If any of the elements are not of the specified type.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, r_array::TypedFrozenRArray, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let ary = ruby.ary_from_iter(1..4);
+    ///     let typed_ary: TypedFrozenRArray<i64> = ary.try_into()?;
+    ///     rb_assert!(ruby, "ary == [1, 2, 3]", ary = typed_ary.as_value());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
+    ///
+    /// ```
+    /// use magnus::{r_array::TypedFrozenRArray, Error, RString, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let ary = ruby.ary_from_iter(1..4);
+    ///     let error = TypedFrozenRArray::<RString>::try_from(ary).unwrap_err();
+    ///     assert_eq!(error.to_string(), "no implicit conversion of Integer into String");
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
+    fn try_from(value: RArray) -> Result<Self, Self::Error> {
+        value.freeze();
+        value
+            .into_iter()
+            .try_for_each(|el| T::try_convert(el).map(|_| ()))?;
+        Ok(Self(value, PhantomData))
     }
 }
 
