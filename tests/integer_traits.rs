@@ -1,9 +1,9 @@
-use std::os::raw::{c_long, c_ulong};
+use std::os::raw::c_long;
 
 use magnus::{eval, Integer};
 
-const RUBY_FIXNUM_MAX: c_ulong = (c_long::MAX / 2) as c_ulong;
-const RUBY_FIXNUM_MIN: c_long = c_long::MIN / 2;
+const RUBY_FIXNUM_MAX: u64 = (c_long::MAX / 2) as u64;
+const RUBY_FIXNUM_MIN: i64 = (c_long::MIN / 2) as i64;
 
 #[test]
 fn test_all() {
