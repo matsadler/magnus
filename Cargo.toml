@@ -1,6 +1,6 @@
 [package]
 name = "magnus"
-version = "0.6.0"
+version = "0.6.1"
 edition = "2021"
 description = "High level Ruby bindings. Write Ruby extension gems in Rust, or call Ruby code from a Rust binary."
 keywords = ["ruby", "rubygem", "extension", "gem"]
@@ -32,7 +32,7 @@ seq-macro = "0.3"
 
 [dev-dependencies]
 magnus = { path = ".", features = ["embed", "rb-sys"] }
-rb-sys = { version = "*", default-features = false, features = ["stable-api-compiled-fallback"] }
+rb-sys = { version = "0.9", default-features = false, features = ["stable-api-compiled-fallback"] }
 
 [build-dependencies]
 rb-sys-env = "0.1.2"
