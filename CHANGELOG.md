@@ -33,6 +33,18 @@
 
 ### Security
 
+## [0.6.1] - 2023-08-20
+### Changed
+- Support `rb-sys`' `stable-api` feature.
+
+## [0.5.5] - 2023-08-20
+### Changed
+- Support `rb-sys`' `stable-api` feature.
+- Minimum supported Rust version is 1.60.
+- Ruby 2.6 support requires enabling `rb-sys`' `stable-api-compiled-fallback`
+  feature in your `Cargo.toml` like so:
+  `rb-sys = { version = "*", default-features = false, features = ["stable-api-compiled-fallback"] }`
+
 ## [0.6.0] - 2023-07-28
 ### Added
 - `value::Opaque` can be used to wrap a Ruby type to make it `Send` + `Sync`.
@@ -418,7 +430,9 @@
 - Pre-built bindings for Ruby 2.6 - 3.1 on common platforms, build-time
   generated bindings otherwise.
 
-[Unreleased]: https://github.com/matsadler/magnus/compare/0.6.0...HEAD
+[Unreleased]: https://github.com/matsadler/magnus/compare/0.6.1...HEAD
+[0.6.1]: https://github.com/matsadler/magnus/compare/0.6.0...0.6.1
+[0.5.5]: https://github.com/matsadler/magnus/compare/0.5.4...0.5.5
 [0.6.0]: https://github.com/matsadler/magnus/compare/0.5.3...0.6.0
 [0.5.3]: https://github.com/matsadler/magnus/compare/0.5.2...0.5.3
 [0.5.2]: https://github.com/matsadler/magnus/compare/0.5.1...0.5.2
