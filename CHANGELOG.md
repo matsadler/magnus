@@ -13,6 +13,10 @@
 
 ### Security
 
+## [0.6.1] - 2023-08-20
+### Changed
+- Support `rb-sys`' `stable-api` feature.
+
 ## [0.6.0] - 2023-07-28
 ### Added
 - `value::Opaque` can be used to wrap a Ruby type to make it `Send` + `Sync`.
@@ -41,7 +45,7 @@
   to `ReprValue::funcall`, et al.
 
 ### Changed
-- Minimum supported Rust version in now 1.61.
+- Minimum supported Rust version is now 1.61.
 - The `bytes-crate` feature has been renamed to `bytes`.
 - The `rb-sys-interop` feature has been renamed to `rb-sys`.
 - Ruby types are no longer `Send` or `Sync`. These types can be made `Send` &
@@ -398,7 +402,8 @@
 - Pre-built bindings for Ruby 2.6 - 3.1 on common platforms, build-time
   generated bindings otherwise.
 
-[Unreleased]: https://github.com/matsadler/magnus/compare/0.6.0...HEAD
+[Unreleased]: https://github.com/matsadler/magnus/compare/0.6.1...0.6
+[0.6.1]: https://github.com/matsadler/magnus/compare/0.6.0...0.6.1
 [0.6.0]: https://github.com/matsadler/magnus/compare/0.5.3...0.6.0
 [0.5.3]: https://github.com/matsadler/magnus/compare/0.5.2...0.5.3
 [0.5.2]: https://github.com/matsadler/magnus/compare/0.5.1...0.5.2
