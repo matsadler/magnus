@@ -391,7 +391,13 @@ be installed.
 
 The Minimum supported Rust version is currently Rust 1.61.
 
-Support for statically linking Ruby is provided.
+Support for statically linking Ruby is provided via the lower-level [rb-sys]
+crate, and can be enabled by adding the following to your `Cargo.toml`:
+
+```toml
+# * should select the same version used by Magnus
+rb-sys = { version = "*", default-features = false, features = ["ruby-static"] }
+```
 
 Cross-compilation is supported by rb-sys [for the platforms listed here][plat].
 
