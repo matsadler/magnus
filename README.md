@@ -418,11 +418,6 @@ which Magnus does not expose.
 [rb-sys]: https://github.com/oxidize-rb/rb-sys/tree/main/crates/rb-sys
 [rb_sys_module]: https://docs.rs/magnus/latest/magnus/rb_sys/index.html
 
-### `serde_magnus`
-
-`serde_magnus` integrates [Serde] and Magnus for seamless serialisation and
-deserialisation of Rust to Ruby data structures and vice versa.
-
 ## Users
 
 * [`halton`](https://github.com/matsadler/halton-rb) a Ruby gem providing a
