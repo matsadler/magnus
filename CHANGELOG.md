@@ -13,6 +13,8 @@
   inaccessible to Rust.
 
 ### Changed
+- Closures/Functions used as Ruby blocks/procs take an additional first
+  argument of `&Ruby`.
 
 ### Deprecated
 

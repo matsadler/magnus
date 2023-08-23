@@ -367,7 +367,7 @@ where
 #[doc(hidden)]
 pub trait Block<Res>
 where
-    Self: Sized + FnMut(&[Value], Option<Proc>) -> Res,
+    Self: Sized + FnMut(&Ruby, &[Value], Option<Proc>) -> Res,
     Res: BlockReturn,
 {
     #[inline]
@@ -377,8 +377,9 @@ where
         argv: *const Value,
         blockarg: Value,
     ) -> Result<Value, Error> {
+        let ruby = unsafe { Ruby::get_unchecked() };
         let args = slice::from_raw_parts(argv, argc as usize);
-        (self)(args, Proc::from_value(blockarg)).into_block_return()
+        (self)(&ruby, args, Proc::from_value(blockarg)).into_block_return()
     }
 
     #[inline]
@@ -398,7 +399,7 @@ where
 
 impl<Func, Res> Block<Res> for Func
 where
-    Func: FnMut(&[Value], Option<Proc>) -> Res,
+    Func: FnMut(&Ruby, &[Value], Option<Proc>) -> Res,
     Res: BlockReturn,
 {
 }

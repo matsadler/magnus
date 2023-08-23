@@ -52,7 +52,7 @@ impl Ruby {
     /// use magnus::{prelude::*, rb_assert, Error, Ruby};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
-    ///     let proc = ruby.proc_new(|args, _block| {
+    ///     let proc = ruby.proc_new(|_ruby, args, _block| {
     ///         let acc = i64::try_convert(*args.get(0).unwrap())?;
     ///         let i = i64::try_convert(*args.get(1).unwrap())?;
     ///         Ok(acc + i)
@@ -66,7 +66,7 @@ impl Ruby {
     /// }
     /// # Ruby::init(example).unwrap()
     /// ```
-    pub fn proc_new<R>(&self, block: fn(&[Value], Option<Proc>) -> R) -> Proc
+    pub fn proc_new<R>(&self, block: fn(&Ruby, &[Value], Option<Proc>) -> R) -> Proc
     where
         R: BlockReturn,
     {
@@ -80,7 +80,8 @@ impl Ruby {
         where
             R: BlockReturn,
         {
-            let func = std::mem::transmute::<VALUE, fn(&[Value], Option<Proc>) -> R>(callback_arg);
+            let func =
+                std::mem::transmute::<VALUE, fn(&Ruby, &[Value], Option<Proc>) -> R>(callback_arg);
             func.call_handle_error(argc, argv as *const Value, Value::new(blockarg))
                 .as_rb_value()
         }
@@ -107,7 +108,7 @@ impl Ruby {
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let mut count = 0;
     ///
-    ///     let proc = ruby.proc_from_fn(move |args, _block| {
+    ///     let proc = ruby.proc_from_fn(move |_ruby, args, _block| {
     ///         let step = i64::try_convert(*args.get(0).unwrap())?;
     ///         count += step;
     ///         Ok(count)
@@ -123,7 +124,7 @@ impl Ruby {
     /// ```
     pub fn proc_from_fn<F, R>(&self, block: F) -> Proc
     where
-        F: 'static + Send + FnMut(&[Value], Option<Proc>) -> R,
+        F: 'static + Send + FnMut(&Ruby, &[Value], Option<Proc>) -> R,
         R: BlockReturn,
     {
         unsafe extern "C" fn call<F, R>(
@@ -134,7 +135,7 @@ impl Ruby {
             blockarg: VALUE,
         ) -> VALUE
         where
-            F: FnMut(&[Value], Option<Proc>) -> R,
+            F: FnMut(&Ruby, &[Value], Option<Proc>) -> R,
             R: BlockReturn,
         {
             let closure = &mut *(callback_arg as *mut F);
@@ -211,7 +212,7 @@ impl Proc {
     /// use magnus::{block::Proc, prelude::*, rb_assert};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// let proc = Proc::new(|args, _block| {
+    /// let proc = Proc::new(|_ruby, args, _block| {
     ///     let acc = i64::try_convert(*args.get(0).unwrap())?;
     ///     let i = i64::try_convert(*args.get(1).unwrap())?;
     ///     Ok(acc + i)
@@ -226,7 +227,7 @@ impl Proc {
         deprecated(note = "please use `Ruby::proc_new` instead")
     )]
     #[inline]
-    pub fn new<R>(block: fn(&[Value], Option<Proc>) -> R) -> Self
+    pub fn new<R>(block: fn(&Ruby, &[Value], Option<Proc>) -> R) -> Self
     where
         R: BlockReturn,
     {
@@ -251,7 +252,7 @@ impl Proc {
     ///
     /// let mut count = 0;
     ///
-    /// let proc = Proc::from_fn(move |args, _block| {
+    /// let proc = Proc::from_fn(move |_ruby, args, _block| {
     ///     let step = i64::try_convert(*args.get(0).unwrap())?;
     ///     count += step;
     ///     Ok(count)
@@ -268,7 +269,7 @@ impl Proc {
     #[inline]
     pub fn from_fn<F, R>(block: F) -> Self
     where
-        F: 'static + Send + FnMut(&[Value], Option<Proc>) -> R,
+        F: 'static + Send + FnMut(&Ruby, &[Value], Option<Proc>) -> R,
         R: BlockReturn,
     {
         get_ruby!().proc_from_fn(block)
@@ -468,7 +469,7 @@ impl TryConvert for Proc {
 /// dropped when the returned `Value` is garbage collected.
 fn wrap_closure<F, R>(func: F) -> (*mut F, Value)
 where
-    F: FnMut(&[Value], Option<Proc>) -> R,
+    F: FnMut(&Ruby, &[Value], Option<Proc>) -> R,
     R: BlockReturn,
 {
     struct Closure<F>(F, DataType);

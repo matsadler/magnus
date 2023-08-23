@@ -3,7 +3,7 @@ use magnus::{block::Proc, eval, gc, value::Opaque, Ruby, Value};
 fn make_proc(ruby: &Ruby) -> Proc {
     let x = String::from("foo");
     let y = Opaque::from(ruby.str_new("bar"));
-    ruby.proc_from_fn(move |_args, _block| Ok((x.clone(), y)))
+    ruby.proc_from_fn(move |_ruby, _args, _block| Ok((x.clone(), y)))
 }
 
 #[test]

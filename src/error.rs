@@ -55,15 +55,9 @@ impl Ruby {
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let i: i64 = ruby
     ///         .range_new(1, 100, false)?
-    ///         .block_call("each", (), |args, _block| {
+    ///         .block_call("each", (), |ruby, args, _block| {
     ///             let i = i64::try_convert(*args.get(0).unwrap())?;
     ///             if i % 3 == 0 && i % 5 == 0 {
-    ///                 // `block_call` takes a function pointer, not a
-    ///                 // closure, so can't capture `ruby`. As we know this
-    ///                 // will always be called from Ruby it's safe to get
-    ///                 // `Ruby` without the checks that we're on a Ruby
-    ///                 // thread.
-    ///                 let ruby = unsafe { Ruby::get_unchecked() };
     ///                 Err(ruby.iter_break_value(i))
     ///             } else {
     ///                 Ok(())
@@ -171,7 +165,7 @@ impl Error {
     ///
     /// let i: i64 = magnus::Range::new(1, 100, false)
     ///     .unwrap()
-    ///     .block_call("each", (), |args, _block| {
+    ///     .block_call("each", (), |_ruby, args, _block| {
     ///         let i = i64::try_convert(*args.get(0).unwrap())?;
     ///         if i % 3 == 0 && i % 5 == 0 {
     ///             Err(Error::iter_break(i))

@@ -10,7 +10,7 @@ fn it_can_call_method_with_block() {
         ruby.into_value(3_i64),
     ]);
     let _: Value = ary
-        .block_call("map!", (), |args, _| {
+        .block_call("map!", (), |_, args, _| {
             i64::try_convert(args[0]).map(|i| i * 4)
         })
         .unwrap();

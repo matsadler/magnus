@@ -1254,7 +1254,7 @@ pub trait ReprValue: private::ReprValue {
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let values = eval::<RArray>(r#"["foo", 1, :bar]"#).unwrap();
-    /// let block = Proc::new(|args, _block| args.first().unwrap().to_r_string());
+    /// let block = Proc::new(|_ruby, args, _block| args.first().unwrap().to_r_string());
     /// let _: Value = values.funcall_with_block("map!", (), block).unwrap();
     /// assert_eq!(values.to_vec::<String>().unwrap(), vec!["foo", "1", "bar"]);
     /// ```
@@ -1310,7 +1310,7 @@ pub trait ReprValue: private::ReprValue {
     ///
     /// let values = eval::<RArray>(r#"["foo", 1, :bar]"#).unwrap();
     /// let _: Value = values
-    ///     .block_call("map!", (), |args, _block| {
+    ///     .block_call("map!", (), |_ruby, args, _block| {
     ///         args.first().unwrap().to_r_string()
     ///     })
     ///     .unwrap();
@@ -1320,7 +1320,7 @@ pub trait ReprValue: private::ReprValue {
         self,
         method: M,
         args: A,
-        block: fn(&[Value], Option<Proc>) -> R,
+        block: fn(&Ruby, &[Value], Option<Proc>) -> R,
     ) -> Result<T, Error>
     where
         M: IntoId,
@@ -1338,7 +1338,8 @@ pub trait ReprValue: private::ReprValue {
         where
             R: BlockReturn,
         {
-            let func = std::mem::transmute::<VALUE, fn(&[Value], Option<Proc>) -> R>(callback_arg);
+            let func =
+                std::mem::transmute::<VALUE, fn(&Ruby, &[Value], Option<Proc>) -> R>(callback_arg);
             func.call_handle_error(argc, argv as *const Value, Value::new(blockarg))
                 .as_rb_value()
         }
