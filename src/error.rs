@@ -53,16 +53,16 @@ impl Ruby {
     /// use magnus::{prelude::*, Error, Ruby};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
-    ///     let i: i64 = ruby
-    ///         .range_new(1, 100, false)?
-    ///         .block_call("each", (), |ruby, args, _block| {
-    ///             let i = i64::try_convert(*args.get(0).unwrap())?;
-    ///             if i % 3 == 0 && i % 5 == 0 {
-    ///                 Err(ruby.iter_break_value(i))
-    ///             } else {
-    ///                 Ok(())
-    ///             }
-    ///         })?;
+    ///     let i: i64 =
+    ///         ruby.range_new(1, 100, false)?
+    ///             .block_call("each", (), |ruby, args, _block| {
+    ///                 let i = i64::try_convert(*args.get(0).unwrap())?;
+    ///                 if i % 3 == 0 && i % 5 == 0 {
+    ///                     Err(ruby.iter_break_value(i))
+    ///                 } else {
+    ///                     Ok(())
+    ///                 }
+    ///             })?;
     ///
     ///     assert_eq!(i, 15);
     ///     Ok(())

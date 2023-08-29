@@ -9,8 +9,7 @@ use std::{
     mem::transmute,
     os::raw::{c_char, c_long},
     path::{Path, PathBuf},
-    ptr::{self},
-    slice, str,
+    ptr, slice, str,
 };
 
 #[cfg(ruby_gte_3_0)]
