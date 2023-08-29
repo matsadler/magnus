@@ -324,7 +324,7 @@
 // * `rb_big_modulo`:
 // * `rb_big_mul`:
 // * `rb_big_new`:
-// * `rb_big_norm`:
+//! * `rb_big_norm`: [`Integer::norm`].
 // * `rb_big_or`:
 // * `rb_big_pack`:
 // * `rb_big_plus`:
