@@ -35,7 +35,9 @@ use crate::{
 
 /// Converts from a [`Value`] to a raw [`VALUE`].
 pub trait AsRawValue {
-    /// Convert [`magnus::Value`](Value) to [`rb_sys::VALUE`](VALUE).
+    /// Convert [`magnus::Value`](Value) to [`rb_sys::VALUE`].
+    ///
+    /// # Examples
     ///
     /// ```
     /// # let _cleanup = unsafe { magnus::embed::init() };
@@ -54,12 +56,15 @@ pub trait AsRawValue {
 
 /// Converts from a raw [`VALUE`] to a [`Value`].
 pub trait FromRawValue {
-    /// Convert [`rb_sys::VALUE`](VALUE) to [`magnus::Value`](Value).
+    /// Convert [`rb_sys::VALUE`] to [`magnus::Value`](Value).
+    ///
     /// # Safety
     ///
     /// You must only supply a valid [`VALUE`] obtained from [rb-sys](rb_sys)
     /// to this function. Using a invalid [`Value`] produced from this
     /// function will void all saftey guarantees provided by Magnus.
+    ///
+    /// # Examples
     ///
     /// ```
     /// # let _cleanup = unsafe { magnus::embed::init() };
@@ -90,7 +95,9 @@ impl FromRawValue for Value {
 
 /// Trait to convert a [`Id`] to a raw [`ID`].
 pub trait AsRawId {
-    /// Convert [`magnus::value::Id`](Id) to [`rb_sys::ID`](ID).
+    /// Convert [`magnus::value::Id`](Id) to [`rb_sys::ID`].
+    ///
+    /// # Examples
     ///
     /// ```
     /// use magnus::{
@@ -112,7 +119,7 @@ pub trait AsRawId {
 
 /// Trait to convert from a raw [`ID`] to an [`Id`].
 pub trait FromRawId {
-    /// Convert [`rb_sys::ID`](ID) to [`magnus::value::Id`](ID).
+    /// Convert [`rb_sys::ID`] to [`magnus::value::Id`](Id).
     ///
     /// # Safety
     ///
@@ -120,6 +127,8 @@ pub trait FromRawId {
     /// [rb-sys](rb_sys) to this function. Using a invalid [`Id`] produced
     /// from this function will void all saftey guarantees provided by
     /// Magnus.
+    ///
+    /// # Examples
     ///
     /// ```
     /// use magnus::{
