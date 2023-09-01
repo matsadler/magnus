@@ -693,12 +693,13 @@
 // * `rb_fd_term`:
 // * `rb_fd_zero`:
 // * `rb_feature_provided`:
-// * `rb_fiber_alive_p`:
-// * `rb_fiber_current`:
-// * `rb_fiber_new`:
-// * `rb_fiber_raise`:
-// * `rb_fiber_resume`:
-// * `rb_fiber_resume_kw`:
+//! * `rb_fiber_alive_p`: [`Fiber::is_alive`].
+//! * `rb_fiber_current`: [`Ruby::fiber_current`]
+//! * `rb_fiber_new`: See [`Ruby::fiber_new`] & [`Ruby::fiber_new_from_fn`].
+//! * `rb_fiber_new_storage`: [`Ruby::fiber_new`] & [`Ruby::fiber_new_from_fn`].
+//! * `rb_fiber_raise`: [`Fiber::raise`].
+//! * `rb_fiber_resume`: See [`Fiber::resume`].
+//! * `rb_fiber_resume_kw`: [`Fiber::resume`].
 // * `rb_fiber_scheduler_address_resolve`:
 // * `rb_fiber_scheduler_block`:
 // * `rb_fiber_scheduler_close`:
@@ -723,10 +724,10 @@
 // * `rb_fiber_scheduler_process_wait`:
 // * `rb_fiber_scheduler_set`:
 // * `rb_fiber_scheduler_unblock`:
-// * `rb_fiber_transfer`:
-// * `rb_fiber_transfer_kw`:
-// * `rb_fiber_yield`:
-// * `rb_fiber_yield_kw`:
+//! * `rb_fiber_transfer`: See [`Fiber::transfer`].
+//! * `rb_fiber_transfer_kw`: [`Fiber::transfer`].
+//! * `rb_fiber_yield`: See [`Ruby::fiber_yield`].
+//! * `rb_fiber_yield_kw`: [`Ruby::fiber_yield`].
 //! * `rb_filesystem_encindex`: [`encoding::Index::filesystem`].
 //! * `rb_filesystem_encoding`:
 //!   [`RbEncoding::filesystem`](encoding::RbEncoding::filesystem).
@@ -1177,7 +1178,7 @@
 // * `rb_obj_instance_eval`:
 // * `rb_obj_instance_exec`:
 // * `rb_obj_instance_variables`:
-// * `rb_obj_is_fiber`:
+//! * `rb_obj_is_fiber`: [`Fiber::from_value`].
 // * `rb_obj_is_instance_of`:
 //! * `rb_obj_is_kind_of`: [`Value::is_kind_of`].
 // * `rb_obj_is_method`:
@@ -1799,6 +1800,7 @@ pub mod encoding;
 mod enumerator;
 pub mod error;
 pub mod exception;
+pub mod fiber;
 mod float;
 pub mod gc;
 mod integer;
@@ -1856,6 +1858,7 @@ pub use crate::{
     enumerator::Enumerator,
     error::Error,
     exception::{Exception, ExceptionClass},
+    fiber::Fiber,
     float::Float,
     integer::Integer,
     into_value::{ArgList, IntoValue, IntoValueFromNative, KwArgs, RArrayArgList},

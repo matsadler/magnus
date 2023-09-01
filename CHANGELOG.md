@@ -3,6 +3,7 @@
 ## [Unreleased]
 ### Added
 - `Thread`, `Ruby::thread_create`/`thread_create_from_fn` and other thread APIs.
+- `Fiber`, `Ruby::fiber_new`/`fiber_new_from_fn` and other fiber APIs.
 - `Ruby::ary_try_from_iter` is an efficient way to create a Ruby array from a
   fallible Rust iterator.
 - `Ruby::hash_from_iter` and `Ruby::hash_try_from_iter`.

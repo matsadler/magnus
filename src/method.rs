@@ -367,17 +367,17 @@ where
 #[doc(hidden)]
 pub trait Block<Res>
 where
-    Self: Sized + FnMut(&Ruby, &[Value], Option<Proc>) -> Res,
+    Self: Sized + FnOnce(&Ruby, &[Value], Option<Proc>) -> Res,
     Res: BlockReturn,
 {
     #[inline]
     unsafe fn call_convert_value(
-        mut self,
+        self,
         argc: c_int,
         argv: *const Value,
         blockarg: Value,
     ) -> Result<Value, Error> {
-        let ruby = unsafe { Ruby::get_unchecked() };
+        let ruby = Ruby::get_unchecked();
         let args = slice::from_raw_parts(argv, argc as usize);
         (self)(&ruby, args, Proc::from_value(blockarg)).into_block_return()
     }
@@ -399,7 +399,7 @@ where
 
 impl<Func, Res> Block<Res> for Func
 where
-    Func: FnMut(&Ruby, &[Value], Option<Proc>) -> Res,
+    Func: FnOnce(&Ruby, &[Value], Option<Proc>) -> Res,
     Res: BlockReturn,
 {
 }
