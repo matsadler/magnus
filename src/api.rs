@@ -99,6 +99,7 @@ impl RubyGvlState {
 /// * [Errors](#errors)
 /// * [Extracting values from `Opaque`/`Lazy`](#extracting-values-from-opaquelazy)
 /// * [`false`](#false)
+/// * [`Fiber`](#fiber)
 /// * [`Fixnum`](#fixnum) - small/fast integers
 /// * [`Float`](#float)
 /// * [`Flonum`](#flonum) - lower precision/fast floats
@@ -123,6 +124,7 @@ impl RubyGvlState {
 /// * [`StaticSymbol`](#staticsymbol) - non GC'd symbols
 /// * [`Struct`](#struct)
 /// * [`Symbol`](#symbol)
+/// * [`Thread`](#thread)
 /// * [`true`](#true)
 /// * [`typed_data::Obj`](#typed_dataobj) - wrapping Rust data in a Ruby object
 pub struct Ruby(PhantomData<*mut ()>);

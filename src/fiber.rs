@@ -1,3 +1,5 @@
+//! Types and functions for working with Ruby's Fiber class.
+
 use std::{fmt, mem::size_of, os::raw::c_int, slice};
 
 #[cfg(ruby_lt_3_2)]
@@ -30,7 +32,18 @@ use crate::{
     },
 };
 
+/// # `Fiber`
+///
+/// Functions to create and work with Ruby `Fiber`s.
+///
+/// See also the [`Fiber`] type.
 impl Ruby {
+    /// Create a Ruby Fiber.
+    ///
+    /// As `func` is a function pointer, only functions and closures that do
+    /// not capture any variables are permitted. For more flexibility (at the
+    /// cost of allocating) see [`fiber_new_from_fn`](Ruby::fiber_new_from_fn).
+    ///
     /// # Examples
     ///
     /// ```
@@ -97,6 +110,11 @@ impl Ruby {
         }
     }
 
+    /// Create a Ruby Fiber.
+    ///
+    /// See also [`fiber_new`](Ruby::fiber_new), which is more efficient when
+    /// `func` is a function or closure that does not capture any variables.
+    ///
     /// # Examples
     ///
     /// ```
@@ -195,6 +213,11 @@ impl Ruby {
     }
 }
 
+/// Wrapper type for a Value known to be an instance of Ruby's Fiber class.
+///
+/// See the [`ReprValue`] and [`Object`] traits for additional methods
+/// available on this type. See [`Ruby`](Ruby#fiber) for methods to create a
+/// `Fiber` and [`Ruby::fiber_yield`].
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct Fiber(RTypedData);
@@ -218,6 +241,8 @@ impl Fiber {
         unsafe { Value::new(rb_fiber_alive_p(self.as_rb_value())).to_bool() }
     }
 
+    /// Resume the execution of `self`.
+    ///
     /// # Examples
     ///
     /// ```
@@ -342,11 +367,15 @@ impl TryConvert for Fiber {
     }
 }
 
+/// Options for initialising Fiber-local storage.
 pub enum Storage {
+    /// Inherit the storage from the current Fiber.
     Inherit,
+    /// Initialise a new empty storage when needed.
     #[cfg(any(ruby_gte_3_2, docsrs))]
     #[cfg_attr(docsrs, doc(cfg(ruby_gte_3_2)))]
     Lazy,
+    /// Use the given Hash as the Fiber's storage.
     #[cfg(any(ruby_gte_3_2, docsrs))]
     #[cfg_attr(docsrs, doc(cfg(ruby_gte_3_2)))]
     Use(RHash),

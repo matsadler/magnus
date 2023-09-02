@@ -28,7 +28,7 @@ use crate::{
 
 /// # `Thread`
 ///
-/// Functions that can be used to create Ruby `Thread`s.
+/// Functions to create and work with Ruby `Thread`s.
 ///
 /// See also the [`Thread`] type.
 impl Ruby {
