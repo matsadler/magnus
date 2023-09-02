@@ -5,16 +5,10 @@ use rb_sys::rb_fiber_new;
 #[cfg(ruby_gte_3_2)]
 use rb_sys::rb_fiber_new_storage;
 use rb_sys::{
-    rb_data_typed_object_wrap, rb_fiber_alive_p, rb_fiber_current, rb_fiber_resume_kw,
-    rb_fiber_yield_kw, VALUE,
+    rb_data_typed_object_wrap, rb_fiber_alive_p, rb_fiber_current, rb_fiber_raise,
+    rb_fiber_resume_kw, rb_fiber_transfer_kw, rb_fiber_yield_kw, rb_obj_is_fiber, VALUE,
 };
-#[cfg(ruby_gte_3_1)]
-use rb_sys::{rb_fiber_raise, rb_fiber_transfer_kw, rb_obj_is_fiber};
 
-#[cfg(ruby_lt_3_1)]
-use crate::class::RClass;
-#[cfg(ruby_gte_3_1)]
-use crate::exception::Exception;
 #[cfg(any(ruby_gte_3_2, docsrs))]
 use crate::r_hash::RHash;
 use crate::{
@@ -22,6 +16,7 @@ use crate::{
     block::Proc,
     data_type_builder,
     error::{protect, Error},
+    exception::Exception,
     gc,
     into_value::{kw_splat, ArgList, IntoValue},
     method::{Block, BlockReturn},
@@ -53,14 +48,11 @@ impl Ruby {
     ///         Ok(())
     ///     })?;
     ///
-    ///     # #[cfg(ruby_gte_3_1)]
-    ///     # {
     ///     rb_assert!(ruby, "fib.resume(0, 1) == 1", fib);
     ///     rb_assert!(ruby, "fib.resume == 2", fib);
     ///     rb_assert!(ruby, "fib.resume == 3", fib);
     ///     rb_assert!(ruby, "fib.resume == 5", fib);
     ///     rb_assert!(ruby, "fib.resume == 8", fib);
-    ///     # }
     ///
     ///     Ok(())
     /// }
@@ -123,14 +115,11 @@ impl Ruby {
     ///         Ok(())
     ///     })?;
     ///
-    ///     # #[cfg(ruby_gte_3_1)]
-    ///     # {
     ///     rb_assert!(ruby, "fib.resume == 1", fib);
     ///     rb_assert!(ruby, "fib.resume == 2", fib);
     ///     rb_assert!(ruby, "fib.resume == 3", fib);
     ///     rb_assert!(ruby, "fib.resume == 5", fib);
     ///     rb_assert!(ruby, "fib.resume == 8", fib);
-    ///     # }
     ///
     ///     Ok(())
     /// }
@@ -213,23 +202,11 @@ pub struct Fiber(RTypedData);
 impl Fiber {
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
-        #[cfg(ruby_lt_3_1)]
-        let fiber = {
-            let fiber_class: RClass = Ruby::get_with(val)
-                .class_object()
-                .funcall("const_get", ("Fiber",))
-                .ok()?;
-            RTypedData::from_value(val)
-                .filter(|_| val.is_kind_of(fiber_class))
-                .map(Self)
-        };
-        #[cfg(ruby_gte_3_1)]
-        let fiber = unsafe {
+        unsafe {
             Value::new(rb_obj_is_fiber(val.as_rb_value()))
                 .to_bool()
                 .then(|| Self::from_rb_value_unchecked(val.as_rb_value()))
-        };
-        fiber
+        }
     }
 
     #[inline]
@@ -258,14 +235,11 @@ impl Fiber {
     ///         Ok(())
     ///     })?;
     ///
-    ///     # #[cfg(ruby_gte_3_1)]
-    ///     # {
     ///     assert_eq!(fib.resume::<_, u64>((0, 1))?, 1);
     ///     assert_eq!(fib.resume::<_, u64>(())?, 2);
     ///     assert_eq!(fib.resume::<_, u64>(())?, 3);
     ///     assert_eq!(fib.resume::<_, u64>(())?, 5);
     ///     assert_eq!(fib.resume::<_, u64>(())?, 8);
-    ///     # }
     ///
     ///     Ok(())
     /// }
@@ -292,8 +266,6 @@ impl Fiber {
         }
     }
 
-    #[cfg(any(ruby_gte_3_1, docsrs))]
-    #[cfg_attr(docsrs, doc(cfg(ruby_gte_3_1)))]
     pub fn transfer<A, T>(self, args: A) -> Result<T, Error>
     where
         A: ArgList,
@@ -315,8 +287,6 @@ impl Fiber {
         }
     }
 
-    #[cfg(any(ruby_gte_3_1, docsrs))]
-    #[cfg_attr(docsrs, doc(cfg(ruby_gte_3_1)))]
     pub fn raise<T>(self, e: Exception) -> Result<T, Error>
     where
         T: TryConvert,
