@@ -405,7 +405,7 @@ impl Ruby {
 pub struct Thread(RTypedData);
 
 impl Thread {
-    /// Return `Some(Thread)` if `val` is an `Thread`, `None` otherwise.
+    /// Return `Some(Thread)` if `val` is a `Thread`, `None` otherwise.
     ///
     /// # Examples
     ///

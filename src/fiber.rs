@@ -188,10 +188,61 @@ impl Ruby {
         })
     }
 
+    /// Return the currently executing Fiber.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let fiber = ruby.fiber_current();
+    ///
+    ///     rb_assert!(ruby, "fiber.is_a?(Fiber)", fiber);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     pub fn fiber_current(&self) -> Fiber {
         unsafe { Fiber::from_rb_value_unchecked(rb_fiber_current()) }
     }
 
+    /// Transfer execution back to where the current Fiber was resumed.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, value::Opaque, Error, Ruby, Value};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let ary = ruby.ary_new();
+    ///     let send_array = Opaque::from(ary);
+    ///
+    ///     let fiber = ruby.fiber_new_from_fn(Default::default(), move |ruby, _args, _block| {
+    ///         let ary = ruby.get_inner(send_array);
+    ///         ary.push(1)?;
+    ///         let _: Value = ruby.fiber_yield(())?;
+    ///         ary.push(2)?;
+    ///         let _: Value = ruby.fiber_yield(())?;
+    ///         ary.push(3)?;
+    ///         let _: Value = ruby.fiber_yield(())?;
+    ///         Ok(())
+    ///     })?;
+    ///
+    ///     ary.push("a")?;
+    ///     let _: Value = fiber.resume(())?;
+    ///     ary.push("b")?;
+    ///     let _: Value = fiber.resume(())?;
+    ///     ary.push("c")?;
+    ///     let _: Value = fiber.resume(())?;
+    ///
+    ///     rb_assert!(ruby, r#"ary == ["a", 1, "b", 2, "c", 3]"#, ary);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     pub fn fiber_yield<A, T>(&self, args: A) -> Result<T, Error>
     where
         A: ArgList,
@@ -223,6 +274,18 @@ impl Ruby {
 pub struct Fiber(RTypedData);
 
 impl Fiber {
+    /// Return `Some(Fiber)` if `val` is a `Fiber`, `None` otherwise.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::eval;
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// assert!(magnus::Fiber::from_value(eval("Fiber.new {1 + 2}").unwrap()).is_some());
+    /// assert!(magnus::Fiber::from_value(eval("Thread.new {1 + 2}").unwrap()).is_none());
+    /// assert!(magnus::Fiber::from_value(eval("Proc.new {1 + 2}").unwrap()).is_none());
+    /// ```
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
         unsafe {
@@ -237,6 +300,32 @@ impl Fiber {
         Self(RTypedData::from_rb_value_unchecked(val))
     }
 
+    /// Return `true` if `self` can be resumed, `false` otherwise.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Error, Ruby, Value};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let fiber = ruby.fiber_new(Default::default(), move |ruby, _args, _block| {
+    ///         let _: Value = ruby.fiber_yield((1,))?;
+    ///         let _: Value = ruby.fiber_yield((3,))?;
+    ///         Ok(5)
+    ///     })?;
+    ///
+    ///     assert!(fiber.is_alive());
+    ///     assert_eq!(fiber.resume::<_, u64>(())?, 1);
+    ///     assert!(fiber.is_alive());
+    ///     assert_eq!(fiber.resume::<_, u64>(())?, 3);
+    ///     assert!(fiber.is_alive());
+    ///     assert_eq!(fiber.resume::<_, u64>(())?, 5);
+    ///     assert!(!fiber.is_alive());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     pub fn is_alive(self) -> bool {
         unsafe { Value::new(rb_fiber_alive_p(self.as_rb_value())).to_bool() }
     }
@@ -291,6 +380,41 @@ impl Fiber {
         }
     }
 
+    /// Transfer control to another Fiber.
+    ///
+    /// `transfer` is an alternate API to
+    /// [`resume`](Fiber::resume)/[`yield`](Ruby::fiber_yield). The two APIs
+    /// can not be mixed, a Fiber muse use *either* `transfer` or
+    /// `resume`/`yield` to pass control.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Error, Fiber, Ruby, TryConvert, Value};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let fib = ruby.fiber_new(Default::default(), |_ruby, args, _block| {
+    ///         let root = Fiber::try_convert(*args.get(0).unwrap())?;
+    ///         let mut a = u64::try_convert(*args.get(1).unwrap())?;
+    ///         let mut b = u64::try_convert(*args.get(2).unwrap())?;
+    ///         while let Some(c) = a.checked_add(b) {
+    ///             let _: Value = root.transfer((c,))?;
+    ///             a = b;
+    ///             b = c;
+    ///         }
+    ///         Ok(())
+    ///     })?;
+    ///
+    ///     assert_eq!(fib.transfer::<_, u64>((ruby.fiber_current(), 0, 1))?, 1);
+    ///     assert_eq!(fib.transfer::<_, u64>(())?, 2);
+    ///     assert_eq!(fib.transfer::<_, u64>(())?, 3);
+    ///     assert_eq!(fib.transfer::<_, u64>(())?, 5);
+    ///     assert_eq!(fib.transfer::<_, u64>(())?, 8);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     pub fn transfer<A, T>(self, args: A) -> Result<T, Error>
     where
         A: ArgList,
@@ -312,6 +436,25 @@ impl Fiber {
         }
     }
 
+    /// Resume the execution of `self`, raising the exception `e`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{prelude::*, Error, Ruby, Value};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let fiber = ruby.fiber_new(Default::default(), move |ruby, _args, _block| {
+    ///         assert!(ruby.fiber_yield::<_, Value>(()).is_err());
+    ///     })?;
+    ///
+    ///     let _: Value = fiber.resume(())?;
+    ///     let _: Value = fiber.raise(ruby.exception_runtime_error().new_instance(("oh no!",))?)?;
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     pub fn raise<T>(self, e: Exception) -> Result<T, Error>
     where
         T: TryConvert,
