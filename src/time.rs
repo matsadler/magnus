@@ -34,7 +34,7 @@ impl Ruby {
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let t = ruby.time_new(1654013280, 0)?;
     ///
-    ///     rb_assert!(ruby, "t == Time.new(2022, 5, 31, 9, 8, 0)", t);
+    ///     rb_assert!(ruby, r#"t == Time.new(2022, 5, 31, 9, 8, 0, "-07:00")"#, t);
     ///
     ///     Ok(())
     /// }
