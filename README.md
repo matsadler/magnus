@@ -287,6 +287,7 @@ See `magnus::TryConvert` for more details.
 | `[T; N]`                                                             | `[T]`, `#to_ary`                        |
 | `magnus::RArray`                                                     | `Array`, `#to_ary`                      |
 | `magnus::RHash`                                                      | `Hash`, `#to_hash`                      |
+| `std::time::SystemTime`, `magnus::Time`                              | `Time`                                  |
 | `magnus::Value`                                                      | any object                              |
 | `Vec<T>`\*                                                           | `[T]`, `#to_ary`                        |
 | `HashMap<K, V>`\*                                                    | `{K => V}`, `#to_hash`                  |
@@ -316,6 +317,7 @@ and `magnus::ArgList` for some additional details.
 | `Result<T, magnus::Error>` (return only)           | `T` or raises error                     |
 | `(T, U)`, `(T, U, V)`, etc, `[T; N]`, `Vec<T>`     | `Array`                                 |
 | `HashMap<K, V>`                                    | `Hash`                                  |
+| `std::time::SystemTime`                            | `Time`                                  |
 | `T`, `typed_data::Obj<T>` where `T: TypedData`\*\* | instance of `<T as TypedData>::class()` |
 
 \*\* see the `wrap` macro.

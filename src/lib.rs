@@ -1540,13 +1540,13 @@
 // * `rb_timespec_now`:
 // * `rb_time_interval`:
 // * `rb_time_nano_new`:
-// * `rb_time_new`:
+//! * `rb_time_new`: [`Ruby::time_new`].
 // * `rb_time_num_new`:
 // * `rb_time_timespec`:
 // * `rb_time_timespec_interval`:
 // * `rb_time_timespec_new`:
-// * `rb_time_timeval`:
-// * `rb_time_utc_offset`:
+//! * `rb_time_timeval`: [`TryConvert`].
+//! * `rb_time_utc_offset`: [`Time::utc_offset`].
 // * `rb_tolower`:
 // * `rb_toupper`:
 //! * `rb_to_encoding`: [`TryConvert`] or [`Value::try_convert`].
@@ -1839,6 +1839,7 @@ pub mod rb_sys;
 pub mod scan_args;
 pub mod symbol;
 mod thread;
+mod time;
 pub mod try_convert;
 pub mod typed_data;
 pub mod value;
@@ -1885,6 +1886,7 @@ pub use crate::{
     range::Range,
     symbol::Symbol,
     thread::Thread,
+    time::Time,
     try_convert::TryConvert,
     typed_data::{DataType, DataTypeFunctions, TypedData},
     value::{Fixnum, StaticSymbol, Value},

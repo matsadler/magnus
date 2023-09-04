@@ -125,6 +125,7 @@ impl RubyGvlState {
 /// * [`Struct`](#struct)
 /// * [`Symbol`](#symbol)
 /// * [`Thread`](#thread)
+/// * [`Time`](#time)
 /// * [`true`](#true)
 /// * [`typed_data::Obj`](#typed_dataobj) - wrapping Rust data in a Ruby object
 pub struct Ruby(PhantomData<*mut ()>);
