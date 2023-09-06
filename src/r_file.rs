@@ -14,7 +14,7 @@ use crate::{
     Ruby,
 };
 
-/// A Value pointer to a RFile struct, Ruby's internal representation of files.
+/// A Value pointer to a RFile struct, Ruby's internal representation of IO.
 ///
 /// See the [`ReprValue`] and [`Object`] traits for additional methods
 /// available on this type.
@@ -24,6 +24,22 @@ pub struct RFile(NonZeroValue);
 
 impl RFile {
     /// Return `Some(RFile)` if `val` is a `RFile`, `None` otherwise.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::eval;
+    /// # let ruby = unsafe { magnus::embed::init() };
+    ///
+    /// assert!(
+    ///     magnus::RFile::from_value(eval(r#"File.open("/tmp/example.txt", "w+")"#).unwrap())
+    ///         .is_some()
+    /// );
+    /// assert!(magnus::RFile::from_value(eval("STDOUT").unwrap()).is_some());
+    /// # ruby.require("socket").unwrap();
+    /// assert!(magnus::RFile::from_value(eval("UNIXSocket.pair.first").unwrap()).is_some());
+    /// assert!(magnus::RFile::from_value(eval("nil").unwrap()).is_none());
+    /// ```
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
         unsafe {
