@@ -28,17 +28,17 @@ impl RFile {
     /// # Examples
     ///
     /// ```
-    /// use magnus::eval;
+    /// use magnus::{eval, RFile};
     /// # let ruby = unsafe { magnus::embed::init() };
     ///
-    /// assert!(
-    ///     magnus::RFile::from_value(eval(r#"File.open("/tmp/example.txt", "w+")"#).unwrap())
-    ///         .is_some()
-    /// );
-    /// assert!(magnus::RFile::from_value(eval("STDOUT").unwrap()).is_some());
+    /// assert!(RFile::from_value(eval("STDOUT").unwrap()).is_some());
+    /// # #[cfg(not(windows))]
+    /// # {
+    /// assert!(RFile::from_value(eval(r#"File.open("/tmp/example.txt", "w+")"#).unwrap()).is_some());
     /// # ruby.require("socket").unwrap();
-    /// assert!(magnus::RFile::from_value(eval("UNIXSocket.pair.first").unwrap()).is_some());
-    /// assert!(magnus::RFile::from_value(eval("nil").unwrap()).is_none());
+    /// assert!(RFile::from_value(eval("UNIXSocket.pair.first").unwrap()).is_some());
+    /// # }
+    /// assert!(RFile::from_value(eval("nil").unwrap()).is_none());
     /// ```
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
