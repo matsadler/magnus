@@ -529,7 +529,10 @@ impl Thread {
         T: TryConvert,
     {
         T::try_convert(Value::new(unsafe {
-            rb_thread_local_aref(self.as_rb_value(), key.into_id().as_rb_id())
+            rb_thread_local_aref(
+                self.as_rb_value(),
+                key.into_id_with(&Ruby::get_with(self)).as_rb_id(),
+            )
         }))
     }
 
@@ -580,8 +583,8 @@ impl Thread {
         T: IntoValue,
     {
         let ruby = Ruby::get_with(self);
-        let key = key.into_id();
-        let val = val.into_value();
+        let key = key.into_id_with(&ruby);
+        let val = val.into_value_with(&ruby);
         protect(|| {
             unsafe { rb_thread_local_aset(self.as_rb_value(), key.as_rb_id(), val.as_rb_value()) };
             ruby.qnil()

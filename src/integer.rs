@@ -656,7 +656,7 @@ impl Mul for Integer {
                 let raw_b = b.to_i64();
                 let result = raw_a.checked_mul(raw_b);
                 if let Some(result) = result {
-                    Integer::from_i64(result)
+                    Ruby::get_with(a).integer_from_i64(result)
                 } else {
                     let a = unsafe { rb_int2big(a.to_isize()) };
                     let result = unsafe { rb_big_mul(a, b.as_rb_value()) };
@@ -689,7 +689,7 @@ impl Div for Integer {
                 // the only case when division can overflow is when dividing
                 // i64::MIN by -1, but Fixnum can't represent that I64::MIN
                 // so we can safely not use checked_div here
-                Integer::from_i64(raw_a / raw_b)
+                Ruby::get_with(a).integer_from_i64(raw_a / raw_b)
             },
             |a, b| {
                 let result = unsafe { rb_big_div(a, b) };
