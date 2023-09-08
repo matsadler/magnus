@@ -438,8 +438,8 @@ impl RArray {
     where
         T: TryConvert,
     {
-        for r in self.each() {
-            T::try_convert(r?)?;
+        for r in self {
+            T::try_convert(r)?;
         }
         unsafe {
             let ary = rb_ary_hidden_new(0);
@@ -1205,11 +1205,16 @@ impl RArray {
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let mut res = Vec::new();
+    /// # #[allow(deprecated)]
     /// for i in eval::<RArray>("[1, 2, 3]").unwrap().each() {
     ///     res.push(i64::try_convert(i.unwrap()).unwrap());
     /// }
     /// assert_eq!(res, vec![1, 2, 3]);
     /// ```
+    #[deprecated(
+        since = "0.7.0",
+        note = "Please use `ary.into_iter()` or `ary.enumeratorize(\"each\", ())` instead."
+    )]
     pub fn each(self) -> Enumerator {
         // TODO why doesn't rb_ary_each work?
         self.enumeratorize("each", ())
@@ -1421,6 +1426,55 @@ impl fmt::Display for RArray {
 impl fmt::Debug for RArray {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.inspect())
+    }
+}
+
+impl IntoIterator for RArray {
+    type Item = Value;
+    type IntoIter = Iter<Value>;
+
+    /// Returns an [`Iter`] over a copy of `self`.
+    ///
+    /// `self` is copied using a fast copy-on-write optimisation, so if `self`
+    /// is not modified then `self` and the copy will point to the same backing
+    /// store and use no extra memory.
+    ///
+    /// The copy is skipped if `self` is frozen.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Error, Ruby, TryConvert};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let ary = ruby.ary_new();
+    ///     ary.push(1)?;
+    ///     ary.push(2)?;
+    ///     ary.push(3)?;
+    ///
+    ///     let iter = ary.into_iter();
+    ///
+    ///     ary.push(4)?;
+    ///
+    ///     let res = iter
+    ///         .map(TryConvert::try_convert)
+    ///         .collect::<Result<Vec<i64>, Error>>()?;
+    ///
+    ///     assert_eq!(res, vec![1, 2, 3]);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
+    fn into_iter(self) -> Self::IntoIter {
+        let ary = if self.is_frozen() {
+            self
+        } else {
+            let tmp = self.dup();
+            unsafe { rb_obj_hide(tmp.as_rb_value()) };
+            tmp
+        };
+        Iter::new(ary)
     }
 }
 
@@ -1660,6 +1714,41 @@ where
         unsafe { RArray::from_value_unchecked(self.0.get()).to_array() }
     }
 
+    /// Returns an [`Iter`] over a copy of `self`.
+    ///
+    /// `self` is copied using a fast copy-on-write optimisation, so if `self`
+    /// is not modified then `self` and the copy will point to the same backing
+    /// store and use no extra memory.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let ary = ruby.typed_ary_new();
+    ///     ary.push(ruby.integer_from_i64(1))?;
+    ///     ary.push(ruby.integer_from_i64(2))?;
+    ///     ary.push(ruby.integer_from_i64(3))?;
+    ///
+    ///     let iter = ary.iter();
+    ///
+    ///     ary.push(ruby.integer_from_i64(4))?;
+    ///
+    ///     let res = iter
+    ///         .map(|int| int.to_usize())
+    ///         .collect::<Result<Vec<_>, Error>>()?;
+    ///
+    ///     assert_eq!(res, vec![1, 2, 3]);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
+    pub fn iter(&self) -> Iter<T> {
+        Iter::new(unsafe { RArray::from_value_unchecked(self.dup().0.get()) })
+    }
+
     // TODO? assoc & rassoc
 }
 
@@ -1670,6 +1759,42 @@ where
     /// See [`RArray::to_vec`].
     pub fn to_vec(&self) -> Vec<T> {
         unsafe { RArray::from_value_unchecked(self.0.get()).to_vec().unwrap() }
+    }
+}
+
+impl<T> IntoIterator for TypedArray<T>
+where
+    T: TryConvert,
+{
+    type Item = T;
+    type IntoIter = Iter<T>;
+
+    /// Returns an [`Iter`] over `self`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let ary = ruby.typed_ary_new();
+    ///     ary.push(ruby.integer_from_i64(1))?;
+    ///     ary.push(ruby.integer_from_i64(2))?;
+    ///     ary.push(ruby.integer_from_i64(3))?;
+    ///
+    ///     let res = ary
+    ///         .into_iter()
+    ///         .map(|int| int.to_usize())
+    ///         .collect::<Result<Vec<_>, Error>>()?;
+    ///
+    ///     assert_eq!(res, vec![1, 2, 3]);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
+    fn into_iter(self) -> Self::IntoIter {
+        Iter::new(unsafe { RArray::from_value_unchecked(self.0.get()) })
     }
 }
 
@@ -1688,3 +1813,45 @@ impl<T> gc::private::Mark for TypedArray<T> {
     }
 }
 impl<T> gc::Mark for TypedArray<T> {}
+
+/// An iterator over the elements of an array.
+pub struct Iter<T> {
+    data: RArray,
+    len: usize,
+    idx: usize,
+    item_type: PhantomData<T>,
+}
+
+impl<T> Iterator for Iter<T>
+where
+    T: TryConvert,
+{
+    type Item = T;
+
+    #[inline]
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.idx >= self.len {
+            None
+        } else {
+            let value = self.data.entry(self.idx as isize).ok();
+            self.idx += 1;
+            value
+        }
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let remaining = self.len - self.idx;
+        (remaining, Some(remaining))
+    }
+}
+
+impl<T> Iter<T> {
+    fn new(data: RArray) -> Self {
+        Self {
+            data,
+            len: data.len(),
+            idx: 0,
+            item_type: PhantomData,
+        }
+    }
+}

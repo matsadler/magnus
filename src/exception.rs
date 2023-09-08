@@ -99,12 +99,8 @@ impl fmt::Debug for Exception {
             unsafe {
                 writeln!(f, "{}: {}", self.classname(), self)?;
                 if let Ok(Some(backtrace)) = self.funcall::<_, _, Option<RArray>>("backtrace", ()) {
-                    for line in backtrace.each() {
-                        if let Ok(line) = line {
-                            writeln!(f, "{}", line)?;
-                        } else {
-                            break;
-                        }
+                    for line in backtrace {
+                        writeln!(f, "{}", line)?;
                     }
                 }
             }

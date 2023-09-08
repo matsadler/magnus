@@ -13,6 +13,7 @@
   On creation the Array is hidden from Ruby, and must be consumed to pass it
   to Ruby (where it reverts to a regular untyped Array). It is then
   inaccessible to Rust.
+- Implement `IntoIterator` for `RArray`.
 - Implement `PartialEq`, `PartialOrd`, `Add`, `Sub`, `Mul`, and `Div` for
   `Integer`.
 
@@ -21,6 +22,8 @@
   argument of `&Ruby`.
 
 ### Deprecated
+- `RArray::each`. Please use `ary.into_iter()` or
+  `ary.enumeratorize("each", ())` instead.
 
 ### Removed
 - `deprecated-send-sync-value` feature.
