@@ -222,7 +222,7 @@
 // * `rb_add_event_hook`:
 // * `rb_add_event_hook2`:
 //! * `rb_alias`: [`Module::define_alias`].
-// * `rb_alias_variable`:
+//! * `rb_alias_variable`: [`Ruby::alias_variable`].
 // * `RB_ALLOC`:
 // * `RB_ALLOCV`:
 // * `RB_ALLOCV_END`:
@@ -1847,9 +1847,9 @@ pub mod value;
 use std::{ffi::CString, mem::transmute, os::raw::c_int};
 
 use ::rb_sys::{
-    rb_backref_get, rb_call_super_kw, rb_current_receiver, rb_define_class, rb_define_global_const,
-    rb_define_global_function, rb_define_module, rb_define_variable, rb_errinfo,
-    rb_eval_string_protect, rb_require_string, rb_set_errinfo, VALUE,
+    rb_alias_variable, rb_backref_get, rb_call_super_kw, rb_current_receiver, rb_define_class,
+    rb_define_global_const, rb_define_global_function, rb_define_module, rb_define_variable,
+    rb_errinfo, rb_eval_string_protect, rb_require_string, rb_set_errinfo, VALUE,
 };
 pub use magnus_macros::{init, wrap, DataTypeFunctions, TypedData};
 
@@ -1895,7 +1895,7 @@ use crate::{
     error::protect,
     method::Method,
     r_string::IntoRString,
-    value::{private::ReprValue as _, ReprValue},
+    value::{private::ReprValue as _, IntoId, ReprValue},
 };
 
 /// Evaluate a literal string of Ruby code with the given local variables.
@@ -2175,6 +2175,40 @@ impl Ruby {
             rb_define_variable(name.as_ptr(), ptr as *mut VALUE);
         }
         Ok(ptr)
+    }
+
+    /// Alias the global variable `src` as `dst`.
+    ///
+    /// Unlike [`define_variable`](Ruby::define_variable), the preceeding `$`
+    /// of the global variable's name is required, otherwise the alias will not
+    /// be accessable from Ruby.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     ruby.define_variable("example", 42)?;
+    ///     ruby.alias_variable("$answer", "$example")?;
+    ///     rb_assert!(ruby, "$answer == 42");
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
+    pub fn alias_variable<T, U>(&self, dst: T, src: U) -> Result<(), Error>
+    where
+        T: IntoId,
+        U: IntoId,
+    {
+        let dst = dst.into_id_with(self);
+        let src = src.into_id_with(self);
+        protect(|| {
+            unsafe { rb_alias_variable(dst.as_rb_id(), src.as_rb_id()) };
+            self.qnil()
+        })?;
+        Ok(())
     }
 
     /// Define a global constant.
