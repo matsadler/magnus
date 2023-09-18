@@ -1743,7 +1743,7 @@ unsafe impl IntoValueFromNative for &str {}
 impl IntoValue for bytes::Bytes {
     #[inline]
     fn into_value_with(self, handle: &Ruby) -> Value {
-        handle.str_from_slice(self.as_ref()).into()
+        handle.str_from_slice(self.as_ref()).into_value_with(handle)
     }
 }
 

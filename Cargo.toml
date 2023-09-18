@@ -29,7 +29,7 @@ rb-sys = { version = "0.9.81", default-features = false, features = ["bindgen-rb
 seq-macro = "0.3"
 
 [dev-dependencies]
-magnus = { path = ".", features = ["embed", "rb-sys"] }
+magnus = { path = ".", features = ["embed", "rb-sys", "bytes"] }
 rb-sys = { version = "0.9", default-features = false, features = ["stable-api-compiled-fallback"] }
 
 [build-dependencies]
