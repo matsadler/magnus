@@ -13,6 +13,10 @@
 
 ### Security
 
+## [0.6.2] - 2023-09-18
+### Fixed
+- Compliation error in `bytes` feature.
+
 ## [0.6.1] - 2023-08-20
 ### Changed
 - Support `rb-sys`' `stable-api` feature.
@@ -402,7 +406,8 @@
 - Pre-built bindings for Ruby 2.6 - 3.1 on common platforms, build-time
   generated bindings otherwise.
 
-[Unreleased]: https://github.com/matsadler/magnus/compare/0.6.1...0.6
+[Unreleased]: https://github.com/matsadler/magnus/compare/0.6.2...0.6
+[0.6.2]: https://github.com/matsadler/magnus/compare/0.6.1...0.6.2
 [0.6.1]: https://github.com/matsadler/magnus/compare/0.6.0...0.6.1
 [0.6.0]: https://github.com/matsadler/magnus/compare/0.5.3...0.6.0
 [0.5.3]: https://github.com/matsadler/magnus/compare/0.5.2...0.5.3
