@@ -110,6 +110,7 @@ impl RubyGvlState {
 /// * [`Integer`](#integer)
 /// * [`nil`](#nil)
 /// * [`Proc`](#proc) - Ruby's blocks as objects
+/// * [`Process`](#process) - external processes
 /// * [`Range`](#range)
 /// * [`RArray`](#rarray)
 /// * [`RbEncoding`](#rbencoding) - string encoding

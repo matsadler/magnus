@@ -1619,7 +1619,7 @@
 // * `rb_vsprintf`:
 // * `rb_w32_fd_copy`:
 // * `rb_w32_fd_dup`:
-// * `rb_waitpid`:
+//! * `rb_waitpid`: [`Ruby::waitpid`].
 // * `rb_warn`:
 //! * `rb_warning`: [`error::warning`].
 // * `rb_write_error`:
@@ -1811,6 +1811,7 @@ pub mod method;
 pub mod module;
 pub mod numeric;
 mod object;
+pub mod process;
 /// Traits that commonly should be in scope.
 pub mod prelude {
     pub use crate::{
