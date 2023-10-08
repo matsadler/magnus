@@ -8,7 +8,7 @@ use std::os::unix::process::ExitStatusExt;
 use std::os::windows::process::ExitStatusExt;
 use std::{num::NonZeroU32, os::raw::c_int, process::ExitStatus, ptr::null};
 
-use rb_sys::{rb_sys_fail, rb_waitpid};
+use rb_sys::{pid_t, rb_sys_fail, rb_waitpid};
 
 use crate::{
     api::Ruby,
@@ -69,7 +69,7 @@ impl Ruby {
             }
             self.qnil()
         })?;
-        Ok(NonZeroU32::new(out_pid as u32).map(|pid| (pid, ExitStatus::from_raw(status))))
+        Ok(NonZeroU32::new(out_pid as u32).map(|pid| (pid, ExitStatus::from_raw(status as _))))
     }
 }
 
@@ -84,6 +84,7 @@ const WUNTRACED: c_int = 0x00000002;
 const WUNTRACED: c_int = 0x04;
 
 /// Argument type for [`Ruby::waitpid`].
+#[derive(Clone, Copy)]
 pub enum WaitTarget {
     /// Wait for the given child process
     ChildPid(u32),
@@ -97,12 +98,12 @@ pub enum WaitTarget {
 }
 
 impl WaitTarget {
-    fn to_rb_pid_t(self) -> i32 {
+    fn to_rb_pid_t(self) -> pid_t {
         match self {
-            Self::ChildPid(pid) => pid as i32,
+            Self::ChildPid(pid) => pid as pid_t,
             Self::ProcessGroup => 0,
             Self::AnyChild => -1,
-            Self::ChildProcessGroup(pid) => -(pid as i32),
+            Self::ChildProcessGroup(pid) => -(pid as pid_t),
         }
     }
 }
