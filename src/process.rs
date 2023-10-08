@@ -8,7 +8,7 @@ use std::os::unix::process::ExitStatusExt;
 use std::os::windows::process::ExitStatusExt;
 use std::{num::NonZeroU32, os::raw::c_int, process::ExitStatus, ptr::null};
 
-use rb_sys::{pid_t, rb_sys_fail, rb_waitpid};
+use rb_sys::{rb_sys_fail, rb_waitpid};
 
 use crate::{
     api::Ruby,
@@ -63,7 +63,7 @@ impl Ruby {
         let mut out_pid = 0;
         let mut status: c_int = 0;
         protect(|| unsafe {
-            out_pid = rb_waitpid(pid.to_rb_pid_t(), &mut status as *mut c_int, flags.0);
+            out_pid = rb_waitpid(pid.to_i32() as _, &mut status as *mut c_int, flags.0);
             if out_pid < 0 {
                 rb_sys_fail(null());
             }
@@ -98,12 +98,12 @@ pub enum WaitTarget {
 }
 
 impl WaitTarget {
-    fn to_rb_pid_t(self) -> pid_t {
+    fn to_i32(self) -> i32 {
         match self {
-            Self::ChildPid(pid) => pid as pid_t,
+            Self::ChildPid(pid) => pid as i32,
             Self::ProcessGroup => 0,
             Self::AnyChild => -1,
-            Self::ChildProcessGroup(pid) => -(pid as pid_t),
+            Self::ChildProcessGroup(pid) => -(pid as i32),
         }
     }
 }
