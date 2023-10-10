@@ -16,6 +16,9 @@
 - Implement `IntoIterator` for `RArray`.
 - Implement `PartialEq`, `PartialOrd`, `Add`, `Sub`, `Mul`, and `Div` for
   `Integer`.
+- `Time` with automatic conversion to/from `std::time::SystemTime`.
+- `Ruby::alias_variable`.
+- `Ruby::waitpid`.
 
 ### Changed
 - Closures/Functions used as Ruby blocks/procs take an additional first
