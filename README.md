@@ -322,6 +322,14 @@ and `magnus::ArgList` for some additional details.
 
 \*\* see the `wrap` macro.
 
+### Conversions via Serde
+
+Rust types can also be converted to Ruby, and vice versa, using [Serde] with
+the [`serde_magnus`] crate.
+
+[Serde]: https://github.com/serde-rs/serde
+[`serde_magnus`]: https://github.com/OneSignal/serde-magnus
+
 ### Manual Conversions
 
 There may be cases where you want to bypass the automatic type conversions, to
@@ -419,6 +427,11 @@ which Magnus does not expose.
 
 [rb-sys]: https://github.com/oxidize-rb/rb-sys/tree/main/crates/rb-sys
 [rb_sys_module]: https://docs.rs/magnus/latest/magnus/rb_sys/index.html
+
+### `serde_magnus`
+
+[`serde_magnus`] integrates [Serde] and Magnus for seamless serialisation and
+deserialisation of Rust to Ruby data structures and vice versa.
 
 ## Users
 
