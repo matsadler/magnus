@@ -1085,13 +1085,13 @@
 // * `rb_mod_sys_fail`:
 // * `rb_mod_sys_fail_str`:
 // * `rb_must_asciicompat`:
-// * `rb_mutex_lock`:
-// * `rb_mutex_locked_p`:
-// * `rb_mutex_new`:
-// * `rb_mutex_sleep`:
-// * `rb_mutex_synchronize`:
-// * `rb_mutex_trylock`:
-// * `rb_mutex_unlock`:
+//! * `rb_mutex_lock`: [`Mutex::lock`].
+//! * `rb_mutex_locked_p`: [`Mutex::is_locked`].
+//! * `rb_mutex_new`: [`Ruby::mutex_new`].
+//! * `rb_mutex_sleep`: [`Mutex::sleep`].
+//! * `rb_mutex_synchronize`: [`Mutex::synchronize`].
+//! * `rb_mutex_trylock`: [`Mutex::trylock`].
+//! * `rb_mutex_unlock`: [`Mutex::unlock`].
 //!
 //! ## `rb_n`
 // * `rb_name_error`:
@@ -1810,6 +1810,7 @@ mod integer;
 mod into_value;
 pub mod method;
 pub mod module;
+mod mutex;
 pub mod numeric;
 mod object;
 pub mod process;
@@ -1870,6 +1871,7 @@ pub use crate::{
     integer::Integer,
     into_value::{ArgList, IntoValue, IntoValueFromNative, KwArgs, RArrayArgList},
     module::{Attr, Module, RModule},
+    mutex::Mutex,
     numeric::Numeric,
     object::Object,
     r_array::RArray,

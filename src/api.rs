@@ -108,6 +108,7 @@ impl RubyGvlState {
 ///   as calling the current `super` method.
 /// * [`Id`](#id) - low-level Symbol representation
 /// * [`Integer`](#integer)
+/// * [`Mutex`](#mutex)
 /// * [`nil`](#nil)
 /// * [`Proc`](#proc) - Ruby's blocks as objects
 /// * [`Process`](#process) - external processes

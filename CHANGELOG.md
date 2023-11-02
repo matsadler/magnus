@@ -3,6 +3,7 @@
 ## [Unreleased]
 ### Added
 - `Thread`, `Ruby::thread_create`/`thread_create_from_fn` and other thread APIs.
+- `Mutex`, `Ruby::mutex_new` and other mutex APIs.
 - `Fiber`, `Ruby::fiber_new`/`fiber_new_from_fn` and other fiber APIs
   (requires Ruby >= 3.1).
 - `Ruby::ary_try_from_iter` is an efficient way to create a Ruby array from a
