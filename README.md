@@ -465,7 +465,7 @@ rustflags = ["-C", "link-dead-code=on"]
 
 Magnus is named after *Magnus the Red* a character from the Warhammer 40,000
 universe. A sorcerer who believed he could tame the psychic energy of the Warp.
-Ultimately, his hubris lead to his fall to Chaos, but lets hope using this
+Ultimately, his hubris lead to his fall to Chaos, but let's hope using this
 library turns out better for you.
 
 ## License
