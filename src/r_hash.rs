@@ -422,8 +422,8 @@ impl RHash {
     /// Return the value for `key`, converting it to `U`.
     ///
     /// Returns hash's default if `key` is missing. See also
-    /// [`lookup`](RHash::lookup), [`get`](RHash::get), and
-    /// [`fetch`](RHash::fetch).
+    /// [`lookup`](RHash::lookup), [`lookup2`](RHash::lookup2),
+    /// [`get`](RHash::get), and [`fetch`](RHash::fetch).
     ///
     /// # Examples
     ///
@@ -468,7 +468,8 @@ impl RHash {
     /// Return the value for `key`, converting it to `U`.
     ///
     /// Returns `nil` if `key` is missing. See also [`aref`](RHash::aref),
-    /// [`get`](RHash::get), and [`fetch`](RHash::fetch).
+    /// [`lookup2`](RHash::lookup2), [`get`](RHash::get), and
+    /// [`fetch`](RHash::fetch).
     ///
     /// # Examples
     ///
@@ -499,10 +500,61 @@ impl RHash {
             .and_then(TryConvert::try_convert)
     }
 
+    /// Return the value for `key` or the provided `default`, converting to `U`.
+    ///
+    /// Returns `default` if `key` is missing. See also [`aref`](RHash::aref),
+    /// [`lookup`](RHash::lookup), [`get`](RHash::get), and
+    /// [`fetch`](RHash::fetch).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RHash};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// let hash: RHash = eval(
+    ///     r#"
+    ///       hash = {"foo" => 1, "bar" => nil}
+    ///       hash.default = 0
+    ///       hash
+    ///     "#,
+    /// )
+    /// .unwrap();
+    /// assert_eq!(hash.lookup2::<_, _, i64>("foo", -1).unwrap(), 1);
+    /// assert_eq!(
+    ///     hash.lookup2::<_, _, Option<i64>>("foo", -1).unwrap(),
+    ///     Some(1)
+    /// );
+    /// assert_eq!(hash.lookup2::<_, _, Option<i64>>("bar", -1).unwrap(), None);
+    /// assert_eq!(
+    ///     hash.lookup2::<_, _, Option<i64>>("baz", -1).unwrap(),
+    ///     Some(-1)
+    /// );
+    /// ```
+    pub fn lookup2<T, U, V>(self, key: T, default: U) -> Result<V, Error>
+    where
+        T: IntoValue,
+        U: IntoValue,
+        V: TryConvert,
+    {
+        let ruby = Ruby::get_with(self);
+        let key = ruby.into_value(key);
+        let default = ruby.into_value(default);
+        protect(|| unsafe {
+            Value::new(rb_hash_lookup2(
+                self.as_rb_value(),
+                key.as_rb_value(),
+                default.as_rb_value(),
+            ))
+        })
+        .and_then(TryConvert::try_convert)
+    }
+
     /// Return the value for `key` as a [`Value`].
     ///
     /// Returns `None` if `key` is missing. See also [`aref`](RHash::aref),
-    /// [`lookup`](RHash::lookup), and [`fetch`](RHash::fetch).
+    /// [`lookup`](RHash::lookup), [`lookup2`](RHash::lookup2), and
+    /// [`fetch`](RHash::fetch).
     ///
     /// Note: It is possible for very badly behaved key objects to raise an
     /// error during hash lookup. This is unlikely, and for the simplicity of
@@ -538,7 +590,8 @@ impl RHash {
     /// Return the value for `key`, converting it to `U`.
     ///
     /// Returns `Err` if `key` is missing. See also [`aref`](RHash::aref),
-    /// [`lookup`](RHash::lookup), and [`get`](RHash::get).
+    /// [`lookup`](RHash::lookup), [`lookup2`](RHash::lookup2), and
+    /// [`get`](RHash::get).
     ///
     /// # Examples
     ///

@@ -19,6 +19,7 @@
 - `Time` with automatic conversion to/from `std::time::SystemTime`.
 - `Ruby::alias_variable`.
 - `Ruby::waitpid`.
+- `RHash::lookup2`.
 
 ### Changed
 - Closures/Functions used as Ruby blocks/procs take an additional first
