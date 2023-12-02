@@ -197,7 +197,8 @@ impl RTypedData {
             (val.rb_type() == ruby_value_type::RUBY_T_DATA)
                 .then(|| NonNull::new_unchecked(val.as_rb_value() as *mut rb_sys::RTypedData))
                 .and_then(|typed_data| {
-                    (typed_data.as_ref().typed_flag == 1)
+                    let typed_flag = typed_data.as_ref().typed_flag;
+                    (typed_flag != 0 && typed_flag <= 3)
                         .then(|| Self(NonZeroValue::new_unchecked(val)))
                 })
         }
