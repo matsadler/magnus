@@ -22,10 +22,6 @@ jobs:
         rustup-toolchain:
           - "1.61"
           - stable
-        include:
-          - os: windows-latest
-            ruby-version: mswin
-            rustup-toolchain: stable
 
     steps:
       - uses: actions/checkout@v3
