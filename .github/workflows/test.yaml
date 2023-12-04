@@ -23,10 +23,6 @@ jobs:
         rustup-toolchain:
           - "1.61"
           - stable
-        include:
-          - os: windows-latest
-            ruby-version: mswin
-            rustup-toolchain: stable
         exclude:
           - os: windows-latest
             ruby-version: head
@@ -46,11 +42,6 @@ jobs:
             examples/complete_object/tmp/
             examples/custom_exception_ruby/tmp/
             examples/custom_exception_rust/tmp/
-
-      - uses: KyleMayes/install-llvm-action@v1
-        if: contains(matrix.os, 'windows') && matrix.ruby-version != 'mswin'
-        with:
-          version: "15.0"
 
       - name: Example gem tests (blank?)
         working-directory: examples/rust_blank
