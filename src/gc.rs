@@ -193,7 +193,7 @@ impl Compactor {
 /// let root = RArray::new();
 /// gc::register_mark_object(root);
 ///
-/// // won't be collected while it is in out `root` array
+/// // won't be collected while it is in our `root` array
 /// let s = RString::new("example");
 /// root.push(s).unwrap();
 /// ```
