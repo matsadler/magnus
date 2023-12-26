@@ -1,5 +1,9 @@
-use std::{fmt, ptr::NonNull};
+use std::fmt;
+#[cfg(ruby_lt_3_3)]
+use std::ptr::NonNull;
 
+#[cfg(ruby_gte_3_3)]
+use rb_sys::rb_io_descriptor;
 use rb_sys::ruby_value_type;
 
 use crate::{
@@ -48,6 +52,7 @@ impl RFile {
         }
     }
 
+    #[cfg(ruby_lt_3_3)]
     fn as_internal(self) -> NonNull<rb_sys::RFile> {
         // safe as inner value is NonZero
         unsafe { NonNull::new_unchecked(self.0.get().as_rb_value() as *mut _) }
@@ -107,6 +112,11 @@ pub mod fd {
 pub use std::os::unix::io as fd;
 
 impl fd::AsRawFd for RFile {
+    #[cfg(ruby_gte_3_3)]
+    fn as_raw_fd(&self) -> fd::RawFd {
+        unsafe { rb_io_descriptor(self.as_rb_value()) }
+    }
+    #[cfg(ruby_lt_3_3)]
     fn as_raw_fd(&self) -> fd::RawFd {
         unsafe { (*self.as_internal().as_ref().fptr).fd }
     }
