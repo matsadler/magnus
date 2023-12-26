@@ -1,65 +1,68 @@
 name: Test
 
 on:
-  - push
-  - pull_request
+    - push
+    - pull_request
 
 jobs:
-  test:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os:
-          - ubuntu-latest
-          - macos-latest
-          - windows-latest
-        ruby-version:
-          - "2.7"
-          - "3.0"
-          - "3.1"
-          - "3.2"
-          - head
-        rustup-toolchain:
-          - "1.61"
-          - stable
-        exclude:
-          - os: windows-latest
-            ruby-version: head
+    test:
+        runs-on: ${{ matrix.os }}
+        strategy:
+            fail-fast: false
+            matrix:
+                os:
+                    - ubuntu-latest
+                    - macos-latest
+                    - windows-latest
+                ruby-version:
+                    - "2.7"
+                    - "3.0"
+                    - "3.1"
+                    - "3.2"
+                    - "3.3"
+                    - head
+                rustup-toolchain:
+                    - "1.61"
+                    - stable
+                exclude:
+                    - os: windows-latest
+                      ruby-version: "3.3"
+                    - os: windows-latest
+                      ruby-version: head
 
-    steps:
-      - uses: actions/checkout@v3
+        steps:
+            - uses: actions/checkout@v3
 
-      - uses: oxidize-rb/actions/setup-ruby-and-rust@v1
-        with:
-          rustup-toolchain: ${{ matrix.rustup-toolchain }}
-          ruby-version: ${{ matrix.ruby-version }}
-          cache-version: v2
-          bundler-cache: true
-          cargo-cache: true
-          cargo-cache-extra-path: |
-            examples/rust_blank/tmp/
-            examples/complete_object/tmp/
-            examples/custom_exception_ruby/tmp/
-            examples/custom_exception_rust/tmp/
+            - uses: oxidize-rb/actions/setup-ruby-and-rust@v1
+              with:
+                  rustup-toolchain: ${{ matrix.rustup-toolchain }}
+                  ruby-version: ${{ matrix.ruby-version }}
+                  cache-version: v2
+                  bundler-cache: true
+                  cargo-cache: true
+                  cargo-cache-extra-path: |
+                      examples/rust_blank/tmp/
+                      examples/complete_object/tmp/
+                      examples/custom_exception_ruby/tmp/
+                      examples/custom_exception_rust/tmp/
 
-      - name: Example gem tests (blank?)
-        working-directory: examples/rust_blank
-        run: bundle exec rake test
+            - name: Example gem tests (blank?)
+              working-directory: examples/rust_blank
+              run: bundle exec rake test
 
-      - name: Example gem tests (complete object)
-        working-directory: examples/complete_object
-        run: bundle exec rake test
+            - name: Example gem tests (complete object)
+              working-directory: examples/complete_object
+              run: bundle exec rake test
 
-      - name: Example gem tests (custom exception defined in Ruby)
-        if: matrix.ruby-version != 'head'
-        working-directory: examples/custom_exception_ruby
-        run: bundle exec rake test
+            - name: Example gem tests (custom exception defined in Ruby)
+              if: matrix.ruby-version != 'head'
+              working-directory: examples/custom_exception_ruby
+              run: bundle exec rake test
 
-      - name: Example gem tests (custom exception defined in Rust)
-        if: matrix.ruby-version != 'head'
-        working-directory: examples/custom_exception_rust
-        run: bundle exec rake test
+            - name: Example gem tests (custom exception defined in Rust)
+              if: matrix.ruby-version != 'head'
+              working-directory: examples/custom_exception_rust
+              run: bundle exec rake test
 
-      - name: Run tests
-        run: cargo test --workspace
+            - name: Run tests
+              run: cargo test --workspace
