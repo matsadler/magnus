@@ -390,7 +390,7 @@ use `unsafe`.
 
 ## Compatibility
 
-Ruby versions 3.0, 3.1, and 3.2 are fully supported.
+Ruby versions 3.0, 3.1, 3.2, and 3.3 are fully supported.
 
 Magnus currently works with, and is still tested against, Ruby 2.7, but as this
 version of the language is no longer supported by the Ruby developers it is not
