@@ -21,6 +21,7 @@
 - `Ruby::alias_variable`.
 - `Ruby::waitpid`.
 - `RHash::lookup2`.
+- `Ruby::define_data` new for Ruby 3.3.
 
 ### Changed
 - Closures/Functions used as Ruby blocks/procs take an additional first

@@ -11,6 +11,8 @@ use std::{
     slice,
 };
 
+#[cfg(ruby_gte_3_3)]
+use rb_sys::rb_data_define;
 use rb_sys::{
     rb_struct_aref, rb_struct_aset, rb_struct_define, rb_struct_getmember, rb_struct_members,
     rb_struct_size, ruby_value_type, VALUE,
@@ -399,6 +401,38 @@ impl Ruby {
     {
         members.define(name)
     }
+
+    /// Define a Ruby Data class.
+    ///
+    /// If provided, `super_class` must be a subclass of Ruby's `Data` class
+    /// (or `Data` itself).
+    ///
+    /// `members` is a tuple of `&str`, of between lengths 1 to 12 inclusive.
+    ///
+    /// ```
+    /// use magnus::{kwargs, prelude::*, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let data_class = ruby.define_data(None, ("foo", "bar"))?;
+    ///     ruby.define_global_const("Example", data_class)?;
+    ///
+    ///     assert_eq!(unsafe { data_class.name().to_owned() }, "Example");
+    ///
+    ///     let instance = data_class.new_instance((kwargs!("foo" => 1, "bar" => 2),))?;
+    ///     assert_eq!(instance.inspect(), "#<data Example foo=1, bar=2>");
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
+    #[cfg(any(ruby_gte_3_3, docsrs))]
+    #[cfg_attr(docsrs, doc(cfg(ruby_gte_3_3)))]
+    pub fn define_data<T>(&self, super_class: Option<RClass>, members: T) -> Result<RClass, Error>
+    where
+        T: StructMembers,
+    {
+        members.define_data(super_class)
+    }
 }
 
 /// Define a Ruby Struct class.
@@ -459,6 +493,9 @@ mod private {
 
     pub trait StructMembers {
         fn define(self, name: Option<&str>) -> Result<RClass, Error>;
+
+        #[cfg(ruby_gte_3_3)]
+        fn define_data(self, super_class: Option<RClass>) -> Result<RClass, Error>;
     }
 }
 use private::StructMembers;
@@ -473,6 +510,18 @@ macro_rules! impl_struct_members {
                     protect(|| unsafe {
                         RClass::from_rb_value_unchecked(rb_struct_define(
                             name.as_ref().map(|n| n.as_ptr()).unwrap_or_else(null),
+                            #(arg~N.as_ptr(),)*
+                            null::<c_char>(),
+                        ))
+                    })
+                }
+
+                #[cfg(ruby_gte_3_3)]
+                fn define_data(self, super_class: Option<RClass>) -> Result<RClass, Error> {
+                    #(let arg~N = CString::new(self.N).unwrap();)*
+                    protect(|| unsafe {
+                        RClass::from_rb_value_unchecked(rb_data_define(
+                            super_class.map(|s| s.as_rb_value()).unwrap_or(0),
                             #(arg~N.as_ptr(),)*
                             null::<c_char>(),
                         ))

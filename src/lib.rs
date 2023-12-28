@@ -458,6 +458,7 @@
 //!
 //! ## `rb_d`
 //!
+//! * `rb_data_define`: [`Ruby::define_data`].
 //! * `rb_data_object_make`: See [`wrap`] and [`TypedData`].
 //! * `rb_data_object_wrap`: See [`wrap`] and [`TypedData`].
 //! * `rb_data_object_zalloc`: See [`wrap`] and [`TypedData`].
@@ -1359,7 +1360,7 @@
 // * `rb_struct_alloc_noinit`:
 //! * `rb_struct_aref`: [`RStruct::aref`].
 //! * `rb_struct_aset`: [`RStruct::aset`].
-//! * `rb_struct_define`: [`r_struct::define_struct`].
+//! * `rb_struct_define`: [`Ruby::define_struct`].
 // * `rb_struct_define_under`:
 // * `rb_struct_define_without_accessor`:
 // * `rb_struct_define_without_accessor_under`:
