@@ -36,7 +36,11 @@ fn fib(n: usize) -> usize {
     }
 }
 
-magnus::define_global_function("fib", magnus::function!(fib, 1));
+#[magnus::init]
+fn init(ruby: &magnus::Ruby) -> Result<(), Error> {
+    ruby.define_global_function("fib", magnus::function!(fib, 1));
+    Ok(())
+}
 ```
 
 Defining a method (with a Ruby `self` argument):
@@ -46,9 +50,14 @@ fn is_blank(rb_self: String) -> bool {
     !rb_self.contains(|c: char| !c.is_whitespace())
 }
 
-let class = magnus::define_class("String", magnus::class::object())?;
-// 0 as self doesn't count against the number of arguments
-class.define_method("blank?", magnus::method!(is_blank, 0))?;
+#[magnus::init]
+fn init(ruby: &magnus::Ruby) -> Result<(), Error> {
+    // returns the existing class if already defined
+    let class = ruby.define_class("String", ruby.class_object())?;
+    // 0 as self doesn't count against the number of arguments
+    class.define_method("blank?", magnus::method!(is_blank, 0))?;
+    Ok(())
+}
 ```
 
 ### Calling Ruby Methods
@@ -82,7 +91,7 @@ wrapped in the specified class, and whenever it is passed back to Rust it will
 be unwrapped to a reference.
 
 ```rust
-use magnus::{class, define_class, function, method, prelude::*, Error};
+use magnus::{function, method, prelude::*, Error, Ruby};
 
 #[magnus::wrap(class = "Point")]
 struct Point {
@@ -109,8 +118,8 @@ impl Point {
 }
 
 #[magnus::init]
-fn init() -> Result<(), Error> {
-    let class = define_class("Point", class::object())?;
+fn init(ruby: &Ruby) -> Result<(), Error> {
+    let class = ruby.define_class("Point", ruby.class_object())?;
     class.define_singleton_method("new", function!(Point::new, 2))?;
     class.define_method("x", method!(Point::x, 0))?;
     class.define_method("y", method!(Point::y, 0))?;
@@ -162,15 +171,15 @@ your init function so it can be correctly exposed to Ruby.
 **`src/lib.rs`**
 
 ```rust
-use magnus::{define_global_function, function};
+use magnus::{function, Error, Ruby};
 
 fn distance(a: (f64, f64), b: (f64, f64)) -> f64 {
     ((b.0 - a.0).powi(2) + (b.1 - a.1).powi(2)).sqrt()
 }
 
 #[magnus::init]
-fn init() {
-    define_global_function("distance", function!(distance, 2));
+fn init(ruby: &Ruby) -> Result<(), Error> {
+    ruby.define_global_function("distance", function!(distance, 2));
 }
 ```
 
@@ -245,14 +254,16 @@ called more than once.
 **`src/main.rs`**
 
 ```rust
-use magnus::{embed, eval};
+use magnus::eval;
 
 fn main() {
-    let _cleanup = unsafe { embed::init() };
+    magnus::Ruby::init(|ruby| {
+        let val: f64 = eval!(ruby, "a + rand", a = 1)?;
 
-    let val: f64 = eval!("a + rand", a = 1).unwrap();
+        println!("{}", val);
 
-    println!("{}", val);
+        Ok(())
+    }).unwrap();
 }
 ```
 
@@ -341,14 +352,14 @@ encoded String so you can take a reference without allocating you could do the
 following:
 
 ```rust
-fn example(val: magnus::Value) -> Result<(), magnus::Error> {
+fn example(ruby: &Ruby, val: magnus::Value) -> Result<(), magnus::Error> {
     // checks value is a String, does not call #to_str
     let r_string = RString::from_value(val)
-        .ok_or_else(|| magnus::Error::new(magnus::exception::type_error(), "expected string"))?;
+        .ok_or_else(|| magnus::Error::new(ruby.exception_type_error(), "expected string"))?;
     // error on encodings that would otherwise need converting to utf-8
     if !r_string.is_utf8_compatible_encoding() {
         return Err(magnus::Error::new(
-            magnus::exception::encoding_error(),
+            ruby.exception_encoding_error(),
             "string must be utf-8",
         ));
     }
