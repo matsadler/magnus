@@ -146,6 +146,37 @@ impl MutPoint {
 }
 ```
 
+To allow wrapped types to be subclassed they must implement `Default`, and
+define and alloc func and an initialize method:
+
+``` rust
+#[derive(Default)]
+struct Point {
+    x: isize,
+    y: isize,
+}
+
+#[derive(Default)]
+#[wrap(class = "Point")]
+struct MutPoint(RefCell<Point>);
+
+impl MutPoint {
+    fn initialize(&self, x: isize, y: isize) {
+        let mut this = self.0.borrow_mut();
+        this.x = x;
+        this.y = y;
+    }
+}
+
+#[magnus::init]
+fn init(ruby: &Ruby) -> Result<(), Error> {
+    let class = ruby.define_class("Point", ruby.class_object()).unwrap();
+    class.define_alloc_func::<MutPoint>();
+    class.define_method("initialize", method!(MutPoint::initialize, 2))?;
+    Ok(())
+}
+```
+
 ## Getting Started
 
 ### Writing an extension gem (calling Rust from Ruby)
