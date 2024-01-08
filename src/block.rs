@@ -286,56 +286,68 @@ impl Proc {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{block::Proc, eval, Integer, RArray};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{block::Proc, Error, Ruby};
     ///
-    /// let proc: Proc = eval("Proc.new {|a, b| a + b}").unwrap();
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let proc: Proc = ruby.eval("Proc.new {|a, b| a + b}").unwrap();
     ///
-    /// // call with a tuple
-    /// let result: i64 = proc.call((1, 2)).unwrap();
-    /// assert_eq!(3, result);
+    ///     // call with a tuple
+    ///     let result: i64 = proc.call((1, 2)).unwrap();
+    ///     assert_eq!(3, result);
     ///
-    /// // call with a slice
-    /// let result: i64 = proc
-    ///     .call(&[Integer::from_i64(3), Integer::from_i64(4)][..])
-    ///     .unwrap();
-    /// assert_eq!(7, result);
+    ///     // call with a slice
+    ///     let result: i64 = proc
+    ///         .call(&[ruby.integer_from_i64(3), ruby.integer_from_i64(4)][..])
+    ///         .unwrap();
+    ///     assert_eq!(7, result);
     ///
-    /// // call with an array
-    /// let result: i64 = proc
-    ///     .call([Integer::from_i64(5), Integer::from_i64(6)])
-    ///     .unwrap();
-    /// assert_eq!(11, result);
+    ///     // call with an array
+    ///     let result: i64 = proc
+    ///         .call([ruby.integer_from_i64(5), ruby.integer_from_i64(6)])
+    ///         .unwrap();
+    ///     assert_eq!(11, result);
     ///
-    /// // call with a Ruby array
-    /// let array = RArray::from_vec(vec![7, 8]);
-    /// let result: i64 = proc.call(array).unwrap();
-    /// assert_eq!(15, result);
+    ///     // call with a Ruby array
+    ///     let array = ruby.ary_from_vec(vec![7, 8]);
+    ///     let result: i64 = proc.call(array).unwrap();
+    ///     assert_eq!(15, result);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     ///
     /// With keyword arguments:
     ///
     /// ```
-    /// use magnus::{block::Proc, eval, kwargs};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{block::Proc, kwargs, Error, Ruby};
     ///
-    /// let proc: Proc = eval("Proc.new {|a, b:, c:| a + b + c}").unwrap();
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let proc: Proc = ruby.eval("Proc.new {|a, b:, c:| a + b + c}").unwrap();
     ///
-    /// let result: i64 = proc.call((1, kwargs!("b" => 2, "c" => 3))).unwrap();
-    /// assert_eq!(6, result);
+    ///     let result: i64 = proc.call((1, kwargs!("b" => 2, "c" => 3))).unwrap();
+    ///     assert_eq!(6, result);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     ///
     /// Ignoring return value:
     ///
     /// ```
-    /// use magnus::{block::Proc, eval, rb_assert, Value};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{block::Proc, rb_assert, Error, Ruby, Value};
     ///
-    /// let proc: Proc = eval("Proc.new { $called = true }").unwrap();
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let proc: Proc = ruby.eval("Proc.new { $called = true }").unwrap();
     ///
-    /// let _: Value = proc.call(()).unwrap();
+    ///     let _: Value = proc.call(()).unwrap();
     ///
-    /// rb_assert!("$called == true");
+    ///     rb_assert!(ruby, "$called == true");
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn call<A, T>(self, args: A) -> Result<T, Error>
     where
@@ -1057,34 +1069,33 @@ where
 /// # Examples
 ///
 /// ```
-/// use magnus::{
-///     block::{block_given, Yield},
-///     define_global_function, eval, method,
-///     prelude::*,
-///     rb_assert, RArray, Value,
-/// };
-/// # let _cleanup = unsafe { magnus::embed::init() };
+/// use magnus::{block::Yield, method, prelude::*, rb_assert, Error, Ruby, Value};
 ///
-/// fn count_to_3(rb_self: Value) -> Yield<impl Iterator<Item = u8>> {
-///     if block_given() {
+/// fn count_to_3(ruby: &Ruby, rb_self: Value) -> Yield<impl Iterator<Item = u8>> {
+///     if ruby.block_given() {
 ///         Yield::Iter(1..=3)
 ///     } else {
 ///         Yield::Enumerator(rb_self.enumeratorize("count_to_3", ()))
 ///     }
 /// }
 ///
-/// define_global_function("count_to_3", method!(count_to_3, 0));
+/// fn example(ruby: &Ruby) -> Result<(), Error> {
+///     ruby.define_global_function("count_to_3", method!(count_to_3, 0));
 ///
-/// // call Ruby method with a block.
-/// let a = RArray::new();
-/// rb_assert!("count_to_3 {|i| a << i} == nil", a);
-/// rb_assert!("a == [1, 2, 3]", a);
+///     // call Ruby method with a block.
+///     let a = ruby.ary_new();
+///     rb_assert!(ruby, "count_to_3 {|i| a << i} == nil", a);
+///     rb_assert!(ruby, "a == [1, 2, 3]", a);
 ///
-/// // call Ruby method without a block.
-/// let enumerator: Value = eval("count_to_3").unwrap();
+///     // call Ruby method without a block.
+///     let enumerator: Value = ruby.eval("count_to_3").unwrap();
 ///
-/// rb_assert!("enumerator.next == 1", enumerator);
-/// rb_assert!("enumerator.next == 2", enumerator);
+///     rb_assert!(ruby, "enumerator.next == 1", enumerator);
+///     rb_assert!(ruby, "enumerator.next == 2", enumerator);
+///
+///     Ok(())
+/// }
+/// # Ruby::init(example).unwrap()
 /// ```
 pub enum Yield<I> {
     /// Yields `I::Item` to given block.
@@ -1101,34 +1112,36 @@ pub enum Yield<I> {
 /// # Examples
 ///
 /// ```
-/// use magnus::{
-///     block::{block_given, YieldValues},
-///     define_global_function, eval, method,
-///     prelude::*,
-///     rb_assert, RArray, Value,
-/// };
-/// # let _cleanup = unsafe { magnus::embed::init() };
+/// use magnus::{block::YieldValues, method, prelude::*, rb_assert, Error, Ruby, Value};
 ///
-/// fn count_to_3_abc(rb_self: Value) -> YieldValues<impl Iterator<Item = (u8, char)>> {
-///     if block_given() {
+/// fn count_to_3_abc(
+///     ruby: &Ruby,
+///     rb_self: Value,
+/// ) -> YieldValues<impl Iterator<Item = (u8, char)>> {
+///     if ruby.block_given() {
 ///         YieldValues::Iter((1..=3).zip('a'..='c'))
 ///     } else {
 ///         YieldValues::Enumerator(rb_self.enumeratorize("count_to_3_abc", ()))
 ///     }
 /// }
 ///
-/// define_global_function("count_to_3_abc", method!(count_to_3_abc, 0));
+/// fn example(ruby: &Ruby) -> Result<(), Error> {
+///     ruby.define_global_function("count_to_3_abc", method!(count_to_3_abc, 0));
 ///
-/// // call Ruby method with a block.
-/// let a = RArray::new();
-/// rb_assert!("count_to_3_abc {|i, c| a << [i, c]} == nil", a);
-/// rb_assert!(r#"a == [[1, "a"], [2, "b"], [3, "c"]]"#, a);
+///     // call Ruby method with a block.
+///     let a = ruby.ary_new();
+///     rb_assert!(ruby, "count_to_3_abc {|i, c| a << [i, c]} == nil", a);
+///     rb_assert!(ruby, r#"a == [[1, "a"], [2, "b"], [3, "c"]]"#, a);
 ///
-/// // call Ruby method without a block.
-/// let enumerator: Value = eval("count_to_3_abc").unwrap();
+///     // call Ruby method without a block.
+///     let enumerator: Value = ruby.eval("count_to_3_abc").unwrap();
 ///
-/// rb_assert!(r#"enumerator.next == [1, "a"]"#, enumerator);
-/// rb_assert!(r#"enumerator.next == [2, "b"]"#, enumerator);
+///     rb_assert!(ruby, r#"enumerator.next == [1, "a"]"#, enumerator);
+///     rb_assert!(ruby, r#"enumerator.next == [2, "b"]"#, enumerator);
+///
+///     Ok(())
+/// }
+/// # Ruby::init(example).unwrap()
 /// ```
 pub enum YieldValues<I> {
     /// Yields `I::Item` to given block.
@@ -1145,18 +1158,15 @@ pub enum YieldValues<I> {
 /// # Examples
 ///
 /// ```
-/// use magnus::{
-///     block::{block_given, YieldSplat},
-///     define_global_function, eval, method,
-///     prelude::*,
-///     rb_assert, RArray, Value,
-/// };
-/// # let _cleanup = unsafe { magnus::embed::init() };
+/// use magnus::{block::YieldSplat, method, prelude::*, rb_assert, Error, RArray, Ruby, Value};
 ///
-/// fn count_to_3_abc(rb_self: Value) -> YieldSplat<impl Iterator<Item = RArray>> {
-///     if block_given() {
+/// fn count_to_3_abc(ruby: &Ruby, rb_self: Value) -> YieldSplat<impl Iterator<Item = RArray>> {
+///     if ruby.block_given() {
 ///         YieldSplat::Iter((1..=3).zip('a'..='c').map(|(i, c)| {
-///             let ary = RArray::new();
+///             // we know this will be called on a Ruby thread so it's safe
+///             // to get a handle to Ruby, but we don't want to be tied to the
+///             // lifetime of the existing `ruby`.
+///             let ary = unsafe { Ruby::get_unchecked() }.ary_new();
 ///             ary.push(i).unwrap();
 ///             ary.push(c).unwrap();
 ///             ary
@@ -1166,18 +1176,23 @@ pub enum YieldValues<I> {
 ///     }
 /// }
 ///
-/// define_global_function("count_to_3_abc", method!(count_to_3_abc, 0));
+/// fn example(ruby: &Ruby) -> Result<(), Error> {
+///     ruby.define_global_function("count_to_3_abc", method!(count_to_3_abc, 0));
 ///
-/// // call Ruby method with a block.
-/// let a = RArray::new();
-/// rb_assert!("count_to_3_abc {|i, c| a << [i, c]} == nil", a);
-/// rb_assert!(r#"a == [[1, "a"], [2, "b"], [3, "c"]]"#, a);
+///     // call Ruby method with a block.
+///     let a = ruby.ary_new();
+///     rb_assert!(ruby, "count_to_3_abc {|i, c| a << [i, c]} == nil", a);
+///     rb_assert!(ruby, r#"a == [[1, "a"], [2, "b"], [3, "c"]]"#, a);
 ///
-/// // call Ruby method without a block.
-/// let enumerator: Value = eval("count_to_3_abc").unwrap();
+///     // call Ruby method without a block.
+///     let enumerator: Value = ruby.eval("count_to_3_abc").unwrap();
 ///
-/// rb_assert!(r#"enumerator.next == [1, "a"]"#, enumerator);
-/// rb_assert!(r#"enumerator.next == [2, "b"]"#, enumerator);
+///     rb_assert!(ruby, r#"enumerator.next == [1, "a"]"#, enumerator);
+///     rb_assert!(ruby, r#"enumerator.next == [2, "b"]"#, enumerator);
+///
+///     Ok(())
+/// }
+/// # Ruby::init(example).unwrap()
 /// ```
 pub enum YieldSplat<I> {
     /// Yields `I::Item` to given block.
