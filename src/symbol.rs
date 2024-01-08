@@ -93,6 +93,7 @@ impl Symbol {
     /// # Examples
     ///
     /// ```
+    /// # #![allow(deprecated)]
     /// use magnus::{rb_assert, Symbol};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
@@ -230,6 +231,7 @@ pub trait IntoSymbol: Sized {
     /// # Examples
     ///
     /// ```
+    /// # #![allow(deprecated)]
     /// use magnus::{rb_assert, symbol::IntoSymbol};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///

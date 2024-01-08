@@ -160,6 +160,7 @@ impl Error {
     /// # Examples
     ///
     /// ```
+    /// # #![allow(deprecated)]
     /// use magnus::{prelude::*, Error};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///

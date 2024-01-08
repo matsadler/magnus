@@ -2472,6 +2472,7 @@ impl Ruby {
 /// # Examples
 ///
 /// ```
+/// # #![allow(deprecated)]
 /// use magnus::{class, define_class, rb_assert};
 /// # let _cleanup = unsafe { magnus::embed::init() };
 ///
@@ -2497,6 +2498,7 @@ pub fn define_class(name: &str, superclass: RClass) -> Result<RClass, Error> {
 /// # Examples
 ///
 /// ```
+/// # #![allow(deprecated)]
 /// use magnus::{define_module, rb_assert};
 /// # let _cleanup = unsafe { magnus::embed::init() };
 ///
@@ -2523,6 +2525,7 @@ pub fn define_module(name: &str) -> Result<RModule, Error> {
 /// # Examples
 ///
 /// ```
+/// # #![allow(deprecated)]
 /// use magnus::{define_error, exception, rb_assert};
 /// # let _cleanup = unsafe { magnus::embed::init() };
 ///
@@ -2549,6 +2552,7 @@ pub fn define_error(name: &str, superclass: ExceptionClass) -> Result<ExceptionC
 /// # Examples
 ///
 /// ```
+/// # #![allow(deprecated)]
 /// use magnus::{define_variable, prelude::*, rb_assert, RString};
 /// # let _cleanup = unsafe { magnus::embed::init() };
 ///
@@ -2583,6 +2587,7 @@ where
 /// # Examples
 ///
 /// ```
+/// # #![allow(deprecated)]
 /// use magnus::{define_global_const, rb_assert};
 /// # let _cleanup = unsafe { magnus::embed::init() };
 ///
@@ -2611,6 +2616,7 @@ where
 /// # Examples
 ///
 /// ```
+/// # #![allow(deprecated)]
 /// use magnus::{define_global_function, function, rb_assert};
 /// # let _cleanup = unsafe { magnus::embed::init() };
 ///
@@ -2643,6 +2649,7 @@ where
 /// # Examples
 ///
 /// ```
+/// # #![allow(deprecated)]
 /// use magnus::{backref_get, RRegexp};
 /// # let _cleanup = unsafe { magnus::embed::init() };
 ///
@@ -2681,6 +2688,7 @@ pub fn backref_get() -> Option<RMatch> {
 /// # Examples
 ///
 /// ```
+/// # #![allow(deprecated)]
 /// use magnus::{
 ///     current_receiver, define_global_function, method, prelude::*, rb_assert, Error, Value,
 /// };
@@ -2719,6 +2727,7 @@ where
 /// # Examples
 ///
 /// ```
+/// # #![allow(deprecated)]
 /// use magnus::{call_super, define_class, eval, function, prelude::*, rb_assert, Error};
 /// # let _cleanup = unsafe { magnus::embed::init() };
 ///
@@ -2766,6 +2775,7 @@ where
 /// # Examples
 ///
 /// ```
+/// # #![allow(deprecated)]
 /// # let _cleanup = unsafe { magnus::embed::init() };
 /// use magnus::require;
 ///

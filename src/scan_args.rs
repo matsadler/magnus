@@ -875,6 +875,7 @@ impl Ruby {
 /// # Examples
 ///
 /// ```
+/// # #![allow(deprecated)]
 /// use magnus::{
 ///     define_global_function, eval, function, scan_args::check_arity, Error, RArray, RString,
 ///     Value,

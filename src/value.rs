@@ -1759,6 +1759,7 @@ const QFALSE: Qfalse = Qfalse::new();
 /// # Examples
 ///
 /// ```
+/// # #![allow(deprecated)]
 /// use magnus::{rb_assert, value::qfalse};
 /// # let _cleanup = unsafe { magnus::embed::init() };
 ///
@@ -1886,6 +1887,7 @@ const QNIL: Qnil = Qnil::new();
 /// # Examples
 ///
 /// ```
+/// # #![allow(deprecated)]
 /// use magnus::{rb_assert, value::qnil};
 /// # let _cleanup = unsafe { magnus::embed::init() };
 ///
@@ -2041,6 +2043,7 @@ const QTRUE: Qtrue = Qtrue::new();
 /// # Examples
 ///
 /// ```
+/// # #![allow(deprecated)]
 /// use magnus::{rb_assert, value::qtrue};
 /// # let _cleanup = unsafe { magnus::embed::init() };
 ///
@@ -2312,6 +2315,7 @@ impl Fixnum {
     /// # Examples
     ///
     /// ```
+    /// # #![allow(deprecated)]
     /// use magnus::Fixnum;
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
@@ -2342,6 +2346,7 @@ impl Fixnum {
     /// # Examples
     ///
     /// ```
+    /// # #![allow(deprecated)]
     /// use magnus::Fixnum;
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
@@ -2813,6 +2818,7 @@ impl StaticSymbol {
     ///
     /// # Examples
     /// ```
+    /// # #![allow(deprecated)]
     /// use magnus::{rb_assert, StaticSymbol};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
@@ -2841,6 +2847,7 @@ impl StaticSymbol {
     /// # Examples
     ///
     /// ```
+    /// # #![allow(deprecated)]
     /// use magnus::{eval, StaticSymbol};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
@@ -3029,6 +3036,7 @@ impl Id {
     /// # Examples
     ///
     /// ```
+    /// # #![allow(deprecated)]
     /// use magnus::value::Id;
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
@@ -3066,6 +3074,7 @@ impl Id {
     /// # Examples
     ///
     /// ```
+    /// # #![allow(deprecated)]
     /// use magnus::{value::Id, StaticSymbol};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///

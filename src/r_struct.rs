@@ -466,6 +466,7 @@ impl Ruby {
 /// under `Struct`:
 ///
 /// ```
+/// # #![allow(deprecated)]
 /// use magnus::{prelude::*, r_struct::define_struct};
 /// # let _cleanup = unsafe { magnus::embed::init() };
 ///

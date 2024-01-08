@@ -219,6 +219,7 @@ impl RTypedData {
     /// # Examples
     ///
     /// ```
+    /// # #![allow(deprecated)]
     /// use magnus::{class, define_class, prelude::*, RTypedData};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
@@ -286,6 +287,7 @@ impl RTypedData {
     /// `new` method rather than `initialize`)
     ///
     /// ```
+    /// # #![allow(deprecated)]
     /// use magnus::{
     ///     class, define_class, eval, function, method, prelude::*, RClass, RTypedData, Value,
     /// };

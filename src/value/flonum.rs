@@ -112,6 +112,7 @@ impl Flonum {
     /// # Examples
     ///
     /// ```
+    /// # #![allow(deprecated)]
     /// use magnus::{rb_assert, Flonum};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///

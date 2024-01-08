@@ -693,6 +693,7 @@ where
     /// # Examples
     ///
     /// ```
+    /// # #![allow(deprecated)]
     /// use magnus::{class, define_class, prelude::*, typed_data};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
@@ -757,6 +758,7 @@ where
     /// `new` method rather than `initialize`)
     ///
     /// ```
+    /// # #![allow(deprecated)]
     /// use magnus::{
     ///     class, define_class, eval, function, method, prelude::*, typed_data, RClass, Value,
     /// };

@@ -130,6 +130,7 @@ impl RFloat {
     /// # Examples
     ///
     /// ```
+    /// # #![allow(deprecated)]
     /// use magnus::{rb_assert, RFloat};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
@@ -159,6 +160,7 @@ impl RFloat {
     /// # Examples
     ///
     /// ```
+    /// # #![allow(deprecated)]
     /// use magnus::{rb_assert, RFloat};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///

@@ -209,6 +209,7 @@ impl Proc {
     /// # Examples
     ///
     /// ```
+    /// # #![allow(deprecated)]
     /// use magnus::{block::Proc, prelude::*, rb_assert};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
@@ -247,6 +248,7 @@ impl Proc {
     /// # Examples
     ///
     /// ```
+    /// # #![allow(deprecated)]
     /// use magnus::{block::Proc, prelude::*, rb_assert};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
@@ -743,6 +745,7 @@ impl Ruby {
 /// # Examples
 ///
 /// ```
+/// # #![allow(deprecated)]
 /// use magnus::{block::block_given, define_global_function, function, rb_assert};
 /// # let _cleanup = unsafe { magnus::embed::init() };
 ///
@@ -774,6 +777,7 @@ pub fn block_given() -> bool {
 /// # Examples
 ///
 /// ```
+/// # #![allow(deprecated)]
 /// use magnus::{
 ///     block::{block_proc, Proc},
 ///     define_global_function, function, rb_assert, Error,
@@ -812,6 +816,7 @@ pub fn block_proc() -> Result<Proc, Error> {
 /// # Examples
 ///
 /// ```
+/// # #![allow(deprecated)]
 /// use magnus::{
 ///     block::yield_value, define_global_function, function, rb_assert, Error, RArray, Value,
 /// };
@@ -861,6 +866,7 @@ where
 /// # Examples
 ///
 /// ```
+/// # #![allow(deprecated)]
 /// use magnus::{
 ///     block::yield_values, define_global_function, function, rb_assert, Error, RArray, Value,
 /// };
@@ -913,6 +919,7 @@ where
 /// # Examples
 ///
 /// ```
+/// # #![allow(deprecated)]
 /// use magnus::{
 ///     block::yield_splat, define_global_function, function, rb_assert, Error, RArray, Value,
 /// };

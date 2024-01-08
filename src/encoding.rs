@@ -443,6 +443,7 @@ impl RbEncoding {
     /// # Examples
     ///
     /// ```
+    /// # #![allow(deprecated)]
     /// use magnus::encoding::RbEncoding;
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
@@ -1090,6 +1091,7 @@ impl Index {
     /// # Examples
     ///
     /// ```
+    /// # #![allow(deprecated)]
     /// use magnus::encoding;
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///

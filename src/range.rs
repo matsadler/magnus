@@ -111,6 +111,7 @@ impl Range {
     /// # Examples
     ///
     /// ```
+    /// # #![allow(deprecated)]
     /// use magnus::rb_assert;
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
@@ -119,6 +120,7 @@ impl Range {
     /// ```
     ///
     /// ```
+    /// # #![allow(deprecated)]
     /// use magnus::rb_assert;
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///

@@ -476,6 +476,7 @@ impl Ruby {
 /// # Examples
 ///
 /// ```
+/// # #![allow(deprecated)]
 /// use magnus::gc;
 /// # let _cleanup = unsafe { magnus::embed::init() };
 ///
@@ -512,6 +513,7 @@ pub fn disable() -> bool {
 /// # Examples
 ///
 /// ```
+/// # #![allow(deprecated)]
 /// use magnus::gc;
 /// # let _cleanup = unsafe { magnus::embed::init() };
 ///
@@ -551,6 +553,7 @@ pub fn enable() -> bool {
 /// # Examples
 ///
 /// ```
+/// # #![allow(deprecated)]
 /// use magnus::gc;
 /// # let _cleanup = unsafe { magnus::embed::init() };
 ///
@@ -582,6 +585,7 @@ pub fn start() {
 /// # Examples
 ///
 /// ```
+/// # #![allow(deprecated)]
 /// use magnus::gc;
 /// # let _cleanup = unsafe { magnus::embed::init() };
 ///
@@ -614,6 +618,7 @@ pub fn adjust_memory_usage(diff: isize) {
 /// # Examples
 ///
 /// ```
+/// # #![allow(deprecated)]
 /// use magnus::gc;
 /// # let _cleanup = unsafe { magnus::embed::init() };
 ///
@@ -640,6 +645,7 @@ pub fn count() -> usize {
 /// # Examples
 ///
 /// ```
+/// # #![allow(deprecated)]
 /// use magnus::gc;
 /// # let _cleanup = unsafe { magnus::embed::init() };
 ///
@@ -668,6 +674,7 @@ where
 /// # Examples
 ///
 /// ```
+/// # #![allow(deprecated)]
 /// use magnus::{gc, Symbol};
 /// # let _cleanup = unsafe { magnus::embed::init() };
 ///

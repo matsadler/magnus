@@ -103,6 +103,7 @@ impl RRegexp {
     /// # Examples
     ///
     /// ```
+    /// # #![allow(deprecated)]
     /// use magnus::{r_regexp::Opts, rb_assert, RRegexp};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///

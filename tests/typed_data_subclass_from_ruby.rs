@@ -1,6 +1,6 @@
 use magnus::{
-    embed::init, eval, exception, function, method, prelude::*, rb_assert, typed_data::Obj, Error,
-    RClass, Value,
+    embed::init, eval, function, method, prelude::*, rb_assert, typed_data::Obj, Error, RClass,
+    Ruby, Value,
 };
 
 const FACTOR: f64 = 1000000.0;
@@ -12,16 +12,17 @@ struct Temperature {
 
 impl Temperature {
     fn new(class: RClass, k: f64) -> Result<Obj<Self>, Error> {
+        let ruby = Ruby::get_with(class);
         if k < 0.0 {
             return Err(Error::new(
-                exception::arg_error(),
+                ruby.exception_arg_error(),
                 "temperature must be above absolute zero",
             ));
         }
         let value = Self {
             microkelvin: (k * FACTOR) as u64,
         };
-        Ok(Obj::wrap_as(value, class))
+        Ok(ruby.obj_wrap_as(value, class))
     }
 
     fn to_kelvin(&self) -> f64 {

@@ -1,4 +1,4 @@
-use magnus::{block::Proc, eval, gc, value::Opaque, Ruby, Value};
+use magnus::{block::Proc, eval, value::Opaque, Ruby, Value};
 
 fn make_proc(ruby: &Ruby) -> Proc {
     let x = String::from("foo");
@@ -14,7 +14,7 @@ fn proc_from_closure_can_be_called_later() {
 
     eval::<Value>(r#"1024.times.map {|i| "test#{i}"}"#).unwrap();
 
-    gc::start();
+    ruby.gc_start();
 
     let res: bool = eval!(ruby, r#"proc.call == ["foo", "bar"]"#, proc).unwrap();
     assert!(res);

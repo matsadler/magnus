@@ -322,6 +322,7 @@ impl RString {
     /// # Examples
     ///
     /// ```
+    /// # #![allow(deprecated)]
     /// use magnus::{rb_assert, RString};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
@@ -357,6 +358,7 @@ impl RString {
     /// # Examples
     ///
     /// ```
+    /// # #![allow(deprecated)]
     /// use magnus::{rb_assert, RString};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
@@ -386,6 +388,7 @@ impl RString {
     /// # Examples
     ///
     /// ```
+    /// # #![allow(deprecated)]
     /// use magnus::{rb_assert, RString};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
@@ -416,6 +419,7 @@ impl RString {
     /// # Examples
     ///
     /// ```
+    /// # #![allow(deprecated)]
     /// use magnus::{rb_assert, RString};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
@@ -441,6 +445,7 @@ impl RString {
     /// # Examples
     ///
     /// ```
+    /// # #![allow(deprecated)]
     /// use magnus::{encoding::RbEncoding, rb_assert, RString};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
@@ -449,6 +454,7 @@ impl RString {
     /// ```
     ///
     /// ```
+    /// # #![allow(deprecated)]
     /// use magnus::{encoding::RbEncoding, rb_assert, RString};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
@@ -480,6 +486,7 @@ impl RString {
     /// # Examples
     ///
     /// ```
+    /// # #![allow(deprecated)]
     /// use magnus::{rb_assert, RString};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
@@ -488,6 +495,7 @@ impl RString {
     /// ```
     ///
     /// ```
+    /// # #![allow(deprecated)]
     /// use magnus::{rb_assert, RString};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
@@ -516,6 +524,7 @@ impl RString {
     /// # Examples
     ///
     /// ```
+    /// # #![allow(deprecated)]
     /// use magnus::{encoding::RbEncoding, rb_assert, RString};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
@@ -524,6 +533,7 @@ impl RString {
     /// ```
     ///
     /// ```
+    /// # #![allow(deprecated)]
     /// use magnus::{encoding::RbEncoding, rb_assert, RString};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///

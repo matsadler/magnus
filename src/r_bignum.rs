@@ -136,6 +136,7 @@ impl RBignum {
     /// # Examples
     ///
     /// ```
+    /// # #![allow(deprecated)]
     /// use magnus::RBignum;
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
@@ -166,6 +167,7 @@ impl RBignum {
     /// # Examples
     ///
     /// ```
+    /// # #![allow(deprecated)]
     /// use magnus::RBignum;
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///

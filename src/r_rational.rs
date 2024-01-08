@@ -94,6 +94,7 @@ impl RRational {
     /// # Examples
     ///
     /// ```
+    /// # #![allow(deprecated)]
     /// use std::num::NonZeroI64;
     ///
     /// use magnus::RRational;

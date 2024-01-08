@@ -104,6 +104,7 @@ impl RModule {
     /// # Examples
     ///
     /// ```
+    /// # #![allow(deprecated)]
     /// use magnus::{class, prelude::*, RModule};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///

@@ -109,6 +109,7 @@ impl Float {
     /// # Examples
     ///
     /// ```
+    /// # #![allow(deprecated)]
     /// use magnus::{rb_assert, Float};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///

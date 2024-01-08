@@ -303,6 +303,7 @@ impl RArray {
     /// # Examples
     ///
     /// ```
+    /// # #![allow(deprecated)]
     /// use magnus::RArray;
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
@@ -329,6 +330,7 @@ impl RArray {
     /// # Examples
     ///
     /// ```
+    /// # #![allow(deprecated)]
     /// use magnus::RArray;
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
@@ -627,6 +629,7 @@ impl RArray {
     /// # Examples
     ///
     /// ```
+    /// # #![allow(deprecated)]
     /// use magnus::{prelude::*, rb_assert, value::qnil, Integer, RArray, Symbol};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
@@ -639,6 +642,7 @@ impl RArray {
     /// ```
     ///
     /// ```
+    /// # #![allow(deprecated)]
     /// use magnus::{rb_assert, RArray, Symbol};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
@@ -954,6 +958,7 @@ impl RArray {
     /// # Examples
     ///
     /// ```
+    /// # #![allow(deprecated)]
     /// use magnus::{rb_assert, RArray};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///

@@ -158,6 +158,7 @@ impl Integer {
     /// # Examples
     ///
     /// ```
+    /// # #![allow(deprecated)]
     /// use magnus::{rb_assert, Integer};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
@@ -190,6 +191,7 @@ impl Integer {
     /// # Examples
     ///
     /// ```
+    /// # #![allow(deprecated)]
     /// use magnus::{rb_assert, Integer};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///

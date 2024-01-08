@@ -278,6 +278,7 @@ impl RHash {
     /// # Examples
     ///
     /// ```
+    /// # #![allow(deprecated)]
     /// use magnus::RHash;
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
@@ -304,6 +305,7 @@ impl RHash {
     /// # Examples
     ///
     /// ```
+    /// # #![allow(deprecated)]
     /// use magnus::RHash;
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
