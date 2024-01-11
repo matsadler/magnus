@@ -120,18 +120,26 @@ pub trait Class: Module {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{class, prelude::*, RClass};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{prelude::*, Error, RClass, Ruby};
     ///
-    /// let class = RClass::new(class::object()).unwrap();
-    /// assert!(class.is_kind_of(class::class()));
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let class = RClass::new(ruby.class_object())?;
+    ///     assert!(class.is_kind_of(ruby.class_class()));
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     ///
     /// ```
-    /// use magnus::{exception, prelude::*, ExceptionClass};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{prelude::*, Error, ExceptionClass, Ruby};
     ///
-    /// assert!(ExceptionClass::new(exception::standard_error()).is_ok());
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     assert!(ExceptionClass::new(ruby.exception_standard_error()).is_ok());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     fn new(superclass: Self) -> Result<Self, Error>;
 
@@ -141,70 +149,85 @@ pub trait Class: Module {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{class, prelude::*};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{prelude::*, Error, Ruby};
     ///
-    /// let s = class::string().new_instance(()).unwrap();
-    /// assert!(s.is_kind_of(class::string()));
-    /// assert_eq!(s.to_string(), "");
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let s = ruby.class_string().new_instance(())?;
+    ///     assert!(s.is_kind_of(ruby.class_string()));
+    ///     assert_eq!(s.to_string(), "");
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     ///
     /// ```
-    /// use magnus::{eval, kwargs, prelude::*, RClass};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{eval, kwargs, prelude::*, Error, RClass, Ruby};
     ///
-    /// let cls: RClass = eval!(
-    ///     r#"
-    ///     class Foo
-    ///       def initialize(bar, baz:)
-    ///         @bar = bar
-    ///         @baz = baz
-    ///       end
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let cls: RClass = eval!(
+    ///         ruby,
+    ///         r#"
+    ///             class Foo
+    ///               def initialize(bar, baz:)
+    ///                 @bar = bar
+    ///                 @baz = baz
+    ///               end
     ///
-    ///       attr_reader(:bar, :baz)
-    ///     end
+    ///               attr_reader(:bar, :baz)
+    ///             end
     ///
-    ///     Object.const_get(:Foo)
-    /// "#
-    /// )
-    /// .unwrap();
-    /// let instance = cls.new_instance((1, kwargs!("baz" => 2))).unwrap();
-    /// assert!(instance.is_kind_of(cls));
-    /// let bar: i32 = instance.funcall("bar", ()).unwrap();
-    /// assert_eq!(bar, 1);
-    /// let baz: i32 = instance.funcall("baz", ()).unwrap();
-    /// assert_eq!(baz, 2);
+    ///             Object.const_get(:Foo)
+    ///         "#
+    ///     )?;
+    ///     let instance = cls.new_instance((1, kwargs!("baz" => 2)))?;
+    ///     assert!(instance.is_kind_of(cls));
+    ///     let bar: i32 = instance.funcall("bar", ())?;
+    ///     assert_eq!(bar, 1);
+    ///     let baz: i32 = instance.funcall("baz", ())?;
+    ///     assert_eq!(baz, 2);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     ///
     /// ```
-    /// use magnus::{exception, prelude::*};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{prelude::*, Error, Ruby};
     ///
-    /// let s = exception::standard_error()
-    ///     .new_instance(("bang!",))
-    ///     .unwrap();
-    /// assert!(s.is_kind_of(exception::standard_error()));
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let s = ruby.exception_standard_error().new_instance(("bang!",))?;
+    ///     assert!(s.is_kind_of(ruby.exception_standard_error()));
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     ///
     /// ```
-    /// use magnus::{eval, ExceptionClass, kwargs, prelude::*};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{eval, ExceptionClass, kwargs, prelude::*, Error, Ruby};
     ///
-    /// let exc: ExceptionClass = eval!(
-    ///     r#"
-    ///     class MyError < StandardError
-    ///       def initialize(message:)
-    ///         super(message)
-    ///       end
-    ///     end
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let exc: ExceptionClass = eval!(
+    ///         ruby,
+    ///         r#"
+    ///             class MyError < StandardError
+    ///               def initialize(message:)
+    ///                 super(message)
+    ///               end
+    ///             end
     ///
-    ///     Object.const_get(:MyError)
-    /// "#
-    /// ).unwrap();
-    /// let s = exc.new_instance((kwargs!("message" => "bang!"),)).unwrap();
-    /// assert!(s.is_kind_of(exc));
-    /// let message: String = s.funcall("message", ()).unwrap();
-    /// assert_eq!(message, "bang!");
+    ///             Object.const_get(:MyError)
+    ///         "#
+    ///     )?;
+    ///     let s = exc.new_instance((kwargs!("message" => "bang!"),))?;
+    ///     assert!(s.is_kind_of(exc));
+    ///     let message: String = s.funcall("message", ())?;
+    ///     assert_eq!(message, "bang!");
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     fn new_instance<T>(self, args: T) -> Result<Self::Instance, Error>
     where
@@ -216,19 +239,27 @@ pub trait Class: Module {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{class, prelude::*};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{prelude::*, Error, Ruby};
     ///
-    /// let s = class::string().obj_alloc().unwrap();
-    /// assert!(s.is_kind_of(class::string()));
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let s = ruby.class_string().obj_alloc()?;
+    ///     assert!(s.is_kind_of(ruby.class_string()));
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     ///
     /// ```
-    /// use magnus::{exception, prelude::*};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{prelude::*, Error, Ruby};
     ///
-    /// let s = exception::standard_error().obj_alloc().unwrap();
-    /// assert!(s.is_kind_of(exception::standard_error()));
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let s = ruby.exception_standard_error().obj_alloc()?;
+    ///     assert!(s.is_kind_of(ruby.exception_standard_error()));
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     fn obj_alloc(self) -> Result<Self::Instance, Error>;
 
@@ -239,19 +270,27 @@ pub trait Class: Module {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{class, prelude::*};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{prelude::*, Error, Ruby};
     ///
-    /// let klass = class::hash().superclass().unwrap();
-    /// assert!(klass.equal(class::object()).unwrap());
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let klass = ruby.class_hash().superclass()?;
+    ///     assert!(klass.equal(ruby.class_object())?);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     ///
     /// ```
-    /// use magnus::{class, exception, prelude::*};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{prelude::*, Error, Ruby};
     ///
-    /// let klass = exception::exception().superclass().unwrap();
-    /// assert!(klass.equal(class::object()).unwrap());
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let klass = ruby.exception_exception().superclass()?;
+    ///     assert!(klass.equal(ruby.class_object())?);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     fn superclass(self) -> Result<RClass, Error> {
         protect(|| unsafe {
@@ -272,23 +311,31 @@ pub trait Class: Module {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{class, prelude::*};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{prelude::*, Error, Ruby};
     ///
-    /// let value = class::hash();
-    /// // safe as we neve give Ruby a chance to free the string.
-    /// let s = unsafe { value.name() }.into_owned();
-    /// assert_eq!(s, "Hash");
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let value = ruby.class_hash();
+    ///     // safe as we neve give Ruby a chance to free the string.
+    ///     let s = unsafe { value.name() }.into_owned();
+    ///     assert_eq!(s, "Hash");
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     ///
     /// ```
-    /// use magnus::{exception, prelude::*};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{prelude::*, Error, Ruby};
     ///
-    /// let value = exception::standard_error();
-    /// // safe as we neve give Ruby a chance to free the string.
-    /// let s = unsafe { value.name() }.into_owned();
-    /// assert_eq!(s, "StandardError");
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let value = ruby.exception_standard_error();
+    ///     // safe as we neve give Ruby a chance to free the string.
+    ///     let s = unsafe { value.name() }.into_owned();
+    ///     assert_eq!(s, "StandardError");
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     unsafe fn name(&self) -> Cow<str> {
         let ptr = rb_class2name(self.as_rb_value());
@@ -331,10 +378,7 @@ pub trait Class: Module {
     /// ```
     /// use std::cell::RefCell;
     ///
-    /// use magnus::{
-    ///     class, define_class, embed, eval, function, method, prelude::*, wrap, Error, RClass, Value,
-    /// };
-    /// # let _cleanup = unsafe { embed::init() };
+    /// use magnus::{function, method, prelude::*, wrap, Error, RClass, Ruby, Value};
     ///
     /// #[derive(Default)]
     /// struct Point {
@@ -370,34 +414,32 @@ pub trait Class: Module {
     ///     }
     /// }
     ///
-    /// let class = define_class("Point", class::object()).unwrap();
-    /// class.define_alloc_func::<MutPoint>();
-    /// class
-    ///     .define_singleton_method("create", function!(MutPoint::create, 2))
-    ///     .unwrap();
-    /// class
-    ///     .define_singleton_method("call_new", method!(MutPoint::call_new, 2))
-    ///     .unwrap();
-    /// class
-    ///     .define_method("initialize", method!(MutPoint::initialize, 2))
-    ///     .unwrap();
-    /// class
-    ///     .define_method("distance", method!(MutPoint::distance, 1))
-    ///     .unwrap();
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let class = ruby.define_class("Point", ruby.class_object())?;
+    ///     class.define_alloc_func::<MutPoint>();
+    ///     class.define_singleton_method("create", function!(MutPoint::create, 2))?;
+    ///     class.define_singleton_method("call_new", method!(MutPoint::call_new, 2))?;
+    ///     class.define_method("initialize", method!(MutPoint::initialize, 2))?;
+    ///     class.define_method("distance", method!(MutPoint::distance, 1))?;
     ///
-    /// let d: f64 = eval(
-    ///     "class OffsetPoint < Point
-    ///        def initialize(offset, x, y)
-    ///          super(x + offset, y + offset)
-    ///        end
-    ///      end
-    ///      a = Point.new(1, 1)
-    ///      b = OffsetPoint.new(2, 3, 3)
-    ///      a.distance(b).round(2)",
-    /// )
-    /// .unwrap();
+    ///     let d: f64 = ruby.eval(
+    ///         "
+    ///           class OffsetPoint < Point
+    ///             def initialize(offset, x, y)
+    ///               super(x + offset, y + offset)
+    ///             end
+    ///           end
+    ///           a = Point.new(1, 1)
+    ///           b = OffsetPoint.new(2, 3, 3)
+    ///           a.distance(b).round(2)
+    ///         ",
+    ///     )?;
     ///
-    /// assert_eq!(d, 5.66);
+    ///     assert_eq!(d, 5.66);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     fn define_alloc_func<T>(self)
     where
@@ -435,17 +477,22 @@ pub trait Class: Module {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{class, Class};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
-    /// let class = magnus::define_class("Point", class::object()).unwrap();
+    /// use magnus::{Class, Error, Ruby};
     ///
-    /// class.undef_default_alloc_func();
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let class = ruby.define_class("Point", ruby.class_object())?;
     ///
-    /// let instance = class.new_instance(());
-    /// assert_eq!(
-    ///     "allocator undefined for Point",
-    ///     instance.err().unwrap().to_string()
-    /// );
+    ///     class.undef_default_alloc_func();
+    ///
+    ///     let instance = class.new_instance(());
+    ///     assert_eq!(
+    ///         "allocator undefined for Point",
+    ///         instance.err().unwrap().to_string()
+    ///     );
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     fn undef_default_alloc_func(self) {
         static INIT: std::sync::Once = std::sync::Once::new();
