@@ -116,28 +116,32 @@ impl Error {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{define_global_function, eval, exception, function, prelude::*, Error, Exception};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{function, prelude::*, Error, Exception, Ruby};
     ///
-    /// fn bang() -> Result<(), Error> {
-    ///     Err(Error::new(exception::runtime_error(), "BANG"))
+    /// fn bang(ruby: &Ruby) -> Result<(), Error> {
+    ///     Err(Error::new(ruby.exception_runtime_error(), "BANG"))
     /// }
-    /// define_global_function("bang", function!(bang, 0));
     ///
-    /// let error: Exception = eval(
-    ///     "
-    ///       begin
-    ///         bang
-    ///       rescue => e
-    ///         e
-    ///       end
-    ///     ",
-    /// )
-    /// .unwrap();
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     ruby.define_global_function("bang", function!(bang, 0));
     ///
-    /// assert!(error.is_kind_of(exception::runtime_error()));
-    /// let msg: String = error.funcall("message", ()).unwrap();
-    /// assert_eq!(msg, "BANG")
+    ///     let error: Exception = ruby.eval(
+    ///         "
+    ///             begin
+    ///               bang
+    ///             rescue => e
+    ///               e
+    ///             end
+    ///             ",
+    ///     )?;
+    ///
+    ///     assert!(error.is_kind_of(ruby.exception_runtime_error()));
+    ///     let msg: String = error.funcall("message", ())?;
+    ///     assert_eq!(msg, "BANG");
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn new<T>(class: ExceptionClass, msg: T) -> Self
     where
@@ -196,13 +200,12 @@ impl Error {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{
-    ///     class, eval, exception::ExceptionClass, prelude::*, Error, RModule, TryConvert, Value,
-    /// };
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{exception::ExceptionClass, prelude::*, Error, RModule, Ruby, TryConvert, Value};
     ///
-    /// let err: Error = eval::<Value>(
-    ///     "
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let err: Error = ruby
+    ///         .eval::<Value>(
+    ///             "
     ///       class ExampleError < StandardError
     ///       end
     ///       module Tag
@@ -212,20 +215,24 @@ impl Error {
     ///       end
     ///       raise SpecificError
     ///     ",
-    /// )
-    /// .unwrap_err();
+    ///         )
+    ///         .unwrap_err();
     ///
-    /// fn get<T: TryConvert>(name: &str) -> T {
-    ///     class::object().const_get::<_, T>(name).unwrap()
+    ///     fn get<T: TryConvert>(ruby: &Ruby, name: &str) -> Result<T, Error> {
+    ///         ruby.class_object().const_get::<_, T>(name)
+    ///     }
+    ///     assert!(err.is_kind_of(get::<ExceptionClass>(ruby, "SpecificError")?));
+    ///     assert!(err.is_kind_of(get::<ExceptionClass>(ruby, "ExampleError")?));
+    ///     assert!(err.is_kind_of(get::<ExceptionClass>(ruby, "StandardError")?));
+    ///     assert!(err.is_kind_of(get::<ExceptionClass>(ruby, "Exception")?));
+    ///     assert!(err.is_kind_of(get::<RModule>(ruby, "Tag")?));
+    ///
+    ///     assert!(!err.is_kind_of(get::<ExceptionClass>(ruby, "NoMethodError")?));
+    ///     assert!(!err.is_kind_of(get::<RModule>(ruby, "Math")?));
+    ///
+    ///     Ok(())
     /// }
-    /// assert!(err.is_kind_of(get::<ExceptionClass>("SpecificError")));
-    /// assert!(err.is_kind_of(get::<ExceptionClass>("ExampleError")));
-    /// assert!(err.is_kind_of(get::<ExceptionClass>("StandardError")));
-    /// assert!(err.is_kind_of(get::<ExceptionClass>("Exception")));
-    /// assert!(err.is_kind_of(get::<RModule>("Tag")));
-    ///
-    /// assert!(!err.is_kind_of(get::<ExceptionClass>("NoMethodError")));
-    /// assert!(!err.is_kind_of(get::<RModule>("Math")));
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn is_kind_of<T>(&self, class: T) -> bool
     where
