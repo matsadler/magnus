@@ -27,17 +27,21 @@ use crate::{
 /// # Examples
 ///
 /// ```
-/// use magnus::{prelude::*, rb_assert, RArray, RString};
-/// # let _cleanup = unsafe { magnus::embed::init() };
+/// use magnus::{prelude::*, rb_assert, Error, Ruby};
 ///
-/// let s = RString::new("foo\nbar\nbaz");
-/// let results = RArray::new();
+/// fn example(ruby: &Ruby) -> Result<(), Error> {
+///     let s = ruby.str_new("foo\nbar\nbaz");
+///     let results = ruby.ary_new();
 ///
-/// // `enumeratorize` returns `Enumerator`
-/// for line in s.enumeratorize("each_line", ()) {
-///     results.push(line.unwrap()).unwrap();
+///     // `enumeratorize` returns `Enumerator`
+///     for line in s.enumeratorize("each_line", ()) {
+///         results.push(line?)?;
+///     }
+///     rb_assert!(r#"results == ["foo\n", "bar\n", "baz"]"#, results);
+///
+///     Ok(())
 /// }
-/// rb_assert!(r#"results == ["foo\n", "bar\n", "baz"]"#, results);
+/// # Ruby::init(example).unwrap()
 /// ```
 #[derive(Clone, Copy)]
 #[repr(transparent)]
