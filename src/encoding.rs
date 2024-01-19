@@ -468,11 +468,15 @@ impl RbEncoding {
     /// # Examples
     ///
     /// ```
-    /// use magnus::encoding::RbEncoding;
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, Ruby};
     ///
-    /// assert_eq!(RbEncoding::utf8().name(), "UTF-8");
-    /// assert_eq!(RbEncoding::find("UTF-16").unwrap().name(), "UTF-16");
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     assert_eq!(ruby.utf8_encoding().name(), "UTF-8");
+    ///     assert_eq!(ruby.find_encoding("UTF-16").unwrap().name(), "UTF-16");
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     ///
     /// # Panics
@@ -489,11 +493,15 @@ impl RbEncoding {
     /// # Examples
     ///
     /// ```
-    /// use magnus::encoding::RbEncoding;
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, Ruby};
     ///
-    /// assert_eq!(RbEncoding::usascii().mbminlen(), 1);
-    /// assert_eq!(RbEncoding::utf8().mbminlen(), 1);
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     assert_eq!(ruby.usascii_encoding().mbminlen(), 1);
+    ///     assert_eq!(ruby.utf8_encoding().mbminlen(), 1);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn mbminlen(&self) -> usize {
         unsafe { self.0.as_ref().min_enc_len as usize }
@@ -505,11 +513,15 @@ impl RbEncoding {
     /// # Examples
     ///
     /// ```
-    /// use magnus::encoding::RbEncoding;
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, Ruby};
     ///
-    /// assert_eq!(RbEncoding::usascii().mbmaxlen(), 1);
-    /// assert_eq!(RbEncoding::utf8().mbmaxlen(), 4);
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     assert_eq!(ruby.usascii_encoding().mbmaxlen(), 1);
+    ///     assert_eq!(ruby.utf8_encoding().mbmaxlen(), 4);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn mbmaxlen(&self) -> usize {
         unsafe { self.0.as_ref().max_enc_len as usize }
@@ -531,26 +543,30 @@ impl RbEncoding {
     /// ```
     /// use magnus::{
     ///     encoding::{EncodingCapable, RbEncoding},
-    ///     RString,
+    ///     Error, Ruby,
     /// };
-    /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// let s = RString::new("🦀 café");
-    /// let encoding: RbEncoding = s.enc_get().into();
-    /// let mut chars = 0;
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let s = ruby.str_new("🦀 café");
+    ///     let encoding: RbEncoding = s.enc_get().into();
+    ///     let mut chars = 0;
     ///
-    /// unsafe {
-    ///     let mut bytes = s.as_slice();
-    ///     assert_eq!(bytes.len(), 10);
+    ///     unsafe {
+    ///         let mut bytes = s.as_slice();
+    ///         assert_eq!(bytes.len(), 10);
     ///
-    ///     while !bytes.is_empty() {
-    ///         chars += 1;
-    ///         let len = encoding.mbclen(bytes);
-    ///         bytes = &bytes[len..];
+    ///         while !bytes.is_empty() {
+    ///             chars += 1;
+    ///             let len = encoding.mbclen(bytes);
+    ///             bytes = &bytes[len..];
+    ///         }
     ///     }
-    /// }
     ///
-    /// assert_eq!(chars, 6);
+    ///     assert_eq!(chars, 6);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn mbclen(&self, slice: &[u8]) -> usize {
         let Range { start: p, end: e } = slice.as_ptr_range();
@@ -575,26 +591,30 @@ impl RbEncoding {
     /// ```
     /// use magnus::{
     ///     encoding::{EncodingCapable, RbEncoding},
-    ///     RString,
+    ///     Error, Ruby,
     /// };
-    /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// let s = RString::new("🦀 café");
-    /// let encoding: RbEncoding = s.enc_get().into();
-    /// let mut chars = 0;
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let s = ruby.str_new("🦀 café");
+    ///     let encoding: RbEncoding = s.enc_get().into();
+    ///     let mut chars = 0;
     ///
-    /// unsafe {
-    ///     let mut bytes = s.as_slice();
-    ///     assert_eq!(bytes.len(), 10);
+    ///     unsafe {
+    ///         let mut bytes = s.as_slice();
+    ///         assert_eq!(bytes.len(), 10);
     ///
-    ///     while !bytes.is_empty() {
-    ///         chars += 1;
-    ///         let len = encoding.fast_mbclen(bytes);
-    ///         bytes = &bytes[len..];
+    ///         while !bytes.is_empty() {
+    ///             chars += 1;
+    ///             let len = encoding.fast_mbclen(bytes);
+    ///             bytes = &bytes[len..];
+    ///         }
     ///     }
-    /// }
     ///
-    /// assert_eq!(chars, 6);
+    ///     assert_eq!(chars, 6);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn fast_mbclen(&self, slice: &[u8]) -> usize {
         let Range { start: p, end: e } = slice.as_ptr_range();
@@ -613,29 +633,33 @@ impl RbEncoding {
     /// ```
     /// use magnus::{
     ///     encoding::{EncodingCapable, MbcLen, RbEncoding},
-    ///     RString,
+    ///     Error, Ruby,
     /// };
-    /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// let s = RString::new("🦀 café");
-    /// let encoding: RbEncoding = s.enc_get().into();
-    /// let mut chars = 0;
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let s = ruby.str_new("🦀 café");
+    ///     let encoding: RbEncoding = s.enc_get().into();
+    ///     let mut chars = 0;
     ///
-    /// unsafe {
-    ///     let mut bytes = s.as_slice();
-    ///     assert_eq!(bytes.len(), 10);
+    ///     unsafe {
+    ///         let mut bytes = s.as_slice();
+    ///         assert_eq!(bytes.len(), 10);
     ///
-    ///     while !bytes.is_empty() {
-    ///         chars += 1;
-    ///         match encoding.precise_mbclen(bytes) {
-    ///             MbcLen::CharFound(len) => bytes = &bytes[len..],
-    ///             MbcLen::NeedMore(len) => panic!("Met end of string expecting {} bytes", len),
-    ///             MbcLen::Invalid => panic!("corrupted string"),
+    ///         while !bytes.is_empty() {
+    ///             chars += 1;
+    ///             match encoding.precise_mbclen(bytes) {
+    ///                 MbcLen::CharFound(len) => bytes = &bytes[len..],
+    ///                 MbcLen::NeedMore(len) => panic!("Met end of string expecting {} bytes", len),
+    ///                 MbcLen::Invalid => panic!("corrupted string"),
+    ///             }
     ///         }
     ///     }
-    /// }
     ///
-    /// assert_eq!(chars, 6);
+    ///     assert_eq!(chars, 6);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn precise_mbclen(&self, slice: &[u8]) -> MbcLen {
         let Range { start: p, end: e } = slice.as_ptr_range();
@@ -663,29 +687,33 @@ impl RbEncoding {
     /// ```
     /// use magnus::{
     ///     encoding::{EncodingCapable, RbEncoding},
-    ///     RString,
+    ///     Error, Ruby,
     /// };
-    /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// let s = RString::new("example");
-    /// let encoding: RbEncoding = s.enc_get().into();
-    /// let mut chars = Vec::new();
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let s = ruby.str_new("example");
+    ///     let encoding: RbEncoding = s.enc_get().into();
+    ///     let mut chars = Vec::new();
     ///
-    /// unsafe {
-    ///     let mut bytes = s.as_slice();
+    ///     unsafe {
+    ///         let mut bytes = s.as_slice();
     ///
-    ///     while !bytes.is_empty() {
-    ///         match encoding.ascget(bytes) {
-    ///             Some((char, len)) => {
-    ///                 chars.push(char);
-    ///                 bytes = &bytes[len..];
+    ///         while !bytes.is_empty() {
+    ///             match encoding.ascget(bytes) {
+    ///                 Some((char, len)) => {
+    ///                     chars.push(char);
+    ///                     bytes = &bytes[len..];
+    ///                 }
+    ///                 None => panic!("string not ASCII"),
     ///             }
-    ///             None => panic!("string not ASCII"),
     ///         }
     ///     }
-    /// }
     ///
-    /// assert_eq!(chars, [101, 120, 97, 109, 112, 108, 101]);
+    ///     assert_eq!(chars, [101, 120, 97, 109, 112, 108, 101]);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn ascget(&self, slice: &[u8]) -> Option<(u8, usize)> {
         let Range { start: p, end: e } = slice.as_ptr_range();
@@ -712,25 +740,29 @@ impl RbEncoding {
     /// ```
     /// use magnus::{
     ///     encoding::{EncodingCapable, RbEncoding},
-    ///     RString,
+    ///     Error, Ruby,
     /// };
-    /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// let s = RString::new("🦀 café");
-    /// let encoding: RbEncoding = s.enc_get().into();
-    /// let mut codepoints = Vec::new();
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let s = ruby.str_new("🦀 café");
+    ///     let encoding: RbEncoding = s.enc_get().into();
+    ///     let mut codepoints = Vec::new();
     ///
-    /// unsafe {
-    ///     let mut bytes = s.as_slice();
+    ///     unsafe {
+    ///         let mut bytes = s.as_slice();
     ///
-    ///     while !bytes.is_empty() {
-    ///         let (codepoint, len) = encoding.codepoint_len(bytes).unwrap();
-    ///         codepoints.push(codepoint);
-    ///         bytes = &bytes[len..];
+    ///         while !bytes.is_empty() {
+    ///             let (codepoint, len) = encoding.codepoint_len(bytes)?;
+    ///             codepoints.push(codepoint);
+    ///             bytes = &bytes[len..];
+    ///         }
     ///     }
-    /// }
     ///
-    /// assert_eq!(codepoints, [129408, 32, 99, 97, 102, 233]);
+    ///     assert_eq!(codepoints, [129408, 32, 99, 97, 102, 233]);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn codepoint_len(&self, slice: &[u8]) -> Result<(u32, usize), Error> {
         let Range { start: p, end: e } = slice.as_ptr_range();
@@ -754,11 +786,15 @@ impl RbEncoding {
     /// # Examples
     ///
     /// ```
-    /// use magnus::encoding::RbEncoding;
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, Ruby};
     ///
-    /// assert_eq!(RbEncoding::utf8().codelen(97).unwrap(), 1);
-    /// assert_eq!(RbEncoding::utf8().codelen(129408).unwrap(), 4);
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     assert_eq!(ruby.utf8_encoding().codelen(97)?, 1);
+    ///     assert_eq!(ruby.utf8_encoding().codelen(129408)?, 4);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn codelen(&self, code: u32) -> Result<usize, Error> {
         let handle = unsafe { Ruby::get_unchecked() };
@@ -781,21 +817,29 @@ impl RbEncoding {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{encoding::RbEncoding, eval};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{eval, Error, Ruby};
     ///
-    /// let c = RbEncoding::usascii().chr(97).unwrap();
-    /// let res: bool = eval!(r#"c == "a""#, c).unwrap();
-    /// assert!(res);
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let c = ruby.usascii_encoding().chr(97)?;
+    ///     let res: bool = eval!(ruby, r#"c == "a""#, c)?;
+    ///     assert!(res);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     ///
     /// ```
-    /// use magnus::{encoding::RbEncoding, eval};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{eval, Error, Ruby};
     ///
-    /// let c = RbEncoding::utf8().chr(129408).unwrap();
-    /// let res: bool = eval!(r#"c == "🦀""#, c).unwrap();
-    /// assert!(res);
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let c = ruby.utf8_encoding().chr(129408)?;
+    ///     let res: bool = eval!(ruby, r#"c == "🦀""#, c)?;
+    ///     assert!(res);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn chr(&self, code: u32) -> Result<RString, Error> {
         protect(|| unsafe {
@@ -809,11 +853,15 @@ impl RbEncoding {
     /// # Examples
     ///
     /// ```
-    /// use magnus::encoding::RbEncoding;
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, Ruby};
     ///
-    /// assert!(RbEncoding::utf8().is_mbc_newline(&[10]));
-    /// assert!(!RbEncoding::utf8().is_mbc_newline(&[32]));
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     assert!(ruby.utf8_encoding().is_mbc_newline(&[10]));
+    ///     assert!(!ruby.utf8_encoding().is_mbc_newline(&[32]));
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn is_mbc_newline(&self, slice: &[u8]) -> bool {
         let Range { start: p, end: e } = slice.as_ptr_range();
@@ -829,14 +877,18 @@ impl RbEncoding {
     /// # Examples
     ///
     /// ```
-    /// use magnus::encoding::{CType, RbEncoding};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{encoding::CType, Error, Ruby};
     ///
-    /// assert!(RbEncoding::utf8().is_code_ctype(9, CType::Space)); // "\t"
-    /// assert!(RbEncoding::utf8().is_code_ctype(32, CType::Space)); // " "
-    /// assert!(!RbEncoding::utf8().is_code_ctype(65, CType::Space)); // "A"
-    /// assert!(RbEncoding::utf8().is_code_ctype(65, CType::Alnum)); // "A"
-    /// assert!(RbEncoding::utf8().is_code_ctype(65, CType::Upper)); // "A"
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     assert!(ruby.utf8_encoding().is_code_ctype(9, CType::Space)); // "\t"
+    ///     assert!(ruby.utf8_encoding().is_code_ctype(32, CType::Space)); // " "
+    ///     assert!(!ruby.utf8_encoding().is_code_ctype(65, CType::Space)); // "A"
+    ///     assert!(ruby.utf8_encoding().is_code_ctype(65, CType::Alnum)); // "A"
+    ///     assert!(ruby.utf8_encoding().is_code_ctype(65, CType::Upper)); // "A"
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn is_code_ctype(&self, code: u32, ctype: CType) -> bool {
         unsafe { self.0.as_ref().is_code_ctype.unwrap()(code, ctype as _, self.as_ptr()) != 0 }
@@ -1155,13 +1207,14 @@ pub trait EncodingCapable: ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{
-    ///     encoding::{self, EncodingCapable},
-    ///     RString,
-    /// };
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{encoding::EncodingCapable, Error, Ruby};
     ///
-    /// assert!(RString::new("example").enc_get() == encoding::Index::utf8());
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     assert!(ruby.str_new("example").enc_get() == ruby.utf8_encindex());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     fn enc_get(self) -> Index {
         let i = unsafe { rb_enc_get_index(self.as_rb_value()) };
@@ -1180,16 +1233,17 @@ pub trait EncodingCapable: ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{
-    ///     encoding::{self, EncodingCapable},
-    ///     RString,
-    /// };
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{encoding::EncodingCapable, Error, Ruby};
     ///
-    /// let s = RString::new("example");
-    /// assert!(s.enc_get() == encoding::Index::utf8());
-    /// s.enc_set(encoding::Index::usascii()).unwrap();
-    /// assert!(s.enc_get() == encoding::Index::usascii());
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let s = ruby.str_new("example");
+    ///     assert!(s.enc_get() == ruby.utf8_encindex());
+    ///     s.enc_set(ruby.usascii_encindex())?;
+    ///     assert!(s.enc_get() == ruby.usascii_encindex());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     fn enc_set<T>(self, enc: T) -> Result<(), Error>
     where
@@ -1215,16 +1269,17 @@ pub trait EncodingCapable: ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{
-    ///     encoding::{self, EncodingCapable},
-    ///     RString,
-    /// };
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{encoding::EncodingCapable, Error, Ruby};
     ///
-    /// let s = RString::new("example");
-    /// assert!(s.enc_get() == encoding::Index::utf8());
-    /// s.enc_associate(encoding::Index::usascii()).unwrap();
-    /// assert!(s.enc_get() == encoding::Index::usascii());
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let s = ruby.str_new("example");
+    ///     assert!(s.enc_get() == ruby.utf8_encindex());
+    ///     s.enc_associate(ruby.usascii_encindex())?;
+    ///     assert!(s.enc_get() == ruby.usascii_encindex());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     fn enc_associate<T>(self, enc: T) -> Result<(), Error>
     where
@@ -1246,16 +1301,20 @@ pub trait EncodingCapable: ReprValue + Copy {
 /// # Examples
 ///
 /// ```
-/// use magnus::{encoding, prelude::*, RString};
-/// # let _cleanup = unsafe { magnus::embed::init() };
+/// use magnus::{encoding, prelude::*, Error, Ruby};
 ///
-/// let a = RString::new("a");
-/// let b = RString::new("b");
+/// fn example(ruby: &Ruby) -> Result<(), Error> {
+///     let a = ruby.str_new("a");
+///     let b = ruby.str_new("b");
 ///
-/// assert!(a.enc_get() == encoding::Index::utf8());
-/// b.enc_set(encoding::Index::usascii()).unwrap();
+///     assert!(a.enc_get() == ruby.utf8_encindex());
+///     b.enc_set(ruby.usascii_encindex())?;
 ///
-/// assert_eq!(encoding::compatible(a, b).unwrap().name(), "UTF-8");
+///     assert_eq!(encoding::compatible(a, b).unwrap().name(), "UTF-8");
+///
+///     Ok(())
+/// }
+/// # Ruby::init(example).unwrap()
 /// ```
 pub fn compatible<T, U>(v1: T, v2: U) -> Option<RbEncoding>
 where
@@ -1274,16 +1333,20 @@ where
 /// # Examples
 ///
 /// ```
-/// use magnus::{encoding, prelude::*, RString};
-/// # let _cleanup = unsafe { magnus::embed::init() };
+/// use magnus::{encoding, prelude::*, Error, Ruby};
 ///
-/// let a = RString::new("a");
-/// let b = RString::new("b");
+/// fn example(ruby: &Ruby) -> Result<(), Error> {
+///     let a = ruby.str_new("a");
+///     let b = ruby.str_new("b");
 ///
-/// assert!(a.enc_get() == encoding::Index::utf8());
-/// b.enc_set(encoding::Index::usascii()).unwrap();
+///     assert!(a.enc_get() == ruby.utf8_encindex());
+///     b.enc_set(ruby.usascii_encindex())?;
 ///
-/// assert_eq!(encoding::check(a, b).unwrap().name(), "UTF-8");
+///     assert_eq!(encoding::check(a, b)?.name(), "UTF-8");
+///
+///     Ok(())
+/// }
+/// # Ruby::init(example).unwrap()
 /// ```
 pub fn check<T, U>(v1: T, v2: U) -> Result<RbEncoding, Error>
 where
@@ -1308,18 +1371,22 @@ where
 /// # Examples
 ///
 /// ```
-/// use magnus::{encoding, prelude::*, RString};
-/// # let _cleanup = unsafe { magnus::embed::init() };
+/// use magnus::{encoding, prelude::*, Error, Ruby};
 ///
-/// let a = RString::new("a");
-/// assert!(a.enc_get() == encoding::Index::utf8());
-/// let b = RString::new("b");
-/// assert!(b.enc_get() == encoding::Index::utf8());
+/// fn example(ruby: &Ruby) -> Result<(), Error> {
+///     let a = ruby.str_new("a");
+///     assert!(a.enc_get() == ruby.utf8_encindex());
+///     let b = ruby.str_new("b");
+///     assert!(b.enc_get() == ruby.utf8_encindex());
 ///
-/// a.enc_set(encoding::Index::usascii()).unwrap();
-/// encoding::copy(b, a).unwrap();
+///     a.enc_set(ruby.usascii_encindex())?;
+///     encoding::copy(b, a)?;
 ///
-/// assert!(b.enc_get() == encoding::Index::usascii());
+///     assert!(b.enc_get() == ruby.usascii_encindex());
+///
+///     Ok(())
+/// }
+/// # Ruby::init(example).unwrap()
 /// ```
 pub fn copy<T, U>(dst: T, src: U) -> Result<(), Error>
 where
