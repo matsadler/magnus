@@ -801,20 +801,20 @@ seq!(N in 0..=16 {
 /// # Examples
 ///
 /// ```
-/// use magnus::{class, define_class, method, prelude::*, Error};
+/// use magnus::{method, prelude::*, Error, Ruby};
 ///
 /// fn rb_is_blank(rb_self: String) -> bool {
 ///     rb_self.contains(|c: char| !c.is_whitespace())
 /// }
 ///
 /// #[magnus::init]
-/// fn init() -> Result<(), Error> {
-///     let class = define_class("String", class::object())?;
+/// fn init(ruby: &Ruby) -> Result<(), Error> {
+///     let class = ruby.define_class("String", ruby.class_object())?;
 ///     class.define_method("blank?", method!(rb_is_blank, 0))?;
 ///     Ok(())
 /// }
-/// # let _cleanup = unsafe { magnus::embed::init() };
-/// # init().unwrap();
+/// # let cleanup = unsafe { magnus::embed::init() };
+/// # init(&cleanup).unwrap();
 /// ```
 #[macro_export]
 macro_rules! method {
@@ -1589,11 +1589,11 @@ seq!(N in 0..=16 {
 /// }
 ///
 /// #[magnus::init]
-/// fn init() {
-///     magnus::define_global_function("distance", magnus::function!(distance, 2));
+/// fn init(ruby: &magnus::Ruby) {
+///     ruby.define_global_function("distance", magnus::function!(distance, 2));
 /// }
-/// # let _cleanup = unsafe { magnus::embed::init() };
-/// # init();
+/// # let cleanup = unsafe { magnus::embed::init() };
+/// # init(&cleanup);
 /// ```
 #[macro_export]
 macro_rules! function {
