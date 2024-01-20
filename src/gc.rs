@@ -186,16 +186,20 @@ impl Compactor {
 /// # Examples
 ///
 /// ```
-/// use magnus::{gc, RArray, RString};
-/// # let _cleanup = unsafe { magnus::embed::init() };
+/// use magnus::{gc, Error, Ruby};
 ///
-/// // will never be collected
-/// let root = RArray::new();
-/// gc::register_mark_object(root);
+/// fn example(ruby: &Ruby) -> Result<(), Error> {
+///     // will never be collected
+///     let root = ruby.ary_new();
+///     gc::register_mark_object(root);
 ///
-/// // won't be collected while it is in our `root` array
-/// let s = RString::new("example");
-/// root.push(s).unwrap();
+///     // won't be collected while it is in our `root` array
+///     let s = ruby.str_new("example");
+///     root.push(s).unwrap();
+///
+///     Ok(())
+/// }
+/// # Ruby::init(example).unwrap()
 /// ```
 pub fn register_mark_object<T>(value: T)
 where
@@ -215,20 +219,24 @@ where
 /// # Examples
 ///
 /// ```
-/// use magnus::{gc, RString};
-/// # let _cleanup = unsafe { magnus::embed::init() };
+/// use magnus::{gc, Error, Ruby};
 ///
-/// let s = RString::new("example");
+/// fn example(ruby: &Ruby) -> Result<(), Error> {
+///     let s = ruby.str_new("example");
 ///
-/// // s won't be collected even though it's on the heap
-/// let boxed = Box::new(s);
-/// gc::register_address(&*boxed);
+///     // s won't be collected even though it's on the heap
+///     let boxed = Box::new(s);
+///     gc::register_address(&*boxed);
 ///
-/// // ...
+///     // ...
 ///
-/// // allow s to be collected
-/// gc::unregister_address(&*boxed);
-/// drop(boxed);
+///     // allow s to be collected
+///     gc::unregister_address(&*boxed);
+///     drop(boxed);
+///
+///     Ok(())
+/// }
+/// # Ruby::init(example).unwrap()
 /// ```
 pub fn register_address<T>(valref: &T)
 where
@@ -244,20 +252,24 @@ where
 /// # Examples
 ///
 /// ```
-/// use magnus::{gc, RString};
-/// # let _cleanup = unsafe { magnus::embed::init() };
+/// use magnus::{gc, Error, Ruby};
 ///
-/// let s = RString::new("example");
+/// fn example(ruby: &Ruby) -> Result<(), Error> {
+///     let s = ruby.str_new("example");
 ///
-/// // s won't be collected even though it's on the heap
-/// let boxed = Box::new(s);
-/// gc::register_address(&*boxed);
+///     // s won't be collected even though it's on the heap
+///     let boxed = Box::new(s);
+///     gc::register_address(&*boxed);
 ///
-/// // ...
+///     // ...
 ///
-/// // allow s to be collected
-/// gc::unregister_address(&*boxed);
-/// drop(boxed);
+///     // allow s to be collected
+///     gc::unregister_address(&*boxed);
+///     drop(boxed);
+///
+///     Ok(())
+/// }
+/// # Ruby::init(example).unwrap()
 /// ```
 pub fn unregister_address<T>(valref: &T)
 where
