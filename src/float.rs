@@ -153,22 +153,26 @@ impl Float {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Float};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{rb_assert, Error, Ruby};
     ///
-    /// let pi = Float::from_f64(3.141592);
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let pi = ruby.float_from_f64(3.141592);
     ///
-    /// let r = pi.rationalize_with_prec(Float::from_f64(0.001));
-    /// rb_assert!("r == 201/64r", r);
+    ///     let r = pi.rationalize_with_prec(ruby.float_from_f64(0.001));
+    ///     rb_assert!(ruby, "r == 201/64r", r);
     ///
-    /// let r = pi.rationalize_with_prec(Float::from_f64(0.01));
-    /// rb_assert!("r == 22/7r", r);
+    ///     let r = pi.rationalize_with_prec(ruby.float_from_f64(0.01));
+    ///     rb_assert!(ruby, "r == 22/7r", r);
     ///
-    /// let r = pi.rationalize_with_prec(Float::from_f64(0.1));
-    /// rb_assert!("r == 16/5r", r);
+    ///     let r = pi.rationalize_with_prec(ruby.float_from_f64(0.1));
+    ///     rb_assert!(ruby, "r == 16/5r", r);
     ///
-    /// let r = pi.rationalize_with_prec(Float::from_f64(1.));
-    /// rb_assert!("r == 3/1r", r);
+    ///     let r = pi.rationalize_with_prec(ruby.float_from_f64(1.));
+    ///     rb_assert!(ruby, "r == 3/1r", r);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn rationalize_with_prec(self, prec: Self) -> RRational {
         unsafe {
@@ -184,11 +188,15 @@ impl Float {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Float};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{rb_assert, Error, Ruby};
     ///
-    /// let pi = Float::from_f64(3.141592);
-    /// rb_assert!("r = 392699/125000r", r = pi.rationalize());
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let pi = ruby.float_from_f64(3.141592);
+    ///     rb_assert!(ruby, "r = 392699/125000r", r = pi.rationalize());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn rationalize(self) -> RRational {
         unsafe { RRational::from_rb_value_unchecked(rb_flt_rationalize(self.as_rb_value())) }
