@@ -127,26 +127,29 @@ impl RModule {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{define_module, function, r_string, rb_assert, RString};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{function, r_string, rb_assert, Error, RString, Ruby};
     ///
-    /// fn greet() -> RString {
-    ///     r_string!("Hello, world!")
+    /// fn greet(ruby: &Ruby) -> RString {
+    ///     r_string!(ruby, "Hello, world!")
     /// }
     ///
-    /// let module = define_module("Greeting").unwrap();
-    /// module
-    ///     .define_module_function("greet", function!(greet, 0))
-    ///     .unwrap();
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let module = ruby.define_module("Greeting")?;
+    ///     module.define_module_function("greet", function!(greet, 0))?;
     ///
-    /// rb_assert!(r#"Greeting.greet == "Hello, world!""#);
+    ///     rb_assert!(ruby, r#"Greeting.greet == "Hello, world!""#);
     ///
-    /// rb_assert!(
-    ///     r#"
-    ///     include Greeting
-    ///     greet == "Hello, world!"
-    /// "#,
-    /// );
+    ///     rb_assert!(
+    ///         ruby,
+    ///         r#"
+    ///             include Greeting
+    ///             greet == "Hello, world!"
+    ///         "#,
+    ///     );
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn define_module_function<M>(self, name: &str, func: M) -> Result<(), Error>
     where
@@ -215,12 +218,16 @@ pub trait Module: Object + ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{class, define_module, prelude::*, rb_assert};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{prelude::*, rb_assert, Error, Ruby};
     ///
-    /// let outer = define_module("Outer").unwrap();
-    /// outer.define_class("Inner", class::object()).unwrap();
-    /// rb_assert!("Outer::Inner.is_a?(Class)");
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let outer = ruby.define_module("Outer")?;
+    ///     outer.define_class("Inner", ruby.class_object())?;
+    ///     rb_assert!(ruby, "Outer::Inner.is_a?(Class)");
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     fn define_class<T>(self, name: T, superclass: RClass) -> Result<RClass, Error>
     where
@@ -244,13 +251,17 @@ pub trait Module: Object + ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{define_module, prelude::*, rb_assert};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{prelude::*, rb_assert, Error, Ruby};
     ///
-    /// let outer = define_module("Outer").unwrap();
-    /// outer.define_module("Inner").unwrap();
-    /// rb_assert!("Outer::Inner.is_a?(Module)");
-    /// rb_assert!("!Outer::Inner.is_a?(Class)");
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let outer = ruby.define_module("Outer")?;
+    ///     outer.define_module("Inner")?;
+    ///     rb_assert!(ruby, "Outer::Inner.is_a?(Module)");
+    ///     rb_assert!(ruby, "!Outer::Inner.is_a?(Class)");
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     fn define_module<T>(self, name: T) -> Result<RModule, Error>
     where
@@ -270,15 +281,17 @@ pub trait Module: Object + ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{define_module, exception, prelude::*, rb_assert};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{prelude::*, rb_assert, Error, Ruby};
     ///
-    /// let outer = define_module("Outer").unwrap();
-    /// outer
-    ///     .define_error("InnerError", exception::standard_error())
-    ///     .unwrap();
-    /// rb_assert!("Outer::InnerError.is_a?(Class)");
-    /// rb_assert!("Outer::InnerError < Exception");
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let outer = ruby.define_module("Outer")?;
+    ///     outer.define_error("InnerError", ruby.exception_standard_error())?;
+    ///     rb_assert!(ruby, "Outer::InnerError.is_a?(Class)");
+    ///     rb_assert!(ruby, "Outer::InnerError < Exception");
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     fn define_error<T>(self, name: T, superclass: ExceptionClass) -> Result<ExceptionClass, Error>
     where
@@ -296,23 +309,25 @@ pub trait Module: Object + ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{class, function, prelude::*, rb_assert, RClass, RModule};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{function, prelude::*, rb_assert, Error, RClass, Ruby};
     ///
-    /// fn example() -> i64 {
+    /// fn test() -> i64 {
     ///     42
     /// }
     ///
-    /// let module = RModule::new();
-    /// module
-    ///     .define_method("example", function!(example, 0))
-    ///     .unwrap();
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let module = ruby.module_new();
+    ///     module.define_method("test", function!(test, 0))?;
     ///
-    /// let class = RClass::new(class::object()).unwrap();
-    /// class.include_module(module).unwrap();
+    ///     let class = RClass::new(ruby.class_object())?;
+    ///     class.include_module(module)?;
     ///
-    /// let obj = class.new_instance(()).unwrap();
-    /// rb_assert!("obj.example == 42", obj);
+    ///     let obj = class.new_instance(())?;
+    ///     rb_assert!(ruby, "obj.test == 42", obj);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     fn include_module(self, module: RModule) -> Result<(), Error> {
         protect(|| {
@@ -330,33 +345,34 @@ pub trait Module: Object + ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{call_super, eval, function, prelude::*, rb_assert, Error, RClass, RModule};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{function, prelude::*, rb_assert, Error, RClass, Ruby};
     ///
-    /// fn example() -> Result<i64, Error> {
-    ///     Ok(call_super::<_, i64>(())? + 2)
+    /// fn test(ruby: &Ruby) -> Result<i64, Error> {
+    ///     Ok(ruby.call_super::<_, i64>(())? + 2)
     /// }
     ///
-    /// let module = RModule::new();
-    /// module
-    ///     .define_method("example", function!(example, 0))
-    ///     .unwrap();
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let module = ruby.module_new();
+    ///     module.define_method("test", function!(test, 0))?;
     ///
-    /// let class: RClass = eval(
-    ///     r#"
-    ///     class Example
-    ///       def example
-    ///         40
-    ///       end
-    ///     end
-    ///     Example
-    /// "#,
-    /// )
-    /// .unwrap();
-    /// class.prepend_module(module).unwrap();
+    ///     let class: RClass = ruby.eval(
+    ///         r#"
+    ///             class Example
+    ///               def test
+    ///                 40
+    ///               end
+    ///             end
+    ///             Example
+    ///         "#,
+    ///     )?;
+    ///     class.prepend_module(module)?;
     ///
-    /// let obj = class.new_instance(()).unwrap();
-    /// rb_assert!("obj.example == 42", obj);
+    ///     let obj = class.new_instance(())?;
+    ///     rb_assert!("obj.test == 42", obj);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     fn prepend_module(self, module: RModule) -> Result<(), Error> {
         protect(|| {
@@ -371,12 +387,16 @@ pub trait Module: Object + ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{class, rb_assert, Module};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{rb_assert, Error, Module, Ruby};
     ///
-    /// class::array().const_set("EXAMPLE", 42).unwrap();
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     ruby.class_array().const_set("EXAMPLE", 42)?;
     ///
-    /// rb_assert!("Array::EXAMPLE == 42");
+    ///     rb_assert!(ruby, "Array::EXAMPLE == 42");
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     fn const_set<T, U>(self, name: T, value: U) -> Result<(), Error>
     where
@@ -398,20 +418,23 @@ pub trait Module: Object + ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{class, eval, rb_assert, Module, RClass, Value};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{rb_assert, Error, Module, RClass, Ruby, Value};
     ///
-    /// eval::<Value>(
-    ///     "
-    ///     class Example
-    ///       VALUE = 42
-    ///     end
-    /// ",
-    /// )
-    /// .unwrap();
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     ruby.eval::<Value>(
+    ///         "
+    ///           class Example
+    ///             VALUE = 42
+    ///           end
+    ///         ",
+    ///     )?;
     ///
-    /// let class = class::object().const_get::<_, RClass>("Example").unwrap();
-    /// rb_assert!("klass::VALUE == 42", klass = class);
+    ///     let class = ruby.class_object().const_get::<_, RClass>("Example")?;
+    ///     rb_assert!(ruby, "klass::VALUE == 42", klass = class);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     fn const_get<T, U>(self, name: T) -> Result<U, Error>
     where
@@ -432,13 +455,17 @@ pub trait Module: Object + ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{class, prelude::*, Module, RClass};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{prelude::*, Error, Module, RClass, Ruby};
     ///
-    /// let a = RClass::new(class::object()).unwrap();
-    /// let b = RClass::new(a).unwrap();
-    /// assert!(b.is_inherited(a));
-    /// assert!(!a.is_inherited(b));
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let a = RClass::new(ruby.class_object())?;
+    ///     let b = RClass::new(a)?;
+    ///     assert!(b.is_inherited(a));
+    ///     assert!(!a.is_inherited(b));
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     fn is_inherited<T>(self, other: T) -> bool
     where
@@ -458,15 +485,20 @@ pub trait Module: Object + ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{class, rb_assert, Module};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{rb_assert, Error, Module, Ruby};
     ///
-    /// let ary = class::string().ancestors();
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let ary = ruby.class_string().ancestors();
     ///
-    /// rb_assert!(
-    ///     "ary == [String, Comparable, Object, Kernel, BasicObject]",
-    ///     ary,
-    /// );
+    ///     rb_assert!(
+    ///         ruby,
+    ///         "ary == [String, Comparable, Object, Kernel, BasicObject]",
+    ///         ary,
+    ///     );
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     fn ancestors(self) -> RArray {
         unsafe { RArray::from_rb_value_unchecked(rb_mod_ancestors(self.as_rb_value())) }
@@ -477,20 +509,24 @@ pub trait Module: Object + ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{class, rb_assert, method, Module};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{method, rb_assert, Error, Module, Ruby};
     ///
     /// fn escape_unicode(s: String) -> String {
     ///     s.escape_unicode().to_string()
     /// }
     ///
-    /// class::string()
-    ///     .define_method("escape_unicode", method!(escape_unicode, 0))
-    ///     .unwrap();
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     ruby.class_string()
+    ///         .define_method("escape_unicode", method!(escape_unicode, 0))?;
     ///
-    /// rb_assert!(
-    ///     r#""🤖\etest".escape_unicode == "\\u{1f916}\\u{1b}\\u{74}\\u{65}\\u{73}\\u{74}""#,
-    /// );
+    ///     rb_assert!(
+    ///         ruby,
+    ///         r#""🤖\etest".escape_unicode == "\\u{1f916}\\u{1b}\\u{74}\\u{65}\\u{73}\\u{74}""#,
+    ///     );
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     fn define_method<T, M>(self, name: T, func: M) -> Result<(), Error>
     where
@@ -519,8 +555,7 @@ pub trait Module: Object + ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{class, eval, exception, function, rb_assert, Module, Value};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{eval, function, rb_assert, Error, Module, Ruby, Value};
     ///
     /// fn percent_encode(c: char) -> String {
     ///     if c.is_ascii_alphanumeric() || c == '-' || c == '_' || c == '.' || c == '~' {
@@ -530,26 +565,29 @@ pub trait Module: Object + ReprValue + Copy {
     ///     }
     /// }
     ///
-    /// class::string()
-    ///     .define_private_method("percent_encode_char", function!(percent_encode, 1))
-    ///     .unwrap();
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     ruby.class_string()
+    ///         .define_private_method("percent_encode_char", function!(percent_encode, 1))?;
     ///
-    /// eval::<Value>(
-    ///     r#"
-    ///     class String
-    ///       def percent_encode
-    ///         chars.map {|c| percent_encode_char(c)}.join("")
-    ///       end
-    ///     end
-    /// "#,
-    /// )
-    /// .unwrap();
+    ///     ruby.eval::<Value>(
+    ///         r#"
+    ///             class String
+    ///               def percent_encode
+    ///                 chars.map {|c| percent_encode_char(c)}.join("")
+    ///               end
+    ///             end
+    ///         "#,
+    ///     )?;
     ///
-    /// rb_assert!(r#""foo bar".percent_encode == "foo%20bar""#);
+    ///     rb_assert!(ruby, r#""foo bar".percent_encode == "foo%20bar""#);
     ///
-    /// assert!(eval::<bool>(r#"" ".percent_encode_char(" ")"#)
-    ///     .unwrap_err()
-    ///     .is_kind_of(exception::no_method_error()));
+    ///     assert!(eval::<bool>(r#"" ".percent_encode_char(" ")"#)
+    ///         .unwrap_err()
+    ///         .is_kind_of(ruby.exception_no_method_error()));
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     fn define_private_method<M>(self, name: &str, func: M) -> Result<(), Error>
     where
@@ -576,8 +614,7 @@ pub trait Module: Object + ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{class, eval, exception, method, rb_assert, Module, Value};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{method, rb_assert, Error, Module, Ruby, Value};
     ///
     /// fn escape_unicode(s: String) -> String {
     ///     s.escape_unicode().to_string()
@@ -587,33 +624,35 @@ pub trait Module: Object + ReprValue + Copy {
     ///     c.is_control() || c.is_whitespace()
     /// }
     ///
-    /// class::string()
-    ///     .define_method("escape_unicode", method!(escape_unicode, 0))
-    ///     .unwrap();
-    /// class::string()
-    ///     .define_protected_method("invisible?", method!(is_invisible, 0))
-    ///     .unwrap();
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     ruby.class_string()
+    ///         .define_method("escape_unicode", method!(escape_unicode, 0))?;
+    ///     ruby.class_string()
+    ///         .define_protected_method("invisible?", method!(is_invisible, 0))?;
     ///
-    /// eval::<Value>(
-    ///     r#"
-    ///     class String
-    ///       def escape_invisible
-    ///         chars.map {|c| c.invisible? ? c.escape_unicode : c}.join("")
-    ///       end
-    ///     end
-    /// "#,
-    /// )
-    /// .unwrap();
+    ///     ruby.eval::<Value>(
+    ///         r#"
+    ///             class String
+    ///               def escape_invisible
+    ///                 chars.map {|c| c.invisible? ? c.escape_unicode : c}.join("")
+    ///               end
+    ///             end
+    ///         "#,
+    ///     )?;
     ///
-    /// rb_assert!(
-    ///     r#"
-    ///       "🤖\tfoo bar".escape_invisible == "🤖\\u{9}foo\\u{20}bar"
-    ///     "#,
-    /// );
+    ///     rb_assert!(
+    ///         ruby,
+    ///         r#""🤖\tfoo bar".escape_invisible == "🤖\\u{9}foo\\u{20}bar""#,
+    ///     );
     ///
-    /// assert!(eval::<bool>(r#"" ".invisible?"#)
-    ///     .unwrap_err()
-    ///     .is_kind_of(exception::no_method_error()));
+    ///     assert!(ruby
+    ///         .eval::<bool>(r#"" ".invisible?"#)
+    ///         .unwrap_err()
+    ///         .is_kind_of(ruby.exception_no_method_error()));
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     fn define_protected_method<M>(self, name: &str, func: M) -> Result<(), Error>
     where
@@ -642,15 +681,19 @@ pub trait Module: Object + ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{class, eval, prelude::*, rb_assert, Attr, Module, RClass, Value};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{eval, prelude::*, rb_assert, Attr, Error, Module, RClass, Ruby, Value};
     ///
-    /// let class = RClass::new(class::object()).unwrap();
-    /// class.define_attr("example", Attr::ReadWrite).unwrap();
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let class = RClass::new(ruby.class_object())?;
+    ///     class.define_attr("example", Attr::ReadWrite)?;
     ///
-    /// let obj = class.new_instance(()).unwrap();
-    /// let _: Value = eval!("obj.example = 42", obj).unwrap();
-    /// rb_assert!("obj.example == 42", obj);
+    ///     let obj = class.new_instance(())?;
+    ///     let _: Value = eval!(ruby, "obj.example = 42", obj)?;
+    ///     rb_assert!(ruby, "obj.example == 42", obj);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     fn define_attr<T>(self, name: T, rw: Attr) -> Result<(), Error>
     where
@@ -678,21 +721,23 @@ pub trait Module: Object + ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{class, function, prelude::*, rb_assert, Module, RClass};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{function, prelude::*, rb_assert, Error, Module, RClass, Ruby};
     ///
-    /// fn example() -> i64 {
+    /// fn test() -> i64 {
     ///     42
     /// }
     ///
-    /// let class = RClass::new(class::object()).unwrap();
-    /// class
-    ///     .define_method("example", function!(example, 0))
-    ///     .unwrap();
-    /// class.define_alias("test", "example").unwrap();
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let class = RClass::new(ruby.class_object())?;
+    ///     class.define_method("test", function!(test, 0))?;
+    ///     class.define_alias("example", "test")?;
     ///
-    /// let obj = class.new_instance(()).unwrap();
-    /// rb_assert!("obj.test == 42", obj);
+    ///     let obj = class.new_instance(())?;
+    ///     rb_assert!(ruby, "obj.example == 42", obj);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     fn define_alias<T, U>(self, dst: T, src: U) -> Result<(), Error>
     where
