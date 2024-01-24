@@ -33,28 +33,36 @@ pub trait Numeric: ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{Integer, Numeric};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, Numeric, Ruby};
     ///
-    /// let a = Integer::from_i64(2);
-    /// let b = Integer::from_i64(3);
-    /// let c: i64 = a.coerce_bin(b, "+").unwrap();
-    /// assert_eq!(c, 5);
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let a = ruby.integer_from_i64(2);
+    ///     let b = ruby.integer_from_i64(3);
+    ///     let c: i64 = a.coerce_bin(b, "+")?;
+    ///     assert_eq!(c, 5);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     ///
     /// Avoiding type conversion of the result to demonstrate Ruby is coercing
     /// the types:
     ///
     /// ```
-    /// use magnus::{Float, Integer, Numeric, Value};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, Float, Numeric, Ruby, Value};
     ///
-    /// let a = Integer::from_i64(2);
-    /// let b = Float::from_f64(3.5);
-    /// let c: Value = a.coerce_bin(b, "+").unwrap();
-    /// let c = Float::from_value(c);
-    /// assert!(c.is_some());
-    /// assert_eq!(c.unwrap().to_f64(), 5.5);
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let a = ruby.integer_from_i64(2);
+    ///     let b = ruby.float_from_f64(3.5);
+    ///     let c: Value = a.coerce_bin(b, "+")?;
+    ///     let c = Float::from_value(c);
+    ///     assert!(c.is_some());
+    ///     assert_eq!(c.unwrap().to_f64(), 5.5);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     fn coerce_bin<T, ID, U>(self, other: T, op: ID) -> Result<U, Error>
     where
@@ -94,13 +102,17 @@ pub trait Numeric: ReprValue + Copy {
     /// ```
     /// use std::num::NonZeroI64;
     ///
-    /// use magnus::{Float, Numeric, RRational};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, Numeric, Ruby};
     ///
-    /// let a = RRational::new(1, NonZeroI64::new(4).unwrap());
-    /// let b = Float::from_f64(0.3);
-    /// let result: i64 = a.coerce_cmp(b, "<=>").unwrap();
-    /// assert_eq!(result, -1);
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let a = ruby.rational_new(1, NonZeroI64::new(4).unwrap());
+    ///     let b = ruby.float_from_f64(0.3);
+    ///     let result: i64 = a.coerce_cmp(b, "<=>")?;
+    ///     assert_eq!(result, -1);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     fn coerce_cmp<T, ID, U>(self, other: T, op: ID) -> Result<U, Error>
     where
@@ -137,13 +149,17 @@ pub trait Numeric: ReprValue + Copy {
     /// ```
     /// use std::num::NonZeroI64;
     ///
-    /// use magnus::{Float, Numeric, RRational};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, Numeric, Ruby};
     ///
-    /// let a = Float::from_f64(0.3);
-    /// let b = RRational::new(1, NonZeroI64::new(4).unwrap());
-    /// let result: bool = a.coerce_cmp(b, "<=").unwrap();
-    /// assert_eq!(result, false);
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let a = ruby.float_from_f64(0.3);
+    ///     let b = ruby.rational_new(1, NonZeroI64::new(4).unwrap());
+    ///     let result: bool = a.coerce_cmp(b, "<=")?;
+    ///     assert_eq!(result, false);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     fn coerce_relop<T, ID, U>(self, other: T, op: ID) -> Result<U, Error>
     where
@@ -178,13 +194,17 @@ pub trait Numeric: ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{Integer, Numeric};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, Numeric, Ruby};
     ///
-    /// let a = Integer::from_i64(0b00000011);
-    /// let b = Integer::from_i64(0b00001110);
-    /// let result: i64 = a.coerce_cmp(b, "^").unwrap();
-    /// assert_eq!(result, 0b00001101);
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let a = ruby.integer_from_i64(0b00000011);
+    ///     let b = ruby.integer_from_i64(0b00001110);
+    ///     let result: i64 = a.coerce_cmp(b, "^")?;
+    ///     assert_eq!(result, 0b00001101);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     fn coerce_bit<T, ID, U>(self, other: T, op: ID) -> Result<U, Error>
     where
@@ -213,18 +233,22 @@ pub trait Numeric: ReprValue + Copy {
 /// ```
 /// use std::num::NonZeroI64;
 ///
-/// use magnus::{numeric::NumericValue, prelude::*, Float, Integer, RRational};
-/// # let _cleanup = unsafe { magnus::embed::init() };
+/// use magnus::{numeric::NumericValue, prelude::*, Error, Ruby};
 ///
-/// let a = Integer::from_i64(1);
-/// let b = RRational::new(1, NonZeroI64::new(2).unwrap());
-/// let c = Float::from_f64(0.3);
-/// let d = Integer::from_i64(4);
+/// fn example(ruby: &Ruby) -> Result<(), Error> {
+///     let a = ruby.integer_from_i64(1);
+///     let b = ruby.rational_new(1, NonZeroI64::new(2).unwrap());
+///     let c = ruby.float_from_f64(0.3);
+///     let d = ruby.integer_from_i64(4);
 ///
-/// let result: NumericValue = a.coerce_bin(b, "+").unwrap();
-/// let result: NumericValue = result.coerce_bin(c, "+").unwrap();
-/// let result: NumericValue = result.coerce_bin(d, "+").unwrap();
-/// assert_eq!(f64::try_convert(result.as_value()).unwrap(), 5.8);
+///     let result: NumericValue = a.coerce_bin(b, "+")?;
+///     let result: NumericValue = result.coerce_bin(c, "+")?;
+///     let result: NumericValue = result.coerce_bin(d, "+")?;
+///     assert_eq!(f64::try_convert(result.as_value())?, 5.8);
+///
+///     Ok(())
+/// }
+/// # Ruby::init(example).unwrap()
 /// ```
 #[derive(Clone, Copy)]
 #[repr(transparent)]
