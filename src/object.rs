@@ -25,23 +25,24 @@ pub trait Object: ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{define_module, function, prelude::*, rb_assert};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{function, prelude::*, rb_assert, Error, Ruby};
     ///
-    /// fn example() -> i64 {
+    /// fn test() -> i64 {
     ///     42
     /// }
     ///
-    /// let module = define_module("Example").unwrap();
-    /// module
-    ///     .define_singleton_method("example", function!(example, 0))
-    ///     .unwrap();
-    /// rb_assert!("Example.example == 42");
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let module = ruby.define_module("Example")?;
+    ///     module.define_singleton_method("test", function!(test, 0))?;
+    ///     rb_assert!(ruby, "Example.test == 42");
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     ///
     /// ```
-    /// use magnus::{class, define_class, function, prelude::*, rb_assert};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{function, prelude::*, rb_assert, Error, Ruby};
     ///
     /// #[magnus::wrap(class = "Point", free_immediately, size)]
     /// struct Point {
@@ -55,13 +56,16 @@ pub trait Object: ReprValue + Copy {
     ///     }
     /// }
     ///
-    /// let class = define_class("Point", class::object()).unwrap();
-    /// class
-    ///     .define_singleton_method("new", function!(Point::new, 2))
-    ///     .unwrap();
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let class = ruby.define_class("Point", ruby.class_object())?;
+    ///     class.define_singleton_method("new", function!(Point::new, 2))?;
     ///
-    /// rb_assert!("Point.new(1, 2).is_a?(Point)");
+    ///     rb_assert!(ruby, "Point.new(1, 2).is_a?(Point)");
+    ///
+    ///     Ok(())
+    /// }
     /// # let _ = Point { x: 1, y: 2 }.x + Point { x: 3, y: 4 }.y;
+    /// # Ruby::init(example).unwrap()
     /// ```
     fn define_singleton_method<M>(self, name: &str, func: M) -> Result<(), Error>
     where
@@ -92,22 +96,25 @@ pub trait Object: ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, prelude::*, RObject};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{prelude::*, Error, RObject, Ruby};
     ///
-    /// let val: RObject = eval(
-    ///     r#"
-    ///       class Example
-    ///         def initialize(value)
-    ///           @value = value
-    ///         end
-    ///       end
-    ///       Example.new("foo")
-    ///     "#,
-    /// )
-    /// .unwrap();
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let val: RObject = ruby.eval(
+    ///         r#"
+    ///             class Example
+    ///               def initialize(value)
+    ///                 @value = value
+    ///               end
+    ///             end
+    ///             Example.new("foo")
+    ///         "#,
+    ///     )?;
     ///
-    /// assert_eq!(val.ivar_get::<_, String>("@value").unwrap(), "foo");
+    ///     assert_eq!(val.ivar_get::<_, String>("@value")?, "foo");
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     fn ivar_get<T, U>(self, name: T) -> Result<U, Error>
     where
@@ -129,27 +136,30 @@ pub trait Object: ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, prelude::*, rb_assert, RObject};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{prelude::*, rb_assert, Error, RObject, Ruby};
     ///
-    /// let obj: RObject = eval(
-    ///     r#"
-    ///       class Example
-    ///         def initialize(value)
-    ///           @value = value
-    ///         end
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let obj: RObject = ruby.eval(
+    ///         r#"
+    ///             class Example
+    ///               def initialize(value)
+    ///                 @value = value
+    ///               end
     ///
-    ///         def value
-    ///           @value
-    ///         end
-    ///       end
-    ///       Example.new("foo")
-    ///     "#,
-    /// )
-    /// .unwrap();
+    ///               def value
+    ///                 @value
+    ///               end
+    ///             end
+    ///             Example.new("foo")
+    ///         "#,
+    ///     )?;
     ///
-    /// obj.ivar_set("@value", "bar").unwrap();
-    /// rb_assert!(r#"obj.value == "bar""#, obj);
+    ///     obj.ivar_set("@value", "bar")?;
+    ///     rb_assert!(ruby, r#"obj.value == "bar""#, obj);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     fn ivar_set<T, U>(self, name: T, value: U) -> Result<(), Error>
     where
@@ -179,10 +189,14 @@ pub trait Object: ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, RString};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{prelude::*, Error, Ruby};
     ///
-    /// assert!(RString::new("example").singleton_class().is_ok());
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     assert!(ruby.str_new("example").singleton_class().is_ok());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     fn singleton_class(self) -> Result<RClass, Error> {
         protect(|| unsafe {
@@ -195,21 +209,23 @@ pub trait Object: ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{class, function, prelude::*, rb_assert, RModule, RObject};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{function, prelude::*, rb_assert, Error, RObject, Ruby};
     ///
-    /// fn example() -> i64 {
+    /// fn test() -> i64 {
     ///     42
     /// }
     ///
-    /// let module = RModule::new();
-    /// module
-    ///     .define_method("example", function!(example, 0))
-    ///     .unwrap();
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let module = ruby.module_new();
+    ///     module.define_method("test", function!(test, 0))?;
     ///
-    /// let obj = RObject::try_convert(class::object().new_instance(()).unwrap()).unwrap();
-    /// obj.extend_object(module).unwrap();
-    /// rb_assert!("obj.example == 42", obj);
+    ///     let obj = RObject::try_convert(ruby.class_object().new_instance(())?)?;
+    ///     obj.extend_object(module)?;
+    ///     rb_assert!(ruby, "obj.test == 42", obj);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     fn extend_object(self, module: RModule) -> Result<(), Error> {
         protect(|| {
