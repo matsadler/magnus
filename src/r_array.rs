@@ -354,33 +354,40 @@ impl RArray {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, IntoValue, RArray};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{prelude::*, rb_assert, Error, RArray, Ruby};
     ///
-    /// let ary = RArray::to_ary(1.into_value()).unwrap();
-    /// rb_assert!("[1] == ary", ary);
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let ary = RArray::to_ary(ruby.integer_from_i64(1).as_value())?;
+    ///     rb_assert!(ruby, "[1] == ary", ary);
     ///
-    /// let ary = RArray::to_ary(vec![1, 2, 3].into_value()).unwrap();
-    /// rb_assert!("[1, 2, 3] == ary", ary);
+    ///     let ary = RArray::to_ary(ruby.ary_from_vec(vec![1, 2, 3]).as_value())?;
+    ///     rb_assert!(ruby, "[1, 2, 3] == ary", ary);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     ///
     /// This can fail in the case of a misbehaving `#to_ary` method:
     ///
     /// ```
-    /// use magnus::{eval, RArray};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, RArray, Ruby};
     ///
-    /// let val = eval(
-    ///     r#"
-    /// o = Object.new
-    /// def o.to_ary
-    ///   "not an array"
-    /// end
-    /// o
-    /// "#,
-    /// )
-    /// .unwrap();
-    /// assert!(RArray::to_ary(val).is_err());
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let val = ruby.eval(
+    ///         r#"
+    ///             o = Object.new
+    ///             def o.to_ary
+    ///               "not an array"
+    ///             end
+    ///             o
+    ///         "#,
+    ///     )?;
+    ///     assert!(RArray::to_ary(val).is_err());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn to_ary(val: Value) -> Result<Self, Error> {
         protect(|| unsafe { Self::from_rb_value_unchecked(rb_ary_to_ary(val.as_rb_value())) })
@@ -460,16 +467,20 @@ impl RArray {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, RArray};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{rb_assert, Error, Ruby};
     ///
-    /// let a = RArray::from_vec(vec![1, 2, 3]);
-    /// let b = a.dup();
-    /// rb_assert!("a == b", a, b);
-    /// a.push(4).unwrap();
-    /// b.push(5).unwrap();
-    /// rb_assert!("a == [1, 2, 3, 4]", a);
-    /// rb_assert!("b == [1, 2, 3, 5]", b);
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let a = ruby.ary_from_vec(vec![1, 2, 3]);
+    ///     let b = a.dup();
+    ///     rb_assert!(ruby, "a == b", a, b);
+    ///     a.push(4)?;
+    ///     b.push(5)?;
+    ///     rb_assert!(ruby, "a == [1, 2, 3, 4]", a);
+    ///     rb_assert!(ruby, "b == [1, 2, 3, 5]", b);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn dup(self) -> Self {
         // rb_ary_subseq does a cheap copy-on-write
@@ -481,14 +492,18 @@ impl RArray {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, RArray};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, RArray, Ruby};
     ///
-    /// let ary = RArray::new();
-    /// assert_eq!(ary.len(), 0);
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let ary = ruby.ary_new();
+    ///     assert_eq!(ary.len(), 0);
     ///
-    /// let ary: RArray = eval("[:a, :b, :c]").unwrap();
-    /// assert_eq!(ary.len(), 3)
+    ///     let ary: RArray = ruby.eval("[:a, :b, :c]")?;
+    ///     assert_eq!(ary.len(), 3);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn len(self) -> usize {
         debug_assert_value!(self);
@@ -500,14 +515,18 @@ impl RArray {
     /// # Examples
     ///
     /// ```
-    /// use magnus::RArray;
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, Ruby};
     ///
-    /// let ary = RArray::new();
-    /// assert!(ary.is_empty());
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let ary = ruby.ary_new();
+    ///     assert!(ary.is_empty());
     ///
-    /// ary.push("foo").unwrap();
-    /// assert!(!ary.is_empty());
+    ///     ary.push("foo")?;
+    ///     assert!(!ary.is_empty());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn is_empty(self) -> bool {
         self.len() == 0
@@ -518,17 +537,21 @@ impl RArray {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, value::qnil, RArray, Symbol};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, RArray, Ruby};
     ///
-    /// let ary: RArray = eval(r#"[:foo, "bar", 2]"#).unwrap();
-    /// assert!(ary.includes(Symbol::new("foo")));
-    /// assert!(ary.includes("bar"));
-    /// assert!(ary.includes(2));
-    /// // 2.0 == 2 in Ruby
-    /// assert!(ary.includes(2.0));
-    /// assert!(!ary.includes("foo"));
-    /// assert!(!ary.includes(qnil()));
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let ary: RArray = ruby.eval(r#"[:foo, "bar", 2]"#)?;
+    ///     assert!(ary.includes(ruby.to_symbol("foo")));
+    ///     assert!(ary.includes("bar"));
+    ///     assert!(ary.includes(2));
+    ///     // 2.0 == 2 in Ruby
+    ///     assert!(ary.includes(2.0));
+    ///     assert!(!ary.includes("foo"));
+    ///     assert!(!ary.includes(ruby.qnil()));
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn includes<T>(self, val: T) -> bool
     where
@@ -545,27 +568,37 @@ impl RArray {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, rb_assert, value::qnil, Integer, RArray, Symbol};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{prelude::*, rb_assert, Error, Ruby};
     ///
-    /// let ary = RArray::new();
-    /// ary.cat(&[
-    ///     Symbol::new("a").as_value(),
-    ///     Integer::from_i64(1).as_value(),
-    ///     qnil().as_value(),
-    /// ])
-    /// .unwrap();
-    /// rb_assert!("ary == [:a, 1, nil]", ary);
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let ary = ruby.ary_new();
+    ///     ary.cat(&[
+    ///         ruby.to_symbol("a").as_value(),
+    ///         ruby.integer_from_i64(1).as_value(),
+    ///         ruby.qnil().as_value(),
+    ///     ])?;
+    ///     rb_assert!(ruby, "ary == [:a, 1, nil]", ary);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     ///
     /// ```
-    /// use magnus::{rb_assert, RArray, Symbol};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{rb_assert, Error, Ruby};
     ///
-    /// let ary = RArray::new();
-    /// ary.cat(&[Symbol::new("a"), Symbol::new("b"), Symbol::new("c")])
-    ///     .unwrap();
-    /// rb_assert!("ary == [:a, :b, :c]", ary);
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let ary = ruby.ary_new();
+    ///     ary.cat(&[
+    ///         ruby.to_symbol("a"),
+    ///         ruby.to_symbol("b"),
+    ///         ruby.to_symbol("c"),
+    ///     ])?;
+    ///     rb_assert!(ruby, "ary == [:a, :b, :c]", ary);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn cat<T>(self, s: &[T]) -> Result<(), Error>
     where
@@ -583,14 +616,18 @@ impl RArray {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, RArray};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{rb_assert, Error, Ruby};
     ///
-    /// let a = RArray::from_vec(vec![1, 2, 3]);
-    /// let b = RArray::from_vec(vec!["a", "b", "c"]);
-    /// a.concat(b).unwrap();
-    /// rb_assert!(r#"a == [1, 2, 3, "a", "b", "c"]"#, a);
-    /// rb_assert!(r#"b == ["a", "b", "c"]"#, b);
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let a = ruby.ary_from_vec(vec![1, 2, 3]);
+    ///     let b = ruby.ary_from_vec(vec!["a", "b", "c"]);
+    ///     a.concat(b)?;
+    ///     rb_assert!(ruby, r#"a == [1, 2, 3, "a", "b", "c"]"#, a);
+    ///     rb_assert!(ruby, r#"b == ["a", "b", "c"]"#, b);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn concat(self, other: Self) -> Result<(), Error> {
         protect(|| unsafe { Value::new(rb_ary_concat(self.as_rb_value(), other.as_rb_value())) })?;
@@ -603,15 +640,19 @@ impl RArray {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, RArray};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{rb_assert, Error, Ruby};
     ///
-    /// let a = RArray::from_vec(vec![1, 2, 3]);
-    /// let b = RArray::from_vec(vec!["a", "b", "c"]);
-    /// let c = a.plus(b);
-    /// rb_assert!(r#"c == [1, 2, 3, "a", "b", "c"]"#, c);
-    /// rb_assert!(r#"a == [1, 2, 3]"#, a);
-    /// rb_assert!(r#"b == ["a", "b", "c"]"#, b);
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let a = ruby.ary_from_vec(vec![1, 2, 3]);
+    ///     let b = ruby.ary_from_vec(vec!["a", "b", "c"]);
+    ///     let c = a.plus(b);
+    ///     rb_assert!(ruby, r#"c == [1, 2, 3, "a", "b", "c"]"#, c);
+    ///     rb_assert!(ruby, r#"a == [1, 2, 3]"#, a);
+    ///     rb_assert!(ruby, r#"b == ["a", "b", "c"]"#, b);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn plus(self, other: Self) -> Self {
         unsafe {
@@ -668,14 +709,18 @@ impl RArray {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, RArray, Symbol};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{rb_assert, Error, Ruby};
     ///
-    /// let ary = RArray::new();
-    /// ary.push(Symbol::new("a")).unwrap();
-    /// ary.push(1).unwrap();
-    /// ary.push(()).unwrap();
-    /// rb_assert!("ary == [:a, 1, nil]", ary);
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let ary = ruby.ary_new();
+    ///     ary.push(ruby.to_symbol("a"))?;
+    ///     ary.push(1)?;
+    ///     ary.push(())?;
+    ///     rb_assert!(ruby, "ary == [:a, 1, nil]", ary);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn push<T>(self, item: T) -> Result<(), Error>
     where
@@ -693,25 +738,33 @@ impl RArray {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, RArray};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, RArray, Ruby};
     ///
-    /// let ary: RArray = eval("[1, 2, 3]").unwrap();
-    /// assert_eq!(ary.pop::<i64>().unwrap(), 3);
-    /// assert_eq!(ary.pop::<i64>().unwrap(), 2);
-    /// assert_eq!(ary.pop::<i64>().unwrap(), 1);
-    /// assert!(ary.pop::<i64>().is_err());
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let ary: RArray = ruby.eval("[1, 2, 3]")?;
+    ///     assert_eq!(ary.pop::<i64>()?, 3);
+    ///     assert_eq!(ary.pop::<i64>()?, 2);
+    ///     assert_eq!(ary.pop::<i64>()?, 1);
+    ///     assert!(ary.pop::<i64>().is_err());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     ///
     /// ```
-    /// use magnus::{eval, RArray};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, RArray, Ruby};
     ///
-    /// let ary: RArray = eval("[1, 2, 3]").unwrap();
-    /// assert_eq!(ary.pop::<Option<i64>>().unwrap(), Some(3));
-    /// assert_eq!(ary.pop::<Option<i64>>().unwrap(), Some(2));
-    /// assert_eq!(ary.pop::<Option<i64>>().unwrap(), Some(1));
-    /// assert_eq!(ary.pop::<Option<i64>>().unwrap(), None);
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let ary: RArray = ruby.eval("[1, 2, 3]")?;
+    ///     assert_eq!(ary.pop::<Option<i64>>()?, Some(3));
+    ///     assert_eq!(ary.pop::<Option<i64>>()?, Some(2));
+    ///     assert_eq!(ary.pop::<Option<i64>>()?, Some(1));
+    ///     assert_eq!(ary.pop::<Option<i64>>()?, None);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn pop<T>(self) -> Result<T, Error>
     where
@@ -728,14 +781,18 @@ impl RArray {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, RArray, Symbol};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{rb_assert, Error, Ruby};
     ///
-    /// let ary = RArray::new();
-    /// ary.unshift(Symbol::new("a")).unwrap();
-    /// ary.unshift(1).unwrap();
-    /// ary.unshift(()).unwrap();
-    /// rb_assert!("ary == [nil, 1, :a]", ary);
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let ary = ruby.ary_new();
+    ///     ary.unshift(ruby.to_symbol("a"))?;
+    ///     ary.unshift(1)?;
+    ///     ary.unshift(())?;
+    ///     rb_assert!(ruby, "ary == [nil, 1, :a]", ary);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn unshift<T>(self, item: T) -> Result<(), Error>
     where
@@ -753,25 +810,33 @@ impl RArray {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, RArray};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, RArray, Ruby};
     ///
-    /// let ary: RArray = eval("[1, 2, 3]").unwrap();
-    /// assert_eq!(ary.shift::<i64>().unwrap(), 1);
-    /// assert_eq!(ary.shift::<i64>().unwrap(), 2);
-    /// assert_eq!(ary.shift::<i64>().unwrap(), 3);
-    /// assert!(ary.shift::<i64>().is_err());
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let ary: RArray = ruby.eval("[1, 2, 3]")?;
+    ///     assert_eq!(ary.shift::<i64>()?, 1);
+    ///     assert_eq!(ary.shift::<i64>()?, 2);
+    ///     assert_eq!(ary.shift::<i64>()?, 3);
+    ///     assert!(ary.shift::<i64>().is_err());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     ///
     /// ```
-    /// use magnus::{eval, RArray};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, RArray, Ruby};
     ///
-    /// let ary: RArray = eval("[1, 2, 3]").unwrap();
-    /// assert_eq!(ary.shift::<Option<i64>>().unwrap(), Some(1));
-    /// assert_eq!(ary.shift::<Option<i64>>().unwrap(), Some(2));
-    /// assert_eq!(ary.shift::<Option<i64>>().unwrap(), Some(3));
-    /// assert_eq!(ary.shift::<Option<i64>>().unwrap(), None);
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let ary: RArray = ruby.eval("[1, 2, 3]")?;
+    ///     assert_eq!(ary.shift::<Option<i64>>()?, Some(1));
+    ///     assert_eq!(ary.shift::<Option<i64>>()?, Some(2));
+    ///     assert_eq!(ary.shift::<Option<i64>>()?, Some(3));
+    ///     assert_eq!(ary.shift::<Option<i64>>()?, None);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn shift<T>(self) -> Result<T, Error>
     where
@@ -788,12 +853,16 @@ impl RArray {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, RArray};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{rb_assert, Error, Ruby};
     ///
-    /// let ary = RArray::from_vec(vec![1, 1, 2, 3]);
-    /// ary.delete(1).unwrap();
-    /// rb_assert!("ary == [2, 3]", ary);
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let ary = ruby.ary_from_vec(vec![1, 1, 2, 3]);
+    ///     ary.delete(1)?;
+    ///     rb_assert!(ruby, "ary == [2, 3]", ary);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn delete<T>(self, item: T) -> Result<(), Error>
     where
@@ -819,13 +888,17 @@ impl RArray {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, RArray};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{rb_assert, Error, Ruby};
     ///
-    /// let ary = RArray::from_vec(vec!["a", "b", "c"]);
-    /// let removed: Option<String> = ary.delete_at(1).unwrap();
-    /// assert_eq!(removed, Some(String::from("b")));
-    /// rb_assert!(r#"ary == ["a", "c"]"#, ary);
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let ary = ruby.ary_from_vec(vec!["a", "b", "c"]);
+    ///     let removed: Option<String> = ary.delete_at(1)?;
+    ///     assert_eq!(removed, Some(String::from("b")));
+    ///     rb_assert!(ruby, r#"ary == ["a", "c"]"#, ary);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn delete_at<T>(self, index: isize) -> Result<T, Error>
     where
@@ -842,13 +915,17 @@ impl RArray {
     /// # Examples
     ///
     /// ```
-    /// use magnus::RArray;
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, Ruby};
     ///
-    /// let ary = RArray::from_vec::<i64>(vec![1, 2, 3]);
-    /// assert!(!ary.is_empty());
-    /// ary.clear().unwrap();
-    /// assert!(ary.is_empty());
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let ary = ruby.ary_from_vec::<i64>(vec![1, 2, 3]);
+    ///     assert!(!ary.is_empty());
+    ///     ary.clear()?;
+    ///     assert!(ary.is_empty());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn clear(self) -> Result<(), Error> {
         protect(|| unsafe { Value::new(rb_ary_clear(self.as_rb_value())) })?;
@@ -865,14 +942,18 @@ impl RArray {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, RArray};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{rb_assert, Error, Ruby};
     ///
-    /// let ary = RArray::from_vec::<i64>(vec![1, 2, 3]);
-    /// ary.resize(5).unwrap();
-    /// rb_assert!("ary == [1, 2, 3, nil, nil]", ary);
-    /// ary.resize(2).unwrap();
-    /// rb_assert!("ary == [1, 2]", ary);
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let ary = ruby.ary_from_vec::<i64>(vec![1, 2, 3]);
+    ///     ary.resize(5)?;
+    ///     rb_assert!(ruby, "ary == [1, 2, 3, nil, nil]", ary);
+    ///     ary.resize(2)?;
+    ///     rb_assert!(ruby, "ary == [1, 2]", ary);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn resize(self, len: usize) -> Result<(), Error> {
         protect(|| unsafe { Value::new(rb_ary_resize(self.as_rb_value(), len as c_long)) })?;
@@ -886,12 +967,16 @@ impl RArray {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, RArray};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{rb_assert, Error, Ruby};
     ///
-    /// let ary = RArray::from_vec::<i64>(vec![1, 2, 3]);
-    /// ary.reverse().unwrap();
-    /// rb_assert!("ary == [3, 2, 1]", ary);
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let ary = ruby.ary_from_vec::<i64>(vec![1, 2, 3]);
+    ///     ary.reverse()?;
+    ///     rb_assert!(ruby, "ary == [3, 2, 1]", ary);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn reverse(self) -> Result<(), Error> {
         protect(|| unsafe { Value::new(rb_ary_reverse(self.as_rb_value())) })?;
@@ -908,21 +993,29 @@ impl RArray {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, RArray};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{rb_assert, Error, Ruby};
     ///
-    /// let ary = RArray::from_vec::<i64>(vec![1, 2, 3, 4, 5, 6, 7]);
-    /// ary.rotate(3).unwrap();
-    /// rb_assert!("ary == [4, 5, 6, 7, 1, 2, 3]", ary);
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let ary = ruby.ary_from_vec::<i64>(vec![1, 2, 3, 4, 5, 6, 7]);
+    ///     ary.rotate(3)?;
+    ///     rb_assert!(ruby, "ary == [4, 5, 6, 7, 1, 2, 3]", ary);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     ///
     /// ```
-    /// use magnus::{rb_assert, RArray};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{rb_assert, Error, Ruby};
     ///
-    /// let ary = RArray::from_vec::<i64>(vec![1, 2, 3, 4, 5, 6, 7]);
-    /// ary.rotate(-3).unwrap();
-    /// rb_assert!("ary == [5, 6, 7, 1, 2, 3, 4]", ary);
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let ary = ruby.ary_from_vec::<i64>(vec![1, 2, 3, 4, 5, 6, 7]);
+    ///     ary.rotate(-3)?;
+    ///     rb_assert!(ruby, "ary == [5, 6, 7, 1, 2, 3, 4]", ary);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn rotate(self, rot: isize) -> Result<(), Error> {
         protect(|| unsafe { Value::new(rb_ary_rotate(self.as_rb_value(), rot as c_long)) })?;
@@ -936,12 +1029,16 @@ impl RArray {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, RArray};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{rb_assert, Error, Ruby};
     ///
-    /// let ary = RArray::from_vec::<i64>(vec![2, 1, 3]);
-    /// ary.sort().unwrap();
-    /// rb_assert!("ary == [1, 2, 3]", ary);
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let ary = ruby.ary_from_vec::<i64>(vec![2, 1, 3]);
+    ///     ary.sort()?;
+    ///     rb_assert!(ruby, "ary == [1, 2, 3]", ary);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn sort(self) -> Result<(), Error> {
         protect(|| unsafe { Value::new(rb_ary_sort_bang(self.as_rb_value())) })?;
@@ -991,16 +1088,20 @@ impl RArray {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, rb_assert, RArray};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{rb_assert, Error, RArray, Ruby};
     ///
-    /// let ary: RArray = eval("[1, 2, 3, 4, 5]").unwrap();
-    /// // must not call any Ruby api that may modify ary while we have a
-    /// // refrence to the return value of ::from_slice()
-    /// unsafe {
-    ///     let middle = RArray::from_slice(&ary.as_slice()[1..4]);
-    ///     rb_assert!("middle == [2, 3, 4]", middle);
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let ary: RArray = ruby.eval("[1, 2, 3, 4, 5]")?;
+    ///     // must not call any Ruby api that may modify ary while we have a
+    ///     // refrence to the return value of ::from_slice()
+    ///     unsafe {
+    ///         let middle = ruby.ary_new_from_values(&ary.as_slice()[1..4]);
+    ///         rb_assert!(ruby, "middle == [2, 3, 4]", middle);
+    ///     }
+    ///
+    ///     Ok(())
     /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub unsafe fn as_slice(&self) -> &[Value] {
         self.as_slice_unconstrained()
@@ -1026,11 +1127,15 @@ impl RArray {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, RArray};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, RArray, Ruby};
     ///
-    /// let ary: RArray = eval("[1, 2, 3]").unwrap();
-    /// assert_eq!(ary.to_vec::<i64>().unwrap(), vec![1, 2, 3]);
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let ary: RArray = ruby.eval("[1, 2, 3]")?;
+    ///     assert_eq!(ary.to_vec::<i64>()?, vec![1, 2, 3]);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn to_vec<T>(self) -> Result<Vec<T>, Error>
     where
@@ -1046,13 +1151,17 @@ impl RArray {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, RArray};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, RArray, Ruby};
     ///
-    /// let ary: RArray = eval("[1, 2, 3]").unwrap();
-    /// assert!(ary.to_value_array::<3>().is_ok());
-    /// assert!(ary.to_value_array::<2>().is_err());
-    /// assert!(ary.to_value_array::<4>().is_err());
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let ary: RArray = ruby.eval("[1, 2, 3]")?;
+    ///     assert!(ary.to_value_array::<3>().is_ok());
+    ///     assert!(ary.to_value_array::<2>().is_err());
+    ///     assert!(ary.to_value_array::<4>().is_err());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn to_value_array<const N: usize>(self) -> Result<[Value; N], Error> {
         unsafe {
@@ -1073,13 +1182,17 @@ impl RArray {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, RArray};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, RArray, Ruby};
     ///
-    /// let ary: RArray = eval("[1, 2, 3]").unwrap();
-    /// assert_eq!(ary.to_array::<i64, 3>().unwrap(), [1, 2, 3]);
-    /// assert!(ary.to_array::<i64, 2>().is_err());
-    /// assert!(ary.to_array::<i64, 4>().is_err());
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let ary: RArray = ruby.eval("[1, 2, 3]")?;
+    ///     assert_eq!(ary.to_array::<i64, 3>()?, [1, 2, 3]);
+    ///     assert!(ary.to_array::<i64, 2>().is_err());
+    ///     assert!(ary.to_array::<i64, 4>().is_err());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn to_array<T, const N: usize>(self) -> Result<[T; N], Error>
     where
@@ -1109,15 +1222,19 @@ impl RArray {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, value::qnil, Integer, RArray, Symbol};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{prelude::*, Error, Ruby};
     ///
-    /// let ary = RArray::from_slice(&[
-    ///     Symbol::new("a").as_value(),
-    ///     Integer::from_i64(1).as_value(),
-    ///     qnil().as_value(),
-    /// ]);
-    /// assert_eq!(ary.join(", ").unwrap().to_string().unwrap(), "a, 1, ")
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let ary = ruby.ary_new_from_values(&[
+    ///         ruby.to_symbol("a").as_value(),
+    ///         ruby.integer_from_i64(1).as_value(),
+    ///         ruby.qnil().as_value(),
+    ///     ]);
+    ///     assert_eq!(ary.join(", ").unwrap().to_string().unwrap(), "a, 1, ");
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn join<T>(self, sep: T) -> Result<RString, Error>
     where
@@ -1138,23 +1255,24 @@ impl RArray {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, RArray};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, RArray, Ruby};
     ///
-    /// let ary: RArray = eval(r#"["a", "b", "c"]"#).unwrap();
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let ary: RArray = ruby.eval(r#"["a", "b", "c"]"#)?;
     ///
-    /// assert_eq!(ary.entry::<String>(0).unwrap(), String::from("a"));
-    /// assert_eq!(ary.entry::<char>(0).unwrap(), 'a');
-    /// assert_eq!(
-    ///     ary.entry::<Option<String>>(0).unwrap(),
-    ///     Some(String::from("a"))
-    /// );
-    /// assert_eq!(ary.entry::<String>(1).unwrap(), String::from("b"));
-    /// assert_eq!(ary.entry::<String>(-1).unwrap(), String::from("c"));
-    /// assert_eq!(ary.entry::<Option<String>>(3).unwrap(), None);
+    ///     assert_eq!(ary.entry::<String>(0)?, String::from("a"));
+    ///     assert_eq!(ary.entry::<char>(0)?, 'a');
+    ///     assert_eq!(ary.entry::<Option<String>>(0)?, Some(String::from("a")));
+    ///     assert_eq!(ary.entry::<String>(1)?, String::from("b"));
+    ///     assert_eq!(ary.entry::<String>(-1)?, String::from("c"));
+    ///     assert_eq!(ary.entry::<Option<String>>(3)?, None);
     ///
-    /// assert!(ary.entry::<i64>(0).is_err());
-    /// assert!(ary.entry::<String>(3).is_err());
+    ///     assert!(ary.entry::<i64>(0).is_err());
+    ///     assert!(ary.entry::<String>(3).is_err());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn entry<T>(self, offset: isize) -> Result<T, Error>
     where
@@ -1178,15 +1296,23 @@ impl RArray {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, RArray, Symbol};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{rb_assert, Error, Ruby};
     ///
-    /// let ary = RArray::from_slice(&[Symbol::new("a"), Symbol::new("b"), Symbol::new("c")]);
-    /// ary.store(0, Symbol::new("d")).unwrap();
-    /// ary.store(5, Symbol::new("e")).unwrap();
-    /// ary.store(6, Symbol::new("f")).unwrap();
-    /// ary.store(-1, Symbol::new("g")).unwrap();
-    /// rb_assert!("ary == [:d, :b, :c, nil, nil, :e, :g]", ary);
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let ary = ruby.ary_new_from_values(&[
+    ///         ruby.to_symbol("a"),
+    ///         ruby.to_symbol("b"),
+    ///         ruby.to_symbol("c"),
+    ///     ]);
+    ///     ary.store(0, ruby.to_symbol("d"))?;
+    ///     ary.store(5, ruby.to_symbol("e"))?;
+    ///     ary.store(6, ruby.to_symbol("f"))?;
+    ///     ary.store(-1, ruby.to_symbol("g"))?;
+    ///     rb_assert!(ruby, "ary == [:d, :b, :c, nil, nil, :e, :g]", ary);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn store<T>(self, offset: isize, val: T) -> Result<(), Error>
     where
@@ -1238,17 +1364,21 @@ impl RArray {
     /// # Examples
     ///
     /// ```
-    /// use magnus::RArray;
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, Ruby};
     ///
-    /// let ary = RArray::from_vec((0..256).collect());
-    /// let copy = RArray::new();
-    /// copy.replace(ary).unwrap();
-    /// assert!(ary.is_shared(copy));
-    /// assert!(copy.is_shared(ary));
-    /// copy.push(11).unwrap();
-    /// assert!(!ary.is_shared(copy));
-    /// assert!(!copy.is_shared(ary));
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let ary = ruby.ary_from_vec((0..256).collect());
+    ///     let copy = ruby.ary_new();
+    ///     copy.replace(ary)?;
+    ///     assert!(ary.is_shared(copy));
+    ///     assert!(copy.is_shared(ary));
+    ///     copy.push(11)?;
+    ///     assert!(!ary.is_shared(copy));
+    ///     assert!(!copy.is_shared(ary));
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn is_shared(self, other: Self) -> bool {
         unsafe {
@@ -1274,15 +1404,19 @@ impl RArray {
     /// # Examples
     ///
     /// ```
-    /// use magnus::RArray;
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, Ruby};
     ///
-    /// let ary = RArray::from_vec((0..256).collect());
-    /// let copy = RArray::new();
-    /// copy.replace(ary).unwrap();
-    /// assert!(copy.is_shared(ary));
-    /// copy.push(11).unwrap();
-    /// assert!(!copy.is_shared(ary));
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let ary = ruby.ary_from_vec((0..256).collect());
+    ///     let copy = ruby.ary_new();
+    ///     copy.replace(ary)?;
+    ///     assert!(copy.is_shared(ary));
+    ///     copy.push(11)?;
+    ///     assert!(!copy.is_shared(ary));
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn replace(self, from: Self) -> Result<(), Error> {
         protect(|| unsafe { Value::new(rb_ary_replace(self.as_rb_value(), from.as_rb_value())) })?;
@@ -1297,14 +1431,18 @@ impl RArray {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, RArray};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{rb_assert, Error, Ruby};
     ///
-    /// let ary = RArray::from_vec(vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
-    /// let a = ary.subseq(0, 5).unwrap();
-    /// let b = ary.subseq(5, 5).unwrap();
-    /// rb_assert!("a == [1, 2, 3, 4, 5]", a);
-    /// rb_assert!("b == [6, 7, 8, 9, 10]", b);
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let ary = ruby.ary_from_vec(vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+    ///     let a = ary.subseq(0, 5).unwrap();
+    ///     let b = ary.subseq(5, 5).unwrap();
+    ///     rb_assert!(ruby, "a == [1, 2, 3, 4, 5]", a);
+    ///     rb_assert!(ruby, "b == [6, 7, 8, 9, 10]", b);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     // TODO maybe take a range instead of offset and length
     pub fn subseq(self, offset: usize, length: usize) -> Option<Self> {
@@ -1327,15 +1465,19 @@ impl RArray {
     /// # Examples
     ///
     /// ```
-    /// use magnus::RArray;
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, Ruby};
     ///
-    /// let ary = RArray::from_vec(vec![("foo", 1), ("bar", 2), ("baz", 3), ("baz", 4)]);
-    /// assert_eq!(
-    ///     ary.assoc::<_, (String, i64)>("baz").unwrap(),
-    ///     (String::from("baz"), 3)
-    /// );
-    /// assert_eq!(ary.assoc::<_, Option<(String, i64)>>("quz").unwrap(), None);
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let ary = ruby.ary_from_vec(vec![("foo", 1), ("bar", 2), ("baz", 3), ("baz", 4)]);
+    ///     assert_eq!(
+    ///         ary.assoc::<_, (String, i64)>("baz")?,
+    ///         (String::from("baz"), 3)
+    ///     );
+    ///     assert_eq!(ary.assoc::<_, Option<(String, i64)>>("quz")?, None);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn assoc<K, T>(self, key: K) -> Result<T, Error>
     where
@@ -1356,15 +1498,16 @@ impl RArray {
     /// # Examples
     ///
     /// ```
-    /// use magnus::RArray;
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, Ruby};
     ///
-    /// let ary = RArray::from_vec(vec![("foo", 1), ("bar", 2), ("baz", 3), ("qux", 3)]);
-    /// assert_eq!(
-    ///     ary.rassoc::<_, (String, i64)>(3).unwrap(),
-    ///     (String::from("baz"), 3)
-    /// );
-    /// assert_eq!(ary.rassoc::<_, Option<(String, i64)>>(4).unwrap(), None);
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let ary = ruby.ary_from_vec(vec![("foo", 1), ("bar", 2), ("baz", 3), ("qux", 3)]);
+    ///     assert_eq!(ary.rassoc::<_, (String, i64)>(3)?, (String::from("baz"), 3));
+    ///     assert_eq!(ary.rassoc::<_, Option<(String, i64)>>(4)?, None);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn rassoc<K, T>(self, value: K) -> Result<T, Error>
     where
@@ -1388,22 +1531,26 @@ impl RArray {
     /// ```
     /// use std::cmp::Ordering;
     ///
-    /// use magnus::RArray;
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, Ruby};
     ///
-    /// let a = RArray::from_vec(vec![1, 2, 3]);
-    /// let b = RArray::from_vec(vec![1, 2, 3]);
-    /// assert_eq!(a.cmp(b).unwrap(), Some(Ordering::Equal));
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let a = ruby.ary_from_vec(vec![1, 2, 3]);
+    ///     let b = ruby.ary_from_vec(vec![1, 2, 3]);
+    ///     assert_eq!(a.cmp(b)?, Some(Ordering::Equal));
     ///
-    /// let c = RArray::from_vec(vec![1, 2, 0]);
-    /// assert_eq!(a.cmp(c).unwrap(), Some(Ordering::Greater));
+    ///     let c = ruby.ary_from_vec(vec![1, 2, 0]);
+    ///     assert_eq!(a.cmp(c)?, Some(Ordering::Greater));
     ///
-    /// let d = RArray::from_vec(vec![1, 2, 4]);
-    /// assert_eq!(a.cmp(d).unwrap(), Some(Ordering::Less));
+    ///     let d = ruby.ary_from_vec(vec![1, 2, 4]);
+    ///     assert_eq!(a.cmp(d)?, Some(Ordering::Less));
     ///
-    /// let e = RArray::from_vec(vec![1, 2]);
-    /// e.push(()).unwrap();
-    /// assert_eq!(a.cmp(e).unwrap(), None);
+    ///     let e = ruby.ary_from_vec(vec![1, 2]);
+    ///     e.push(())?;
+    ///     assert_eq!(a.cmp(e)?, None);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     ///
     /// Note that `std::cmp::Ordering` can be cast to `i{8,16,32,64,size}` to
