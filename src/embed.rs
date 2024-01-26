@@ -11,7 +11,8 @@ use std::{
 #[cfg(windows)]
 use rb_sys::rb_w32_sysinit;
 use rb_sys::{
-    ruby_cleanup, ruby_exec_node, ruby_process_options, ruby_set_script_name, ruby_setup,
+    ruby_cleanup, ruby_exec_node, ruby_init_stack, ruby_process_options, ruby_set_script_name,
+    ruby_setup, VALUE,
 };
 
 use crate::{
@@ -75,6 +76,10 @@ impl Deref for Cleanup {
 #[inline(always)]
 pub unsafe fn setup() -> Cleanup {
     static INIT: AtomicBool = AtomicBool::new(false);
+
+    let mut variable_in_this_stack_frame: VALUE = 0;
+    ruby_init_stack(&mut variable_in_this_stack_frame as *mut VALUE as *mut _);
+
     match INIT.compare_exchange(false, true, Ordering::SeqCst, Ordering::SeqCst) {
         Ok(false) => {
             #[cfg(windows)]
