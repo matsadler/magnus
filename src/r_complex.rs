@@ -56,11 +56,15 @@ impl RComplex {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{Integer, RComplex};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, RComplex, Ruby};
     ///
-    /// let complex = RComplex::new(Integer::from_i64(2), Integer::from_i64(1));
-    /// assert_eq!(complex.to_string(), "2+1i");
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let complex = RComplex::new(ruby.integer_from_i64(2), ruby.integer_from_i64(1));
+    ///     assert_eq!(complex.to_string(), "2+1i");
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn new<T, U>(real: T, imag: U) -> RComplex
     where
@@ -80,14 +84,18 @@ impl RComplex {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{Integer, RComplex};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, RComplex, Ruby};
     ///
-    /// let complex = RComplex::polar(Integer::from_i64(2), Integer::from_i64(3)).unwrap();
-    /// assert_eq!(
-    ///     complex.to_string(),
-    ///     "-1.9799849932008908+0.2822400161197344i"
-    /// );
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let complex = RComplex::polar(ruby.integer_from_i64(2), ruby.integer_from_i64(3))?;
+    ///     assert_eq!(
+    ///         complex.to_string(),
+    ///         "-1.9799849932008908+0.2822400161197344i"
+    ///     );
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn polar<T, U>(real: T, imag: U) -> Result<RComplex, Error>
     where
@@ -107,11 +115,15 @@ impl RComplex {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{Integer, RComplex};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, RComplex, Ruby};
     ///
-    /// let complex = RComplex::new(Integer::from_i64(9), Integer::from_i64(-4));
-    /// assert_eq!(complex.real::<i64>().unwrap(), 9);
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let complex = RComplex::new(ruby.integer_from_i64(9), ruby.integer_from_i64(-4));
+    ///     assert_eq!(complex.real::<i64>()?, 9);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn real<T>(self) -> Result<T, Error>
     where
@@ -126,11 +138,15 @@ impl RComplex {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{Integer, RComplex};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, RComplex, Ruby};
     ///
-    /// let complex = RComplex::new(Integer::from_i64(9), Integer::from_i64(-4));
-    /// assert_eq!(complex.imag::<i64>().unwrap(), -4);
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let complex = RComplex::new(ruby.integer_from_i64(9), ruby.integer_from_i64(-4));
+    ///     assert_eq!(complex.imag::<i64>()?, -4);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn imag<T>(self) -> Result<T, Error>
     where
@@ -145,11 +161,15 @@ impl RComplex {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{Integer, RComplex};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, RComplex, Ruby};
     ///
-    /// let complex = RComplex::new(Integer::from_i64(1), Integer::from_i64(2));
-    /// assert_eq!(complex.conjugate().to_string(), "1-2i");
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let complex = RComplex::new(ruby.integer_from_i64(1), ruby.integer_from_i64(2));
+    ///     assert_eq!(complex.conjugate().to_string(), "1-2i");
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn conjugate(self) -> Self {
         unsafe { Self::from_rb_value_unchecked(rb_complex_conjugate(self.as_rb_value())) }
@@ -160,11 +180,15 @@ impl RComplex {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{Integer, RComplex};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, RComplex, Ruby};
     ///
-    /// let complex = RComplex::new(Integer::from_i64(3), Integer::from_i64(-4));
-    /// assert_eq!(complex.abs(), 5.0);
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let complex = RComplex::new(ruby.integer_from_i64(3), ruby.integer_from_i64(-4));
+    ///     assert_eq!(complex.abs(), 5.0);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn abs(self) -> f64 {
         unsafe { Float::from_rb_value_unchecked(rb_complex_abs(self.as_rb_value())).to_f64() }
@@ -177,11 +201,15 @@ impl RComplex {
     /// ```
     /// use std::f64::consts::PI;
     ///
-    /// use magnus::{Float, Integer, RComplex};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, RComplex, Ruby};
     ///
-    /// let complex = RComplex::polar(Integer::from_i64(3), Float::from_f64(PI / 2.0)).unwrap();
-    /// assert_eq!(complex.arg(), 1.5707963267948966);
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let complex = RComplex::polar(ruby.integer_from_i64(3), ruby.float_from_f64(PI / 2.0))?;
+    ///     assert_eq!(complex.arg(), 1.5707963267948966);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn arg(self) -> f64 {
         unsafe { Float::from_rb_value_unchecked(rb_complex_arg(self.as_rb_value())).to_f64() }
