@@ -404,14 +404,18 @@ impl RBignum {
     /// # Examples
     ///
     /// ```
-    /// use magnus::RBignum;
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, Ruby};
     ///
-    /// let num = RBignum::from_u64(4611686018427387904).unwrap();
-    /// assert!(num.is_positive());
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let num = ruby.bignum_from_u64(4611686018427387904).unwrap();
+    ///     assert!(num.is_positive());
     ///
-    /// let num = RBignum::from_i64(-4611686018427387905).unwrap();
-    /// assert!(!num.is_positive());
+    ///     let num = ruby.bignum_from_i64(-4611686018427387905).unwrap();
+    ///     assert!(!num.is_positive());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn is_positive(self) -> bool {
         debug_assert_value!(self);
@@ -426,14 +430,18 @@ impl RBignum {
     /// # Examples
     ///
     /// ```
-    /// use magnus::RBignum;
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, Ruby};
     ///
-    /// let num = RBignum::from_i64(-4611686018427387905).unwrap();
-    /// assert!(num.is_negative());
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let num = ruby.bignum_from_i64(-4611686018427387905).unwrap();
+    ///     assert!(num.is_negative());
     ///
-    /// let num = RBignum::from_u64(4611686018427387904).unwrap();
-    /// assert!(!num.is_negative());
+    ///     let num = ruby.bignum_from_u64(4611686018427387904).unwrap();
+    ///     assert!(!num.is_negative());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn is_negative(self) -> bool {
         !self.is_positive()
