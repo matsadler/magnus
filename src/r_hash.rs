@@ -330,12 +330,16 @@ impl RHash {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, RHash};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{rb_assert, Error, Ruby};
     ///
-    /// let hash = RHash::new();
-    /// hash.aset("answer", 42).unwrap();
-    /// rb_assert!(r#"hash == {"answer" => 42}"#, hash);
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let hash = ruby.hash_new();
+    ///     hash.aset("answer", 42)?;
+    ///     rb_assert!(ruby, r#"hash == {"answer" => 42}"#, hash);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn aset<K, V>(self, key: K, val: V) -> Result<(), Error>
     where
@@ -362,21 +366,26 @@ impl RHash {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, rb_assert, RHash, RString, Symbol};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{prelude::*, rb_assert, Error, Ruby};
     ///
-    /// let hash = RHash::new();
-    /// hash.bulk_insert(&[
-    ///     Symbol::new("given_name").as_value(),
-    ///     RString::new("Arthur").as_value(),
-    ///     Symbol::new("family_name").as_value(),
-    ///     RString::new("Dent").as_value(),
-    /// ])
-    /// .unwrap();
-    /// rb_assert!(
-    ///     r#"hash == {given_name: "Arthur", family_name: "Dent"}"#,
-    ///     hash,
-    /// );
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let hash = ruby.hash_new();
+    ///     hash.bulk_insert(&[
+    ///         ruby.to_symbol("given_name").as_value(),
+    ///         ruby.str_new("Arthur").as_value(),
+    ///         ruby.to_symbol("family_name").as_value(),
+    ///         ruby.str_new("Dent").as_value(),
+    ///     ])
+    ///     .unwrap();
+    ///     rb_assert!(
+    ///         ruby,
+    ///         r#"hash == {given_name: "Arthur", family_name: "Dent"}"#,
+    ///         hash,
+    ///     );
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn bulk_insert<T>(self, slice: &[T]) -> Result<(), Error>
     where
@@ -395,18 +404,22 @@ impl RHash {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, rb_assert, RHash};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{rb_assert, Error, RHash, Ruby};
     ///
-    /// let a: RHash = eval("{a: 1, b: 2}").unwrap();
-    /// let b: RHash = eval("{b: 3, c: 4}").unwrap();
-    /// a.update(b).unwrap();
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let a: RHash = ruby.eval("{a: 1, b: 2}")?;
+    ///     let b: RHash = ruby.eval("{b: 3, c: 4}")?;
+    ///     a.update(b)?;
     ///
-    /// // a is mutated, in case of conflicts b wins
-    /// rb_assert!("a == {a: 1, b: 3, c: 4}", a);
+    ///     // a is mutated, in case of conflicts b wins
+    ///     rb_assert!(ruby, "a == {a: 1, b: 3, c: 4}", a);
     ///
-    /// // b is unmodified
-    /// rb_assert!("b == {b: 3, c: 4}", b);
+    ///     // b is unmodified
+    ///     rb_assert!(ruby, "b == {b: 3, c: 4}", b);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     //
     // Implementation note: `rb_hash_update_by` takes a third optional argument,
@@ -430,32 +443,39 @@ impl RHash {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{value::Qnil, RHash};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{value::Qnil, Error, Ruby};
     ///
-    /// let hash = RHash::new();
-    /// hash.aset("answer", 42).unwrap();
-    /// assert_eq!(hash.aref::<_, i64>("answer").unwrap(), 42);
-    /// assert!(hash.aref::<_, Qnil>("missing").is_ok());
-    /// assert_eq!(hash.aref::<_, Option<i64>>("answer").unwrap(), Some(42));
-    /// assert_eq!(hash.aref::<_, Option<i64>>("missing").unwrap(), None);
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let hash = ruby.hash_new();
+    ///     hash.aset("answer", 42)?;
+    ///     assert_eq!(hash.aref::<_, i64>("answer")?, 42);
+    ///     assert!(hash.aref::<_, Qnil>("missing").is_ok());
+    ///     assert_eq!(hash.aref::<_, Option<i64>>("answer")?, Some(42));
+    ///     assert_eq!(hash.aref::<_, Option<i64>>("missing")?, None);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     ///
     /// ```
-    /// use magnus::{eval, RHash};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, RHash, Ruby};
     ///
-    /// let hash: RHash = eval(
-    ///     r#"
-    ///       hash = {"answer" => 42}
-    ///       hash.default = 0
-    ///       hash
-    ///     "#,
-    /// )
-    /// .unwrap();
-    /// assert_eq!(hash.aref::<_, i64>("answer").unwrap(), 42);
-    /// assert_eq!(hash.aref::<_, i64>("missing").unwrap(), 0);
-    /// assert_eq!(hash.aref::<_, i64>(()).unwrap(), 0);
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let hash: RHash = ruby.eval(
+    ///         r#"
+    ///             hash = {"answer" => 42}
+    ///             hash.default = 0
+    ///             hash
+    ///         "#,
+    ///     )?;
+    ///     assert_eq!(hash.aref::<_, i64>("answer")?, 42);
+    ///     assert_eq!(hash.aref::<_, i64>("missing")?, 0);
+    ///     assert_eq!(hash.aref::<_, i64>(())?, 0);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn aref<T, U>(self, key: T) -> Result<U, Error>
     where
@@ -476,21 +496,24 @@ impl RHash {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, value::Qnil, RHash};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{value::Qnil, Error, RHash, Ruby};
     ///
-    /// let hash: RHash = eval(
-    ///     r#"
-    ///       hash = {"answer" => 42}
-    ///       hash.default = 0
-    ///       hash
-    ///     "#,
-    /// )
-    /// .unwrap();
-    /// assert_eq!(hash.lookup::<_, i64>("answer").unwrap(), 42);
-    /// assert!(hash.lookup::<_, Qnil>("missing").is_ok());
-    /// assert_eq!(hash.lookup::<_, Option<i64>>("answer").unwrap(), Some(42));
-    /// assert_eq!(hash.lookup::<_, Option<i64>>("missing").unwrap(), None);
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let hash: RHash = ruby.eval(
+    ///         r#"
+    ///             hash = {"answer" => 42}
+    ///             hash.default = 0
+    ///             hash
+    ///         "#,
+    ///     )?;
+    ///     assert_eq!(hash.lookup::<_, i64>("answer")?, 42);
+    ///     assert!(hash.lookup::<_, Qnil>("missing").is_ok());
+    ///     assert_eq!(hash.lookup::<_, Option<i64>>("answer")?, Some(42));
+    ///     assert_eq!(hash.lookup::<_, Option<i64>>("missing")?, None);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn lookup<T, U>(self, key: T) -> Result<U, Error>
     where
@@ -511,27 +534,24 @@ impl RHash {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, RHash};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, RHash, Ruby};
     ///
-    /// let hash: RHash = eval(
-    ///     r#"
-    ///       hash = {"foo" => 1, "bar" => nil}
-    ///       hash.default = 0
-    ///       hash
-    ///     "#,
-    /// )
-    /// .unwrap();
-    /// assert_eq!(hash.lookup2::<_, _, i64>("foo", -1).unwrap(), 1);
-    /// assert_eq!(
-    ///     hash.lookup2::<_, _, Option<i64>>("foo", -1).unwrap(),
-    ///     Some(1)
-    /// );
-    /// assert_eq!(hash.lookup2::<_, _, Option<i64>>("bar", -1).unwrap(), None);
-    /// assert_eq!(
-    ///     hash.lookup2::<_, _, Option<i64>>("baz", -1).unwrap(),
-    ///     Some(-1)
-    /// );
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let hash: RHash = ruby.eval(
+    ///         r#"
+    ///             hash = {"foo" => 1, "bar" => nil}
+    ///             hash.default = 0
+    ///             hash
+    ///         "#,
+    ///     )?;
+    ///     assert_eq!(hash.lookup2::<_, _, i64>("foo", -1)?, 1);
+    ///     assert_eq!(hash.lookup2::<_, _, Option<i64>>("foo", -1)?, Some(1));
+    ///     assert_eq!(hash.lookup2::<_, _, Option<i64>>("bar", -1)?, None);
+    ///     assert_eq!(hash.lookup2::<_, _, Option<i64>>("baz", -1)?, Some(-1));
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn lookup2<T, U, V>(self, key: T, default: U) -> Result<V, Error>
     where
@@ -565,13 +585,17 @@ impl RHash {
     /// # Examples
     ///
     /// ```
-    /// use magnus::RHash;
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, Ruby};
     ///
-    /// let hash = RHash::new();
-    /// hash.aset("answer", 42).unwrap();
-    /// assert!(hash.get("answer").is_some());
-    /// assert!(hash.get("missing").is_none());
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let hash = ruby.hash_new();
+    ///     hash.aset("answer", 42)?;
+    ///     assert!(hash.get("answer").is_some());
+    ///     assert!(hash.get("missing").is_none());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn get<T>(self, key: T) -> Option<Value>
     where
@@ -598,21 +622,24 @@ impl RHash {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, RHash};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, RHash, Ruby};
     ///
-    /// let hash: RHash = eval(
-    ///     r#"
-    ///       hash = {"answer" => 42}
-    ///       hash.default = 0
-    ///       hash
-    ///     "#,
-    /// )
-    /// .unwrap();
-    /// assert_eq!(hash.fetch::<_, i64>("answer").unwrap(), 42);
-    /// assert!(hash.fetch::<_, i64>("missing").is_err());
-    /// assert_eq!(hash.fetch::<_, Option<i64>>("answer").unwrap(), Some(42));
-    /// assert!(hash.fetch::<_, Option<i64>>("missing").is_err());
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let hash: RHash = ruby.eval(
+    ///         r#"
+    ///             hash = {"answer" => 42}
+    ///             hash.default = 0
+    ///             hash
+    ///         "#,
+    ///     )?;
+    ///     assert_eq!(hash.fetch::<_, i64>("answer")?, 42);
+    ///     assert!(hash.fetch::<_, i64>("missing").is_err());
+    ///     assert_eq!(hash.fetch::<_, Option<i64>>("answer")?, Some(42));
+    ///     assert!(hash.fetch::<_, Option<i64>>("missing").is_err());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn fetch<T, U>(self, key: T) -> Result<U, Error>
     where
@@ -632,12 +659,16 @@ impl RHash {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, value::Qnil, RHash};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{value::Qnil, Error, RHash, Ruby};
     ///
-    /// let hash: RHash = eval(r#"hash = {"answer" => 42}"#).unwrap();
-    /// assert_eq!(hash.delete::<_, i64>("answer").unwrap(), 42);
-    /// assert!(hash.delete::<_, Qnil>("answer").is_ok());
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let hash: RHash = ruby.eval(r#"hash = {"answer" => 42}"#)?;
+    ///     assert_eq!(hash.delete::<_, i64>("answer")?, 42);
+    ///     assert!(hash.delete::<_, Qnil>("answer").is_ok());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn delete<T, U>(self, key: T) -> Result<U, Error>
     where
@@ -656,13 +687,17 @@ impl RHash {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, RHash};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, RHash, Ruby};
     ///
-    /// let hash: RHash = eval(r#"{"answer" => 42}"#).unwrap();
-    /// assert!(!hash.is_empty());
-    /// hash.clear().unwrap();
-    /// assert!(hash.is_empty());
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let hash: RHash = ruby.eval(r#"{"answer" => 42}"#)?;
+    ///     assert!(!hash.is_empty());
+    ///     hash.clear()?;
+    ///     assert!(hash.is_empty());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn clear(self) -> Result<(), Error> {
         protect(|| unsafe { Value::new(rb_hash_clear(self.as_rb_value())) })?;
@@ -681,21 +716,24 @@ impl RHash {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, r_hash::ForEach, RHash};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{r_hash::ForEach, Error, RHash, Ruby};
     ///
-    /// let hash: RHash = eval(r#"{"foo" => 1, "bar" => 2, "baz" => 4, "qux" => 8}"#).unwrap();
-    /// let mut found = None;
-    /// hash.foreach(|key: String, value: i64| {
-    ///     if value > 3 {
-    ///         found = Some(key);
-    ///         Ok(ForEach::Stop)
-    ///     } else {
-    ///         Ok(ForEach::Continue)
-    ///     }
-    /// })
-    /// .unwrap();
-    /// assert_eq!(found, Some(String::from("baz")));
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let hash: RHash = ruby.eval(r#"{"foo" => 1, "bar" => 2, "baz" => 4, "qux" => 8}"#)?;
+    ///     let mut found = None;
+    ///     hash.foreach(|key: String, value: i64| {
+    ///         if value > 3 {
+    ///             found = Some(key);
+    ///             Ok(ForEach::Stop)
+    ///         } else {
+    ///             Ok(ForEach::Continue)
+    ///         }
+    ///     })?;
+    ///     assert_eq!(found, Some(String::from("baz")));
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn foreach<F, K, V>(self, mut func: F) -> Result<(), Error>
     where
@@ -739,13 +777,17 @@ impl RHash {
     /// ```
     /// use std::collections::HashMap;
     ///
-    /// use magnus::{eval, RHash};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, RHash, Ruby};
     ///
-    /// let r_hash: RHash = eval(r#"{"answer" => 42}"#).unwrap();
-    /// let mut hash_map = HashMap::new();
-    /// hash_map.insert(String::from("answer"), 42);
-    /// assert_eq!(r_hash.to_hash_map().unwrap(), hash_map);
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let r_hash: RHash = ruby.eval(r#"{"answer" => 42}"#)?;
+    ///     let mut hash_map = HashMap::new();
+    ///     hash_map.insert(String::from("answer"), 42);
+    ///     assert_eq!(r_hash.to_hash_map()?, hash_map);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn to_hash_map<K, V>(self) -> Result<HashMap<K, V>, Error>
     where
@@ -773,11 +815,15 @@ impl RHash {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, RHash};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, RHash, Ruby};
     ///
-    /// let r_hash: RHash = eval(r#"{"answer" => 42}"#).unwrap();
-    /// assert_eq!(r_hash.to_vec().unwrap(), vec![(String::from("answer"), 42)]);
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let r_hash: RHash = ruby.eval(r#"{"answer" => 42}"#)?;
+    ///     assert_eq!(r_hash.to_vec()?, vec![(String::from("answer"), 42)]);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn to_vec<K, V>(self) -> Result<Vec<(K, V)>, Error>
     where
@@ -797,11 +843,15 @@ impl RHash {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, RHash};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, RHash, Ruby};
     ///
-    /// let hash: RHash = eval(r#"{"foo" => 1, "bar" => 2, "baz" => 4}"#).unwrap();
-    /// assert_eq!(hash.size().to_i64(), 3);
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let hash: RHash = ruby.eval(r#"{"foo" => 1, "bar" => 2, "baz" => 4}"#)?;
+    ///     assert_eq!(hash.size().to_i64(), 3);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn size(self) -> Fixnum {
         unsafe { Fixnum::from_rb_value_unchecked(rb_hash_size(self.as_rb_value())) }
@@ -812,11 +862,15 @@ impl RHash {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, RHash};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, RHash, Ruby};
     ///
-    /// let hash: RHash = eval(r#"{"foo" => 1, "bar" => 2, "baz" => 4}"#).unwrap();
-    /// assert_eq!(hash.len(), 3);
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let hash: RHash = ruby.eval(r#"{"foo" => 1, "bar" => 2, "baz" => 4}"#)?;
+    ///     assert_eq!(hash.len(), 3);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn len(self) -> usize {
         unsafe { rb_hash_size_num(self.as_rb_value()) as usize }
@@ -827,13 +881,17 @@ impl RHash {
     /// # Examples
     ///
     /// ```
-    /// use magnus::RHash;
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, Ruby};
     ///
-    /// let hash = RHash::new();
-    /// assert!(hash.is_empty());
-    /// hash.aset("answer", 42).unwrap();
-    /// assert!(!hash.is_empty());
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let hash = ruby.hash_new();
+    ///     assert!(hash.is_empty());
+    ///     hash.aset("answer", 42)?;
+    ///     assert!(!hash.is_empty());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn is_empty(self) -> bool {
         self.len() == 0
