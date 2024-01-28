@@ -119,11 +119,15 @@ impl RRational {
     /// ```
     /// use std::num::NonZeroI64;
     ///
-    /// use magnus::RRational;
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, Ruby};
     ///
-    /// let rational = RRational::new(6, NonZeroI64::new(9).unwrap());
-    /// assert_eq!(rational.num().to_i64().unwrap(), 2);
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let rational = ruby.rational_new(6, NonZeroI64::new(9).unwrap());
+    ///     assert_eq!(rational.num().to_i64()?, 2);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn num(self) -> Integer {
         unsafe { Integer::from_rb_value_unchecked(rb_rational_num(self.as_rb_value())) }
@@ -136,11 +140,15 @@ impl RRational {
     /// ```
     /// use std::num::NonZeroI64;
     ///
-    /// use magnus::RRational;
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, Ruby};
     ///
-    /// let rational = RRational::new(6, NonZeroI64::new(9).unwrap());
-    /// assert_eq!(rational.den().to_i64().unwrap(), 3);
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let rational = ruby.rational_new(6, NonZeroI64::new(9).unwrap());
+    ///     assert_eq!(rational.den().to_i64()?, 3);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn den(self) -> Integer {
         unsafe { Integer::from_rb_value_unchecked(rb_rational_den(self.as_rb_value())) }
