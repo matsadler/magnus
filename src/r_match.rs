@@ -65,22 +65,26 @@ impl RMatch {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{backref_get, RRegexp};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, Ruby};
     ///
-    /// let regexp = RRegexp::new(".([a-z])([a-z]*)([0-9])?", Default::default()).unwrap();
-    /// regexp.reg_match("ex").unwrap();
-    /// let match_data = backref_get().unwrap();
-    /// // 0th group is the whole match
-    /// assert_eq!(match_data.nth_defined(0), Some(true));
-    /// // the `([a-z])` group
-    /// assert_eq!(match_data.nth_defined(1), Some(true));
-    /// // the `([a-z]*)` group
-    /// assert_eq!(match_data.nth_defined(2), Some(true));
-    /// // the `([0-9])?` group
-    /// assert_eq!(match_data.nth_defined(3), Some(false));
-    /// // no 4th group
-    /// assert_eq!(match_data.nth_defined(4), None);
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let regexp = ruby.reg_new(".([a-z])([a-z]*)([0-9])?", Default::default())?;
+    ///     regexp.reg_match("ex")?;
+    ///     let match_data = ruby.backref_get().unwrap();
+    ///     // 0th group is the whole match
+    ///     assert_eq!(match_data.nth_defined(0), Some(true));
+    ///     // the `([a-z])` group
+    ///     assert_eq!(match_data.nth_defined(1), Some(true));
+    ///     // the `([a-z]*)` group
+    ///     assert_eq!(match_data.nth_defined(2), Some(true));
+    ///     // the `([0-9])?` group
+    ///     assert_eq!(match_data.nth_defined(3), Some(false));
+    ///     // no 4th group
+    ///     assert_eq!(match_data.nth_defined(4), None);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn nth_defined(self, n: isize) -> Option<bool> {
         let value = unsafe { Value::new(rb_reg_nth_defined(n as c_int, self.as_rb_value())) };
@@ -94,37 +98,41 @@ impl RMatch {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{backref_get, RRegexp};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, Ruby};
     ///
-    /// let regexp = RRegexp::new(".([a-z])([a-z]*)([0-9])?", Default::default()).unwrap();
-    /// regexp.reg_match("ex").unwrap();
-    /// let match_data = backref_get().unwrap();
-    /// // 0th group is the whole match
-    /// assert_eq!(
-    ///     match_data.nth_match(0).map(|s| s.to_string().unwrap()),
-    ///     Some(String::from("ex"))
-    /// );
-    /// // the `([a-z])` group
-    /// assert_eq!(
-    ///     match_data.nth_match(1).map(|s| s.to_string().unwrap()),
-    ///     Some(String::from("x"))
-    /// );
-    /// // the `([a-z]*)` group
-    /// assert_eq!(
-    ///     match_data.nth_match(2).map(|s| s.to_string().unwrap()),
-    ///     Some(String::from(""))
-    /// );
-    /// // the `([0-9])?` group
-    /// assert_eq!(
-    ///     match_data.nth_match(3).map(|s| s.to_string().unwrap()),
-    ///     None
-    /// );
-    /// // no 4th group
-    /// assert_eq!(
-    ///     match_data.nth_match(4).map(|s| s.to_string().unwrap()),
-    ///     None
-    /// );
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let regexp = ruby.reg_new(".([a-z])([a-z]*)([0-9])?", Default::default())?;
+    ///     regexp.reg_match("ex")?;
+    ///     let match_data = ruby.backref_get().unwrap();
+    ///     // 0th group is the whole match
+    ///     assert_eq!(
+    ///         match_data.nth_match(0).map(|s| s.to_string().unwrap()),
+    ///         Some(String::from("ex"))
+    ///     );
+    ///     // the `([a-z])` group
+    ///     assert_eq!(
+    ///         match_data.nth_match(1).map(|s| s.to_string().unwrap()),
+    ///         Some(String::from("x"))
+    ///     );
+    ///     // the `([a-z]*)` group
+    ///     assert_eq!(
+    ///         match_data.nth_match(2).map(|s| s.to_string().unwrap()),
+    ///         Some(String::from(""))
+    ///     );
+    ///     // the `([0-9])?` group
+    ///     assert_eq!(
+    ///         match_data.nth_match(3).map(|s| s.to_string().unwrap()),
+    ///         None
+    ///     );
+    ///     // no 4th group
+    ///     assert_eq!(
+    ///         match_data.nth_match(4).map(|s| s.to_string().unwrap()),
+    ///         None
+    ///     );
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn nth_match(self, n: isize) -> Option<RString> {
         let value = unsafe { Value::new(rb_reg_nth_match(n as c_int, self.as_rb_value())) };
@@ -138,14 +146,18 @@ impl RMatch {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{backref_get, RRegexp};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, Ruby};
     ///
-    /// let regexp = RRegexp::new("Hello, (?<subject>.*)!", Default::default()).unwrap();
-    /// regexp.reg_match("Hello, World!").unwrap();
-    /// let match_data = backref_get().unwrap();
-    /// assert_eq!(match_data.backref_number("subject").unwrap(), 1);
-    /// assert!(match_data.backref_number("foo").is_err());
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let regexp = ruby.reg_new("Hello, (?<subject>.*)!", Default::default())?;
+    ///     regexp.reg_match("Hello, World!")?;
+    ///     let match_data = ruby.backref_get().unwrap();
+    ///     assert_eq!(match_data.backref_number("subject")?, 1);
+    ///     assert!(match_data.backref_number("foo").is_err());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn backref_number<T>(self, name: T) -> Result<usize, Error>
     where
@@ -166,14 +178,18 @@ impl RMatch {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{backref_get, RRegexp};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, Ruby};
     ///
-    /// let regexp = RRegexp::new("b(.)r", Default::default()).unwrap();
-    /// regexp.reg_match("foo bar baz").unwrap();
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let regexp = ruby.reg_new("b(.)r", Default::default())?;
+    ///     regexp.reg_match("foo bar baz")?;
     ///
-    /// let match_data = backref_get().unwrap();
-    /// assert_eq!(match_data.matched().to_string().unwrap(), "bar");
+    ///     let match_data = ruby.backref_get().unwrap();
+    ///     assert_eq!(match_data.matched().to_string()?, "bar");
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn matched(self) -> RString {
         unsafe { RString::from_rb_value_unchecked(rb_reg_last_match(self.as_rb_value())) }
@@ -184,14 +200,18 @@ impl RMatch {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{backref_get, RRegexp};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, Ruby};
     ///
-    /// let regexp = RRegexp::new("b(.)r", Default::default()).unwrap();
-    /// regexp.reg_match("foo bar baz").unwrap();
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let regexp = ruby.reg_new("b(.)r", Default::default())?;
+    ///     regexp.reg_match("foo bar baz")?;
     ///
-    /// let match_data = backref_get().unwrap();
-    /// assert_eq!(match_data.pre().to_string().unwrap(), "foo ");
+    ///     let match_data = ruby.backref_get().unwrap();
+    ///     assert_eq!(match_data.pre().to_string()?, "foo ");
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn pre(self) -> RString {
         unsafe { RString::from_rb_value_unchecked(rb_reg_match_pre(self.as_rb_value())) }
@@ -202,14 +222,18 @@ impl RMatch {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{backref_get, RRegexp};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, Ruby};
     ///
-    /// let regexp = RRegexp::new("b(.)r", Default::default()).unwrap();
-    /// regexp.reg_match("foo bar baz").unwrap();
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let regexp = ruby.reg_new("b(.)r", Default::default())?;
+    ///     regexp.reg_match("foo bar baz")?;
     ///
-    /// let match_data = backref_get().unwrap();
-    /// assert_eq!(match_data.post().to_string().unwrap(), " baz");
+    ///     let match_data = ruby.backref_get().unwrap();
+    ///     assert_eq!(match_data.post().to_string()?, " baz");
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn post(self) -> RString {
         unsafe { RString::from_rb_value_unchecked(rb_reg_match_post(self.as_rb_value())) }
@@ -222,14 +246,18 @@ impl RMatch {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{backref_get, RRegexp};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, Ruby};
     ///
-    /// let regexp = RRegexp::new("(.)oo b(.)r ba(.)", Default::default()).unwrap();
-    /// regexp.reg_match("foo bar baz").unwrap();
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let regexp = ruby.reg_new("(.)oo b(.)r ba(.)", Default::default())?;
+    ///     regexp.reg_match("foo bar baz")?;
     ///
-    /// let match_data = backref_get().unwrap();
-    /// assert_eq!(match_data.last().unwrap().to_string().unwrap(), "z");
+    ///     let match_data = ruby.backref_get().unwrap();
+    ///     assert_eq!(match_data.last().unwrap().to_string()?, "z");
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn last(self) -> Option<RString> {
         let value = unsafe { Value::new(rb_reg_match_last(self.as_rb_value())) };
