@@ -124,11 +124,15 @@ impl RRegexp {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{r_regexp::Opts, rb_assert, RRegexp, RString};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{r_regexp::Opts, rb_assert, Error, RRegexp, Ruby};
     ///
-    /// let regexp = RRegexp::new_str(RString::new("foo"), Opts::new().ignorecase()).unwrap();
-    /// rb_assert!(r#"regexp == /foo/i"#, regexp);
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let regexp = RRegexp::new_str(ruby.str_new("foo"), Opts::new().ignorecase())?;
+    ///     rb_assert!(ruby, r#"regexp == /foo/i"#, regexp);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn new_str(pattern: RString, opts: Opts) -> Result<Self, Error> {
         protect(|| unsafe {
@@ -141,12 +145,16 @@ impl RRegexp {
     /// # Examples
     ///
     /// ```
-    /// use magnus::RRegexp;
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, Ruby};
     ///
-    /// let regexp = RRegexp::new("x", Default::default()).unwrap();
-    /// assert_eq!(regexp.reg_match("text").unwrap(), Some(2));
-    /// assert_eq!(regexp.reg_match("test").unwrap(), None);
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let regexp = ruby.reg_new("x", Default::default())?;
+    ///     assert_eq!(regexp.reg_match("text")?, Some(2));
+    ///     assert_eq!(regexp.reg_match("test")?, None);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn reg_match<T>(self, s: T) -> Result<Option<usize>, Error>
     where
@@ -162,16 +170,20 @@ impl RRegexp {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, RRegexp};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, RRegexp, Ruby};
     ///
-    /// let regexp: RRegexp = eval("/x/i").unwrap();
-    /// assert!(regexp.options().is_ignorecase());
-    /// assert!(!regexp.options().is_multiline());
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let regexp: RRegexp = ruby.eval("/x/i").unwrap();
+    ///     assert!(regexp.options().is_ignorecase());
+    ///     assert!(!regexp.options().is_multiline());
     ///
-    /// let regexp: RRegexp = eval("/x/m").unwrap();
-    /// assert!(!regexp.options().is_ignorecase());
-    /// assert!(regexp.options().is_multiline());
+    ///     let regexp: RRegexp = ruby.eval("/x/m").unwrap();
+    ///     assert!(!regexp.options().is_ignorecase());
+    ///     assert!(regexp.options().is_multiline());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn options(self) -> Opts {
         unsafe { Opts(rb_reg_options(self.as_rb_value()) as c_uint) }
