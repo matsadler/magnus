@@ -562,15 +562,19 @@ impl RString {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, RString};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{rb_assert, Error, RString, Ruby};
     ///
-    /// let s = RString::new("example");
-    /// let dup = RString::new_shared(s);
-    /// rb_assert!("s == dup", s, dup);
-    /// // mutating one doesn't mutate both
-    /// dup.cat("foo");
-    /// rb_assert!("s != dup", s, dup);
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let s = ruby.str_new("example");
+    ///     let dup = RString::new_shared(s);
+    ///     rb_assert!(ruby, "s == dup", s, dup);
+    ///     // mutating one doesn't mutate both
+    ///     dup.cat("foo");
+    ///     rb_assert!(ruby, "s != dup", s, dup);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn new_shared(s: Self) -> Self {
         unsafe { Self::from_rb_value_unchecked(rb_str_new_shared(s.as_rb_value())) }
@@ -584,15 +588,19 @@ impl RString {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, RString};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{rb_assert, Error, RString, Ruby};
     ///
-    /// let orig = RString::new("example");
-    /// let frozen = RString::new_frozen(orig);
-    /// rb_assert!(r#"frozen == "example""#, frozen);
-    /// // mutating original doesn't impact the frozen copy
-    /// orig.cat("foo");
-    /// rb_assert!(r#"frozen == "example""#, frozen);
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let orig = ruby.str_new("example");
+    ///     let frozen = RString::new_frozen(orig);
+    ///     rb_assert!(ruby, r#"frozen == "example""#, frozen);
+    ///     // mutating original doesn't impact the frozen copy
+    ///     orig.cat("foo");
+    ///     rb_assert!(ruby, r#"frozen == "example""#, frozen);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn new_frozen(s: Self) -> Self {
         unsafe { Self::from_rb_value_unchecked(rb_str_new_frozen(s.as_rb_value())) }
@@ -612,13 +620,17 @@ impl RString {
     /// # Examples
     ///
     /// ```
-    /// use magnus::RString;
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, Ruby};
     ///
-    /// let s = RString::new("example");
-    /// // safe as we don't give Ruby the chance to mess with the string while
-    /// // we hold a refrence to the slice.
-    /// unsafe { assert_eq!(s.as_slice(), [101, 120, 97, 109, 112, 108, 101]) };
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let s = ruby.str_new("example");
+    ///     // safe as we don't give Ruby the chance to mess with the string while
+    ///     // we hold a refrence to the slice.
+    ///     unsafe { assert_eq!(s.as_slice(), [101, 120, 97, 109, 112, 108, 101]) };
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub unsafe fn as_slice(&self) -> &[u8] {
         self.as_slice_unconstrained()
@@ -643,19 +655,23 @@ impl RString {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{Error, RString};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, RString, Ruby};
     ///
-    /// let s = RString::new("🦀 café");
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let s = ruby.str_new("🦀 café");
     ///
-    /// let codepoints = unsafe {
-    ///     // ensure string isn't mutated during iteration by creating a
-    ///     // frozen copy and iterating over that
-    ///     let f = RString::new_frozen(s);
-    ///     f.codepoints().collect::<Result<Vec<_>, Error>>().unwrap()
-    /// };
+    ///     let codepoints = unsafe {
+    ///         // ensure string isn't mutated during iteration by creating a
+    ///         // frozen copy and iterating over that
+    ///         let f = RString::new_frozen(s);
+    ///         f.codepoints().collect::<Result<Vec<_>, Error>>()?
+    ///     };
     ///
-    /// assert_eq!(codepoints, [129408, 32, 99, 97, 102, 233]);
+    ///     assert_eq!(codepoints, [129408, 32, 99, 97, 102, 233]);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub unsafe fn codepoints(&self) -> Codepoints {
         Codepoints {
@@ -675,27 +691,31 @@ impl RString {
     /// # Examples
     ///
     /// ```
-    /// use magnus::RString;
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, RString, Ruby};
     ///
-    /// let s = RString::new("🦀 café");
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let s = ruby.str_new("🦀 café");
     ///
-    /// // ensure string isn't mutated during iteration by creating a frozen
-    /// // copy and iterating over that
-    /// let f = RString::new_frozen(s);
-    /// let codepoints = unsafe { f.char_bytes().collect::<Vec<_>>() };
+    ///     // ensure string isn't mutated during iteration by creating a frozen
+    ///     // copy and iterating over that
+    ///     let f = RString::new_frozen(s);
+    ///     let codepoints = unsafe { f.char_bytes().collect::<Vec<_>>() };
     ///
-    /// assert_eq!(
-    ///     codepoints,
-    ///     [
-    ///         &[240, 159, 166, 128][..],
-    ///         &[32],
-    ///         &[99],
-    ///         &[97],
-    ///         &[102],
-    ///         &[195, 169]
-    ///     ]
-    /// );
+    ///     assert_eq!(
+    ///         codepoints,
+    ///         [
+    ///             &[240, 159, 166, 128][..],
+    ///             &[32],
+    ///             &[99],
+    ///             &[97],
+    ///             &[102],
+    ///             &[195, 169]
+    ///         ]
+    ///     );
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub unsafe fn char_bytes(&self) -> CharBytes {
         CharBytes {
@@ -709,12 +729,16 @@ impl RString {
     /// # Examples
     ///
     /// ```
-    /// use magnus::RString;
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, Ruby};
     ///
-    /// let s = RString::new("🌊🦀🏝️");
-    /// assert_eq!(s.offset(1), 4);
-    /// assert_eq!(s.offset(2), 8);
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let s = ruby.str_new("🌊🦀🏝️");
+    ///     assert_eq!(s.offset(1), 4);
+    ///     assert_eq!(s.offset(2), 8);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn offset(self, pos: usize) -> usize {
         unsafe { rb_str_offset(self.as_rb_value(), pos as c_long) as usize }
@@ -729,19 +753,27 @@ impl RString {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, RString};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{eval, Error, RString, Ruby};
     ///
-    /// let s: RString = eval!(r#""café""#).unwrap();
-    /// assert!(s.is_utf8_compatible_encoding());
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let s: RString = eval!(ruby, r#""café""#)?;
+    ///     assert!(s.is_utf8_compatible_encoding());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     ///
     /// ```
-    /// use magnus::{eval, RString};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{eval, Error, RString, Ruby};
     ///
-    /// let s: RString = eval!(r#""café".encode("ISO-8859-1")"#).unwrap();
-    /// assert!(!s.is_utf8_compatible_encoding());
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let s: RString = eval!(ruby, r#""café".encode("ISO-8859-1")"#)?;
+    ///     assert!(!s.is_utf8_compatible_encoding());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn is_utf8_compatible_encoding(self) -> bool {
         let handle = Ruby::get_with(self);
@@ -756,15 +788,19 @@ impl RString {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{encoding::RbEncoding, eval, RString};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{eval, Error, RString, Ruby};
     ///
-    /// let s: RString = eval!(r#""café".encode("ISO-8859-1")"#).unwrap();
-    /// // safe as we don't give Ruby the chance to mess with the string while
-    /// // we hold a refrence to the slice.
-    /// unsafe { assert_eq!(s.as_slice(), &[99, 97, 102, 233]) };
-    /// let e = s.conv_enc(RbEncoding::utf8()).unwrap();
-    /// unsafe { assert_eq!(e.as_slice(), &[99, 97, 102, 195, 169]) };
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let s: RString = eval!(ruby, r#""café".encode("ISO-8859-1")"#)?;
+    ///     // safe as we don't give Ruby the chance to mess with the string while
+    ///     // we hold a refrence to the slice.
+    ///     unsafe { assert_eq!(s.as_slice(), &[99, 97, 102, 233]) };
+    ///     let e = s.conv_enc(ruby.utf8_encoding())?;
+    ///     unsafe { assert_eq!(e.as_slice(), &[99, 97, 102, 195, 169]) };
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn conv_enc<T>(self, enc: T) -> Result<Self, Error>
     where
@@ -792,14 +828,22 @@ impl RString {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{encoding::RbEncoding, RString};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, Ruby};
     ///
-    /// // 156 is invalid for utf-8
-    /// let s = RString::enc_new([156, 57, 57], RbEncoding::utf8());
-    /// assert_eq!(s.scrub(None).unwrap().unwrap().to_string().unwrap(), "�99");
-    /// assert_eq!(s.scrub(Some(RString::new("?"))).unwrap().unwrap().to_string().unwrap(), "?99");
-    /// assert_eq!(s.scrub(Some(RString::new(""))).unwrap().unwrap().to_string().unwrap(), "99");
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     // 156 is invalid for utf-8
+    ///     let s = ruby.enc_str_new([156, 57, 57], ruby.utf8_encoding());
+    ///     assert_eq!(s.scrub(None)?.unwrap().to_string()?, "�99");
+    ///     assert_eq!(
+    ///         s.scrub(Some(ruby.str_new("?")))?.unwrap().to_string()?,
+    ///         "?99"
+    ///     );
+    ///     assert_eq!(s.scrub(Some(ruby.str_new("")))?.unwrap().to_string()?, "99");
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     pub fn scrub(self, replacement: Option<Self>) -> Result<Option<Self>, Error> {
         let val = protect(|| unsafe {
             Value::new(rb_str_scrub(
@@ -824,34 +868,38 @@ impl RString {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{encoding::Coderange, prelude::*, RString};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{encoding::Coderange, prelude::*, Error, Ruby};
     ///
-    /// // Coderange is unknown on creation.
-    /// let s = RString::new("test");
-    /// assert_eq!(s.enc_coderange(), Coderange::Unknown);
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     // Coderange is unknown on creation.
+    ///     let s = ruby.str_new("test");
+    ///     assert_eq!(s.enc_coderange(), Coderange::Unknown);
     ///
-    /// // Methods that operate on the string using the encoding will set the
-    /// // coderange as a side effect.
-    /// let _: usize = s.funcall("length", ()).unwrap();
-    /// assert_eq!(s.enc_coderange(), Coderange::SevenBit);
+    ///     // Methods that operate on the string using the encoding will set the
+    ///     // coderange as a side effect.
+    ///     let _: usize = s.funcall("length", ())?;
+    ///     assert_eq!(s.enc_coderange(), Coderange::SevenBit);
     ///
-    /// // Operations with two strings with known coderanges will set it
-    /// // appropriately.
-    /// let t = RString::new("🦀");
-    /// let _: usize = t.funcall("length", ()).unwrap();
-    /// assert_eq!(t.enc_coderange(), Coderange::Valid);
-    /// s.buf_append(t).unwrap();
-    /// assert_eq!(s.enc_coderange(), Coderange::Valid);
+    ///     // Operations with two strings with known coderanges will set it
+    ///     // appropriately.
+    ///     let t = ruby.str_new("🦀");
+    ///     let _: usize = t.funcall("length", ())?;
+    ///     assert_eq!(t.enc_coderange(), Coderange::Valid);
+    ///     s.buf_append(t)?;
+    ///     assert_eq!(s.enc_coderange(), Coderange::Valid);
     ///
-    /// // Operations that modify the string with an unknown coderange will
-    /// // set the coderange back to unknown.
-    /// s.cat([128]);
-    /// assert_eq!(s.enc_coderange(), Coderange::Unknown);
+    ///     // Operations that modify the string with an unknown coderange will
+    ///     // set the coderange back to unknown.
+    ///     s.cat([128]);
+    ///     assert_eq!(s.enc_coderange(), Coderange::Unknown);
     ///
-    /// // Which may leave the string with a broken encoding.
-    /// let _: usize = s.funcall("length", ()).unwrap();
-    /// assert_eq!(s.enc_coderange(), Coderange::Broken);
+    ///     // Which may leave the string with a broken encoding.
+    ///     let _: usize = s.funcall("length", ())?;
+    ///     assert_eq!(s.enc_coderange(), Coderange::Broken);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn enc_coderange(self) -> Coderange {
         unsafe {
@@ -870,11 +918,15 @@ impl RString {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{encoding::Coderange, RString};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{encoding::Coderange, Error, Ruby};
     ///
-    /// let s = RString::new("test");
-    /// assert_eq!(s.enc_coderange_scan(), Coderange::SevenBit);
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let s = ruby.str_new("test");
+    ///     assert_eq!(s.enc_coderange_scan(), Coderange::SevenBit);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn enc_coderange_scan(self) -> Coderange {
         unsafe { transmute(rb_enc_str_coderange(self.as_rb_value()) as u32) }
@@ -885,16 +937,20 @@ impl RString {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{encoding::Coderange, prelude::*, RString};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{encoding::Coderange, prelude::*, Error, Ruby};
     ///
-    /// let s = RString::new("🦀");
-    /// // trigger setting coderange
-    /// let _: usize = s.funcall("length", ()).unwrap();
-    /// assert_eq!(s.enc_coderange(), Coderange::Valid);
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let s = ruby.str_new("🦀");
+    ///     // trigger setting coderange
+    ///     let _: usize = s.funcall("length", ())?;
+    ///     assert_eq!(s.enc_coderange(), Coderange::Valid);
     ///
-    /// s.enc_coderange_clear();
-    /// assert_eq!(s.enc_coderange(), Coderange::Unknown);
+    ///     s.enc_coderange_clear();
+    ///     assert_eq!(s.enc_coderange(), Coderange::Unknown);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn enc_coderange_clear(self) {
         unsafe {
@@ -919,17 +975,14 @@ impl RString {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{
-    ///     encoding::{self, Coderange},
-    ///     exception,
-    ///     prelude::*,
-    ///     Error, RString,
-    /// };
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{encoding::Coderange, prelude::*, Error, RString, Ruby};
     ///
-    /// fn crabbify(s: RString) -> Result<(), Error> {
-    ///     if s.enc_get() != encoding::Index::utf8() {
-    ///         return Err(Error::new(exception::encoding_error(), "expected utf-8"));
+    /// fn crabbify(ruby: &Ruby, s: RString) -> Result<(), Error> {
+    ///     if s.enc_get() != ruby.utf8_encindex() {
+    ///         return Err(Error::new(
+    ///             ruby.exception_encoding_error(),
+    ///             "expected utf-8",
+    ///         ));
     ///     }
     ///     let original = s.enc_coderange();
     ///     // ::cat() will clear the coderange
@@ -945,12 +998,17 @@ impl RString {
     ///     Ok(())
     /// }
     ///
-    /// let s = RString::new("test");
-    /// // trigger setting coderange
-    /// let _: usize = s.funcall("length", ()).unwrap();
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let s = ruby.str_new("test");
+    ///     // trigger setting coderange
+    ///     let _: usize = s.funcall("length", ())?;
     ///
-    /// crabbify(s).unwrap();
-    /// assert_eq!(s.enc_coderange(), Coderange::Valid);
+    ///     crabbify(ruby, s)?;
+    ///     assert_eq!(s.enc_coderange(), Coderange::Valid);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub unsafe fn enc_coderange_set(self, cr: Coderange) {
         self.enc_coderange_clear();
@@ -974,13 +1032,17 @@ impl RString {
     /// # Examples
     ///
     /// ```
-    /// use magnus::RString;
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, Ruby};
     ///
-    /// let s = RString::new("example");
-    /// // safe as we don't give Ruby the chance to mess with the string while
-    /// // we hold a refrence to the slice.
-    /// unsafe { assert_eq!(s.test_as_str().unwrap(), "example") };
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let s = ruby.str_new("example");
+    ///     // safe as we don't give Ruby the chance to mess with the string while
+    ///     // we hold a refrence to the slice.
+    ///     unsafe { assert_eq!(s.test_as_str().unwrap(), "example") };
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub unsafe fn test_as_str(&self) -> Option<&str> {
         self.test_as_str_unconstrained()
@@ -1003,13 +1065,17 @@ impl RString {
     /// # Examples
     ///
     /// ```
-    /// use magnus::RString;
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, Ruby};
     ///
-    /// let s = RString::new("example");
-    /// // safe as we don't give Ruby the chance to mess with the string while
-    /// // we hold a refrence to the slice.
-    /// unsafe { assert_eq!(s.as_str().unwrap(), "example") };
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let s = ruby.str_new("example");
+    ///     // safe as we don't give Ruby the chance to mess with the string while
+    ///     // we hold a refrence to the slice.
+    ///     unsafe { assert_eq!(s.as_str()?, "example") };
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub unsafe fn as_str(&self) -> Result<&str, Error> {
         self.as_str_unconstrained()
@@ -1056,13 +1122,17 @@ impl RString {
     /// # Examples
     ///
     /// ```
-    /// use magnus::RString;
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, Ruby};
     ///
-    /// let s = RString::new("example");
-    /// // safe as we don't give Ruby the chance to mess with the string while
-    /// // we hold a refrence to the slice.
-    /// unsafe { assert_eq!(s.to_string_lossy(), "example") };
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let s = ruby.str_new("example");
+    ///     // safe as we don't give Ruby the chance to mess with the string while
+    ///     // we hold a refrence to the slice.
+    ///     unsafe { assert_eq!(s.to_string_lossy(), "example") };
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     #[allow(clippy::wrong_self_convention)]
     pub unsafe fn to_string_lossy(&self) -> Cow<'_, str> {
@@ -1076,11 +1146,15 @@ impl RString {
     /// # Examples
     ///
     /// ```
-    /// use magnus::RString;
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, Ruby};
     ///
-    /// let s = RString::new("example");
-    /// assert_eq!(s.to_string().unwrap(), "example");
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let s = ruby.str_new("example");
+    ///     assert_eq!(s.to_string()?, "example");
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn to_string(self) -> Result<String, Error> {
         let handle = Ruby::get_with(self);
@@ -1100,11 +1174,15 @@ impl RString {
     ///
     /// ```
     /// use bytes::Bytes;
-    /// use magnus::RString;
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, Ruby};
     ///
-    /// let s = RString::new("example");
-    /// assert_eq!(s.to_bytes(), Bytes::from("example"));
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let s = ruby.str_new("example");
+    ///     assert_eq!(s.to_bytes(), Bytes::from("example"));
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     #[cfg_attr(docsrs, doc(cfg(feature = "bytes")))]
     #[cfg(feature = "bytes")]
@@ -1119,11 +1197,15 @@ impl RString {
     /// # Examples
     ///
     /// ```
-    /// use magnus::RString;
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, Ruby};
     ///
-    /// let s = RString::new("a");
-    /// assert_eq!(s.to_char().unwrap(), 'a');
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let s = ruby.str_new("a");
+    ///     assert_eq!(s.to_char()?, 'a');
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn to_char(self) -> Result<char, Error> {
         let handle = Ruby::get_with(self);
@@ -1154,14 +1236,15 @@ impl RString {
     /// # Examples
     ///
     /// ```
-    /// use magnus::RString;
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, Ruby};
     ///
-    /// let s = RString::new("🦀 café");
-    /// assert_eq!(
-    ///     s.dump().unwrap().to_string().unwrap(),
-    ///     r#""\u{1F980} caf\u00E9""#
-    /// );
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let s = ruby.str_new("🦀 café");
+    ///     assert_eq!(s.dump()?.to_string()?, r#""\u{1F980} caf\u00E9""#);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn dump(self) -> Result<Self, Error> {
         protect(|| unsafe { RString::from_rb_value_unchecked(rb_str_dump(self.as_rb_value())) })
@@ -1178,26 +1261,34 @@ impl RString {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, RString};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{eval, Error, RString, Ruby};
     ///
-    /// let s: RString = eval!(
-    ///     r#"
-    ///       ## frozen_string_literal: true
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let s: RString = eval!(
+    ///         ruby,
+    ///         r#"
+    ///             ## frozen_string_literal: true
     ///
-    ///       "example"
-    ///     "#
-    /// )
-    /// .unwrap();
-    /// assert!(s.is_interned());
+    ///             "example"
+    ///         "#
+    ///     )?;
+    ///     assert!(s.is_interned());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     ///
     /// ```
-    /// use magnus::{eval, RString};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{eval, Error, RString, Ruby};
     ///
-    /// let s: RString = eval!(r#""example""#).unwrap();
-    /// assert!(!s.is_interned());
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let s: RString = eval!(ruby, r#""example""#)?;
+    ///     assert!(!s.is_interned());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn is_interned(self) -> bool {
         unsafe {
@@ -1216,26 +1307,34 @@ impl RString {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, RString};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{eval, Error, RString, Ruby};
     ///
-    /// let s: RString = eval!(
-    ///     r#"
-    ///       ## frozen_string_literal: true
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let s: RString = eval!(
+    ///         ruby,
+    ///         r#"
+    ///             ## frozen_string_literal: true
     ///
-    ///       "example"
-    ///     "#
-    /// )
-    /// .unwrap();
-    /// assert!(s.as_interned_str().is_some());
+    ///             "example"
+    ///         "#
+    ///     )?;
+    ///     assert!(s.as_interned_str().is_some());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     ///
     /// ```
-    /// use magnus::{eval, RString};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{eval, Error, RString, Ruby};
     ///
-    /// let s: RString = eval!(r#""example""#).unwrap();
-    /// assert!(s.as_interned_str().is_none());
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let s: RString = eval!(ruby, r#""example""#)?;
+    ///     assert!(s.as_interned_str().is_none());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn as_interned_str(self) -> Option<FString> {
         self.is_interned().then(|| FString(self))
@@ -1247,11 +1346,15 @@ impl RString {
     /// # Examples
     ///
     /// ```
-    /// use magnus::RString;
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, Ruby};
     ///
-    /// let fstring = RString::new("example").to_interned_str();
-    /// assert_eq!(fstring.as_str().unwrap(), "example");
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let fstring = ruby.str_new("example").to_interned_str();
+    ///     assert_eq!(fstring.as_str()?, "example");
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     #[cfg(any(ruby_gte_3_0, docsrs))]
     #[cfg_attr(docsrs, doc(cfg(ruby_gte_3_0)))]
@@ -1269,13 +1372,17 @@ impl RString {
     /// # Examples
     ///
     /// ```
-    /// use magnus::RString;
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, Ruby};
     ///
-    /// let a = RString::new("foo");
-    /// let b = RString::new("bar");
-    /// a.buf_append(b).unwrap();
-    /// assert_eq!(a.to_string().unwrap(), "foobar");
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let a = ruby.str_new("foo");
+    ///     let b = ruby.str_new("bar");
+    ///     a.buf_append(b)?;
+    ///     assert_eq!(a.to_string()?, "foobar");
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn buf_append(self, other: Self) -> Result<(), Error> {
         protect(|| unsafe {
@@ -1294,13 +1401,17 @@ impl RString {
     /// # Examples
     ///
     /// ```
-    /// use magnus::RString;
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, Ruby};
     ///
-    /// let buf = RString::buf_new(4096);
-    /// buf.cat(&[102, 111, 111]);
-    /// buf.cat("bar");
-    /// assert_eq!(buf.to_string().unwrap(), "foobar");
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let buf = ruby.str_buf_new(4096);
+    ///     buf.cat(&[102, 111, 111]);
+    ///     buf.cat("bar");
+    ///     assert_eq!(buf.to_string()?, "foobar");
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn cat<T: AsRef<[u8]>>(self, buf: T) {
         let buf = buf.as_ref();
@@ -1316,13 +1427,17 @@ impl RString {
     /// # Examples
     ///
     /// ```
-    /// use magnus::RString;
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, Ruby};
     ///
-    /// let a = RString::new("foo");
-    /// let b = RString::new("bar");
-    /// a.replace(b).unwrap();
-    /// assert_eq!(a.to_string().unwrap(), "bar");
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let a = ruby.str_new("foo");
+    ///     let b = ruby.str_new("bar");
+    ///     a.replace(b)?;
+    ///     assert_eq!(a.to_string()?, "bar");
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn replace(self, other: Self) -> Result<(), Error> {
         protect(|| {
@@ -1343,16 +1458,20 @@ impl RString {
     /// # Examples
     ///
     /// ```
-    /// use magnus::RString;
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, Ruby};
     ///
-    /// let a = RString::new("foo");
-    /// let b = RString::new("bar");
-    /// a.shared_replace(b).unwrap();
-    /// assert_eq!(a.to_string().unwrap(), "bar");
-    /// // mutating one doesn't mutate both
-    /// b.cat("foo");
-    /// assert_eq!(a.to_string().unwrap(), "bar");
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let a = ruby.str_new("foo");
+    ///     let b = ruby.str_new("bar");
+    ///     a.shared_replace(b)?;
+    ///     assert_eq!(a.to_string()?, "bar");
+    ///     // mutating one doesn't mutate both
+    ///     b.cat("foo");
+    ///     assert_eq!(a.to_string()?, "bar");
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn shared_replace(self, other: Self) -> Result<(), Error> {
         protect(|| {
@@ -1373,20 +1492,24 @@ impl RString {
     /// # Examples
     ///
     /// ```
-    /// use magnus::RString;
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, Ruby};
     ///
-    /// let s = RString::new("foo");
-    /// s.update(-1, 1, RString::new("x")).unwrap();
-    /// assert_eq!(s.to_string().unwrap(), "fox");
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let s = ruby.str_new("foo");
+    ///     s.update(-1, 1, ruby.str_new("x"))?;
+    ///     assert_eq!(s.to_string()?, "fox");
     ///
-    /// let s = RString::new("splat");
-    /// s.update(0, 3, RString::new("b")).unwrap();
-    /// assert_eq!(s.to_string().unwrap(), "bat");
+    ///     let s = ruby.str_new("splat");
+    ///     s.update(0, 3, ruby.str_new("b"))?;
+    ///     assert_eq!(s.to_string()?, "bat");
     ///
-    /// let s = RString::new("corncob");
-    /// s.update(1, 5, RString::new("ra")).unwrap();
-    /// assert_eq!(s.to_string().unwrap(), "crab");
+    ///     let s = ruby.str_new("corncob");
+    ///     s.update(1, 5, ruby.str_new("ra"))?;
+    ///     assert_eq!(s.to_string()?, "crab");
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn update(self, beg: isize, len: usize, other: Self) -> Result<(), Error> {
         protect(|| {
@@ -1408,14 +1531,18 @@ impl RString {
     /// # Examples
     ///
     /// ```
-    /// use magnus::RString;
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, Ruby};
     ///
-    /// let a = RString::new("foo");
-    /// let b = RString::new("bar");
-    /// assert_eq!(a.plus(b).unwrap().to_string().unwrap(), "foobar");
-    /// assert_eq!(a.to_string().unwrap(), "foo");
-    /// assert_eq!(b.to_string().unwrap(), "bar");
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let a = ruby.str_new("foo");
+    ///     let b = ruby.str_new("bar");
+    ///     assert_eq!(a.plus(b)?.to_string()?, "foobar");
+    ///     assert_eq!(a.to_string()?, "foo");
+    ///     assert_eq!(b.to_string()?, "bar");
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn plus(self, other: Self) -> Result<Self, Error> {
         protect(|| unsafe {
@@ -1428,13 +1555,14 @@ impl RString {
     /// # Examples
     ///
     /// ```
-    /// use magnus::RString;
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, Ruby};
     ///
-    /// assert_eq!(
-    ///     RString::new("foo").times(3).to_string().unwrap(),
-    ///     "foofoofoo"
-    /// );
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     assert_eq!(ruby.str_new("foo").times(3).to_string()?, "foofoofoo");
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn times(self, num: usize) -> Self {
         let num = Ruby::get_with(self).into_value(num);
@@ -1448,12 +1576,16 @@ impl RString {
     /// # Examples
     ///
     /// ```
-    /// use magnus::RString;
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, Ruby};
     ///
-    /// let s = RString::new("foobar");
-    /// s.drop_bytes(3).unwrap();
-    /// assert_eq!(s.to_string().unwrap(), "bar");
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let s = ruby.str_new("foobar");
+    ///     s.drop_bytes(3)?;
+    ///     assert_eq!(s.to_string()?, "bar");
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn drop_bytes(self, len: usize) -> Result<(), Error> {
         protect(|| {
@@ -1470,11 +1602,15 @@ impl RString {
     /// # Examples
     ///
     /// ```
-    /// use magnus::RString;
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, Ruby};
     ///
-    /// let s = RString::new("🦀 Hello, Ferris");
-    /// assert_eq!(s.len(), 18);
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let s = ruby.str_new("🦀 Hello, Ferris");
+    ///     assert_eq!(s.len(), 18);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn len(self) -> usize {
         debug_assert_value!(self);
@@ -1488,11 +1624,15 @@ impl RString {
     /// # Examples
     ///
     /// ```
-    /// use magnus::RString;
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, Ruby};
     ///
-    /// let s = RString::new("🦀 Hello, Ferris");
-    /// assert_eq!(s.length(), 15);
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let s = ruby.str_new("🦀 Hello, Ferris");
+    ///     assert_eq!(s.length(), 15);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn length(self) -> usize {
         unsafe { rb_str_strlen(self.as_rb_value()) as usize }
@@ -1503,13 +1643,17 @@ impl RString {
     /// # Examples
     ///
     /// ```
-    /// use magnus::RString;
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, Ruby};
     ///
-    /// let s = RString::with_capacity(9);
-    /// s.cat("foo");
-    /// assert_eq!(3, s.len());
-    /// assert!(s.capacity() >= 9);
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let s = ruby.str_with_capacity(9);
+    ///     s.cat("foo");
+    ///     assert_eq!(3, s.len());
+    ///     assert!(s.capacity() >= 9);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn capacity(self) -> usize {
         unsafe { rb_str_capacity(self.as_rb_value()) as usize }
@@ -1520,11 +1664,15 @@ impl RString {
     /// # Examples
     ///
     /// ```
-    /// use magnus::RString;
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, Ruby};
     ///
-    /// let s = RString::new("");
-    /// assert!(s.is_empty());
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let s = ruby.str_new("");
+    ///     assert!(s.is_empty());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn is_empty(self) -> bool {
         self.len() == 0
@@ -1537,12 +1685,16 @@ impl RString {
     /// ```
     /// use std::cmp::Ordering;
     ///
-    /// use magnus::RString;
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, Ruby};
     ///
-    /// let a = RString::new("a");
-    /// let b = RString::new("b");
-    /// assert_eq!(Ordering::Less, a.cmp(b));
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let a = ruby.str_new("a");
+    ///     let b = ruby.str_new("b");
+    ///     assert_eq!(Ordering::Less, a.cmp(b));
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     ///
     /// Note that `std::cmp::Ordering` can be cast to `i{8,16,32,64,size}` to
@@ -1576,11 +1728,15 @@ impl RString {
     /// # Examples
     ///
     /// ```
-    /// use magnus::RString;
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, Ruby};
     ///
-    /// let s = RString::new("foobarbaz");
-    /// assert_eq!(s.ellipsize(6).to_string().unwrap(), "foo...");
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let s = ruby.str_new("foobarbaz");
+    ///     assert_eq!(s.ellipsize(6).to_string()?, "foo...");
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn ellipsize(self, len: usize) -> Self {
         unsafe {
@@ -1598,22 +1754,26 @@ impl RString {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, RString};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{prelude::*, Error, Ruby};
     ///
-    /// let s = RString::new(" foo  bar  baz ");
-    /// assert_eq!(
-    ///     Vec::<String>::try_convert(s.split("").as_value()).unwrap(),
-    ///     vec![" ", "f", "o", "o", " ", " ", "b", "a", "r", " ", " ", "b", "a", "z", " "]
-    /// );
-    /// assert_eq!(
-    ///     Vec::<String>::try_convert(s.split(" ").as_value()).unwrap(),
-    ///     vec!["foo", "bar", "baz"]
-    /// );
-    /// assert_eq!(
-    ///     Vec::<String>::try_convert(s.split(" bar ").as_value()).unwrap(),
-    ///     vec![" foo ", " baz "]
-    /// );
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let s = ruby.str_new(" foo  bar  baz ");
+    ///     assert_eq!(
+    ///         Vec::<String>::try_convert(s.split("").as_value())?,
+    ///         vec![" ", "f", "o", "o", " ", " ", "b", "a", "r", " ", " ", "b", "a", "z", " "]
+    ///     );
+    ///     assert_eq!(
+    ///         Vec::<String>::try_convert(s.split(" ").as_value())?,
+    ///         vec!["foo", "bar", "baz"]
+    ///     );
+    ///     assert_eq!(
+    ///         Vec::<String>::try_convert(s.split(" bar ").as_value())?,
+    ///         vec![" foo ", " baz "]
+    ///     );
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn split(self, delim: &str) -> RArray {
         let delim = CString::new(delim).unwrap();
@@ -1834,19 +1994,23 @@ impl FString {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, RString};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{eval, Error, RString, Ruby};
     ///
-    /// let s: RString = eval!(
-    ///     r#"
-    ///       ## frozen_string_literal: true
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let s: RString = eval!(
+    ///         ruby,
+    ///         r#"
+    ///             ## frozen_string_literal: true
     ///
-    ///       "example"
-    ///     "#
-    /// )
-    /// .unwrap();
-    /// let fstring = s.as_interned_str().unwrap();
-    /// assert_eq!(fstring.as_slice(), &[101, 120, 97, 109, 112, 108, 101]);
+    ///             "example"
+    ///         "#
+    ///     )?;
+    ///     let fstring = s.as_interned_str().unwrap();
+    ///     assert_eq!(fstring.as_slice(), &[101, 120, 97, 109, 112, 108, 101]);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn as_slice(self) -> &'static [u8] {
         unsafe { self.as_r_string().as_slice_unconstrained() }
@@ -1858,19 +2022,23 @@ impl FString {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, RString};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{eval, Error, RString, Ruby};
     ///
-    /// let s: RString = eval!(
-    ///     r#"
-    ///       ## frozen_string_literal: true
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let s: RString = eval!(
+    ///         ruby,
+    ///         r#"
+    ///             ## frozen_string_literal: true
     ///
-    ///       "example"
-    ///     "#
-    /// )
-    /// .unwrap();
-    /// let fstring = s.as_interned_str().unwrap();
-    /// assert_eq!(fstring.test_as_str().unwrap(), "example");
+    ///             "example"
+    ///         "#
+    ///     )?;
+    ///     let fstring = s.as_interned_str().unwrap();
+    ///     assert_eq!(fstring.test_as_str().unwrap(), "example");
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn test_as_str(self) -> Option<&'static str> {
         unsafe { self.as_r_string().test_as_str_unconstrained() }
@@ -1882,19 +2050,23 @@ impl FString {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, RString};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{eval, Error, RString, Ruby};
     ///
-    /// let s: RString = eval!(
-    ///     r#"
-    ///       ## frozen_string_literal: true
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let s: RString = eval!(
+    ///         ruby,
+    ///         r#"
+    ///             ## frozen_string_literal: true
     ///
-    ///       "example"
-    ///     "#
-    /// )
-    /// .unwrap();
-    /// let fstring = s.as_interned_str().unwrap();
-    /// assert_eq!(fstring.as_str().unwrap(), "example");
+    ///             "example"
+    ///         "#
+    ///     )?;
+    ///     let fstring = s.as_interned_str().unwrap();
+    ///     assert_eq!(fstring.as_str()?, "example");
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn as_str(self) -> Result<&'static str, Error> {
         unsafe { self.as_r_string().as_str_unconstrained() }
@@ -1907,19 +2079,23 @@ impl FString {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, RString};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{eval, Error, RString, Ruby};
     ///
-    /// let s: RString = eval!(
-    ///     r#"
-    ///       ## frozen_string_literal: true
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let s: RString = eval!(
+    ///         ruby,
+    ///         r#"
+    ///             ## frozen_string_literal: true
     ///
-    ///       "example"
-    ///     "#
-    /// )
-    /// .unwrap();
-    /// let fstring = s.as_interned_str().unwrap();
-    /// assert_eq!(fstring.to_string_lossy(), "example");
+    ///             "example"
+    ///         "#
+    ///     )?;
+    ///     let fstring = s.as_interned_str().unwrap();
+    ///     assert_eq!(fstring.to_string_lossy(), "example");
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn to_string_lossy(self) -> Cow<'static, str> {
         String::from_utf8_lossy(self.as_slice())
@@ -2004,11 +2180,15 @@ impl<'a> Iterator for CharBytes<'a> {
 /// # Examples
 ///
 /// ```
-/// use magnus::{r_string, rb_assert};
-/// # let _cleanup = unsafe { magnus::embed::init() };
+/// use magnus::{r_string, rb_assert, Error, Ruby};
 ///
-/// let s = r_string!("Hello, world!");
-/// rb_assert!(r#"s == "Hello, world!""#, s);
+/// fn example(ruby: &Ruby) -> Result<(), Error> {
+///     let s = r_string!("Hello, world!");
+///     rb_assert!(ruby, r#"s == "Hello, world!""#, s);
+///
+///     Ok(())
+/// }
+/// # Ruby::init(example).unwrap()
 /// ```
 #[macro_export]
 macro_rules! r_string {
