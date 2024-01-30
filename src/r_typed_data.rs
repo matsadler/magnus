@@ -173,8 +173,7 @@ impl RTypedData {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{class, define_class, eval, function, prelude::*, RTypedData};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{function, prelude::*, Error, RTypedData, Ruby};
     ///
     /// #[magnus::wrap(class = "Point")]
     /// struct Point {
@@ -182,13 +181,16 @@ impl RTypedData {
     ///     y: isize,
     /// }
     ///
-    /// let point_class = define_class("Point", class::object()).unwrap();
-    /// point_class
-    ///     .define_singleton_method("new", function!(|x, y| Point { x, y }, 2))
-    ///     .unwrap();
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let point_class = ruby.define_class("Point", ruby.class_object())?;
+    ///     point_class.define_singleton_method("new", function!(|x, y| Point { x, y }, 2))?;
     ///
-    /// assert!(RTypedData::from_value(eval(r#"Point.new(1, 2)"#).unwrap()).is_some());
-    /// assert!(RTypedData::from_value(eval(r#"Object.new"#).unwrap()).is_none());
+    ///     assert!(RTypedData::from_value(ruby.eval(r#"Point.new(1, 2)"#)?).is_some());
+    ///     assert!(RTypedData::from_value(ruby.eval(r#"Object.new"#)?).is_none());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap();
     /// # let _ = Point { x: 1, y: 2 }.x + Point { x: 3, y: 4 }.y;
     /// ```
     #[inline]
@@ -262,6 +264,7 @@ impl RTypedData {
     /// # Examples
     ///
     /// ```
+    /// # #![allow(deprecated)]
     /// use magnus::{class, define_class, prelude::*, RTypedData};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
@@ -343,8 +346,7 @@ impl RTypedData {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{class, define_class, RTypedData};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, Ruby};
     ///
     /// #[magnus::wrap(class = "Point")]
     /// #[derive(Debug, PartialEq, Eq)]
@@ -353,10 +355,15 @@ impl RTypedData {
     ///     y: isize,
     /// }
     ///
-    /// define_class("Point", class::object()).unwrap();
-    /// let value = RTypedData::wrap(Point { x: 4, y: 2 });
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     ruby.define_class("Point", ruby.class_object())?;
+    ///     let value = ruby.wrap(Point { x: 4, y: 2 });
     ///
-    /// assert_eq!(value.get::<Point>().unwrap(), &Point { x: 4, y: 2 });
+    ///     assert_eq!(value.get::<Point>()?, &Point { x: 4, y: 2 });
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     #[inline]
     pub fn get<T>(&self) -> Result<&T, Error>
