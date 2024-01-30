@@ -83,14 +83,18 @@ impl RStruct {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{define_global_const, eval, r_struct::define_struct, RStruct};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, RStruct, Ruby};
     ///
-    /// let struct_class = define_struct(None, ("foo", "bar")).unwrap();
-    /// define_global_const("Example", struct_class).unwrap();
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let struct_class = ruby.define_struct(None, ("foo", "bar"))?;
+    ///     ruby.define_global_const("Example", struct_class)?;
     ///
-    /// assert!(RStruct::from_value(eval(r#"Example.new(1, 2)"#).unwrap()).is_some());
-    /// assert!(RStruct::from_value(eval(r#"Object.new"#).unwrap()).is_none());
+    ///     assert!(RStruct::from_value(ruby.eval(r#"Example.new(1, 2)"#)?).is_some());
+    ///     assert!(RStruct::from_value(ruby.eval(r#"Object.new"#)?).is_none());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
@@ -143,13 +147,17 @@ impl RStruct {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, r_struct::define_struct, RStruct};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{prelude::*, Error, RStruct, Ruby};
     ///
-    /// let struct_class = define_struct(None, ("foo", "bar")).unwrap();
-    /// let instance = RStruct::from_value(struct_class.new_instance((1, 2)).unwrap()).unwrap();
-    /// assert_eq!(instance.get::<i64>(0).unwrap(), 1);
-    /// assert_eq!(instance.get::<i64>(1).unwrap(), 2);
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let struct_class = ruby.define_struct(None, ("foo", "bar"))?;
+    ///     let instance = RStruct::from_value(struct_class.new_instance((1, 2))?).unwrap();
+    ///     assert_eq!(instance.get::<i64>(0)?, 1);
+    ///     assert_eq!(instance.get::<i64>(1)?, 2);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn get<T>(self, index: usize) -> Result<T, Error>
     where
@@ -181,14 +189,18 @@ impl RStruct {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, r_struct::define_struct, RStruct, Symbol};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{prelude::*, Error, RStruct, Ruby};
     ///
-    /// let struct_class = define_struct(None, ("foo", "bar", "baz")).unwrap();
-    /// let instance = RStruct::from_value(struct_class.new_instance((1, 2, 3)).unwrap()).unwrap();
-    /// assert_eq!(instance.aref::<_, i64>(0).unwrap(), 1);
-    /// assert_eq!(instance.aref::<_, i64>("bar").unwrap(), 2);
-    /// assert_eq!(instance.aref::<_, i64>(Symbol::new("baz")).unwrap(), 3);
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let struct_class = ruby.define_struct(None, ("foo", "bar", "baz"))?;
+    ///     let instance = RStruct::from_value(struct_class.new_instance((1, 2, 3))?).unwrap();
+    ///     assert_eq!(instance.aref::<_, i64>(0)?, 1);
+    ///     assert_eq!(instance.aref::<_, i64>("bar")?, 2);
+    ///     assert_eq!(instance.aref::<_, i64>(ruby.to_symbol("baz"))?, 3);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn aref<T, U>(self, index: T) -> Result<U, Error>
     where
@@ -207,20 +219,24 @@ impl RStruct {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, r_struct::define_struct, rb_assert, RStruct, Symbol};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{prelude::*, rb_assert, Error, RStruct, Ruby};
     ///
-    /// let struct_class = define_struct(None, ("foo", "bar", "baz")).unwrap();
-    /// let instance = RStruct::from_value(struct_class.new_instance((1, 2, 3)).unwrap()).unwrap();
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let struct_class = ruby.define_struct(None, ("foo", "bar", "baz"))?;
+    ///     let instance = RStruct::from_value(struct_class.new_instance((1, 2, 3))?).unwrap();
     ///
-    /// instance.aset(0, 4).unwrap();
-    /// rb_assert!("instance.foo == 4", instance);
+    ///     instance.aset(0, 4)?;
+    ///     rb_assert!("instance.foo == 4", instance);
     ///
-    /// instance.aset("bar", 5).unwrap();
-    /// rb_assert!("instance.bar == 5", instance);
+    ///     instance.aset("bar", 5)?;
+    ///     rb_assert!("instance.bar == 5", instance);
     ///
-    /// instance.aset(Symbol::new("baz"), 6).unwrap();
-    /// rb_assert!("instance.baz == 6", instance);
+    ///     instance.aset(ruby.to_symbol("baz"), 6)?;
+    ///     rb_assert!("instance.baz == 6", instance);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn aset<T, U>(self, index: T, val: U) -> Result<(), Error>
     where
@@ -247,13 +263,17 @@ impl RStruct {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, r_struct::define_struct, RStruct};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{prelude::*, Error, RStruct, Ruby};
     ///
-    /// let struct_class = define_struct(None, ("foo", "bar", "baz")).unwrap();
-    /// let instance = RStruct::from_value(struct_class.new_instance(()).unwrap()).unwrap();
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let struct_class = ruby.define_struct(None, ("foo", "bar", "baz"))?;
+    ///     let instance = RStruct::from_value(struct_class.new_instance(())?).unwrap();
     ///
-    /// assert_eq!(instance.size(), 3);
+    ///     assert_eq!(instance.size(), 3);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn size(self) -> usize {
         unsafe { usize::try_convert(Value::new(rb_struct_size(self.as_rb_value()))).unwrap() }
@@ -264,13 +284,17 @@ impl RStruct {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, r_struct::define_struct, RStruct};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{prelude::*, Error, RStruct, Ruby};
     ///
-    /// let struct_class = define_struct(None, ("foo", "bar", "baz")).unwrap();
-    /// let instance = RStruct::from_value(struct_class.new_instance(()).unwrap()).unwrap();
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let struct_class = ruby.define_struct(None, ("foo", "bar", "baz"))?;
+    ///     let instance = RStruct::from_value(struct_class.new_instance(())?).unwrap();
     ///
-    /// assert_eq!(instance.members().unwrap(), &["foo", "bar", "baz"]);
+    ///     assert_eq!(instance.members()?, &["foo", "bar", "baz"]);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn members(self) -> Result<Vec<Cow<'static, str>>, Error> {
         unsafe {
@@ -288,13 +312,17 @@ impl RStruct {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, r_struct::define_struct, RStruct};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{prelude::*, Error, RStruct, Ruby};
     ///
-    /// let struct_class = define_struct(None, ("foo", "bar")).unwrap();
-    /// let instance = RStruct::from_value(struct_class.new_instance((1, 2)).unwrap()).unwrap();
-    /// assert_eq!(instance.getmember::<_, i64>("foo").unwrap(), 1);
-    /// assert_eq!(instance.getmember::<_, i64>("bar").unwrap(), 2);
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let struct_class = ruby.define_struct(None, ("foo", "bar"))?;
+    ///     let instance = RStruct::from_value(struct_class.new_instance((1, 2))?).unwrap();
+    ///     assert_eq!(instance.getmember::<_, i64>("foo")?, 1);
+    ///     assert_eq!(instance.getmember::<_, i64>("bar")?, 2);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn getmember<T, U>(self, id: T) -> Result<U, Error>
     where
@@ -450,6 +478,7 @@ impl Ruby {
 /// from the first constant it is assigned to:
 ///
 /// ```
+/// # #![allow(deprecated)]
 /// use magnus::{define_global_const, prelude::*, r_struct::define_struct};
 /// # let _cleanup = unsafe { magnus::embed::init() };
 ///
