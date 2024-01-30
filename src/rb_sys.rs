@@ -40,16 +40,22 @@ pub trait AsRawValue {
     /// # Examples
     ///
     /// ```
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{
+    ///     rb_sys::{protect, AsRawValue},
+    ///     Error, Ruby,
+    /// };
     ///
-    /// use magnus::{rb_sys::AsRawValue, RString};
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let foo = ruby.str_new("foo");
+    ///     let bar = ruby.str_new("bar");
     ///
-    /// let foo = RString::new("foo");
-    /// let bar = RString::new("bar");
+    ///     protect(|| unsafe { rb_sys::rb_str_buf_append(foo.as_raw(), bar.as_raw()) })?;
     ///
-    /// unsafe { rb_sys::rb_str_buf_append(foo.as_raw(), bar.as_raw()) };
+    ///     assert_eq!(foo.to_string()?, "foobar");
     ///
-    /// assert_eq!(foo.to_string().unwrap(), "foobar");
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     fn as_raw(self) -> VALUE;
 }
@@ -104,15 +110,19 @@ pub trait AsRawId {
     ///     prelude::*,
     ///     rb_sys::{AsRawId, FromRawId},
     ///     value::Id,
-    ///     Symbol,
+    ///     Error, Ruby, Symbol,
     /// };
-    /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// let foo: Id = Symbol::new("foo").into();
-    /// let raw = foo.as_raw();
-    /// let from_raw_val: Symbol = unsafe { Id::from_raw(raw) }.into();
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let foo: Id = ruby.to_symbol("foo").into();
+    ///     let raw = foo.as_raw();
+    ///     let from_raw_val: Symbol = unsafe { Id::from_raw(raw) }.into();
     ///
-    /// assert_eq!(from_raw_val.inspect(), ":foo");
+    ///     assert_eq!(from_raw_val.inspect(), ":foo");
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     fn as_raw(self) -> ID;
 }
@@ -135,14 +145,18 @@ pub trait FromRawId {
     ///     prelude::*,
     ///     rb_sys::{AsRawId, FromRawId},
     ///     value::Id,
-    ///     Symbol,
+    ///     Error, Ruby, Symbol,
     /// };
-    /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// let foo: Id = Symbol::new("foo").into();
-    /// let from_raw_val: Symbol = unsafe { Id::from_raw(foo.as_raw()) }.into();
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let foo: Id = ruby.to_symbol("foo").into();
+    ///     let from_raw_val: Symbol = unsafe { Id::from_raw(foo.as_raw()) }.into();
     ///
-    /// assert_eq!(from_raw_val.inspect(), ":foo");
+    ///     assert_eq!(from_raw_val.inspect(), ":foo");
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     unsafe fn from_raw(id: ID) -> Self;
 }
