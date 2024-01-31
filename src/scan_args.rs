@@ -448,12 +448,9 @@ impl<T> ScanArgsBlock for T where T: private::ScanArgsBlock {}
 ///
 /// `TCPServer::new`'s argument handling. This is roughly equivalent to
 /// `def new(hostname=nil, port)`.
+///
 /// ```
-/// use magnus::{
-///     class, define_class, error::Error, function, prelude::*, scan_args::scan_args, Value,
-/// };
-/// # use magnus::IntoValue;
-/// # let _cleanup = unsafe { magnus::embed::init() };
+/// use magnus::{function, prelude::*, scan_args::scan_args, Error, Ruby, Value};
 ///
 /// fn tcp_svr_init(args: &[Value]) -> Result<Value, Error> {
 ///     let args = scan_args(args)?;
@@ -465,29 +462,28 @@ impl<T> ScanArgsBlock for T where T: private::ScanArgsBlock {}
 ///     let _: () = args.block;
 ///
 ///     // ...
-/// #   let res = magnus::RArray::with_capacity(2);
+/// #   let res = Ruby::get().unwrap().ary_new_capa(2);
 /// #   res.push(hostname)?;
 /// #   res.push(port)?;
-/// #   Ok(res.into_value())
+/// #   Ok(res.as_value())
 /// }
 ///
-/// let class = define_class("TCPServer", class::object()).unwrap();
-/// class
-///     .define_singleton_method("new", function!(tcp_svr_init, -1))
-///     .unwrap();
-/// # let res = magnus::eval::<bool>(r#"TCPServer.new("foo", 1) == ["foo", 1]"#).unwrap();
-/// # assert!(res);
-/// # let res = magnus::eval::<bool>(r#"TCPServer.new(2) == [nil, 2]"#).unwrap();
-/// # assert!(res);
+/// fn example(ruby: &Ruby) -> Result<(), Error> {
+///     let class = ruby.define_class("TCPServer", ruby.class_object())?;
+///     class.define_singleton_method("new", function!(tcp_svr_init, -1))?;
+/// #   let res = ruby.eval::<bool>(r#"TCPServer.new("foo", 1) == ["foo", 1]"#)?;
+/// #   assert!(res);
+/// #   let res = ruby.eval::<bool>(r#"TCPServer.new(2) == [nil, 2]"#)?;
+/// #   assert!(res);
+///
+///     Ok(())
+/// }
+/// # Ruby::init(example).unwrap()
 /// ```
 ///
 /// The same example as above, specifying the types slightly differently.
 /// ```
-/// use magnus::{
-///     class, define_class, error::Error, function, prelude::*, scan_args::scan_args, Value,
-/// };
-/// # use magnus::IntoValue;
-/// # let _cleanup = unsafe { magnus::embed::init() };
+/// use magnus::{function, prelude::*, scan_args::scan_args, Error, Ruby, Value};
 ///
 /// fn tcp_svr_init(args: &[Value]) -> Result<Value, Error> {
 ///     let args = scan_args::<(), (Option<String>,), (), (u16,), (), ()>(args)?;
@@ -495,31 +491,30 @@ impl<T> ScanArgsBlock for T where T: private::ScanArgsBlock {}
 ///     let (port,) = args.trailing;
 ///
 ///     // ...
-/// #   let res = magnus::RArray::with_capacity(2);
+/// #   let res = Ruby::get().unwrap().ary_new_capa(2);
 /// #   res.push(hostname)?;
 /// #   res.push(port)?;
-/// #   Ok(res.into_value())
+/// #   Ok(res.as_value())
 /// }
 ///
-/// let class = define_class("TCPServer", class::object()).unwrap();
-/// class
-///     .define_singleton_method("new", function!(tcp_svr_init, -1))
-///     .unwrap();
-/// # let res = magnus::eval::<bool>(r#"TCPServer.new("foo", 1) == ["foo", 1]"#).unwrap();
-/// # assert!(res);
-/// # let res = magnus::eval::<bool>(r#"TCPServer.new(2) == [nil, 2]"#).unwrap();
-/// # assert!(res);
+/// fn example(ruby: &Ruby) -> Result<(), Error> {
+///     let class = ruby.define_class("TCPServer", ruby.class_object())?;
+///     class.define_singleton_method("new", function!(tcp_svr_init, -1))?;
+/// #   let res = ruby.eval::<bool>(r#"TCPServer.new("foo", 1) == ["foo", 1]"#)?;
+/// #   assert!(res);
+/// #   let res = ruby.eval::<bool>(r#"TCPServer.new(2) == [nil, 2]"#)?;
+/// #   assert!(res);
+///
+///     Ok(())
+/// }
+/// # Ruby::init(example).unwrap()
 /// ```
 ///
 /// `Addrinfo::getaddrinfo`'s argument handling. This is roughly equivalent to
 /// `def getaddrinfo(nodename, service, family=nil, socktype=nil, protocol=nil, flags=nil, timeout: nil)`:
 ///
 /// ```
-/// use magnus::{
-///     prelude::*, class, define_class, error::Error, function, scan_args::{scan_args, get_kwargs}, Symbol, Value,
-/// };
-/// # use magnus::IntoValue;
-/// # let _cleanup = unsafe { magnus::embed::init() };
+/// use magnus::{function, prelude::*, scan_args::{get_kwargs, scan_args}, Error, Ruby, Symbol, Value};
 ///
 /// fn getaddrinfo(args: &[Value]) -> Result<Value, Error> {
 ///     let args = scan_args::<_, _, (), (), _, ()>(args)?;
@@ -534,7 +529,7 @@ impl<T> ScanArgsBlock for T where T: private::ScanArgsBlock {}
 ///     let (timeout,) = kw.optional;
 ///
 ///     // ...
-/// #   let res = magnus::RArray::with_capacity(7);
+/// #   let res = Ruby::get().unwrap().ary_new_capa(7);
 /// #   res.push(nodename)?;
 /// #   res.push(service)?;
 /// #   res.push(family)?;
@@ -542,15 +537,20 @@ impl<T> ScanArgsBlock for T where T: private::ScanArgsBlock {}
 /// #   res.push(protocol)?;
 /// #   res.push(flags)?;
 /// #   res.push(timeout)?;
-/// #   Ok(res.into_value())
+/// #   Ok(res.as_value())
 /// }
 ///
-/// let class = define_class("Addrinfo", class::object()).unwrap();
-/// class.define_singleton_method("getaddrinfo", function!(getaddrinfo, -1)).unwrap();
-/// # let res = magnus::eval::<bool>(r#"Addrinfo.getaddrinfo("a", 1) == ["a", 1, nil, nil, nil, nil, nil]"#).unwrap();
-/// # assert!(res);
-/// # let res = magnus::eval::<bool>(r#"Addrinfo.getaddrinfo("a", 1, :b, :c, 3, 4, timeout: 5) == ["a", 1, :b, :c, 3, 4, 5]"#).unwrap();
-/// # assert!(res);
+/// fn example(ruby: &Ruby) -> Result<(), Error> {
+///     let class = ruby.define_class("Addrinfo", ruby.class_object())?;
+///     class.define_singleton_method("getaddrinfo", function!(getaddrinfo, -1))?;
+/// #   let res = ruby.eval::<bool>(r#"Addrinfo.getaddrinfo("a", 1) == ["a", 1, nil, nil, nil, nil, nil]"#)?;
+/// #   assert!(res);
+/// #   let res = ruby.eval::<bool>(r#"Addrinfo.getaddrinfo("a", 1, :b, :c, 3, 4, timeout: 5) == ["a", 1, :b, :c, 3, 4, 5]"#)?;
+/// #   assert!(res);
+///
+///     Ok(())
+/// }
+/// # Ruby::init(example).unwrap()
 /// ```
 pub fn scan_args<Req, Opt, Splat, Trail, Kw, Block>(
     args: &[Value],
@@ -656,97 +656,102 @@ pub struct KwArgs<Req, Opt, Splat> {
 ///
 /// # Examples
 ///
-/// The rough equivalent of `def example(a:, b:, c: nil, **rest)` would be:
+/// The rough equivalent of `def test(a:, b:, c: nil, **rest)` would be:
 /// ```
-/// use magnus::{prelude::*, class, error::Error, method, scan_args::get_kwargs, RHash, Value};
+/// use magnus::{method, prelude::*, scan_args::get_kwargs, Error, RHash, Ruby, Value};
 /// # use magnus::IntoValue;
-/// # let _cleanup = unsafe { magnus::embed::init() };
 ///
-/// fn example(_rb_self: Value, kw: RHash) -> Result<Value, Error> {
+/// fn test(_rb_self: Value, kw: RHash) -> Result<Value, Error> {
 ///     let args = get_kwargs(kw, &["a", "b"], &["c"])?;
 ///     let (a, b): (String, usize) = args.required;
 ///     let (c,): (Option<bool>,) = args.optional;
 ///     let rest: RHash = args.splat;
 ///
 ///     // ...
-/// #   let res = magnus::RArray::with_capacity(4);
+/// #   let res = Ruby::get().unwrap().ary_new_capa(4);
 /// #   res.push(a)?;
 /// #   res.push(b)?;
 /// #   res.push(c)?;
 /// #   res.push(rest)?;
-/// #   Ok(res.into_value())
+/// #   Ok(res.into_value_with(&Ruby::get().unwrap()))
 /// }
 ///
-/// class::object().define_method("example", method!(example, 1)).unwrap();
-/// # let res = magnus::eval::<bool>(r#"Object.new.example(a: "foo", b: 1, c: true, d: "bar") == ["foo", 1, true, {d: "bar"}]"#).unwrap();
-/// # assert!(res);
-/// # let res = magnus::eval::<bool>(r#"Object.new.example(a: "foo", b: 1) == ["foo", 1, nil, {}]"#).unwrap();
-/// # assert!(res);
+/// fn example(ruby: &Ruby) -> Result<(), Error> {
+///     ruby.class_object().define_method("test", method!(test, 1))?;
+/// #   let res = ruby.eval::<bool>(r#"Object.new.test(a: "foo", b: 1, c: true, d: "bar") == ["foo", 1, true, {d: "bar"}]"#)?;
+/// #   assert!(res);
+/// #   let res = ruby.eval::<bool>(r#"Object.new.test(a: "foo", b: 1) == ["foo", 1, nil, {}]"#)?;
+/// #   assert!(res);
+///
+///     Ok(())
+/// }
+/// # Ruby::init(example).unwrap()
 /// ```
-/// The rough equivalent of `def example(a: "foo")` would be:
+/// The rough equivalent of `def test(a: "foo")` would be:
 /// ```
 /// use magnus::{
-///     class,
-///     error::Error,
 ///     method,
 ///     prelude::*,
 ///     scan_args::{get_kwargs, scan_args},
-///     Value,
+///     Error, Ruby, Value,
 /// };
 /// # use magnus::IntoValue;
-/// # let _cleanup = unsafe { magnus::embed::init() };
 ///
-/// fn example(_rb_self: Value, args: &[Value]) -> Result<Value, Error> {
+/// fn test(_rb_self: Value, args: &[Value]) -> Result<Value, Error> {
 ///     let args = scan_args::<(), (), (), (), _, ()>(args)?;
 ///     let args = get_kwargs(args.keywords, &[], &["a"])?;
 ///     let _: () = args.required;
 ///     let (a,): (Option<String>,) = args.optional;
 ///     let _: () = args.splat;
-///
 ///     let a = a.unwrap_or_else(|| String::from("foo"));
 ///
 ///     // ...
-///     Ok(a.into_value())
+/// #   Ok(a.into_value_with(&Ruby::get().unwrap()))
 /// }
 ///
-/// class::object()
-///     .define_method("example", method!(example, -1))
-///     .unwrap();
-/// # let res = magnus::eval::<bool>(r#"Object.new.example(a: "test") == "test""#).unwrap();
-/// # assert!(res);
-/// # let res = magnus::eval::<bool>(r#"Object.new.example == "foo""#).unwrap();
-/// # assert!(res);
+/// fn example(ruby: &Ruby) -> Result<(), Error> {
+///     ruby.class_object()
+///         .define_method("test", method!(test, -1))?;
+/// #   let res = ruby.eval::<bool>(r#"Object.new.test(a: "test") == "test""#)?;
+/// #   assert!(res);
+/// #   let res = ruby.eval::<bool>(r#"Object.new.test == "foo""#)?;
+/// #   assert!(res);
+///
+///     Ok(())
+/// }
+/// # Ruby::init(example).unwrap()
 /// ```
 /// or, specifying the types slightly differently:
 /// ```
 /// use magnus::{
-///     class,
-///     error::Error,
 ///     method,
 ///     prelude::*,
 ///     scan_args::{get_kwargs, scan_args},
-///     RHash, Value,
+///     Error, RHash, Ruby, Value,
 /// };
 /// # use magnus::IntoValue;
-/// # let _cleanup = unsafe { magnus::embed::init() };
 ///
-/// fn example(_rb_self: Value, args: &[Value]) -> Result<Value, Error> {
+/// fn test(_rb_self: Value, args: &[Value]) -> Result<Value, Error> {
 ///     let args = scan_args::<(), (), (), (), RHash, ()>(args)?;
 ///     let args = get_kwargs::<_, (), (Option<String>,), ()>(args.keywords, &[], &["a"])?;
 ///     let (a,) = args.optional;
 ///     let a = a.unwrap_or_else(|| String::from("foo"));
 ///
 ///     // ...
-///     Ok(a.into_value())
+/// #   Ok(a.into_value_with(&Ruby::get().unwrap()))
 /// }
 ///
-/// class::object()
-///     .define_method("example", method!(example, -1))
-///     .unwrap();
-/// # let res = magnus::eval::<bool>(r#"Object.new.example(a: "test") == "test""#).unwrap();
-/// # assert!(res);
-/// # let res = magnus::eval::<bool>(r#"Object.new.example == "foo""#).unwrap();
-/// # assert!(res);
+/// fn example(ruby: &Ruby) -> Result<(), Error> {
+///     ruby.class_object()
+///         .define_method("test", method!(test, -1))?;
+/// #   let res = ruby.eval::<bool>(r#"Object.new.test(a: "test") == "test""#)?;
+/// #   assert!(res);
+/// #   let res = ruby.eval::<bool>(r#"Object.new.test == "foo""#)?;
+/// #   assert!(res);
+///
+///     Ok(())
+/// }
+/// # Ruby::init(example).unwrap()
 /// ```
 pub fn get_kwargs<T, Req, Opt, Splat>(
     kw: RHash,
