@@ -117,12 +117,16 @@ impl Symbol {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, Symbol};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, Ruby, Symbol};
     ///
-    /// assert!(eval::<Symbol>(":foo").unwrap().is_static());
-    /// assert!(!Symbol::new("bar").is_static());
-    /// assert!(!eval::<Symbol>(r#""baz".to_sym"#).unwrap().is_static());
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     assert!(ruby.eval::<Symbol>(":foo")?.is_static());
+    ///     assert!(!ruby.to_symbol("bar").is_static());
+    ///     assert!(!ruby.eval::<Symbol>(r#""baz".to_sym"#)?.is_static());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn is_static(self) -> bool {
         if self.is_static_symbol() {
@@ -140,11 +144,15 @@ impl Symbol {
     /// # Examples
     ///
     /// ```
-    /// use magnus::Symbol;
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, Ruby};
     ///
-    /// let sym = Symbol::new("example");
-    /// assert_eq!(sym.name().unwrap(), "example");
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let sym = ruby.to_symbol("example");
+    ///     assert_eq!(sym.name()?, "example");
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn name(self) -> Result<Cow<'static, str>, Error> {
         if let Some(sym) = self.as_static() {
@@ -163,15 +171,19 @@ impl Symbol {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, Symbol};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, Ruby, Symbol};
     ///
-    /// assert!(eval::<Symbol>(":foo").unwrap().as_static().is_some());
-    /// assert!(Symbol::new("bar").as_static().is_none());
-    /// assert!(eval::<Symbol>(r#""baz".to_sym"#)
-    ///     .unwrap()
-    ///     .as_static()
-    ///     .is_none());
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     assert!(ruby.eval::<Symbol>(":foo")?.as_static().is_some());
+    ///     assert!(ruby.to_symbol("bar").as_static().is_none());
+    ///     assert!(ruby
+    ///         .eval::<Symbol>(r#""baz".to_sym"#)?
+    ///         .as_static()
+    ///         .is_none());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn as_static(self) -> Option<StaticSymbol> {
         self.is_static()
@@ -187,12 +199,16 @@ impl Symbol {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Symbol};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{rb_assert, Error, Ruby};
     ///
-    /// let sym = Symbol::new("example");
-    /// let static_sym = sym.to_static();
-    /// rb_assert!("sym == static_sym", sym, static_sym);
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let sym = ruby.to_symbol("example");
+    ///     let static_sym = sym.to_static();
+    ///     rb_assert!(ruby, "sym == static_sym", sym, static_sym);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn to_static(self) -> StaticSymbol {
         if let Some(sym) = StaticSymbol::from_value(self.as_value()) {
