@@ -12,7 +12,10 @@ jobs:
             matrix:
                 os:
                     - ubuntu-latest
-                    - macos-latest
+                    # intel
+                    - macos-12
+                    # arm
+                    - macos-14
                     - windows-latest
                 ruby-version:
                     - "2.7"
