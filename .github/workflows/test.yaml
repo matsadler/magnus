@@ -32,9 +32,15 @@ jobs:
                       ruby-version: "3.3"
                     - os: windows-latest
                       ruby-version: head
+                    # This works locally (macOS 14.3, M2, Ruby 3.1.4, Rust 1.75)
+                    # and all other OS/arch/ruby/rust versions work, so not sure
+                    # this specific setup on GH actions fails.
+                    - os: macos-14
+                      ruby-version: "3.1"
+                      rustup-toolchain: stable
 
         steps:
-            - uses: actions/checkout@v3
+            - uses: actions/checkout@v4
 
             - uses: oxidize-rb/actions/setup-ruby-and-rust@v1
               with:
