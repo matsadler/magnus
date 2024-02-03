@@ -733,6 +733,7 @@ where
     /// # Examples
     ///
     /// ```
+    /// # #![allow(deprecated)]
     /// use magnus::{class, define_class, prelude::*, typed_data};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
@@ -817,8 +818,7 @@ where
     /// # Examples
     ///
     /// ```
-    /// use magnus::{class, define_class, typed_data};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, Ruby};
     ///
     /// #[magnus::wrap(class = "Point")]
     /// #[derive(Debug, PartialEq, Eq)]
@@ -827,10 +827,15 @@ where
     ///     y: isize,
     /// }
     ///
-    /// define_class("Point", class::object()).unwrap();
-    /// let value = typed_data::Obj::wrap(Point { x: 4, y: 2 });
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     ruby.define_class("Point", ruby.class_object())?;
+    ///     let value = ruby.obj_wrap(Point { x: 4, y: 2 });
     ///
-    /// assert_eq!(&*value, &Point { x: 4, y: 2 });
+    ///     assert_eq!(&*value, &Point { x: 4, y: 2 });
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     fn deref(&self) -> &Self::Target {
         self.inner.get().unwrap()
@@ -919,8 +924,8 @@ where
 /// use std::hash::Hasher;
 ///
 /// use magnus::{
-///     class, define_class, function, gc, method, prelude::*, typed_data, value::Opaque,
-///     DataTypeFunctions, IntoValue, RHash, TypedData, Value,
+///     function, gc, method, prelude::*, typed_data, value::Opaque, DataTypeFunctions, Error,
+///     Ruby, TypedData, Value,
 /// };
 ///
 /// #[derive(TypedData)]
@@ -975,28 +980,34 @@ where
 ///
 /// impl Eq for Pair {}
 ///
-/// # let _cleanup = unsafe { magnus::embed::init() };
-/// #
-/// let class = define_class("Pair", class::object()).unwrap();
-/// class
-///     .define_singleton_method("new", function!(Pair::new, 2))
-///     .unwrap();
-/// class
-///     .define_method("hash", method!(<Pair as typed_data::Hash>::hash, 0))
-///     .unwrap();
-/// class
-///     .define_method("eql?", method!(<Pair as typed_data::IsEql>::is_eql, 1))
-///     .unwrap();
+/// fn example(ruby: &Ruby) -> Result<(), Error> {
+///     let class = ruby.define_class("Pair", ruby.class_object())?;
+///     class.define_singleton_method("new", function!(Pair::new, 2))?;
+///     class.define_method("hash", method!(<Pair as typed_data::Hash>::hash, 0))?;
+///     class.define_method("eql?", method!(<Pair as typed_data::IsEql>::is_eql, 1))?;
 ///
-/// let a = Pair::new("foo".into_value(), 1.into_value());
-/// let hash = RHash::new();
-/// hash.aset(a, "test value").unwrap();
+///     let a = Pair::new(
+///         ruby.str_new("foo").as_value(),
+///         ruby.integer_from_i64(1).as_value(),
+///     );
+///     let hash = ruby.hash_new();
+///     hash.aset(a, "test value")?;
 ///
-/// let b = Pair::new("foo".into_value(), 1.into_value());
-/// assert_eq!("test value", hash.fetch::<_, String>(b).unwrap());
+///     let b = Pair::new(
+///         ruby.str_new("foo").as_value(),
+///         ruby.integer_from_i64(1).as_value(),
+///     );
+///     assert_eq!("test value", hash.fetch::<_, String>(b)?);
 ///
-/// let c = Pair::new("bar".into_value(), 2.into_value());
-/// assert!(hash.get(c).is_none());
+///     let c = Pair::new(
+///         ruby.str_new("bar").as_value(),
+///         ruby.integer_from_i64(2).as_value(),
+///     );
+///     assert!(hash.get(c).is_none());
+///
+///     Ok(())
+/// }
+/// # Ruby::init(example).unwrap()
 /// ```
 pub trait Hash {
     // Docs at trait level.
@@ -1031,8 +1042,8 @@ where
 /// use std::hash::Hasher;
 ///
 /// use magnus::{
-///     class, define_class, function, gc, method, prelude::*, typed_data, value::Opaque,
-///     DataTypeFunctions, IntoValue, RHash, TypedData, Value,
+///     function, gc, method, prelude::*, typed_data, value::Opaque, DataTypeFunctions, Error,
+///     Ruby, TypedData, Value,
 /// };
 ///
 /// #[derive(TypedData)]
@@ -1087,28 +1098,34 @@ where
 ///
 /// impl Eq for Pair {}
 ///
-/// # let _cleanup = unsafe { magnus::embed::init() };
-/// #
-/// let class = define_class("Pair", class::object()).unwrap();
-/// class
-///     .define_singleton_method("new", function!(Pair::new, 2))
-///     .unwrap();
-/// class
-///     .define_method("hash", method!(<Pair as typed_data::Hash>::hash, 0))
-///     .unwrap();
-/// class
-///     .define_method("eql?", method!(<Pair as typed_data::IsEql>::is_eql, 1))
-///     .unwrap();
+/// fn example(ruby: &Ruby) -> Result<(), Error> {
+///     let class = ruby.define_class("Pair", ruby.class_object())?;
+///     class.define_singleton_method("new", function!(Pair::new, 2))?;
+///     class.define_method("hash", method!(<Pair as typed_data::Hash>::hash, 0))?;
+///     class.define_method("eql?", method!(<Pair as typed_data::IsEql>::is_eql, 1))?;
 ///
-/// let a = Pair::new("foo".into_value(), 1.into_value());
-/// let hash = RHash::new();
-/// hash.aset(a, "test value").unwrap();
+///     let a = Pair::new(
+///         ruby.str_new("foo").as_value(),
+///         ruby.integer_from_i64(1).as_value(),
+///     );
+///     let hash = ruby.hash_new();
+///     hash.aset(a, "test value")?;
 ///
-/// let b = Pair::new("foo".into_value(), 1.into_value());
-/// assert_eq!("test value", hash.fetch::<_, String>(b).unwrap());
+///     let b = Pair::new(
+///         ruby.str_new("foo").as_value(),
+///         ruby.integer_from_i64(1).as_value(),
+///     );
+///     assert_eq!("test value", hash.fetch::<_, String>(b)?);
 ///
-/// let c = Pair::new("bar".into_value(), 2.into_value());
-/// assert!(hash.get(c).is_none());
+///     let c = Pair::new(
+///         ruby.str_new("bar").as_value(),
+///         ruby.integer_from_i64(2).as_value(),
+///     );
+///     assert!(hash.get(c).is_none());
+///
+///     Ok(())
+/// }
+/// # Ruby::init(example).unwrap()
 /// ```
 pub trait IsEql {
     // Docs at trait level.
@@ -1141,8 +1158,8 @@ where
 /// use std::cmp::Ordering;
 ///
 /// use magnus::{
-///     class, define_class, function, gc, method, module, prelude::*, rb_assert, typed_data,
-///     value::Opaque, DataTypeFunctions, IntoValue, Module, TypedData, Value,
+///     function, gc, method, prelude::*, rb_assert, typed_data, value::Opaque, DataTypeFunctions,
+///     Error, Module, Ruby, TypedData, Value,
 /// };
 ///
 /// #[derive(TypedData)]
@@ -1194,28 +1211,45 @@ where
 ///     }
 /// }
 ///
-/// # let _cleanup = unsafe { magnus::embed::init() };
-/// #
-/// let class = define_class("Pair", class::object()).unwrap();
-/// class
-///     .define_singleton_method("new", function!(Pair::new, 2))
-///     .unwrap();
-/// class
-///     .define_method("<=>", method!(<Pair as typed_data::Cmp>::cmp, 1))
-///     .unwrap();
-/// class.include_module(module::comparable()).unwrap();
+/// fn example(ruby: &Ruby) -> Result<(), Error> {
+///     let class = ruby.define_class("Pair", ruby.class_object())?;
+///     class.define_singleton_method("new", function!(Pair::new, 2))?;
+///     class.define_method("<=>", method!(<Pair as typed_data::Cmp>::cmp, 1))?;
+///     class.include_module(ruby.module_comparable())?;
 ///
-/// let a = Pair::new("foo".into_value(), 1.into_value());
-/// let b = Pair::new("foo".into_value(), 2.into_value());
-/// rb_assert!("a < b", a, b);
+///     let a = Pair::new(
+///         ruby.str_new("foo").as_value(),
+///         ruby.integer_from_i64(1).as_value(),
+///     );
+///     let b = Pair::new(
+///         ruby.str_new("foo").as_value(),
+///         ruby.integer_from_i64(2).as_value(),
+///     );
+///     rb_assert!(ruby, "a < b", a, b);
 ///
-/// let b = Pair::new("foo".into_value(), 2.into_value());
-/// let c = Pair::new("bar".into_value(), 3.into_value());
-/// rb_assert!("b > c", b, c);
+///     let b = Pair::new(
+///         ruby.str_new("foo").as_value(),
+///         ruby.integer_from_i64(2).as_value(),
+///     );
+///     let c = Pair::new(
+///         ruby.str_new("bar").as_value(),
+///         ruby.integer_from_i64(1).as_value(),
+///     );
+///     rb_assert!(ruby, "b > c", b, c);
 ///
-/// let a = Pair::new("foo".into_value(), 1.into_value());
-/// let b = Pair::new("foo".into_value(), 2.into_value());
-/// rb_assert!("(a <=> b) == -1", a, b);
+///     let a = Pair::new(
+///         ruby.str_new("foo").as_value(),
+///         ruby.integer_from_i64(1).as_value(),
+///     );
+///     let b = Pair::new(
+///         ruby.str_new("foo").as_value(),
+///         ruby.integer_from_i64(2).as_value(),
+///     );
+///     rb_assert!(ruby, "(a <=> b) == -1", a, b);
+///
+///     Ok(())
+/// }
+/// # Ruby::init(example).unwrap()
 /// ```
 pub trait Cmp {
     // Docs at trait level.
@@ -1249,8 +1283,8 @@ where
 /// use std::fmt;
 ///
 /// use magnus::{
-///     class, define_class, function, gc, method, prelude::*, rb_assert, typed_data,
-///     value::Opaque, DataTypeFunctions, IntoValue, TypedData, Value,
+///     function, gc, method, prelude::*, rb_assert, typed_data, value::Opaque, DataTypeFunctions,
+///     Error, Ruby, TypedData, Value,
 /// };
 ///
 /// #[derive(TypedData)]
@@ -1287,21 +1321,23 @@ where
 ///     }
 /// }
 ///
-/// # let _cleanup = unsafe { magnus::embed::init() };
-/// #
-/// let class = define_class("Pair", class::object()).unwrap();
-/// class
-///     .define_singleton_method("new", function!(Pair::new, 2))
-///     .unwrap();
-/// class
-///     .define_method(
+/// fn example(ruby: &Ruby) -> Result<(), Error> {
+///     let class = ruby.define_class("Pair", ruby.class_object())?;
+///     class.define_singleton_method("new", function!(Pair::new, 2))?;
+///     class.define_method(
 ///         "inspect",
 ///         method!(<Pair as typed_data::Inspect>::inspect, 0),
-///     )
-///     .unwrap();
+///     )?;
 ///
-/// let pair = Pair::new("foo".into_value(), 1.into_value());
-/// rb_assert!(r#"pair.inspect == "Pair { a: \"foo\", b: 1 }""#, pair);
+///     let pair = Pair::new(
+///         ruby.str_new("foo").as_value(),
+///         ruby.integer_from_i64(1).as_value(),
+///     );
+///     rb_assert!(ruby, r#"pair.inspect == "Pair { a: \"foo\", b: 1 }""#, pair);
+///
+///     Ok(())
+/// }
+/// # Ruby::init(example).unwrap()
 /// ```
 pub trait Inspect {
     // Docs at trait level.
@@ -1329,8 +1365,8 @@ where
 ///
 /// ```
 /// use magnus::{
-///     class, define_class, function, gc, method, prelude::*, rb_assert, typed_data,
-///     value::Opaque, DataTypeFunctions, IntoValue, TypedData, Value,
+///     function, gc, method, prelude::*, rb_assert, typed_data, value::Opaque, DataTypeFunctions,
+///     Error, Ruby, TypedData, Value,
 /// };
 ///
 /// #[derive(TypedData, Clone)]
@@ -1356,21 +1392,21 @@ where
 ///     }
 /// }
 ///
-/// # let _cleanup = unsafe { magnus::embed::init() };
-/// #
-/// let class = define_class("Pair", class::object()).unwrap();
-/// class
-///     .define_singleton_method("new", function!(Pair::new, 2))
-///     .unwrap();
-/// class
-///     .define_method("dup", method!(<Pair as typed_data::Dup>::dup, 0))
-///     .unwrap();
-/// class
-///     .define_method("clone", method!(<Pair as typed_data::Dup>::clone, -1))
-///     .unwrap();
+/// fn example(ruby: &Ruby) -> Result<(), Error> {
+///     let class = ruby.define_class("Pair", ruby.class_object())?;
+///     class.define_singleton_method("new", function!(Pair::new, 2))?;
+///     class.define_method("dup", method!(<Pair as typed_data::Dup>::dup, 0))?;
+///     class.define_method("clone", method!(<Pair as typed_data::Dup>::clone, -1))?;
 ///
-/// let a = Pair::new("foo".into_value(), 1.into_value());
-/// rb_assert!("b = a.dup; a.object_id != b.object_id", a);
+///     let a = Pair::new(
+///         ruby.str_new("foo").as_value(),
+///         ruby.integer_from_i64(1).as_value(),
+///     );
+///     rb_assert!(ruby, "b = a.dup; a.object_id != b.object_id", a);
+///
+///     Ok(())
+/// }
+/// # Ruby::init(example).unwrap()
 /// ```
 pub trait Dup: Sized {
     // Docs at trait level.
