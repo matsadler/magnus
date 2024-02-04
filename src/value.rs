@@ -784,13 +784,17 @@ pub trait ReprValue: private::ReprValue {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, prelude::*, Value};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{prelude::*, Error, Ruby, Value};
     ///
-    /// assert!(eval::<Value>("nil").unwrap().is_nil());
-    /// assert!(!eval::<Value>("Object.new").unwrap().is_nil());
-    /// assert!(!eval::<Value>("0").unwrap().is_nil());
-    /// assert!(!eval::<Value>("[]").unwrap().is_nil());
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     assert!(ruby.eval::<Value>("nil")?.is_nil());
+    ///     assert!(!ruby.eval::<Value>("Object.new")?.is_nil());
+    ///     assert!(!ruby.eval::<Value>("0")?.is_nil());
+    ///     assert!(!ruby.eval::<Value>("[]")?.is_nil());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     #[inline]
     fn is_nil(self) -> bool {
@@ -807,36 +811,44 @@ pub trait ReprValue: private::ReprValue {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, Integer, RArray};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{prelude::*, Error, Ruby};
     ///
-    /// let a = RArray::from_vec(vec![1, 2, 3]);
-    /// let b = RArray::from_vec(vec![1, 2, 3]);
-    /// let c = RArray::from_vec(vec![4, 5, 6]);
-    /// let d = Integer::from_i64(1);
-    /// assert!(a.equal(a).unwrap());
-    /// assert!(a.equal(b).unwrap());
-    /// assert!(!a.equal(c).unwrap());
-    /// assert!(!a.equal(d).unwrap());
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let a = ruby.ary_from_vec(vec![1, 2, 3]);
+    ///     let b = ruby.ary_from_vec(vec![1, 2, 3]);
+    ///     let c = ruby.ary_from_vec(vec![4, 5, 6]);
+    ///     let d = ruby.integer_from_i64(1);
+    ///     assert!(a.equal(a)?);
+    ///     assert!(a.equal(b)?);
+    ///     assert!(!a.equal(c)?);
+    ///     assert!(!a.equal(d)?);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     ///
     /// ```
-    /// use magnus::{eval, prelude::*, Value};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{eval, prelude::*, Error, Ruby, Value};
     ///
-    /// let (a, b): (Value, Value) = eval!(
-    ///     "
-    ///     class Example
-    ///       def ==(other)
-    ///         raise
-    ///       end
-    ///     end
-    ///     [Example.new, Example.new]
-    /// "
-    /// )
-    /// .unwrap();
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let (a, b): (Value, Value) = eval!(
+    ///         ruby,
+    ///         "
+    ///           class Example
+    ///             def ==(other)
+    ///               raise
+    ///             end
+    ///           end
+    ///           [Example.new, Example.new]
+    ///         "
+    ///     )?;
     ///
-    /// assert!(a.equal(b).is_err());
+    ///     assert!(a.equal(b).is_err());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     fn equal<T>(self, other: T) -> Result<bool, Error>
     where
@@ -860,36 +872,44 @@ pub trait ReprValue: private::ReprValue {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, Integer, RArray};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{prelude::*, Error, Ruby};
     ///
-    /// let a = RArray::from_vec(vec![1, 2, 3]);
-    /// let b = RArray::from_vec(vec![1, 2, 3]);
-    /// let c = RArray::from_vec(vec![4, 5, 6]);
-    /// let d = Integer::from_i64(1);
-    /// assert!(a.eql(a).unwrap());
-    /// assert!(a.eql(b).unwrap());
-    /// assert!(!a.eql(c).unwrap());
-    /// assert!(!a.eql(d).unwrap());
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let a = ruby.ary_from_vec(vec![1, 2, 3]);
+    ///     let b = ruby.ary_from_vec(vec![1, 2, 3]);
+    ///     let c = ruby.ary_from_vec(vec![4, 5, 6]);
+    ///     let d = ruby.integer_from_i64(1);
+    ///     assert!(a.eql(a)?);
+    ///     assert!(a.eql(b)?);
+    ///     assert!(!a.eql(c)?);
+    ///     assert!(!a.eql(d)?);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     ///
     /// ```
-    /// use magnus::{eval, prelude::*, Value};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{eval, prelude::*, Error, Ruby, Value};
     ///
-    /// let (a, b): (Value, Value) = eval!(
-    ///     "
-    ///       class Example
-    ///         def eql?(other)
-    ///           raise
-    ///         end
-    ///       end
-    ///       [Example.new, Example.new]
-    ///     "
-    /// )
-    /// .unwrap();
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let (a, b): (Value, Value) = eval!(
+    ///         ruby,
+    ///         "
+    ///           class Example
+    ///             def eql?(other)
+    ///               raise
+    ///             end
+    ///           end
+    ///           [Example.new, Example.new]
+    ///         "
+    ///     )?;
     ///
-    /// assert!(a.eql(b).is_err());
+    ///     assert!(a.eql(b).is_err());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     fn eql<T>(self, other: T) -> Result<bool, Error>
     where
@@ -915,14 +935,17 @@ pub trait ReprValue: private::ReprValue {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, RString};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{prelude::*, Error, Ruby};
     ///
-    /// assert!(RString::new("test")
-    ///     .hash()
-    ///     .unwrap()
-    ///     .equal(RString::new("test").hash().unwrap())
-    ///     .unwrap());
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     assert!(ruby
+    ///         .str_new("test")
+    ///         .hash()?
+    ///         .equal(ruby.str_new("test").hash()?)?);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     fn hash(self) -> Result<Integer, Error> {
         unsafe { protect(|| Integer::from_rb_value_unchecked(rb_hash(self.as_rb_value()))) }
@@ -937,14 +960,15 @@ pub trait ReprValue: private::ReprValue {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, prelude::*, Value};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{prelude::*, Error, Ruby, Value};
     ///
-    /// assert_eq!(
-    ///     eval::<Value>("true").unwrap().class().inspect(),
-    ///     "TrueClass"
-    /// );
-    /// assert_eq!(eval::<Value>("[1,2,3]").unwrap().class().inspect(), "Array");
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     assert_eq!(ruby.eval::<Value>("true")?.class().inspect(), "TrueClass");
+    ///     assert_eq!(ruby.eval::<Value>("[1,2,3]")?.class().inspect(), "Array");
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     fn class(self) -> RClass {
         let handle = Ruby::get_with(self);
@@ -981,12 +1005,16 @@ pub trait ReprValue: private::ReprValue {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, prelude::*, Value};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{prelude::*, Error, Ruby, Value};
     ///
-    /// assert!(eval::<Value>(":foo").unwrap().is_frozen());
-    /// assert!(eval::<Value>("42").unwrap().is_frozen());
-    /// assert!(!eval::<Value>("[]").unwrap().is_frozen());
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     assert!(ruby.eval::<Value>(":foo")?.is_frozen());
+    ///     assert!(ruby.eval::<Value>("42")?.is_frozen());
+    ///     assert!(!ruby.eval::<Value>("[]")?.is_frozen());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     fn is_frozen(self) -> bool {
         match self.r_basic() {
@@ -1004,8 +1032,7 @@ pub trait ReprValue: private::ReprValue {
     ///
     /// # Examples
     /// ```
-    /// use magnus::{eval, prelude::*, Error, Value};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{prelude::*, Error, Ruby, Value};
     ///
     /// fn mutate(val: Value) -> Result<(), Error> {
     ///     val.check_frozen()?;
@@ -1014,8 +1041,13 @@ pub trait ReprValue: private::ReprValue {
     ///     Ok(())
     /// }
     ///
-    /// assert!(mutate(eval("Object.new").unwrap()).is_ok());
-    /// assert!(mutate(eval(":foo").unwrap()).is_err());
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     assert!(mutate(ruby.eval("Object.new")?).is_ok());
+    ///     assert!(mutate(ruby.eval(":foo")?).is_err());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     fn check_frozen(self) -> Result<(), Error> {
         if self.is_frozen() {
@@ -1033,13 +1065,17 @@ pub trait ReprValue: private::ReprValue {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, RArray};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{prelude::*, Error, Ruby};
     ///
-    /// let ary = RArray::new();
-    /// assert!(!ary.is_frozen());
-    /// ary.freeze();
-    /// assert!(ary.is_frozen());
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let ary = ruby.ary_new();
+    ///     assert!(!ary.is_frozen());
+    ///     ary.freeze();
+    ///     assert!(ary.is_frozen());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     fn freeze(self) {
         unsafe { rb_obj_freeze(self.as_rb_value()) };
@@ -1051,17 +1087,21 @@ pub trait ReprValue: private::ReprValue {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, prelude::*, Value};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{prelude::*, Error, Ruby, Value};
     ///
-    /// assert!(!eval::<Value>("false").unwrap().to_bool());
-    /// assert!(!eval::<Value>("nil").unwrap().to_bool());
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     assert!(!ruby.eval::<Value>("false")?.to_bool());
+    ///     assert!(!ruby.eval::<Value>("nil")?.to_bool());
     ///
-    /// assert!(eval::<Value>("true").unwrap().to_bool());
-    /// assert!(eval::<Value>("0").unwrap().to_bool());
-    /// assert!(eval::<Value>("[]").unwrap().to_bool());
-    /// assert!(eval::<Value>(":foo").unwrap().to_bool());
-    /// assert!(eval::<Value>("Object.new").unwrap().to_bool());
+    ///     assert!(ruby.eval::<Value>("true")?.to_bool());
+    ///     assert!(ruby.eval::<Value>("0")?.to_bool());
+    ///     assert!(ruby.eval::<Value>("[]")?.to_bool());
+    ///     assert!(ruby.eval::<Value>(":foo")?.to_bool());
+    ///     assert!(ruby.eval::<Value>("Object.new")?.to_bool());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     #[inline]
     fn to_bool(self) -> bool {
@@ -1077,33 +1117,41 @@ pub trait ReprValue: private::ReprValue {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, prelude::*, RArray};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{prelude::*, Error, RArray, Ruby};
     ///
-    /// let values = eval::<RArray>(r#"["foo", 1, :bar]"#).unwrap();
-    /// let result: String = values.funcall("join", (" & ",)).unwrap();
-    /// assert_eq!(result, "foo & 1 & bar");
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let values = ruby.eval::<RArray>(r#"["foo", 1, :bar]"#)?;
+    ///     let result: String = values.funcall("join", (" & ",))?;
+    ///     assert_eq!(result, "foo & 1 & bar");
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     ///
     /// ```
-    /// use magnus::{eval, kwargs, prelude::*, RObject};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{eval, kwargs, prelude::*, Error, RObject, Ruby};
     ///
-    /// let object: RObject = eval!(
-    ///     r#"
-    ///     class Adder
-    ///       def add(a, b, c:)
-    ///         a + b + c
-    ///       end
-    ///     end
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let object: RObject = eval!(
+    ///         ruby,
+    ///         r#"
+    ///           class Adder
+    ///             def add(a, b, c:)
+    ///               a + b + c
+    ///             end
+    ///           end
     ///
-    ///     Adder.new
-    /// "#
-    /// )
-    /// .unwrap();
+    ///           Adder.new
+    ///         "#
+    ///     )?;
     ///
-    /// let result: i32 = object.funcall("add", (1, 2, kwargs!("c" => 3))).unwrap();
-    /// assert_eq!(result, 6);
+    ///     let result: i32 = object.funcall("add", (1, 2, kwargs!("c" => 3)))?;
+    ///     assert_eq!(result, 6);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     fn funcall<M, A, T>(self, method: M, args: A) -> Result<T, Error>
     where
@@ -1139,33 +1187,37 @@ pub trait ReprValue: private::ReprValue {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, prelude::*, Error, RObject, Symbol};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{eval, prelude::*, Error, RObject, Ruby, Symbol};
     ///
-    /// let object: RObject = eval!(
-    ///     r#"
-    ///     class Foo
-    ///       def bar
-    ///         :bar
-    ///       end
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let object: RObject = eval!(
+    ///         ruby,
+    ///         r#"
+    ///           class Foo
+    ///             def bar
+    ///               :bar
+    ///             end
     ///
-    ///       private
+    ///             private
     ///
-    ///       def baz
-    ///         :baz
-    ///       end
-    ///     end
+    ///             def baz
+    ///               :baz
+    ///             end
+    ///           end
     ///
-    ///     Foo.new
-    /// "#
-    /// )
-    /// .unwrap();
+    ///           Foo.new
+    ///         "#
+    ///     )?;
     ///
-    /// let result: Symbol = object.funcall_public("bar", ()).unwrap();
-    /// assert_eq!(result.name().unwrap(), "bar");
+    ///     let result: Symbol = object.funcall_public("bar", ())?;
+    ///     assert_eq!(result.name()?, "bar");
     ///
-    /// let result: Result<Symbol, Error> = object.funcall_public("baz", ());
-    /// assert!(result.is_err());
+    ///     let result: Result<Symbol, Error> = object.funcall_public("baz", ());
+    ///     assert!(result.is_err());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     fn funcall_public<M, A, T>(self, method: M, args: A) -> Result<T, Error>
     where
@@ -1200,16 +1252,20 @@ pub trait ReprValue: private::ReprValue {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, Float, Integer, RString};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{prelude::*, Error, Integer, Ruby};
     ///
-    /// let val = Float::from_f64(1.23);
-    /// let res: Integer = val.check_funcall("to_int", ()).unwrap().unwrap();
-    /// assert_eq!(res.to_i64().unwrap(), 1);
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let val = ruby.float_from_f64(1.23);
+    ///     let res: Integer = val.check_funcall("to_int", ()).unwrap()?;
+    ///     assert_eq!(res.to_i64()?, 1);
     ///
-    /// let val = RString::new("1.23");
-    /// let res: Option<Result<Integer, _>> = val.check_funcall("to_int", ());
-    /// assert!(res.is_none());
+    ///     let val = ruby.str_new("1.23");
+    ///     let res: Option<Result<Integer, _>> = val.check_funcall("to_int", ());
+    ///     assert!(res.is_none());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     fn check_funcall<M, A, T>(self, method: M, args: A) -> Option<Result<T, Error>>
     where
@@ -1250,13 +1306,17 @@ pub trait ReprValue: private::ReprValue {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{block::Proc, eval, prelude::*, RArray, Value};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{prelude::*, Error, RArray, Ruby, Value};
     ///
-    /// let values = eval::<RArray>(r#"["foo", 1, :bar]"#).unwrap();
-    /// let block = Proc::new(|_ruby, args, _block| args.first().unwrap().to_r_string());
-    /// let _: Value = values.funcall_with_block("map!", (), block).unwrap();
-    /// assert_eq!(values.to_vec::<String>().unwrap(), vec!["foo", "1", "bar"]);
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let values = ruby.eval::<RArray>(r#"["foo", 1, :bar]"#)?;
+    ///     let block = ruby.proc_new(|_ruby, args, _block| args.first().unwrap().to_r_string());
+    ///     let _: Value = values.funcall_with_block("map!", (), block)?;
+    ///     assert_eq!(values.to_vec::<String>()?, vec!["foo", "1", "bar"]);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     fn funcall_with_block<M, A, T>(self, method: M, args: A, block: Proc) -> Result<T, Error>
     where
@@ -1305,16 +1365,18 @@ pub trait ReprValue: private::ReprValue {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, prelude::*, RArray, Value};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{prelude::*, Error, RArray, Ruby, Value};
     ///
-    /// let values = eval::<RArray>(r#"["foo", 1, :bar]"#).unwrap();
-    /// let _: Value = values
-    ///     .block_call("map!", (), |_ruby, args, _block| {
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let values = ruby.eval::<RArray>(r#"["foo", 1, :bar]"#)?;
+    ///     let _: Value = values.block_call("map!", (), |_ruby, args, _block| {
     ///         args.first().unwrap().to_r_string()
-    ///     })
-    ///     .unwrap();
-    /// assert_eq!(values.to_vec::<String>().unwrap(), vec!["foo", "1", "bar"]);
+    ///     })?;
+    ///     assert_eq!(values.to_vec::<String>()?, vec!["foo", "1", "bar"]);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     fn block_call<M, A, R, T>(
         self,
@@ -1377,15 +1439,19 @@ pub trait ReprValue: private::ReprValue {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, RString};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{prelude::*, Error, Ruby};
     ///
-    /// let s = RString::new("example");
-    /// assert!(s.respond_to("to_str", false).unwrap());
-    /// assert!(!s.respond_to("puts", false).unwrap());
-    /// assert!(s.respond_to("puts", true).unwrap());
-    /// assert!(!s.respond_to("non_existant", false).unwrap());
-    /// assert!(!s.respond_to("non_existant", true).unwrap());
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let s = ruby.str_new("example");
+    ///     assert!(s.respond_to("to_str", false)?);
+    ///     assert!(!s.respond_to("puts", false)?);
+    ///     assert!(s.respond_to("puts", true)?);
+    ///     assert!(!s.respond_to("non_existant", false)?);
+    ///     assert!(!s.respond_to("non_existant", true)?);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     fn respond_to<M>(self, method: M, include_private: bool) -> Result<bool, Error>
     where
@@ -1412,11 +1478,15 @@ pub trait ReprValue: private::ReprValue {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{class, eval, prelude::*, Value};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{prelude::*, Error, Ruby, Value};
     ///
-    /// let value = eval::<Value>("[]").unwrap();
-    /// assert!(value.to_r_string().unwrap().is_kind_of(class::string()));
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let value = ruby.eval::<Value>("[]")?;
+    ///     assert!(value.to_r_string()?.is_kind_of(ruby.class_string()));
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     fn to_r_string(self) -> Result<RString, Error> {
         match RString::from_value(self.as_value()) {
@@ -1441,13 +1511,17 @@ pub trait ReprValue: private::ReprValue {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, IntoValue};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{prelude::*, Error, Ruby};
     ///
-    /// let value = true.into_value();
-    /// // safe as we never give Ruby a chance to free the string.
-    /// let s = unsafe { value.to_s() }.unwrap().into_owned();
-    /// assert_eq!(s, "true");
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let value = ruby.qtrue();
+    ///     // safe as we never give Ruby a chance to free the string.
+    ///     let s = unsafe { value.to_s() }?.into_owned();
+    ///     assert_eq!(s, "true");
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     #[allow(clippy::wrong_self_convention)]
     unsafe fn to_s(&self) -> Result<Cow<str>, Error> {
@@ -1467,11 +1541,15 @@ pub trait ReprValue: private::ReprValue {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, IntoValue, Symbol};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{prelude::*, Error, Ruby};
     ///
-    /// assert_eq!(().into_value().inspect(), "nil");
-    /// assert_eq!(Symbol::new("foo").inspect(), ":foo");
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     assert_eq!(ruby.qnil().inspect(), "nil");
+    ///     assert_eq!(ruby.to_symbol("foo").inspect(), ":foo");
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     fn inspect(self) -> String {
         let handle = Ruby::get_with(self);
@@ -1500,13 +1578,17 @@ pub trait ReprValue: private::ReprValue {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, RHash};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{prelude::*, Error, Ruby};
     ///
-    /// let value = RHash::new();
-    /// // safe as we never give Ruby a chance to free the string.
-    /// let s = unsafe { value.classname() }.into_owned();
-    /// assert_eq!(s, "Hash");
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let value = ruby.hash_new();
+    ///     // safe as we never give Ruby a chance to free the string.
+    ///     let s = unsafe { value.classname() }.into_owned();
+    ///     assert_eq!(s, "Hash");
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     unsafe fn classname(&self) -> Cow<str> {
         let ptr = rb_obj_classname(self.as_rb_value());
@@ -1519,11 +1601,15 @@ pub trait ReprValue: private::ReprValue {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{class, eval, prelude::*, Value};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{prelude::*, Error, Ruby, Value};
     ///
-    /// let value = eval::<Value>("[]").unwrap();
-    /// assert!(value.is_kind_of(class::array()));
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let value = ruby.eval::<Value>("[]")?;
+    ///     assert!(value.is_kind_of(ruby.class_array()));
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     fn is_kind_of<T>(self, class: T) -> bool
     where
@@ -1538,16 +1624,20 @@ pub trait ReprValue: private::ReprValue {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{class, prelude::*, r_string};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{prelude::*, r_string, Error, Ruby};
     ///
-    /// let s = r_string!("foo\\bar\\baz");
-    /// let mut i = 0;
-    /// for line in s.enumeratorize("each_line", ("\\",)) {
-    ///     assert!(line.unwrap().is_kind_of(class::string()));
-    ///     i += 1;
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let s = r_string!("foo\\bar\\baz");
+    ///     let mut i = 0;
+    ///     for line in s.enumeratorize("each_line", ("\\",)) {
+    ///         assert!(line?.is_kind_of(ruby.class_string()));
+    ///         i += 1;
+    ///     }
+    ///     assert_eq!(i, 3);
+    ///
+    ///     Ok(())
     /// }
-    /// assert_eq!(i, 3);
+    /// # Ruby::init(example).unwrap()
     /// ```
     fn enumeratorize<M, A>(self, method: M, args: A) -> Enumerator
     where
@@ -1609,30 +1699,34 @@ where
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, gc, value::BoxValue, RString, Value};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{eval, value::BoxValue, Error, RString, Ruby, Value};
     ///
     /// # #[inline(never)]
-    /// fn box_value() -> BoxValue<RString> {
-    ///     BoxValue::new(RString::new("foo"))
+    /// fn box_value(ruby: &Ruby) -> BoxValue<RString> {
+    ///     BoxValue::new(ruby.str_new("foo"))
     /// }
     ///
-    /// # // get the Value in a different stack frame and copy it to a BoxValue
-    /// # // test is invalid if this is done in this function.
-    /// let boxed = box_value();
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    /// #   // get the Value in a different stack frame and copy it to a BoxValue
+    /// #   // test is invalid if this is done in this function.
+    ///     let boxed = box_value(ruby);
     ///
-    /// # // make some garbage
-    /// # eval::<Value>(r#"1024.times.map {|i| "test#{i}"}"#).unwrap();
-    /// // run garbage collector
-    /// gc::start();
+    /// #   // make some garbage
+    /// #   ruby.eval::<Value>(r#"1024.times.map {|i| "test#{i}"}"#)?;
+    ///     // run garbage collector
+    ///     ruby.gc_start();
     ///
-    /// # // try and use value
-    /// // boxed is still useable
-    /// let result: String = eval!(r#"foo + "bar""#, foo = boxed).unwrap();
+    /// #   // try and use value
+    ///     // boxed is still useable
+    ///     let result: String = eval!(ruby, r#"foo + "bar""#, foo = boxed)?;
     ///
-    /// assert_eq!(result, "foobar");
+    ///     assert_eq!(result, "foobar");
     ///
-    /// # // didn't segfault? we passed!
+    /// #   // didn't segfault? we passed!
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn new(val: T) -> Self {
         let mut boxed = Box::new(val);
@@ -2373,13 +2467,17 @@ impl Fixnum {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, Fixnum};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, Fixnum, Ruby};
     ///
-    /// assert_eq!(eval::<Fixnum>("127").unwrap().to_i8().unwrap(), 127);
-    /// assert!(eval::<Fixnum>("128").unwrap().to_i8().is_err());
-    /// assert_eq!(eval::<Fixnum>("-128").unwrap().to_i8().unwrap(), -128);
-    /// assert!(eval::<Fixnum>("-129").unwrap().to_i8().is_err());
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     assert_eq!(ruby.eval::<Fixnum>("127")?.to_i8()?, 127);
+    ///     assert!(ruby.eval::<Fixnum>("128")?.to_i8().is_err());
+    ///     assert_eq!(ruby.eval::<Fixnum>("-128")?.to_i8()?, -128);
+    ///     assert!(ruby.eval::<Fixnum>("-129")?.to_i8().is_err());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     #[inline]
     pub fn to_i8(self) -> Result<i8, Error> {
@@ -2399,13 +2497,17 @@ impl Fixnum {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, Fixnum};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, Fixnum, Ruby};
     ///
-    /// assert_eq!(eval::<Fixnum>("32767").unwrap().to_i16().unwrap(), 32767);
-    /// assert!(eval::<Fixnum>("32768").unwrap().to_i16().is_err());
-    /// assert_eq!(eval::<Fixnum>("-32768").unwrap().to_i16().unwrap(), -32768);
-    /// assert!(eval::<Fixnum>("-32769").unwrap().to_i16().is_err());
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     assert_eq!(ruby.eval::<Fixnum>("32767")?.to_i16()?, 32767);
+    ///     assert!(ruby.eval::<Fixnum>("32768")?.to_i16().is_err());
+    ///     assert_eq!(ruby.eval::<Fixnum>("-32768")?.to_i16()?, -32768);
+    ///     assert!(ruby.eval::<Fixnum>("-32769")?.to_i16().is_err());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     #[inline]
     pub fn to_i16(self) -> Result<i16, Error> {
@@ -2425,22 +2527,20 @@ impl Fixnum {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, Fixnum};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, Fixnum, Ruby};
     ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
     /// # #[cfg(not(windows))]
     /// # {
-    /// assert_eq!(
-    ///     eval::<Fixnum>("2147483647").unwrap().to_i32().unwrap(),
-    ///     2147483647
-    /// );
-    /// assert!(eval::<Fixnum>("2147483648").unwrap().to_i32().is_err());
-    /// assert_eq!(
-    ///     eval::<Fixnum>("-2147483648").unwrap().to_i32().unwrap(),
-    ///     -2147483648
-    /// );
-    /// assert!(eval::<Fixnum>("-2147483649").unwrap().to_i32().is_err());
+    ///     assert_eq!(ruby.eval::<Fixnum>("2147483647")?.to_i32()?, 2147483647);
+    ///     assert!(ruby.eval::<Fixnum>("2147483648")?.to_i32().is_err());
+    ///     assert_eq!(ruby.eval::<Fixnum>("-2147483648")?.to_i32()?, -2147483648);
+    ///     assert!(ruby.eval::<Fixnum>("-2147483649")?.to_i32().is_err());
     /// # }
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     #[inline]
     pub fn to_i32(self) -> Result<i32, Error> {
@@ -2460,19 +2560,23 @@ impl Fixnum {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, Fixnum};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, Fixnum, Ruby};
     ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
     /// # #[cfg(not(windows))]
-    /// assert_eq!(
-    ///     eval::<Fixnum>("4611686018427387903").unwrap().to_i64(),
-    ///     4611686018427387903
-    /// );
+    ///     assert_eq!(
+    ///         ruby.eval::<Fixnum>("4611686018427387903")?.to_i64(),
+    ///         4611686018427387903
+    ///     );
     /// # #[cfg(not(windows))]
-    /// assert_eq!(
-    ///     eval::<Fixnum>("-4611686018427387904").unwrap().to_i64(),
-    ///     -4611686018427387904
-    /// );
+    ///     assert_eq!(
+    ///         ruby.eval::<Fixnum>("-4611686018427387904")?.to_i64(),
+    ///         -4611686018427387904
+    ///     );
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     #[inline]
     pub fn to_i64(self) -> i64 {
@@ -2485,19 +2589,23 @@ impl Fixnum {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, Fixnum};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, Fixnum, Ruby};
     ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
     /// # #[cfg(not(windows))]
-    /// assert_eq!(
-    ///     eval::<Fixnum>("4611686018427387903").unwrap().to_isize(),
-    ///     4611686018427387903
-    /// );
+    ///     assert_eq!(
+    ///         ruby.eval::<Fixnum>("4611686018427387903")?.to_isize(),
+    ///         4611686018427387903
+    ///     );
     /// # #[cfg(not(windows))]
-    /// assert_eq!(
-    ///     eval::<Fixnum>("-4611686018427387904").unwrap().to_isize(),
-    ///     -4611686018427387904
-    /// );
+    ///     assert_eq!(
+    ///         ruby.eval::<Fixnum>("-4611686018427387904")?.to_isize(),
+    ///         -4611686018427387904
+    ///     );
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     #[inline]
     pub fn to_isize(self) -> isize {
@@ -2510,12 +2618,16 @@ impl Fixnum {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, Fixnum};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, Fixnum, Ruby};
     ///
-    /// assert_eq!(eval::<Fixnum>("255").unwrap().to_u8().unwrap(), 255);
-    /// assert!(eval::<Fixnum>("256").unwrap().to_u8().is_err());
-    /// assert!(eval::<Fixnum>("-1").unwrap().to_u8().is_err());
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     assert_eq!(ruby.eval::<Fixnum>("255")?.to_u8()?, 255);
+    ///     assert!(ruby.eval::<Fixnum>("256")?.to_u8().is_err());
+    ///     assert!(ruby.eval::<Fixnum>("-1")?.to_u8().is_err());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     #[inline]
     pub fn to_u8(self) -> Result<u8, Error> {
@@ -2542,12 +2654,16 @@ impl Fixnum {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, Fixnum};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, Fixnum, Ruby};
     ///
-    /// assert_eq!(eval::<Fixnum>("65535").unwrap().to_u16().unwrap(), 65535);
-    /// assert!(eval::<Fixnum>("65536").unwrap().to_u16().is_err());
-    /// assert!(eval::<Fixnum>("-1").unwrap().to_u16().is_err());
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     assert_eq!(ruby.eval::<Fixnum>("65535")?.to_u16()?, 65535);
+    ///     assert!(ruby.eval::<Fixnum>("65536")?.to_u16().is_err());
+    ///     assert!(ruby.eval::<Fixnum>("-1")?.to_u16().is_err());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     #[inline]
     pub fn to_u16(self) -> Result<u16, Error> {
@@ -2574,18 +2690,19 @@ impl Fixnum {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, Fixnum};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, Fixnum, Ruby};
     ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
     /// # #[cfg(not(windows))]
     /// # {
-    /// assert_eq!(
-    ///     eval::<Fixnum>("4294967295").unwrap().to_u32().unwrap(),
-    ///     4294967295
-    /// );
-    /// assert!(eval::<Fixnum>("4294967296").unwrap().to_u32().is_err());
+    ///     assert_eq!(ruby.eval::<Fixnum>("4294967295")?.to_u32()?, 4294967295);
+    ///     assert!(ruby.eval::<Fixnum>("4294967296")?.to_u32().is_err());
     /// # }
-    /// assert!(eval::<Fixnum>("-1").unwrap().to_u32().is_err());
+    ///     assert!(ruby.eval::<Fixnum>("-1")?.to_u32().is_err());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     #[inline]
     pub fn to_u32(self) -> Result<u32, Error> {
@@ -2611,18 +2728,19 @@ impl Fixnum {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, Fixnum};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, Fixnum, Ruby};
     ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
     /// # #[cfg(not(windows))]
-    /// assert_eq!(
-    ///     eval::<Fixnum>("4611686018427387903")
-    ///         .unwrap()
-    ///         .to_u64()
-    ///         .unwrap(),
-    ///     4611686018427387903
-    /// );
-    /// assert!(eval::<Fixnum>("-1").unwrap().to_u64().is_err());
+    ///     assert_eq!(
+    ///         ruby.eval::<Fixnum>("4611686018427387903")?.to_u64()?,
+    ///         4611686018427387903
+    ///     );
+    ///     assert!(ruby.eval::<Fixnum>("-1")?.to_u64().is_err());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     #[inline]
     pub fn to_u64(self) -> Result<u64, Error> {
@@ -2641,18 +2759,19 @@ impl Fixnum {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, Fixnum};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, Fixnum, Ruby};
     ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
     /// # #[cfg(not(windows))]
-    /// assert_eq!(
-    ///     eval::<Fixnum>("4611686018427387903")
-    ///         .unwrap()
-    ///         .to_usize()
-    ///         .unwrap(),
-    ///     4611686018427387903
-    /// );
-    /// assert!(eval::<Fixnum>("-1").unwrap().to_usize().is_err());
+    ///     assert_eq!(
+    ///         ruby.eval::<Fixnum>("4611686018427387903")?.to_usize()?,
+    ///         4611686018427387903
+    ///     );
+    ///     assert!(ruby.eval::<Fixnum>("-1")?.to_usize().is_err());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     #[inline]
     pub fn to_usize(self) -> Result<usize, Error> {
@@ -2871,11 +2990,15 @@ impl StaticSymbol {
     /// # Examples
     ///
     /// ```
-    /// use magnus::StaticSymbol;
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, Ruby};
     ///
-    /// let sym = StaticSymbol::new("example");
-    /// assert_eq!(sym.name().unwrap(), "example");
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let sym = ruby.sym_new("example");
+    ///     assert_eq!(sym.name()?, "example");
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     #[inline]
     pub fn name(self) -> Result<&'static str, Error> {
@@ -3099,11 +3222,15 @@ impl Id {
     /// # Examples
     ///
     /// ```
-    /// use magnus::value::Id;
-    /// # let _cleanup = unsafe { magnus::embed::init() };
+    /// use magnus::{Error, Ruby};
     ///
-    /// let id = Id::new("example");
-    /// assert_eq!(id.name().unwrap(), "example");
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let id = ruby.intern("example");
+    ///     assert_eq!(id.name()?, "example");
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn name(self) -> Result<&'static str, Error> {
         unsafe {
@@ -3358,12 +3485,16 @@ impl LazyId {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, value::LazyId};
+    /// use magnus::{rb_assert, value::LazyId, Error, Ruby};
     ///
     /// static EXAMPLE: LazyId = LazyId::new("example");
     ///
-    /// # let _cleanup = unsafe { magnus::embed::init() };
-    /// rb_assert!("val == :example", val = *EXAMPLE);
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(ruby, "val == :example", val = *EXAMPLE);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub const fn new(name: &'static str) -> Self {
         Self {
@@ -3412,16 +3543,16 @@ impl LazyId {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{
-    ///     value::{Id, LazyId},
-    ///     Ruby,
-    /// };
+    /// use magnus::{value::LazyId, Error, Ruby};
     ///
     /// static EXAMPLE: LazyId = LazyId::new("example");
     ///
-    /// # let _cleanup = unsafe { magnus::embed::init() };
-    /// let ruby = Ruby::get().unwrap();
-    /// assert!(Id::new("example") == LazyId::get_inner_with(&EXAMPLE, &ruby));
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     assert!(ruby.intern("example") == LazyId::get_inner_with(&EXAMPLE, &ruby));
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     #[inline]
     pub fn get_inner_with(this: &Self, handle: &Ruby) -> Id {
@@ -3446,16 +3577,20 @@ impl LazyId {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, value::LazyId};
+    /// use magnus::{rb_assert, value::LazyId, Error, Ruby};
     ///
     /// static EXAMPLE: LazyId = LazyId::new("example");
     ///
-    /// # let _cleanup = unsafe { magnus::embed::init() };
-    /// assert!(LazyId::try_get_inner(&EXAMPLE).is_none());
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     assert!(LazyId::try_get_inner(&EXAMPLE).is_none());
     ///
-    /// rb_assert!("val == :example", val = *EXAMPLE);
+    ///     rb_assert!(ruby, "val == :example", val = *EXAMPLE);
     ///
-    /// assert!(LazyId::try_get_inner(&EXAMPLE).is_some());
+    ///     assert!(LazyId::try_get_inner(&EXAMPLE).is_some());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
     /// ```
     pub fn try_get_inner(this: &Self) -> Option<OpaqueId> {
         unsafe { this.init.is_completed().then(|| (*this.inner.get()).value) }
