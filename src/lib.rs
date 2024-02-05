@@ -57,7 +57,7 @@
 //! # Examples
 //!
 //! ```
-//! use magnus::{class, define_module, function, method, prelude::*, Error};
+//! use magnus::{function, method, prelude::*, Error, Ruby};
 //!
 //! #[magnus::wrap(class = "Euclid::Point", free_immediately, size)]
 //! struct Point {
@@ -84,17 +84,16 @@
 //! }
 //!
 //! #[magnus::init]
-//! fn init() -> Result<(), Error> {
-//!     let module = define_module("Euclid")?;
-//!     let class = module.define_class("Point", class::object())?;
+//! fn init(ruby: &Ruby) -> Result<(), Error> {
+//!     let module = ruby.define_module("Euclid")?;
+//!     let class = module.define_class("Point", ruby.class_object())?;
 //!     class.define_singleton_method("new", function!(Point::new, 2))?;
 //!     class.define_method("x", method!(Point::x, 0))?;
 //!     class.define_method("y", method!(Point::y, 0))?;
 //!     module.define_module_function("distance", function!(distance, 2))?;
 //!     Ok(())
 //! }
-//! # let _cleanup = unsafe { magnus::embed::init() };
-//! # init().unwrap();
+//! # Ruby::init(init).unwrap()
 //! ```
 //!
 //! # Crates that work with Magnus
