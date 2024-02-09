@@ -1215,6 +1215,7 @@ impl Ruby {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::class_array` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn array() -> RClass {
     get_ruby!().class_array()
@@ -1230,6 +1231,7 @@ pub fn array() -> RClass {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::class_basic_object` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn basic_object() -> RClass {
     get_ruby!().class_basic_object()
@@ -1245,6 +1247,7 @@ pub fn basic_object() -> RClass {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::class_binding` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn binding() -> RClass {
     get_ruby!().class_binding()
@@ -1260,6 +1263,7 @@ pub fn binding() -> RClass {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::class_class` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn class() -> RClass {
     get_ruby!().class_class()
@@ -1275,6 +1279,7 @@ pub fn class() -> RClass {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::class_complex` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn complex() -> RClass {
     get_ruby!().class_complex()
@@ -1290,6 +1295,7 @@ pub fn complex() -> RClass {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::class_dir` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn dir() -> RClass {
     get_ruby!().class_dir()
@@ -1305,6 +1311,7 @@ pub fn dir() -> RClass {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::class_encoding` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn encoding() -> RClass {
     get_ruby!().class_encoding()
@@ -1320,6 +1327,7 @@ pub fn encoding() -> RClass {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::class_enumerator` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn enumerator() -> RClass {
     get_ruby!().class_enumerator()
@@ -1335,6 +1343,7 @@ pub fn enumerator() -> RClass {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::class_false_class` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn false_class() -> RClass {
     get_ruby!().class_false_class()
@@ -1350,6 +1359,7 @@ pub fn false_class() -> RClass {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::class_file` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn file() -> RClass {
     get_ruby!().class_file()
@@ -1365,6 +1375,7 @@ pub fn file() -> RClass {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::class_float` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn float() -> RClass {
     get_ruby!().class_float()
@@ -1380,6 +1391,7 @@ pub fn float() -> RClass {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::class_hash` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn hash() -> RClass {
     get_ruby!().class_hash()
@@ -1395,6 +1407,7 @@ pub fn hash() -> RClass {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::class_io` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn io() -> RClass {
     get_ruby!().class_io()
@@ -1410,6 +1423,7 @@ pub fn io() -> RClass {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::class_integer` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn integer() -> RClass {
     get_ruby!().class_integer()
@@ -1425,6 +1439,7 @@ pub fn integer() -> RClass {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::class_match` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn match_class() -> RClass {
     get_ruby!().class_match()
@@ -1440,6 +1455,7 @@ pub fn match_class() -> RClass {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::class_method` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn method() -> RClass {
     get_ruby!().class_method()
@@ -1455,6 +1471,7 @@ pub fn method() -> RClass {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::class_module` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn module() -> RClass {
     get_ruby!().class_module()
@@ -1470,6 +1487,7 @@ pub fn module() -> RClass {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::class_name_error_mesg` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn name_error_mesg() -> RClass {
     get_ruby!().class_name_error_mesg()
@@ -1485,6 +1503,7 @@ pub fn name_error_mesg() -> RClass {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::class_nil_class` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn nil_class() -> RClass {
     get_ruby!().class_nil_class()
@@ -1500,6 +1519,7 @@ pub fn nil_class() -> RClass {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::class_numeric` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn numeric() -> RClass {
     get_ruby!().class_numeric()
@@ -1515,6 +1535,7 @@ pub fn numeric() -> RClass {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::class_object` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn object() -> RClass {
     get_ruby!().class_object()
@@ -1530,6 +1551,7 @@ pub fn object() -> RClass {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::class_proc` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn proc() -> RClass {
     get_ruby!().class_proc()
@@ -1545,6 +1567,7 @@ pub fn proc() -> RClass {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::class_random` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn random() -> RClass {
     get_ruby!().class_random()
@@ -1560,6 +1583,7 @@ pub fn random() -> RClass {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::class_range` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn range() -> RClass {
     get_ruby!().class_range()
@@ -1575,6 +1599,7 @@ pub fn range() -> RClass {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::class_rational` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn rational() -> RClass {
     get_ruby!().class_rational()
@@ -1590,6 +1615,7 @@ pub fn rational() -> RClass {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::class_refinement` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[cfg(any(ruby_gte_3_1, docsrs))]
 #[cfg_attr(docsrs, doc(cfg(ruby_gte_3_1)))]
 #[inline]
@@ -1607,6 +1633,7 @@ pub fn refinement() -> RClass {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::class_regexp` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn regexp() -> RClass {
     get_ruby!().class_regexp()
@@ -1622,6 +1649,7 @@ pub fn regexp() -> RClass {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::class_stat` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn stat() -> RClass {
     get_ruby!().class_stat()
@@ -1637,6 +1665,7 @@ pub fn stat() -> RClass {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::class_string` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn string() -> RClass {
     get_ruby!().class_string()
@@ -1652,6 +1681,7 @@ pub fn string() -> RClass {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::class_struct` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn struct_class() -> RClass {
     get_ruby!().class_struct()
@@ -1667,6 +1697,7 @@ pub fn struct_class() -> RClass {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::class_symbol` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn symbol() -> RClass {
     get_ruby!().class_symbol()
@@ -1682,6 +1713,7 @@ pub fn symbol() -> RClass {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::class_thread` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn thread() -> RClass {
     get_ruby!().class_thread()
@@ -1697,6 +1729,7 @@ pub fn thread() -> RClass {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::class_time` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn time() -> RClass {
     get_ruby!().class_time()
@@ -1712,6 +1745,7 @@ pub fn time() -> RClass {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::class_true_class` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn true_class() -> RClass {
     get_ruby!().class_true_class()
@@ -1727,6 +1761,7 @@ pub fn true_class() -> RClass {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::class_unbound_method` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn unbound_method() -> RClass {
     get_ruby!().class_unbound_method()

@@ -126,6 +126,7 @@ impl Flonum {
         not(feature = "old-api"),
         deprecated(note = "please use `Ruby::flonum_from_f64` instead")
     )]
+    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn from_f64(n: f64) -> Result<Self, RFloat> {
         get_ruby!().flonum_from_f64(n)

@@ -186,6 +186,7 @@ impl Error {
         not(feature = "old-api"),
         deprecated(note = "please use `Ruby::iter_break_value` instead")
     )]
+    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn iter_break<T>(val: T) -> Self
     where
@@ -558,6 +559,7 @@ pub fn bug(s: &str) -> ! {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::warning` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn warning(s: &str) {
     get_ruby!().warning(s)

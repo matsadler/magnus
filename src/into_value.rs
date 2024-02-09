@@ -36,6 +36,7 @@ pub trait IntoValue: Sized {
         not(feature = "old-api"),
         deprecated(note = "please use `IntoValue::into_value_with` instead")
     )]
+    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     fn into_value(self) -> Value {
         self.into_value_with(&get_ruby!())

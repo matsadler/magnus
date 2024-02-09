@@ -909,6 +909,7 @@ impl Ruby {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::check_arity` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn check_arity<T>(len: usize, bounds: T) -> Result<(), Error>
 where

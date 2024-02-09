@@ -289,6 +289,7 @@ impl RHash {
         not(feature = "old-api"),
         deprecated(note = "please use `Ruby::hash_new` instead")
     )]
+    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn new() -> RHash {
         get_ruby!().hash_new()
@@ -316,6 +317,7 @@ impl RHash {
         not(feature = "old-api"),
         deprecated(note = "please use `Ruby::hash_new_capa` instead")
     )]
+    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[cfg(any(ruby_gte_3_2, docsrs))]
     #[cfg_attr(docsrs, doc(cfg(ruby_gte_3_2)))]
     #[inline]

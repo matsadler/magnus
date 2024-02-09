@@ -144,6 +144,7 @@ impl RFloat {
         not(feature = "old-api"),
         deprecated(note = "please use `Ruby::r_float_from_f64` instead")
     )]
+    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[cfg(ruby_use_flonum)]
     #[inline]
     pub fn from_f64(n: f64) -> Result<Self, Flonum> {
@@ -174,6 +175,7 @@ impl RFloat {
         not(feature = "old-api"),
         deprecated(note = "please use `Ruby::r_float_from_f64` instead")
     )]
+    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[cfg(not(ruby_use_flonum))]
     #[inline]
     pub fn from_f64(n: f64) -> Result<Self, Self> {

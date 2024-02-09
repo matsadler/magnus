@@ -116,6 +116,7 @@ impl Encoding {
         not(feature = "old-api"),
         deprecated(note = "please use `Ruby::enc_default_external` instead")
     )]
+    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn default_external() -> Self {
         get_ruby!().enc_default_external()
@@ -134,6 +135,7 @@ impl Encoding {
         not(feature = "old-api"),
         deprecated(note = "please use `Ruby::enc_default_internal` instead")
     )]
+    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn default_internal() -> Option<Self> {
         get_ruby!().enc_default_internal()
@@ -326,6 +328,7 @@ impl RbEncoding {
         not(feature = "old-api"),
         deprecated(note = "please use `Ruby::ascii8bit_encoding` instead")
     )]
+    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn ascii8bit() -> Self {
         get_ruby!().ascii8bit_encoding()
@@ -341,6 +344,7 @@ impl RbEncoding {
         not(feature = "old-api"),
         deprecated(note = "please use `Ruby::utf8_encoding` instead")
     )]
+    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn utf8() -> Self {
         get_ruby!().utf8_encoding()
@@ -356,6 +360,7 @@ impl RbEncoding {
         not(feature = "old-api"),
         deprecated(note = "please use `Ruby::usascii_encoding` instead")
     )]
+    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn usascii() -> Self {
         get_ruby!().usascii_encoding()
@@ -374,6 +379,7 @@ impl RbEncoding {
         not(feature = "old-api"),
         deprecated(note = "please use `Ruby::locale_encoding` instead")
     )]
+    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn locale() -> Self {
         get_ruby!().locale_encoding()
@@ -392,6 +398,7 @@ impl RbEncoding {
         not(feature = "old-api"),
         deprecated(note = "please use `Ruby::filesystem_encoding` instead")
     )]
+    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn filesystem() -> Self {
         get_ruby!().filesystem_encoding()
@@ -410,6 +417,7 @@ impl RbEncoding {
         not(feature = "old-api"),
         deprecated(note = "please use `Ruby::default_external_encoding` instead")
     )]
+    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn default_external() -> Self {
         get_ruby!().default_external_encoding()
@@ -428,6 +436,7 @@ impl RbEncoding {
         not(feature = "old-api"),
         deprecated(note = "please use `Ruby::default_internal_encoding` instead")
     )]
+    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn default_internal() -> Option<Self> {
         get_ruby!().default_internal_encoding()
@@ -454,6 +463,7 @@ impl RbEncoding {
         not(feature = "old-api"),
         deprecated(note = "please use `Ruby::find_encoding` instead")
     )]
+    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn find(name: &str) -> Option<Self> {
         get_ruby!().find_encoding(name)
@@ -1062,6 +1072,7 @@ impl Index {
         not(feature = "old-api"),
         deprecated(note = "please use `Ruby::ascii8bit_encindex` instead")
     )]
+    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn ascii8bit() -> Self {
         get_ruby!().ascii8bit_encindex()
@@ -1077,6 +1088,7 @@ impl Index {
         not(feature = "old-api"),
         deprecated(note = "please use `Ruby::utf8_encindex` instead")
     )]
+    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn utf8() -> Self {
         get_ruby!().utf8_encindex()
@@ -1092,6 +1104,7 @@ impl Index {
         not(feature = "old-api"),
         deprecated(note = "please use `Ruby::usascii_encindex` instead")
     )]
+    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn usascii() -> Self {
         get_ruby!().usascii_encindex()
@@ -1110,6 +1123,7 @@ impl Index {
         not(feature = "old-api"),
         deprecated(note = "please use `Ruby::locale_encindex` instead")
     )]
+    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn locale() -> Self {
         get_ruby!().locale_encindex()
@@ -1128,6 +1142,7 @@ impl Index {
         not(feature = "old-api"),
         deprecated(note = "please use `Ruby::filesystem_encindex` instead")
     )]
+    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn filesystem() -> Self {
         get_ruby!().filesystem_encindex()
@@ -1155,6 +1170,7 @@ impl Index {
         not(feature = "old-api"),
         deprecated(note = "please use `Ruby::find_encindex` instead")
     )]
+    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn find(name: &str) -> Result<Self, Error> {
         get_ruby!().find_encindex(name)

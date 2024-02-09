@@ -227,6 +227,7 @@ impl Proc {
         not(feature = "old-api"),
         deprecated(note = "please use `Ruby::proc_new` instead")
     )]
+    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn new<R>(block: fn(&Ruby, &[Value], Option<Proc>) -> R) -> Self
     where
@@ -268,6 +269,7 @@ impl Proc {
         not(feature = "old-api"),
         deprecated(note = "please use `Ruby::proc_from_fn` instead")
     )]
+    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn from_fn<F, R>(block: F) -> Self
     where
@@ -774,6 +776,7 @@ impl Ruby {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::block_given` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn block_given() -> bool {
     get_ruby!().block_given()
@@ -808,6 +811,7 @@ pub fn block_given() -> bool {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::block_proc` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn block_proc() -> Result<Proc, Error> {
     get_ruby!().block_proc()
@@ -854,6 +858,7 @@ pub fn block_proc() -> Result<Proc, Error> {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::yield_value` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn yield_value<T, U>(val: T) -> Result<U, Error>
 where
@@ -907,6 +912,7 @@ where
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::yield_values` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn yield_values<T, U>(vals: T) -> Result<U, Error>
 where
@@ -969,6 +975,7 @@ where
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::yield_splat` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn yield_splat<T>(vals: RArray) -> Result<T, Error>
 where

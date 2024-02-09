@@ -314,6 +314,7 @@ impl RArray {
         not(feature = "old-api"),
         deprecated(note = "please use `Ruby::ary_new` instead")
     )]
+    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn new() -> Self {
         get_ruby!().ary_new()
@@ -341,6 +342,7 @@ impl RArray {
         not(feature = "old-api"),
         deprecated(note = "please use `Ruby::ary_new_capa` instead")
     )]
+    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn with_capacity(n: usize) -> Self {
         get_ruby!().ary_new_capa(n)
@@ -694,6 +696,7 @@ impl RArray {
         not(feature = "old-api"),
         deprecated(note = "please use `Ruby::ary_new_from_values` instead")
     )]
+    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn from_slice<T>(slice: &[T]) -> Self
     where
@@ -1066,6 +1069,7 @@ impl RArray {
         not(feature = "old-api"),
         deprecated(note = "please use `Ruby::ary_from_vec` instead")
     )]
+    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn from_vec<T>(vec: Vec<T>) -> Self
     where

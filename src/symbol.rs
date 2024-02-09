@@ -104,6 +104,7 @@ impl Symbol {
         not(feature = "old-api"),
         deprecated(note = "please use `Ruby::to_symbol` instead")
     )]
+    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn new<T: AsRef<str>>(name: T) -> Self {
         get_ruby!().to_symbol(name)
@@ -258,6 +259,7 @@ pub trait IntoSymbol: Sized {
         not(feature = "old-api"),
         deprecated(note = "please use `IntoSymbol::into_symbol_with` instead")
     )]
+    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     fn into_symbol(self) -> Symbol {
         self.into_symbol_with(&get_ruby!())

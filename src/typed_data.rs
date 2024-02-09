@@ -713,6 +713,7 @@ where
         not(feature = "old-api"),
         deprecated(note = "please use `Ruby::obj_wrap` instead")
     )]
+    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn wrap(data: T) -> Self {
         get_ruby!().obj_wrap(data)
@@ -801,6 +802,7 @@ where
         not(feature = "old-api"),
         deprecated(note = "please use `Ruby::obj_wrap_as` instead")
     )]
+    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn wrap_as(data: T, class: RClass) -> Self {
         get_ruby!().obj_wrap_as(data, class)

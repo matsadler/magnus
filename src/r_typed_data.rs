@@ -241,6 +241,7 @@ impl RTypedData {
         not(feature = "old-api"),
         deprecated(note = "please use `Ruby::wrap` instead")
     )]
+    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn wrap<T>(data: T) -> Self
     where
@@ -333,6 +334,7 @@ impl RTypedData {
         not(feature = "old-api"),
         deprecated(note = "please use `Ruby::wrap_as` instead")
     )]
+    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn wrap_as<T>(data: T, class: RClass) -> Self
     where

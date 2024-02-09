@@ -176,6 +176,7 @@ impl Integer {
         not(feature = "old-api"),
         deprecated(note = "please use `Ruby::integer_from_i64` instead")
     )]
+    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn from_i64(n: i64) -> Self {
         get_ruby!().integer_from_i64(n)
@@ -205,6 +206,7 @@ impl Integer {
         not(feature = "old-api"),
         deprecated(note = "please use `Ruby::integer_from_u64` instead")
     )]
+    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn from_u64(n: u64) -> Self {
         get_ruby!().integer_from_u64(n)

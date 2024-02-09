@@ -114,6 +114,7 @@ impl RRegexp {
         not(feature = "old-api"),
         deprecated(note = "please use `Ruby::reg_new` instead")
     )]
+    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn new(pattern: &str, opts: Opts) -> Result<Self, Error> {
         get_ruby!().reg_new(pattern, opts)

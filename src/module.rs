@@ -115,6 +115,7 @@ impl RModule {
         not(feature = "old-api"),
         deprecated(note = "please use `Ruby::module_new` instead")
     )]
+    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn new() -> Self {
         get_ruby!().module_new()
@@ -997,6 +998,7 @@ impl Ruby {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::module_comparable` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn comparable() -> RModule {
     get_ruby!().module_comparable()
@@ -1012,6 +1014,7 @@ pub fn comparable() -> RModule {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::module_enumerable` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn enumerable() -> RModule {
     get_ruby!().module_enumerable()
@@ -1027,6 +1030,7 @@ pub fn enumerable() -> RModule {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::module_errno` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn errno() -> RModule {
     get_ruby!().module_errno()
@@ -1042,6 +1046,7 @@ pub fn errno() -> RModule {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::module_file_test` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn file_test() -> RModule {
     get_ruby!().module_file_test()
@@ -1057,6 +1062,7 @@ pub fn file_test() -> RModule {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::module_gc` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn gc() -> RModule {
     get_ruby!().module_gc()
@@ -1072,6 +1078,7 @@ pub fn gc() -> RModule {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::module_kernel` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn kernel() -> RModule {
     get_ruby!().module_kernel()
@@ -1087,6 +1094,7 @@ pub fn kernel() -> RModule {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::module_math` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn math() -> RModule {
     get_ruby!().module_math()
@@ -1102,6 +1110,7 @@ pub fn math() -> RModule {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::module_process` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn process() -> RModule {
     get_ruby!().module_process()
@@ -1117,6 +1126,7 @@ pub fn process() -> RModule {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::module_wait_readable` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn wait_readable() -> RModule {
     get_ruby!().module_wait_readable()
@@ -1132,6 +1142,7 @@ pub fn wait_readable() -> RModule {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::module_wait_writable` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn wait_writable() -> RModule {
     get_ruby!().module_wait_writable()

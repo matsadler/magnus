@@ -505,6 +505,7 @@ impl Ruby {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::gc_disable` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn disable() -> bool {
     get_ruby!().gc_disable()
@@ -542,6 +543,7 @@ pub fn disable() -> bool {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::gc_enable` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn enable() -> bool {
     get_ruby!().gc_enable()
@@ -575,6 +577,7 @@ pub fn enable() -> bool {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::gc_start` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn start() {
     get_ruby!().gc_start()
@@ -614,6 +617,7 @@ pub fn start() {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::gc_adjust_memory_usage` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn adjust_memory_usage(diff: isize) {
     get_ruby!().gc_adjust_memory_usage(diff)
@@ -642,6 +646,7 @@ pub fn adjust_memory_usage(diff: isize) {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::gc_count` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn count() -> usize {
     get_ruby!().gc_count()
@@ -667,6 +672,7 @@ pub fn count() -> usize {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::gc_stat` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn stat<T>(key: T) -> Result<usize, Error>
 where
@@ -698,6 +704,7 @@ where
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::gc_all_stats` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn all_stats() -> RHash {
     get_ruby!().gc_all_stats()

@@ -1056,6 +1056,7 @@ impl Ruby {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::exception_arg_error` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn arg_error() -> ExceptionClass {
     get_ruby!().exception_arg_error()
@@ -1071,6 +1072,7 @@ pub fn arg_error() -> ExceptionClass {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::exception_eof_error` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn eof_error() -> ExceptionClass {
     get_ruby!().exception_eof_error()
@@ -1086,6 +1088,7 @@ pub fn eof_error() -> ExceptionClass {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::exception_enc_compat_error` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn enc_compat_error() -> ExceptionClass {
     get_ruby!().exception_enc_compat_error()
@@ -1101,6 +1104,7 @@ pub fn enc_compat_error() -> ExceptionClass {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::exception_encoding_error` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn encoding_error() -> ExceptionClass {
     get_ruby!().exception_encoding_error()
@@ -1116,6 +1120,7 @@ pub fn encoding_error() -> ExceptionClass {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::exception_exception` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn exception() -> ExceptionClass {
     get_ruby!().exception_exception()
@@ -1131,6 +1136,7 @@ pub fn exception() -> ExceptionClass {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::exception_fatal` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn fatal() -> ExceptionClass {
     get_ruby!().exception_fatal()
@@ -1146,6 +1152,7 @@ pub fn fatal() -> ExceptionClass {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::exception_float_domain_error` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn float_domain_error() -> ExceptionClass {
     get_ruby!().exception_float_domain_error()
@@ -1161,6 +1168,7 @@ pub fn float_domain_error() -> ExceptionClass {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::exception_frozen_error` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn frozen_error() -> ExceptionClass {
     get_ruby!().exception_frozen_error()
@@ -1176,6 +1184,7 @@ pub fn frozen_error() -> ExceptionClass {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::exception_io_error` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn io_error() -> ExceptionClass {
     get_ruby!().exception_io_error()
@@ -1191,6 +1200,7 @@ pub fn io_error() -> ExceptionClass {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::exception_index_error` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn index_error() -> ExceptionClass {
     get_ruby!().exception_index_error()
@@ -1206,6 +1216,7 @@ pub fn index_error() -> ExceptionClass {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::exception_interrupt` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn interrupt() -> ExceptionClass {
     get_ruby!().exception_interrupt()
@@ -1221,6 +1232,7 @@ pub fn interrupt() -> ExceptionClass {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::exception_key_error` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn key_error() -> ExceptionClass {
     get_ruby!().exception_key_error()
@@ -1236,6 +1248,7 @@ pub fn key_error() -> ExceptionClass {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::exception_load_error` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn load_error() -> ExceptionClass {
     get_ruby!().exception_load_error()
@@ -1251,6 +1264,7 @@ pub fn load_error() -> ExceptionClass {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::exception_local_jump_error` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn local_jump_error() -> ExceptionClass {
     get_ruby!().exception_local_jump_error()
@@ -1266,6 +1280,7 @@ pub fn local_jump_error() -> ExceptionClass {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::exception_math_domain_error` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn math_domain_error() -> ExceptionClass {
     get_ruby!().exception_math_domain_error()
@@ -1281,6 +1296,7 @@ pub fn math_domain_error() -> ExceptionClass {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::exception_name_error` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn name_error() -> ExceptionClass {
     get_ruby!().exception_name_error()
@@ -1296,6 +1312,7 @@ pub fn name_error() -> ExceptionClass {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::exception_no_matching_pattern_error` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn no_matching_pattern_error() -> ExceptionClass {
     get_ruby!().exception_no_matching_pattern_error()
@@ -1314,6 +1331,7 @@ pub fn no_matching_pattern_error() -> ExceptionClass {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::exception_no_matching_pattern_key_error` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn no_matching_pattern_key_error() -> ExceptionClass {
     get_ruby!().exception_no_matching_pattern_key_error()
@@ -1329,6 +1347,7 @@ pub fn no_matching_pattern_key_error() -> ExceptionClass {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::exception_no_mem_error` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn no_mem_error() -> ExceptionClass {
     get_ruby!().exception_no_mem_error()
@@ -1344,6 +1363,7 @@ pub fn no_mem_error() -> ExceptionClass {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::exception_no_method_error` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn no_method_error() -> ExceptionClass {
     get_ruby!().exception_no_method_error()
@@ -1359,6 +1379,7 @@ pub fn no_method_error() -> ExceptionClass {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::exception_not_imp_error` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn not_imp_error() -> ExceptionClass {
     get_ruby!().exception_not_imp_error()
@@ -1374,6 +1395,7 @@ pub fn not_imp_error() -> ExceptionClass {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::exception_range_error` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn range_error() -> ExceptionClass {
     get_ruby!().exception_range_error()
@@ -1389,6 +1411,7 @@ pub fn range_error() -> ExceptionClass {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::exception_regexp_error` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn regexp_error() -> ExceptionClass {
     get_ruby!().exception_regexp_error()
@@ -1404,6 +1427,7 @@ pub fn regexp_error() -> ExceptionClass {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::exception_runtime_error` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn runtime_error() -> ExceptionClass {
     get_ruby!().exception_runtime_error()
@@ -1419,6 +1443,7 @@ pub fn runtime_error() -> ExceptionClass {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::exception_script_error` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn script_error() -> ExceptionClass {
     get_ruby!().exception_script_error()
@@ -1434,6 +1459,7 @@ pub fn script_error() -> ExceptionClass {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::exception_security_error` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn security_error() -> ExceptionClass {
     get_ruby!().exception_security_error()
@@ -1449,6 +1475,7 @@ pub fn security_error() -> ExceptionClass {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::exception_signal` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn signal() -> ExceptionClass {
     get_ruby!().exception_signal()
@@ -1464,6 +1491,7 @@ pub fn signal() -> ExceptionClass {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::exception_standard_error` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn standard_error() -> ExceptionClass {
     get_ruby!().exception_standard_error()
@@ -1479,6 +1507,7 @@ pub fn standard_error() -> ExceptionClass {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::exception_stop_iteration` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn stop_iteration() -> ExceptionClass {
     get_ruby!().exception_stop_iteration()
@@ -1494,6 +1523,7 @@ pub fn stop_iteration() -> ExceptionClass {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::exception_syntax_error` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn syntax_error() -> ExceptionClass {
     get_ruby!().exception_syntax_error()
@@ -1509,6 +1539,7 @@ pub fn syntax_error() -> ExceptionClass {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::exception_sys_stack_error` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn sys_stack_error() -> ExceptionClass {
     get_ruby!().exception_sys_stack_error()
@@ -1524,6 +1555,7 @@ pub fn sys_stack_error() -> ExceptionClass {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::exception_system_call_error` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn system_call_error() -> ExceptionClass {
     get_ruby!().exception_system_call_error()
@@ -1539,6 +1571,7 @@ pub fn system_call_error() -> ExceptionClass {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::exception_system_exit` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn system_exit() -> ExceptionClass {
     get_ruby!().exception_system_exit()
@@ -1554,6 +1587,7 @@ pub fn system_exit() -> ExceptionClass {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::exception_thread_error` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn thread_error() -> ExceptionClass {
     get_ruby!().exception_thread_error()
@@ -1569,6 +1603,7 @@ pub fn thread_error() -> ExceptionClass {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::exception_type_error` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn type_error() -> ExceptionClass {
     get_ruby!().exception_type_error()
@@ -1584,6 +1619,7 @@ pub fn type_error() -> ExceptionClass {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::exception_zero_div_error` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn zero_div_error() -> ExceptionClass {
     get_ruby!().exception_zero_div_error()

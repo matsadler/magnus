@@ -131,6 +131,7 @@ impl Range {
         not(feature = "old-api"),
         deprecated(note = "please use `Ruby::range_new` instead")
     )]
+    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn new<T, U>(beg: T, end: U, excl: bool) -> Result<Self, Error>
     where

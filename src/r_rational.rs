@@ -107,6 +107,7 @@ impl RRational {
         not(feature = "old-api"),
         deprecated(note = "please use `Ruby::rational_new` instead")
     )]
+    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn new(num: i64, den: NonZeroI64) -> Self {
         get_ruby!().rational_new(num, den)

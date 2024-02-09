@@ -510,6 +510,7 @@ impl Ruby {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::define_struct` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn define_struct<T>(name: Option<&str>, members: T) -> Result<RClass, Error>
 where

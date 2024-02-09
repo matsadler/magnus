@@ -1863,6 +1863,7 @@ const QFALSE: Qfalse = Qfalse::new();
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::qfalse` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn qfalse() -> Qfalse {
     get_ruby!().qfalse()
@@ -1991,6 +1992,7 @@ const QNIL: Qnil = Qnil::new();
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::qnil` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn qnil() -> Qnil {
     get_ruby!().qnil()
@@ -2147,6 +2149,7 @@ const QTRUE: Qtrue = Qtrue::new();
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::qtrue` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn qtrue() -> Qtrue {
     get_ruby!().qtrue()
@@ -2422,6 +2425,7 @@ impl Fixnum {
         not(feature = "old-api"),
         deprecated(note = "please use `Ruby::fixnum_from_i64` instead")
     )]
+    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn from_i64(n: i64) -> Result<Self, RBignum> {
         get_ruby!().fixnum_from_i64(n)
@@ -2452,6 +2456,7 @@ impl Fixnum {
         not(feature = "old-api"),
         deprecated(note = "please use `Ruby::fixnum_from_u64` instead")
     )]
+    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn from_u64(n: u64) -> Result<Self, RBignum> {
         get_ruby!().fixnum_from_u64(n)
@@ -2948,6 +2953,7 @@ impl StaticSymbol {
         not(feature = "old-api"),
         deprecated(note = "please use `Ruby::sym_new` instead")
     )]
+    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn new<T>(name: T) -> Self
     where
@@ -2978,6 +2984,7 @@ impl StaticSymbol {
         not(feature = "old-api"),
         deprecated(note = "please use `Ruby::check_symbol` instead")
     )]
+    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn check(name: &str) -> Option<Self> {
         get_ruby!().check_symbol(name)
@@ -3170,6 +3177,7 @@ impl Id {
         not(feature = "old-api"),
         deprecated(note = "please use `Ruby::intern` instead")
     )]
+    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     pub fn new<T>(name: T) -> Self
     where
         T: AsRef<str>,
@@ -3209,6 +3217,7 @@ impl Id {
         not(feature = "old-api"),
         deprecated(note = "please use `Ruby::check_id` instead")
     )]
+    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn check(name: &str) -> Option<Self> {
         get_ruby!().check_id(name)
@@ -3264,6 +3273,7 @@ pub trait IntoId: Sized {
         not(feature = "old-api"),
         deprecated(note = "please use `IntoId::into_id_with` instead")
     )]
+    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     fn into_id(self) -> Id {
         self.into_id_with(&get_ruby!())

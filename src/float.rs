@@ -123,6 +123,7 @@ impl Float {
         not(feature = "old-api"),
         deprecated(note = "please use `Ruby::float_from_f64` instead")
     )]
+    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn from_f64(n: f64) -> Self {
         get_ruby!().float_from_f64(n)

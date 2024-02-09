@@ -214,6 +214,7 @@ impl Ruby {
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::script` instead")
 )]
+#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn ruby_script<T>(name: T)
 where

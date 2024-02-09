@@ -333,6 +333,7 @@ impl RString {
         not(feature = "old-api"),
         deprecated(note = "please use `Ruby::str_new` instead")
     )]
+    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn new(s: &str) -> Self {
         get_ruby!().str_new(s)
@@ -370,6 +371,7 @@ impl RString {
         not(feature = "old-api"),
         deprecated(note = "please use `Ruby::str_buf_new` instead")
     )]
+    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn buf_new(n: usize) -> Self {
         get_ruby!().str_buf_new(n)
@@ -402,6 +404,7 @@ impl RString {
         not(feature = "old-api"),
         deprecated(note = "please use `Ruby::str_with_capacity` instead")
     )]
+    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn with_capacity(n: usize) -> Self {
         get_ruby!().str_with_capacity(n)
@@ -430,6 +433,7 @@ impl RString {
         not(feature = "old-api"),
         deprecated(note = "please use `Ruby::str_from_slice` instead")
     )]
+    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn from_slice(s: &[u8]) -> Self {
         get_ruby!().str_from_slice(s)
@@ -465,6 +469,7 @@ impl RString {
         not(feature = "old-api"),
         deprecated(note = "please use `Ruby::enc_str_new` instead")
     )]
+    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn enc_new<T, E>(s: T, enc: E) -> Self
     where
@@ -506,6 +511,7 @@ impl RString {
         not(feature = "old-api"),
         deprecated(note = "please use `Ruby::str_from_char` instead")
     )]
+    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn from_char(c: char) -> Self {
         get_ruby!().str_from_char(c)
@@ -544,6 +550,7 @@ impl RString {
         not(feature = "old-api"),
         deprecated(note = "please use `Ruby::chr` instead")
     )]
+    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn chr<T>(code: u32, enc: T) -> Result<Self, Error>
     where
@@ -1819,6 +1826,7 @@ pub trait IntoRString: Sized {
         not(feature = "old-api"),
         deprecated(note = "please use `IntoRString::into_r_string_with` instead")
     )]
+    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     fn into_r_string(self) -> RString {
         self.into_r_string_with(&get_ruby!())
