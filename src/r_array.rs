@@ -1675,6 +1675,8 @@ where
     }
 }
 
+unsafe impl<T> IntoValueFromNative for Vec<T> where T: IntoValueFromNative {}
+
 #[cfg(feature = "old-api")]
 impl<T> FromIterator<T> for RArray
 where
