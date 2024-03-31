@@ -103,6 +103,8 @@ pub enum ErrorType {
     Error(ExceptionClass, Cow<'static, str>),
     /// A Ruby `Exception` captured from Ruby as an Error.
     Exception(Exception),
+    /// Error returned in case we could get a handle to Ruby.
+    UnavaliableError(RubyUnavailableError),
 }
 
 /// Wrapper type for Ruby `Exception`s or other interrupts.
@@ -243,6 +245,7 @@ impl Error {
             ErrorType::Jump(_) => false,
             ErrorType::Error(c, _) => c.is_inherited(class),
             ErrorType::Exception(e) => e.is_kind_of(class),
+            ErrorType::UnavaliableError(_) => false,
         }
     }
 
@@ -250,7 +253,7 @@ impl Error {
     ///
     /// # Panics
     ///
-    /// Panics if called on an `Error::Jump`.
+    /// Panics if called on an `Error::Jump` and `Error::UnavailableError`.
     fn exception(self) -> Exception {
         let handle = unsafe { Ruby::get_unchecked() };
         match self.0 {
@@ -262,6 +265,7 @@ impl Error {
                 }
             }
             ErrorType::Exception(e) => e,
+            ErrorType::UnavaliableError(_) => panic!("Error::exception() called on {}", self),
         }
     }
 
@@ -282,6 +286,7 @@ impl Error {
             ErrorType::Jump(_) => None,
             ErrorType::Error(c, _) => Some(c.as_value()),
             ErrorType::Exception(e) => Some(e.as_value()),
+            ErrorType::UnavaliableError(_) => None,
         }
     }
 
@@ -310,6 +315,7 @@ impl fmt::Display for Error {
             ErrorType::Jump(s) => s.fmt(f),
             ErrorType::Error(e, m) => write!(f, "{}: {}", e, m),
             ErrorType::Exception(e) => e.fmt(f),
+            ErrorType::UnavaliableError(e) => e.fmt(f),
         }
     }
 }
@@ -317,6 +323,12 @@ impl fmt::Display for Error {
 impl From<Exception> for Error {
     fn from(val: Exception) -> Self {
         Self(ErrorType::Exception(val))
+    }
+}
+
+impl From<RubyUnavailableError> for Error {
+    fn from(val: RubyUnavailableError) -> Self {
+        Self(ErrorType::UnavaliableError(val))
     }
 }
 
