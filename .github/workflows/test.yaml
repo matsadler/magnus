@@ -55,6 +55,11 @@ jobs:
                       examples/custom_exception_ruby/tmp/
                       examples/custom_exception_rust/tmp/
 
+            # Ruby head is currently missing the power_assert default gem
+            - name: Ruby head bug workaround
+              if: matrix.ruby-version == 'head'
+              run: gem install power_assert
+
             - name: Example gem tests (blank?)
               working-directory: examples/rust_blank
               run: bundle exec rake test
