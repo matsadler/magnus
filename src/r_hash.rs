@@ -933,6 +933,13 @@ where
     }
 }
 
+unsafe impl<K, V> IntoValueFromNative for HashMap<K, V>
+where
+    K: IntoValueFromNative,
+    V: IntoValueFromNative,
+{
+}
+
 #[cfg(feature = "old-api")]
 impl<K, V> FromIterator<(K, V)> for RHash
 where
