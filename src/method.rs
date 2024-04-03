@@ -13,7 +13,7 @@ use crate::{
         do_yield_iter, do_yield_splat_iter, do_yield_values_iter, Proc, Yield, YieldSplat,
         YieldValues,
     },
-    error::{raise, Error},
+    error::{raise, Error, IntoError},
     into_value::{ArgList, IntoValue},
     r_array::RArray,
     try_convert::TryConvert,
@@ -74,12 +74,15 @@ mod private {
         fn into_return_value(self) -> Result<Value, Error>;
     }
 
-    impl<T> ReturnValue for Result<T, Error>
+    impl<T, E> ReturnValue for Result<T, E>
     where
         T: IntoValue,
+        E: IntoError,
     {
         fn into_return_value(self) -> Result<Value, Error> {
-            self.map(|val| unsafe { val.into_value_unchecked() })
+            let ruby = unsafe { Ruby::get_unchecked() };
+            self.map(|val| val.into_value_with(&ruby))
+                .map_err(|err| err.into_error(&ruby))
         }
     }
 
@@ -88,7 +91,26 @@ mod private {
         T: IntoValue,
     {
         fn into_return_value(self) -> Result<Value, Error> {
-            Ok(self).into_return_value()
+            Ok::<T, Error>(self).into_return_value()
+        }
+    }
+
+    impl<I, T, E> ReturnValue for Result<Yield<I>, E>
+    where
+        I: Iterator<Item = T>,
+        T: IntoValue,
+        E: IntoError,
+    {
+        fn into_return_value(self) -> Result<Value, Error> {
+            let ruby = unsafe { Ruby::get_unchecked() };
+            self.map(|i| match i {
+                Yield::Iter(iter) => unsafe {
+                    do_yield_iter(iter);
+                    ruby.qnil().as_value()
+                },
+                Yield::Enumerator(e) => e.into_value_with(&ruby),
+            })
+            .map_err(|err| err.into_error(&ruby))
         }
     }
 
@@ -98,23 +120,26 @@ mod private {
         T: IntoValue,
     {
         fn into_return_value(self) -> Result<Value, Error> {
-            match self {
-                Yield::Iter(iter) => unsafe {
-                    do_yield_iter(iter);
-                    Ok(Ruby::get_unchecked().qnil().as_value())
-                },
-                Yield::Enumerator(e) => Ok(unsafe { e.into_value_unchecked() }),
-            }
+            Ok::<Self, Error>(self).into_return_value()
         }
     }
 
-    impl<I, T> ReturnValue for Result<Yield<I>, Error>
+    impl<I, T, E> ReturnValue for Result<YieldValues<I>, E>
     where
         I: Iterator<Item = T>,
-        T: IntoValue,
+        T: ArgList,
+        E: IntoError,
     {
         fn into_return_value(self) -> Result<Value, Error> {
-            self?.into_return_value()
+            let ruby = unsafe { Ruby::get_unchecked() };
+            self.map(|i| match i {
+                YieldValues::Iter(iter) => unsafe {
+                    do_yield_values_iter(iter);
+                    ruby.qnil().as_value()
+                },
+                YieldValues::Enumerator(e) => e.into_value_with(&ruby),
+            })
+            .map_err(|err| err.into_error(&ruby))
         }
     }
 
@@ -124,23 +149,25 @@ mod private {
         T: ArgList,
     {
         fn into_return_value(self) -> Result<Value, Error> {
-            match self {
-                YieldValues::Iter(iter) => unsafe {
-                    do_yield_values_iter(iter);
-                    Ok(Ruby::get_unchecked().qnil().as_value())
-                },
-                YieldValues::Enumerator(e) => Ok(unsafe { e.into_value_unchecked() }),
-            }
+            Ok::<Self, Error>(self).into_return_value()
         }
     }
 
-    impl<I, T> ReturnValue for Result<YieldValues<I>, Error>
+    impl<I, E> ReturnValue for Result<YieldSplat<I>, E>
     where
-        I: Iterator<Item = T>,
-        T: ArgList,
+        I: Iterator<Item = RArray>,
+        E: IntoError,
     {
         fn into_return_value(self) -> Result<Value, Error> {
-            self?.into_return_value()
+            let ruby = unsafe { Ruby::get_unchecked() };
+            self.map(|i| match i {
+                YieldSplat::Iter(iter) => unsafe {
+                    do_yield_splat_iter(iter);
+                    ruby.qnil().as_value()
+                },
+                YieldSplat::Enumerator(e) => e.into_value_with(&ruby),
+            })
+            .map_err(|err| err.into_error(&ruby))
         }
     }
 
@@ -149,22 +176,7 @@ mod private {
         I: Iterator<Item = RArray>,
     {
         fn into_return_value(self) -> Result<Value, Error> {
-            match self {
-                YieldSplat::Iter(iter) => unsafe {
-                    do_yield_splat_iter(iter);
-                    Ok(Ruby::get_unchecked().qnil().as_value())
-                },
-                YieldSplat::Enumerator(e) => Ok(unsafe { e.into_value_unchecked() }),
-            }
-        }
-    }
-
-    impl<I> ReturnValue for Result<YieldSplat<I>, Error>
-    where
-        I: Iterator<Item = RArray>,
-    {
-        fn into_return_value(self) -> Result<Value, Error> {
-            self?.into_return_value()
+            Ok::<Self, Error>(self).into_return_value()
         }
     }
 
@@ -178,9 +190,12 @@ mod private {
         }
     }
 
-    impl InitReturn for Result<(), Error> {
+    impl<E> InitReturn for Result<(), E>
+    where
+        E: IntoError,
+    {
         fn into_init_return(self) -> Result<(), Error> {
-            self
+            self.map_err(|err| err.into_error(&unsafe { Ruby::get_unchecked() }))
         }
     }
 

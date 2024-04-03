@@ -320,6 +320,19 @@ impl From<Exception> for Error {
     }
 }
 
+/// Conversions into [`Error`].
+pub trait IntoError {
+    /// Convert `self` into [`Error`].
+    fn into_error(self, ruby: &Ruby) -> Error;
+}
+
+impl IntoError for Error {
+    #[inline]
+    fn into_error(self, _: &Ruby) -> Error {
+        self
+    }
+}
+
 /// A wrapper to make a [`Error`] [`Send`] + [`Sync`].
 ///
 /// [`Error`] is not [`Send`] or [`Sync`] as it provides a way to call some of
@@ -369,6 +382,13 @@ impl OpaqueError {
 impl From<Error> for OpaqueError {
     fn from(err: Error) -> Self {
         Self(err.0)
+    }
+}
+
+impl IntoError for OpaqueError {
+    #[inline]
+    fn into_error(self, _: &Ruby) -> Error {
+        Error(self.0)
     }
 }
 

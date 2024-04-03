@@ -22,6 +22,9 @@
 - `Ruby::waitpid`.
 - `RHash::lookup2`.
 - `Ruby::define_data` new for Ruby 3.3.
+- `IntoError` trait for conversion to `Error`, plus `impl ReturnValue for
+  Result<T, E> where E: IntoError` to allow returning custom error types to
+  Ruby.
 
 ### Changed
 - Closures/Functions used as Ruby blocks/procs take an additional first

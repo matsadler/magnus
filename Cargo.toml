@@ -1,6 +1,6 @@
 [package]
 name = "magnus"
-version = "0.6.0"
+version = "0.7.0"
 edition = "2021"
 description = "High level Ruby bindings. Write Ruby extension gems in Rust, or call Ruby code from a Rust binary."
 keywords = ["ruby", "rubygem", "extension", "gem"]
@@ -13,7 +13,12 @@ exclude = [".github", ".gitignore"]
 
 [workspace]
 members = ["magnus-macros"]
-exclude = ["examples/rust_blank/ext/rust_blank", "examples/custom_exception_ruby/ext/ahriman", "examples/custom_exception_rust/ext/ahriman", "examples/complete_object/ext/temperature"]
+exclude = [
+    "examples/rust_blank/ext/rust_blank",
+    "examples/custom_exception_ruby/ext/ahriman",
+    "examples/custom_exception_rust/ext/ahriman",
+    "examples/complete_object/ext/temperature",
+]
 
 [features]
 default = ["old-api"]
@@ -25,12 +30,22 @@ rb-sys = []
 [dependencies]
 bytes = { version = "1", optional = true }
 magnus-macros = { version = "0.6.0", path = "magnus-macros" }
-rb-sys = { version = "0.9.85", default-features = false, features = ["bindgen-rbimpls", "bindgen-deprecated-types", "stable-api"] }
+rb-sys = { version = "0.9.85", default-features = false, features = [
+    "bindgen-rbimpls",
+    "bindgen-deprecated-types",
+    "stable-api",
+] }
 seq-macro = "0.3"
 
 [dev-dependencies]
-magnus = { path = ".", features = ["embed", "rb-sys", "bytes"] }
-rb-sys = { version = "0.9", default-features = false, features = ["stable-api-compiled-fallback"] }
+magnus = { path = ".", default-features = false, features = [
+    "embed",
+    "rb-sys",
+    "bytes",
+] }
+rb-sys = { version = "0.9", default-features = false, features = [
+    "stable-api-compiled-fallback",
+] }
 
 [build-dependencies]
 rb-sys-env = "0.1.2"
