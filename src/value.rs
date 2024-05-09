@@ -454,12 +454,8 @@ unsafe impl<T: ReprValue> Sync for Opaque<T> {}
 pub struct Lazy<T: ReprValue> {
     init: Once,
     mark: bool,
-    inner: UnsafeCell<LazyInner<T>>,
-}
-
-union LazyInner<T: ReprValue> {
     func: fn(&Ruby) -> T,
-    value: T,
+    value: UnsafeCell<Value>,
 }
 
 impl<T> Lazy<T>
@@ -469,7 +465,9 @@ where
     /// Create a new `Lazy<T>`.
     ///
     /// This function can be called in a `const` context. `func` is evaluated
-    /// once when the `Lazy<T>` is first accessed (see [`Ruby::get_inner`]).
+    /// when the `Lazy<T>` is first accessed (see [`Ruby::get_inner`]). If
+    /// multiple threads attempt first access at the same time `func` may be
+    /// called more than once, but all threads will recieve the same value.
     ///
     /// This function assumes the `Lazy<T>` will be assinged to a `static`, so
     /// marks the inner Ruby value with Ruby's garbage collector to never be
@@ -491,7 +489,8 @@ where
         Self {
             init: Once::new(),
             mark: true,
-            inner: UnsafeCell::new(LazyInner { func }),
+            func,
+            value: UnsafeCell::new(QNIL.0.get()),
         }
     }
 
@@ -506,7 +505,8 @@ where
         Self {
             init: Once::new(),
             mark: false,
-            inner: UnsafeCell::new(LazyInner { func }),
+            func,
+            value: UnsafeCell::new(QNIL.0.get()),
         }
     }
 
@@ -562,7 +562,7 @@ where
         unsafe {
             this.init
                 .is_completed()
-                .then(|| (*this.inner.get()).value.into())
+                .then(|| T::from_value_unchecked(*this.value.get()).into())
         }
     }
 }
@@ -589,15 +589,16 @@ where
 
     fn get_inner_ref_with<'a>(&'a self, ruby: &Ruby) -> &'a Self::Value {
         unsafe {
-            self.init.call_once(|| {
-                let inner = self.inner.get();
-                let value = ((*inner).func)(ruby);
-                if self.mark {
-                    gc::register_mark_object(value);
-                }
-                (*inner).value = value;
-            });
-            &(*self.inner.get()).value
+            if !self.init.is_completed() {
+                let value = (self.func)(ruby);
+                self.init.call_once(|| {
+                    if self.mark {
+                        gc::register_mark_object(value);
+                    }
+                    *self.value.get() = value.as_value();
+                });
+            }
+            T::ref_from_ref_value_unchecked(&*self.value.get())
         }
     }
 }
@@ -624,6 +625,11 @@ pub(crate) mod private {
         #[inline]
         unsafe fn from_value_unchecked(val: Value) -> Self {
             *(&val as *const Value as *const Self)
+        }
+
+        #[inline]
+        unsafe fn ref_from_ref_value_unchecked(val: &Value) -> &Self {
+            &*(val as *const Value as *const Self)
         }
 
         #[inline]

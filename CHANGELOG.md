@@ -48,6 +48,8 @@
 - `Exception::backtrace`.
 
 ### Fixed
+- Potential deadlock in `Lazy` when accessed for the first time from
+  multiple threads simultaneously.
 
 ### Security
 
