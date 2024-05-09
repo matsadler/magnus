@@ -1,6 +1,6 @@
 [package]
 name = "magnus"
-version = "0.6.3"
+version = "0.6.4"
 edition = "2021"
 description = "High level Ruby bindings. Write Ruby extension gems in Rust, or call Ruby code from a Rust binary."
 keywords = ["ruby", "rubygem", "extension", "gem"]

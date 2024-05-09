@@ -120,7 +120,7 @@ dependencies = [
 
 [[package]]
 name = "magnus"
-version = "0.6.3"
+version = "0.6.4"
 dependencies = [
  "bytes",
  "magnus",
