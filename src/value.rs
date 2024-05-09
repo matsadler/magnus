@@ -520,6 +520,7 @@ where
             init: Once::new(),
             mark: true,
             func,
+            #[allow(deprecated)]
             value: UnsafeCell::new(QNIL.0.get()),
         }
     }
@@ -536,6 +537,7 @@ where
             init: Once::new(),
             mark: false,
             func,
+            #[allow(deprecated)]
             value: UnsafeCell::new(QNIL.0.get()),
         }
     }
