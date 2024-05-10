@@ -48,10 +48,13 @@
 - `Exception::backtrace`.
 
 ### Fixed
-- Potential deadlock in `Lazy` when accessed for the first time from
-  multiple threads simultaneously.
 
 ### Security
+
+## [0.6.4] - 2024-05-08
+### Fixed
+- Potential deadlock in `Lazy` when accessed for the first time from
+  multiple threads simultaneously.
 
 ## [0.6.3] - 2024-03-31
 ### Fixed
@@ -458,7 +461,8 @@
 - Pre-built bindings for Ruby 2.6 - 3.1 on common platforms, build-time
   generated bindings otherwise.
 
-[Unreleased]: https://github.com/matsadler/magnus/compare/0.6.3...HEAD
+[Unreleased]: https://github.com/matsadler/magnus/compare/0.6.4...HEAD
+[0.6.4]: https://github.com/matsadler/magnus/compare/0.6.3...0.6.4
 [0.6.3]: https://github.com/matsadler/magnus/compare/0.6.2...0.6.3
 [0.6.2]: https://github.com/matsadler/magnus/compare/0.6.1...0.6.2
 [0.6.1]: https://github.com/matsadler/magnus/compare/0.6.0...0.6.1
