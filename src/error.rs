@@ -94,7 +94,7 @@ impl Ruby {
 pub type Result<T> = std::result::Result<T, Error>;
 
 /// The possible types of [`Error`].
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum ErrorType {
     /// An interrupt, such as `break` or `throw`.
     Jump(Tag),
@@ -106,7 +106,7 @@ pub enum ErrorType {
 }
 
 /// Wrapper type for Ruby `Exception`s or other interrupts.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Error(ErrorType);
 
 impl Error {
@@ -350,6 +350,7 @@ impl IntoError for Error {
 /// Note that `OpaqueError` contains a Ruby value, so must be kept on the stack
 /// of a Ruby thread to prevent it from being Garbage Collected (or otherwise
 /// protected from premature GC).
+#[derive(Clone)]
 pub struct OpaqueError(ErrorType);
 
 unsafe impl Send for OpaqueError {}
@@ -394,7 +395,7 @@ impl IntoError for OpaqueError {
 
 /// The state of a call to Ruby exiting early, interrupting the normal flow
 /// of code.
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 #[repr(i32)]
 pub enum Tag {
     // None = 0,
