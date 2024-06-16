@@ -1,3 +1,5 @@
+//! Types for working with Ruby’s Time class.
+
 use std::{
     fmt,
     time::{Duration, SystemTime},

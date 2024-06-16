@@ -1842,7 +1842,7 @@ pub mod rb_sys;
 pub mod scan_args;
 pub mod symbol;
 mod thread;
-mod time;
+pub mod time;
 pub mod try_convert;
 pub mod typed_data;
 pub mod value;
