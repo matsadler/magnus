@@ -13,6 +13,11 @@
 
 ### Security
 
+## [0.7.1] - 2024-06-30
+
+### Fixed
+- Building docs with Ruby 3.0
+
 ## [0.7.0] - 2024-06-30
 ### Added
 - `Thread`, `Ruby::thread_create`/`thread_create_from_fn` and other thread APIs.
