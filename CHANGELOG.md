@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 ### Added
+
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Security
+
+## [0.7.0] - 2024-06-30
+### Added
 - `Thread`, `Ruby::thread_create`/`thread_create_from_fn` and other thread APIs.
 - `Mutex`, `Ruby::mutex_new` and other mutex APIs.
 - `Fiber`, `Ruby::fiber_new`/`fiber_new_from_fn` and other fiber APIs
@@ -461,7 +474,8 @@
 - Pre-built bindings for Ruby 2.6 - 3.1 on common platforms, build-time
   generated bindings otherwise.
 
-[Unreleased]: https://github.com/matsadler/magnus/compare/0.6.4...HEAD
+[Unreleased]: https://github.com/matsadler/magnus/compare/0.7.0...HEAD
+[0.7.0]: https://github.com/matsadler/magnus/compare/0.6.4...0.7.0
 [0.6.4]: https://github.com/matsadler/magnus/compare/0.6.3...0.6.4
 [0.6.3]: https://github.com/matsadler/magnus/compare/0.6.2...0.6.3
 [0.6.2]: https://github.com/matsadler/magnus/compare/0.6.1...0.6.2
