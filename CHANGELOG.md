@@ -479,7 +479,8 @@
 - Pre-built bindings for Ruby 2.6 - 3.1 on common platforms, build-time
   generated bindings otherwise.
 
-[Unreleased]: https://github.com/matsadler/magnus/compare/0.7.0...HEAD
+[Unreleased]: https://github.com/matsadler/magnus/compare/0.7.1...HEAD
+[0.7.1]: https://github.com/matsadler/magnus/compare/0.7.0...0.7.1
 [0.7.0]: https://github.com/matsadler/magnus/compare/0.6.4...0.7.0
 [0.6.4]: https://github.com/matsadler/magnus/compare/0.6.3...0.6.4
 [0.6.3]: https://github.com/matsadler/magnus/compare/0.6.2...0.6.3
