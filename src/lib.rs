@@ -1540,13 +1540,13 @@
 // * `rb_throw_obj`:
 // * `rb_timespec_now`:
 // * `rb_time_interval`:
-// * `rb_time_nano_new`:
+//! * `rb_time_nano_new`: [`Ruby::time_nano_new`].
 //! * `rb_time_new`: [`Ruby::time_new`].
 // * `rb_time_num_new`:
-// * `rb_time_timespec`:
+//! * `rb_time_timespec`: See [`Time::tv_sec`], [`Time::tv_nsec`] or [`TryConvert`].
 // * `rb_time_timespec_interval`:
 // * `rb_time_timespec_new`:
-//! * `rb_time_timeval`: [`TryConvert`].
+//! * `rb_time_timeval`: See [`Time::tv_sec`], [`Time::tv_usec`] or [`TryConvert`].
 //! * `rb_time_utc_offset`: [`Time::utc_offset`].
 // * `rb_tolower`:
 // * `rb_toupper`:

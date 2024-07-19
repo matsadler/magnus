@@ -3,7 +3,9 @@ use std::{
     time::{Duration, SystemTime},
 };
 
-use rb_sys::{rb_time_new, rb_time_timeval, rb_time_utc_offset, timeval, VALUE};
+use rb_sys::{
+    rb_time_nano_new, rb_time_new, rb_time_timespec, rb_time_utc_offset, timespec, VALUE,
+};
 
 use crate::{
     api::Ruby,
@@ -45,6 +47,31 @@ impl Ruby {
             Time::from_rb_value_unchecked(rb_time_new(
                 seconds.try_into().unwrap(),
                 microseconds.try_into().unwrap(),
+            ))
+        })
+    }
+
+    /// Create a new `Time` with nanosecond resolution in the local timezone.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let t = ruby.time_nano_new(1654013280, 0)?;
+    ///
+    ///     rb_assert!(ruby, r#"t == Time.new(2022, 5, 31, 9, 8, 0, "-07:00")"#, t);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
+    pub fn time_nano_new(&self, seconds: i64, nanoseconds: i64) -> Result<Time, Error> {
+        protect(|| unsafe {
+            Time::from_rb_value_unchecked(rb_time_nano_new(
+                seconds.try_into().unwrap(),
+                nanoseconds.try_into().unwrap(),
             ))
         })
     }
@@ -102,6 +129,85 @@ impl Time {
     pub fn utc_offset(self) -> i64 {
         unsafe { Fixnum::from_rb_value_unchecked(rb_time_utc_offset(self.as_rb_value())).to_i64() }
     }
+
+    #[inline]
+    fn timespec(self) -> Result<timespec, Error> {
+        let mut timespec = timespec {
+            tv_sec: 0,
+            tv_nsec: 0,
+        };
+        protect(|| unsafe {
+            timespec = rb_time_timespec(self.as_rb_value());
+            Ruby::get_unchecked().qnil()
+        })?;
+        Ok(timespec)
+    }
+
+    /// Returns value of `self` as seconds from the UNIX epoch.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Error, Ruby, Time};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let t: Time = ruby.eval(r#"Time.new(2022, 5, 31, 9, 8, 0, "-07:00")"#)?;
+    ///
+    ///     assert_eq!(t.tv_sec()?, 1654013280);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
+    #[inline]
+    pub fn tv_sec(self) -> Result<i64, Error> {
+        Ok(self.timespec()?.tv_sec as _)
+    }
+
+    /// Returns the number of nanoseconds in the subseconds part of `self`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Error, Ruby, Time};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let t: Time = ruby.eval(r#"Time.new(2022, 5, 31, 9, 8, 123456789/1000000000r, "-07:00")"#)?;
+    ///
+    ///     assert_eq!(t.tv_nsec()?, 123456789);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
+    #[inline]
+    pub fn tv_nsec(self) -> Result<i64, Error> {
+        Ok(self.timespec()?.tv_nsec as _)
+    }
+
+    /// Returns the number of microseconds in the subseconds part of `self`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Error, Ruby, Time};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let t: Time = ruby.eval(r#"Time.new(2022, 5, 31, 9, 8, 123456789/1000000000r, "-07:00")"#)?;
+    ///
+    ///     assert_eq!(t.tv_usec()?, 123456);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
+    #[inline]
+    pub fn tv_usec(self) -> Result<i64, Error> {
+        // fake tv_usec with timespec.tv_nsec so that calls to tv_sec and
+        // tv_usec next to each other have a chance to optimise to a single
+        // call to rb_time_timespec
+        Ok((self.timespec()?.tv_nsec / 1_000) as _)
+    }
 }
 
 impl fmt::Display for Time {
@@ -128,17 +234,17 @@ impl IntoValue for SystemTime {
     fn into_value_with(self, ruby: &Ruby) -> Value {
         match self.duration_since(Self::UNIX_EPOCH) {
             Ok(duration) => ruby
-                .time_new(
+                .time_nano_new(
                     duration.as_secs().try_into().unwrap(),
-                    duration.subsec_micros().try_into().unwrap(),
+                    duration.subsec_nanos().try_into().unwrap(),
                 )
                 .unwrap()
                 .as_value(),
             Err(_) => {
                 let duration = Self::UNIX_EPOCH.duration_since(self).unwrap();
-                ruby.time_new(
+                ruby.time_nano_new(
                     -i64::try_from(duration.as_secs()).unwrap(),
-                    -i64::try_from(duration.subsec_micros()).unwrap(),
+                    -i64::try_from(duration.subsec_nanos()).unwrap(),
                 )
                 .unwrap()
                 .as_value()
@@ -168,17 +274,17 @@ impl TryConvert for Time {
 
 impl TryConvert for SystemTime {
     fn try_convert(val: Value) -> Result<Self, Error> {
-        let mut timeval = timeval {
+        let mut timespec = timespec {
             tv_sec: 0,
-            tv_usec: 0,
+            tv_nsec: 0,
         };
         protect(|| unsafe {
-            timeval = rb_time_timeval(val.as_rb_value());
+            timespec = rb_time_timespec(val.as_rb_value());
             Ruby::get_unchecked().qnil()
         })?;
-        if timeval.tv_sec >= 0 && timeval.tv_usec >= 0 {
-            let mut duration = Duration::from_secs(timeval.tv_sec as _);
-            duration += Duration::from_micros(timeval.tv_usec as _);
+        if timespec.tv_sec >= 0 && timespec.tv_nsec >= 0 {
+            let mut duration = Duration::from_secs(timespec.tv_sec as _);
+            duration += Duration::from_nanos(timespec.tv_nsec as _);
             Ok(Self::UNIX_EPOCH + duration)
         } else {
             Err(Error::new(

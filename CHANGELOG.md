@@ -2,8 +2,11 @@
 
 ## [Unreleased]
 ### Added
+- `Ruby::time_nano_new`, `Time::tv_sec`, `Time::tv_usec` and `Time::tv_nsec`.
 
 ### Changed
+- Conversions between Ruby's `Time` and Rust's `SystemTime` now preserve
+  nanosecond precision.
 
 ### Deprecated
 
