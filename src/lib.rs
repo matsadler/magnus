@@ -833,8 +833,8 @@
 //! * `rb_gc_stat`: [`gc::stat`] or [`gc::all_stats`].
 //! * `rb_gc_unregister_address`: [`gc::unregister_address`].
 // * `rb_gc_update_tbl_refs`:
-// * `rb_gc_writebarrier`:
-// * `rb_gc_writebarrier_unprotect`:
+//! * `rb_gc_writebarrier`: [`typed_data::Writebarrier::writebarrier`].
+//! * `rb_gc_writebarrier_unprotect`: [`typed_data::Writebarrier::writebarrier_unprotect`].
 // * `rb_generic_ivar_table`:
 // * `rb_genrand_int32`:
 // * `rb_genrand_real`:

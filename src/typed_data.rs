@@ -18,8 +18,9 @@ use std::{
 #[cfg(ruby_gte_3_0)]
 use rb_sys::rbimpl_typeddata_flags::{self, RUBY_TYPED_FREE_IMMEDIATELY, RUBY_TYPED_WB_PROTECTED};
 use rb_sys::{
-    self, rb_data_type_struct__bindgen_ty_1, rb_data_type_t, rb_obj_reveal,
-    rb_singleton_class_attached, rb_singleton_class_clone, size_t, VALUE,
+    self, rb_data_type_struct__bindgen_ty_1, rb_data_type_t, rb_gc_writebarrier,
+    rb_gc_writebarrier_unprotect, rb_obj_reveal, rb_singleton_class_attached,
+    rb_singleton_class_clone, size_t, VALUE,
 };
 
 #[cfg(ruby_lt_3_0)]
@@ -31,7 +32,7 @@ const RUBY_TYPED_WB_PROTECTED: u32 = rb_sys::ruby_fl_type::RUBY_FL_WB_PROTECTED 
 use crate::{
     class::RClass,
     error::{bug_from_panic, Error},
-    gc,
+    gc::{self, Mark},
     into_value::IntoValue,
     object::Object,
     r_typed_data::RTypedData,
@@ -299,7 +300,14 @@ where
 
     /// Enable the 'write barrier protected' flag.
     ///
-    /// You almost certainly don't want to enable this.
+    /// Types that contain Ruby values by default do not participate in
+    /// generational GC (they are scanned every GC). This flag asserts all
+    /// operations that write Ruby values to this type are protected with
+    /// write barriers (see [`typed_data::Writebarrier::writebarrier`]) so this
+    /// type can participate in generational GC.
+    ///
+    /// This is hard to get right, and it is recomended you do not use this
+    /// flag.
     pub const fn wb_protected(mut self) -> Self {
         self.wb_protected = true;
         self
@@ -913,6 +921,95 @@ where
         })
     }
 }
+
+/// A trait for types that can be used with the `rb_gc_writebarrier` API.
+pub trait Writebarrier: ReprValue {
+    /// Inform Ruby that `self` contains a reference to `new`.
+    ///
+    /// If you have a Rust type that contains Ruby values, and itself is
+    /// wrapped as a Ruby object, and you choose to enable the `wb_protected`
+    /// flag so that it can participate in genrational GC then all operations
+    /// that add a Ruby value to your data type must call this function.
+    ///
+    /// This can be tricky to use correctly, it is reccomended you don't enable
+    /// the `wb_protected` flag, and thus don't need to use this function.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use std::cell::RefCell;
+    ///
+    /// use magnus::{
+    ///     function, gc, method,
+    ///     prelude::*,
+    ///     typed_data::{Obj, Writebarrier},
+    ///     value::Opaque,
+    ///     DataTypeFunctions, Error, Ruby, TypedData, Value,
+    /// };
+    ///
+    /// #[derive(TypedData)]
+    /// #[magnus(class = "MyVec", free_immediately, mark, wb_protected)]
+    /// struct MyVec {
+    ///     values: RefCell<Vec<Opaque<Value>>>,
+    /// }
+    ///
+    /// impl DataTypeFunctions for MyVec {
+    ///     fn mark(&self, marker: &gc::Marker) {
+    ///         marker.mark_slice(self.values.borrow().as_slice());
+    ///     }
+    /// }
+    ///
+    /// impl MyVec {
+    ///     fn new() -> Self {
+    ///         Self {
+    ///             values: RefCell::new(Vec::new()),
+    ///         }
+    ///     }
+    ///
+    ///     fn push(ruby: &Ruby, rb_self: Obj<Self>, val: Value) -> Obj<Self> {
+    ///         rb_self.values.borrow_mut().push(val.into());
+    ///         rb_self.writebarrier(rb_self);
+    ///         rb_self
+    ///     }
+    /// }
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let class = ruby.define_class("MyVec", ruby.class_object())?;
+    ///     class.define_singleton_method("new", function!(MyVec::new, 0))?;
+    ///     class.define_method("push", method!(MyVec::push, 1))?;
+    ///
+    ///     let _: Value = ruby.eval(
+    ///         r#"
+    ///             vec = MyVec.new
+    ///             vec.push("test")
+    ///             vec.push("example")
+    ///         "#,
+    ///     )?;
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap();
+    /// ```
+    fn writebarrier<T>(&self, young: T)
+    where
+        T: Mark,
+    {
+        unsafe { rb_gc_writebarrier(self.as_rb_value(), young.raw()) };
+    }
+
+    /// Opts `self` out of generational GC / write barrier protection.
+    ///
+    /// After calling this function `self` will not participate in generational
+    /// GC and will always be scanned during a GC.
+    /// See [`RTypedData::writebarrier`].
+    fn writebarrier_unprotect<T, U>(&self) {
+        unsafe { rb_gc_writebarrier_unprotect(self.as_rb_value()) };
+    }
+}
+
+impl Writebarrier for RTypedData {}
+
+impl<T> Writebarrier for Obj<T> where T: TypedData {}
 
 /// Trait for a Ruby-compatible `#hash` method.
 ///
