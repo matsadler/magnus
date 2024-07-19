@@ -4,6 +4,8 @@
 ### Added
 
 ### Changed
+- Conversions between Ruby's `Time` and Rust's `SystemTime` now preserve
+  nanosecond precision.
 
 ### Deprecated
 
