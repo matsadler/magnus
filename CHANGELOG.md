@@ -3,6 +3,8 @@
 ## [Unreleased]
 ### Added
 - `Ruby::time_nano_new`, `Time::tv_sec`, `Time::tv_usec` and `Time::tv_nsec`.
+- The `chrono` feature can be enabled to allow automatic conversions
+  between `chrono::DateTime<Utc>` and `chrono::DateTime<FixedOffset>` and Ruby `Time` objects.
 
 ### Changed
 - Conversions between Ruby's `Time` and Rust's `SystemTime` now preserve

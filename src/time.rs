@@ -254,6 +254,7 @@ impl IntoValue for SystemTime {
 }
 
 #[cfg(feature = "chrono")]
+#[cfg_attr(docsrs, doc(cfg(feature = "chrono")))]
 impl IntoValue for chrono::DateTime<chrono::Utc> {
     #[inline]
     fn into_value_with(self, ruby: &Ruby) -> Value {
@@ -265,6 +266,7 @@ impl IntoValue for chrono::DateTime<chrono::Utc> {
 }
 
 #[cfg(feature = "chrono")]
+#[cfg_attr(docsrs, doc(cfg(feature = "chrono")))]
 impl IntoValue for chrono::DateTime<chrono::FixedOffset> {
     #[inline]
     fn into_value_with(self, ruby: &Ruby) -> Value {
@@ -320,6 +322,7 @@ impl TryConvert for SystemTime {
 }
 
 #[cfg(feature = "chrono")]
+#[cfg_attr(docsrs, doc(cfg(feature = "chrono")))]
 impl TryConvert for chrono::DateTime<chrono::Utc> {
     fn try_convert(val: Value) -> Result<Self, Error> {
         let mut timespec = timespec {
@@ -344,6 +347,7 @@ impl TryConvert for chrono::DateTime<chrono::Utc> {
 }
 
 #[cfg(feature = "chrono")]
+#[cfg_attr(docsrs, doc(cfg(feature = "chrono")))]
 impl TryConvert for chrono::DateTime<chrono::FixedOffset> {
     fn try_convert(val: Value) -> Result<Self, Error> {
         use chrono::{DateTime, FixedOffset, Utc};
