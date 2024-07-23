@@ -253,6 +253,32 @@ impl IntoValue for SystemTime {
     }
 }
 
+#[cfg(feature = "chrono")]
+#[cfg_attr(docsrs, doc(cfg(feature = "chrono")))]
+impl IntoValue for chrono::DateTime<chrono::Utc> {
+    #[inline]
+    fn into_value_with(self, ruby: &Ruby) -> Value {
+        let delta = self.signed_duration_since(Self::UNIX_EPOCH);
+        ruby.time_nano_new(delta.num_seconds(), delta.subsec_nanos() as _)
+            .unwrap()
+            .as_value()
+    }
+}
+
+#[cfg(feature = "chrono")]
+#[cfg_attr(docsrs, doc(cfg(feature = "chrono")))]
+impl IntoValue for chrono::DateTime<chrono::FixedOffset> {
+    #[inline]
+    fn into_value_with(self, ruby: &Ruby) -> Value {
+        use chrono::{DateTime, Utc};
+        let epoch = DateTime::<Utc>::UNIX_EPOCH.with_timezone(&self.timezone());
+        let delta = self.signed_duration_since(epoch);
+        ruby.time_nano_new(delta.num_seconds(), delta.subsec_nanos() as _)
+            .unwrap()
+            .as_value()
+    }
+}
+
 impl Object for Time {}
 
 unsafe impl private::ReprValue for Time {}
@@ -292,5 +318,50 @@ impl TryConvert for SystemTime {
                 "time must not be negative",
             ))
         }
+    }
+}
+
+#[cfg(feature = "chrono")]
+#[cfg_attr(docsrs, doc(cfg(feature = "chrono")))]
+impl TryConvert for chrono::DateTime<chrono::Utc> {
+    fn try_convert(val: Value) -> Result<Self, Error> {
+        let mut timespec = timespec {
+            tv_sec: 0,
+            tv_nsec: 0,
+        };
+        protect(|| unsafe {
+            timespec = rb_time_timespec(val.as_rb_value());
+            Ruby::get_unchecked().qnil()
+        })?;
+        if timespec.tv_sec >= 0 && timespec.tv_nsec >= 0 {
+            let mut duration = Duration::from_secs(timespec.tv_sec as _);
+            duration += Duration::from_nanos(timespec.tv_nsec as _);
+            Ok(Self::UNIX_EPOCH + duration)
+        } else {
+            Err(Error::new(
+                Ruby::get_with(val).exception_arg_error(),
+                "time must not be negative",
+            ))
+        }
+    }
+}
+
+#[cfg(feature = "chrono")]
+#[cfg_attr(docsrs, doc(cfg(feature = "chrono")))]
+impl TryConvert for chrono::DateTime<chrono::FixedOffset> {
+    fn try_convert(val: Value) -> Result<Self, Error> {
+        use chrono::{DateTime, FixedOffset, Utc};
+        let offset: i32 = val.funcall("utc_offset", ())?;
+        let dt: DateTime<Utc> = TryConvert::try_convert(val)?;
+        let tz = match FixedOffset::east_opt(offset) {
+            Some(tz) => tz,
+            None => {
+                return Err(Error::new(
+                    Ruby::get_with(val).exception_arg_error(),
+                    "invalid UTC offset",
+                ))
+            }
+        };
+        Ok(dt.with_timezone(&tz))
     }
 }
