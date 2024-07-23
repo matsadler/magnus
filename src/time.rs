@@ -172,7 +172,8 @@ impl Time {
     /// use magnus::{Error, Ruby, Time};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
-    ///     let t: Time = ruby.eval(r#"Time.new(2022, 5, 31, 9, 8, 123456789/1000000000r, "-07:00")"#)?;
+    ///     let t: Time =
+    ///         ruby.eval(r#"Time.new(2022, 5, 31, 9, 8, 123456789/1000000000r, "-07:00")"#)?;
     ///
     ///     assert_eq!(t.tv_nsec()?, 123456789);
     ///
@@ -193,7 +194,8 @@ impl Time {
     /// use magnus::{Error, Ruby, Time};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
-    ///     let t: Time = ruby.eval(r#"Time.new(2022, 5, 31, 9, 8, 123456789/1000000000r, "-07:00")"#)?;
+    ///     let t: Time =
+    ///         ruby.eval(r#"Time.new(2022, 5, 31, 9, 8, 123456789/1000000000r, "-07:00")"#)?;
     ///
     ///     assert_eq!(t.tv_usec()?, 123456);
     ///
