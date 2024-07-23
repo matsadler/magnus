@@ -319,7 +319,7 @@ See `magnus::TryConvert` for more details.
 | `i8`,`i16`,`i32`,`i64`,`isize`, `magnus::Integer`                    | `Integer`, `#to_int`                    |
 | `u8`,`u16`,`u32`,`u64`,`usize`                                       | `Integer`, `#to_int`                    |
 | `f32`,`f64`, `magnus::Float`                                         | `Float`, `Numeric`                      |
-| `String`, `PathBuf`, `char`, `magnus::RString`, `bytes::Bytes`[^3]   | `String`, `#to_str`                     |
+| `String`, `PathBuf`, `char`, `magnus::RString`, `bytes::Bytes`‡      | `String`, `#to_str`                     |
 | `magnus::Symbol`                                                     | `Symbol`, `#to_sym`                     |
 | `bool`                                                               | any object                              |
 | `magnus::Range`                                                      | `Range`                                 |
@@ -329,16 +329,19 @@ See `magnus::TryConvert` for more details.
 | `[T; N]`                                                             | `[T]`, `#to_ary`                        |
 | `magnus::RArray`                                                     | `Array`, `#to_ary`                      |
 | `magnus::RHash`                                                      | `Hash`, `#to_hash`                      |
-| `std::time::SystemTime`, `magnus::Time`, `chrono::DateTime<T>`[^4]   | `Time`                                  |
+| `std::time::SystemTime`, `magnus::Time`, `chrono::DateTime<T>`§      | `Time`                                  |
 | `magnus::Value`                                                      | any object                              |
-| `Vec<T>`[^1]                                                         | `[T]`, `#to_ary`                        |
-| `HashMap<K, V>`[^1]                                                  | `{K => V}`, `#to_hash`                  |
-| `&T`, `typed_data::Obj<T>` where `T: TypedData`[^2]                  | instance of `<T as TypedData>::class()` |
+| `Vec<T>`\*                                                           | `[T]`, `#to_ary`                        |
+| `HashMap<K, V>`\*                                                    | `{K => V}`, `#to_hash`                  |
+| `&T`, `typed_data::Obj<T>` where `T: TypedData`†                     | instance of `<T as TypedData>::class()` |
 
-[^1]: when converting to `Vec` and `HashMap` the types of `T`/`K`,`V` must be native Rust types.
-[^2]: see the `wrap` macro.
-[^3]: when the `bytes` feature is enabled
-[^4]: when the `chrono` feature is enabled; `T` can be `Utc` or `FixedOffset`.
+\* when converting to `Vec` and `HashMap` the types of `T`/`K`,`V` must be native Rust types.
+
+† see the `wrap` macro.
+
+‡ when the `bytes` feature is enabled
+
+§ when the `chrono` feature is enabled; `T` can be `Utc` or `FixedOffset`.
 
 ### Rust returning / passing values to Ruby
 
@@ -359,9 +362,9 @@ and `magnus::ArgList` for some additional details.
 | `(T, U)`, `(T, U, V)`, etc, `[T; N]`, `Vec<T>`     | `Array`                                 |
 | `HashMap<K, V>`                                    | `Hash`                                  |
 | `std::time::SystemTime`                            | `Time`                                  |
-| `T`, `typed_data::Obj<T>` where `T: TypedData`[^2] | instance of `<T as TypedData>::class()` |
+| `T`, `typed_data::Obj<T>` where `T: TypedData`\*  | instance of `<T as TypedData>::class()` |
 
-[^2]: see the `wrap` macro.
+\* see the `wrap` macro.
 
 ### Conversions via Serde
 
