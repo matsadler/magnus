@@ -345,19 +345,19 @@
 //!
 //! ## `rb_c`
 //!
-//! * `rb_call_super`: See [`call_super`].
-//! * `rb_call_super_kw`: [`call_super`].
+//! * `rb_call_super`: See [`Ruby::call_super`].
+//! * `rb_call_super_kw`: [`Ruby::call_super`].
 // * `rb_catch`:
 // * `rb_catch_obj`:
 // * `rb_category_compile_warn`:
 // * `rb_category_warn`:
 // * `rb_category_warning`:
 // * `rb_char_to_option_kcode`:
-//! * `rb_check_arity`: [`scan_args::check_arity`].
+//! * `rb_check_arity`: [`Ruby::check_arity`].
 //! * `rb_check_array_type`:  See [`TryConvert`] and [`Value::try_convert`].
 // * `rb_check_convert_type`:
 // * `rb_check_copyable`:
-// * `rb_check_frozen`:
+//! * `rb_check_frozen`: See [`ReprValue::check_frozen`].
 // * `rb_check_frozen_inline`:
 //! * `rb_check_funcall`: See [`Value::check_funcall`].
 //! * `rb_check_funcall_kw`:  [`Value::check_funcall`].
@@ -366,11 +366,11 @@
 //! * `rb_check_id_cstr`: [`Id::check`](value::Id::check).
 // * `rb_check_inheritable`:
 // * `rb_check_safe_str`:
-// * `rb_check_string_type`:
+//! * `rb_check_string_type`: See [`TryConvert`] and [`Value::try_convert`].
 //! * `rb_check_symbol`: Similar to [`StaticSymbol::check`].
 //! * `rb_check_symbol_cstr`: [`StaticSymbol::check`].
-// * `rb_check_to_float`:
-// * `rb_check_to_int`:
+//! * `rb_check_to_float`: See [`TryConvert`] and [`Value::try_convert`].
+//! * `rb_check_to_int`: See [`TryConvert`] and [`Value::try_convert`].
 // * `rb_check_to_integer`:
 // * `rb_check_type`:
 //! * `rb_check_typeddata`: See [`TryConvert`] and [`Value::try_convert`].
@@ -447,7 +447,7 @@
 // * `rb_cstr2inum`:
 // * `rb_cstr_to_dbl`:
 // * `rb_cstr_to_inum`:
-//! * `rb_current_receiver`: [`current_receiver`].
+//! * `rb_current_receiver`: [`Ruby::current_receiver`].
 // * `rb_cvar_defined`:
 // * `rb_cvar_find`:
 // * `rb_cvar_get`:
@@ -481,8 +481,8 @@
 //! * `rb_define_alias`: [`Module::define_alias`].
 // * `rb_define_alloc_func`:
 //! * `rb_define_attr`: See [`Module::define_attr`].
-//! * `rb_define_class`: [`define_class`].
-//! * `rb_define_class_id`: Simmilar to [`define_class`].
+//! * `rb_define_class`: [`Ruby::define_class`].
+//! * `rb_define_class_id`: Simmilar to [`Ruby::define_class`].
 //! * `rb_define_class_id_under`: [`Module::define_class`].
 //! * `rb_define_class_under`: See [`Module::define_class`].
 // * `rb_define_class_variable`:
@@ -490,20 +490,20 @@
 // * `rb_define_dummy_encoding`:
 // * `rb_define_finalizer`:
 // * `rb_define_global_const`:
-//! * `rb_define_global_function`: [`define_global_function`].
+//! * `rb_define_global_function`: [`Ruby::define_global_function`].
 // * `rb_define_hooked_variable`:
 //! * `rb_define_method`: See [`Module::define_method`].
 //! * `rb_define_method_id`: [`Module::define_method`].
-//! * `rb_define_module`: [`define_module`].
+//! * `rb_define_module`: [`Ruby::define_module`].
 //! * `rb_define_module_function`: [`RModule::define_module_function`].
-//! * `rb_define_module_id`: See [`define_module`].
+//! * `rb_define_module_id`: See [`Ruby::define_module`].
 //! * `rb_define_module_id_under`: [`Module::define_module`].
 //! * `rb_define_module_under`: See [`Module::define_module`].
 //! * `rb_define_private_method`: [`Module::define_private_method`].
 //! * `rb_define_protected_method`: [`Module::define_protected_method`].
 // * `rb_define_readonly_variable`:
 //! * `rb_define_singleton_method`: [`Object::define_singleton_method`].
-//! * `rb_define_variable`: [`define_variable`].
+//! * `rb_define_variable`: [`Ruby::define_variable`].
 // * `rb_define_virtual_variable`:
 // * `rb_deprecate_constant`:
 // * `rb_detach_process`:
@@ -812,13 +812,13 @@
 //!
 //! ## `rb_g`
 //!
-//! * `rb_gc`: [`gc::start`].
-//! * `rb_gc_adjust_memory_usage`: [`gc::adjust_memory_usage`].
+//! * `rb_gc`: [`Ruby::gc_start`].
+//! * `rb_gc_adjust_memory_usage`: [`Ruby::gc_adjust_memory_usage`].
 // * `rb_gc_call_finalizer_at_exit`:
 // * `rb_gc_copy_finalizer`:
-//! * `rb_gc_count`: [`gc::count`].
-//! * `rb_gc_disable`: [`gc::disable`].
-//! * `rb_gc_enable`: [`gc::enable`].
+//! * `rb_gc_count`: [`Ruby::gc_count`].
+//! * `rb_gc_disable`: [`Ruby::gc_disable`].
+//! * `rb_gc_enable`: [`Ruby::gc_enable`].
 // * `RB_GC_GUARD`:
 // * `rb_gc_latest_gc_info`:
 //! * `rb_gc_location`: [`gc::Compactor::location`].
@@ -829,8 +829,8 @@
 //! * `rb_gc_register_address`: [`gc::register_address`] or
 //!   [`BoxValue`](value::BoxValue).
 //! * `rb_gc_register_mark_object`: [`gc::register_mark_object`].
-//! * `rb_gc_start`: [`gc::start`].
-//! * `rb_gc_stat`: [`gc::stat`] or [`gc::all_stats`].
+//! * `rb_gc_start`: [`Ruby::gc_start`].
+//! * `rb_gc_stat`: [`Ruby::gc_stat`] or [`Ruby::gc_all_stats`].
 //! * `rb_gc_unregister_address`: [`gc::unregister_address`].
 // * `rb_gc_update_tbl_refs`:
 //! * `rb_gc_writebarrier`: [`typed_data::Writebarrier::writebarrier`].
@@ -1311,8 +1311,8 @@
 // * `rb_remove_event_hook_with_data`:
 // * `rb_remove_method`:
 // * `rb_remove_method_id`:
-//! * `rb_require`: [`require`].
-//! * `rb_require_string`: [`require`].
+//! * `rb_require`: [`Ruby::require`].
+//! * `rb_require_string`: [`Ruby::require`].
 // * `rb_rescue`:
 // * `rb_rescue2`:
 // * `RB_RESERVED_FD_P`:
@@ -1622,19 +1622,19 @@
 // * `rb_w32_fd_dup`:
 //! * `rb_waitpid`: [`Ruby::waitpid`].
 // * `rb_warn`:
-//! * `rb_warning`: [`error::warning`].
+//! * `rb_warning`: [`Ruby::warning`].
 // * `rb_write_error`:
 // * `rb_write_error2`:
-//! * `rb_yield`: [`block::yield_value`] / return [`block::Yield`].
+//! * `rb_yield`: [`Ruby::yield_value`] / return [`block::Yield`].
 // * `rb_yield_block`:
-//! * `rb_yield_splat`: [`block::yield_splat`] / return [`block::YieldSplat`].
+//! * `rb_yield_splat`: [`Ruby::yield_splat`] / return [`block::YieldSplat`].
 // * `rb_yield_splat_kw`:
 //! * `rb_yield_values`:
-//!   See [`block::yield_values`] / return [`block::YieldValues`].
+//!   See [`Ruby::yield_values`] / return [`block::YieldValues`].
 //! * `rb_yield_values2`:
-//!   See [`block::yield_values`] / return [`block::YieldValues`].
+//!   See [`Ruby::yield_values`] / return [`block::YieldValues`].
 //! * `rb_yield_values_kw`:
-//!   [`block::yield_values`] / return [`block::YieldValues`].
+//!   [`Ruby::yield_values`] / return [`block::YieldValues`].
 // * `RB_ZALLOC`:
 // * `RB_ZALLOC_N`:
 //!
@@ -1740,11 +1740,11 @@
 // * `ruby_scan_digits`:
 // * `ruby_scan_hex`:
 // * `ruby_scan_oct`:
-//! * `ruby_script`: Similar to [`embed::ruby_script`].
+//! * `ruby_script`: Similar to [`Ruby::script`].
 // * `ruby_setenv`:
 //! * `ruby_setup`: [`embed::setup`].
 // * `ruby_set_argv`:
-//! * `ruby_set_script_name`: [`embed::ruby_script`].
+//! * `ruby_set_script_name`: [`Ruby::script`].
 // * `ruby_show_copyright`:
 // * `ruby_show_version`:
 // * `ruby_signal_name`:
