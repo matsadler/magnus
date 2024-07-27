@@ -5,10 +5,10 @@ use std::{
 };
 
 use magnus::{
-    class, define_class, exception, method, module,
+    method,
     prelude::*,
     scan_args::{get_kwargs, scan_args},
-    typed_data, Error, Value,
+    typed_data, Error, Ruby, Value,
 };
 
 #[magnus::wrap(class = "Temperature", free_immediately, size)]
@@ -36,7 +36,11 @@ fn c_to_f(c: f64) -> f64 {
 }
 
 impl Temperature {
-    fn initialize(rb_self: typed_data::Obj<Self>, args: &[Value]) -> Result<(), Error> {
+    fn initialize(
+        ruby: &Ruby,
+        rb_self: typed_data::Obj<Self>,
+        args: &[Value],
+    ) -> Result<(), Error> {
         let args = scan_args::<(), (), (), (), _, ()>(args)?;
         let kwargs = get_kwargs::<_, (), (Option<f64>, Option<f64>, Option<f64>), ()>(
             args.keywords,
@@ -49,13 +53,13 @@ impl Temperature {
             (None, None, Some(f)) => ((f_to_c(f) + C_OFFSET) * FACTOR) as u64,
             (None, None, None) => {
                 return Err(Error::new(
-                    exception::arg_error(),
+                    ruby.exception_arg_error(),
                     "missing keyword: :kelvin, :celsius, or :fahrenheit",
                 ))
             }
             _ => {
                 return Err(Error::new(
-                    exception::arg_error(),
+                    ruby.exception_arg_error(),
                     "unexpected keyword, supply one of: :kelvin, :celsius, or :fahrenheit",
                 ))
             }
@@ -83,8 +87,8 @@ impl fmt::Display for Temperature {
 }
 
 #[magnus::init]
-fn init() -> Result<(), Error> {
-    let class = define_class("Temperature", class::object())?;
+fn init(ruby: &Ruby) -> Result<(), Error> {
+    let class = ruby.define_class("Temperature", ruby.class_object())?;
 
     // Define alloc func based on the Default impl, plus an initialize method,
     // rather than overwriting `new`, to allow class to be subclassed from Ruby
@@ -113,7 +117,7 @@ fn init() -> Result<(), Error> {
     // <=> sort operator based on Rust PartialOrd impl
     class.define_method("<=>", method!(<Temperature as typed_data::Cmp>::cmp, 1))?;
     // defines <, <=, >, >=, and == based on <=>
-    class.include_module(module::comparable())?;
+    class.include_module(ruby.module_comparable())?;
 
     // debug/console output based on Rust Debug impl
     class.define_method(

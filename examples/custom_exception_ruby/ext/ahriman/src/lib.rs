@@ -1,6 +1,6 @@
 use magnus::{
-    define_module, exception::ExceptionClass, function, gc::register_mark_object, prelude::*,
-    value::Lazy, Error, RModule, Ruby,
+    exception::ExceptionClass, function, gc::register_mark_object, prelude::*, value::Lazy, Error,
+    RModule, Ruby,
 };
 
 static RUBRIC_ERROR: Lazy<ExceptionClass> = Lazy::new(|ruby| {
@@ -25,8 +25,8 @@ fn cast_rubric(ruby: &Ruby) -> Result<(), Error> {
 }
 
 #[magnus::init]
-fn init() -> Result<(), Error> {
-    let module = define_module("Ahriman")?;
+fn init(ruby: &Ruby) -> Result<(), Error> {
+    let module = ruby.define_module("Ahriman")?;
     module.define_singleton_method("cast_rubric", function!(cast_rubric, 0))?;
     Ok(())
 }
