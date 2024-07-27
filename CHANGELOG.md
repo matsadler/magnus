@@ -11,6 +11,8 @@
 ### Changed
 - Conversions between Ruby's `Time` and Rust's `SystemTime` now preserve
   nanosecond precision.
+- 'old-api' feature, which disables deprecation warnings for the old api is no
+  longer a default feature.
 
 ### Deprecated
 
