@@ -1,15 +1,21 @@
+//! Types and functions for working with Ruby's Time class.
+//!
+//! See also [`Ruby`](Ruby#time) for more Time related methods.
+
 use std::{
     fmt,
+    os::raw::c_int,
     time::{Duration, SystemTime},
 };
 
 use rb_sys::{
-    rb_time_nano_new, rb_time_new, rb_time_timespec, rb_time_utc_offset, timespec, VALUE,
+    rb_time_nano_new, rb_time_new, rb_time_timespec, rb_time_timespec_new, rb_time_utc_offset,
+    timespec, VALUE,
 };
 
 use crate::{
     api::Ruby,
-    error::{protect, Error},
+    error::{protect, Error, IntoError},
     into_value::IntoValue,
     object::Object,
     r_typed_data::RTypedData,
@@ -75,6 +81,136 @@ impl Ruby {
             ))
         })
     }
+
+    /// Create a new `Time` with nanosecond resolution with the given offset.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{
+    ///     error::IntoError,
+    ///     rb_assert,
+    ///     time::{Offset, Timespec},
+    ///     Error, Ruby,
+    /// };
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let ts = Timespec {
+    ///         tv_sec: 1654013280,
+    ///         tv_nsec: 0,
+    ///     };
+    ///     let offset = Offset::from_hours(-7).map_err(|e| e.into_error(ruby))?;
+    ///     let t = ruby.time_timespec_new(ts, offset)?;
+    ///
+    ///     rb_assert!(ruby, r#"t == Time.new(2022, 5, 31, 9, 8, 0, "-07:00")"#, t);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
+    pub fn time_timespec_new(&self, ts: Timespec, offset: Offset) -> Result<Time, Error> {
+        protect(|| unsafe {
+            Time::from_rb_value_unchecked(rb_time_timespec_new(
+                &ts.into() as *const _,
+                offset.as_c_int(),
+            ))
+        })
+    }
+}
+
+/// Struct representing a point in time as an offset from the UNIX epoch.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub struct Timespec {
+    /// Seconds since the UNIX epoch.
+    pub tv_sec: i64,
+    /// Subsecond offset in nanoseconds.
+    pub tv_nsec: i64,
+}
+
+impl From<timespec> for Timespec {
+    fn from(val: timespec) -> Self {
+        Self {
+            tv_sec: val.tv_sec as _,
+            tv_nsec: val.tv_nsec as _,
+        }
+    }
+}
+
+impl From<Timespec> for timespec {
+    fn from(val: Timespec) -> Self {
+        Self {
+            tv_sec: val.tv_sec as _,
+            tv_nsec: val.tv_nsec as _,
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum OffsetType {
+    Local,
+    UTC,
+    Offset(c_int),
+}
+
+/// Struct representing an offset from UTC.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Offset(OffsetType);
+
+impl Offset {
+    /// Creates a new `Offset` from the specified number of seconds.
+    pub fn from_secs(offset: i32) -> Result<Self, OffsetError> {
+        match offset {
+            -86400..=86400 => Ok(Self(OffsetType::Offset(offset as _))),
+            _ => Err(OffsetError(offset)),
+        }
+    }
+
+    /// Creates a new `Offset` from the specified number of minutes.
+    pub fn from_mins(offset: i32) -> Result<Self, OffsetError> {
+        Self::from_secs(offset * 60)
+    }
+
+    /// Creates a new `Offset` from the specified number of hours.
+    pub fn from_hours(offset: i32) -> Result<Self, OffsetError> {
+        Self::from_secs(offset * 60)
+    }
+
+    /// Create a new `Offset` representing local time.
+    pub fn local() -> Self {
+        Self(OffsetType::Local)
+    }
+
+    /// Create a new `Offset` representing UTC.
+    pub fn utc() -> Self {
+        Self(OffsetType::UTC)
+    }
+
+    fn as_c_int(&self) -> c_int {
+        match self.0 {
+            OffsetType::Local => c_int::MAX,
+            OffsetType::UTC => c_int::MAX - 1,
+            OffsetType::Offset(i) => i,
+        }
+    }
+}
+
+/// An error returned when an [`Offset`] is out of range.
+#[derive(Debug)]
+pub struct OffsetError(i32);
+
+impl fmt::Display for OffsetError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "utc_offset {} out of range (-86400 to 86400)", self.0)
+    }
+}
+
+impl std::error::Error for OffsetError {}
+
+impl IntoError for OffsetError {
+    #[inline]
+    fn into_error(self, ruby: &Ruby) -> Error {
+        Error::new(ruby.exception_arg_error(), self.to_string())
+    }
 }
 
 /// Wrapper type for a Value known to be an instance of Ruby's Time class.
@@ -130,8 +266,25 @@ impl Time {
         unsafe { Fixnum::from_rb_value_unchecked(rb_time_utc_offset(self.as_rb_value())).to_i64() }
     }
 
-    #[inline]
-    fn timespec(self) -> Result<timespec, Error> {
+    /// Returns `self` as a [`Timespec`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Error, Ruby, Time};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let t: Time =
+    ///         ruby.eval(r#"Time.new(2022, 5, 31, 9, 8, 123456789/1000000000r, "-07:00")"#)?;
+    ///
+    ///     assert_eq!(t.timespec()?.tv_sec, 1654013280);
+    ///     assert_eq!(t.timespec()?.tv_nsec, 123456789);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
+    pub fn timespec(self) -> Result<Timespec, Error> {
         let mut timespec = timespec {
             tv_sec: 0,
             tv_nsec: 0,
@@ -140,75 +293,7 @@ impl Time {
             timespec = rb_time_timespec(self.as_rb_value());
             Ruby::get_unchecked().qnil()
         })?;
-        Ok(timespec)
-    }
-
-    /// Returns value of `self` as seconds from the UNIX epoch.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use magnus::{Error, Ruby, Time};
-    ///
-    /// fn example(ruby: &Ruby) -> Result<(), Error> {
-    ///     let t: Time = ruby.eval(r#"Time.new(2022, 5, 31, 9, 8, 0, "-07:00")"#)?;
-    ///
-    ///     assert_eq!(t.tv_sec()?, 1654013280);
-    ///
-    ///     Ok(())
-    /// }
-    /// # Ruby::init(example).unwrap()
-    /// ```
-    #[inline]
-    pub fn tv_sec(self) -> Result<i64, Error> {
-        Ok(self.timespec()?.tv_sec as _)
-    }
-
-    /// Returns the number of nanoseconds in the subseconds part of `self`.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use magnus::{Error, Ruby, Time};
-    ///
-    /// fn example(ruby: &Ruby) -> Result<(), Error> {
-    ///     let t: Time =
-    ///         ruby.eval(r#"Time.new(2022, 5, 31, 9, 8, 123456789/1000000000r, "-07:00")"#)?;
-    ///
-    ///     assert_eq!(t.tv_nsec()?, 123456789);
-    ///
-    ///     Ok(())
-    /// }
-    /// # Ruby::init(example).unwrap()
-    /// ```
-    #[inline]
-    pub fn tv_nsec(self) -> Result<i64, Error> {
-        Ok(self.timespec()?.tv_nsec as _)
-    }
-
-    /// Returns the number of microseconds in the subseconds part of `self`.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use magnus::{Error, Ruby, Time};
-    ///
-    /// fn example(ruby: &Ruby) -> Result<(), Error> {
-    ///     let t: Time =
-    ///         ruby.eval(r#"Time.new(2022, 5, 31, 9, 8, 123456789/1000000000r, "-07:00")"#)?;
-    ///
-    ///     assert_eq!(t.tv_usec()?, 123456);
-    ///
-    ///     Ok(())
-    /// }
-    /// # Ruby::init(example).unwrap()
-    /// ```
-    #[inline]
-    pub fn tv_usec(self) -> Result<i64, Error> {
-        // fake tv_usec with timespec.tv_nsec so that calls to tv_sec and
-        // tv_usec next to each other have a chance to optimise to a single
-        // call to rb_time_timespec
-        Ok((self.timespec()?.tv_nsec / 1_000) as _)
+        Ok(timespec.into())
     }
 }
 

@@ -2,7 +2,7 @@
 
 ## [Unreleased]
 ### Added
-- `Ruby::time_nano_new`, `Time::tv_sec`, `Time::tv_usec` and `Time::tv_nsec`.
+- `Ruby::time_nano_new`, `Ruby::time_timespec_new`, and `Time::timespec`.
 - The `chrono` feature can be enabled to allow automatic conversions
   between `chrono::DateTime<Utc>` and `chrono::DateTime<FixedOffset>` and Ruby
   `Time` objects.
