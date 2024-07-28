@@ -346,7 +346,11 @@ impl IntoValue for chrono::DateTime<chrono::Utc> {
     #[inline]
     fn into_value_with(self, ruby: &Ruby) -> Value {
         let delta = self.signed_duration_since(Self::UNIX_EPOCH);
-        ruby.time_nano_new(delta.num_seconds(), delta.subsec_nanos() as _)
+        let ts = Timespec {
+            tv_sec: delta.num_seconds(),
+            tv_nsec: delta.subsec_nanos() as _,
+        };
+        ruby.time_timespec_new(ts, Offset::utc())
             .unwrap()
             .as_value()
     }
@@ -357,12 +361,15 @@ impl IntoValue for chrono::DateTime<chrono::Utc> {
 impl IntoValue for chrono::DateTime<chrono::FixedOffset> {
     #[inline]
     fn into_value_with(self, ruby: &Ruby) -> Value {
-        use chrono::{DateTime, Utc};
-        let epoch = DateTime::<Utc>::UNIX_EPOCH.with_timezone(&self.timezone());
-        let delta = self.signed_duration_since(epoch);
-        ruby.time_nano_new(delta.num_seconds(), delta.subsec_nanos() as _)
-            .unwrap()
-            .as_value()
+        use chrono::{DateTime, FixedOffset, Utc};
+        let delta = self.signed_duration_since(DateTime::<Utc>::UNIX_EPOCH);
+        let ts = Timespec {
+            tv_sec: delta.num_seconds(),
+            tv_nsec: delta.subsec_nanos() as _,
+        };
+        let offset: FixedOffset = self.timezone().into();
+        let offset = Offset::from_secs(offset.local_minus_utc()).unwrap();
+        ruby.time_timespec_new(ts, offset).unwrap().as_value()
     }
 }
 
@@ -395,14 +402,18 @@ impl TryConvert for SystemTime {
             timespec = rb_time_timespec(val.as_rb_value());
             Ruby::get_unchecked().qnil()
         })?;
-        if timespec.tv_sec >= 0 && timespec.tv_nsec >= 0 {
-            let mut duration = Duration::from_secs(timespec.tv_sec as _);
+        if timespec.tv_nsec >= 0 {
+            let mut duration = Duration::from_secs(timespec.tv_sec.abs() as _);
             duration += Duration::from_nanos(timespec.tv_nsec as _);
-            Ok(Self::UNIX_EPOCH + duration)
+            if timespec.tv_sec >= 0 {
+                Ok(Self::UNIX_EPOCH + duration)
+            } else {
+                Ok(Self::UNIX_EPOCH - duration)
+            }
         } else {
             Err(Error::new(
                 Ruby::get_with(val).exception_arg_error(),
-                "time must not be negative",
+                "time nanos must not be negative",
             ))
         }
     }
@@ -420,15 +431,12 @@ impl TryConvert for chrono::DateTime<chrono::Utc> {
             timespec = rb_time_timespec(val.as_rb_value());
             Ruby::get_unchecked().qnil()
         })?;
-        if timespec.tv_sec >= 0 && timespec.tv_nsec >= 0 {
-            let mut duration = Duration::from_secs(timespec.tv_sec as _);
-            duration += Duration::from_nanos(timespec.tv_nsec as _);
-            Ok(Self::UNIX_EPOCH + duration)
-        } else {
-            Err(Error::new(
+        match chrono::Duration::new(timespec.tv_sec as _, timespec.tv_nsec as _) {
+            Some(duration) => Ok(Self::UNIX_EPOCH + duration),
+            None => Err(Error::new(
                 Ruby::get_with(val).exception_arg_error(),
-                "time must not be negative",
-            ))
+                "time out of range",
+            )),
         }
     }
 }
