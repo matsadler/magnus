@@ -180,13 +180,34 @@ fn init(ruby: &Ruby) -> Result<(), Error> {
 ## Getting Started
 
 ### Writing an extension gem (calling Rust from Ruby)
+Let's say we are writing a gem called [ruby_rust](https://github.com/oozzal/ruby_rust). The project structure looks like this:
+```bash
+├── Gemfile
+├── Rakefile
+├── app
+│   └── Gemfile
+├── ext
+│   └── ruby_rust
+│       ├── Cargo.toml
+│       ├── extconf.rb
+│       └── src
+│           └── lib.rs
+├── lib
+│   └── ruby_rust.rb
+├── ruby_rust.gemspec
+```
 
 Ruby extensions must be built as dynamic system libraries, this can be done by
 setting the `crate-type` attribute in your `Cargo.toml`.
 
-**`Cargo.toml`**
+**`ext/ruby_rust/Cargo.toml`**
 
 ```toml
+[package]
+name = "ruby_rust"
+version = "0.1.0"
+edition = "2021"
+
 [lib]
 crate-type = ["cdylib"]
 
@@ -199,7 +220,7 @@ extension. In this function you will need to define your Ruby classes and bind
 Rust functions to Ruby methods. Use the `#[magnus::init]` attribute to mark
 your init function so it can be correctly exposed to Ruby.
 
-**`src/lib.rs`**
+**`ext/ruby_rust/src/lib.rs`**
 
 ```rust
 use magnus::{function, Error, Ruby};
@@ -211,6 +232,7 @@ fn distance(a: (f64, f64), b: (f64, f64)) -> f64 {
 #[magnus::init]
 fn init(ruby: &Ruby) -> Result<(), Error> {
     ruby.define_global_function("distance", function!(distance, 2));
+    Ok(())
 }
 ```
 
@@ -219,42 +241,58 @@ If you wish to package your extension as a Gem, we recommend using the
 automatically build your Rust extension as a dynamic library, and then package
 it as a gem.
 
+**`Gemfile`**
+```ruby
+source 'https://rubygems.org'
+gem 'rb_sys'
+gemspec
+```
+
 *Note*: The newest version of rubygems does have beta support for compiling
 Rust, so in the future the `rb_sys` gem won't be necessary.
 
-**`my_example_gem.gemspec`**
+**`ruby_rust.gemspec`**
 ```ruby
-spec.extensions = ["ext/my_example_gem/extconf.rb"]
+Gem::Specification.new do |spec|
+  spec.name = 'ruby_rust'
+  spec.version = '0.1.0'
+  spec.summary = "call rust from ruby"
+  spec.authors = ['author-name']
+  spec.platform = Gem::Platform::RUBY
+  spec.extensions = ['ext/ruby_rust/extconf.rb']
 
-# needed until rubygems supports Rust support is out of beta
-spec.add_dependency "rb_sys", "~> 0.9.39"
-
-# only needed when developing or packaging your gem
-spec.add_development_dependency "rake-compiler", "~> 1.2.0"
+  # only needed when developing or packaging your gem
+  spec.add_development_dependency 'rake-compiler', '~> 1.2.0'
+end
 ```
 
 Then, we add an `extconf.rb` file to the `ext` directory. Ruby will execute
-this file during the compilation process, and it will generate a `Makefile` in
-the `ext` directory. See the [`rb_sys` gem] for more information.
+this file during the compilation process. See the [`rb_sys` gem] for more information.
 
-**`ext/my_example_gem/extconf.rb`**
+**`ext/ruby_rust/extconf.rb`**
 
 ```ruby
 require "mkmf"
 require "rb_sys/mkmf"
 
-create_rust_makefile("my_example_gem/my_example_gem")
+create_rust_makefile("ruby_rust/ruby_rust")
 ```
 
 See the [`rust_blank`] example for examples if `extconf.rb` and `Rakefile`.
 Running `rake compile` will place the extension at
-`lib/my_example_gem/my_example_gem.so` (or `.bundle` on macOS), which you'd
+`lib/ruby_rust/ruby_rust.so` (or `.bundle` on macOS), which you'd
 load from Ruby like so:
 
-**`lib/my_example_gem.rb`**
+**`lib/ruby_rust.rb`**
 
 ```ruby
-require_relative "my_example_gem/my_example_gem"
+require_relative "ruby_rust/ruby_rust"
+```
+
+Give it a try locally
+```bash
+bundle console
+distance([1.1, 1.2], [1.3, 1.4])
 ```
 
 For a more detailed example (including cross-compilation and more), see the
