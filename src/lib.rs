@@ -658,7 +658,7 @@
 //! * `rb_eval_string`: See [`eval()`] or [`eval!`].
 //! * `rb_eval_string_protect`: [`eval()`] or [`eval!`].
 // * `rb_eval_string_wrap`:
-// * `rb_exc_fatal`:
+//! * `rb_exc_fatal`: Return an [`Error`] constructed from [`Ruby::exception_fatal`].
 // * `rb_exc_new`:
 // * `rb_exc_new_cstr`:
 // * `rb_exc_new_str`:

@@ -19,6 +19,8 @@
 ### Removed
 
 ### Fixed
+- The `fatal` exception raised when a Rust function bound to Ruby panics can no
+  longer be caught with `rescue Exception`.
 
 ### Security
 

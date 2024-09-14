@@ -5,8 +5,8 @@
 use std::{any::Any, borrow::Cow, ffi::CString, fmt, mem::transmute, os::raw::c_int};
 
 use rb_sys::{
-    rb_bug, rb_ensure, rb_errinfo, rb_exc_raise, rb_iter_break_value, rb_jump_tag, rb_protect,
-    rb_set_errinfo, rb_warning, ruby_special_consts, VALUE,
+    rb_bug, rb_ensure, rb_errinfo, rb_exc_fatal, rb_exc_raise, rb_iter_break_value, rb_jump_tag,
+    rb_protect, rb_set_errinfo, rb_warning, ruby_special_consts, VALUE,
 };
 
 use crate::{
@@ -539,6 +539,15 @@ where
 pub(crate) fn raise(e: Error) -> ! {
     match e.0 {
         ErrorType::Jump(tag) => tag.resume(),
+        ErrorType::Error(class, _)
+            if class.as_rb_value()
+                == unsafe { Ruby::get_unchecked().exception_fatal().as_rb_value() } =>
+        {
+            unsafe { rb_exc_fatal(e.exception().as_rb_value()) }
+            // friendly reminder: we really never get here, and as such won't
+            // drop any values still in scope, make sure everything has been
+            // consumed/dropped
+        }
         _ => {
             unsafe { rb_exc_raise(e.exception().as_rb_value()) }
             // friendly reminder: we really never get here, and as such won't
