@@ -25,7 +25,7 @@ jobs:
                     - "3.3"
                     - head
                 rustup-toolchain:
-                    - "1.61"
+                    - "1.65"
                     - stable
                 exclude:
                     - os: windows-latest

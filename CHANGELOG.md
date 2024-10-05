@@ -9,6 +9,7 @@
 - `typed_data::Writebarrier::writebarrier` and `writebarrier_unprotect`.
 
 ### Changed
+- Minimum supported Rust version in now 1.65.
 - Conversions between Ruby's `Time` and Rust's `SystemTime` now preserve
   nanosecond precision.
 - 'old-api' feature, which disables deprecation warnings for the old api is no
