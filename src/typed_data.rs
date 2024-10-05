@@ -37,7 +37,7 @@ use crate::{
     object::Object,
     r_typed_data::RTypedData,
     scan_args::{get_kwargs, scan_args},
-    try_convert::TryConvert,
+    try_convert::{TryConvert, TryConvertOwned},
     value::{
         private::{self, ReprValue as _},
         ReprValue, Value,
@@ -520,6 +520,8 @@ where
         }
     }
 }
+
+unsafe impl<T> TryConvertOwned for &T where T: TypedData {}
 
 impl<T> IntoValue for T
 where
