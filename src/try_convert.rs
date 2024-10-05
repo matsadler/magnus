@@ -134,6 +134,32 @@ impl TryConvert for usize {
 }
 unsafe impl TryConvertOwned for usize {}
 
+macro_rules! impl_non_zero_try_convert {
+    ($type:ty, $prim:ty) => {
+        impl TryConvert for $type {
+            #[inline]
+            fn try_convert(val: Value) -> Result<Self, Error> {
+                <$type>::new(<$prim>::try_convert(val)?).ok_or(Error::new(
+                    Ruby::get_with(val).exception_arg_error(),
+                    "value must be non-zero",
+                ))
+            }
+        }
+        unsafe impl TryConvertOwned for $type {}
+    };
+}
+
+impl_non_zero_try_convert!(std::num::NonZeroI8, i8);
+impl_non_zero_try_convert!(std::num::NonZeroI16, i16);
+impl_non_zero_try_convert!(std::num::NonZeroI32, i32);
+impl_non_zero_try_convert!(std::num::NonZeroI64, i64);
+impl_non_zero_try_convert!(std::num::NonZeroIsize, isize);
+impl_non_zero_try_convert!(std::num::NonZeroU8, u8);
+impl_non_zero_try_convert!(std::num::NonZeroU16, u16);
+impl_non_zero_try_convert!(std::num::NonZeroU32, u32);
+impl_non_zero_try_convert!(std::num::NonZeroU64, u64);
+impl_non_zero_try_convert!(std::num::NonZeroUsize, usize);
+
 impl TryConvert for f32 {
     #[inline]
     fn try_convert(val: Value) -> Result<Self, Error> {
