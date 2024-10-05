@@ -240,7 +240,7 @@ macro_rules! impl_try_convert {
             }
             unsafe impl<#(T~N,)*> TryConvertOwned for (#(T~N,)*)
             where
-                #(T~N: TryConvert,)*
+                #(T~N: TryConvertOwned,)*
             {
             }
         });

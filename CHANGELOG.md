@@ -22,6 +22,8 @@
 ### Fixed
 - The `fatal` exception raised when a Rust function bound to Ruby panics can no
   longer be caught with `rescue Exception`.
+- Fixed type bounds for `TryConvertOwned` for `(T, ...)` so that `T` must be
+  `TryConvertOwned`.
 
 ### Security
 
