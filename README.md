@@ -246,7 +246,7 @@ require "rb_sys/mkmf"
 create_rust_makefile("my_example_gem/my_example_gem")
 ```
 
-See the [`rust_blank`] example for examples if `extconf.rb` and `Rakefile`.
+See the [`rust_blank`] example for examples of `extconf.rb` and `Rakefile`.
 Running `rake compile` will place the extension at
 `lib/my_example_gem/my_example_gem.so` (or `.bundle` on macOS), which you'd
 load from Ruby like so:
