@@ -8,8 +8,8 @@
 //! }
 //!
 //! #[magnus::init]
-//! fn init() -> Result<(), magnus::Error> {
-//!     magnus::define_class("RbPoint", magnus::class::object())?;
+//! fn init(ruby: &Ruby) -> Result<(), magnus::Error> {
+//!     ruby.define_class("RbPoint", magnus::class::object())?;
 //!     Ok(())
 //! }
 //! ```
@@ -110,71 +110,164 @@ pub fn init(attrs: TokenStream, item: TokenStream) -> TokenStream {
     .into()
 }
 
-/// Allow a Rust type to be passed to Ruby, automatically wrapped as a Ruby
-/// object.
+/// Allows a Rust type to be passed to Ruby, where it is automatically wrapped
+/// as a Ruby object.
 ///
-/// For more control over the wrapped object, see [`TypedData`].
+/// For more control over the wrapping behavior, see [`TypedData`].
 ///
 /// # Attributes
 ///
-/// * `class = "..."` - required, sets the Ruby class to wrap the Rust type.
-///   Supports module paths, e.g. `Foo::Bar::Baz`.
-/// * `name = "..."` - debug name for the type, must be unique. Defaults to the
-///   class name.
-/// * `free_immediately` - Drop the Rust type as soon as the Ruby object has
-///   been garbage collected. This is only safe to set if the type's [`Drop`]
-///   implmentation does not call Ruby.
-/// * `size` - Report the [`std::mem::size_of_val`] of the type to Ruby, used
-///   to aid in deciding when to run the garbage collector.
-/// * `unsafe_generics` - The derived implementation of [`TypedData`] is not
-///   guaranteed to be correct for types with generics. If you are sure it is
-///   for your type this attribute can be used to override the compile time
-///   error usually generated for types with generics.
+/// The `#[wrap]` macro supports several attributes to configure its behavior:
+///
+/// * `class = "..."` (required):  
+///   Specifies the Ruby class associated with the Rust type. The class name can include
+///   module paths, such as `Foo::Bar::Baz`, which are used to define the hierarchy
+///   of the Ruby class.
+///   
+/// * `name = "..."`:  
+///   Specifies a debug name for the type. This name must be unique and defaults to the
+///   class name if not explicitly provided.
+///
+/// * `free_immediately`:  
+///   Indicates that the Rust type should be dropped as soon as the Ruby object is garbage
+///   collected. This is only safe if the type's [`Drop`] implementation does not call Ruby,
+///   as calling Ruby during the garbage collection process is unsafe and can lead to
+///   undefined behavior.
+///
+/// * `size`:  
+///   Reports the [`std::mem::size_of_val`] of the type to Ruby, helping Ruby's garbage
+///   collector determine when to run.
+///
+/// * `unsafe_generics`:  
+///   Disables compile-time checks for types with generics, allowing their use with
+///   `#[wrap]`. This should only be used if you are confident that the derived
+///   implementation of [`TypedData`] is correct for your generic type.
 ///
 /// # Variant Attributes
 ///
-/// The `#[magnus(...)]` attribute can be set on enum variants with the
-/// following values:
+/// When wrapping enums, the `#[magnus(...)]` attribute can also be applied to individual
+/// variants to define specific behavior for them:
 ///
-/// * `class = "..."` - sets the Ruby class to wrap the variant. Supports
-///   module paths, e.g. `Foo::Bar::Baz`.
+/// * `class = "..."`:  
+///   Specifies the Ruby class associated with a particular variant. This is useful
+///   for defining subclasses for the variants.
 ///
-/// # Examples
+/// ## Wrapping a Struct
 ///
 /// ```
-/// #[magnus::wrap(class = "RbPoint", free_immediately, size)]
+/// use magnus::{function, prelude::*, wrap};
+///
+/// #[wrap(class = "Point", free_immediately, size)]
 /// struct Point {
 ///     x: isize,
 ///     y: isize,
 /// }
 ///
-/// // the `Point` struct is automatically wrapped in a Ruby `RbPoint` object
-/// // when returned to Ruby.
 /// fn point(x: isize, y: isize) -> Point {
 ///     Point { x, y }
 /// }
 ///
-/// // Ruby `RbPoint` objects are automatically unwrapped to references to the
-/// // `Point` structs they are wrapping when this function is called from Ruby.
 /// fn distance(a: &Point, b: &Point) -> f64 {
 ///     (((b.x - a.x).pow(2) + (b.y - a.y).pow(2)) as f64).sqrt()
 /// }
 ///
 /// #[magnus::init]
 /// fn init() {
-///     magnus::define_global_function("point", magnus::function!(point, 2));
-///     magnus::define_global_function("distance", magnus::function!(distance, 2));
+///     magnus::define_global_function("point", function!(point, 2));
+///     magnus::define_global_function("distance", function!(distance, 2));
 /// }
 /// ```
 ///
-/// With subclasses for enum variants:
+/// Read the complete example [here](https://github.com/matsadler/magnus/blob/main/examples/point.rs).
+///
+/// ## Handling Mutability
 ///
 /// ```
+/// use magnus::{wrap, prelude::*};
+/// use std::cell::RefCell;
+///
+/// struct Point {
+///     x: isize,
+///     y: isize,
+/// }
+///
+/// #[wrap(class = "Point")]
+/// struct MutPoint(RefCell<Point>);
+///
+/// impl MutPoint {
+///     fn set_x(&self, i: isize) {
+///         self.0.borrow_mut().x = i;
+///     }
+/// }
+/// ```
+///
+/// Read the complete example [here](https://github.com/matsadler/magnus/blob/main/examples/mut_point.rs).
+///
+/// ## Supporting Subclassing
+///
+/// ```
+/// use magnus::{function, method, prelude::*, wrap, Ruby, Error};
+/// use std::cell::RefCell;
+///
+/// #[derive(Default)]
+/// struct Point {
+///     x: isize,
+///     y: isize,
+/// }
+///
+/// #[derive(Default)]
+/// #[wrap(class = "Point")]
+/// struct MutPoint(RefCell<Point>);
+///
+/// impl MutPoint {
+///     fn initialize(&self, x: isize, y: isize) {
+///         let mut this = self.0.borrow_mut();
+///         this.x = x;
+///         this.y = y;
+///     }
+/// }
+///
+/// #[magnus::init]
+/// fn init(ruby: &Ruby) -> Result<(), Error> {
+///     let class = ruby.define_class("Point", ruby.class_object()).unwrap();
+///     class.define_alloc_func::<MutPoint>();
+///     class.define_method("initialize", method!(MutPoint::initialize, 2))?;
+///     Ok(())
+/// }
+/// ```
+///
+/// ## Error Handling
+///
+/// ```
+/// use magnus::{wrap, prelude::*, Ruby, Error};
+/// use std::cell::RefCell;
+///
+/// struct Point {
+///     x: isize,
+///     y: isize,
+/// }
+///
+/// #[wrap(class = "Point")]
+/// struct MutPoint(RefCell<Point>);
+///
+/// impl MutPoint {
+///     fn set_x(ruby: &Ruby, rb_self: &Self, i: i32) -> Result<(), Error> {
+///         if i <= 0 {
+///             return Err(Error::new(ruby.exception_arg_error(), "x must be positive"));
+///         }
+///         rb_self.0.borrow_mut().x = i as isize;
+///         Ok(())
+///     }
+/// }
+/// ```
+///
+/// ## Wrapping an Enum with Subclasses
+///
+/// ```
+/// use magnus::{class, define_class, function, method, prelude::*, wrap};
 /// use std::f64::consts::PI;
 ///
-/// use magnus::{class, define_class, function, method, prelude::*};
-///
-/// #[magnus::wrap(class = "Shape")]
+/// #[wrap(class = "Shape")]
 /// enum Shape {
 ///     #[magnus(class = "Circle")]
 ///     Circle { r: f64 },
@@ -189,20 +282,6 @@ pub fn init(attrs: TokenStream, item: TokenStream) -> TokenStream {
 ///             Shape::Rectangle { x, y } => x * y,
 ///         }
 ///     }
-/// }
-///
-/// #[magnus::init]
-/// fn init() -> Result<(), magnus::Error> {
-///     let shape = define_class("Shape", class::object())?;
-///     shape.define_method("area", method!(Shape::area, 0))?;
-///
-///     let circle = define_class("Circle", shape)?;
-///     circle.define_singleton_method("new", function!(|r| Shape::Circle { r }, 1))?;
-///
-///     let rectangle = define_class("Rectangle", shape)?;
-///     rectangle.define_singleton_method("new", function!(|x, y| Shape::Rectangle { x, y }, 2))?;
-///
-///     Ok(())
 /// }
 /// ```
 #[proc_macro_attribute]
@@ -221,85 +300,100 @@ pub fn derive_data_type_functions(input: TokenStream) -> TokenStream {
     typed_data::expand_derive_data_type_functions(parse_macro_input!(input)).into()
 }
 
-/// Derives `TypedData`, allowing the type to be passed to Ruby automatically
+/// Derives `TypedData`, allowing a Rust type to be passed to Ruby and automatically
 /// wrapped as a Ruby object.
 ///
-/// For simple cases, see [`macro@wrap`].
+/// For simpler use cases, consider using [`macro@wrap`].
 ///
 /// # Attributes
 ///
-/// The `#[magnus(...)]` attribute can be set with the following values:
+/// The `#[magnus(...)]` attribute supports the following values to configure its behavior:
 ///
-/// * `class = "..."` - required, sets the Ruby class to wrap the Rust type.
-///   Supports module paths, e.g. `Foo::Bar::Baz`.
-/// * `name = "..."` - debug name for the type, must be unique. Defaults to the
-///   class name.
-/// * `free_immediately` - Drop the Rust type as soon as the Ruby object has
-///   been garbage collected. This is only safe to set if the type's [`Drop`]
-///   and `DataTypeFunctions::free` implementations do not call Ruby.
-/// * `mark` - Enable Ruby calling the `DataTypeFunctions::mark` function.
-/// * `size` - Enable Ruby calling the `DataTypeFunctions::size` function.
-/// * `compact` - Enable Ruby calling the `DataTypeFunctions::compact` function.
-/// * `wb_protected` - Enable the `wb_protected` flag.
-/// * `frozen_shareable` - Enable the `frozen_shareable` flag.
-/// * `unsafe_generics` - The derived implementation of [`TypedData`] is not
-///   guaranteed to be correct for types with generics. If you are sure it is
-///   for your type this attribute can be used to override the compile time
-///   error usually generated for types with generics.
+/// * `class = "..."` (required):  
+///   Specifies the Ruby class associated with the Rust type. Supports module paths,
+///   such as `Foo::Bar::Baz`.
+///
+/// * `name = "..."`:  
+///   Specifies a debug name for the type. This name must be unique and defaults to the
+///   class name if not explicitly provided.
+///
+/// * `free_immediately`:  
+///   Indicates that the Rust type should be dropped as soon as the Ruby object is garbage
+///   collected. This is only safe if the type's [`Drop`] and `DataTypeFunctions::free`
+///   implementations do not call Ruby.
+///
+/// * `mark`:  
+///   Enables Ruby to call the `DataTypeFunctions::mark` function.
+///
+/// * `size`:  
+///   Enables Ruby to call the `DataTypeFunctions::size` function.
+///
+/// * `compact`:  
+///   Enables Ruby to call the `DataTypeFunctions::compact` function.
+///
+/// * `wb_protected`:  
+///   Sets the `wb_protected` flag for write-barrier-protected objects.
+///
+/// * `frozen_shareable`:  
+///   Sets the `frozen_shareable` flag for objects shareable across frozen Ruby objects.
+///
+/// * `unsafe_generics`:  
+///   Disables compile-time checks for types with generics, allowing their use with
+///   `#[magnus(...)]`. Use this only if you are confident the derived implementation
+///   is correct for your generic type.
 ///
 /// # Field Attributes
 ///
-/// The `#[magnus(...)]` attribute can be set on struct fields with the
-/// following values:
+/// The `#[magnus(...)]` attribute can be set on struct fields with the following values:
 ///
-/// * `opaque_attr_reader` - For a Ruby value wrapped in `Opaque`, creates a
-///   accessor method that returns the unwrapped Ruby value.
+/// * `opaque_attr_reader`:  
+///   For a Ruby value wrapped in `Opaque`, creates an accessor method that returns
+///   the unwrapped Ruby value.
 ///
 /// # Variant Attributes
 ///
-/// The `#[magnus(...)]` attribute can be set on enum variants with the
-/// following values:
+/// The `#[magnus(...)]` attribute can be set on enum variants with the following values:
 ///
-/// * `class = "..."` - sets the Ruby class to wrap the variant. Supports
-///   module paths, e.g. `Foo::Bar::Baz`.
+/// * `class = "..."`:  
+///   Specifies the Ruby class associated with the variant. Supports module paths,
+///   such as `Foo::Bar::Baz`.
 ///
-/// # Examples
+/// ## Wrapping a Struct
 ///
 /// ```
-/// use magnus::{DataTypeFunctions, TypedData};
+/// use magnus::{TypedData, DataTypeFunctions, function, prelude::*, Ruby};
 ///
 /// #[derive(DataTypeFunctions, TypedData)]
-/// #[magnus(class = "RbPoint", size, free_immediately)]
+/// #[magnus(class = "Point", size, free_immediately)]
 /// struct Point {
 ///     x: isize,
 ///     y: isize,
 /// }
 ///
-/// // the `Point` struct is automatically wrapped in a Ruby `RbPoint` object
-/// // when returned to Ruby.
+/// // wraps `Point` struct in a Ruby `Point` object when returned to Ruby.
 /// fn point(x: isize, y: isize) -> Point {
 ///     Point { x, y }
 /// }
 ///
-/// // Ruby `RbPoint` objects are automatically unwrapped to references to the
-/// // `Point` structs they are wrapping when this function is called from Ruby.
+/// // automatically unwraps `Point` objects to references to `Point`` structs
+/// // when invoking the function.
 /// fn distance(a: &Point, b: &Point) -> f64 {
 ///     (((b.x - a.x).pow(2) + (b.y - a.y).pow(2)) as f64).sqrt()
 /// }
 ///
 /// #[magnus::init]
-/// fn init() {
-///     magnus::define_global_function("point", magnus::function!(point, 2));
-///     magnus::define_global_function("distance", magnus::function!(distance, 2));
+/// fn init(ruby: &Ruby) {
+///     ruby.define_global_function("point", function!(point, 2));
+///     ruby.define_global_function("distance", function!(distance, 2));
 /// }
 /// ```
 ///
-/// With subclasses for enum variants:
+/// ## Wrapping an Enum with Subclasses
 ///
 /// ```
-/// use magnus::{class, define_class};
+/// use magnus::{class, prelude::*, wrap, Ruby, Error};
 ///
-/// #[magnus::wrap(class = "Shape")]
+/// #[wrap(class = "Shape")]
 /// enum Shape {
 ///     #[magnus(class = "Circle")]
 ///     Circle { r: f64 },
@@ -308,19 +402,18 @@ pub fn derive_data_type_functions(input: TokenStream) -> TokenStream {
 /// }
 ///
 /// #[magnus::init]
-/// fn init() -> Result<(), magnus::Error> {
-///     let shape = define_class("Shape", class::object())?;
-///     define_class("Circle", shape)?;
-///     define_class("Rectangle", shape)?;
+/// fn init(ruby: &Ruby) -> Result<(), Error> {
+///     let shape = ruby.define_class("Shape", ruby.class_object())?;
+///     ruby.define_class("Circle", shape)?;
+///     ruby.define_class("Rectangle", shape)?;
 ///     Ok(())
 /// }
 /// ```
 ///
-/// Defining a custom `DataType` function:
+/// ## Custom `DataTypeFunctions` Implementation
 ///
 /// ```
 /// use std::mem::size_of_val;
-///
 /// use magnus::{DataTypeFunctions, TypedData};
 ///
 /// #[derive(TypedData)]
@@ -337,20 +430,21 @@ pub fn derive_data_type_functions(input: TokenStream) -> TokenStream {
 /// }
 /// ```
 ///
-/// A struct containing Ruby values.
+/// ## Struct Containing Ruby Values
 ///
 /// ```
 /// use magnus::{
-///     class, define_class, function, gc, method, prelude::*, typed_data::Obj, value::Opaque,
-///     DataTypeFunctions, TypedData,
+///     class, function, gc, method, prelude::*, typed_data::Obj, value::Opaque,
+///     DataTypeFunctions, TypedData, Ruby
 /// };
 ///
-/// # #[magnus::wrap(class = "Point", free_immediately, size)]
-/// # struct Point {
-/// #     x: isize,
-/// #     y: isize,
-/// # }
-/// #
+/// #[derive(DataTypeFunctions, TypedData)]
+/// #[magnus(class = "Point", size, free_immediately)]
+/// struct Point {
+///     x: isize,
+///     y: isize,
+/// }
+///
 /// #[derive(TypedData)]
 /// #[magnus(class = "Line", free_immediately, mark)]
 /// struct Line {
@@ -384,8 +478,8 @@ pub fn derive_data_type_functions(input: TokenStream) -> TokenStream {
 /// }
 ///
 /// #[magnus::init]
-/// fn init() -> Result<(), magnus::Error> {
-///     let line = define_class("Line", class::object())?;
+/// fn init(ruby: &Ruby) -> Result<(), magnus::Error> {
+///     let line = ruby.define_class("Line", ruby.class_object())?;
 ///     line.define_singleton_method("new", function!(Line::new, 2))?;
 ///     line.define_method("length", method!(Line::length, 0))?;
 ///     Ok(())
