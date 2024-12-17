@@ -13,7 +13,7 @@ jobs:
                 os:
                     - ubuntu-latest
                     # intel
-                    - macos-12
+                    - macos-13
                     # arm
                     - macos-14
                     - windows-latest
