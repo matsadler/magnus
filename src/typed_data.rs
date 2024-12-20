@@ -303,7 +303,7 @@ where
     /// Types that contain Ruby values by default do not participate in
     /// generational GC (they are scanned every GC). This flag asserts all
     /// operations that write Ruby values to this type are protected with
-    /// write barriers (see [`typed_data::Writebarrier::writebarrier`]) so this
+    /// write barriers (see [`Writebarrier::writebarrier`]) so this
     /// type can participate in generational GC.
     ///
     /// This is hard to get right, and it is recomended you do not use this
