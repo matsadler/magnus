@@ -82,13 +82,24 @@ make sure the return type is `magnus::Value`.
 
 ### Wrapping Rust Types in Ruby Objects
 
-Rust structs and enums can be wrapped in Ruby objects so they can be returned
-to Ruby.
+Magnus allows you to wrap Rust structs and enums as Ruby objects, enabling seamless interaction between Rust and Ruby. This functionality is ideal for exposing Rust logic to Ruby modules.
 
-Types can opt-in to this with the `magnus::wrap` macro (or by implementing
-`magnus::TypedData`). Whenever a compatible type is returned to Ruby it will be
-wrapped in the specified class, and whenever it is passed back to Rust it will
-be unwrapped to a reference.
+Use one of the following approaches to expose a Rust type to Ruby:
+
+* A convenience macro [`#[magnus::wrap]`].
+* More customised approach by implementing the [`magnus::TypedData`] trait.
+
+[`#[magnus::wrap]`]: https://docs.rs/magnus/latest/magnus/attr.wrap.html
+[`magnus::TypedData`]:  https://docs.rs/magnus/latest/magnus/derive.TypedData.html
+
+Then this Rust type can be:
+
+* Returned to Ruby as a wrapped object.
+* Passed back to Rust and automatically unwrapped to a native Rust reference.
+
+#### Basic Usage
+
+Here’s how you can wrap a simple Rust struct and expose its methods to Ruby:
 
 ```rust
 use magnus::{function, method, prelude::*, Error, Ruby};
@@ -128,16 +139,20 @@ fn init(ruby: &Ruby) -> Result<(), Error> {
 }
 ```
 
-The newtype pattern and `RefCell` can be used if mutability is required:
+#### Handling Mutability
+
+Because Ruby's GC manages the memory where your Rust type is stored, Magnus can't bind functions with mutable references. To allow mutable fields in wrapped Rust structs, you can use the newtype pattern with `RefCell`:
 
 ```rust
+use std::cell::RefCell;
+
 struct Point {
     x: isize,
     y: isize,
 }
 
 #[magnus::wrap(class = "Point")]
-struct MutPoint(std::cell::RefCell<Point>);
+struct MutPoint(RefCell<Point>);
 
 impl MutPoint {
     fn set_x(&self, i: isize) {
@@ -146,8 +161,17 @@ impl MutPoint {
 }
 ```
 
-To allow wrapped types to be subclassed they must implement `Default`, and
-define and alloc func and an initialize method:
+See [`examples/mut_point.rs`] for the complete example.
+
+[`examples/mut_point.rs`]: https://github.com/matsadler/magnus/blob/main/examples/mut_point.rs
+
+#### Supporting Subclassing
+
+To enable Ruby subclassing for wrapped Rust types, the type must:
+
+* Implement the `Default` trait.
+* Define an allocator.
+* Define an initialiser.
 
 ``` rust
 #[derive(Default)]
@@ -174,6 +198,26 @@ fn init(ruby: &Ruby) -> Result<(), Error> {
     class.define_alloc_func::<MutPoint>();
     class.define_method("initialize", method!(MutPoint::initialize, 2))?;
     Ok(())
+}
+```
+
+#### Error Handling
+
+Use `magnus::Error` to propagate errors to Ruby from Rust:
+
+```rust
+#[magnus::wrap(class = "Point")]
+struct MutPoint(RefCell<Point>);
+
+impl MutPoint {
+    fn add_x(ruby: &Ruby, rb_self: &Self, val: isize) -> Result<isize, Error> {
+        if let Some(sum) = rb_self.0.borrow().x.checked_add(val) {
+            rb_self.0.borrow_mut().x = sum;
+            Ok(sum)
+        } else {
+            return Err(Error::new(ruby.exception_range_error(), "result out of range"));
+        }
+    }
 }
 ```
 
