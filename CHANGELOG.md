@@ -7,6 +7,7 @@
   between `chrono::DateTime<Utc>` and `chrono::DateTime<FixedOffset>` and Ruby
   `Time` objects.
 - `typed_data::Writebarrier::writebarrier` and `writebarrier_unprotect`.
+- Implement `TryConvert` for `NonZero` types.
 
 ### Changed
 - Minimum supported Rust version in now 1.65.
