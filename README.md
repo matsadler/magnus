@@ -86,11 +86,11 @@ Magnus allows you to wrap Rust structs and enums as Ruby objects, enabling seaml
 
 Use one of the following approaches to expose a Rust type to Ruby:
 
-* A convenience macro [`#[magnus::wrap]`].
+* A convenience macro [`#[magnus::wrap]`][magnus-wrap].
 * More customised approach by implementing the [`magnus::TypedData`] trait.
 
-[`#[magnus::wrap]`]: https://docs.rs/magnus/latest/magnus/attr.wrap.html
-[`magnus::TypedData`]:  https://docs.rs/magnus/latest/magnus/derive.TypedData.html
+[magnus-wrap]: https://docs.rs/magnus/latest/magnus/attr.wrap.html
+[`magnus::TypedData`]: https://docs.rs/magnus/latest/magnus/derive.TypedData.html
 
 Then this Rust type can be:
 
@@ -558,4 +558,6 @@ library turns out better for you.
 
 ## License
 
-This project is licensed under the MIT license, see LICENSE.
+This project is licensed under the MIT license, see [LICENSE].
+
+[LICENSE]: https://github.com/matsadler/magnus/blob/main/LICENSE
