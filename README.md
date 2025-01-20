@@ -560,4 +560,4 @@ library turns out better for you.
 
 This project is licensed under the MIT license, see [LICENSE].
 
-[LICENSE]: /LICENSE
+[LICENSE]: https://github.com/matsadler/magnus/blob/main/LICENSE
