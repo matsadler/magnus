@@ -1165,14 +1165,13 @@ impl RString {
     /// ```
     pub fn to_string(self) -> Result<String, Error> {
         let handle = Ruby::get_with(self);
-        let utf8 = if self.is_utf8_compatible_encoding() {
-            self
-        } else {
-            self.conv_enc(handle.utf8_encoding())?
-        };
-        str::from_utf8(unsafe { utf8.as_slice() })
-            .map(ToOwned::to_owned)
-            .map_err(|e| Error::new(handle.exception_encoding_error(), format!("{}", e)))
+        unsafe {
+            if let Some(str) = self.test_as_str() {
+                Ok(str.to_owned())
+            } else {
+                Ok(self.conv_enc(handle.utf8_encoding())?.as_str()?.to_owned())
+            }
+        }
     }
 
     /// Returns `self` as an owned Rust `Bytes`.

@@ -15,6 +15,10 @@
   nanosecond precision.
 - 'old-api' feature, which disables deprecation warnings for the old api is no
   longer a default feature.
+- `RString::to_string` will now use a Ruby utf-8 validation api that caches the
+  results of the validity check. This will greatly improve performance in the
+  case a string is already known to be utf-8, but may slightly reduce
+  performance when not known.
 
 ### Deprecated
 
