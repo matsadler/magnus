@@ -97,6 +97,70 @@ impl Ruby {
             )
         }
     }
+
+    /// Create a new `Integer` from an `i128.`
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!(ruby, "i == 0", i = ruby.integer_from_i128(0));
+    ///     rb_assert!(
+    ///         ruby,
+    ///         "i == 170141183460469231731687303715884105727",
+    ///         i = ruby.integer_from_i128(170141183460469231731687303715884105727),
+    ///     );
+    ///     rb_assert!(
+    ///         ruby,
+    ///         "i == -170141183460469231731687303715884105728",
+    ///         i = ruby.integer_from_i128(-170141183460469231731687303715884105728),
+    ///     );
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
+    #[inline]
+    pub fn integer_from_i128(&self, n: i128) -> Integer {
+        if n >= i64::MIN as i128 && n <= i64::MAX as i128 {
+            self.integer_from_i64(n as i64)
+        } else {
+            self.module_kernel()
+                .funcall("Integer", (n.to_string(),))
+                .unwrap()
+        }
+    }
+
+    /// Create a new `Integer` from a `u128.`
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{rb_assert, Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     rb_assert!("i == 0", i = ruby.integer_from_u128(0));
+    ///     rb_assert!(
+    ///         "i == 340282366920938463463374607431768211455",
+    ///         i = ruby.integer_from_u128(340282366920938463463374607431768211455),
+    ///     );
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
+    #[inline]
+    pub fn integer_from_u128(&self, n: u128) -> Integer {
+        if n <= u64::MAX as u128 {
+            self.integer_from_u64(n as u64)
+        } else {
+            self.module_kernel()
+                .funcall("Integer", (n.to_string(),))
+                .unwrap()
+        }
+    }
 }
 
 /// A type wrapping either a [`Fixnum`] or a [`RBignum`].
