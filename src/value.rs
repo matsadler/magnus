@@ -130,6 +130,15 @@ impl IntoValue for i64 {
 
 unsafe impl IntoValueFromNative for i64 {}
 
+impl IntoValue for i128 {
+    #[inline]
+    fn into_value_with(self, handle: &Ruby) -> Value {
+        handle.integer_from_i128(self).into_value_with(handle)
+    }
+}
+
+unsafe impl IntoValueFromNative for i128 {}
+
 impl IntoValue for isize {
     #[inline]
     fn into_value_with(self, handle: &Ruby) -> Value {
@@ -174,6 +183,15 @@ impl IntoValue for u64 {
 }
 
 unsafe impl IntoValueFromNative for u64 {}
+
+impl IntoValue for u128 {
+    #[inline]
+    fn into_value_with(self, handle: &Ruby) -> Value {
+        handle.integer_from_u128(self).into_value_with(handle)
+    }
+}
+
+unsafe impl IntoValueFromNative for u128 {}
 
 impl IntoValue for usize {
     #[inline]
