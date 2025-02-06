@@ -525,6 +525,10 @@ deserialisation of Rust to Ruby data structures and vice versa.
 
 * [`halton`](https://github.com/matsadler/halton-rb) a Ruby gem providing a
   highly optimised method for generating Halton sequences.
+* [`optify`](https://github.com/juharris/optify) a Ruby gem to
+  simplify using configuration files to manage options for experiments.
+  It has a GitHub action to publish the gem for different architectures to RubyGems
+  with a RBI file for type hints.
 
 Please open a [pull request](https://github.com/matsadler/magnus/pulls) if
 you'd like your project listed here.
