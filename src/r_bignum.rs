@@ -4,8 +4,8 @@ use std::{
 };
 
 use rb_sys::{
-    rb_ll2inum, rb_num2ll, rb_num2long, rb_num2ull, rb_num2ulong, rb_ull2inum, ruby_fl_type,
-    ruby_value_type, VALUE,
+    rb_big2str, rb_ll2inum, rb_num2ll, rb_num2long, rb_num2ull, rb_num2ulong, rb_ull2inum,
+    ruby_fl_type, ruby_value_type, VALUE,
 };
 
 use crate::{
@@ -18,7 +18,7 @@ use crate::{
         private::{self, ReprValue as _},
         Fixnum, NonZeroValue, ReprValue, Value,
     },
-    Ruby,
+    RString, Ruby,
 };
 
 /// # `RBignum`
@@ -250,6 +250,57 @@ impl RBignum {
         Ok(res)
     }
 
+    /// Convert `self` to an `i128`. Returns `Err` if `self` is out of range for
+    /// `i128`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RBignum};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// assert_eq!(
+    ///     eval::<RBignum>("170141183460469231731687303715884105727")
+    ///         .unwrap()
+    ///         .to_i128()
+    ///         .unwrap(),
+    ///     170141183460469231731687303715884105727
+    /// );
+    /// assert_eq!(
+    ///     eval::<RBignum>("-170141183460469231731687303715884105728")
+    ///         .unwrap()
+    ///         .to_i128()
+    ///         .unwrap(),
+    ///     -170141183460469231731687303715884105728
+    /// );
+    /// assert!(eval::<RBignum>("170141183460469231731687303715884105728")
+    ///     .unwrap()
+    ///     .to_i128()
+    ///     .is_err());
+    /// assert!(eval::<RBignum>("-170141183460469231731687303715884105729")
+    ///     .unwrap()
+    ///     .to_i128()
+    ///     .is_err());
+    /// ```
+    pub fn to_i128(self) -> Result<i128, Error> {
+        debug_assert_value!(self);
+        let handle = Ruby::get_with(self);
+        let mut res = 0;
+        protect(|| {
+            unsafe { res = rb_big2str(self.as_rb_value(), 10) };
+            handle.qnil()
+        })?;
+        unsafe { RString::from_rb_value_unchecked(res).as_str() }
+            .unwrap()
+            .parse::<i128>()
+            .map_err(|_| {
+                Error::new(
+                    handle.exception_range_error(),
+                    "bignum too big to convert into `i128`",
+                )
+            })
+    }
+
     /// Convert `self` to an `isize`. Returns `Err` if `self` is out of range
     /// for `isize`.
     ///
@@ -355,6 +406,52 @@ impl RBignum {
             handle.qnil()
         })?;
         Ok(res)
+    }
+
+    /// Convert `self` to a `u128`. Returns `Err` if `self` is negative or out
+    /// of range for `u128`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, RBignum};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// assert_eq!(
+    ///     eval::<RBignum>("340282366920938463463374607431768211455")
+    ///         .unwrap()
+    ///         .to_u128()
+    ///         .unwrap(),
+    ///     340282366920938463463374607431768211455
+    /// );
+    /// assert!(eval::<RBignum>("340282366920938463463374607431768211456")
+    ///     .unwrap()
+    ///     .to_u128()
+    ///     .is_err());
+    /// ```
+    pub fn to_u128(self) -> Result<u128, Error> {
+        debug_assert_value!(self);
+        let handle = Ruby::get_with(self);
+        if self.is_negative() {
+            return Err(Error::new(
+                handle.exception_range_error(),
+                "can't convert negative integer to unsigned",
+            ));
+        }
+        let mut res = 0;
+        protect(|| {
+            unsafe { res = rb_big2str(self.as_rb_value(), 10) };
+            handle.qnil()
+        })?;
+        unsafe { RString::from_rb_value_unchecked(res).as_str() }
+            .unwrap()
+            .parse::<u128>()
+            .map_err(|_| {
+                Error::new(
+                    handle.exception_range_error(),
+                    "bignum too big to convert into `u128`",
+                )
+            })
     }
 
     /// Convert `self` to a `usize`. Returns `Err` if `self` is negative or out

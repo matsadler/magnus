@@ -394,6 +394,46 @@ impl Integer {
         }
     }
 
+    /// Convert `self` to an `i128`. Returns `Err` if `self` is out of range for
+    /// `i128`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, Integer};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// assert_eq!(
+    ///     eval::<Integer>("170141183460469231731687303715884105727")
+    ///         .unwrap()
+    ///         .to_i128()
+    ///         .unwrap(),
+    ///     170141183460469231731687303715884105727
+    /// );
+    /// assert_eq!(
+    ///     eval::<Integer>("-170141183460469231731687303715884105728")
+    ///         .unwrap()
+    ///         .to_i128()
+    ///         .unwrap(),
+    ///     -170141183460469231731687303715884105728
+    /// );
+    /// assert!(eval::<Integer>("170141183460469231731687303715884105728")
+    ///     .unwrap()
+    ///     .to_i128()
+    ///     .is_err());
+    /// assert!(eval::<Integer>("-170141183460469231731687303715884105729")
+    ///     .unwrap()
+    ///     .to_i128()
+    ///     .is_err());
+    /// ```
+    #[inline]
+    pub fn to_i128(self) -> Result<i128, Error> {
+        match self.integer_type() {
+            IntegerType::Fixnum(fix) => Ok(fix.to_i128()),
+            IntegerType::Bignum(big) => big.to_i128(),
+        }
+    }
+
     /// Convert `self` to an `isize`. Returns `Err` if `self` is out of range
     /// for `isize`.
     ///
@@ -525,6 +565,36 @@ impl Integer {
         match self.integer_type() {
             IntegerType::Fixnum(fix) => fix.to_u64(),
             IntegerType::Bignum(big) => big.to_u64(),
+        }
+    }
+
+    /// Convert `self` to a `u128`. Returns `Err` if `self` is negative or out of
+    /// range for `u128`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, Integer};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// assert_eq!(
+    ///     eval::<Integer>("340282366920938463463374607431768211455")
+    ///         .unwrap()
+    ///         .to_u128()
+    ///         .unwrap(),
+    ///     340282366920938463463374607431768211455
+    /// );
+    /// assert!(eval::<Integer>("-1").unwrap().to_u128().is_err());
+    /// assert!(eval::<Integer>("340282366920938463463374607431768211456")
+    ///     .unwrap()
+    ///     .to_u128()
+    ///     .is_err());
+    /// ```
+    #[inline]
+    pub fn to_u128(self) -> Result<u128, Error> {
+        match self.integer_type() {
+            IntegerType::Fixnum(fix) => fix.to_u128(),
+            IntegerType::Bignum(big) => big.to_u128(),
         }
     }
 

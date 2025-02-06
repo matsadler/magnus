@@ -2612,6 +2612,35 @@ impl Fixnum {
         self.to_isize() as i64
     }
 
+    /// Convert `self` to an `i128`. This is infallible as `i128` can represent a
+    /// larger range than `Fixnum`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Error, Fixnum, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    /// # #[cfg(not(windows))]
+    ///     assert_eq!(
+    ///         ruby.eval::<Fixnum>("4611686018427387903")?.to_i128(),
+    ///         4611686018427387903
+    ///     );
+    /// # #[cfg(not(windows))]
+    ///     assert_eq!(
+    ///         ruby.eval::<Fixnum>("-4611686018427387904")?.to_i128(),
+    ///         -4611686018427387904
+    ///     );
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
+    #[inline]
+    pub fn to_i128(self) -> i128 {
+        self.to_isize() as i128
+    }
+
     /// Convert `self` to an `isize`. Returns `Err` if `self` is out of range
     /// for `isize`.
     ///
@@ -2780,6 +2809,36 @@ impl Fixnum {
             ));
         }
         Ok(self.to_isize() as u64)
+    }
+
+    /// Convert `self` to a `u128`. Returns `Err` if `self` is negative.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Error, Fixnum, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    /// # #[cfg(not(windows))]
+    ///     assert_eq!(
+    ///         ruby.eval::<Fixnum>("4611686018427387903")?.to_u128()?,
+    ///         4611686018427387903
+    ///     );
+    ///     assert!(ruby.eval::<Fixnum>("-1")?.to_u128().is_err());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
+    #[inline]
+    pub fn to_u128(self) -> Result<u128, Error> {
+        if self.is_negative() {
+            return Err(Error::new(
+                Ruby::get_with(self).exception_range_error(),
+                "can't convert negative integer to unsigned",
+            ));
+        }
+        Ok(self.to_isize() as u128)
     }
 
     /// Convert `self` to a `usize`. Returns `Err` if `self` is negative or out
