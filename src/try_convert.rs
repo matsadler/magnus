@@ -295,6 +295,24 @@ where
 {
 }
 
+impl<K, V> TryConvert for std::collections::BTreeMap<K, V>
+where
+    K: TryConvertOwned + Eq + std::hash::Hash + Ord,
+    V: TryConvertOwned,
+{
+    #[inline]
+    fn try_convert(val: Value) -> Result<Self, Error> {
+        debug_assert_value!(val);
+        RHash::try_convert(val)?.to_btree_map()
+    }
+}
+unsafe impl<K, V> TryConvertOwned for std::collections::BTreeMap<K, V>
+where
+    K: TryConvertOwned + Eq + std::hash::Hash + Ord,
+    V: TryConvertOwned,
+{
+}
+
 #[cfg(unix)]
 impl TryConvert for PathBuf {
     fn try_convert(val: Value) -> Result<Self, Error> {

@@ -1,6 +1,7 @@
 //! Types and functions for working with Ruby’s Hash class.
 
 use std::{
+    collections::BTreeMap,
     collections::HashMap,
     convert::Infallible,
     fmt,
@@ -804,6 +805,46 @@ impl RHash {
         Ok(map)
     }
 
+    /// Return `self` converted to a Rust [`BTreeMap`].
+    ///
+    /// This will only convert to a map of 'owned' Rust native types. The types
+    /// representing Ruby objects can not be stored in a heap-allocated
+    /// datastructure like a [`BTreeMap`] as they are hidden from the mark phase
+    /// of Ruby's garbage collector, and thus may be prematurely garbage
+    /// collected in the following sweep phase.
+    ///
+    /// Errors if the conversion of any key or value fails.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use std::collections::BTreeMap;
+    ///
+    /// use magnus::{Error, RHash, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let r_hash: RHash = ruby.eval(r#"{"answer" => 42}"#)?;
+    ///     let mut hash_map = BTreeMap::new();
+    ///     hash_map.insert(String::from("answer"), 42);
+    ///     assert_eq!(r_hash.to_btree_map()?, hash_map);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
+    pub fn to_btree_map<K, V>(self) -> Result<BTreeMap<K, V>, Error>
+    where
+        K: TryConvertOwned + Eq + Hash + Ord,
+        V: TryConvertOwned,
+    {
+        let mut map = BTreeMap::new();
+        self.foreach(|key, value| {
+            map.insert(key, value);
+            Ok(ForEach::Continue)
+        })?;
+        Ok(map)
+    }
+
     /// Convert `self` to a Rust vector of key/value pairs.
     ///
     /// This will only convert to a map of 'owned' Rust native types. The types
@@ -934,6 +975,27 @@ where
 }
 
 unsafe impl<K, V> IntoValueFromNative for HashMap<K, V>
+where
+    K: IntoValueFromNative,
+    V: IntoValueFromNative,
+{
+}
+
+impl<K, V> IntoValue for BTreeMap<K, V>
+where
+    K: IntoValueFromNative,
+    V: IntoValueFromNative,
+{
+    fn into_value_with(self, handle: &Ruby) -> Value {
+        let hash = handle.hash_new();
+        for (k, v) in self {
+            let _ = hash.aset(k, v);
+        }
+        hash.into_value_with(handle)
+    }
+}
+
+unsafe impl<K, V> IntoValueFromNative for BTreeMap<K, V>
 where
     K: IntoValueFromNative,
     V: IntoValueFromNative,
