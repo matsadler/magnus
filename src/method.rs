@@ -66,7 +66,7 @@ mod private {
         }
     }
 
-    seq!(N in 0..=16 {
+    seq!(N in 0..=15 {
         impl_method!(N);
     });
 
@@ -242,9 +242,9 @@ mod private {
 /// |     1 | `unsafe extern "C" fn(Value, Value) -> Value;`               |
 /// |     2 | `unsafe extern "C" fn(Value, Value, Value) -> Value;`        |
 /// |   ... | ...                                                          |
-/// |    16 | ...                                                          |
+/// |    15 | ...                                                          |
 ///
-/// note: for arity 0..=16 the number of arguments is 1 greater than the arity,
+/// note: for arity 0..=15 the number of arguments is 1 greater than the arity,
 /// due to the initial `self` argument.
 pub trait Method: private::Method {}
 
@@ -771,7 +771,7 @@ macro_rules! method_n {
     }
 }
 
-seq!(N in 0..=16 {
+seq!(N in 0..=15 {
     method_n!(Method~N, RubyMethod~N, N);
 });
 
@@ -1257,51 +1257,8 @@ macro_rules! method {
             $crate::Value,
         ) -> $crate::Value
     }};
-    ($name:expr, 16) => {{
-        unsafe extern "C" fn anon(
-            rb_self: $crate::Value,
-            a: $crate::Value,
-            b: $crate::Value,
-            c: $crate::Value,
-            d: $crate::Value,
-            e: $crate::Value,
-            f: $crate::Value,
-            g: $crate::Value,
-            h: $crate::Value,
-            i: $crate::Value,
-            j: $crate::Value,
-            k: $crate::Value,
-            l: $crate::Value,
-            m: $crate::Value,
-            n: $crate::Value,
-            o: $crate::Value,
-            p: $crate::Value,
-        ) -> $crate::Value {
-            use $crate::method::{Method16, RubyMethod16};
-            $name.call_handle_error(rb_self, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p)
-        }
-        anon as unsafe extern "C" fn(
-            $crate::Value,
-            $crate::Value,
-            $crate::Value,
-            $crate::Value,
-            $crate::Value,
-            $crate::Value,
-            $crate::Value,
-            $crate::Value,
-            $crate::Value,
-            $crate::Value,
-            $crate::Value,
-            $crate::Value,
-            $crate::Value,
-            $crate::Value,
-            $crate::Value,
-            $crate::Value,
-            $crate::Value,
-        ) -> $crate::Value
-    }};
     ($name:expr, $arity:expr) => {
-        compile_error!("arity must be an integer literal between -2..=16")
+        compile_error!("arity must be an integer literal between -2..=15")
     };
 }
 
@@ -1554,7 +1511,7 @@ macro_rules! function_n {
     }
 }
 
-seq!(N in 0..=16 {
+seq!(N in 0..=15 {
     function_n!(Function~N, RubyFunction~N, N);
 });
 
@@ -2036,50 +1993,7 @@ macro_rules! function {
             $crate::Value,
         ) -> $crate::Value
     }};
-    ($name:expr, 16) => {{
-        unsafe extern "C" fn anon(
-            rb_self: $crate::Value,
-            a: $crate::Value,
-            b: $crate::Value,
-            c: $crate::Value,
-            d: $crate::Value,
-            e: $crate::Value,
-            f: $crate::Value,
-            g: $crate::Value,
-            h: $crate::Value,
-            i: $crate::Value,
-            j: $crate::Value,
-            k: $crate::Value,
-            l: $crate::Value,
-            m: $crate::Value,
-            n: $crate::Value,
-            o: $crate::Value,
-            p: $crate::Value,
-        ) -> $crate::Value {
-            use $crate::method::{Function16, RubyFunction16};
-            $name.call_handle_error(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p)
-        }
-        anon as unsafe extern "C" fn(
-            $crate::Value,
-            $crate::Value,
-            $crate::Value,
-            $crate::Value,
-            $crate::Value,
-            $crate::Value,
-            $crate::Value,
-            $crate::Value,
-            $crate::Value,
-            $crate::Value,
-            $crate::Value,
-            $crate::Value,
-            $crate::Value,
-            $crate::Value,
-            $crate::Value,
-            $crate::Value,
-            $crate::Value,
-        ) -> $crate::Value
-    }};
     ($name:expr, $arity:expr) => {
-        compile_error!("arity must be an integer literal between -2..=16")
+        compile_error!("arity must be an integer literal between -2..=15")
     };
 }
