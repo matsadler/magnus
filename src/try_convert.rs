@@ -86,6 +86,14 @@ impl TryConvert for i64 {
 }
 unsafe impl TryConvertOwned for i64 {}
 
+impl TryConvert for i128 {
+    #[inline]
+    fn try_convert(val: Value) -> Result<Self, Error> {
+        Integer::try_convert(val)?.to_i128()
+    }
+}
+unsafe impl TryConvertOwned for i128 {}
+
 impl TryConvert for isize {
     #[inline]
     fn try_convert(val: Value) -> Result<Self, Error> {
@@ -126,6 +134,14 @@ impl TryConvert for u64 {
 }
 unsafe impl TryConvertOwned for u64 {}
 
+impl TryConvert for u128 {
+    #[inline]
+    fn try_convert(val: Value) -> Result<Self, Error> {
+        Integer::try_convert(val)?.to_u128()
+    }
+}
+unsafe impl TryConvertOwned for u128 {}
+
 impl TryConvert for usize {
     #[inline]
     fn try_convert(val: Value) -> Result<Self, Error> {
@@ -153,11 +169,13 @@ impl_non_zero_try_convert!(std::num::NonZeroI8, i8);
 impl_non_zero_try_convert!(std::num::NonZeroI16, i16);
 impl_non_zero_try_convert!(std::num::NonZeroI32, i32);
 impl_non_zero_try_convert!(std::num::NonZeroI64, i64);
+impl_non_zero_try_convert!(std::num::NonZeroI128, i128);
 impl_non_zero_try_convert!(std::num::NonZeroIsize, isize);
 impl_non_zero_try_convert!(std::num::NonZeroU8, u8);
 impl_non_zero_try_convert!(std::num::NonZeroU16, u16);
 impl_non_zero_try_convert!(std::num::NonZeroU32, u32);
 impl_non_zero_try_convert!(std::num::NonZeroU64, u64);
+impl_non_zero_try_convert!(std::num::NonZeroU128, u128);
 impl_non_zero_try_convert!(std::num::NonZeroUsize, usize);
 
 impl TryConvert for f32 {
