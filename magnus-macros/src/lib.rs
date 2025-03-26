@@ -375,8 +375,8 @@ pub fn derive_data_type_functions(input: TokenStream) -> TokenStream {
 ///   write barriers (see `typed_data::Writebarrier::writebarrier`) so this
 ///   type can participate in generational GC.
 ///
-///   This is hard to get right, and it is recomended you do not use this
-///   flag.
+///   The write barrier is hard to get right. Magnus recommends you do not use
+///   this flag.
 ///
 /// * `frozen_shareable`:  
 ///   Sets the `frozen_shareable` flag for objects that can be safely accessed

@@ -5,7 +5,7 @@
 //! [`method`](crate::method!) macro, allow defining methods with a fixed
 //! number of positional arguments, or an unbounded collection of arguments as
 //! a slice or Ruby array. The functions in this module allow for more complex
-//! agument handling.
+//! argument handling.
 //!
 //! Ruby arguments can be classified as follows:
 //! ``` text
@@ -440,7 +440,7 @@ impl<T> ScanArgsBlock for T where T: private::ScanArgsBlock {}
 /// signatures, including optional arguments and 'splats'.
 ///
 /// The format of the arguments required is driven by the types in the return
-/// value. The stuct [`Args`] is returned but the types of its fields are
+/// value. The struct [`Args`] is returned but the types of its fields are
 /// determined by type parameters. The type `()` is used as a placeholder when
 /// a set of arguments is not required.
 ///
@@ -645,7 +645,7 @@ pub struct KwArgs<Req, Opt, Splat> {
 /// Extracts `required` and `optional` arguments from the given `kw` hash.
 ///
 /// The format of the arguments required is driven by the types in the return
-/// value. The stuct [`KwArgs`] is returned but the types of its fields are
+/// value. The struct [`KwArgs`] is returned but the types of its fields are
 /// determined by type parameters. The type `()` is used as a placeholder when
 /// a set of arguments is not required.
 ///

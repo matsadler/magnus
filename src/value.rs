@@ -1455,7 +1455,7 @@ pub trait ReprValue: private::ReprValue {
 
     /// Check if `self` responds to the given Ruby method.
     ///
-    /// The `include_private` agument controls whether `self`'s private methods
+    /// The `include_private` argument controls whether `self`'s private methods
     /// are checked. If `false` they are not, if `true` they are.
     ///
     /// See also [`Value::check_funcall`].
@@ -1470,8 +1470,8 @@ pub trait ReprValue: private::ReprValue {
     ///     assert!(s.respond_to("to_str", false)?);
     ///     assert!(!s.respond_to("puts", false)?);
     ///     assert!(s.respond_to("puts", true)?);
-    ///     assert!(!s.respond_to("non_existant", false)?);
-    ///     assert!(!s.respond_to("non_existant", true)?);
+    ///     assert!(!s.respond_to("non_existent", false)?);
+    ///     assert!(!s.respond_to("non_existent", true)?);
     ///
     ///     Ok(())
     /// }

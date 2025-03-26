@@ -19,7 +19,7 @@ use crate::{
 };
 
 /// An error returned to indicate an attempt to interact with the Ruby API from
-/// a non-Ruby thread or without aquiring the GVL.
+/// a non-Ruby thread or without acquiring the GVL.
 #[derive(Debug)]
 pub enum RubyUnavailableError {
     /// GVL is not locked.

@@ -222,7 +222,7 @@ mod private {
     }
 }
 
-/// Trait implemented for function pointers that can be registed as Ruby
+/// Trait implemented for function pointers that can be registered as Ruby
 /// methods.
 ///
 /// While it is possible to directly write functions that will automatically
@@ -265,7 +265,7 @@ impl<T> Method for T where T: private::Method {}
 ///
 /// where `I` implements `Iterator<Item = T>` and `T` implements [`IntoValue`].
 ///
-/// When is `Err(magnus::Error)` returned to Ruby it will be conveted to and
+/// When is `Err(magnus::Error)` returned to Ruby it will be converted to and
 /// raised as a Ruby exception.
 ///
 /// [`Yield`], [`YieldValues`], and [`YieldSplat`] allow returning a Rust
@@ -286,7 +286,7 @@ impl<T> ReturnValue for T where T: private::ReturnValue {}
 /// * `()`
 /// * `Result<(), magnus::Error>`
 ///
-/// When is `Err(magnus::Error)` returned to Ruby it will be conveted to and
+/// When is `Err(magnus::Error)` returned to Ruby it will be converted to and
 /// raised as a Ruby exception.
 ///
 /// Note: functions without a specified return value will return `()`. `()`
@@ -304,7 +304,7 @@ impl<T> InitReturn for T where T: private::InitReturn {}
 ///
 /// where `T` implements [`IntoValue`].
 ///
-/// When is `Err(magnus::Error)` returned to Ruby it will be conveted to and
+/// When is `Err(magnus::Error)` returned to Ruby it will be converted to and
 /// raised as a Ruby exception.
 ///
 /// Note: functions without a specified return value will return `()`. `()`
@@ -783,8 +783,8 @@ seq!(N in 0..=15 {
 /// [`define_method`](crate::module::Module::define_method).
 ///
 /// Ruby code implicitly always has a `self` parameter available. In the
-/// extention API this is passed explicitly. As a result there is always an
-/// extra `self` argument before the arguments explitly passed in Ruby, and the
+/// extension API this is passed explicitly. As a result there is always an
+/// extra `self` argument before the arguments explicitly passed in Ruby, and the
 /// number of Rust argument will be one more than the Ruby arity.
 ///
 /// The values `-2` and `-1` for `arity` have special meaning. Both indicate
@@ -1524,7 +1524,7 @@ seq!(N in 0..=15 {
 /// [`define_method`](crate::module::Module::define_method).
 ///
 /// Ruby code implicitly always has a `self` parameter available. In the
-/// extention API this is passed explicitly. The wrapper this macro generates
+/// extension API this is passed explicitly. The wrapper this macro generates
 /// ignores that argument, and does not pass it to the wrapped function.
 ///
 /// The values `-2` and `-1` for `arity` have special meaning. Both indicate

@@ -107,7 +107,7 @@ impl Mutex {
         unsafe { Value::new(rb_mutex_locked_p(self.as_rb_value())).to_bool() }
     }
 
-    /// Attempts to aquire the lock.
+    /// Attempts to acquire the lock.
     ///
     /// This method does not block. Returns true if the lock can be acquired,
     /// false otherwise.

@@ -1,4 +1,4 @@
-//! Magnus is a library for writing Ruby extentions in Rust, or running Ruby
+//! Magnus is a library for writing Ruby extensions in Rust, or running Ruby
 //! code from Rust.
 //!
 //! # Overview
@@ -380,7 +380,7 @@
 // * `rb_class_get_superclass`:
 // * `rb_class_inherited_p`: [`Module::is_inherited`].
 // * `rb_class_instance_methods`:
-//! * `rb_class_name`: Simmilar to [`Value::classname`].
+//! * `rb_class_name`: Similar to [`Value::classname`].
 //! * `rb_class_new`: [`RClass::new`].
 //! * `rb_class_new_instance`: See [`RClass::new_instance`].
 //! * `rb_class_new_instance_kw`: [`RClass::new_instance`].
@@ -482,7 +482,7 @@
 // * `rb_define_alloc_func`:
 //! * `rb_define_attr`: See [`Module::define_attr`].
 //! * `rb_define_class`: [`Ruby::define_class`].
-//! * `rb_define_class_id`: Simmilar to [`Ruby::define_class`].
+//! * `rb_define_class_id`: Similar to [`Ruby::define_class`].
 //! * `rb_define_class_id_under`: [`Module::define_class`].
 //! * `rb_define_class_under`: See [`Module::define_class`].
 // * `rb_define_class_variable`:
@@ -1253,7 +1253,7 @@
 // * `rb_ractor_stdin_set`:
 // * `rb_ractor_stdout`:
 // * `rb_ractor_stdout_set`:
-//! * `rb_raise`: Simmilar to returning [`Error`].
+//! * `rb_raise`: Similar to returning [`Error`].
 // * `rb_random_base_init`:
 // * `rb_random_bytes`:
 // * `RB_RANDOM_DATA_INIT_PARENT`:
@@ -1413,10 +1413,10 @@
 //! * `rb_str_new`: [`RString::from_slice`].
 // * `rb_str_new_cstr`:
 //! * `rb_str_new_frozen`: [`RString::new_frozen`].
-//! * `rb_str_new_lit`: Simmilar to [`r_string!`].
-//! * `rb_str_new_literal`: Simmilar to [`r_string!`].
+//! * `rb_str_new_lit`: Similar to [`r_string!`].
+//! * `rb_str_new_literal`: Similar to [`r_string!`].
 //! * `rb_str_new_shared`: [`RString::new_shared`].
-// * `rb_str_new_static`: Simmilar to [`r_string!`].
+// * `rb_str_new_static`: Similar to [`r_string!`].
 // * `rb_str_new_with_class`:
 //! * `rb_str_offset`: [`RString::offset`].
 //! * `rb_str_plus`: [`RString::plus`].
@@ -1610,8 +1610,8 @@
 //! * `rb_utf8_encoding`: [`RbEncoding::utf8`](encoding::RbEncoding::utf8).
 //! * `rb_utf8_str_new`: [`RString::new`].
 //! * `rb_utf8_str_new_cstr`: See [`RString::new`].
-//! * `rb_utf8_str_new_lit`: Simmilar to [`r_string!`].
-//! * `rb_utf8_str_new_literal`: Simmilar to [`r_string!`].
+//! * `rb_utf8_str_new_lit`: Similar to [`r_string!`].
+//! * `rb_utf8_str_new_literal`: Similar to [`r_string!`].
 //! * `rb_utf8_str_new_static`: [`r_string!`].
 // * `rb_uv_to_utf8`:
 //!
@@ -2183,9 +2183,9 @@ impl Ruby {
 
     /// Alias the global variable `src` as `dst`.
     ///
-    /// Unlike [`define_variable`](Ruby::define_variable), the preceeding `$`
+    /// Unlike [`define_variable`](Ruby::define_variable), the preceding `$`
     /// of the global variable's name is required, otherwise the alias will not
-    /// be accessable from Ruby.
+    /// be accessible from Ruby.
     ///
     /// # Examples
     ///

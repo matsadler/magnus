@@ -6,10 +6,10 @@
 //! Encoding <-> RbEncoding <-> Index
 //!       |______________________^
 //! ```
-//! Many functions that require an encoding take thier arguments as
+//! Many functions that require an encoding take their arguments as
 //! `Into<RbEncoding>` or `Into<Index>` to ease working with the different
 //! types. The type specified for the `Into` conversion hints at the type the
-//! function nativly works with, and thus will avoid any conversion cost.
+//! function natively works with, and thus will avoid any conversion cost.
 //!
 //! [`Encoding`] and [`RbEncoding`] both implement [`TryConvert`] and
 //! [`IntoValue`] so can be used as parameters and return values in functions
@@ -586,7 +586,7 @@ impl RbEncoding {
     /// Returns the number of bytes of the first character in `slice`.
     ///
     /// If the first byte of `slice` is mid way through a character this will
-    /// return the number of bytes until the next character boundry.
+    /// return the number of bytes until the next character boundary.
     ///
     /// If the slice ends before the last byte of the character this will
     /// return the theoretical number of bytes until the end of the character,

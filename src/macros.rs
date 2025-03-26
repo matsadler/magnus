@@ -6,7 +6,7 @@ macro_rules! debug_assert_value {
     ($value:expr) => {
         // The memory this points to is managed by Ruby's GC and we can't
         // really know if it's safe to access as with GC compaction this may
-        // point to memory now outside that owned by the process. We will likly
+        // point to memory now outside that owned by the process. We will likely
         // segfault in that case, which is kind of OK, as we're trying to panic
         // anyway.
         #[allow(unused_unsafe)]
@@ -30,7 +30,7 @@ macro_rules! debug_assert_value {
 ///
 /// The check is currently not performed in release mode as the Ruby API
 /// hasn't been finalised and there isn't an alternative to this that avoids
-/// the check and the associated perfomance hit.
+/// the check and the associated performance hit.
 macro_rules! get_ruby {
     () => {
         if cfg!(debug_assertions) {

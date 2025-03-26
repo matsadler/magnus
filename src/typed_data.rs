@@ -135,12 +135,12 @@ where
     /// in your [`mark`](Self::mark) function, you must update them in this
     /// function using [`gc::Compactor::location`].
     ///
-    /// Ruby values would be concidered moveable if marked with the
+    /// Ruby considers values are moveable if marked with the
     /// [`gc::Marker::mark_movable`] function. Other marking functions such as
     /// [`gc::Marker::mark`] will prevent values being moved.
     ///
     /// As it is only safe for this function to receive a shared `&self`
-    /// reference, you must implement interior mutablility to be able to update
+    /// reference, you must implement interior mutability to be able to update
     /// values. This is very hard to do correctly, and it is recommended to
     /// simply avoid using [`gc::Marker::mark_movable`] and `compact`.
     ///
@@ -158,7 +158,7 @@ where
     ///
     /// # Safety
     ///
-    /// `ptr` must be a vaild pointer to a `Box<Self>`, and must not be aliased
+    /// `ptr` must be a valid pointer to a `Box<Self>`, and must not be aliased
     /// This function will free the memory pointed to by `ptr`.
     ///
     /// This function must not panic.
@@ -173,7 +173,7 @@ where
     ///
     /// # Safety
     ///
-    /// `ptr` must be a vaild pointer to a `Self`, and must not be aliased.
+    /// `ptr` must be a valid pointer to a `Self`, and must not be aliased.
     ///
     /// This function must not panic.
     #[doc(hidden)]
@@ -188,7 +188,7 @@ where
     ///
     /// # Safety
     ///
-    /// `ptr` must be a vaild pointer to a `Self`.
+    /// `ptr` must be a valid pointer to a `Self`.
     ///
     /// This function must not panic.
     #[doc(hidden)]
@@ -203,7 +203,7 @@ where
     ///
     /// # Safety
     ///
-    /// `ptr` must be a vaild pointer to a `Self`, and must not be aliased.
+    /// `ptr` must be a valid pointer to a `Self`, and must not be aliased.
     ///
     /// This function must not panic.
     #[doc(hidden)]
@@ -306,8 +306,8 @@ where
     /// write barriers (see [`Writebarrier::writebarrier`]) so this
     /// type can participate in generational GC.
     ///
-    /// This is hard to get right, and it is recomended you do not use this
-    /// flag.
+    /// The write barrier is hard to get right. Magnus recommends you do not use
+    /// this flag.
     pub const fn wb_protected(mut self) -> Self {
         self.wb_protected = true;
         self
@@ -928,11 +928,11 @@ pub trait Writebarrier: ReprValue {
     ///
     /// If you have a Rust type that contains Ruby values, and itself is
     /// wrapped as a Ruby object, and you choose to enable the `wb_protected`
-    /// flag so that it can participate in genrational GC then all operations
+    /// flag so that it can participate in generational GC then all operations
     /// that add a Ruby value to your data type must call this function.
     ///
-    /// This can be tricky to use correctly, it is reccomended you don't enable
-    /// the `wb_protected` flag, and thus don't need to use this function.
+    /// The write barrier is hard to get right. Magnus recommends you do not
+    /// enable the `wb_protected` flag, and thus you don't need to use this function.
     ///
     /// # Examples
     ///

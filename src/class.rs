@@ -36,7 +36,7 @@ use crate::{
 /// See the [`Class`] trait for methods available on classes.
 /// See the [`Module`] trait for defining instance methods and nested
 /// classes/modules.
-/// See the [`Object`] trait for defining singlton methods (aka class methods).
+/// See the [`Object`] trait for defining singleton methods (aka class methods).
 ///
 /// See the [`ReprValue`] trait for additional methods available on this type.
 #[derive(Clone, Copy)]
@@ -315,7 +315,7 @@ pub trait Class: Module {
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let value = ruby.class_hash();
-    ///     // safe as we neve give Ruby a chance to free the string.
+    ///     // safe as we never give Ruby a chance to free the string.
     ///     let s = unsafe { value.name() }.into_owned();
     ///     assert_eq!(s, "Hash");
     ///
@@ -329,7 +329,7 @@ pub trait Class: Module {
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let value = ruby.exception_standard_error();
-    ///     // safe as we neve give Ruby a chance to free the string.
+    ///     // safe as we never give Ruby a chance to free the string.
     ///     let s = unsafe { value.name() }.into_owned();
     ///     assert_eq!(s, "StandardError");
     ///

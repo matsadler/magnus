@@ -1087,7 +1087,7 @@ impl RArray {
     /// ensure this does not happen.
     ///
     /// Ruby must not be allowed to garbage collect or modify `self` while a
-    /// refrence to the slice is held.
+    /// reference to the slice is held.
     ///
     /// # Examples
     ///
@@ -1097,7 +1097,7 @@ impl RArray {
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let ary: RArray = ruby.eval("[1, 2, 3, 4, 5]")?;
     ///     // must not call any Ruby api that may modify ary while we have a
-    ///     // refrence to the return value of ::from_slice()
+    ///     // reference to the return value of ::from_slice()
     ///     unsafe {
     ///         let middle = ruby.ary_new_from_values(&ary.as_slice()[1..4]);
     ///         rb_assert!(ruby, "middle == [2, 3, 4]", middle);
