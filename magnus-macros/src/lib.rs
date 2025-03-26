@@ -311,6 +311,11 @@ pub fn init(attrs: TokenStream, item: TokenStream) -> TokenStream {
 ///     Ok(())
 /// }
 /// ```
+/// 
+/// See [`examples/inheritance.rs`] for the complete example.
+///
+/// [`examples/inheritance.rs`]: https://github.com/matsadler/magnus/blob/main/examples/inheritance.rs
+///
 #[proc_macro_attribute]
 pub fn wrap(attrs: TokenStream, item: TokenStream) -> TokenStream {
     typed_data::expand(parse_macro_input!(attrs), parse_macro_input!(item)).into()
