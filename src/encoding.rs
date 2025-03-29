@@ -314,7 +314,7 @@ impl Ruby {
 pub struct RbEncoding(NonNull<rb_encoding>);
 
 impl RbEncoding {
-    fn new(inner: *mut rb_encoding) -> Option<Self> {
+    pub(crate) fn new(inner: *mut rb_encoding) -> Option<Self> {
         NonNull::new(inner).map(Self)
     }
 
