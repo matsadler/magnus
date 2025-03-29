@@ -1804,6 +1804,7 @@ mod float;
 pub mod gc;
 mod integer;
 mod into_value;
+pub mod io;
 pub mod method;
 pub mod module;
 mod mutex;

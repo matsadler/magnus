@@ -107,6 +107,7 @@ impl RubyGvlState {
 /// * [Globals](#globals) - global variables, etc, plus current VM state such
 ///   as calling the current `super` method.
 /// * [`Id`](#id) - low-level Symbol representation
+/// * [`Io`](#io-helper-functions) - IO helper functions
 /// * [`Integer`](#integer)
 /// * [`Mutex`](#mutex)
 /// * [`nil`](#nil)
