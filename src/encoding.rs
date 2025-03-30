@@ -739,7 +739,7 @@ impl RbEncoding {
         if len == 0 {
             panic!("{:?}", slice);
         }
-        (c > -1).then(|| (c as u8, len as usize))
+        (c > -1).then_some((c as u8, len as usize))
     }
 
     /// Returns the codepoint and length in bytes of the first character in

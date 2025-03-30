@@ -2,7 +2,7 @@ use magnus::{block::Yield, eval, method, prelude::*, rb_assert, Ruby, Value};
 
 fn count_to_3(ruby: &Ruby, rb_self: Value) -> Yield<impl Iterator<Item = u8>> {
     if ruby.block_given() {
-        Yield::Iter((1..=3).into_iter())
+        Yield::Iter(1..=3)
     } else {
         Yield::Enumerator(rb_self.enumeratorize("count_to_3", ()))
     }

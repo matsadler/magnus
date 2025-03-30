@@ -90,7 +90,7 @@ impl Flonum {
     #[inline]
     pub(crate) fn from_f64_impl(d: f64) -> Option<Self> {
         let v = d.to_bits();
-        let bits = v >> 60 & 0x7;
+        let bits = (v >> 60) & 0x7;
         if v != 0x3000000000000000 && bits.wrapping_sub(3) & !0x01 == 0 {
             return Some(unsafe { Self::from_rb_value_unchecked(v.rotate_left(3) & !0x01 | 0x02) });
         } else if v == 0 {

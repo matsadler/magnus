@@ -23,7 +23,7 @@ enum RubyGvlState {
 }
 
 thread_local! {
-    static RUBY_GVL_STATE: RefCell<Option<RubyGvlState>> = RefCell::new(None);
+    static RUBY_GVL_STATE: RefCell<Option<RubyGvlState>> = const { RefCell::new(None) };
 }
 
 impl RubyGvlState {
