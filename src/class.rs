@@ -504,10 +504,12 @@ pub trait Class: Module {
             });
             RB_CLASS_ALLOCATE_INSTANCE
         };
-
         unsafe {
-            if rb_get_alloc_func(self.as_rb_value()) == rb_class_allocate_instance {
-                rb_undef_alloc_func(self.as_rb_value())
+            let current_alloc = rb_get_alloc_func(self.as_rb_value());
+            if let (Some(actual), Some(default)) = (current_alloc, rb_class_allocate_instance) {
+                if std::ptr::eq(actual as *const (), default as *const ()) {
+                    rb_undef_alloc_func(self.as_rb_value());
+                }
             }
         }
     }
