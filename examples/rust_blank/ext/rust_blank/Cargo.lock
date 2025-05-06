@@ -173,18 +173,18 @@ dependencies = [
 
 [[package]]
 name = "rb-sys"
-version = "0.9.102"
+version = "0.9.113"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "df4dec4b1d304c3b308a2cd86b1216ea45dd4361f4e9fa056f108332d0a450c1"
+checksum = "b5792b4ea6610acc874f17bd6ced47c9384f224851ff54d71160aca7ea4e9214"
 dependencies = [
  "rb-sys-build",
 ]
 
 [[package]]
 name = "rb-sys-build"
-version = "0.9.102"
+version = "0.9.113"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1d71de3e29d174b8fb17b5d4470f27d7aa2605f8a9d05fda0d3aeff30e05a570"
+checksum = "99a5c39dde51057378e99ed29b9e28951172bdfb74290989c7eea4eb28cdc0b5"
 dependencies = [
  "bindgen",
  "lazy_static",
@@ -197,9 +197,9 @@ dependencies = [
 
 [[package]]
 name = "rb-sys-env"
-version = "0.1.2"
+version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a35802679f07360454b418a5d1735c89716bde01d35b1560fc953c1415a0b3bb"
+checksum = "08f8d2924cf136a1315e2b4c7460a39f62ef11ee5d522df9b2750fab55b868b6"
 
 [[package]]
 name = "regex"
