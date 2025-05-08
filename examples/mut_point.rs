@@ -58,10 +58,10 @@ impl MutPoint {
             rb_self.0.borrow_mut().x = sum;
             Ok(sum)
         } else {
-            return Err(Error::new(
+            Err(Error::new(
                 ruby.exception_range_error(),
                 "result out of range",
-            ));
+            ))
         }
     }
 
@@ -78,10 +78,10 @@ impl MutPoint {
             rb_self.0.borrow_mut().y = sum;
             Ok(sum)
         } else {
-            return Err(Error::new(
+            Err(Error::new(
                 ruby.exception_range_error(),
                 "result out of range",
-            ));
+            ))
         }
     }
 

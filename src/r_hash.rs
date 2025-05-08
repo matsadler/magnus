@@ -613,7 +613,7 @@ impl RHash {
             ))
         })
         .ok()
-        .and_then(|v| (!v.is_undef()).then(|| v))
+        .and_then(|v| (!v.is_undef()).then_some(v))
     }
 
     /// Return the value for `key`, converting it to `U`.

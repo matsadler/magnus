@@ -1343,7 +1343,7 @@ impl RString {
     /// # Ruby::init(example).unwrap()
     /// ```
     pub fn as_interned_str(self) -> Option<FString> {
-        self.is_interned().then(|| FString(self))
+        self.is_interned().then_some(FString(self))
     }
 
     /// Interns self and returns a [`FString`]. Be aware that once interned a
@@ -2138,7 +2138,7 @@ pub struct Codepoints<'a> {
     encoding: RbEncoding,
 }
 
-impl<'a> Iterator for Codepoints<'a> {
+impl Iterator for Codepoints<'_> {
     type Item = Result<u32, Error>;
 
     fn next(&mut self) -> Option<Self::Item> {

@@ -323,7 +323,7 @@ impl IntoValue for SystemTime {
             Ok(duration) => ruby
                 .time_nano_new(
                     duration.as_secs().try_into().unwrap(),
-                    duration.subsec_nanos().try_into().unwrap(),
+                    duration.subsec_nanos().into(),
                 )
                 .unwrap()
                 .as_value(),
@@ -331,7 +331,7 @@ impl IntoValue for SystemTime {
                 let duration = Self::UNIX_EPOCH.duration_since(self).unwrap();
                 ruby.time_nano_new(
                     -i64::try_from(duration.as_secs()).unwrap(),
-                    -i64::try_from(duration.subsec_nanos()).unwrap(),
+                    -i64::from(duration.subsec_nanos()),
                 )
                 .unwrap()
                 .as_value()
@@ -367,7 +367,7 @@ impl IntoValue for chrono::DateTime<chrono::FixedOffset> {
             tv_sec: delta.num_seconds(),
             tv_nsec: delta.subsec_nanos() as _,
         };
-        let offset: FixedOffset = self.timezone().into();
+        let offset: FixedOffset = self.timezone();
         let offset = Offset::from_secs(offset.local_minus_utc()).unwrap();
         ruby.time_timespec_new(ts, offset).unwrap().as_value()
     }
@@ -403,7 +403,7 @@ impl TryConvert for SystemTime {
             Ruby::get_unchecked().qnil()
         })?;
         if timespec.tv_nsec >= 0 {
-            let mut duration = Duration::from_secs(timespec.tv_sec.abs() as _);
+            let mut duration = Duration::from_secs(timespec.tv_sec.unsigned_abs());
             duration += Duration::from_nanos(timespec.tv_nsec as _);
             if timespec.tv_sec >= 0 {
                 Ok(Self::UNIX_EPOCH + duration)
