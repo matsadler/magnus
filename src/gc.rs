@@ -212,7 +212,7 @@ where
 ///
 /// Prevents Ruby moving or collecting `valref`. This should be used on
 /// `static` items to prevent them being collected instead of relying on Ruby
-/// constants/globals to allways refrence the value.
+/// constants/globals to always reference the value.
 ///
 /// See also [`BoxValue`](crate::value::BoxValue).
 ///
@@ -347,7 +347,7 @@ impl Ruby {
     /// Trigger a "full" GC run.
     ///
     /// This will perform a full mark phase and a complete sweep phase, but may
-    /// not run every single proceess associated with garbage collection.
+    /// not run every single process associated with garbage collection.
     ///
     /// Finalisers will be deferred to run later.
     ///
@@ -552,7 +552,7 @@ pub fn enable() -> bool {
 /// Trigger a "full" GC run.
 ///
 /// This will perform a full mark phase and a complete sweep phase, but may not
-/// run every single proceess associated with garbage collection.
+/// run every single process associated with garbage collection.
 ///
 /// Finalisers will be deferred to run later.
 ///

@@ -23,7 +23,7 @@ pub fn expand_derive_data_type_functions(input: DeriveInput) -> TokenStream {
 }
 
 pub fn expand_derive_typed_data(input: DeriveInput) -> Result<TokenStream, Error> {
-    let attrs = match util::get_magnus_attrubute(&input.attrs)? {
+    let attrs = match util::get_magnus_attribute(&input.attrs)? {
         Some(v) => v,
         None => return Err(Error::new(input.span(), "missing #[magnus] attribute")),
     };
@@ -101,7 +101,7 @@ pub fn expand_derive_typed_data(input: DeriveInput) -> Result<TokenStream, Error
     let mut arms = Vec::new();
     if let Data::Enum(DataEnum { ref variants, .. }) = input.data {
         for variant in variants.into_iter() {
-            let attrs = match util::get_magnus_attrubute(&variant.attrs)? {
+            let attrs = match util::get_magnus_attribute(&variant.attrs)? {
                 Some(v) => v,
                 None => continue,
             };
@@ -156,7 +156,7 @@ pub fn expand_derive_typed_data(input: DeriveInput) -> Result<TokenStream, Error
     }) = input.data
     {
         for field in named {
-            let attrs = match util::get_magnus_attrubute(&field.attrs)? {
+            let attrs = match util::get_magnus_attribute(&field.attrs)? {
                 Some(v) => v,
                 None => continue,
             };

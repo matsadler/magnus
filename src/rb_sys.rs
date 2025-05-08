@@ -22,7 +22,7 @@
 //! # Safety
 //!
 //! The unsafe functions in this module are capable of producing values that
-//! break the saftey guarantees of almost every other function in Magnus. Use
+//! break the safety guarantees of almost every other function in Magnus. Use
 //! them with care.
 use std::panic::UnwindSafe;
 
@@ -68,7 +68,7 @@ pub trait FromRawValue {
     ///
     /// You must only supply a valid [`VALUE`] obtained from [rb-sys](rb_sys)
     /// to this function. Using a invalid [`Value`] produced from this
-    /// function will void all saftey guarantees provided by Magnus.
+    /// function will void all safety guarantees provided by Magnus.
     ///
     /// # Examples
     ///
@@ -135,7 +135,7 @@ pub trait FromRawId {
     ///
     /// You must only supply a valid, non-zero [`ID`] obtained from
     /// [rb-sys](rb_sys) to this function. Using a invalid [`Id`] produced
-    /// from this function will void all saftey guarantees provided by
+    /// from this function will void all safety guarantees provided by
     /// Magnus.
     ///
     /// # Examples

@@ -68,11 +68,11 @@ impl RubyGvlState {
 
 /// A handle to access Ruby's API.
 ///
-/// Using Ruby's API requires the Ruby VM to be initalised and all access to be
+/// Using Ruby's API requires the Ruby VM to be initialised and all access to be
 /// from a Ruby-created thread.
 ///
 /// This structure allows safe access to Ruby's API as it should only be
-/// possible to aquire an instance in situations where Ruby's API is known to
+/// possible to acquire an instance in situations where Ruby's API is known to
 /// be available.
 ///
 /// Many functions that take Ruby values as arguments are available directly

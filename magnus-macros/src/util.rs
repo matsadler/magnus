@@ -1,6 +1,6 @@
 use syn::{spanned::Spanned, Attribute, Error};
 
-pub fn get_magnus_attrubute(attrs: &[Attribute]) -> Result<Option<&Attribute>, Error> {
+pub fn get_magnus_attribute(attrs: &[Attribute]) -> Result<Option<&Attribute>, Error> {
     let attrs = attrs
         .iter()
         .filter(|attr| attr.path().is_ident("magnus"))

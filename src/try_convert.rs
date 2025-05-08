@@ -26,7 +26,7 @@ pub trait TryConvert: Sized {
 /// Conversions from [`Value`] to Rust types that do not contain [`Value`].
 ///
 /// This trait is used as a bound on some implementations of [`TryConvert`]
-/// (for example, for [`Vec`]) to prevent heap allocated datastructures
+/// (for example, for [`Vec`]) to prevent heap allocated data structures
 /// containing `Value`, as it is not safe to store a `Value` on the heap.
 ///
 /// # Safety

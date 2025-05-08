@@ -589,7 +589,7 @@ impl RString {
 
     /// Create a new Ruby string that is a frozen copy of `s`.
     ///
-    /// This can be used to get a copy of a string that is guranteed not to be
+    /// This can be used to get a copy of a string that is guaranteed not to be
     /// modified while you are referencing it.
     ///
     /// # Examples
@@ -622,7 +622,7 @@ impl RString {
     /// ensure this does not happen.
     ///
     /// Ruby must not be allowed to garbage collect or modify `self` while a
-    /// refrence to the slice is held.
+    /// reference to the slice is held.
     ///
     /// # Examples
     ///
@@ -632,7 +632,7 @@ impl RString {
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let s = ruby.str_new("example");
     ///     // safe as we don't give Ruby the chance to mess with the string while
-    ///     // we hold a refrence to the slice.
+    ///     // we hold a reference to the slice.
     ///     unsafe { assert_eq!(s.as_slice(), [101, 120, 97, 109, 112, 108, 101]) };
     ///
     ///     Ok(())
@@ -800,7 +800,7 @@ impl RString {
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let s: RString = eval!(ruby, r#""café".encode("ISO-8859-1")"#)?;
     ///     // safe as we don't give Ruby the chance to mess with the string while
-    ///     // we hold a refrence to the slice.
+    ///     // we hold a reference to the slice.
     ///     unsafe { assert_eq!(s.as_slice(), &[99, 97, 102, 233]) };
     ///     let e = s.conv_enc(ruby.utf8_encoding())?;
     ///     unsafe { assert_eq!(e.as_slice(), &[99, 97, 102, 195, 169]) };
@@ -1034,7 +1034,7 @@ impl RString {
     /// ensure this does not happen.
     ///
     /// Ruby must not be allowed to garbage collect or modify `self` while a
-    /// refrence to the str is held.
+    /// reference to the str is held.
     ///
     /// # Examples
     ///
@@ -1044,7 +1044,7 @@ impl RString {
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let s = ruby.str_new("example");
     ///     // safe as we don't give Ruby the chance to mess with the string while
-    ///     // we hold a refrence to the slice.
+    ///     // we hold a reference to the slice.
     ///     unsafe { assert_eq!(s.test_as_str().unwrap(), "example") };
     ///
     ///     Ok(())
@@ -1067,7 +1067,7 @@ impl RString {
     /// ensure this does not happen.
     ///
     /// Ruby must not be allowed to garbage collect or modify `self` while a
-    /// refrence to the str is held.
+    /// reference to the str is held.
     ///
     /// # Examples
     ///
@@ -1077,7 +1077,7 @@ impl RString {
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let s = ruby.str_new("example");
     ///     // safe as we don't give Ruby the chance to mess with the string while
-    ///     // we hold a refrence to the slice.
+    ///     // we hold a reference to the slice.
     ///     unsafe { assert_eq!(s.as_str()?, "example") };
     ///
     ///     Ok(())
@@ -1124,7 +1124,7 @@ impl RString {
     /// ensure this does not happen.
     ///
     /// Ruby must not be allowed to garbage collect or modify `self` while a
-    /// refrence to the str is held.
+    /// reference to the str is held.
     ///
     /// # Examples
     ///
@@ -1134,7 +1134,7 @@ impl RString {
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let s = ruby.str_new("example");
     ///     // safe as we don't give Ruby the chance to mess with the string while
-    ///     // we hold a refrence to the slice.
+    ///     // we hold a reference to the slice.
     ///     unsafe { assert_eq!(s.to_string_lossy(), "example") };
     ///
     ///     Ok(())
@@ -1261,7 +1261,7 @@ impl RString {
     /// `# frozen_string_literal: true` 'magic comment'.
     ///
     /// Interned strings won't be garbage collected or modified, so should be
-    /// safe to store on the heap or hold a `&str` refrence to. See
+    /// safe to store on the heap or hold a `&str` reference to. See
     /// [`as_interned_str`](RString::as_interned_str).
     ///
     /// # Examples
@@ -1305,7 +1305,7 @@ impl RString {
     /// Returns `Some(FString)` if self is interned, `None` otherwise.
     ///
     /// Interned strings won't be garbage collected or modified, so should be
-    /// safe to store on the heap or hold a `&str` refrence to. The `FString`
+    /// safe to store on the heap or hold a `&str` reference to. The `FString`
     /// type returned by this function provides a way to encode this property
     /// into the type system, and provides safe methods to access the string
     /// as a `&str` or slice.
@@ -1983,7 +1983,7 @@ impl TryConvert for RString {
 /// FString contains an RString known to be interned.
 ///
 /// Interned strings won't be garbage collected or modified, so should be
-/// safe to store on the heap or hold a `&str` refrence to. `FString` provides
+/// safe to store on the heap or hold a `&str` reference to. `FString` provides
 /// a way to encode this property into the type system, and provides safe
 /// methods to access the string as a `&str` or slice.
 #[derive(Clone, Copy)]

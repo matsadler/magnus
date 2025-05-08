@@ -303,7 +303,7 @@ impl Ruby {
 
     /// Blocks for the given period of time.
     ///
-    /// Returns an error if sleep is intrrupted by a signal.
+    /// Returns an error if sleep is interrupted by a signal.
     ///
     /// # Examples
     ///
@@ -337,7 +337,7 @@ impl Ruby {
 
     /// Blocks indefinitely.
     ///
-    /// Returns an error if sleep is intrrupted by a signal.
+    /// Returns an error if sleep is interrupted by a signal.
     pub fn thread_sleep_forever(&self) -> Result<(), Error> {
         protect(|| {
             unsafe { rb_thread_sleep_forever() };
@@ -352,7 +352,7 @@ impl Ruby {
     /// deadlock checker is triggered.
     /// See also [`thread_sleep_forever`](Ruby::thread_sleep_forever).
     ///
-    /// Returns an error if sleep is intrrupted by a signal.
+    /// Returns an error if sleep is interrupted by a signal.
     pub fn thread_sleep_deadly(&self) -> Result<(), Error> {
         protect(|| {
             unsafe { rb_thread_sleep_deadly() };
@@ -459,7 +459,7 @@ impl Thread {
     ///
     /// See also [`Thread::wakeup`] and [`Thread::wakeup_alive`].
     ///
-    /// There is not gurantee that `self` will be the next thread scheduled.
+    /// There is no guarantee that `self` will be the next thread scheduled.
     ///
     /// Returns an error `self` is dead.
     pub fn run(self) -> Result<(), Error> {
@@ -641,7 +641,7 @@ impl TryConvert for Thread {
 
 /// Wrap a closure in a Ruby object with no class.
 ///
-/// This effectivly makes the closure's lifetime managed by Ruby. It will be
+/// This effectively makes the closure's lifetime managed by Ruby. It will be
 /// dropped when the returned `Value` is garbage collected.
 fn wrap_closure<F, R>(func: F) -> (*mut Option<F>, Value)
 where
