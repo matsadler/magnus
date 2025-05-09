@@ -1,6 +1,8 @@
-use std::{fmt, ptr::NonNull};
+use std::fmt;
 
-use rb_sys::{self, rb_check_typeddata, rb_data_typed_object_wrap, ruby_value_type, VALUE};
+use rb_sys::{
+    self, rb_check_typeddata, rb_data_typed_object_wrap, ruby_value_type, RTYPEDDATA_P, VALUE,
+};
 
 use crate::{
     class::RClass,
@@ -196,13 +198,8 @@ impl RTypedData {
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
         unsafe {
-            (val.rb_type() == ruby_value_type::RUBY_T_DATA)
-                .then(|| NonNull::new_unchecked(val.as_rb_value() as *mut rb_sys::RTypedData))
-                .and_then(|typed_data| {
-                    let typed_flag = typed_data.as_ref().typed_flag;
-                    (typed_flag != 0 && typed_flag <= 3)
-                        .then(|| Self(NonZeroValue::new_unchecked(val)))
-                })
+            (val.rb_type() == ruby_value_type::RUBY_T_DATA && RTYPEDDATA_P(val.as_rb_value()))
+                .then(|| Self::from_rb_value_unchecked(val.as_rb_value()))
         }
     }
 
