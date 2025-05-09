@@ -4,16 +4,17 @@
 //! including file open flags (`OpenFlags`), mode flags (`FMode`), and encoding metadata
 //! (`IoEncoding`).
 
-use rb_sys::{
-    rb_io_extract_modeenc, OnigEncodingTypeST, FMODE_APPEND, FMODE_BINMODE,
-    FMODE_CREATE, FMODE_DUPLEX, FMODE_EXCL, FMODE_READABLE, FMODE_READWRITE,
-    FMODE_SETENC_BY_BOM, FMODE_SYNC, FMODE_TEXTMODE, FMODE_TRUNC, FMODE_TTY, FMODE_WRITABLE, VALUE,
-};
+#[cfg(ruby_lt_3_3)]
+use rb_sys::rb_io_enc_t as rb_io_encoding;
+#[cfg(ruby_gt_3_4)]
+use rb_sys::rb_io_mode;
 #[cfg(ruby_gte_3_3)]
 use rb_sys::{rb_io_encoding, FMODE_EXTERNAL};
-#[cfg(ruby_lt_3_3)]
-use rb_sys::{rb_io_enc_t as rb_io_encoding};
-
+use rb_sys::{
+    rb_io_extract_modeenc, OnigEncodingTypeST, FMODE_APPEND, FMODE_BINMODE, FMODE_CREATE,
+    FMODE_DUPLEX, FMODE_EXCL, FMODE_READABLE, FMODE_READWRITE, FMODE_SETENC_BY_BOM, FMODE_SYNC,
+    FMODE_TEXTMODE, FMODE_TRUNC, FMODE_TTY, FMODE_WRITABLE, VALUE,
+};
 
 use crate::{
     encoding::{Encoding, RbEncoding},
@@ -170,7 +171,10 @@ impl Ruby {
     ) -> Result<(OpenFlags, FMode, IoEncoding), Error> {
         // `rb_io_extract_modeenc` will fill these variables:
         let mut oflags: std::os::raw::c_int = 0; // with O_ flags; flags are available in `File::Constants`.
+        #[cfg(ruby_lte_3_4)]
         let mut fmode: std::os::raw::c_int = 0; // with FMODE_ flags
+        #[cfg(ruby_gt_3_4)]
+        let mut fmode: rb_io_mode = rb_io_mode::RUBY_IO_MODE_EXTERNAL; // arbitrary initialization value
         let mut io_encoding: rb_io_encoding = unsafe { std::mem::zeroed() }; // with IO encoding options
 
         // Can raise:
