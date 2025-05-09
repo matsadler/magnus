@@ -478,7 +478,7 @@ use `unsafe`.
 
 ## Compatibility
 
-Ruby versions 3.0, 3.1, 3.2, and 3.3 are fully supported.
+Ruby versions 3.0, 3.1, 3.2, 3.3 and 3.4 are fully supported.
 
 Magnus currently works with, and is still tested against, Ruby 2.7, but as this
 version of the language is no longer supported by the Ruby developers it is not
@@ -487,7 +487,7 @@ recommended and future support in Magnus is not guaranteed.
 Ruby bindings will be generated at compile time, this may require libclang to
 be installed.
 
-The Minimum supported Rust version is currently Rust 1.65.
+The minimum supported Rust version is currently Rust 1.65.
 
 Support for statically linking Ruby is provided via the lower-level [rb-sys]
 crate, and can be enabled by adding the following to your `Cargo.toml`:
