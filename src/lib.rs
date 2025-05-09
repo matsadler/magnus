@@ -1114,10 +1114,6 @@
 // * `rb_native_mutex_unlock`:
 // * `rb_need_block`:
 // * `RB_NEGFIXABLE`:
-// * `RB_NEWOBJ`:
-// * `rb_newobj`:
-// * `RB_NEWOBJ_OF`:
-// * `rb_newobj_of`:
 // * `RB_NIL_P`:
 // * `rb_nogvl`:
 // * `rb_notimplement`:
