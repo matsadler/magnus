@@ -20,7 +20,12 @@ exclude = [
     "examples/complete_object/ext/temperature",
 ]
 
+[workspace.dependencies]
+magnus = { path = "./magnus" }
+
 [features]
+default = []
+test-features = ["embed", "rb-sys", "bytes", "chrono", "io"]
 bytes = ["dep:bytes"]
 chrono = ["dep:chrono"]
 embed = ["rb-sys/link-ruby"]
@@ -40,12 +45,6 @@ rb-sys = { version = ">=0.9.113", default-features = false, features = [
 seq-macro = "0.3"
 
 [dev-dependencies]
-magnus = { path = ".", default-features = false, features = [
-    "embed",
-    "rb-sys",
-    "bytes",
-    "chrono",
-] }
 rb-sys = { version = "0.9.113", default-features = false, features = [
     "stable-api-compiled-fallback",
 ] }

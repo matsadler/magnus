@@ -311,7 +311,7 @@ pub fn init(attrs: TokenStream, item: TokenStream) -> TokenStream {
 ///     Ok(())
 /// }
 /// ```
-/// 
+///
 /// See [`examples/inheritance.rs`] for the complete example.
 ///
 /// [`examples/inheritance.rs`]: https://github.com/matsadler/magnus/blob/main/examples/inheritance.rs
