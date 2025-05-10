@@ -200,7 +200,6 @@ version = "0.8.0"
 dependencies = [
  "bytes",
  "chrono",
- "magnus",
  "magnus-macros",
  "rb-sys",
  "rb-sys-env",

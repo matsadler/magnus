@@ -1804,6 +1804,9 @@ mod float;
 pub mod gc;
 mod integer;
 mod into_value;
+#[cfg(feature = "io")]
+#[cfg_attr(docsrs, doc(cfg(feature = "io")))]
+pub mod io;
 pub mod method;
 pub mod module;
 mod mutex;

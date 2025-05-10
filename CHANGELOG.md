@@ -8,9 +8,21 @@
   `Time` objects.
 - `typed_data::Writebarrier::writebarrier` and `writebarrier_unprotect`.
 - Implement `TryConvert` for `NonZero` types.
+- `io` module available with `io` feature, supporting `io_extract_modeenc`,
+  `OpenFlags`, `FMode`, and `IoEncoding`.
+- `Ruby::io_extract_modeenc`, a safe wrapper around `rb_io_extract_modeenc`,
+  allowing structured extraction of open flags, mode flags, and IO encoding
+  metadata.
+- `OpenFlags` struct, which wraps Ruby's `O_` open flags
+  (e.g. `O_RDONLY`, `O_CREAT`) in a convenient bitflag-like interface.
+- `FMode` struct, representing `FMODE_` flags used internally by Ruby to
+  represent IO modes (`READ`, `WRITE`, `BINARY_MODE`, etc.).
+- `IoEncoding`, a safe Rust struct for temporarily owning and
+  inspecting `rb_io_encoding`, including safe accessors for
+  internal/external encoding and encoding options.
 
 ### Changed
-- Minimum supported Rust version in now 1.65.
+- Minimum supported Rust version is now 1.65.
 - Conversions between Ruby's `Time` and Rust's `SystemTime` now preserve
   nanosecond precision.
 - 'old-api' feature, which disables deprecation warnings for the old api is no
