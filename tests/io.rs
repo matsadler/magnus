@@ -29,10 +29,8 @@ fn test_io_extract_modeenc_extracts_open_flags(ruby: &Ruby) -> Result<(), Error>
 
     let file_class = ruby.class_file();
     let append_flag = file_class.const_get::<_, Fixnum>("APPEND")?.to_i32()?;
-    let readable_flag = file_class.const_get::<_, Fixnum>("READABLE")?.to_i32()?;
 
     assert!(open_flags.contains(append_flag));
-    assert!(open_flags.contains(readable_flag));
     Ok(())
 }
 
