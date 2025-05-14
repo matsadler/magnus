@@ -5,7 +5,7 @@ use std::{
 
 use rb_sys::{
     rb_big2str, rb_ll2inum, rb_num2ll, rb_num2long, rb_num2ull, rb_num2ulong, rb_ull2inum,
-    ruby_fl_type, ruby_value_type, VALUE,
+    ruby_value_type, RBIGNUM_NEGATIVE_P, RBIGNUM_POSITIVE_P, VALUE,
 };
 
 use crate::{
@@ -518,10 +518,7 @@ impl RBignum {
     /// ```
     pub fn is_positive(self) -> bool {
         debug_assert_value!(self);
-        unsafe {
-            let r_basic = self.r_basic_unchecked();
-            r_basic.as_ref().flags & (ruby_fl_type::RUBY_FL_USER1 as VALUE) != 0
-        }
+        unsafe { RBIGNUM_POSITIVE_P(self.as_rb_value()) }
     }
 
     /// Check if `self` is negative.
@@ -543,7 +540,8 @@ impl RBignum {
     /// # Ruby::init(example).unwrap()
     /// ```
     pub fn is_negative(self) -> bool {
-        !self.is_positive()
+        debug_assert_value!(self);
+        unsafe { RBIGNUM_NEGATIVE_P(self.as_rb_value()) }
     }
 }
 
