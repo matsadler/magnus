@@ -50,6 +50,15 @@ jobs:
         steps:
             - uses: actions/checkout@v4
 
+            # TODO: fix LLVM 20 support (windows-2022's LLVM) when
+            # upstreams (e.g., rb-sys and bindgen) support LLVM 20 on Windows.
+            # LLVM 20 introduced new types but bindgen seems not support new types yet.
+            - name: Install LLVM 18 (on Windows)
+              if: runner.os == 'Windows'
+              uses: KyleMayes/install-llvm-action@v2
+              with:
+                  version: 18
+
             - uses: oxidize-rb/actions/setup-ruby-and-rust@v1
               with:
                   rustup-toolchain: ${{ matrix.rustup-toolchain }}
