@@ -46,6 +46,7 @@ magnus = { path = ".", default-features = false, features = [
     "rb-sys",
     "bytes",
     "chrono",
+    "io",
 ] }
 rb-sys = { version = "0.9.113", default-features = false, features = [
     "stable-api-compiled-fallback",
