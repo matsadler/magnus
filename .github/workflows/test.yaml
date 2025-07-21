@@ -49,19 +49,13 @@ jobs:
 
         steps:
             - uses: actions/checkout@v4
-
-            - uses: oxidize-rb/actions/setup-ruby-and-rust@v1
+            - uses: ruby/setup-ruby@v1
               with:
-                  rustup-toolchain: ${{ matrix.rustup-toolchain }}
                   ruby-version: ${{ matrix.ruby-version }}
-                  cache-version: v2
                   bundler-cache: true
-                  cargo-cache: true
-                  cargo-cache-extra-path: |
-                      examples/rust_blank/tmp/
-                      examples/complete_object/tmp/
-                      examples/custom_exception_ruby/tmp/
-                      examples/custom_exception_rust/tmp/
+            - uses: dtolnay/rust-toolchain@stable
+              with:
+                  toolchain: ${{ matrix.rustup-toolchain }}
 
             # Ruby head is currently missing the power_assert default gem
             - name: Ruby head bug workaround
