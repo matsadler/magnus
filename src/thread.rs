@@ -1,11 +1,13 @@
 use std::{fmt, mem::size_of, os::raw::c_void, slice, time::Duration};
 
+#[allow(deprecated)]
+use rb_sys::rb_thread_fd_close;
 use rb_sys::{
     rb_data_typed_object_wrap, rb_thread_alone, rb_thread_check_ints, rb_thread_create,
-    rb_thread_current, rb_thread_fd_close, rb_thread_fd_writable, rb_thread_interrupted,
-    rb_thread_kill, rb_thread_local_aref, rb_thread_local_aset, rb_thread_main, rb_thread_run,
-    rb_thread_schedule, rb_thread_sleep_deadly, rb_thread_sleep_forever, rb_thread_wait_fd,
-    rb_thread_wait_for, rb_thread_wakeup, rb_thread_wakeup_alive, timeval, VALUE,
+    rb_thread_current, rb_thread_fd_writable, rb_thread_interrupted, rb_thread_kill,
+    rb_thread_local_aref, rb_thread_local_aset, rb_thread_main, rb_thread_run, rb_thread_schedule,
+    rb_thread_sleep_deadly, rb_thread_sleep_forever, rb_thread_wait_fd, rb_thread_wait_for,
+    rb_thread_wakeup, rb_thread_wakeup_alive, timeval, VALUE,
 };
 
 use crate::{
@@ -265,13 +267,17 @@ impl Ruby {
     /// has been closed.
     ///
     /// Blocks until all threads waiting on `fd` have woken up.
+    #[deprecated(note = "No-op as of Ruby 3.5")]
     pub fn thread_fd_close<T>(&self, fd: &T) -> Result<(), Error>
     where
         T: AsRawFd,
     {
         let fd = fd.as_raw_fd();
         protect(|| {
-            unsafe { rb_thread_fd_close(fd) };
+            unsafe {
+                #[allow(deprecated)]
+                rb_thread_fd_close(fd)
+            };
             self.qnil()
         })?;
         Ok(())
