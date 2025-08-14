@@ -57,6 +57,10 @@ jobs:
               with:
                   toolchain: ${{ matrix.rustup-toolchain }}
 
+            - name: Set LD_LIBRARY_PATH
+              if: runner.os == 'Linux'
+              run: echo "LD_LIBRARY_PATH=$(ruby -rrbconfig -e'puts RbConfig::CONFIG["libdir"]')${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" >> $GITHUB_ENV
+
             # Ruby head is currently missing the power_assert default gem
             - name: Ruby head bug workaround
               if: matrix.ruby-version == 'head'
