@@ -463,11 +463,19 @@ impl Fiber {
     {
         unsafe {
             protect(|| {
-                Value::new(rb_fiber_raise(
+                #[cfg(ruby_lte_3_4)]
+                let val = Value::new(rb_fiber_raise(
                     self.as_rb_value(),
                     1,
                     &e.as_rb_value() as *const VALUE,
-                ))
+                ));
+                #[cfg(ruby_gt_3_4)]
+                let val = Value::new(rb_fiber_raise(
+                    self.as_rb_value(),
+                    1,
+                    &e.as_rb_value() as *const VALUE as *mut VALUE,
+                ));
+                val
             })
             .and_then(TryConvert::try_convert)
         }

@@ -21,6 +21,7 @@
   performance when not known.
 
 ### Deprecated
+- `thread_fd_close` as it will be a no-op as of Ruby 3.5
 
 ### Removed
 
