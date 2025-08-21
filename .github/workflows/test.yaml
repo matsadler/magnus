@@ -53,10 +53,24 @@ jobs:
               with:
                   ruby-version: ${{ matrix.ruby-version }}
                   bundler-cache: true
-            - uses: dtolnay/rust-toolchain@stable
+            - if: runner.os != 'Windows'
+              uses: dtolnay/rust-toolchain@master
               with:
                   toolchain: ${{ matrix.rustup-toolchain }}
 
+            # fixes "fatal error: 'strings.h' file not found" for Windows,
+            # which is down to Ruby being built with gnu/msys2 and the
+            # Rust extension with msvc
+            - if: runner.os == 'Windows'
+              uses: dtolnay/rust-toolchain@master
+              with:
+                  toolchain: ${{ matrix.rustup-toolchain }}-gnu
+            - name: Set BINDGEN_EXTRA_CLANG_ARGS
+              shell: bash
+              if: runner.os == 'Windows'
+              run: echo BINDGEN_EXTRA_CLANG_ARGS="--target=x86_64-pc-windows-gnu --sysroot=${RI_DEVKIT//\\/\/}$MSYSTEM_PREFIX" >> $GITHUB_ENV
+
+            # fixes "fatal error: 'strings.h' file not found" for Linux
             - name: Set LD_LIBRARY_PATH
               if: runner.os == 'Linux'
               run: echo "LD_LIBRARY_PATH=$(ruby -rrbconfig -e'puts RbConfig::CONFIG["libdir"]')${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" >> $GITHUB_ENV
