@@ -30,11 +30,16 @@ jobs:
                     - stable
                 exclude:
                     - os: windows-latest
-                      ruby-version: "3.3"
-                    - os: windows-latest
-                      ruby-version: "3.4"
-                    - os: windows-latest
                       ruby-version: head
+                    # weird "exit code: 0xc0000139" error on doctests with
+                    # Ruby 3.2 and 3.3, plus Rust 1.65. Resolved with *either*
+                    # newer Ruby or newer Rust
+                    - os: windows-latest
+                      rustup-toolchain: "1.65"
+                      ruby-version: "3.2"
+                    - os: windows-latest
+                      rustup-toolchain: "1.65"
+                      ruby-version: "3.3"
                     # The setup-ruby pre-built Ruby 3.1 is built on macos-11
                     # and something doesn't quite add up when running it on
                     # macos-14 just for our tests and everything fails with
