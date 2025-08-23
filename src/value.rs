@@ -776,7 +776,7 @@ pub(crate) mod private {
         /// Ruby may modify or free the memory backing the returned
         /// str, the caller must ensure this does not happen.
         #[allow(clippy::wrong_self_convention)]
-        unsafe fn to_s_infallible(&self) -> Cow<str> {
+        unsafe fn to_s_infallible(&self) -> Cow<'_, str> {
             match self.as_value_ref().to_s() {
                 Ok(v) => v,
                 Err(_) => Cow::Owned(
@@ -1548,7 +1548,7 @@ pub trait ReprValue: private::ReprValue {
     /// # Ruby::init(example).unwrap()
     /// ```
     #[allow(clippy::wrong_self_convention)]
-    unsafe fn to_s(&self) -> Result<Cow<str>, Error> {
+    unsafe fn to_s(&self) -> Result<Cow<'_, str>, Error> {
         if let Some(s) = RString::ref_from_value(self.as_value_ref()) {
             if s.is_utf8_compatible_encoding() {
                 return s.as_str().map(Cow::Borrowed);
@@ -1614,7 +1614,7 @@ pub trait ReprValue: private::ReprValue {
     /// }
     /// # Ruby::init(example).unwrap()
     /// ```
-    unsafe fn classname(&self) -> Cow<str> {
+    unsafe fn classname(&self) -> Cow<'_, str> {
         let ptr = rb_obj_classname(self.as_rb_value());
         let cstr = CStr::from_ptr(ptr);
         cstr.to_string_lossy()

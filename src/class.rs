@@ -337,7 +337,7 @@ pub trait Class: Module {
     /// }
     /// # Ruby::init(example).unwrap()
     /// ```
-    unsafe fn name(&self) -> Cow<str> {
+    unsafe fn name(&self) -> Cow<'_, str> {
         let ptr = rb_class2name(self.as_rb_value());
         let cstr = CStr::from_ptr(ptr);
         cstr.to_string_lossy()

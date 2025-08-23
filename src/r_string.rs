@@ -680,7 +680,7 @@ impl RString {
     /// }
     /// # Ruby::init(example).unwrap()
     /// ```
-    pub unsafe fn codepoints(&self) -> Codepoints {
+    pub unsafe fn codepoints(&self) -> Codepoints<'_> {
         Codepoints {
             slice: self.as_slice(),
             encoding: self.enc_get().into(),
@@ -724,7 +724,7 @@ impl RString {
     /// }
     /// # Ruby::init(example).unwrap()
     /// ```
-    pub unsafe fn char_bytes(&self) -> CharBytes {
+    pub unsafe fn char_bytes(&self) -> CharBytes<'_> {
         CharBytes {
             slice: self.as_slice(),
             encoding: self.enc_get().into(),
