@@ -1260,10 +1260,6 @@ impl RString {
     /// are usually string literals with the in files with the
     /// `# frozen_string_literal: true` 'magic comment'.
     ///
-    /// Interned strings won't be garbage collected or modified, so should be
-    /// safe to store on the heap or hold a `&str` reference to. See
-    /// [`as_interned_str`](RString::as_interned_str).
-    ///
     /// # Examples
     ///
     /// ```
