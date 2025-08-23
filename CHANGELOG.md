@@ -35,11 +35,17 @@
   results of the validity check. This will greatly improve performance in the
   case a string is already known to be utf-8, but may slightly reduce
   performance when not known.
+- `RString::to_interned_str` now returns an `RString` rather than an `FString`.
 
 ### Deprecated
 - `thread_fd_close` as it will be a no-op as of Ruby 3.5
 
 ### Removed
+- `FString` as it can not safely uphold the promise it was making. Either due
+  to Ruby's apis changing or a misinterpretation of old documentation it had
+  been designed assuming interned strings (aka fstrings) would not be garbage
+  collected, which is not the case.
+- `RString::as_interned_str` as its only purpose was to return an `FString`.
 
 ### Fixed
 - The `fatal` exception raised when a Rust function bound to Ruby panics can no

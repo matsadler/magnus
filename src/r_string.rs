@@ -1302,61 +1302,22 @@ impl RString {
         }
     }
 
-    /// Returns `Some(FString)` if self is interned, `None` otherwise.
+    /// Interns `self`, returning an interned string.
     ///
-    /// Interned strings won't be garbage collected or modified, so should be
-    /// safe to store on the heap or hold a `&str` reference to. The `FString`
-    /// type returned by this function provides a way to encode this property
-    /// into the type system, and provides safe methods to access the string
-    /// as a `&str` or slice.
+    /// Finds or creates an interned string, modifying `self` so that its
+    /// parent is the returned string.
     ///
-    /// # Examples
-    ///
-    /// ```
-    /// use magnus::{eval, Error, RString, Ruby};
-    ///
-    /// fn example(ruby: &Ruby) -> Result<(), Error> {
-    ///     let s: RString = eval!(
-    ///         ruby,
-    ///         r#"
-    ///             ## frozen_string_literal: true
-    ///
-    ///             "example"
-    ///         "#
-    ///     )?;
-    ///     assert!(s.as_interned_str().is_some());
-    ///
-    ///     Ok(())
-    /// }
-    /// # Ruby::init(example).unwrap()
-    /// ```
-    ///
-    /// ```
-    /// use magnus::{eval, Error, RString, Ruby};
-    ///
-    /// fn example(ruby: &Ruby) -> Result<(), Error> {
-    ///     let s: RString = eval!(ruby, r#""example""#)?;
-    ///     assert!(s.as_interned_str().is_none());
-    ///
-    ///     Ok(())
-    /// }
-    /// # Ruby::init(example).unwrap()
-    /// ```
-    pub fn as_interned_str(self) -> Option<FString> {
-        self.is_interned().then_some(FString(self))
-    }
-
-    /// Interns self and returns a [`FString`]. Be aware that once interned a
-    /// string will never be garbage collected.
+    /// Interned strings with the same value will use the same backing memory.
     ///
     /// # Examples
     ///
     /// ```
-    /// use magnus::{Error, Ruby};
+    /// use magnus::{rb_assert, Error, Ruby};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
-    ///     let fstring = ruby.str_new("example").to_interned_str();
-    ///     assert_eq!(fstring.as_str()?, "example");
+    ///     let example = ruby.str_new("example");
+    ///     let interned = example.to_interned_str();
+    ///     rb_assert!("interned == example", interned, example);
     ///
     ///     Ok(())
     /// }
@@ -1364,12 +1325,8 @@ impl RString {
     /// ```
     #[cfg(any(ruby_gte_3_0, docsrs))]
     #[cfg_attr(docsrs, doc(cfg(ruby_gte_3_0)))]
-    pub fn to_interned_str(self) -> FString {
-        unsafe {
-            FString(RString::from_rb_value_unchecked(rb_str_to_interned_str(
-                self.as_rb_value(),
-            )))
-        }
+    pub fn to_interned_str(self) -> RString {
+        unsafe { RString::from_rb_value_unchecked(rb_str_to_interned_str(self.as_rb_value())) }
     }
 
     /// Mutate `self`, adding `other` to the end. Errors if `self` and
@@ -1979,158 +1936,6 @@ impl TryConvert for RString {
         }
     }
 }
-
-/// FString contains an RString known to be interned.
-///
-/// Interned strings won't be garbage collected or modified, so should be
-/// safe to store on the heap or hold a `&str` reference to. `FString` provides
-/// a way to encode this property into the type system, and provides safe
-/// methods to access the string as a `&str` or slice.
-#[derive(Clone, Copy)]
-#[repr(transparent)]
-pub struct FString(RString);
-
-impl FString {
-    /// Returns the interned string as a [`RString`].
-    pub fn as_r_string(self) -> RString {
-        self.0
-    }
-
-    /// Returns the interned string as a slice of bytes.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use magnus::{eval, Error, RString, Ruby};
-    ///
-    /// fn example(ruby: &Ruby) -> Result<(), Error> {
-    ///     let s: RString = eval!(
-    ///         ruby,
-    ///         r#"
-    ///             ## frozen_string_literal: true
-    ///
-    ///             "example"
-    ///         "#
-    ///     )?;
-    ///     let fstring = s.as_interned_str().unwrap();
-    ///     assert_eq!(fstring.as_slice(), &[101, 120, 97, 109, 112, 108, 101]);
-    ///
-    ///     Ok(())
-    /// }
-    /// # Ruby::init(example).unwrap()
-    /// ```
-    pub fn as_slice(self) -> &'static [u8] {
-        unsafe { self.as_r_string().as_slice_unconstrained() }
-    }
-
-    /// Returns the interned string as a `&str` or `None` string contains
-    /// invliad UTF-8.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use magnus::{eval, Error, RString, Ruby};
-    ///
-    /// fn example(ruby: &Ruby) -> Result<(), Error> {
-    ///     let s: RString = eval!(
-    ///         ruby,
-    ///         r#"
-    ///             ## frozen_string_literal: true
-    ///
-    ///             "example"
-    ///         "#
-    ///     )?;
-    ///     let fstring = s.as_interned_str().unwrap();
-    ///     assert_eq!(fstring.test_as_str().unwrap(), "example");
-    ///
-    ///     Ok(())
-    /// }
-    /// # Ruby::init(example).unwrap()
-    /// ```
-    pub fn test_as_str(self) -> Option<&'static str> {
-        unsafe { self.as_r_string().test_as_str_unconstrained() }
-    }
-
-    /// Returns the interned string as a `&str`. Errors if the string contains
-    /// invliad UTF-8.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use magnus::{eval, Error, RString, Ruby};
-    ///
-    /// fn example(ruby: &Ruby) -> Result<(), Error> {
-    ///     let s: RString = eval!(
-    ///         ruby,
-    ///         r#"
-    ///             ## frozen_string_literal: true
-    ///
-    ///             "example"
-    ///         "#
-    ///     )?;
-    ///     let fstring = s.as_interned_str().unwrap();
-    ///     assert_eq!(fstring.as_str()?, "example");
-    ///
-    ///     Ok(())
-    /// }
-    /// # Ruby::init(example).unwrap()
-    /// ```
-    pub fn as_str(self) -> Result<&'static str, Error> {
-        unsafe { self.as_r_string().as_str_unconstrained() }
-    }
-
-    /// Returns interned string as a Rust string, ignoring the Ruby encoding
-    /// and dropping any non-UTF-8 characters. If the string is valid UTF-8
-    /// this will return a `&str` reference.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use magnus::{eval, Error, RString, Ruby};
-    ///
-    /// fn example(ruby: &Ruby) -> Result<(), Error> {
-    ///     let s: RString = eval!(
-    ///         ruby,
-    ///         r#"
-    ///             ## frozen_string_literal: true
-    ///
-    ///             "example"
-    ///         "#
-    ///     )?;
-    ///     let fstring = s.as_interned_str().unwrap();
-    ///     assert_eq!(fstring.to_string_lossy(), "example");
-    ///
-    ///     Ok(())
-    /// }
-    /// # Ruby::init(example).unwrap()
-    /// ```
-    pub fn to_string_lossy(self) -> Cow<'static, str> {
-        String::from_utf8_lossy(self.as_slice())
-    }
-}
-
-impl fmt::Display for FString {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", unsafe { self.as_r_string().to_s_infallible() })
-    }
-}
-
-impl fmt::Debug for FString {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.as_r_string().inspect())
-    }
-}
-
-impl IntoValue for FString {
-    #[inline]
-    fn into_value_with(self, handle: &Ruby) -> Value {
-        self.as_r_string().into_value_with(handle)
-    }
-}
-
-unsafe impl private::ReprValue for FString {}
-
-impl ReprValue for FString {}
 
 /// An iterator over a Ruby string's codepoints.
 pub struct Codepoints<'a> {
