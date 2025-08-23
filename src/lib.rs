@@ -932,7 +932,7 @@
 // * `rb_io_descriptor`:
 // * `rb_io_eof`:
 // * `rb_io_extract_encoding_option`:
-// * `rb_io_extract_modeenc`:
+//! * `rb_io_extract_modeenc`: [`Ruby::io_extract_modeenc`].
 // * `rb_io_fdopen`:
 // * `rb_io_flush`:
 // * `rb_io_fptr_finalize`:
