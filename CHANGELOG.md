@@ -20,6 +20,10 @@
 - `IoEncoding`, a safe Rust struct for temporarily owning and
   inspecting `rb_io_encoding`, including safe accessors for
   internal/external encoding and encoding options.
+- Automatic type conversions to/from `i128`/`u128`.
+- `to_i128`/`to_u128` for `Fixnum`/`Bignum`/`Integer`.
+- `Ruby::integer_from_i128` & `Ruby::integer_from_u128`.
+- `RHash::to_btree_map` and automatic conversion from `Hash` to `BTreeMap`.
 
 ### Changed
 - Minimum supported Rust version is now 1.65.
@@ -42,6 +46,7 @@
   longer be caught with `rescue Exception`.
 - Fixed type bounds for `TryConvertOwned` for `(T, ...)` so that `T` must be
   `TryConvertOwned`.
+- Defining functions with an arity of 16
 
 ### Security
 
