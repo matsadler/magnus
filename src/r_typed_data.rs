@@ -1,4 +1,4 @@
-use std::fmt;
+use std::{fmt, ptr::null_mut};
 
 use rb_sys::{
     self, RTYPEDDATA_P, VALUE, rb_check_typeddata, rb_data_typed_object_wrap, ruby_value_type,
@@ -368,6 +368,28 @@ impl RTypedData {
         unsafe { self.get_unconstrained() }
     }
 
+    /// Get the raw pointer to the Rust type wrapped in the Ruby object `self`.
+    ///
+    /// While it is safe to acquire this pointer it is unsafe to use. You must
+    /// ensure the Ruby object is kept alive, and the pointer is not aliased or
+    /// written to concurrently.
+    pub fn as_ptr<T>(self) -> Result<*mut T, Error>
+    where
+        T: TypedData,
+    {
+        debug_assert_value!(self);
+        let handle = Ruby::get_with(self);
+        let mut res = null_mut();
+        let _ = protect(|| unsafe {
+            res = rb_check_typeddata(
+                self.as_rb_value(),
+                T::data_type().as_rb_data_type() as *const _,
+            ) as *mut T;
+            handle.qnil()
+        })?;
+        Ok(res)
+    }
+
     /// Get a reference to the Rust type wrapped in the Ruby object `self`.
     ///
     /// # Safety
@@ -380,18 +402,8 @@ impl RTypedData {
         T: TypedData,
     {
         unsafe {
-            debug_assert_value!(self);
             let handle = Ruby::get_with(self);
-            let mut res = None;
-            let _ = protect(|| {
-                res = (rb_check_typeddata(
-                    self.as_rb_value(),
-                    T::data_type().as_rb_data_type() as *const _,
-                ) as *const T)
-                    .as_ref();
-                handle.qnil()
-            });
-            res.ok_or_else(|| {
+            self.as_ptr::<T>()?.as_ref().ok_or_else(|| {
                 Error::new(
                     handle.exception_type_error(),
                     format!(

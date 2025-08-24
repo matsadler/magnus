@@ -15,6 +15,8 @@
   and implementations of `IntoRString` for `&CStr`, `IntoValue` for `&CStr`, and
   `TryConvert` for `CString`.
 - `RString::modify_expand` to grow the capacity of a Ruby string.
+- `RTypedData::as_ptr`/`typed_data::Obj::as_ptr` to get the raw pointer to Rust
+  data wrapped as a Ruby object.
 
 ### Changed
 - Minimum supported Rust version is now 1.85.

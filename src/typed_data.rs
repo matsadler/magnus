@@ -843,6 +843,15 @@ where
     pub fn wrap_as(data: T, class: RClass) -> Self {
         get_ruby!().obj_wrap_as(data, class)
     }
+
+    /// Get the raw pointer to the Rust type wrapped in the Ruby object `obj`.
+    ///
+    /// While it is safe to acquire this pointer it is unsafe to use. You must
+    /// ensure the Ruby object is kept alive, and the pointer is not aliased or
+    /// written to concurrently.
+    pub fn as_ptr(obj: Self) -> *mut T {
+        obj.inner.as_ptr().unwrap()
+    }
 }
 
 impl<T> Deref for Obj<T>
