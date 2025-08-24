@@ -2189,9 +2189,12 @@ impl Ruby {
         debug_assert_value!(initial);
         let name = CString::new(name).unwrap();
         let ptr = Box::into_raw(Box::new(initial));
-        unsafe {
-            rb_define_variable(name.as_ptr(), ptr as *mut VALUE);
-        }
+        protect(|| {
+            unsafe {
+                rb_define_variable(name.as_ptr(), ptr as *mut VALUE);
+            }
+            self.qnil()
+        })?;
         Ok(ptr)
     }
 
