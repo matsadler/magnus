@@ -44,13 +44,13 @@ mod util;
 /// }
 ///
 /// #[magnus::init]
-/// fn init() {
-///     magnus::define_global_function("distance", magnus::function!(distance, 2));
+/// fn init(ruby: &magnus::Ruby) {
+///     ruby.define_global_function("distance", magnus::function!(distance, 2));
 /// }
 /// ```
 /// The init function can also return `Result<(), magnus::Error>`.
 /// ```
-/// use magnus::{class, define_module, function, method, prelude::*, Error};
+/// use magnus::{function, method, prelude::*, Error, Ruby};
 ///
 /// #[magnus::wrap(class = "Euclid::Point", free_immediately, size)]
 /// struct Point {
@@ -73,9 +73,9 @@ mod util;
 /// }
 ///
 /// #[magnus::init]
-/// fn init() -> Result<(), Error> {
-///     let module = define_module("Euclid")?;
-///     let class = module.define_class("Point", class::object())?;
+/// fn init(ruby: &Ruby) -> Result<(), Error> {
+///     let module = ruby.define_module("Euclid")?;
+///     let class = module.define_class("Point", ruby.class_object())?;
 ///     class.define_singleton_method("new", function!(Point::new, 2))?;
 ///     class.define_method("x", method!(Point::x, 0))?;
 ///     class.define_method("y", method!(Point::y, 0))?;
@@ -156,7 +156,7 @@ pub fn init(attrs: TokenStream, item: TokenStream) -> TokenStream {
 /// Wrapping a struct:
 ///
 /// ```
-/// use magnus::{function, prelude::*, wrap};
+/// use magnus::{function, prelude::*, wrap, Ruby};
 ///
 /// #[wrap(class = "Point", free_immediately, size)]
 /// struct Point {
@@ -173,9 +173,9 @@ pub fn init(attrs: TokenStream, item: TokenStream) -> TokenStream {
 /// }
 ///
 /// #[magnus::init]
-/// fn init() {
-///     magnus::define_global_function("point", function!(point, 2));
-///     magnus::define_global_function("distance", function!(distance, 2));
+/// fn init(ruby: &Ruby) {
+///     ruby.define_global_function("point", function!(point, 2));
+///     ruby.define_global_function("distance", function!(distance, 2));
 /// }
 /// ```
 ///
@@ -278,7 +278,7 @@ pub fn init(attrs: TokenStream, item: TokenStream) -> TokenStream {
 /// ```
 /// use std::f64::consts::PI;
 ///
-/// use magnus::{class, define_class, function, method, prelude::*, wrap};
+/// use magnus::{function, method, prelude::*, wrap, Ruby};
 ///
 /// #[wrap(class = "Shape")]
 /// enum Shape {
@@ -298,24 +298,23 @@ pub fn init(attrs: TokenStream, item: TokenStream) -> TokenStream {
 /// }
 ///
 /// #[magnus::init]
-/// fn init() -> Result<(), magnus::Error> {
-///     let shape = define_class("Shape", class::object())?;
+/// fn init(ruby: &Ruby) -> Result<(), magnus::Error> {
+///     let shape = ruby.define_class("Shape", ruby.class_object())?;
 ///     shape.define_method("area", method!(Shape::area, 0))?;
 ///
-///     let circle = define_class("Circle", shape)?;
+///     let circle = ruby.define_class("Circle", shape)?;
 ///     circle.define_singleton_method("new", function!(|r| Shape::Circle { r }, 1))?;
 ///
-///     let rectangle = define_class("Rectangle", shape)?;
+///     let rectangle = ruby.define_class("Rectangle", shape)?;
 ///     rectangle.define_singleton_method("new", function!(|x, y| Shape::Rectangle { x, y }, 2))?;
 ///
 ///     Ok(())
 /// }
 /// ```
-/// 
+///
 /// See [`examples/inheritance.rs`] for the complete example.
 ///
 /// [`examples/inheritance.rs`]: https://github.com/matsadler/magnus/blob/main/examples/inheritance.rs
-///
 #[proc_macro_attribute]
 pub fn wrap(attrs: TokenStream, item: TokenStream) -> TokenStream {
     typed_data::expand(parse_macro_input!(attrs), parse_macro_input!(item)).into()

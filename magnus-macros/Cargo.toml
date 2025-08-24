@@ -1,6 +1,6 @@
 [package]
 name = "magnus-macros"
-version = "0.6.0"
+version = "0.8.0"
 edition = "2021"
 description = "Derive and proc macros for magnus"
 repository = "https://github.com/matsadler/magnus"
