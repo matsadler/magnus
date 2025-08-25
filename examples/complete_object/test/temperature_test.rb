@@ -31,14 +31,14 @@ class TemperatureTest < Test::Unit::TestCase
 
   def test_dup
     temp = Temperature.new(celsius: 19.5)
-    def temp.singlton_method_example
+    def temp.singleton_method_example
     end
     copy = temp.dup
 
     assert { temp.object_id != copy.object_id }
     assert { temp == copy }
     assert { !copy.frozen? }
-    assert { !copy.respond_to?(:singlton_method_example)}
+    assert { !copy.respond_to?(:singleton_method_example)}
 
     temp2 = Temperature.new(celsius: 19.5)
     temp2.freeze
@@ -48,14 +48,14 @@ class TemperatureTest < Test::Unit::TestCase
 
   def test_clone
     temp = Temperature.new(celsius: 19.5)
-    def temp.singlton_method_example
+    def temp.singleton_method_example
     end
     copy = temp.clone
 
     assert { temp.object_id != copy.object_id }
     assert { temp == copy }
     assert { !copy.frozen? }
-    assert { copy.respond_to?(:singlton_method_example)}
+    assert { copy.respond_to?(:singleton_method_example)}
 
     temp2 = Temperature.new(celsius: 19.5)
     temp2.freeze

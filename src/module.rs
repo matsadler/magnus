@@ -60,7 +60,7 @@ impl Ruby {
 ///
 /// See the [`Module`] trait for defining instance methods and nested
 /// classes/modules.
-/// See the [`Object`] trait for defining singlton methods (aka class methods).
+/// See the [`Object`] trait for defining singleton methods (aka class methods).
 ///
 /// See the [`ReprValue`] trait for additional methods available on this type.
 /// See [`Ruby`](Ruby#rmodule) for methods to create an `RModule`.
