@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 ### Added
+
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Security
+
+## [0.8.0] - 2025-08-25
+### Added
 - `Ruby::time_nano_new`, `Ruby::time_timespec_new`, and `Time::timespec`.
 - The `chrono` feature can be enabled to allow automatic conversions
   between `chrono::DateTime<Utc>` and `chrono::DateTime<FixedOffset>` and Ruby
@@ -53,8 +66,6 @@
 - Fixed type bounds for `TryConvertOwned` for `(T, ...)` so that `T` must be
   `TryConvertOwned`.
 - Defining functions with an arity of 16
-
-### Security
 
 ## [0.7.1] - 2024-06-30
 
@@ -522,7 +533,8 @@
 - Pre-built bindings for Ruby 2.6 - 3.1 on common platforms, build-time
   generated bindings otherwise.
 
-[Unreleased]: https://github.com/matsadler/magnus/compare/0.7.1...HEAD
+[Unreleased]: https://github.com/matsadler/magnus/compare/0.8.0...HEAD
+[0.8.0]: https://github.com/matsadler/magnus/compare/0.7.1...0.8.0
 [0.7.1]: https://github.com/matsadler/magnus/compare/0.7.0...0.7.1
 [0.7.0]: https://github.com/matsadler/magnus/compare/0.6.4...0.7.0
 [0.6.4]: https://github.com/matsadler/magnus/compare/0.6.3...0.6.4
