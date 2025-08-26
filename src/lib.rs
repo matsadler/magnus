@@ -1797,8 +1797,6 @@ pub mod encoding;
 mod enumerator;
 pub mod error;
 pub mod exception;
-#[cfg(any(ruby_gte_3_1, docsrs))]
-#[cfg_attr(docsrs, doc(cfg(ruby_gte_3_1)))]
 pub mod fiber;
 mod float;
 pub mod gc;
@@ -1855,9 +1853,6 @@ use ::rb_sys::{
 };
 pub use magnus_macros::{DataTypeFunctions, TypedData, init, wrap};
 
-#[cfg(any(ruby_gte_3_1, docsrs))]
-#[cfg_attr(docsrs, doc(cfg(ruby_gte_3_1)))]
-pub use crate::fiber::Fiber;
 #[cfg(ruby_use_flonum)]
 pub use crate::value::Flonum;
 pub use crate::{
@@ -1866,6 +1861,7 @@ pub use crate::{
     enumerator::Enumerator,
     error::Error,
     exception::{Exception, ExceptionClass},
+    fiber::Fiber,
     float::Float,
     integer::Integer,
     into_value::{ArgList, IntoValue, IntoValueFromNative, KwArgs, RArrayArgList},

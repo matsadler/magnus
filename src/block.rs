@@ -1178,7 +1178,10 @@ pub enum YieldValues<I> {
 /// ```
 /// use magnus::{Error, RArray, Ruby, Value, block::YieldSplat, method, prelude::*, rb_assert};
 ///
-/// fn count_to_3_abc(ruby: &Ruby, rb_self: Value) -> YieldSplat<impl Iterator<Item = RArray> + use<>> {
+/// fn count_to_3_abc(
+///     ruby: &Ruby,
+///     rb_self: Value,
+/// ) -> YieldSplat<impl Iterator<Item = RArray> + use<>> {
 ///     if ruby.block_given() {
 ///         YieldSplat::Iter((1..=3).zip('a'..='c').map(|(i, c)| {
 ///             // we know this will be called on a Ruby thread so it's safe

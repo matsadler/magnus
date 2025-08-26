@@ -4,16 +4,15 @@
 
 use std::fmt;
 
-#[cfg(ruby_gte_3_1)]
-use rb_sys::rb_eNoMatchingPatternKeyError;
 use rb_sys::{
     VALUE, rb_eArgError, rb_eEOFError, rb_eEncCompatError, rb_eEncodingError, rb_eException,
     rb_eFatal, rb_eFloatDomainError, rb_eFrozenError, rb_eIOError, rb_eIndexError, rb_eInterrupt,
     rb_eKeyError, rb_eLoadError, rb_eLocalJumpError, rb_eMathDomainError, rb_eNameError,
-    rb_eNoMatchingPatternError, rb_eNoMemError, rb_eNoMethodError, rb_eNotImpError, rb_eRangeError,
-    rb_eRegexpError, rb_eRuntimeError, rb_eScriptError, rb_eSecurityError, rb_eSignal,
-    rb_eStandardError, rb_eStopIteration, rb_eSyntaxError, rb_eSysStackError, rb_eSystemCallError,
-    rb_eSystemExit, rb_eThreadError, rb_eTypeError, rb_eZeroDivError,
+    rb_eNoMatchingPatternError, rb_eNoMatchingPatternKeyError, rb_eNoMemError, rb_eNoMethodError,
+    rb_eNotImpError, rb_eRangeError, rb_eRegexpError, rb_eRuntimeError, rb_eScriptError,
+    rb_eSecurityError, rb_eSignal, rb_eStandardError, rb_eStopIteration, rb_eSyntaxError,
+    rb_eSysStackError, rb_eSystemCallError, rb_eSystemExit, rb_eThreadError, rb_eTypeError,
+    rb_eZeroDivError,
 };
 
 use crate::{
@@ -642,8 +641,6 @@ impl Ruby {
     /// }
     /// # Ruby::init(example).unwrap()
     /// ```
-    #[cfg(any(ruby_gte_3_1, docsrs))]
-    #[cfg_attr(docsrs, doc(cfg(ruby_gte_3_1)))]
     #[inline]
     pub fn exception_no_matching_pattern_key_error(&self) -> ExceptionClass {
         unsafe { ExceptionClass::from_rb_value_unchecked(rb_eNoMatchingPatternKeyError) }
@@ -1325,8 +1322,6 @@ pub fn no_matching_pattern_error() -> ExceptionClass {
 /// Panics if called from a non-Ruby thread. See
 /// [`Ruby::exception_no_matching_pattern_key_error`] for the non-panicking
 /// version.
-#[cfg(any(ruby_gte_3_1, docsrs))]
-#[cfg_attr(docsrs, doc(cfg(ruby_gte_3_1)))]
 #[cfg_attr(
     not(feature = "old-api"),
     deprecated(note = "please use `Ruby::exception_no_matching_pattern_key_error` instead")

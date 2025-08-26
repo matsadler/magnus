@@ -4,16 +4,14 @@
 
 use std::{borrow::Cow, ffi::CStr, fmt, mem::transmute, os::raw::c_int};
 
-#[cfg(ruby_gte_3_1)]
-use rb_sys::rb_cRefinement;
 use rb_sys::{
     self, VALUE, rb_alloc_func_t, rb_cArray, rb_cBasicObject, rb_cBinding, rb_cClass, rb_cComplex,
     rb_cDir, rb_cEncoding, rb_cEnumerator, rb_cFalseClass, rb_cFile, rb_cFloat, rb_cHash, rb_cIO,
     rb_cInteger, rb_cMatch, rb_cMethod, rb_cModule, rb_cNameErrorMesg, rb_cNilClass, rb_cNumeric,
-    rb_cObject, rb_cProc, rb_cRandom, rb_cRange, rb_cRational, rb_cRegexp, rb_cStat, rb_cString,
-    rb_cStruct, rb_cSymbol, rb_cThread, rb_cTime, rb_cTrueClass, rb_cUnboundMethod, rb_class_new,
-    rb_class_new_instance_kw, rb_class_superclass, rb_class2name, rb_define_alloc_func,
-    rb_get_alloc_func, rb_obj_alloc, rb_undef_alloc_func, ruby_value_type,
+    rb_cObject, rb_cProc, rb_cRandom, rb_cRange, rb_cRational, rb_cRefinement, rb_cRegexp,
+    rb_cStat, rb_cString, rb_cStruct, rb_cSymbol, rb_cThread, rb_cTime, rb_cTrueClass,
+    rb_cUnboundMethod, rb_class_new, rb_class_new_instance_kw, rb_class_superclass, rb_class2name,
+    rb_define_alloc_func, rb_get_alloc_func, rb_obj_alloc, rb_undef_alloc_func, ruby_value_type,
 };
 
 use crate::{
@@ -1035,8 +1033,6 @@ impl Ruby {
     /// }
     /// # Ruby::init(example).unwrap()
     /// ```
-    #[cfg(any(ruby_gte_3_1, docsrs))]
-    #[cfg_attr(docsrs, doc(cfg(ruby_gte_3_1)))]
     #[inline]
     pub fn class_refinement(&self) -> RClass {
         unsafe { RClass::from_rb_value_unchecked(rb_cRefinement) }
@@ -1620,8 +1616,6 @@ pub fn rational() -> RClass {
     deprecated(note = "please use `Ruby::class_refinement` instead")
 )]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
-#[cfg(any(ruby_gte_3_1, docsrs))]
-#[cfg_attr(docsrs, doc(cfg(ruby_gte_3_1)))]
 #[inline]
 pub fn refinement() -> RClass {
     get_ruby!().class_refinement()

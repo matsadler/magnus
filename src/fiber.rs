@@ -7,11 +7,9 @@ use rb_sys::rb_fiber_new;
 #[cfg(ruby_gte_3_2)]
 use rb_sys::rb_fiber_new_storage;
 use rb_sys::{
-    VALUE, rb_data_typed_object_wrap, rb_fiber_alive_p, rb_fiber_current, rb_fiber_resume_kw,
-    rb_fiber_yield_kw,
+    VALUE, rb_data_typed_object_wrap, rb_fiber_alive_p, rb_fiber_current, rb_fiber_raise,
+    rb_fiber_resume_kw, rb_fiber_transfer_kw, rb_fiber_yield_kw, rb_obj_is_fiber,
 };
-#[cfg(ruby_gte_3_1)]
-use rb_sys::{rb_fiber_raise, rb_fiber_transfer_kw, rb_obj_is_fiber};
 
 #[cfg(any(ruby_gte_3_2, docsrs))]
 use crate::r_hash::RHash;

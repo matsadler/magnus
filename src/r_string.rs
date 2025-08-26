@@ -12,16 +12,14 @@ use std::{
     ptr, slice, str,
 };
 
-#[cfg(ruby_gte_3_0)]
-use rb_sys::rb_str_to_interned_str;
 use rb_sys::{
     self, RSTRING_LEN, RSTRING_PTR, VALUE, rb_enc_str_coderange, rb_enc_str_new, rb_str_buf_append,
     rb_str_buf_new, rb_str_capacity, rb_str_cat, rb_str_cmp, rb_str_comparable, rb_str_conv_enc,
     rb_str_drop_bytes, rb_str_dump, rb_str_ellipsize, rb_str_new, rb_str_new_frozen,
     rb_str_new_shared, rb_str_offset, rb_str_plus, rb_str_replace, rb_str_scrub,
-    rb_str_shared_replace, rb_str_split, rb_str_strlen, rb_str_times, rb_str_to_str, rb_str_update,
-    rb_utf8_str_new, rb_utf8_str_new_static, ruby_coderange_type, ruby_rstring_flags,
-    ruby_value_type,
+    rb_str_shared_replace, rb_str_split, rb_str_strlen, rb_str_times, rb_str_to_interned_str,
+    rb_str_to_str, rb_str_update, rb_utf8_str_new, rb_utf8_str_new_static, ruby_coderange_type,
+    ruby_rstring_flags, ruby_value_type,
 };
 
 use crate::{
@@ -1332,8 +1330,6 @@ impl RString {
     /// }
     /// # Ruby::init(example).unwrap()
     /// ```
-    #[cfg(any(ruby_gte_3_0, docsrs))]
-    #[cfg_attr(docsrs, doc(cfg(ruby_gte_3_0)))]
     pub fn to_interned_str(self) -> RString {
         unsafe { RString::from_rb_value_unchecked(rb_str_to_interned_str(self.as_rb_value())) }
     }

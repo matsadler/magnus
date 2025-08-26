@@ -478,11 +478,11 @@ use `unsafe`.
 
 ## Compatibility
 
-Ruby versions 3.0, 3.1, 3.2, 3.3 and 3.4 are fully supported.
+Ruby versions 3.2, 3.3 and 3.4 are supported.
 
-Magnus currently works with, and is still tested against, Ruby 2.7, but as this
-version of the language is no longer supported by the Ruby developers it is not
-recommended and future support in Magnus is not guaranteed.
+Magnus currently has code to support, but is not tested against, Ruby 3.1. As
+thi version of the language is no longer supported by the Ruby developers it is
+not recommended and future support in Magnus is not guaranteed.
 
 Ruby bindings will be generated at compile time, this may require libclang to
 be installed.

@@ -18,9 +18,6 @@ jobs:
                     - macos-14
                     - windows-latest
                 ruby-version:
-                    - "2.7"
-                    - "3.0"
-                    - "3.1"
                     - "3.2"
                     - "3.3"
                     - "3.4"
@@ -31,17 +28,6 @@ jobs:
                 exclude:
                     - os: windows-latest
                       ruby-version: head
-                    # The setup-ruby pre-built Ruby 3.1 is built on macos-11
-                    # and something doesn't quite add up when running it on
-                    # macos-14 just for our tests and everything fails with
-                    # dyld: missing symbol called
-                    # unfortunately macos doesn't print what symbol is missing
-                    # so it's hard to debug further
-                    # everything works fine when Ruby 3.1 is built on the same
-                    # version of macos it's running on
-                    - os: macos-14
-                      ruby-version: "3.1"
-                      rustup-toolchain: stable
 
         steps:
             - uses: actions/checkout@v4

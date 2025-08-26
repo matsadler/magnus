@@ -15,19 +15,13 @@ use std::{
     ptr,
 };
 
-#[cfg(ruby_gte_3_0)]
-use rb_sys::rbimpl_typeddata_flags::{self, RUBY_TYPED_FREE_IMMEDIATELY, RUBY_TYPED_WB_PROTECTED};
 use rb_sys::{
     self, RTYPEDDATA_GET_DATA, VALUE, rb_data_type_struct__bindgen_ty_1, rb_data_type_t,
     rb_gc_writebarrier, rb_gc_writebarrier_unprotect, rb_obj_reveal, rb_singleton_class_attached,
-    rb_singleton_class_clone, size_t,
+    rb_singleton_class_clone,
+    rbimpl_typeddata_flags::{self, RUBY_TYPED_FREE_IMMEDIATELY, RUBY_TYPED_WB_PROTECTED},
+    size_t,
 };
-
-#[cfg(ruby_lt_3_0)]
-const RUBY_TYPED_FREE_IMMEDIATELY: u32 = 1;
-
-#[cfg(ruby_lt_3_0)]
-const RUBY_TYPED_WB_PROTECTED: u32 = rb_sys::ruby_fl_type::RUBY_FL_WB_PROTECTED as u32;
 
 use crate::{
     Ruby,
@@ -330,7 +324,6 @@ where
         if self.wb_protected || !self.mark {
             flags |= RUBY_TYPED_WB_PROTECTED as VALUE;
         }
-        #[cfg(ruby_gte_3_0)]
         if self.frozen_shareable {
             flags |= rbimpl_typeddata_flags::RUBY_TYPED_FROZEN_SHAREABLE as VALUE;
         }
