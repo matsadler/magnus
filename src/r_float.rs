@@ -1,20 +1,20 @@
 use std::fmt;
 
-use rb_sys::{rb_float_new, rb_float_value, ruby_value_type, VALUE};
+use rb_sys::{VALUE, rb_float_new, rb_float_value, ruby_value_type};
 
 #[cfg(ruby_use_flonum)]
 use crate::value::Flonum;
 use crate::{
+    Ruby,
     error::Error,
     float::Float,
     into_value::IntoValue,
     numeric::Numeric,
     try_convert::TryConvert,
     value::{
-        private::{self, ReprValue as _},
         NonZeroValue, ReprValue, Value,
+        private::{self, ReprValue as _},
     },
-    Ruby,
 };
 
 /// # `RFloat`
@@ -31,7 +31,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let f = ruby.r_float_from_f64(1.7272337110188890e-77).unwrap();
@@ -58,7 +58,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let f = ruby.r_float_from_f64(1.7272337110188893e-77).unwrap();
@@ -94,7 +94,7 @@ impl RFloat {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, RFloat};
+    /// use magnus::{RFloat, eval};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// assert!(RFloat::from_value(eval("1.7272337110188890e-77").unwrap()).is_some());
@@ -114,7 +114,7 @@ impl RFloat {
 
     #[inline]
     pub(crate) unsafe fn from_rb_value_unchecked(val: VALUE) -> Self {
-        Self(NonZeroValue::new_unchecked(Value::new(val)))
+        unsafe { Self(NonZeroValue::new_unchecked(Value::new(val))) }
     }
 
     /// Create a new `RFloat` from an `f64.`
@@ -131,7 +131,7 @@ impl RFloat {
     ///
     /// ```
     /// # #![allow(deprecated)]
-    /// use magnus::{rb_assert, RFloat};
+    /// use magnus::{RFloat, rb_assert};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let f = RFloat::from_f64(1.7272337110188890e-77).unwrap();
@@ -162,7 +162,7 @@ impl RFloat {
     ///
     /// ```
     /// # #![allow(deprecated)]
-    /// use magnus::{rb_assert, RFloat};
+    /// use magnus::{RFloat, rb_assert};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let f = RFloat::from_f64(1.7272337110188893e-77).unwrap();
@@ -187,7 +187,7 @@ impl RFloat {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, RFloat};
+    /// use magnus::{RFloat, eval};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let f: RFloat = eval("1.7272337110188890e-77").unwrap();

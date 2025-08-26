@@ -37,17 +37,17 @@ use std::{
     os::raw::c_int,
 };
 
-use rb_sys::{rb_error_arity, rb_get_kwargs, rb_scan_args, ID, VALUE};
+use rb_sys::{ID, VALUE, rb_error_arity, rb_get_kwargs, rb_scan_args};
 use seq_macro::seq;
 
 use crate::{
+    Ruby,
     block::Proc,
-    error::{protect, Error},
+    error::{Error, protect},
     r_array::RArray,
     r_hash::RHash,
     try_convert::{TryConvert, TryConvertOwned},
-    value::{private::ReprValue as _, Id, IntoId, ReprValue, Value},
-    Ruby,
+    value::{Id, IntoId, ReprValue, Value, private::ReprValue as _},
 };
 
 struct ArgSpec {
@@ -450,7 +450,7 @@ impl<T> ScanArgsBlock for T where T: private::ScanArgsBlock {}
 /// `def new(hostname=nil, port)`.
 ///
 /// ```
-/// use magnus::{function, prelude::*, scan_args::scan_args, Error, Ruby, Value};
+/// use magnus::{Error, Ruby, Value, function, prelude::*, scan_args::scan_args};
 ///
 /// fn tcp_svr_init(args: &[Value]) -> Result<Value, Error> {
 ///     let args = scan_args(args)?;
@@ -483,7 +483,7 @@ impl<T> ScanArgsBlock for T where T: private::ScanArgsBlock {}
 ///
 /// The same example as above, specifying the types slightly differently.
 /// ```
-/// use magnus::{function, prelude::*, scan_args::scan_args, Error, Ruby, Value};
+/// use magnus::{Error, Ruby, Value, function, prelude::*, scan_args::scan_args};
 ///
 /// fn tcp_svr_init(args: &[Value]) -> Result<Value, Error> {
 ///     let args = scan_args::<(), (Option<String>,), (), (u16,), (), ()>(args)?;
@@ -599,14 +599,15 @@ fn scan_args_untyped(args: &[Value], arg_spec: ArgSpec) -> Result<ScannedArgs, E
 // Fairly close to rb_scan_args, but Rust types and works around variadic args.
 // Size of `out` must be >= number of arguments specified in `fmt`.
 unsafe fn scan_args_impl(args: &[Value], fmt: &str, out: &mut [Value]) -> Result<usize, Error> {
-    let out: &mut [VALUE] = transmute(out);
-    let argc = args.len() as c_int;
-    let argv = args.as_ptr() as *const VALUE;
-    let cstr = CString::new(fmt).unwrap();
-    let fmt = cstr.as_ptr();
-    let mut result = 0;
-    let handle = Ruby::get_unchecked();
-    macro_rules! match_arm {
+    unsafe {
+        let out: &mut [VALUE] = transmute(out);
+        let argc = args.len() as c_int;
+        let argv = args.as_ptr() as *const VALUE;
+        let cstr = CString::new(fmt).unwrap();
+        let fmt = cstr.as_ptr();
+        let mut result = 0;
+        let handle = Ruby::get_unchecked();
+        macro_rules! match_arm {
         ($n:literal) => {
             seq!(N in 0..$n {
                 protect(|| {
@@ -621,13 +622,14 @@ unsafe fn scan_args_impl(args: &[Value], fmt: &str, out: &mut [Value]) -> Result
             })
         }
     }
-    seq!(N in 0..30 {
-        match out.len() {
-            #(N => match_arm!(N),)*
-            _ => unreachable!(),
-        }
-    });
-    Ok(result)
+        seq!(N in 0..30 {
+            match out.len() {
+                #(N => match_arm!(N),)*
+                _ => unreachable!(),
+            }
+        });
+        Ok(result)
+    }
 }
 
 /// Arguments returned from [`get_kwargs`].
@@ -690,10 +692,9 @@ pub struct KwArgs<Req, Opt, Splat> {
 /// The rough equivalent of `def test(a: "foo")` would be:
 /// ```
 /// use magnus::{
-///     method,
+///     Error, Ruby, Value, method,
 ///     prelude::*,
 ///     scan_args::{get_kwargs, scan_args},
-///     Error, Ruby, Value,
 /// };
 /// # use magnus::IntoValue;
 ///
@@ -724,10 +725,9 @@ pub struct KwArgs<Req, Opt, Splat> {
 /// or, specifying the types slightly differently:
 /// ```
 /// use magnus::{
-///     method,
+///     Error, RHash, Ruby, Value, method,
 ///     prelude::*,
 ///     scan_args::{get_kwargs, scan_args},
-///     Error, RHash, Ruby, Value,
 /// };
 /// # use magnus::IntoValue;
 ///
@@ -816,7 +816,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{function, Error, RString, Ruby, Value};
+    /// use magnus::{Error, RString, Ruby, Value, function};
     ///
     /// fn test(ruby: &Ruby, args: &[Value]) -> Result<RString, Error> {
     ///     ruby.check_arity(args.len(), 2..5)?;
@@ -882,8 +882,8 @@ impl Ruby {
 /// ```
 /// # #![allow(deprecated)]
 /// use magnus::{
-///     define_global_function, eval, function, scan_args::check_arity, Error, RArray, RString,
-///     Value,
+///     Error, RArray, RString, Value, define_global_function, eval, function,
+///     scan_args::check_arity,
 /// };
 /// # let _cleanup = unsafe { magnus::embed::init() };
 ///

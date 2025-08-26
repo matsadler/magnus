@@ -11,15 +11,15 @@ use std::{
 #[cfg(windows)]
 use rb_sys::rb_w32_sysinit;
 use rb_sys::{
-    ruby_cleanup, ruby_exec_node, ruby_init_stack, ruby_process_options, ruby_set_script_name,
-    ruby_setup, VALUE,
+    VALUE, ruby_cleanup, ruby_exec_node, ruby_init_stack, ruby_process_options,
+    ruby_set_script_name, ruby_setup,
 };
 
 use crate::{
-    error::{protect, Error},
+    Ruby,
+    error::{Error, protect},
     r_string::IntoRString,
     value::private::ReprValue,
-    Ruby,
 };
 
 /// A guard value that will run the cleanup function for the Ruby VM when
@@ -75,28 +75,30 @@ impl Deref for Cleanup {
 /// ```
 #[inline(always)]
 pub unsafe fn setup() -> Cleanup {
-    static INIT: AtomicBool = AtomicBool::new(false);
+    unsafe {
+        static INIT: AtomicBool = AtomicBool::new(false);
 
-    let mut variable_in_this_stack_frame: VALUE = 0;
-    ruby_init_stack(&mut variable_in_this_stack_frame as *mut VALUE as *mut _);
+        let mut variable_in_this_stack_frame: VALUE = 0;
+        ruby_init_stack(&mut variable_in_this_stack_frame as *mut VALUE as *mut _);
 
-    match INIT.compare_exchange(false, true, Ordering::SeqCst, Ordering::SeqCst) {
-        Ok(false) => {
-            #[cfg(windows)]
-            {
-                let mut argc = 0;
-                let mut argv: [*mut std::os::raw::c_char; 0] = [];
-                let mut argv = argv.as_mut_ptr();
-                rb_w32_sysinit(&mut argc, &mut argv);
+        match INIT.compare_exchange(false, true, Ordering::SeqCst, Ordering::SeqCst) {
+            Ok(false) => {
+                #[cfg(windows)]
+                {
+                    let mut argc = 0;
+                    let mut argv: [*mut std::os::raw::c_char; 0] = [];
+                    let mut argv = argv.as_mut_ptr();
+                    rb_w32_sysinit(&mut argc, &mut argv);
+                }
+
+                if ruby_setup() != 0 {
+                    panic!("Failed to setup Ruby");
+                };
+                Cleanup(Ruby::get_unchecked())
             }
-
-            if ruby_setup() != 0 {
-                panic!("Failed to setup Ruby");
-            };
-            Cleanup(Ruby::get_unchecked())
+            Err(true) => panic!("Ruby already initialized"),
+            r => panic!("unexpected INIT state {:?}", r),
         }
-        Err(true) => panic!("Ruby already initialized"),
-        r => panic!("unexpected INIT state {:?}", r),
     }
 }
 
@@ -128,28 +130,32 @@ pub unsafe fn setup() -> Cleanup {
 /// ```
 #[inline(always)]
 pub unsafe fn init() -> Cleanup {
-    let cleanup = setup();
-    init_options(&["-e", ""]);
-    cleanup
+    unsafe {
+        let cleanup = setup();
+        init_options(&["-e", ""]);
+        cleanup
+    }
 }
 
 #[inline(always)]
 unsafe fn init_options(opts: &[&str]) {
-    let mut argv = vec![CString::new("ruby").unwrap()];
-    argv.extend(opts.iter().map(|s| CString::new(*s).unwrap()));
-    let mut argv = argv
-        .iter()
-        .map(|cs| cs.as_ptr() as *mut _)
-        .collect::<Vec<_>>();
-    let mut node = 0 as _;
-    protect(|| {
-        node = ruby_process_options(argv.len() as i32, argv.as_mut_ptr());
-        Ruby::get_unchecked().qnil()
-    })
-    .unwrap();
-    if ruby_exec_node(node) != 0 {
-        panic!("Ruby init code failed");
-    };
+    unsafe {
+        let mut argv = vec![CString::new("ruby").unwrap()];
+        argv.extend(opts.iter().map(|s| CString::new(*s).unwrap()));
+        let mut argv = argv
+            .iter()
+            .map(|cs| cs.as_ptr() as *mut _)
+            .collect::<Vec<_>>();
+        let mut node = 0 as _;
+        protect(|| {
+            node = ruby_process_options(argv.len() as i32, argv.as_mut_ptr());
+            Ruby::get_unchecked().qnil()
+        })
+        .unwrap();
+        if ruby_exec_node(node) != 0 {
+            panic!("Ruby init code failed");
+        };
+    }
 }
 
 /// # Embedding
@@ -191,7 +197,7 @@ impl Ruby {
     /// .unwrap()
     /// ```
     pub fn init(func: fn(&Ruby) -> Result<(), Error>) -> Result<(), String> {
-        func(unsafe { &init() }).map_err(|e| e.to_string())
+        unsafe { func(&init()) }.map_err(|e| e.to_string())
     }
 
     /// Sets the current script name.

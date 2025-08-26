@@ -37,16 +37,16 @@ use rb_sys::{
 };
 
 use crate::{
-    error::{protect, Error},
+    Ruby,
+    error::{Error, protect},
     into_value::IntoValue,
     object::Object,
     r_string::RString,
     try_convert::TryConvert,
     value::{
-        private::{self, ReprValue as _},
         NonZeroValue, ReprValue, Value,
+        private::{self, ReprValue as _},
     },
-    Ruby,
 };
 
 /// # `Encoding`
@@ -552,8 +552,8 @@ impl RbEncoding {
     ///
     /// ```
     /// use magnus::{
-    ///     encoding::{EncodingCapable, RbEncoding},
     ///     Error, Ruby,
+    ///     encoding::{EncodingCapable, RbEncoding},
     /// };
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
@@ -600,8 +600,8 @@ impl RbEncoding {
     ///
     /// ```
     /// use magnus::{
-    ///     encoding::{EncodingCapable, RbEncoding},
     ///     Error, Ruby,
+    ///     encoding::{EncodingCapable, RbEncoding},
     /// };
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
@@ -642,8 +642,8 @@ impl RbEncoding {
     ///
     /// ```
     /// use magnus::{
-    ///     encoding::{EncodingCapable, MbcLen, RbEncoding},
     ///     Error, Ruby,
+    ///     encoding::{EncodingCapable, MbcLen, RbEncoding},
     /// };
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
@@ -696,8 +696,8 @@ impl RbEncoding {
     ///
     /// ```
     /// use magnus::{
-    ///     encoding::{EncodingCapable, RbEncoding},
     ///     Error, Ruby,
+    ///     encoding::{EncodingCapable, RbEncoding},
     /// };
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
@@ -749,8 +749,8 @@ impl RbEncoding {
     ///
     /// ```
     /// use magnus::{
-    ///     encoding::{EncodingCapable, RbEncoding},
     ///     Error, Ruby,
+    ///     encoding::{EncodingCapable, RbEncoding},
     /// };
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
@@ -827,7 +827,7 @@ impl RbEncoding {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, Error, Ruby};
+    /// use magnus::{Error, Ruby, eval};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let c = ruby.usascii_encoding().chr(97)?;
@@ -840,7 +840,7 @@ impl RbEncoding {
     /// ```
     ///
     /// ```
-    /// use magnus::{eval, Error, Ruby};
+    /// use magnus::{Error, Ruby, eval};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let c = ruby.utf8_encoding().chr(129408)?;
@@ -887,7 +887,7 @@ impl RbEncoding {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{encoding::CType, Error, Ruby};
+    /// use magnus::{Error, Ruby, encoding::CType};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     assert!(ruby.utf8_encoding().is_code_ctype(9, CType::Space)); // "\t"
@@ -1223,7 +1223,7 @@ pub trait EncodingCapable: ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{encoding::EncodingCapable, Error, Ruby};
+    /// use magnus::{Error, Ruby, encoding::EncodingCapable};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     assert!(ruby.str_new("example").enc_get() == ruby.utf8_encindex());
@@ -1249,7 +1249,7 @@ pub trait EncodingCapable: ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{encoding::EncodingCapable, Error, Ruby};
+    /// use magnus::{Error, Ruby, encoding::EncodingCapable};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let s = ruby.str_new("example");
@@ -1285,7 +1285,7 @@ pub trait EncodingCapable: ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{encoding::EncodingCapable, Error, Ruby};
+    /// use magnus::{Error, Ruby, encoding::EncodingCapable};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let s = ruby.str_new("example");
@@ -1317,7 +1317,7 @@ pub trait EncodingCapable: ReprValue + Copy {
 /// # Examples
 ///
 /// ```
-/// use magnus::{encoding, prelude::*, Error, Ruby};
+/// use magnus::{Error, Ruby, encoding, prelude::*};
 ///
 /// fn example(ruby: &Ruby) -> Result<(), Error> {
 ///     let a = ruby.str_new("a");
@@ -1349,7 +1349,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use magnus::{encoding, prelude::*, Error, Ruby};
+/// use magnus::{Error, Ruby, encoding, prelude::*};
 ///
 /// fn example(ruby: &Ruby) -> Result<(), Error> {
 ///     let a = ruby.str_new("a");
@@ -1387,7 +1387,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use magnus::{encoding, prelude::*, Error, Ruby};
+/// use magnus::{Error, Ruby, encoding, prelude::*};
 ///
 /// fn example(ruby: &Ruby) -> Result<(), Error> {
 ///     let a = ruby.str_new("a");

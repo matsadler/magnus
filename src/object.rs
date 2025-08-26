@@ -5,14 +5,14 @@ use rb_sys::{
 };
 
 use crate::{
+    Ruby,
     class::RClass,
-    error::{protect, Error},
+    error::{Error, protect},
     into_value::IntoValue,
     method::Method,
     module::RModule,
     try_convert::TryConvert,
-    value::{private::ReprValue as _, IntoId, ReprValue, Value},
-    Ruby,
+    value::{IntoId, ReprValue, Value, private::ReprValue as _},
 };
 
 /// Functions available all non-immediate values.
@@ -25,7 +25,7 @@ pub trait Object: ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{function, prelude::*, rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, function, prelude::*, rb_assert};
     ///
     /// fn test() -> i64 {
     ///     42
@@ -42,7 +42,7 @@ pub trait Object: ReprValue + Copy {
     /// ```
     ///
     /// ```
-    /// use magnus::{function, prelude::*, rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, function, prelude::*, rb_assert};
     ///
     /// #[magnus::wrap(class = "Point", free_immediately, size)]
     /// struct Point {
@@ -96,7 +96,7 @@ pub trait Object: ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, Error, RObject, Ruby};
+    /// use magnus::{Error, RObject, Ruby, prelude::*};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let val: RObject = ruby.eval(
@@ -136,7 +136,7 @@ pub trait Object: ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, rb_assert, Error, RObject, Ruby};
+    /// use magnus::{Error, RObject, Ruby, prelude::*, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let obj: RObject = ruby.eval(
@@ -189,7 +189,7 @@ pub trait Object: ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, Error, Ruby};
+    /// use magnus::{Error, Ruby, prelude::*};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     assert!(ruby.str_new("example").singleton_class().is_ok());
@@ -209,7 +209,7 @@ pub trait Object: ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{function, prelude::*, rb_assert, Error, RObject, Ruby};
+    /// use magnus::{Error, RObject, Ruby, function, prelude::*, rb_assert};
     ///
     /// fn test() -> i64 {
     ///     42

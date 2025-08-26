@@ -1,21 +1,21 @@
 use std::{fmt, os::raw::c_int};
 
 use rb_sys::{
-    rb_reg_backref_number, rb_reg_last_match, rb_reg_match_last, rb_reg_match_post,
-    rb_reg_match_pre, rb_reg_nth_defined, rb_reg_nth_match, ruby_value_type, VALUE,
+    VALUE, rb_reg_backref_number, rb_reg_last_match, rb_reg_match_last, rb_reg_match_post,
+    rb_reg_match_pre, rb_reg_nth_defined, rb_reg_nth_match, ruby_value_type,
 };
 
 use crate::{
-    error::{protect, Error},
+    Ruby,
+    error::{Error, protect},
     into_value::IntoValue,
     object::Object,
     r_string::{IntoRString, RString},
     try_convert::TryConvert,
     value::{
-        private::{self, ReprValue as _},
         NonZeroValue, ReprValue, Value,
+        private::{self, ReprValue as _},
     },
-    Ruby,
 };
 
 /// A Value pointer to a RMatch struct, Ruby's internal representation of the
@@ -33,7 +33,7 @@ impl RMatch {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, RMatch};
+    /// use magnus::{RMatch, eval};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// assert!(RMatch::from_value(eval(r#""foo".match(/o/)"#).unwrap()).is_some());
@@ -49,7 +49,7 @@ impl RMatch {
 
     #[inline]
     pub(crate) unsafe fn from_rb_value_unchecked(val: VALUE) -> Self {
-        Self(NonZeroValue::new_unchecked(Value::new(val)))
+        unsafe { Self(NonZeroValue::new_unchecked(Value::new(val))) }
     }
 
     /// Returns whether the `n`th capture group is set.

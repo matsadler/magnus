@@ -7,16 +7,17 @@ use std::fmt;
 #[cfg(ruby_gte_3_1)]
 use rb_sys::rb_eNoMatchingPatternKeyError;
 use rb_sys::{
-    rb_eArgError, rb_eEOFError, rb_eEncCompatError, rb_eEncodingError, rb_eException, rb_eFatal,
-    rb_eFloatDomainError, rb_eFrozenError, rb_eIOError, rb_eIndexError, rb_eInterrupt,
+    VALUE, rb_eArgError, rb_eEOFError, rb_eEncCompatError, rb_eEncodingError, rb_eException,
+    rb_eFatal, rb_eFloatDomainError, rb_eFrozenError, rb_eIOError, rb_eIndexError, rb_eInterrupt,
     rb_eKeyError, rb_eLoadError, rb_eLocalJumpError, rb_eMathDomainError, rb_eNameError,
     rb_eNoMatchingPatternError, rb_eNoMemError, rb_eNoMethodError, rb_eNotImpError, rb_eRangeError,
     rb_eRegexpError, rb_eRuntimeError, rb_eScriptError, rb_eSecurityError, rb_eSignal,
     rb_eStandardError, rb_eStopIteration, rb_eSyntaxError, rb_eSysStackError, rb_eSystemCallError,
-    rb_eSystemExit, rb_eThreadError, rb_eTypeError, rb_eZeroDivError, VALUE,
+    rb_eSystemExit, rb_eThreadError, rb_eTypeError, rb_eZeroDivError,
 };
 
 use crate::{
+    Ruby,
     class::{Class, RClass},
     error::Error,
     into_value::{ArgList, IntoValue},
@@ -25,10 +26,9 @@ use crate::{
     r_array::RArray,
     try_convert::TryConvert,
     value::{
-        private::{self, ReprValue as _},
         NonZeroValue, ReprValue, Value,
+        private::{self, ReprValue as _},
     },
-    Ruby,
 };
 
 /// Wrapper type for a Value known to be an instance of Ruby's Exception class.
@@ -45,7 +45,7 @@ impl Exception {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, Exception};
+    /// use magnus::{Exception, eval};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// assert!(Exception::from_value(eval(r#"StandardError.new("example")"#).unwrap()).is_some());
@@ -63,7 +63,7 @@ impl Exception {
 
     #[inline]
     pub(crate) unsafe fn from_rb_value_unchecked(val: VALUE) -> Self {
-        Self(NonZeroValue::new_unchecked(Value::new(val)))
+        unsafe { Self(NonZeroValue::new_unchecked(Value::new(val))) }
     }
 
     /// Returns the class that `self` is an instance of, as an
@@ -74,7 +74,7 @@ impl Exception {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, prelude::*, Exception};
+    /// use magnus::{Exception, eval, prelude::*};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let e: Exception = eval(r#"StandardError.new("example")"#).unwrap();
@@ -156,7 +156,7 @@ impl ExceptionClass {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, ExceptionClass};
+    /// use magnus::{ExceptionClass, eval};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// assert!(ExceptionClass::from_value(eval("StandardError").unwrap()).is_some());
@@ -177,7 +177,7 @@ impl ExceptionClass {
 
     #[inline]
     pub(crate) unsafe fn from_rb_value_unchecked(val: VALUE) -> Self {
-        Self(NonZeroValue::new_unchecked(Value::new(val)))
+        unsafe { Self(NonZeroValue::new_unchecked(Value::new(val))) }
     }
 }
 
@@ -260,7 +260,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(
@@ -282,7 +282,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(
@@ -304,7 +304,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(
@@ -326,7 +326,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(
@@ -348,7 +348,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(
@@ -370,7 +370,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(
@@ -392,7 +392,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(
@@ -414,7 +414,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(
@@ -436,7 +436,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(ruby, "klass == IOError", klass = ruby.exception_io_error());
@@ -454,7 +454,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(
@@ -476,7 +476,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(
@@ -498,7 +498,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(
@@ -520,7 +520,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(
@@ -542,7 +542,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(
@@ -564,7 +564,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(
@@ -586,7 +586,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(
@@ -608,7 +608,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(
@@ -630,7 +630,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(
@@ -654,7 +654,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(
@@ -676,7 +676,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(
@@ -698,7 +698,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(
@@ -720,7 +720,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(
@@ -742,7 +742,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(
@@ -764,7 +764,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(
@@ -786,7 +786,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(
@@ -808,7 +808,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(
@@ -830,7 +830,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(
@@ -852,7 +852,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(
@@ -874,7 +874,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(
@@ -896,7 +896,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(
@@ -918,7 +918,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(
@@ -940,7 +940,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(
@@ -962,7 +962,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(
@@ -984,7 +984,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(
@@ -1006,7 +1006,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(
@@ -1028,7 +1028,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(

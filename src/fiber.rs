@@ -7,8 +7,8 @@ use rb_sys::rb_fiber_new;
 #[cfg(ruby_gte_3_2)]
 use rb_sys::rb_fiber_new_storage;
 use rb_sys::{
-    rb_data_typed_object_wrap, rb_fiber_alive_p, rb_fiber_current, rb_fiber_resume_kw,
-    rb_fiber_yield_kw, VALUE,
+    VALUE, rb_data_typed_object_wrap, rb_fiber_alive_p, rb_fiber_current, rb_fiber_resume_kw,
+    rb_fiber_yield_kw,
 };
 #[cfg(ruby_gte_3_1)]
 use rb_sys::{rb_fiber_raise, rb_fiber_transfer_kw, rb_obj_is_fiber};
@@ -19,18 +19,18 @@ use crate::{
     api::Ruby,
     block::Proc,
     data_type_builder,
-    error::{protect, Error},
+    error::{Error, protect},
     exception::Exception,
     gc,
-    into_value::{kw_splat, ArgList, IntoValue},
+    into_value::{ArgList, IntoValue, kw_splat},
     method::{Block, BlockReturn},
     object::Object,
     r_typed_data::RTypedData,
     try_convert::TryConvert,
     typed_data::{DataType, DataTypeFunctions},
     value::{
+        QUNDEF, ReprValue, Value,
         private::{self, ReprValue as _},
-        ReprValue, Value, QUNDEF,
     },
 };
 
@@ -49,7 +49,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, rb_assert, Error, Ruby, Value};
+    /// use magnus::{Error, Ruby, Value, prelude::*, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let fib = ruby.fiber_new(Default::default(), |ruby, args, _block| {
@@ -91,10 +91,13 @@ impl Ruby {
         where
             R: BlockReturn,
         {
-            let func =
-                std::mem::transmute::<VALUE, fn(&Ruby, &[Value], Option<Proc>) -> R>(callback_arg);
-            func.call_handle_error(argc, argv as *const Value, Value::new(blockarg))
-                .as_rb_value()
+            unsafe {
+                let func = std::mem::transmute::<VALUE, fn(&Ruby, &[Value], Option<Proc>) -> R>(
+                    callback_arg,
+                );
+                func.call_handle_error(argc, argv as *const Value, Value::new(blockarg))
+                    .as_rb_value()
+            }
         }
 
         let call_func =
@@ -120,7 +123,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby, Value};
+    /// use magnus::{Error, Ruby, Value, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let mut a = 0_u64;
@@ -161,10 +164,12 @@ impl Ruby {
             F: FnOnce(&Ruby, &[Value], Option<Proc>) -> R,
             R: BlockReturn,
         {
-            let closure = (*(callback_arg as *mut Option<F>)).take().unwrap();
-            closure
-                .call_handle_error(argc, argv as *const Value, Value::new(blockarg))
-                .as_rb_value()
+            unsafe {
+                let closure = (*(callback_arg as *mut Option<F>)).take().unwrap();
+                closure
+                    .call_handle_error(argc, argv as *const Value, Value::new(blockarg))
+                    .as_rb_value()
+            }
         }
 
         let (closure, keepalive) = wrap_closure(func);
@@ -195,7 +200,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let fiber = ruby.fiber_current();
@@ -215,7 +220,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, value::Opaque, Error, Ruby, Value};
+    /// use magnus::{Error, Ruby, Value, rb_assert, value::Opaque};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let ary = ruby.ary_new();
@@ -299,7 +304,7 @@ impl Fiber {
 
     #[inline]
     pub(crate) unsafe fn from_rb_value_unchecked(val: VALUE) -> Self {
-        Self(RTypedData::from_rb_value_unchecked(val))
+        unsafe { Self(RTypedData::from_rb_value_unchecked(val)) }
     }
 
     /// Return `true` if `self` can be resumed, `false` otherwise.
@@ -337,7 +342,7 @@ impl Fiber {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, Error, Ruby, Value};
+    /// use magnus::{Error, Ruby, Value, prelude::*};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let fib = ruby.fiber_new(Default::default(), |ruby, args, _block| {
@@ -443,7 +448,7 @@ impl Fiber {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, Error, Ruby, Value};
+    /// use magnus::{Error, Ruby, Value, prelude::*};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let fiber = ruby.fiber_new(Default::default(), move |ruby, _args, _block| {
@@ -529,14 +534,16 @@ pub enum Storage {
 #[cfg(ruby_gte_3_2)]
 impl Storage {
     unsafe fn as_rb_value(&self) -> VALUE {
-        #[cfg(ruby_gte_3_2)]
-        let ruby = Ruby::get_unchecked();
-        match self {
-            Self::Inherit => QUNDEF.as_value().as_rb_value(),
+        unsafe {
             #[cfg(ruby_gte_3_2)]
-            Self::Lazy => ruby.qnil().as_rb_value(),
-            #[cfg(ruby_gte_3_2)]
-            Self::Use(hash) => hash.as_rb_value(),
+            let ruby = Ruby::get_unchecked();
+            match self {
+                Self::Inherit => QUNDEF.as_value().as_rb_value(),
+                #[cfg(ruby_gte_3_2)]
+                Self::Lazy => ruby.qnil().as_rb_value(),
+                #[cfg(ruby_gte_3_2)]
+                Self::Use(hash) => hash.as_rb_value(),
+            }
         }
     }
 }

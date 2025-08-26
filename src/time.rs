@@ -9,20 +9,20 @@ use std::{
 };
 
 use rb_sys::{
-    rb_time_nano_new, rb_time_new, rb_time_timespec, rb_time_timespec_new, rb_time_utc_offset,
-    timespec, VALUE,
+    VALUE, rb_time_nano_new, rb_time_new, rb_time_timespec, rb_time_timespec_new,
+    rb_time_utc_offset, timespec,
 };
 
 use crate::{
     api::Ruby,
-    error::{protect, Error, IntoError},
+    error::{Error, IntoError, protect},
     into_value::IntoValue,
     object::Object,
     r_typed_data::RTypedData,
     try_convert::TryConvert,
     value::{
-        private::{self, ReprValue as _},
         Fixnum, ReprValue, Value,
+        private::{self, ReprValue as _},
     },
 };
 
@@ -37,7 +37,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let t = ruby.time_new(1654013280, 0)?;
@@ -62,7 +62,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let t = ruby.time_nano_new(1654013280, 0)?;
@@ -88,10 +88,10 @@ impl Ruby {
     ///
     /// ```
     /// use magnus::{
+    ///     Error, Ruby,
     ///     error::IntoError,
     ///     rb_assert,
     ///     time::{Offset, Timespec},
-    ///     Error, Ruby,
     /// };
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
@@ -243,7 +243,7 @@ impl Time {
 
     #[inline]
     pub(crate) unsafe fn from_rb_value_unchecked(val: VALUE) -> Self {
-        Self(RTypedData::from_rb_value_unchecked(val))
+        unsafe { Self(RTypedData::from_rb_value_unchecked(val)) }
     }
 
     /// Returns the timezone offset of `self` from UTC in seconds.
@@ -454,7 +454,7 @@ impl TryConvert for chrono::DateTime<chrono::FixedOffset> {
                 return Err(Error::new(
                     Ruby::get_with(val).exception_arg_error(),
                     "invalid UTC offset",
-                ))
+                ));
             }
         };
         Ok(dt.with_timezone(&tz))

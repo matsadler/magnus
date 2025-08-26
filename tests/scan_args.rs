@@ -1,10 +1,10 @@
 use magnus::{
+    RArray, RHash, Ruby, Symbol,
     block::Proc,
     error::Error,
     method,
     scan_args::{get_kwargs, scan_args},
     value::Value,
-    RArray, RHash, Ruby, Symbol,
 };
 
 fn example(ruby: &Ruby, _rb_self: Value, args: &[Value]) -> Result<RArray, Error> {

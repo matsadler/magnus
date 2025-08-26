@@ -1,4 +1,4 @@
-use magnus::{error::IntoError, function, rb_assert, Error, Ruby};
+use magnus::{Error, Ruby, error::IntoError, function, rb_assert};
 
 struct CustomError(&'static str);
 

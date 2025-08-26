@@ -1,21 +1,21 @@
 use std::fmt;
 
 use rb_sys::{
-    rb_complex_abs, rb_complex_arg, rb_complex_conjugate, rb_complex_imag, rb_complex_new,
-    rb_complex_new_polar, rb_complex_real, ruby_value_type, VALUE,
+    VALUE, rb_complex_abs, rb_complex_arg, rb_complex_conjugate, rb_complex_imag, rb_complex_new,
+    rb_complex_new_polar, rb_complex_real, ruby_value_type,
 };
 
 use crate::{
-    error::{protect, Error},
+    Ruby,
+    error::{Error, protect},
     float::Float,
     into_value::IntoValue,
     numeric::Numeric,
     try_convert::TryConvert,
     value::{
-        private::{self, ReprValue as _},
         NonZeroValue, ReprValue, Value,
+        private::{self, ReprValue as _},
     },
-    Ruby,
 };
 
 /// A Value pointer to a RComplex struct, Ruby's internal representation of
@@ -32,7 +32,7 @@ impl RComplex {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, RComplex};
+    /// use magnus::{RComplex, eval};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// assert!(RComplex::from_value(eval("2+1i").unwrap()).is_some());
@@ -48,7 +48,7 @@ impl RComplex {
 
     #[inline]
     pub(crate) unsafe fn from_rb_value_unchecked(val: VALUE) -> Self {
-        Self(NonZeroValue::new_unchecked(Value::new(val)))
+        unsafe { Self(NonZeroValue::new_unchecked(Value::new(val))) }
     }
 
     /// Create a new `RComplex`.

@@ -3,17 +3,17 @@ use std::{fmt, mem::size_of, os::raw::c_void, slice, time::Duration};
 #[allow(deprecated)]
 use rb_sys::rb_thread_fd_close;
 use rb_sys::{
-    rb_data_typed_object_wrap, rb_thread_alone, rb_thread_check_ints, rb_thread_create,
+    VALUE, rb_data_typed_object_wrap, rb_thread_alone, rb_thread_check_ints, rb_thread_create,
     rb_thread_current, rb_thread_fd_writable, rb_thread_interrupted, rb_thread_kill,
     rb_thread_local_aref, rb_thread_local_aset, rb_thread_main, rb_thread_run, rb_thread_schedule,
     rb_thread_sleep_deadly, rb_thread_sleep_forever, rb_thread_wait_fd, rb_thread_wait_for,
-    rb_thread_wakeup, rb_thread_wakeup_alive, timeval, VALUE,
+    rb_thread_wakeup, rb_thread_wakeup_alive, timeval,
 };
 
 use crate::{
     api::Ruby,
     data_type_builder,
-    error::{protect, Error},
+    error::{Error, protect},
     gc,
     into_value::IntoValue,
     method::{BlockReturn, Thread as _},
@@ -23,8 +23,8 @@ use crate::{
     try_convert::TryConvert,
     typed_data::{DataType, DataTypeFunctions},
     value::{
-        private::{self, ReprValue as _},
         IntoId, ReprValue, Value,
+        private::{self, ReprValue as _},
     },
 };
 
@@ -44,7 +44,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let t = ruby.thread_create(|_ruby| 1 + 2);
@@ -62,8 +62,10 @@ impl Ruby {
         where
             R: BlockReturn,
         {
-            let func = std::mem::transmute::<*mut c_void, fn(&Ruby) -> R>(arg);
-            func.call_handle_error().as_rb_value()
+            unsafe {
+                let func = std::mem::transmute::<*mut c_void, fn(&Ruby) -> R>(arg);
+                func.call_handle_error().as_rb_value()
+            }
         }
 
         let call_func = call::<R> as unsafe extern "C" fn(arg: *mut c_void) -> VALUE;
@@ -88,7 +90,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let i = 1;
@@ -109,8 +111,10 @@ impl Ruby {
             F: FnOnce(&Ruby) -> R,
             R: BlockReturn,
         {
-            let closure = (*(arg as *mut Option<F>)).take().unwrap();
-            closure.call_handle_error().as_rb_value()
+            unsafe {
+                let closure = (*(arg as *mut Option<F>)).take().unwrap();
+                closure.call_handle_error().as_rb_value()
+            }
         }
 
         let (closure, keepalive) = wrap_closure(func);
@@ -135,7 +139,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, Error, Ruby};
+    /// use magnus::{Error, Ruby, prelude::*};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let t = ruby.thread_current();
@@ -154,7 +158,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, Error, Ruby};
+    /// use magnus::{Error, Ruby, prelude::*};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let t = ruby.thread_main();
@@ -431,7 +435,7 @@ impl Thread {
 
     #[inline]
     pub(crate) unsafe fn from_rb_value_unchecked(val: VALUE) -> Self {
-        Self(RTypedData::from_rb_value_unchecked(val))
+        unsafe { Self(RTypedData::from_rb_value_unchecked(val)) }
     }
 
     /// Mark `self` as eligible for scheduling.

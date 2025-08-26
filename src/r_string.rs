@@ -15,26 +15,27 @@ use std::{
 #[cfg(ruby_gte_3_0)]
 use rb_sys::rb_str_to_interned_str;
 use rb_sys::{
-    self, rb_enc_str_coderange, rb_enc_str_new, rb_str_buf_append, rb_str_buf_new, rb_str_capacity,
-    rb_str_cat, rb_str_cmp, rb_str_comparable, rb_str_conv_enc, rb_str_drop_bytes, rb_str_dump,
-    rb_str_ellipsize, rb_str_new, rb_str_new_frozen, rb_str_new_shared, rb_str_offset, rb_str_plus,
-    rb_str_replace, rb_str_scrub, rb_str_shared_replace, rb_str_split, rb_str_strlen, rb_str_times,
-    rb_str_to_str, rb_str_update, rb_utf8_str_new, rb_utf8_str_new_static, ruby_coderange_type,
-    ruby_rstring_flags, ruby_value_type, RSTRING_LEN, RSTRING_PTR, VALUE,
+    self, RSTRING_LEN, RSTRING_PTR, VALUE, rb_enc_str_coderange, rb_enc_str_new, rb_str_buf_append,
+    rb_str_buf_new, rb_str_capacity, rb_str_cat, rb_str_cmp, rb_str_comparable, rb_str_conv_enc,
+    rb_str_drop_bytes, rb_str_dump, rb_str_ellipsize, rb_str_new, rb_str_new_frozen,
+    rb_str_new_shared, rb_str_offset, rb_str_plus, rb_str_replace, rb_str_scrub,
+    rb_str_shared_replace, rb_str_split, rb_str_strlen, rb_str_times, rb_str_to_str, rb_str_update,
+    rb_utf8_str_new, rb_utf8_str_new_static, ruby_coderange_type, ruby_rstring_flags,
+    ruby_value_type,
 };
 
 use crate::{
+    Ruby,
     encoding::{Coderange, EncodingCapable, RbEncoding},
-    error::{protect, Error},
+    error::{Error, protect},
     into_value::{IntoValue, IntoValueFromNative},
     object::Object,
     r_array::RArray,
     try_convert::TryConvert,
     value::{
-        private::{self, ReprValue as _},
         NonZeroValue, ReprValue, Value,
+        private::{self, ReprValue as _},
     },
-    Ruby,
 };
 
 /// # `RString`
@@ -50,7 +51,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let val = ruby.str_new("example");
@@ -72,7 +73,7 @@ impl Ruby {
     #[doc(hidden)]
     #[inline]
     pub unsafe fn str_new_lit(&self, ptr: *const c_char, len: c_long) -> RString {
-        RString::from_rb_value_unchecked(rb_utf8_str_new_static(ptr, len))
+        unsafe { RString::from_rb_value_unchecked(rb_utf8_str_new_static(ptr, len)) }
     }
 
     /// Create a new Ruby string with capacity `n`.
@@ -83,7 +84,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let buf = ruby.str_buf_new(4096);
@@ -106,7 +107,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let s = ruby.str_with_capacity(9);
@@ -132,7 +133,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let buf = ruby.str_from_slice(&[13, 14, 10, 13, 11, 14, 14, 15]);
@@ -153,7 +154,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let val = ruby.enc_str_new("example", ruby.usascii_encoding());
@@ -165,7 +166,7 @@ impl Ruby {
     /// ```
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let val = ruby.enc_str_new([255, 128, 128], ruby.ascii8bit_encoding());
@@ -203,7 +204,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let c = ruby.str_from_char('a');
@@ -215,7 +216,7 @@ impl Ruby {
     /// ```
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let c = ruby.str_from_char('🦀');
@@ -238,7 +239,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let c = ruby.chr(97, ruby.usascii_encoding())?;
@@ -250,7 +251,7 @@ impl Ruby {
     /// ```
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let c = ruby.chr(129408, ruby.utf8_encoding())?;
@@ -284,7 +285,7 @@ impl RString {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, RString};
+    /// use magnus::{RString, eval};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// assert!(RString::from_value(eval(r#""example""#).unwrap()).is_some());
@@ -307,7 +308,7 @@ impl RString {
 
     #[inline]
     pub(crate) unsafe fn from_rb_value_unchecked(val: VALUE) -> Self {
-        Self(NonZeroValue::new_unchecked(Value::new(val)))
+        unsafe { Self(NonZeroValue::new_unchecked(Value::new(val))) }
     }
 
     /// Create a new Ruby string from the Rust string `s`.
@@ -323,7 +324,7 @@ impl RString {
     ///
     /// ```
     /// # #![allow(deprecated)]
-    /// use magnus::{rb_assert, RString};
+    /// use magnus::{RString, rb_assert};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let val = RString::new("example");
@@ -343,7 +344,7 @@ impl RString {
     #[doc(hidden)]
     #[inline]
     pub unsafe fn new_lit(ptr: *const c_char, len: c_long) -> Self {
-        get_ruby!().str_new_lit(ptr, len)
+        unsafe { get_ruby!().str_new_lit(ptr, len) }
     }
 
     /// Create a new Ruby string with capacity `n`.
@@ -360,7 +361,7 @@ impl RString {
     ///
     /// ```
     /// # #![allow(deprecated)]
-    /// use magnus::{rb_assert, RString};
+    /// use magnus::{RString, rb_assert};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let buf = RString::buf_new(4096);
@@ -391,7 +392,7 @@ impl RString {
     ///
     /// ```
     /// # #![allow(deprecated)]
-    /// use magnus::{rb_assert, RString};
+    /// use magnus::{RString, rb_assert};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let s = RString::with_capacity(9);
@@ -423,7 +424,7 @@ impl RString {
     ///
     /// ```
     /// # #![allow(deprecated)]
-    /// use magnus::{rb_assert, RString};
+    /// use magnus::{RString, rb_assert};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let buf = RString::from_slice(&[13, 14, 10, 13, 11, 14, 14, 15]);
@@ -450,7 +451,7 @@ impl RString {
     ///
     /// ```
     /// # #![allow(deprecated)]
-    /// use magnus::{encoding::RbEncoding, rb_assert, RString};
+    /// use magnus::{RString, encoding::RbEncoding, rb_assert};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let val = RString::enc_new("example", RbEncoding::usascii());
@@ -459,7 +460,7 @@ impl RString {
     ///
     /// ```
     /// # #![allow(deprecated)]
-    /// use magnus::{encoding::RbEncoding, rb_assert, RString};
+    /// use magnus::{RString, encoding::RbEncoding, rb_assert};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let val = RString::enc_new([255, 128, 128], RbEncoding::ascii8bit());
@@ -492,7 +493,7 @@ impl RString {
     ///
     /// ```
     /// # #![allow(deprecated)]
-    /// use magnus::{rb_assert, RString};
+    /// use magnus::{RString, rb_assert};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let c = RString::from_char('a');
@@ -501,7 +502,7 @@ impl RString {
     ///
     /// ```
     /// # #![allow(deprecated)]
-    /// use magnus::{rb_assert, RString};
+    /// use magnus::{RString, rb_assert};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let c = RString::from_char('🦀');
@@ -531,7 +532,7 @@ impl RString {
     ///
     /// ```
     /// # #![allow(deprecated)]
-    /// use magnus::{encoding::RbEncoding, rb_assert, RString};
+    /// use magnus::{RString, encoding::RbEncoding, rb_assert};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let c = RString::chr(97, RbEncoding::usascii()).unwrap();
@@ -540,7 +541,7 @@ impl RString {
     ///
     /// ```
     /// # #![allow(deprecated)]
-    /// use magnus::{encoding::RbEncoding, rb_assert, RString};
+    /// use magnus::{RString, encoding::RbEncoding, rb_assert};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let c = RString::chr(129408, RbEncoding::utf8()).unwrap();
@@ -569,7 +570,7 @@ impl RString {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, RString, Ruby};
+    /// use magnus::{Error, RString, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let s = ruby.str_new("example");
@@ -595,7 +596,7 @@ impl RString {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, RString, Ruby};
+    /// use magnus::{Error, RString, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let orig = ruby.str_new("example");
@@ -640,15 +641,17 @@ impl RString {
     /// # Ruby::init(example).unwrap()
     /// ```
     pub unsafe fn as_slice(&self) -> &[u8] {
-        self.as_slice_unconstrained()
+        unsafe { self.as_slice_unconstrained() }
     }
 
     unsafe fn as_slice_unconstrained<'a>(self) -> &'a [u8] {
-        debug_assert_value!(self);
-        slice::from_raw_parts(
-            RSTRING_PTR(self.as_rb_value()) as *const u8,
-            RSTRING_LEN(self.as_rb_value()) as _,
-        )
+        unsafe {
+            debug_assert_value!(self);
+            slice::from_raw_parts(
+                RSTRING_PTR(self.as_rb_value()) as *const u8,
+                RSTRING_LEN(self.as_rb_value()) as _,
+            )
+        }
     }
 
     /// Return an iterator over `self`'s codepoints.
@@ -681,9 +684,11 @@ impl RString {
     /// # Ruby::init(example).unwrap()
     /// ```
     pub unsafe fn codepoints(&self) -> Codepoints<'_> {
-        Codepoints {
-            slice: self.as_slice(),
-            encoding: self.enc_get().into(),
+        unsafe {
+            Codepoints {
+                slice: self.as_slice(),
+                encoding: self.enc_get().into(),
+            }
         }
     }
 
@@ -725,9 +730,11 @@ impl RString {
     /// # Ruby::init(example).unwrap()
     /// ```
     pub unsafe fn char_bytes(&self) -> CharBytes<'_> {
-        CharBytes {
-            slice: self.as_slice(),
-            encoding: self.enc_get().into(),
+        unsafe {
+            CharBytes {
+                slice: self.as_slice(),
+                encoding: self.enc_get().into(),
+            }
         }
     }
 
@@ -760,7 +767,7 @@ impl RString {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, Error, RString, Ruby};
+    /// use magnus::{Error, RString, Ruby, eval};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let s: RString = eval!(ruby, r#""café""#)?;
@@ -772,7 +779,7 @@ impl RString {
     /// ```
     ///
     /// ```
-    /// use magnus::{eval, Error, RString, Ruby};
+    /// use magnus::{Error, RString, Ruby, eval};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let s: RString = eval!(ruby, r#""café".encode("ISO-8859-1")"#)?;
@@ -795,7 +802,7 @@ impl RString {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, Error, RString, Ruby};
+    /// use magnus::{Error, RString, Ruby, eval};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let s: RString = eval!(ruby, r#""café".encode("ISO-8859-1")"#)?;
@@ -875,7 +882,7 @@ impl RString {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{encoding::Coderange, prelude::*, Error, Ruby};
+    /// use magnus::{Error, Ruby, encoding::Coderange, prelude::*};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     // Coderange is unknown on creation.
@@ -925,7 +932,7 @@ impl RString {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{encoding::Coderange, Error, Ruby};
+    /// use magnus::{Error, Ruby, encoding::Coderange};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let s = ruby.str_new("test");
@@ -944,7 +951,7 @@ impl RString {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{encoding::Coderange, prelude::*, Error, Ruby};
+    /// use magnus::{Error, Ruby, encoding::Coderange, prelude::*};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let s = ruby.str_new("🦀");
@@ -982,7 +989,7 @@ impl RString {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{encoding::Coderange, prelude::*, Error, RString, Ruby};
+    /// use magnus::{Error, RString, Ruby, encoding::Coderange, prelude::*};
     ///
     /// fn crabbify(ruby: &Ruby, s: RString) -> Result<(), Error> {
     ///     if s.enc_get() != ruby.utf8_encindex() {
@@ -1018,8 +1025,10 @@ impl RString {
     /// # Ruby::init(example).unwrap()
     /// ```
     pub unsafe fn enc_coderange_set(self, cr: Coderange) {
-        self.enc_coderange_clear();
-        self.r_basic_unchecked().as_mut().flags |= cr as VALUE;
+        unsafe {
+            self.enc_coderange_clear();
+            self.r_basic_unchecked().as_mut().flags |= cr as VALUE;
+        }
     }
 
     /// Returns a Rust `&str` reference to the value of `self`.
@@ -1052,7 +1061,7 @@ impl RString {
     /// # Ruby::init(example).unwrap()
     /// ```
     pub unsafe fn test_as_str(&self) -> Option<&str> {
-        self.test_as_str_unconstrained()
+        unsafe { self.test_as_str_unconstrained() }
     }
 
     /// Returns a Rust `&str` reference to the value of `self`.
@@ -1085,32 +1094,36 @@ impl RString {
     /// # Ruby::init(example).unwrap()
     /// ```
     pub unsafe fn as_str(&self) -> Result<&str, Error> {
-        self.as_str_unconstrained()
+        unsafe { self.as_str_unconstrained() }
     }
 
     unsafe fn test_as_str_unconstrained<'a>(self) -> Option<&'a str> {
-        let handle = Ruby::get_with(self);
-        let enc = self.enc_get();
-        let cr = self.enc_coderange_scan();
-        ((self.is_utf8_compatible_encoding()
-            && (cr == Coderange::SevenBit || cr == Coderange::Valid))
-            || (enc == handle.ascii8bit_encindex() && cr == Coderange::SevenBit))
-            .then(|| str::from_utf8_unchecked(self.as_slice_unconstrained()))
+        unsafe {
+            let handle = Ruby::get_with(self);
+            let enc = self.enc_get();
+            let cr = self.enc_coderange_scan();
+            ((self.is_utf8_compatible_encoding()
+                && (cr == Coderange::SevenBit || cr == Coderange::Valid))
+                || (enc == handle.ascii8bit_encindex() && cr == Coderange::SevenBit))
+                .then(|| str::from_utf8_unchecked(self.as_slice_unconstrained()))
+        }
     }
 
     unsafe fn as_str_unconstrained<'a>(self) -> Result<&'a str, Error> {
-        self.test_as_str_unconstrained().ok_or_else(|| {
-            let msg: Cow<'static, str> = if self.is_utf8_compatible_encoding() {
-                format!(
-                    "expected utf-8, got {}",
-                    RbEncoding::from(self.enc_get()).name()
-                )
-                .into()
-            } else {
-                "invalid byte sequence in UTF-8".into()
-            };
-            Error::new(Ruby::get_with(self).exception_encoding_error(), msg)
-        })
+        unsafe {
+            self.test_as_str_unconstrained().ok_or_else(|| {
+                let msg: Cow<'static, str> = if self.is_utf8_compatible_encoding() {
+                    format!(
+                        "expected utf-8, got {}",
+                        RbEncoding::from(self.enc_get()).name()
+                    )
+                    .into()
+                } else {
+                    "invalid byte sequence in UTF-8".into()
+                };
+                Error::new(Ruby::get_with(self).exception_encoding_error(), msg)
+            })
+        }
     }
 
     /// Returns `self` as a Rust string, ignoring the Ruby encoding and
@@ -1143,7 +1156,7 @@ impl RString {
     /// ```
     #[allow(clippy::wrong_self_convention)]
     pub unsafe fn to_string_lossy(&self) -> Cow<'_, str> {
-        String::from_utf8_lossy(self.as_slice())
+        unsafe { String::from_utf8_lossy(self.as_slice()) }
     }
 
     /// Returns `self` as an owned Rust `String`. The Ruby string will be
@@ -1263,7 +1276,7 @@ impl RString {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, Error, RString, Ruby};
+    /// use magnus::{Error, RString, Ruby, eval};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let s: RString = eval!(
@@ -1282,7 +1295,7 @@ impl RString {
     /// ```
     ///
     /// ```
-    /// use magnus::{eval, Error, RString, Ruby};
+    /// use magnus::{Error, RString, Ruby, eval};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let s: RString = eval!(ruby, r#""example""#)?;
@@ -1308,7 +1321,7 @@ impl RString {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let example = ruby.str_new("example");
@@ -1713,13 +1726,15 @@ impl RString {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, Error, Ruby};
+    /// use magnus::{Error, Ruby, prelude::*};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let s = ruby.str_new(" foo  bar  baz ");
     ///     assert_eq!(
     ///         Vec::<String>::try_convert(s.split("").as_value())?,
-    ///         vec![" ", "f", "o", "o", " ", " ", "b", "a", "r", " ", " ", "b", "a", "z", " "]
+    ///         vec![
+    ///             " ", "f", "o", "o", " ", " ", "b", "a", "r", " ", " ", "b", "a", "z", " "
+    ///         ]
     ///     );
     ///     assert_eq!(
     ///         Vec::<String>::try_convert(s.split(" ").as_value())?,
@@ -1790,7 +1805,7 @@ pub trait IntoRString: Sized {
     ///
     /// This method should only be called from a Ruby thread.
     unsafe fn into_r_string_unchecked(self) -> RString {
-        self.into_r_string_with(&Ruby::get_unchecked())
+        unsafe { self.into_r_string_with(&Ruby::get_unchecked()) }
     }
 
     /// Convert `self` into [`RString`].
@@ -1988,7 +2003,7 @@ impl<'a> Iterator for CharBytes<'a> {
 /// # Examples
 ///
 /// ```
-/// use magnus::{r_string, rb_assert, Error, Ruby};
+/// use magnus::{Error, Ruby, r_string, rb_assert};
 ///
 /// fn example(ruby: &Ruby) -> Result<(), Error> {
 ///     let s = r_string!("Hello, world!");
@@ -2000,10 +2015,8 @@ impl<'a> Iterator for CharBytes<'a> {
 /// ```
 #[macro_export]
 macro_rules! r_string {
-    ($lit:expr) => {{
-        $crate::r_string!($crate::Ruby::get().unwrap(), $lit)
-    }};
-    ($ruby:expr, $lit:expr) => {{
+    ($lit:expr_2021) => {{ $crate::r_string!($crate::Ruby::get().unwrap(), $lit) }};
+    ($ruby:expr_2021, $lit:expr_2021) => {{
         let s = concat!($lit, "\0");
         let len = s.len() - 1;
         unsafe { $ruby.str_new_lit(s.as_ptr() as *const _, len as _) }

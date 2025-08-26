@@ -1,4 +1,4 @@
-use magnus::{prelude::*, rb_assert, Value};
+use magnus::{Value, prelude::*, rb_assert};
 
 #[test]
 fn it_can_check_frozen() {
@@ -10,10 +10,11 @@ fn it_can_check_frozen() {
     assert!(!ruby.eval::<Value>(r#"Object.new"#).unwrap().is_frozen());
     assert!(!ruby.eval::<Value>(r#"[1]"#).unwrap().is_frozen());
 
-    assert!(ruby
-        .eval::<Value>(r#"Object.new.freeze"#)
-        .unwrap()
-        .is_frozen());
+    assert!(
+        ruby.eval::<Value>(r#"Object.new.freeze"#)
+            .unwrap()
+            .is_frozen()
+    );
     assert!(ruby.eval::<Value>(r#"[1].freeze"#).unwrap().is_frozen());
 
     let val = ruby.ary_new();

@@ -2,19 +2,19 @@
 
 use std::{borrow::Cow, fmt};
 
-use rb_sys::{rb_check_id, rb_intern_str, rb_sym2str, rb_to_symbol, ruby_value_type, VALUE};
+use rb_sys::{VALUE, rb_check_id, rb_intern_str, rb_sym2str, rb_to_symbol, ruby_value_type};
 
 use crate::{
+    Ruby,
     encoding::EncodingCapable,
-    error::{protect, Error},
+    error::{Error, protect},
     into_value::IntoValue,
     r_string::RString,
     try_convert::TryConvert,
     value::{
-        private::{self, ReprValue as _},
         Id, LazyId, NonZeroValue, OpaqueId, ReprValue, StaticSymbol, Value,
+        private::{self, ReprValue as _},
     },
-    Ruby,
 };
 
 /// # Symbol
@@ -28,7 +28,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let sym = ruby.to_symbol("example");
@@ -59,7 +59,7 @@ impl Symbol {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, Symbol};
+    /// use magnus::{Symbol, eval};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// assert!(Symbol::from_value(eval(":foo").unwrap()).is_some());
@@ -80,7 +80,7 @@ impl Symbol {
 
     #[inline]
     pub(crate) unsafe fn from_rb_value_unchecked(val: VALUE) -> Self {
-        Self(NonZeroValue::new_unchecked(Value::new(val)))
+        unsafe { Self(NonZeroValue::new_unchecked(Value::new(val))) }
     }
 
     /// Create a new `Symbol` from `name`.
@@ -94,7 +94,7 @@ impl Symbol {
     ///
     /// ```
     /// # #![allow(deprecated)]
-    /// use magnus::{rb_assert, Symbol};
+    /// use magnus::{Symbol, rb_assert};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let sym = Symbol::new("example");
@@ -177,10 +177,11 @@ impl Symbol {
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     assert!(ruby.eval::<Symbol>(":foo")?.as_static().is_some());
     ///     assert!(ruby.to_symbol("bar").as_static().is_none());
-    ///     assert!(ruby
-    ///         .eval::<Symbol>(r#""baz".to_sym"#)?
-    ///         .as_static()
-    ///         .is_none());
+    ///     assert!(
+    ///         ruby.eval::<Symbol>(r#""baz".to_sym"#)?
+    ///             .as_static()
+    ///             .is_none()
+    ///     );
     ///
     ///     Ok(())
     /// }
@@ -200,7 +201,7 @@ impl Symbol {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let sym = ruby.to_symbol("example");
@@ -282,7 +283,7 @@ pub trait IntoSymbol: Sized {
     /// rb_assert!("sym == :example", sym);
     /// ```
     unsafe fn into_symbol_unchecked(self) -> Symbol {
-        self.into_symbol_with(&Ruby::get_unchecked())
+        unsafe { self.into_symbol_with(&Ruby::get_unchecked()) }
     }
 
     /// Convert `self` into [`Symbol`].
@@ -290,7 +291,7 @@ pub trait IntoSymbol: Sized {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, symbol::IntoSymbol, Ruby};
+    /// use magnus::{Ruby, rb_assert, symbol::IntoSymbol};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let ruby = Ruby::get().unwrap();

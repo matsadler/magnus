@@ -3,23 +3,23 @@
 use std::{fmt, time::Duration};
 
 use rb_sys::{
-    rb_mutex_lock, rb_mutex_locked_p, rb_mutex_new, rb_mutex_sleep, rb_mutex_synchronize,
-    rb_mutex_trylock, rb_mutex_unlock, VALUE,
+    VALUE, rb_mutex_lock, rb_mutex_locked_p, rb_mutex_new, rb_mutex_sleep, rb_mutex_synchronize,
+    rb_mutex_trylock, rb_mutex_unlock,
 };
 
 use crate::{
+    Ruby,
     class::RClass,
-    error::{protect, Error},
+    error::{Error, protect},
     into_value::IntoValue,
     method::{BlockReturn, Synchronize},
     object::Object,
     r_typed_data::RTypedData,
     try_convert::TryConvert,
     value::{
-        private::{self, ReprValue as _},
         ReprValue, Value,
+        private::{self, ReprValue as _},
     },
-    Ruby,
 };
 
 /// # `Mutex`
@@ -82,7 +82,7 @@ impl Mutex {
 
     #[inline]
     pub(crate) unsafe fn from_rb_value_unchecked(val: VALUE) -> Self {
-        Self(RTypedData::from_rb_value_unchecked(val))
+        unsafe { Self(RTypedData::from_rb_value_unchecked(val)) }
     }
 
     /// Returns whether any threads currently hold the lock.
@@ -248,8 +248,10 @@ impl Mutex {
             F: FnOnce() -> R,
             R: BlockReturn,
         {
-            let closure = (*(arg as *mut Option<F>)).take().unwrap();
-            closure.call_handle_error().as_rb_value()
+            unsafe {
+                let closure = (*(arg as *mut Option<F>)).take().unwrap();
+                closure.call_handle_error().as_rb_value()
+            }
         }
 
         protect(|| unsafe {

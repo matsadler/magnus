@@ -1,18 +1,18 @@
 use std::{fmt, num::NonZeroI64};
 
-use rb_sys::{rb_rational_den, rb_rational_new, rb_rational_num, ruby_value_type, VALUE};
+use rb_sys::{VALUE, rb_rational_den, rb_rational_new, rb_rational_num, ruby_value_type};
 
 use crate::{
+    Ruby,
     error::Error,
     integer::Integer,
     into_value::IntoValue,
     numeric::Numeric,
     try_convert::TryConvert,
     value::{
-        private::{self, ReprValue as _},
         NonZeroValue, ReprValue, Value,
+        private::{self, ReprValue as _},
     },
-    Ruby,
 };
 
 /// # `RRational`
@@ -65,7 +65,7 @@ impl RRational {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, RRational};
+    /// use magnus::{RRational, eval};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// assert!(RRational::from_value(eval("1/2r").unwrap()).is_some());
@@ -81,7 +81,7 @@ impl RRational {
 
     #[inline]
     pub(crate) unsafe fn from_rb_value_unchecked(val: VALUE) -> Self {
-        Self(NonZeroValue::new_unchecked(Value::new(val)))
+        unsafe { Self(NonZeroValue::new_unchecked(Value::new(val))) }
     }
 
     /// Create a new `RRational`.

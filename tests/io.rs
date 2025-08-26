@@ -1,5 +1,5 @@
 use magnus::{
-    encoding::Index, io::*, value::ReprValue, Error, Fixnum, IntoValue, Module, Ruby, TryConvert,
+    Error, Fixnum, IntoValue, Module, Ruby, TryConvert, encoding::Index, io::*, value::ReprValue,
 };
 
 #[test]

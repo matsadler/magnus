@@ -3,15 +3,15 @@ use std::fmt;
 use rb_sys::ruby_value_type;
 
 use crate::{
+    Ruby,
     error::Error,
     into_value::IntoValue,
     object::Object,
     try_convert::TryConvert,
     value::{
-        private::{self, ReprValue as _},
         NonZeroValue, ReprValue, Value,
+        private::{self, ReprValue as _},
     },
-    Ruby,
 };
 
 /// A Value pointer to a RObject struct, Ruby's internal representation of
@@ -29,7 +29,7 @@ impl RObject {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, RObject};
+    /// use magnus::{RObject, eval};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// assert!(RObject::from_value(eval("Object.new").unwrap()).is_some());

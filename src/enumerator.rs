@@ -3,15 +3,15 @@ use std::fmt;
 use rb_sys::VALUE;
 
 use crate::{
+    Ruby,
     error::Error,
     into_value::IntoValue,
     object::Object,
     try_convert::TryConvert,
     value::{
-        private::{self, ReprValue as _},
         NonZeroValue, ReprValue, Value,
+        private::{self, ReprValue as _},
     },
-    Ruby,
 };
 
 /// Wrapper type for a Value known to be an instance of Ruby's Enumerator class.
@@ -27,7 +27,7 @@ use crate::{
 /// # Examples
 ///
 /// ```
-/// use magnus::{prelude::*, rb_assert, Error, Ruby};
+/// use magnus::{Error, Ruby, prelude::*, rb_assert};
 ///
 /// fn example(ruby: &Ruby) -> Result<(), Error> {
 ///     let s = ruby.str_new("foo\nbar\nbaz");
@@ -53,7 +53,7 @@ impl Enumerator {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, Enumerator};
+    /// use magnus::{Enumerator, eval};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// assert!(Enumerator::from_value(eval("[1, 2, 3].each").unwrap()).is_some());
@@ -69,7 +69,7 @@ impl Enumerator {
 
     #[inline]
     pub(crate) unsafe fn from_rb_value_unchecked(val: VALUE) -> Self {
-        Self(NonZeroValue::new_unchecked(Value::new(val)))
+        unsafe { Self(NonZeroValue::new_unchecked(Value::new(val))) }
     }
 }
 

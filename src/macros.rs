@@ -3,7 +3,7 @@
 // reused already this won't panic like it should, but we're trying our
 // best here.
 macro_rules! debug_assert_value {
-    ($value:expr) => {
+    ($value:expr_2021) => {
         // The memory this points to is managed by Ruby's GC and we can't
         // really know if it's safe to access as with GC compaction this may
         // point to memory now outside that owned by the process. We will likely

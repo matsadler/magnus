@@ -5,7 +5,7 @@
 
 use std::{
     collections::hash_map::DefaultHasher,
-    ffi::{c_void, CStr},
+    ffi::{CStr, c_void},
     fmt,
     hash::Hasher,
     marker::PhantomData,
@@ -18,9 +18,9 @@ use std::{
 #[cfg(ruby_gte_3_0)]
 use rb_sys::rbimpl_typeddata_flags::{self, RUBY_TYPED_FREE_IMMEDIATELY, RUBY_TYPED_WB_PROTECTED};
 use rb_sys::{
-    self, rb_data_type_struct__bindgen_ty_1, rb_data_type_t, rb_gc_writebarrier,
-    rb_gc_writebarrier_unprotect, rb_obj_reveal, rb_singleton_class_attached,
-    rb_singleton_class_clone, size_t, RTYPEDDATA_GET_DATA, VALUE,
+    self, RTYPEDDATA_GET_DATA, VALUE, rb_data_type_struct__bindgen_ty_1, rb_data_type_t,
+    rb_gc_writebarrier, rb_gc_writebarrier_unprotect, rb_obj_reveal, rb_singleton_class_attached,
+    rb_singleton_class_clone, size_t,
 };
 
 #[cfg(ruby_lt_3_0)]
@@ -30,8 +30,9 @@ const RUBY_TYPED_FREE_IMMEDIATELY: u32 = 1;
 const RUBY_TYPED_WB_PROTECTED: u32 = rb_sys::ruby_fl_type::RUBY_FL_WB_PROTECTED as u32;
 
 use crate::{
+    Ruby,
     class::RClass,
-    error::{bug_from_panic, Error},
+    error::{Error, bug_from_panic},
     gc::{self, Mark},
     into_value::IntoValue,
     object::Object,
@@ -39,10 +40,9 @@ use crate::{
     scan_args::{get_kwargs, scan_args},
     try_convert::TryConvert,
     value::{
-        private::{self, ReprValue as _},
         ReprValue, Value,
+        private::{self, ReprValue as _},
     },
-    Ruby,
 };
 
 /// A C struct containing metadata on a Rust type, for use with the
@@ -164,8 +164,10 @@ where
     /// This function must not panic.
     #[doc(hidden)]
     unsafe extern "C" fn extern_free(ptr: *mut c_void) {
-        if let Err(e) = catch_unwind(|| Self::free(Box::from_raw(ptr as *mut _))) {
-            bug_from_panic(e, "panic in DataTypeFunctions::free")
+        unsafe {
+            if let Err(e) = catch_unwind(|| Self::free(Box::from_raw(ptr as *mut _))) {
+                bug_from_panic(e, "panic in DataTypeFunctions::free")
+            }
         }
     }
 
@@ -178,9 +180,11 @@ where
     /// This function must not panic.
     #[doc(hidden)]
     unsafe extern "C" fn extern_mark(ptr: *mut c_void) {
-        let marker = gc::Marker::new();
-        if let Err(e) = catch_unwind(|| Self::mark(&*(ptr as *mut Self), &marker)) {
-            bug_from_panic(e, "panic in DataTypeFunctions::mark")
+        unsafe {
+            let marker = gc::Marker::new();
+            if let Err(e) = catch_unwind(|| Self::mark(&*(ptr as *mut Self), &marker)) {
+                bug_from_panic(e, "panic in DataTypeFunctions::mark")
+            }
         }
     }
 
@@ -193,9 +197,11 @@ where
     /// This function must not panic.
     #[doc(hidden)]
     unsafe extern "C" fn extern_size(ptr: *const c_void) -> size_t {
-        match catch_unwind(|| Self::size(&*(ptr as *const Self)) as size_t) {
-            Ok(v) => v,
-            Err(e) => bug_from_panic(e, "panic in DataTypeFunctions::size"),
+        unsafe {
+            match catch_unwind(|| Self::size(&*(ptr as *const Self)) as size_t) {
+                Ok(v) => v,
+                Err(e) => bug_from_panic(e, "panic in DataTypeFunctions::size"),
+            }
         }
     }
 
@@ -208,9 +214,11 @@ where
     /// This function must not panic.
     #[doc(hidden)]
     unsafe extern "C" fn extern_compact(ptr: *mut c_void) {
-        let compactor = gc::Compactor::new();
-        if let Err(e) = catch_unwind(|| Self::compact(&*(ptr as *mut Self), &compactor)) {
-            bug_from_panic(e, "panic in DataTypeFunctions::compact")
+        unsafe {
+            let compactor = gc::Compactor::new();
+            if let Err(e) = catch_unwind(|| Self::compact(&*(ptr as *mut Self), &compactor)) {
+                bug_from_panic(e, "panic in DataTypeFunctions::compact")
+            }
         }
     }
 }
@@ -401,7 +409,7 @@ where
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, value::Lazy, RClass, Ruby, TypedData};
+    /// use magnus::{RClass, Ruby, TypedData, prelude::*, value::Lazy};
     /// # use magnus::DataType;
     ///
     /// struct Example();
@@ -428,7 +436,7 @@ where
     /// # Examples
     ///
     /// ```
-    /// use magnus::{data_type_builder, DataType, DataTypeFunctions, TypedData};
+    /// use magnus::{DataType, DataTypeFunctions, TypedData, data_type_builder};
     /// # use magnus::{RClass, Ruby};
     ///
     /// #[derive(DataTypeFunctions)]
@@ -460,7 +468,7 @@ where
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, value::Lazy, RClass, Ruby, TypedData};
+    /// use magnus::{RClass, Ruby, TypedData, prelude::*, value::Lazy};
     /// # use magnus::DataType;
     ///
     /// enum Example {
@@ -570,7 +578,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, Error, Ruby};
+    /// use magnus::{Error, Ruby, prelude::*};
     ///
     /// #[magnus::wrap(class = "Point")]
     /// struct Point {
@@ -611,7 +619,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, Error, Ruby};
+    /// use magnus::{Error, Ruby, prelude::*};
     ///
     /// #[magnus::wrap(class = "Point")]
     /// struct Point {
@@ -640,7 +648,7 @@ impl Ruby {
     /// method rather than `initialize`)
     ///
     /// ```
-    /// use magnus::{function, method, prelude::*, typed_data, Error, RClass, Ruby, Value};
+    /// use magnus::{Error, RClass, Ruby, Value, function, method, prelude::*, typed_data};
     ///
     /// #[magnus::wrap(class = "Point")]
     /// struct Point {
@@ -770,7 +778,7 @@ where
     /// ```
     /// # #![allow(deprecated)]
     /// use magnus::{
-    ///     class, define_class, eval, function, method, prelude::*, typed_data, RClass, Value,
+    ///     RClass, Value, class, define_class, eval, function, method, prelude::*, typed_data,
     /// };
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
@@ -945,11 +953,10 @@ pub trait Writebarrier: ReprValue {
     /// use std::cell::RefCell;
     ///
     /// use magnus::{
-    ///     function, gc, method,
+    ///     DataTypeFunctions, Error, Ruby, TypedData, Value, function, gc, method,
     ///     prelude::*,
     ///     typed_data::{Obj, Writebarrier},
     ///     value::Opaque,
-    ///     DataTypeFunctions, Error, Ruby, TypedData, Value,
     /// };
     ///
     /// #[derive(TypedData)]
@@ -1028,8 +1035,8 @@ impl<T> Writebarrier for Obj<T> where T: TypedData {}
 /// use std::hash::Hasher;
 ///
 /// use magnus::{
-///     function, gc, method, prelude::*, typed_data, value::Opaque, DataTypeFunctions, Error,
-///     Ruby, TypedData, Value,
+///     DataTypeFunctions, Error, Ruby, TypedData, Value, function, gc, method, prelude::*,
+///     typed_data, value::Opaque,
 /// };
 ///
 /// #[derive(TypedData)]
@@ -1146,8 +1153,8 @@ where
 /// use std::hash::Hasher;
 ///
 /// use magnus::{
-///     function, gc, method, prelude::*, typed_data, value::Opaque, DataTypeFunctions, Error,
-///     Ruby, TypedData, Value,
+///     DataTypeFunctions, Error, Ruby, TypedData, Value, function, gc, method, prelude::*,
+///     typed_data, value::Opaque,
 /// };
 ///
 /// #[derive(TypedData)]
@@ -1262,8 +1269,8 @@ where
 /// use std::cmp::Ordering;
 ///
 /// use magnus::{
-///     function, gc, method, prelude::*, rb_assert, typed_data, value::Opaque, DataTypeFunctions,
-///     Error, Module, Ruby, TypedData, Value,
+///     DataTypeFunctions, Error, Module, Ruby, TypedData, Value, function, gc, method, prelude::*,
+///     rb_assert, typed_data, value::Opaque,
 /// };
 ///
 /// #[derive(TypedData)]
@@ -1387,8 +1394,8 @@ where
 /// use std::fmt;
 ///
 /// use magnus::{
-///     function, gc, method, prelude::*, rb_assert, typed_data, value::Opaque, DataTypeFunctions,
-///     Error, Ruby, TypedData, Value,
+///     DataTypeFunctions, Error, Ruby, TypedData, Value, function, gc, method, prelude::*,
+///     rb_assert, typed_data, value::Opaque,
 /// };
 ///
 /// #[derive(TypedData)]
@@ -1469,8 +1476,8 @@ where
 ///
 /// ```
 /// use magnus::{
-///     function, gc, method, prelude::*, rb_assert, typed_data, value::Opaque, DataTypeFunctions,
-///     Error, Ruby, TypedData, Value,
+///     DataTypeFunctions, Error, Ruby, TypedData, Value, function, gc, method, prelude::*,
+///     rb_assert, typed_data, value::Opaque,
 /// };
 ///
 /// #[derive(TypedData, Clone)]

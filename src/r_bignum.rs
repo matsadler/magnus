@@ -4,21 +4,21 @@ use std::{
 };
 
 use rb_sys::{
-    rb_big2str, rb_ll2inum, rb_num2ll, rb_num2long, rb_num2ull, rb_num2ulong, rb_ull2inum,
-    ruby_fl_type, ruby_value_type, VALUE,
+    VALUE, rb_big2str, rb_ll2inum, rb_num2ll, rb_num2long, rb_num2ull, rb_num2ulong, rb_ull2inum,
+    ruby_fl_type, ruby_value_type,
 };
 
 use crate::{
-    error::{protect, Error},
+    RString, Ruby,
+    error::{Error, protect},
     integer::{Integer, IntegerType},
     into_value::IntoValue,
     numeric::Numeric,
     try_convert::TryConvert,
     value::{
-        private::{self, ReprValue as _},
         Fixnum, NonZeroValue, ReprValue, Value,
+        private::{self, ReprValue as _},
     },
-    RString, Ruby,
 };
 
 /// # `RBignum`
@@ -101,7 +101,7 @@ impl RBignum {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, RBignum};
+    /// use magnus::{RBignum, eval};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// assert!(RBignum::from_value(eval("9223372036854775807").unwrap()).is_some());
@@ -120,7 +120,7 @@ impl RBignum {
 
     #[inline]
     pub(crate) unsafe fn from_rb_value_unchecked(val: VALUE) -> Self {
-        Self(NonZeroValue::new_unchecked(Value::new(val)))
+        unsafe { Self(NonZeroValue::new_unchecked(Value::new(val))) }
     }
 
     /// Create a new `RBignum` from an `i64.`
@@ -214,7 +214,7 @@ impl RBignum {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, RBignum};
+    /// use magnus::{RBignum, eval};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// assert_eq!(
@@ -231,14 +231,18 @@ impl RBignum {
     ///         .unwrap(),
     ///     -4611686018427387905
     /// );
-    /// assert!(eval::<RBignum>("9223372036854775808")
-    ///     .unwrap()
-    ///     .to_i64()
-    ///     .is_err());
-    /// assert!(eval::<RBignum>("-9223372036854775809")
-    ///     .unwrap()
-    ///     .to_i64()
-    ///     .is_err());
+    /// assert!(
+    ///     eval::<RBignum>("9223372036854775808")
+    ///         .unwrap()
+    ///         .to_i64()
+    ///         .is_err()
+    /// );
+    /// assert!(
+    ///     eval::<RBignum>("-9223372036854775809")
+    ///         .unwrap()
+    ///         .to_i64()
+    ///         .is_err()
+    /// );
     /// ```
     pub fn to_i64(self) -> Result<i64, Error> {
         debug_assert_value!(self);
@@ -256,7 +260,7 @@ impl RBignum {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, RBignum};
+    /// use magnus::{RBignum, eval};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// assert_eq!(
@@ -273,14 +277,18 @@ impl RBignum {
     ///         .unwrap(),
     ///     -170141183460469231731687303715884105728
     /// );
-    /// assert!(eval::<RBignum>("170141183460469231731687303715884105728")
-    ///     .unwrap()
-    ///     .to_i128()
-    ///     .is_err());
-    /// assert!(eval::<RBignum>("-170141183460469231731687303715884105729")
-    ///     .unwrap()
-    ///     .to_i128()
-    ///     .is_err());
+    /// assert!(
+    ///     eval::<RBignum>("170141183460469231731687303715884105728")
+    ///         .unwrap()
+    ///         .to_i128()
+    ///         .is_err()
+    /// );
+    /// assert!(
+    ///     eval::<RBignum>("-170141183460469231731687303715884105729")
+    ///         .unwrap()
+    ///         .to_i128()
+    ///         .is_err()
+    /// );
     /// ```
     pub fn to_i128(self) -> Result<i128, Error> {
         debug_assert_value!(self);
@@ -290,15 +298,18 @@ impl RBignum {
             unsafe { res = rb_big2str(self.as_rb_value(), 10) };
             handle.qnil()
         })?;
-        unsafe { RString::from_rb_value_unchecked(res).as_str() }
-            .unwrap()
-            .parse::<i128>()
-            .map_err(|_| {
-                Error::new(
-                    handle.exception_range_error(),
-                    "bignum too big to convert into `i128`",
-                )
-            })
+        unsafe {
+            RString::from_rb_value_unchecked(res)
+                .as_str()
+                .unwrap()
+                .parse::<i128>()
+        }
+        .map_err(|_| {
+            Error::new(
+                handle.exception_range_error(),
+                "bignum too big to convert into `i128`",
+            )
+        })
     }
 
     /// Convert `self` to an `isize`. Returns `Err` if `self` is out of range
@@ -307,7 +318,7 @@ impl RBignum {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, RBignum};
+    /// use magnus::{RBignum, eval};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// assert_eq!(
@@ -376,7 +387,7 @@ impl RBignum {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, RBignum};
+    /// use magnus::{RBignum, eval};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// assert_eq!(
@@ -386,10 +397,12 @@ impl RBignum {
     ///         .unwrap(),
     ///     4611686018427387904
     /// );
-    /// assert!(eval::<RBignum>("18446744073709551616")
-    ///     .unwrap()
-    ///     .to_u64()
-    ///     .is_err());
+    /// assert!(
+    ///     eval::<RBignum>("18446744073709551616")
+    ///         .unwrap()
+    ///         .to_u64()
+    ///         .is_err()
+    /// );
     /// ```
     pub fn to_u64(self) -> Result<u64, Error> {
         debug_assert_value!(self);
@@ -414,7 +427,7 @@ impl RBignum {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, RBignum};
+    /// use magnus::{RBignum, eval};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// assert_eq!(
@@ -424,10 +437,12 @@ impl RBignum {
     ///         .unwrap(),
     ///     340282366920938463463374607431768211455
     /// );
-    /// assert!(eval::<RBignum>("340282366920938463463374607431768211456")
-    ///     .unwrap()
-    ///     .to_u128()
-    ///     .is_err());
+    /// assert!(
+    ///     eval::<RBignum>("340282366920938463463374607431768211456")
+    ///         .unwrap()
+    ///         .to_u128()
+    ///         .is_err()
+    /// );
     /// ```
     pub fn to_u128(self) -> Result<u128, Error> {
         debug_assert_value!(self);
@@ -443,15 +458,18 @@ impl RBignum {
             unsafe { res = rb_big2str(self.as_rb_value(), 10) };
             handle.qnil()
         })?;
-        unsafe { RString::from_rb_value_unchecked(res).as_str() }
-            .unwrap()
-            .parse::<u128>()
-            .map_err(|_| {
-                Error::new(
-                    handle.exception_range_error(),
-                    "bignum too big to convert into `u128`",
-                )
-            })
+        unsafe {
+            RString::from_rb_value_unchecked(res)
+                .as_str()
+                .unwrap()
+                .parse::<u128>()
+        }
+        .map_err(|_| {
+            Error::new(
+                handle.exception_range_error(),
+                "bignum too big to convert into `u128`",
+            )
+        })
     }
 
     /// Convert `self` to a `usize`. Returns `Err` if `self` is negative or out
@@ -460,7 +478,7 @@ impl RBignum {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, RBignum};
+    /// use magnus::{RBignum, eval};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// assert_eq!(
@@ -470,10 +488,12 @@ impl RBignum {
     ///         .unwrap(),
     ///     4611686018427387904
     /// );
-    /// assert!(eval::<RBignum>("18446744073709551616")
-    ///     .unwrap()
-    ///     .to_usize()
-    ///     .is_err());
+    /// assert!(
+    ///     eval::<RBignum>("18446744073709551616")
+    ///         .unwrap()
+    ///         .to_usize()
+    ///         .is_err()
+    /// );
     /// ```
     pub fn to_usize(self) -> Result<usize, Error> {
         debug_assert_value!(self);

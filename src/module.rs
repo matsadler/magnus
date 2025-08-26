@@ -5,17 +5,18 @@
 use std::{ffi::CString, fmt, mem::transmute, os::raw::c_int};
 
 use rb_sys::{
-    rb_alias, rb_attr, rb_class_inherited_p, rb_const_get, rb_const_set, rb_define_class_id_under,
-    rb_define_method_id, rb_define_module_function, rb_define_module_id_under,
-    rb_define_private_method, rb_define_protected_method, rb_include_module, rb_mComparable,
-    rb_mEnumerable, rb_mErrno, rb_mFileTest, rb_mGC, rb_mKernel, rb_mMath, rb_mProcess,
-    rb_mWaitReadable, rb_mWaitWritable, rb_mod_ancestors, rb_module_new, rb_prepend_module,
-    ruby_value_type, VALUE,
+    VALUE, rb_alias, rb_attr, rb_class_inherited_p, rb_const_get, rb_const_set,
+    rb_define_class_id_under, rb_define_method_id, rb_define_module_function,
+    rb_define_module_id_under, rb_define_private_method, rb_define_protected_method,
+    rb_include_module, rb_mComparable, rb_mEnumerable, rb_mErrno, rb_mFileTest, rb_mGC, rb_mKernel,
+    rb_mMath, rb_mProcess, rb_mWaitReadable, rb_mWaitWritable, rb_mod_ancestors, rb_module_new,
+    rb_prepend_module, ruby_value_type,
 };
 
 use crate::{
+    Ruby,
     class::{Class, RClass},
-    error::{protect, Error},
+    error::{Error, protect},
     exception::ExceptionClass,
     into_value::IntoValue,
     method::Method,
@@ -23,10 +24,9 @@ use crate::{
     r_array::RArray,
     try_convert::TryConvert,
     value::{
-        private::{self, ReprValue as _},
         IntoId, NonZeroValue, ReprValue, Value,
+        private::{self, ReprValue as _},
     },
-    Ruby,
 };
 
 /// # `RModule`
@@ -40,7 +40,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, Error, Ruby};
+    /// use magnus::{Error, Ruby, prelude::*};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let module = ruby.module_new();
@@ -74,7 +74,7 @@ impl RModule {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, RModule};
+    /// use magnus::{RModule, eval};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// assert!(RModule::from_value(eval("Enumerable").unwrap()).is_some());
@@ -91,7 +91,7 @@ impl RModule {
 
     #[inline]
     pub(crate) unsafe fn from_rb_value_unchecked(val: VALUE) -> Self {
-        Self(NonZeroValue::new_unchecked(Value::new(val)))
+        unsafe { Self(NonZeroValue::new_unchecked(Value::new(val))) }
     }
 
     /// Create a new anonymous module.
@@ -105,7 +105,7 @@ impl RModule {
     ///
     /// ```
     /// # #![allow(deprecated)]
-    /// use magnus::{class, prelude::*, RModule};
+    /// use magnus::{RModule, class, prelude::*};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let module = RModule::new();
@@ -128,7 +128,7 @@ impl RModule {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{function, r_string, rb_assert, Error, RString, Ruby};
+    /// use magnus::{Error, RString, Ruby, function, r_string, rb_assert};
     ///
     /// fn greet(ruby: &Ruby) -> RString {
     ///     r_string!(ruby, "Hello, world!")
@@ -219,7 +219,7 @@ pub trait Module: Object + ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, prelude::*, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let outer = ruby.define_module("Outer")?;
@@ -252,7 +252,7 @@ pub trait Module: Object + ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, prelude::*, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let outer = ruby.define_module("Outer")?;
@@ -282,7 +282,7 @@ pub trait Module: Object + ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, prelude::*, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let outer = ruby.define_module("Outer")?;
@@ -310,7 +310,7 @@ pub trait Module: Object + ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{function, prelude::*, rb_assert, Error, RClass, Ruby};
+    /// use magnus::{Error, RClass, Ruby, function, prelude::*, rb_assert};
     ///
     /// fn test() -> i64 {
     ///     42
@@ -346,7 +346,7 @@ pub trait Module: Object + ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{function, prelude::*, rb_assert, Error, RClass, Ruby};
+    /// use magnus::{Error, RClass, Ruby, function, prelude::*, rb_assert};
     ///
     /// fn test(ruby: &Ruby) -> Result<i64, Error> {
     ///     Ok(ruby.call_super::<_, i64>(())? + 2)
@@ -388,7 +388,7 @@ pub trait Module: Object + ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Module, Ruby};
+    /// use magnus::{Error, Module, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     ruby.class_array().const_set("EXAMPLE", 42)?;
@@ -419,7 +419,7 @@ pub trait Module: Object + ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Module, RClass, Ruby, Value};
+    /// use magnus::{Error, Module, RClass, Ruby, Value, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     ruby.eval::<Value>(
@@ -456,7 +456,7 @@ pub trait Module: Object + ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, Error, Module, RClass, Ruby};
+    /// use magnus::{Error, Module, RClass, Ruby, prelude::*};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let a = RClass::new(ruby.class_object())?;
@@ -486,7 +486,7 @@ pub trait Module: Object + ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Module, Ruby};
+    /// use magnus::{Error, Module, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let ary = ruby.class_string().ancestors();
@@ -510,7 +510,7 @@ pub trait Module: Object + ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{method, rb_assert, Error, Module, Ruby};
+    /// use magnus::{Error, Module, Ruby, method, rb_assert};
     ///
     /// fn escape_unicode(s: String) -> String {
     ///     s.escape_unicode().to_string()
@@ -556,7 +556,7 @@ pub trait Module: Object + ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, function, rb_assert, Error, Module, Ruby, Value};
+    /// use magnus::{Error, Module, Ruby, Value, eval, function, rb_assert};
     ///
     /// fn percent_encode(c: char) -> String {
     ///     if c.is_ascii_alphanumeric() || c == '-' || c == '_' || c == '.' || c == '~' {
@@ -582,9 +582,11 @@ pub trait Module: Object + ReprValue + Copy {
     ///
     ///     rb_assert!(ruby, r#""foo bar".percent_encode == "foo%20bar""#);
     ///
-    ///     assert!(eval::<bool>(r#"" ".percent_encode_char(" ")"#)
-    ///         .unwrap_err()
-    ///         .is_kind_of(ruby.exception_no_method_error()));
+    ///     assert!(
+    ///         eval::<bool>(r#"" ".percent_encode_char(" ")"#)
+    ///             .unwrap_err()
+    ///             .is_kind_of(ruby.exception_no_method_error())
+    ///     );
     ///
     ///     Ok(())
     /// }
@@ -615,7 +617,7 @@ pub trait Module: Object + ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{method, rb_assert, Error, Module, Ruby, Value};
+    /// use magnus::{Error, Module, Ruby, Value, method, rb_assert};
     ///
     /// fn escape_unicode(s: String) -> String {
     ///     s.escape_unicode().to_string()
@@ -646,10 +648,11 @@ pub trait Module: Object + ReprValue + Copy {
     ///         r#""🤖\tfoo bar".escape_invisible == "🤖\\u{9}foo\\u{20}bar""#,
     ///     );
     ///
-    ///     assert!(ruby
-    ///         .eval::<bool>(r#"" ".invisible?"#)
-    ///         .unwrap_err()
-    ///         .is_kind_of(ruby.exception_no_method_error()));
+    ///     assert!(
+    ///         ruby.eval::<bool>(r#"" ".invisible?"#)
+    ///             .unwrap_err()
+    ///             .is_kind_of(ruby.exception_no_method_error())
+    ///     );
     ///
     ///     Ok(())
     /// }
@@ -682,7 +685,7 @@ pub trait Module: Object + ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, prelude::*, rb_assert, Attr, Error, Module, RClass, Ruby, Value};
+    /// use magnus::{Attr, Error, Module, RClass, Ruby, Value, eval, prelude::*, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let class = RClass::new(ruby.class_object())?;
@@ -722,7 +725,7 @@ pub trait Module: Object + ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{function, prelude::*, rb_assert, Error, Module, RClass, Ruby};
+    /// use magnus::{Error, Module, RClass, Ruby, function, prelude::*, rb_assert};
     ///
     /// fn test() -> i64 {
     ///     42
@@ -794,7 +797,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(ruby, "md == Comparable", md = ruby.module_comparable());
@@ -813,7 +816,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(ruby, "md == Enumerable", md = ruby.module_enumerable());
@@ -832,7 +835,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(ruby, "md == Errno", md = ruby.module_errno());
@@ -851,7 +854,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(ruby, "md == FileTest", md = ruby.module_file_test());
@@ -870,7 +873,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(ruby, "md == GC", md = ruby.module_gc());
@@ -889,7 +892,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(ruby, "md == Kernel", md = ruby.module_kernel());
@@ -908,7 +911,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(ruby, "md == Math", md = ruby.module_math());
@@ -927,7 +930,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(ruby, "md == Process", md = ruby.module_process());
@@ -946,7 +949,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(
@@ -969,7 +972,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(

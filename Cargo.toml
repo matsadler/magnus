@@ -1,7 +1,8 @@
 [package]
 name = "magnus"
 version = "0.8.0"
-edition = "2021"
+edition = "2024"
+rust-version = "1.85"
 description = "High level Ruby bindings. Write Ruby extension gems in Rust, or call Ruby code from a Rust binary."
 keywords = ["ruby", "rubygem", "extension", "gem"]
 categories = ["api-bindings", "development-tools::ffi"]

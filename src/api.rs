@@ -9,7 +9,7 @@ use rb_sys::ruby_native_thread_p;
 // this kind of hack, and although the function is marked experimental in
 // Ruby's source, that comment and the code have been unchanged singe 1.9.2,
 // 14 years ago as of writing.
-extern "C" {
+unsafe extern "C" {
     fn ruby_thread_has_gvl_p() -> ::std::os::raw::c_int;
 }
 

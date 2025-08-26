@@ -12,7 +12,7 @@ use rb_sys::{rb_sys_fail, rb_waitpid};
 
 use crate::{
     api::Ruby,
-    error::{protect, Error},
+    error::{Error, protect},
 };
 
 /// # Process
@@ -40,7 +40,7 @@ impl Ruby {
     /// ```
     /// use std::process::Command;
     ///
-    /// use magnus::{process::WaitTarget, Error, Ruby};
+    /// use magnus::{Error, Ruby, process::WaitTarget};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let child = Command::new("ls").spawn().unwrap();

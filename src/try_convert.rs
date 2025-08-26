@@ -8,13 +8,13 @@ use seq_macro::seq;
 #[cfg(ruby_use_flonum)]
 use crate::value::Flonum;
 use crate::{
-    error::{protect, Error},
+    Ruby,
+    error::{Error, protect},
     integer::Integer,
     r_array::RArray,
     r_hash::RHash,
     r_string::RString,
     value::{Fixnum, ReprValue, Value},
-    Ruby,
 };
 
 /// Conversions from [`Value`] to Rust types.

@@ -1,6 +1,6 @@
 use std::os::raw::c_long;
 
-use magnus::{eval, Error, Integer, Ruby};
+use magnus::{Error, Integer, Ruby, eval};
 
 const RUBY_FIXNUM_MAX: u64 = (c_long::MAX / 2) as u64;
 const RUBY_FIXNUM_MIN: i64 = (c_long::MIN / 2) as i64;

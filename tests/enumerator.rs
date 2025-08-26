@@ -1,4 +1,4 @@
-use magnus::{prelude::*, RArray};
+use magnus::{RArray, prelude::*};
 
 #[test]
 fn enumerator_impls_iterator() {

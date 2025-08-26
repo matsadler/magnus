@@ -1,4 +1,4 @@
-use magnus::{eval, method, rb_assert, Error, Ruby, Value};
+use magnus::{Error, Ruby, Value, eval, method, rb_assert};
 
 fn flipflop(ruby: &Ruby, _rb_self: Value, mut val: bool) -> Result<(), Error> {
     val = ruby.yield_value(val)?;
@@ -30,5 +30,10 @@ fn it_yields() {
     )
     .unwrap();
 
-    rb_assert!(ruby, "i == 6 && values == [true, false, true, false, true, false, true, false, true, false, true]", i, values);
+    rb_assert!(
+        ruby,
+        "i == 6 && values == [true, false, true, false, true, false, true, false, true, false, true]",
+        i,
+        values
+    );
 }

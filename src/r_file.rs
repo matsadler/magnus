@@ -7,15 +7,15 @@ use rb_sys::rb_io_descriptor;
 use rb_sys::ruby_value_type;
 
 use crate::{
+    Ruby,
     error::Error,
     into_value::IntoValue,
     object::Object,
     try_convert::TryConvert,
     value::{
-        private::{self, ReprValue as _},
         NonZeroValue, ReprValue, Value,
+        private::{self, ReprValue as _},
     },
-    Ruby,
 };
 
 /// A Value pointer to a RFile struct, Ruby's internal representation of IO.
@@ -32,7 +32,7 @@ impl RFile {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, RFile};
+    /// use magnus::{RFile, eval};
     /// # let ruby = unsafe { magnus::embed::init() };
     ///
     /// assert!(RFile::from_value(eval("STDOUT").unwrap()).is_some());

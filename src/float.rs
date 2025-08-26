@@ -1,23 +1,23 @@
 use std::fmt;
 
 use rb_sys::{
-    rb_float_new_in_heap, rb_float_value, rb_flt_rationalize, rb_flt_rationalize_with_prec,
-    rb_to_float, ruby_value_type, VALUE,
+    VALUE, rb_float_new_in_heap, rb_float_value, rb_flt_rationalize, rb_flt_rationalize_with_prec,
+    rb_to_float, ruby_value_type,
 };
 
 #[cfg(ruby_use_flonum)]
 use crate::value::Flonum;
 use crate::{
-    error::{protect, Error},
+    Ruby,
+    error::{Error, protect},
     into_value::IntoValue,
     numeric::Numeric,
     r_rational::RRational,
     try_convert::TryConvert,
     value::{
-        private::{self, ReprValue as _},
         NonZeroValue, ReprValue, Value,
+        private::{self, ReprValue as _},
     },
-    Ruby,
 };
 
 /// # `Float`
@@ -31,7 +31,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let f = ruby.float_from_f64(1.7272337110188893e-77);
@@ -75,7 +75,7 @@ impl Float {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, Float};
+    /// use magnus::{Float, eval};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// assert!(Float::from_value(eval("1.7272337110188893e-77").unwrap()).is_some());
@@ -96,7 +96,7 @@ impl Float {
 
     #[inline]
     pub(crate) unsafe fn from_rb_value_unchecked(val: VALUE) -> Self {
-        Self(NonZeroValue::new_unchecked(Value::new(val)))
+        unsafe { Self(NonZeroValue::new_unchecked(Value::new(val))) }
     }
 
     /// Create a new `Float` from an `f64`.
@@ -110,7 +110,7 @@ impl Float {
     ///
     /// ```
     /// # #![allow(deprecated)]
-    /// use magnus::{rb_assert, Float};
+    /// use magnus::{Float, rb_assert};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let f = Float::from_f64(1.7272337110188893e-77);
@@ -134,7 +134,7 @@ impl Float {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, Float};
+    /// use magnus::{Float, eval};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let f: Float = eval("2.0").unwrap();
@@ -154,7 +154,7 @@ impl Float {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let pi = ruby.float_from_f64(3.141592);
@@ -189,7 +189,7 @@ impl Float {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let pi = ruby.float_from_f64(3.141592);

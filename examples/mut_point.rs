@@ -1,6 +1,6 @@
 use std::cell::RefCell;
 
-use magnus::{function, method, prelude::*, wrap, Error, Ruby};
+use magnus::{Error, Ruby, function, method, prelude::*, wrap};
 
 struct Point {
     x: isize,
@@ -54,14 +54,15 @@ impl MutPoint {
     }
 
     fn add_x(ruby: &Ruby, rb_self: &Self, val: isize) -> Result<isize, Error> {
-        if let Some(sum) = rb_self.0.borrow().x.checked_add(val) {
-            rb_self.0.borrow_mut().x = sum;
-            Ok(sum)
-        } else {
-            Err(Error::new(
+        match rb_self.0.borrow().x.checked_add(val) {
+            Some(sum) => {
+                rb_self.0.borrow_mut().x = sum;
+                Ok(sum)
+            }
+            _ => Err(Error::new(
                 ruby.exception_range_error(),
                 "result out of range",
-            ))
+            )),
         }
     }
 
@@ -74,14 +75,15 @@ impl MutPoint {
     }
 
     fn add_y(ruby: &Ruby, rb_self: &Self, val: isize) -> Result<isize, Error> {
-        if let Some(sum) = rb_self.0.borrow().y.checked_add(val) {
-            rb_self.0.borrow_mut().y = sum;
-            Ok(sum)
-        } else {
-            Err(Error::new(
+        match rb_self.0.borrow().y.checked_add(val) {
+            Some(sum) => {
+                rb_self.0.borrow_mut().y = sum;
+                Ok(sum)
+            }
+            _ => Err(Error::new(
                 ruby.exception_range_error(),
                 "result out of range",
-            ))
+            )),
         }
     }
 

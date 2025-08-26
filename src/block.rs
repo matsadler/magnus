@@ -10,27 +10,26 @@ use std::{
 };
 
 use rb_sys::{
-    rb_block_given_p, rb_block_proc, rb_data_typed_object_wrap, rb_obj_is_proc, rb_proc_arity,
-    rb_proc_call_kw, rb_proc_lambda_p, rb_proc_new, rb_yield, rb_yield_splat, rb_yield_values_kw,
-    VALUE,
+    VALUE, rb_block_given_p, rb_block_proc, rb_data_typed_object_wrap, rb_obj_is_proc,
+    rb_proc_arity, rb_proc_call_kw, rb_proc_lambda_p, rb_proc_new, rb_yield, rb_yield_splat,
+    rb_yield_values_kw,
 };
 
 use crate::{
-    data_type_builder,
+    Ruby, data_type_builder,
     enumerator::Enumerator,
-    error::{ensure, protect, Error},
+    error::{Error, ensure, protect},
     gc,
-    into_value::{kw_splat, ArgList, IntoValue, RArrayArgList},
+    into_value::{ArgList, IntoValue, RArrayArgList, kw_splat},
     method::{Block, BlockReturn},
     object::Object,
     r_array::RArray,
     try_convert::TryConvert,
     typed_data::{DataType, DataTypeFunctions},
     value::{
-        private::{self, ReprValue as _},
         NonZeroValue, ReprValue, Value,
+        private::{self, ReprValue as _},
     },
-    Ruby,
 };
 
 /// # `Proc`
@@ -49,7 +48,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, prelude::*, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let proc = ruby.proc_new(|_ruby, args, _block| {
@@ -80,10 +79,13 @@ impl Ruby {
         where
             R: BlockReturn,
         {
-            let func =
-                std::mem::transmute::<VALUE, fn(&Ruby, &[Value], Option<Proc>) -> R>(callback_arg);
-            func.call_handle_error(argc, argv as *const Value, Value::new(blockarg))
-                .as_rb_value()
+            unsafe {
+                let func = std::mem::transmute::<VALUE, fn(&Ruby, &[Value], Option<Proc>) -> R>(
+                    callback_arg,
+                );
+                func.call_handle_error(argc, argv as *const Value, Value::new(blockarg))
+                    .as_rb_value()
+            }
         }
 
         let call_func =
@@ -103,7 +105,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, prelude::*, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let mut count = 0;
@@ -138,10 +140,12 @@ impl Ruby {
             F: FnMut(&Ruby, &[Value], Option<Proc>) -> R,
             R: BlockReturn,
         {
-            let closure = &mut *(callback_arg as *mut F);
-            closure
-                .call_handle_error(argc, argv as *const Value, Value::new(blockarg))
-                .as_rb_value()
+            unsafe {
+                let closure = &mut *(callback_arg as *mut F);
+                closure
+                    .call_handle_error(argc, argv as *const Value, Value::new(blockarg))
+                    .as_rb_value()
+            }
         }
 
         let (closure, keepalive) = wrap_closure(block);
@@ -172,7 +176,7 @@ impl Proc {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{block::Proc, eval, Value};
+    /// use magnus::{Value, block::Proc, eval};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let val: Value = eval("Proc.new {|a, b| a + b}").unwrap();
@@ -192,7 +196,7 @@ impl Proc {
 
     #[inline]
     pub(crate) unsafe fn from_rb_value_unchecked(val: VALUE) -> Self {
-        Self(NonZeroValue::new_unchecked(Value::new(val)))
+        unsafe { Self(NonZeroValue::new_unchecked(Value::new(val))) }
     }
 
     /// Create a new `Proc`.
@@ -288,7 +292,7 @@ impl Proc {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{block::Proc, Error, Ruby};
+    /// use magnus::{Error, Ruby, block::Proc};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let proc: Proc = ruby.eval("Proc.new {|a, b| a + b}").unwrap();
@@ -338,7 +342,7 @@ impl Proc {
     /// Ignoring return value:
     ///
     /// ```
-    /// use magnus::{block::Proc, rb_assert, Error, Ruby, Value};
+    /// use magnus::{Error, Ruby, Value, block::Proc, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let proc: Proc = ruby.eval("Proc.new { $called = true }").unwrap();
@@ -463,7 +467,7 @@ impl TryConvert for Proc {
                     format!("no implicit conversion of {} into Proc", unsafe {
                         val.classname()
                     },),
-                ))
+                ));
             }
         };
         Proc::from_value(val).ok_or_else(|| {
@@ -534,7 +538,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{function, rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, function, rb_assert};
     ///
     /// fn got_block(ruby: &Ruby) -> bool {
     ///     ruby.block_given()
@@ -559,7 +563,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{block::Proc, function, rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, block::Proc, function, rb_assert};
     ///
     /// fn make_proc(ruby: &Ruby) -> Result<Proc, Error> {
     ///     ruby.block_proc()
@@ -589,7 +593,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{function, rb_assert, Error, Ruby, Value};
+    /// use magnus::{Error, Ruby, Value, function, rb_assert};
     ///
     /// fn metasyntactic_variables(ruby: &Ruby) -> Result<(), Error> {
     ///     let _: Value = ruby.yield_value("foo")?;
@@ -698,7 +702,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{function, rb_assert, Error, Ruby, Value};
+    /// use magnus::{Error, Ruby, Value, function, rb_assert};
     ///
     /// fn metasyntactic_variables(ruby: &Ruby) -> Result<(), Error> {
     ///     let ary = ruby.ary_new();
@@ -794,8 +798,9 @@ pub fn block_given() -> bool {
 /// ```
 /// # #![allow(deprecated)]
 /// use magnus::{
-///     block::{block_proc, Proc},
-///     define_global_function, function, rb_assert, Error,
+///     Error,
+///     block::{Proc, block_proc},
+///     define_global_function, function, rb_assert,
 /// };
 /// # let _cleanup = unsafe { magnus::embed::init() };
 ///
@@ -834,7 +839,7 @@ pub fn block_proc() -> Result<Proc, Error> {
 /// ```
 /// # #![allow(deprecated)]
 /// use magnus::{
-///     block::yield_value, define_global_function, function, rb_assert, Error, RArray, Value,
+///     Error, RArray, Value, block::yield_value, define_global_function, function, rb_assert,
 /// };
 /// # let _cleanup = unsafe { magnus::embed::init() };
 ///
@@ -885,7 +890,7 @@ where
 /// ```
 /// # #![allow(deprecated)]
 /// use magnus::{
-///     block::yield_values, define_global_function, function, rb_assert, Error, RArray, Value,
+///     Error, RArray, Value, block::yield_values, define_global_function, function, rb_assert,
 /// };
 /// # let _cleanup = unsafe { magnus::embed::init() };
 ///
@@ -939,7 +944,7 @@ where
 /// ```
 /// # #![allow(deprecated)]
 /// use magnus::{
-///     block::yield_splat, define_global_function, function, rb_assert, Error, RArray, Value,
+///     Error, RArray, Value, block::yield_splat, define_global_function, function, rb_assert,
 /// };
 /// # let _cleanup = unsafe { magnus::embed::init() };
 ///
@@ -999,24 +1004,26 @@ where
     I: Iterator<Item = T>,
     T: IntoValue,
 {
-    let handle = Ruby::get_unchecked();
-    let ptr = &mut iter as *mut I;
-    forget(iter); // we're going to drop this ourself;
-                  // ensure runs the first closure, but yield may raise, so the first
-                  // closure might never reach the end, so wouldn't drop. The second
-                  // closure is always run, and always after the first, so we do the
-                  // drop there
-    ensure(
-        || {
-            for val in &mut *ptr {
-                rb_yield(handle.into_value(val).as_rb_value());
-            }
-            handle.qnil()
-        },
-        || {
-            ptr.drop_in_place();
-        },
-    );
+    unsafe {
+        let handle = Ruby::get_unchecked();
+        let ptr = &mut iter as *mut I;
+        forget(iter); // we're going to drop this ourself;
+        // ensure runs the first closure, but yield may raise, so the first
+        // closure might never reach the end, so wouldn't drop. The second
+        // closure is always run, and always after the first, so we do the
+        // drop there
+        ensure(
+            || {
+                for val in &mut *ptr {
+                    rb_yield(handle.into_value(val).as_rb_value());
+                }
+                handle.qnil()
+            },
+            || {
+                ptr.drop_in_place();
+            },
+        );
+    }
 }
 
 // see do_yield_iter
@@ -1025,27 +1032,29 @@ where
     I: Iterator<Item = T>,
     T: ArgList,
 {
-    let handle = Ruby::get_unchecked();
-    let ptr = &mut iter as *mut I;
-    forget(iter);
-    ensure(
-        || {
-            for val in &mut *ptr {
-                let kw_splat = kw_splat(&val);
-                let vals = val.into_arg_list_with(&handle);
-                let slice = vals.as_ref();
-                rb_yield_values_kw(
-                    slice.len() as c_int,
-                    slice.as_ptr() as *const VALUE,
-                    kw_splat as c_int,
-                );
-            }
-            handle.qnil()
-        },
-        || {
-            ptr.drop_in_place();
-        },
-    );
+    unsafe {
+        let handle = Ruby::get_unchecked();
+        let ptr = &mut iter as *mut I;
+        forget(iter);
+        ensure(
+            || {
+                for val in &mut *ptr {
+                    let kw_splat = kw_splat(&val);
+                    let vals = val.into_arg_list_with(&handle);
+                    let slice = vals.as_ref();
+                    rb_yield_values_kw(
+                        slice.len() as c_int,
+                        slice.as_ptr() as *const VALUE,
+                        kw_splat as c_int,
+                    );
+                }
+                handle.qnil()
+            },
+            || {
+                ptr.drop_in_place();
+            },
+        );
+    }
 }
 
 // see do_yield_iter
@@ -1053,19 +1062,21 @@ pub(crate) unsafe fn do_yield_splat_iter<I>(mut iter: I)
 where
     I: Iterator<Item = RArray>,
 {
-    let ptr = &mut iter as *mut I;
-    forget(iter);
-    ensure(
-        || {
-            for val in &mut *ptr {
-                rb_yield_splat(val.as_rb_value());
-            }
-            Ruby::get_unchecked().qnil()
-        },
-        || {
-            ptr.drop_in_place();
-        },
-    );
+    unsafe {
+        let ptr = &mut iter as *mut I;
+        forget(iter);
+        ensure(
+            || {
+                for val in &mut *ptr {
+                    rb_yield_splat(val.as_rb_value());
+                }
+                Ruby::get_unchecked().qnil()
+            },
+            || {
+                ptr.drop_in_place();
+            },
+        );
+    }
 }
 
 /// Helper type for functions that either yield a single value to a block or
@@ -1076,9 +1087,9 @@ where
 /// # Examples
 ///
 /// ```
-/// use magnus::{block::Yield, method, prelude::*, rb_assert, Error, Ruby, Value};
+/// use magnus::{Error, Ruby, Value, block::Yield, method, prelude::*, rb_assert};
 ///
-/// fn count_to_3(ruby: &Ruby, rb_self: Value) -> Yield<impl Iterator<Item = u8>> {
+/// fn count_to_3(ruby: &Ruby, rb_self: Value) -> Yield<impl Iterator<Item = u8> + use<>> {
 ///     if ruby.block_given() {
 ///         Yield::Iter(1..=3)
 ///     } else {
@@ -1119,12 +1130,12 @@ pub enum Yield<I> {
 /// # Examples
 ///
 /// ```
-/// use magnus::{block::YieldValues, method, prelude::*, rb_assert, Error, Ruby, Value};
+/// use magnus::{Error, Ruby, Value, block::YieldValues, method, prelude::*, rb_assert};
 ///
 /// fn count_to_3_abc(
 ///     ruby: &Ruby,
 ///     rb_self: Value,
-/// ) -> YieldValues<impl Iterator<Item = (u8, char)>> {
+/// ) -> YieldValues<impl Iterator<Item = (u8, char)> + use<>> {
 ///     if ruby.block_given() {
 ///         YieldValues::Iter((1..=3).zip('a'..='c'))
 ///     } else {
@@ -1165,9 +1176,9 @@ pub enum YieldValues<I> {
 /// # Examples
 ///
 /// ```
-/// use magnus::{block::YieldSplat, method, prelude::*, rb_assert, Error, RArray, Ruby, Value};
+/// use magnus::{Error, RArray, Ruby, Value, block::YieldSplat, method, prelude::*, rb_assert};
 ///
-/// fn count_to_3_abc(ruby: &Ruby, rb_self: Value) -> YieldSplat<impl Iterator<Item = RArray>> {
+/// fn count_to_3_abc(ruby: &Ruby, rb_self: Value) -> YieldSplat<impl Iterator<Item = RArray> + use<>> {
 ///     if ruby.block_given() {
 ///         YieldSplat::Iter((1..=3).zip('a'..='c').map(|(i, c)| {
 ///             // we know this will be called on a Ruby thread so it's safe

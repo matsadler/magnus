@@ -6,20 +6,20 @@ use std::{
 };
 
 use rb_sys::{
-    rb_enc_reg_new, rb_reg_match, rb_reg_new_str, rb_reg_options, ruby_value_type, VALUE,
+    VALUE, rb_enc_reg_new, rb_reg_match, rb_reg_new_str, rb_reg_options, ruby_value_type,
 };
 
 use crate::{
+    Ruby,
     encoding::EncodingCapable,
-    error::{protect, Error},
+    error::{Error, protect},
     into_value::IntoValue,
     r_string::{IntoRString, RString},
     try_convert::TryConvert,
     value::{
-        private::{self, ReprValue as _},
         NonZeroValue, ReprValue, Value,
+        private::{self, ReprValue as _},
     },
-    Ruby,
 };
 
 /// # `RRegexp`
@@ -35,7 +35,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{r_regexp::Opts, rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, r_regexp::Opts, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let regexp = ruby.reg_new("foo", Opts::new().ignorecase())?;
@@ -72,7 +72,7 @@ impl RRegexp {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, RRegexp};
+    /// use magnus::{RRegexp, eval};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// assert!(RRegexp::from_value(eval("/f(.)o/").unwrap()).is_some());
@@ -88,7 +88,7 @@ impl RRegexp {
 
     #[inline]
     unsafe fn from_rb_value_unchecked(val: VALUE) -> Self {
-        Self(NonZeroValue::new_unchecked(Value::new(val)))
+        unsafe { Self(NonZeroValue::new_unchecked(Value::new(val))) }
     }
 
     /// Create a new `Regexp` from the Rust string `pattern`.
@@ -104,7 +104,7 @@ impl RRegexp {
     ///
     /// ```
     /// # #![allow(deprecated)]
-    /// use magnus::{r_regexp::Opts, rb_assert, RRegexp};
+    /// use magnus::{RRegexp, r_regexp::Opts, rb_assert};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let regexp = RRegexp::new("foo", Opts::new().ignorecase()).unwrap();
@@ -125,7 +125,7 @@ impl RRegexp {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{r_regexp::Opts, rb_assert, Error, RRegexp, Ruby};
+    /// use magnus::{Error, RRegexp, Ruby, r_regexp::Opts, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let regexp = RRegexp::new_str(ruby.str_new("foo"), Opts::new().ignorecase())?;

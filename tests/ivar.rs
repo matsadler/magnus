@@ -1,4 +1,4 @@
-use magnus::{eval, prelude::*, rb_assert, RObject, Value};
+use magnus::{RObject, Value, eval, prelude::*, rb_assert};
 
 #[test]
 fn it_modifies_ivars() {

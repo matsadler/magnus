@@ -1,21 +1,21 @@
 use std::fmt;
 
 use rb_sys::{
-    self, rb_check_typeddata, rb_data_typed_object_wrap, ruby_value_type, RTYPEDDATA_P, VALUE,
+    self, RTYPEDDATA_P, VALUE, rb_check_typeddata, rb_data_typed_object_wrap, ruby_value_type,
 };
 
 use crate::{
+    Ruby,
     class::RClass,
-    error::{protect, Error},
+    error::{Error, protect},
     into_value::IntoValue,
     module::Module,
     object::Object,
     typed_data::TypedData,
     value::{
-        private::{self, ReprValue as _},
         NonZeroValue, ReprValue, Value,
+        private::{self, ReprValue as _},
     },
-    Ruby,
 };
 
 /// # `RTypedData`
@@ -30,7 +30,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, Error, Ruby};
+    /// use magnus::{Error, Ruby, prelude::*};
     ///
     /// #[magnus::wrap(class = "Point")]
     /// struct Point {
@@ -70,7 +70,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, Error, Ruby};
+    /// use magnus::{Error, Ruby, prelude::*};
     ///
     /// #[magnus::wrap(class = "Point")]
     /// struct Point {
@@ -99,7 +99,7 @@ impl Ruby {
     /// `new` method rather than `initialize`)
     ///
     /// ```
-    /// use magnus::{function, method, prelude::*, Error, RClass, RTypedData, Ruby, Value};
+    /// use magnus::{Error, RClass, RTypedData, Ruby, Value, function, method, prelude::*};
     ///
     /// #[magnus::wrap(class = "Point")]
     /// struct Point {
@@ -175,7 +175,7 @@ impl RTypedData {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{function, prelude::*, Error, RTypedData, Ruby};
+    /// use magnus::{Error, RTypedData, Ruby, function, prelude::*};
     ///
     /// #[magnus::wrap(class = "Point")]
     /// struct Point {
@@ -205,7 +205,7 @@ impl RTypedData {
 
     #[inline]
     pub(crate) unsafe fn from_rb_value_unchecked(val: VALUE) -> Self {
-        Self(NonZeroValue::new_unchecked(Value::new(val)))
+        unsafe { Self(NonZeroValue::new_unchecked(Value::new(val))) }
     }
 
     /// Wrap the Rust type `T` in a Ruby object.
@@ -219,7 +219,7 @@ impl RTypedData {
     ///
     /// ```
     /// # #![allow(deprecated)]
-    /// use magnus::{class, define_class, prelude::*, RTypedData};
+    /// use magnus::{RTypedData, class, define_class, prelude::*};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// #[magnus::wrap(class = "Point")]
@@ -263,7 +263,7 @@ impl RTypedData {
     ///
     /// ```
     /// # #![allow(deprecated)]
-    /// use magnus::{class, define_class, prelude::*, RTypedData};
+    /// use magnus::{RTypedData, class, define_class, prelude::*};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// #[magnus::wrap(class = "Point")]
@@ -290,7 +290,7 @@ impl RTypedData {
     /// ```
     /// # #![allow(deprecated)]
     /// use magnus::{
-    ///     class, define_class, eval, function, method, prelude::*, RClass, RTypedData, Value,
+    ///     RClass, RTypedData, Value, class, define_class, eval, function, method, prelude::*,
     /// };
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
@@ -383,27 +383,29 @@ impl RTypedData {
     where
         T: TypedData,
     {
-        debug_assert_value!(self);
-        let handle = Ruby::get_with(self);
-        let mut res = None;
-        let _ = protect(|| {
-            res = (rb_check_typeddata(
-                self.as_rb_value(),
-                T::data_type().as_rb_data_type() as *const _,
-            ) as *const T)
-                .as_ref();
-            handle.qnil()
-        });
-        res.ok_or_else(|| {
-            Error::new(
-                handle.exception_type_error(),
-                format!(
-                    "no implicit conversion of {} into {}",
-                    self.classname(),
-                    T::class(&handle)
-                ),
-            )
-        })
+        unsafe {
+            debug_assert_value!(self);
+            let handle = Ruby::get_with(self);
+            let mut res = None;
+            let _ = protect(|| {
+                res = (rb_check_typeddata(
+                    self.as_rb_value(),
+                    T::data_type().as_rb_data_type() as *const _,
+                ) as *const T)
+                    .as_ref();
+                handle.qnil()
+            });
+            res.ok_or_else(|| {
+                Error::new(
+                    handle.exception_type_error(),
+                    format!(
+                        "no implicit conversion of {} into {}",
+                        self.classname(),
+                        T::class(&handle)
+                    ),
+                )
+            })
+        }
     }
 }
 

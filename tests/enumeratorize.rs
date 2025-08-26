@@ -1,4 +1,4 @@
-use magnus::{prelude::*, rb_assert, Value};
+use magnus::{Value, prelude::*, rb_assert};
 
 #[test]
 fn it_makes_an_enumerator() {

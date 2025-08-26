@@ -57,7 +57,7 @@
 //! # Examples
 //!
 //! ```
-//! use magnus::{function, method, prelude::*, Error, Ruby};
+//! use magnus::{Error, Ruby, function, method, prelude::*};
 //!
 //! #[magnus::wrap(class = "Euclid::Point", free_immediately, size)]
 //! struct Point {
@@ -1849,11 +1849,11 @@ pub mod value;
 use std::{ffi::CString, mem::transmute, os::raw::c_int};
 
 use ::rb_sys::{
-    rb_alias_variable, rb_backref_get, rb_call_super_kw, rb_current_receiver, rb_define_class,
-    rb_define_global_const, rb_define_global_function, rb_define_module, rb_define_variable,
-    rb_errinfo, rb_eval_string_protect, rb_require_string, rb_set_errinfo, VALUE,
+    VALUE, rb_alias_variable, rb_backref_get, rb_call_super_kw, rb_current_receiver,
+    rb_define_class, rb_define_global_const, rb_define_global_function, rb_define_module,
+    rb_define_variable, rb_errinfo, rb_eval_string_protect, rb_require_string, rb_set_errinfo,
 };
-pub use magnus_macros::{init, wrap, DataTypeFunctions, TypedData};
+pub use magnus_macros::{DataTypeFunctions, TypedData, init, wrap};
 
 #[cfg(any(ruby_gte_3_1, docsrs))]
 #[cfg_attr(docsrs, doc(cfg(ruby_gte_3_1)))]
@@ -1898,7 +1898,7 @@ use crate::{
     error::protect,
     method::Method,
     r_string::IntoRString,
-    value::{private::ReprValue as _, IntoId, ReprValue},
+    value::{IntoId, ReprValue, private::ReprValue as _},
 };
 
 /// Evaluate a literal string of Ruby code with the given local variables.
@@ -1933,14 +1933,14 @@ macro_rules! eval {
     ($str:literal, $($bindings:tt)*) => {{
         $crate::eval!($crate::Ruby::get().unwrap(), $str, $($bindings)*)
     }};
-    ($ruby:expr, $str:literal) => {{
+    ($ruby:expr_2021, $str:literal) => {{
         use $crate::{r_string::IntoRString, value::ReprValue};
         $ruby
             .eval::<$crate::Value>("binding")
             .unwrap()
             .funcall("eval", ($str.into_r_string_with(&$ruby),))
     }};
-    ($ruby:expr, $str:literal, $($bindings:tt)*) => {{
+    ($ruby:expr_2021, $str:literal, $($bindings:tt)*) => {{
         use $crate::{r_string::IntoRString, value::ReprValue};
         let binding = $ruby.eval::<$crate::Value>("binding").unwrap();
         $crate::bind!(binding, $($bindings)*);
@@ -1952,7 +1952,7 @@ macro_rules! eval {
 #[macro_export]
 macro_rules! bind {
     ($binding:ident,) => {};
-    ($binding:ident, $k:ident = $v:expr) => {{
+    ($binding:ident, $k:ident = $v:expr_2021) => {{
         use $crate::symbol::IntoSymbol;
         let _: $crate::Value = $binding.funcall(
             "local_variable_set",
@@ -1968,7 +1968,7 @@ macro_rules! bind {
         )
         .unwrap();
     }};
-    ($binding:ident, $k:ident = $v:expr, $($rest:tt)*) => {{
+    ($binding:ident, $k:ident = $v:expr_2021, $($rest:tt)*) => {{
         use $crate::symbol::IntoSymbol;
         let _: $crate::Value = $binding.funcall(
             "local_variable_set",
@@ -2051,10 +2051,10 @@ macro_rules! rb_assert {
     ($expr:literal, $($bindings:tt)*) => {{
         $crate::rb_assert!($crate::Ruby::get().unwrap(), $expr, $($bindings)*)
     }};
-    ($ruby:expr, $expr:literal) => {{
+    ($ruby:expr_2021, $expr:literal) => {{
         $crate::rb_assert!($ruby, $expr,)
     }};
-    ($ruby:expr, $expr:literal, $($bindings:tt)*) => {{
+    ($ruby:expr_2021, $expr:literal, $($bindings:tt)*) => {{
         let msg: Option<String> = $crate::eval!($ruby, r#"
             require "power_assert"
             PowerAssert.start(__assert_exp__, source_binding: binding) do |pa|
@@ -2080,7 +2080,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     ruby.define_class("Example", ruby.class_object())?;
@@ -2104,7 +2104,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     ruby.define_module("Example")?;
@@ -2125,7 +2125,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     ruby.define_error("ExampleError", ruby.exception_standard_error())?;
@@ -2150,7 +2150,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, prelude::*, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let v = ruby.define_variable("example", 42)?;
@@ -2189,7 +2189,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     ruby.define_variable("example", 42)?;
@@ -2219,7 +2219,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     ruby.define_global_const("EXAMPLE", 42)?;
@@ -2249,7 +2249,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{function, rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, function, rb_assert};
     ///
     /// fn greet(subject: String) -> String {
     ///     format!("Hello, {}!", subject)
@@ -2311,7 +2311,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{method, prelude::*, rb_assert, Error, Ruby, Value};
+    /// use magnus::{Error, Ruby, Value, method, prelude::*, rb_assert};
     ///
     /// fn test(ruby: &Ruby, rb_self: Value) -> Result<bool, Error> {
     ///     rb_self.equal(ruby.current_receiver::<Value>()?)
@@ -2342,7 +2342,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{function, prelude::*, rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, function, prelude::*, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let a = ruby.eval(
@@ -2554,7 +2554,7 @@ pub fn define_error(name: &str, superclass: ExceptionClass) -> Result<ExceptionC
 ///
 /// ```
 /// # #![allow(deprecated)]
-/// use magnus::{define_variable, prelude::*, rb_assert, RString};
+/// use magnus::{RString, define_variable, prelude::*, rb_assert};
 /// # let _cleanup = unsafe { magnus::embed::init() };
 ///
 /// let v = define_variable("example", 42).unwrap();
@@ -2654,7 +2654,7 @@ where
 ///
 /// ```
 /// # #![allow(deprecated)]
-/// use magnus::{backref_get, RRegexp};
+/// use magnus::{RRegexp, backref_get};
 /// # let _cleanup = unsafe { magnus::embed::init() };
 ///
 /// let regexp = RRegexp::new("b(.)r", Default::default()).unwrap();
@@ -2695,7 +2695,7 @@ pub fn backref_get() -> Option<RMatch> {
 /// ```
 /// # #![allow(deprecated)]
 /// use magnus::{
-///     current_receiver, define_global_function, method, prelude::*, rb_assert, Error, Value,
+///     Error, Value, current_receiver, define_global_function, method, prelude::*, rb_assert,
 /// };
 /// # let _cleanup = unsafe { magnus::embed::init() };
 ///
@@ -2734,7 +2734,7 @@ where
 ///
 /// ```
 /// # #![allow(deprecated)]
-/// use magnus::{call_super, define_class, eval, function, prelude::*, rb_assert, Error};
+/// use magnus::{Error, call_super, define_class, eval, function, prelude::*, rb_assert};
 /// # let _cleanup = unsafe { magnus::embed::init() };
 ///
 /// let a = eval(

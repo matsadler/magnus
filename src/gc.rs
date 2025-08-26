@@ -5,17 +5,17 @@
 use std::{marker::PhantomData, ops::Range};
 
 use rb_sys::{
-    rb_gc_adjust_memory_usage, rb_gc_count, rb_gc_disable, rb_gc_enable, rb_gc_location,
+    VALUE, rb_gc_adjust_memory_usage, rb_gc_count, rb_gc_disable, rb_gc_enable, rb_gc_location,
     rb_gc_mark, rb_gc_mark_locations, rb_gc_mark_movable, rb_gc_register_address,
-    rb_gc_register_mark_object, rb_gc_start, rb_gc_stat, rb_gc_unregister_address, VALUE,
+    rb_gc_register_mark_object, rb_gc_start, rb_gc_stat, rb_gc_unregister_address,
 };
 
 use crate::{
-    error::{protect, Error},
+    Ruby,
+    error::{Error, protect},
     r_hash::RHash,
     symbol::IntoSymbol,
-    value::{private::ReprValue as _, ReprValue, Value},
-    Ruby,
+    value::{ReprValue, Value, private::ReprValue as _},
 };
 
 pub(crate) mod private {
@@ -186,7 +186,7 @@ impl Compactor {
 /// # Examples
 ///
 /// ```
-/// use magnus::{gc, Error, Ruby};
+/// use magnus::{Error, Ruby, gc};
 ///
 /// fn example(ruby: &Ruby) -> Result<(), Error> {
 ///     // will never be collected
@@ -219,7 +219,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use magnus::{gc, Error, Ruby};
+/// use magnus::{Error, Ruby, gc};
 ///
 /// fn example(ruby: &Ruby) -> Result<(), Error> {
 ///     let s = ruby.str_new("example");
@@ -252,7 +252,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use magnus::{gc, Error, Ruby};
+/// use magnus::{Error, Ruby, gc};
 ///
 /// fn example(ruby: &Ruby) -> Result<(), Error> {
 ///     let s = ruby.str_new("example");
@@ -693,7 +693,7 @@ where
 ///
 /// ```
 /// # #![allow(deprecated)]
-/// use magnus::{gc, Symbol};
+/// use magnus::{Symbol, gc};
 /// # let _cleanup = unsafe { magnus::embed::init() };
 ///
 /// let stats = gc::all_stats();

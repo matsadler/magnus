@@ -8,19 +8,19 @@
 use rb_sys::rb_io_enc_t as rb_io_encoding;
 #[cfg(ruby_gt_3_4)]
 use rb_sys::rb_io_mode;
-#[cfg(ruby_gte_3_3)]
-use rb_sys::{rb_io_encoding, FMODE_EXTERNAL};
 use rb_sys::{
-    rb_io_extract_modeenc, OnigEncodingTypeST, FMODE_APPEND, FMODE_BINMODE, FMODE_CREATE,
-    FMODE_DUPLEX, FMODE_EXCL, FMODE_READABLE, FMODE_READWRITE, FMODE_SETENC_BY_BOM, FMODE_SYNC,
-    FMODE_TEXTMODE, FMODE_TRUNC, FMODE_TTY, FMODE_WRITABLE, VALUE,
+    FMODE_APPEND, FMODE_BINMODE, FMODE_CREATE, FMODE_DUPLEX, FMODE_EXCL, FMODE_READABLE,
+    FMODE_READWRITE, FMODE_SETENC_BY_BOM, FMODE_SYNC, FMODE_TEXTMODE, FMODE_TRUNC, FMODE_TTY,
+    FMODE_WRITABLE, OnigEncodingTypeST, VALUE, rb_io_extract_modeenc,
 };
+#[cfg(ruby_gte_3_3)]
+use rb_sys::{FMODE_EXTERNAL, rb_io_encoding};
 
 use crate::{
-    encoding::{Encoding, RbEncoding},
-    error::{protect, Error},
-    value::{private::ReprValue as _, ReprValue, Value},
     RHash, Ruby,
+    encoding::{Encoding, RbEncoding},
+    error::{Error, protect},
+    value::{ReprValue, Value, private::ReprValue as _},
 };
 
 /// Wrapper for Ruby's file open flag bits (`O_*`).

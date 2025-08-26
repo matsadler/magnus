@@ -1,6 +1,6 @@
 use magnus::{
-    embed::init, eval, function, method, prelude::*, rb_assert, typed_data::Obj, Error, RClass,
-    Ruby, Value,
+    Error, RClass, Ruby, Value, embed::init, eval, function, method, prelude::*, rb_assert,
+    typed_data::Obj,
 };
 
 const FACTOR: f64 = 1000000.0;

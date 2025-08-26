@@ -487,7 +487,7 @@ recommended and future support in Magnus is not guaranteed.
 Ruby bindings will be generated at compile time, this may require libclang to
 be installed.
 
-The minimum supported Rust version is currently Rust 1.65.
+The minimum supported Rust version is currently Rust 1.85.
 
 Support for statically linking Ruby is provided via the lower-level [rb-sys]
 crate, and can be enabled by adding the following to your `Cargo.toml`:

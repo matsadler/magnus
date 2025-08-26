@@ -29,7 +29,7 @@ use std::panic::UnwindSafe;
 use rb_sys::{ID, VALUE};
 
 use crate::{
-    error::{self, raise, Error},
+    error::{self, Error, raise},
     value::{Id, ReprValue, Value},
 };
 
@@ -41,8 +41,8 @@ pub trait AsRawValue {
     ///
     /// ```
     /// use magnus::{
-    ///     rb_sys::{protect, AsRawValue},
     ///     Error, Ruby,
+    ///     rb_sys::{AsRawValue, protect},
     /// };
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
@@ -75,7 +75,7 @@ pub trait FromRawValue {
     /// ```
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// use magnus::{rb_sys::FromRawValue, Value};
+    /// use magnus::{Value, rb_sys::FromRawValue};
     ///
     /// let raw_value = unsafe { rb_sys::rb_str_new("foo".as_ptr() as *mut _, 3) };
     ///
@@ -107,10 +107,10 @@ pub trait AsRawId {
     ///
     /// ```
     /// use magnus::{
+    ///     Error, Ruby, Symbol,
     ///     prelude::*,
     ///     rb_sys::{AsRawId, FromRawId},
     ///     value::Id,
-    ///     Error, Ruby, Symbol,
     /// };
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
@@ -142,10 +142,10 @@ pub trait FromRawId {
     ///
     /// ```
     /// use magnus::{
+    ///     Error, Ruby, Symbol,
     ///     prelude::*,
     ///     rb_sys::{AsRawId, FromRawId},
     ///     value::Id,
-    ///     Error, Ruby, Symbol,
     /// };
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {

@@ -9,16 +9,16 @@ use std::{ffi::c_void, os::raw::c_int, panic::AssertUnwindSafe, slice};
 use seq_macro::seq;
 
 use crate::{
+    Ruby,
     block::{
-        do_yield_iter, do_yield_splat_iter, do_yield_values_iter, Proc, Yield, YieldSplat,
-        YieldValues,
+        Proc, Yield, YieldSplat, YieldValues, do_yield_iter, do_yield_splat_iter,
+        do_yield_values_iter,
     },
-    error::{raise, Error, IntoError},
+    error::{Error, IntoError, raise},
     into_value::{ArgList, IntoValue},
     r_array::RArray,
     try_convert::TryConvert,
     value::{ReprValue, Value},
-    Ruby,
 };
 
 mod private {
@@ -355,15 +355,17 @@ where
 {
     #[inline]
     unsafe fn call_handle_error(self) {
-        let res = match std::panic::catch_unwind(AssertUnwindSafe(|| {
-            (self)(&Ruby::get_unchecked()).into_init_return()
-        })) {
-            Ok(v) => v,
-            Err(e) => Err(Error::from_panic(e)),
-        };
-        match res {
-            Ok(v) => v,
-            Err(e) => raise(e),
+        unsafe {
+            let res = match std::panic::catch_unwind(AssertUnwindSafe(|| {
+                (self)(&Ruby::get_unchecked()).into_init_return()
+            })) {
+                Ok(v) => v,
+                Err(e) => Err(Error::from_panic(e)),
+            };
+            match res {
+                Ok(v) => v,
+                Err(e) => raise(e),
+            }
         }
     }
 }
@@ -392,22 +394,26 @@ where
         argv: *const Value,
         blockarg: Value,
     ) -> Result<Value, Error> {
-        let ruby = Ruby::get_unchecked();
-        let args = slice::from_raw_parts(argv, argc as usize);
-        (self)(&ruby, args, Proc::from_value(blockarg)).into_block_return()
+        unsafe {
+            let ruby = Ruby::get_unchecked();
+            let args = slice::from_raw_parts(argv, argc as usize);
+            (self)(&ruby, args, Proc::from_value(blockarg)).into_block_return()
+        }
     }
 
     #[inline]
     unsafe fn call_handle_error(self, argc: c_int, argv: *const Value, blockarg: Value) -> Value {
-        let res = match std::panic::catch_unwind(AssertUnwindSafe(|| {
-            self.call_convert_value(argc, argv, blockarg)
-        })) {
-            Ok(v) => v,
-            Err(e) => Err(Error::from_panic(e)),
-        };
-        match res {
-            Ok(v) => v,
-            Err(e) => raise(e),
+        unsafe {
+            let res = match std::panic::catch_unwind(AssertUnwindSafe(|| {
+                self.call_convert_value(argc, argv, blockarg)
+            })) {
+                Ok(v) => v,
+                Err(e) => Err(Error::from_panic(e)),
+            };
+            match res {
+                Ok(v) => v,
+                Err(e) => raise(e),
+            }
         }
     }
 }
@@ -431,18 +437,21 @@ where
 {
     #[inline]
     unsafe fn call_convert_value(self) -> Result<Value, Error> {
-        (self)(&Ruby::get_unchecked()).into_block_return()
+        unsafe { (self)(&Ruby::get_unchecked()).into_block_return() }
     }
 
     #[inline]
     unsafe fn call_handle_error(self) -> Value {
-        let res = match std::panic::catch_unwind(AssertUnwindSafe(|| self.call_convert_value())) {
-            Ok(v) => v,
-            Err(e) => Err(Error::from_panic(e)),
-        };
-        match res {
-            Ok(v) => v,
-            Err(e) => raise(e),
+        unsafe {
+            let res = match std::panic::catch_unwind(AssertUnwindSafe(|| self.call_convert_value()))
+            {
+                Ok(v) => v,
+                Err(e) => Err(Error::from_panic(e)),
+            };
+            match res {
+                Ok(v) => v,
+                Err(e) => raise(e),
+            }
         }
     }
 }
@@ -469,13 +478,16 @@ where
 
     #[inline]
     unsafe fn call_handle_error(self) -> Value {
-        let res = match std::panic::catch_unwind(AssertUnwindSafe(|| self.call_convert_value())) {
-            Ok(v) => v,
-            Err(e) => Err(Error::from_panic(e)),
-        };
-        match res {
-            Ok(v) => v,
-            Err(e) => raise(e),
+        unsafe {
+            let res = match std::panic::catch_unwind(AssertUnwindSafe(|| self.call_convert_value()))
+            {
+                Ok(v) => v,
+                Err(e) => Err(Error::from_panic(e)),
+            };
+            match res {
+                Ok(v) => v,
+                Err(e) => raise(e),
+            }
         }
     }
 }
@@ -597,21 +609,25 @@ where
         argv: *const Value,
         rb_self: Value,
     ) -> Result<Value, Error> {
-        let args = slice::from_raw_parts(argv, argc as usize);
-        (self)(TryConvert::try_convert(rb_self)?, args).into_return_value()
+        unsafe {
+            let args = slice::from_raw_parts(argv, argc as usize);
+            (self)(TryConvert::try_convert(rb_self)?, args).into_return_value()
+        }
     }
 
     #[inline]
     unsafe fn call_handle_error(self, argc: c_int, argv: *const Value, rb_self: Value) -> Value {
-        let res = match std::panic::catch_unwind(AssertUnwindSafe(|| {
-            self.call_convert_value(argc, argv, rb_self)
-        })) {
-            Ok(v) => v,
-            Err(e) => Err(Error::from_panic(e)),
-        };
-        match res {
-            Ok(v) => v,
-            Err(e) => raise(e),
+        unsafe {
+            let res = match std::panic::catch_unwind(AssertUnwindSafe(|| {
+                self.call_convert_value(argc, argv, rb_self)
+            })) {
+                Ok(v) => v,
+                Err(e) => Err(Error::from_panic(e)),
+            };
+            match res {
+                Ok(v) => v,
+                Err(e) => raise(e),
+            }
         }
     }
 }
@@ -643,26 +659,30 @@ where
         argv: *const Value,
         rb_self: Value,
     ) -> Result<Value, Error> {
-        let args = slice::from_raw_parts(argv, argc as usize);
-        (self)(
-            &Ruby::get_with(rb_self),
-            TryConvert::try_convert(rb_self)?,
-            args,
-        )
-        .into_return_value()
+        unsafe {
+            let args = slice::from_raw_parts(argv, argc as usize);
+            (self)(
+                &Ruby::get_with(rb_self),
+                TryConvert::try_convert(rb_self)?,
+                args,
+            )
+            .into_return_value()
+        }
     }
 
     #[inline]
     unsafe fn call_handle_error(self, argc: c_int, argv: *const Value, rb_self: Value) -> Value {
-        let res = match std::panic::catch_unwind(AssertUnwindSafe(|| {
-            self.call_convert_value(argc, argv, rb_self)
-        })) {
-            Ok(v) => v,
-            Err(e) => Err(Error::from_panic(e)),
-        };
-        match res {
-            Ok(v) => v,
-            Err(e) => raise(e),
+        unsafe {
+            let res = match std::panic::catch_unwind(AssertUnwindSafe(|| {
+                self.call_convert_value(argc, argv, rb_self)
+            })) {
+                Ok(v) => v,
+                Err(e) => Err(Error::from_panic(e)),
+            };
+            match res {
+                Ok(v) => v,
+                Err(e) => raise(e),
+            }
         }
     }
 }
@@ -816,7 +836,7 @@ seq!(N in 0..=15 {
 /// # Examples
 ///
 /// ```
-/// use magnus::{method, prelude::*, Error, Ruby};
+/// use magnus::{Error, Ruby, method, prelude::*};
 ///
 /// fn rb_is_blank(rb_self: String) -> bool {
 ///     rb_self.contains(|c: char| !c.is_whitespace())
@@ -833,14 +853,14 @@ seq!(N in 0..=15 {
 /// ```
 #[macro_export]
 macro_rules! method {
-    ($name:expr, -2) => {{
+    ($name:expr_2021, -2) => {{
         unsafe extern "C" fn anon(rb_self: $crate::Value, args: $crate::RArray) -> $crate::Value {
             use $crate::method::{MethodRbAry, RubyMethodRbAry};
             $name.call_handle_error(rb_self, args)
         }
         anon as unsafe extern "C" fn($crate::Value, $crate::RArray) -> $crate::Value
     }};
-    ($name:expr, -1) => {{
+    ($name:expr_2021, -1) => {{
         unsafe extern "C" fn anon(
             argc: std::os::raw::c_int,
             argv: *const $crate::Value,
@@ -855,21 +875,21 @@ macro_rules! method {
             $crate::Value,
         ) -> $crate::Value
     }};
-    ($name:expr, 0) => {{
+    ($name:expr_2021, 0) => {{
         unsafe extern "C" fn anon(rb_self: $crate::Value) -> $crate::Value {
             use $crate::method::{Method0, RubyMethod0};
             $name.call_handle_error(rb_self)
         }
         anon as unsafe extern "C" fn($crate::Value) -> $crate::Value
     }};
-    ($name:expr, 1) => {{
+    ($name:expr_2021, 1) => {{
         unsafe extern "C" fn anon(rb_self: $crate::Value, a: $crate::Value) -> $crate::Value {
             use $crate::method::{Method1, RubyMethod1};
             $name.call_handle_error(rb_self, a)
         }
         anon as unsafe extern "C" fn($crate::Value, $crate::Value) -> $crate::Value
     }};
-    ($name:expr, 2) => {{
+    ($name:expr_2021, 2) => {{
         unsafe extern "C" fn anon(
             rb_self: $crate::Value,
             a: $crate::Value,
@@ -880,7 +900,7 @@ macro_rules! method {
         }
         anon as unsafe extern "C" fn($crate::Value, $crate::Value, $crate::Value) -> $crate::Value
     }};
-    ($name:expr, 3) => {{
+    ($name:expr_2021, 3) => {{
         unsafe extern "C" fn anon(
             rb_self: $crate::Value,
             a: $crate::Value,
@@ -897,7 +917,7 @@ macro_rules! method {
             $crate::Value,
         ) -> $crate::Value
     }};
-    ($name:expr, 4) => {{
+    ($name:expr_2021, 4) => {{
         unsafe extern "C" fn anon(
             rb_self: $crate::Value,
             a: $crate::Value,
@@ -916,7 +936,7 @@ macro_rules! method {
             $crate::Value,
         ) -> $crate::Value
     }};
-    ($name:expr, 5) => {{
+    ($name:expr_2021, 5) => {{
         unsafe extern "C" fn anon(
             rb_self: $crate::Value,
             a: $crate::Value,
@@ -937,7 +957,7 @@ macro_rules! method {
             $crate::Value,
         ) -> $crate::Value
     }};
-    ($name:expr, 6) => {{
+    ($name:expr_2021, 6) => {{
         unsafe extern "C" fn anon(
             rb_self: $crate::Value,
             a: $crate::Value,
@@ -960,7 +980,7 @@ macro_rules! method {
             $crate::Value,
         ) -> $crate::Value
     }};
-    ($name:expr, 7) => {{
+    ($name:expr_2021, 7) => {{
         unsafe extern "C" fn anon(
             rb_self: $crate::Value,
             a: $crate::Value,
@@ -985,7 +1005,7 @@ macro_rules! method {
             $crate::Value,
         ) -> $crate::Value
     }};
-    ($name:expr, 8) => {{
+    ($name:expr_2021, 8) => {{
         unsafe extern "C" fn anon(
             rb_self: $crate::Value,
             a: $crate::Value,
@@ -1012,7 +1032,7 @@ macro_rules! method {
             $crate::Value,
         ) -> $crate::Value
     }};
-    ($name:expr, 9) => {{
+    ($name:expr_2021, 9) => {{
         unsafe extern "C" fn anon(
             rb_self: $crate::Value,
             a: $crate::Value,
@@ -1041,7 +1061,7 @@ macro_rules! method {
             $crate::Value,
         ) -> $crate::Value
     }};
-    ($name:expr, 10) => {{
+    ($name:expr_2021, 10) => {{
         unsafe extern "C" fn anon(
             rb_self: $crate::Value,
             a: $crate::Value,
@@ -1072,7 +1092,7 @@ macro_rules! method {
             $crate::Value,
         ) -> $crate::Value
     }};
-    ($name:expr, 11) => {{
+    ($name:expr_2021, 11) => {{
         unsafe extern "C" fn anon(
             rb_self: $crate::Value,
             a: $crate::Value,
@@ -1105,7 +1125,7 @@ macro_rules! method {
             $crate::Value,
         ) -> $crate::Value
     }};
-    ($name:expr, 12) => {{
+    ($name:expr_2021, 12) => {{
         unsafe extern "C" fn anon(
             rb_self: $crate::Value,
             a: $crate::Value,
@@ -1140,7 +1160,7 @@ macro_rules! method {
             $crate::Value,
         ) -> $crate::Value
     }};
-    ($name:expr, 13) => {{
+    ($name:expr_2021, 13) => {{
         unsafe extern "C" fn anon(
             rb_self: $crate::Value,
             a: $crate::Value,
@@ -1177,7 +1197,7 @@ macro_rules! method {
             $crate::Value,
         ) -> $crate::Value
     }};
-    ($name:expr, 14) => {{
+    ($name:expr_2021, 14) => {{
         unsafe extern "C" fn anon(
             rb_self: $crate::Value,
             a: $crate::Value,
@@ -1216,7 +1236,7 @@ macro_rules! method {
             $crate::Value,
         ) -> $crate::Value
     }};
-    ($name:expr, 15) => {{
+    ($name:expr_2021, 15) => {{
         unsafe extern "C" fn anon(
             rb_self: $crate::Value,
             a: $crate::Value,
@@ -1257,7 +1277,7 @@ macro_rules! method {
             $crate::Value,
         ) -> $crate::Value
     }};
-    ($name:expr, $arity:expr) => {
+    ($name:expr_2021, $arity:expr_2021) => {
         compile_error!("arity must be an integer literal between -2..=15")
     };
 }
@@ -1355,21 +1375,25 @@ where
 {
     #[inline]
     unsafe fn call_convert_value(self, argc: c_int, argv: *const Value) -> Result<Value, Error> {
-        let args = slice::from_raw_parts(argv, argc as usize);
-        (self)(args).into_return_value()
+        unsafe {
+            let args = slice::from_raw_parts(argv, argc as usize);
+            (self)(args).into_return_value()
+        }
     }
 
     #[inline]
     unsafe fn call_handle_error(self, argc: c_int, argv: *const Value) -> Value {
-        let res = match std::panic::catch_unwind(AssertUnwindSafe(|| {
-            self.call_convert_value(argc, argv)
-        })) {
-            Ok(v) => v,
-            Err(e) => Err(Error::from_panic(e)),
-        };
-        match res {
-            Ok(v) => v,
-            Err(e) => raise(e),
+        unsafe {
+            let res = match std::panic::catch_unwind(AssertUnwindSafe(|| {
+                self.call_convert_value(argc, argv)
+            })) {
+                Ok(v) => v,
+                Err(e) => Err(Error::from_panic(e)),
+            };
+            match res {
+                Ok(v) => v,
+                Err(e) => raise(e),
+            }
         }
     }
 }
@@ -1394,21 +1418,25 @@ where
 {
     #[inline]
     unsafe fn call_convert_value(self, argc: c_int, argv: *const Value) -> Result<Value, Error> {
-        let args = slice::from_raw_parts(argv, argc as usize);
-        (self)(&Ruby::get_unchecked(), args).into_return_value()
+        unsafe {
+            let args = slice::from_raw_parts(argv, argc as usize);
+            (self)(&Ruby::get_unchecked(), args).into_return_value()
+        }
     }
 
     #[inline]
     unsafe fn call_handle_error(self, argc: c_int, argv: *const Value) -> Value {
-        let res = match std::panic::catch_unwind(AssertUnwindSafe(|| {
-            self.call_convert_value(argc, argv)
-        })) {
-            Ok(v) => v,
-            Err(e) => Err(Error::from_panic(e)),
-        };
-        match res {
-            Ok(v) => v,
-            Err(e) => raise(e),
+        unsafe {
+            let res = match std::panic::catch_unwind(AssertUnwindSafe(|| {
+                self.call_convert_value(argc, argv)
+            })) {
+                Ok(v) => v,
+                Err(e) => Err(Error::from_panic(e)),
+            };
+            match res {
+                Ok(v) => v,
+                Err(e) => raise(e),
+            }
         }
     }
 }
@@ -1478,15 +1506,15 @@ macro_rules! function_n {
                 Res: ReturnValue,
             {
                 #[inline]
-                unsafe fn call_convert_value(self, #(arg~N: Value,)*) -> Result<Value, Error> {
+                unsafe fn call_convert_value(self, #(arg~N: Value,)*) -> Result<Value, Error> { unsafe {
                     (self)(
                         &Ruby::get_unchecked(),
                         #(TryConvert::try_convert(arg~N)?,)*
                     ).into_return_value()
-                }
+                }}
 
                 #[inline]
-                unsafe fn call_handle_error(self, #(arg~N: Value,)*) -> Value {
+                unsafe fn call_handle_error(self, #(arg~N: Value,)*) -> Value { unsafe {
                     let res =
                         match std::panic::catch_unwind(AssertUnwindSafe(|| {
                             self.call_convert_value(#(arg~N,)*)
@@ -1498,7 +1526,7 @@ macro_rules! function_n {
                         Ok(v) => v,
                         Err(e) => raise(e),
                     }
-                }
+                }}
             }
 
             impl<Func, #(T~N,)* Res> $ruby_name<#(T~N,)* Res> for Func
@@ -1569,14 +1597,14 @@ seq!(N in 0..=15 {
 /// ```
 #[macro_export]
 macro_rules! function {
-    ($name:expr, -2) => {{
+    ($name:expr_2021, -2) => {{
         unsafe extern "C" fn anon(rb_self: $crate::Value, args: $crate::RArray) -> $crate::Value {
             use $crate::method::{FunctionRbAry, RubyFunctionRbAry};
             $name.call_handle_error(args)
         }
         anon as unsafe extern "C" fn($crate::Value, $crate::RArray) -> $crate::Value
     }};
-    ($name:expr, -1) => {{
+    ($name:expr_2021, -1) => {{
         unsafe extern "C" fn anon(
             argc: std::os::raw::c_int,
             argv: *const $crate::Value,
@@ -1591,21 +1619,21 @@ macro_rules! function {
             $crate::Value,
         ) -> $crate::Value
     }};
-    ($name:expr, 0) => {{
+    ($name:expr_2021, 0) => {{
         unsafe extern "C" fn anon(rb_self: $crate::Value) -> $crate::Value {
             use $crate::method::{Function0, RubyFunction0};
             $name.call_handle_error()
         }
         anon as unsafe extern "C" fn($crate::Value) -> $crate::Value
     }};
-    ($name:expr, 1) => {{
+    ($name:expr_2021, 1) => {{
         unsafe extern "C" fn anon(rb_self: $crate::Value, a: $crate::Value) -> $crate::Value {
             use $crate::method::{Function1, RubyFunction1};
             $name.call_handle_error(a)
         }
         anon as unsafe extern "C" fn($crate::Value, $crate::Value) -> $crate::Value
     }};
-    ($name:expr, 2) => {{
+    ($name:expr_2021, 2) => {{
         unsafe extern "C" fn anon(
             rb_self: $crate::Value,
             a: $crate::Value,
@@ -1616,7 +1644,7 @@ macro_rules! function {
         }
         anon as unsafe extern "C" fn($crate::Value, $crate::Value, $crate::Value) -> $crate::Value
     }};
-    ($name:expr, 3) => {{
+    ($name:expr_2021, 3) => {{
         unsafe extern "C" fn anon(
             rb_self: $crate::Value,
             a: $crate::Value,
@@ -1633,7 +1661,7 @@ macro_rules! function {
             $crate::Value,
         ) -> $crate::Value
     }};
-    ($name:expr, 4) => {{
+    ($name:expr_2021, 4) => {{
         unsafe extern "C" fn anon(
             rb_self: $crate::Value,
             a: $crate::Value,
@@ -1652,7 +1680,7 @@ macro_rules! function {
             $crate::Value,
         ) -> $crate::Value
     }};
-    ($name:expr, 5) => {{
+    ($name:expr_2021, 5) => {{
         unsafe extern "C" fn anon(
             rb_self: $crate::Value,
             a: $crate::Value,
@@ -1673,7 +1701,7 @@ macro_rules! function {
             $crate::Value,
         ) -> $crate::Value
     }};
-    ($name:expr, 6) => {{
+    ($name:expr_2021, 6) => {{
         unsafe extern "C" fn anon(
             rb_self: $crate::Value,
             a: $crate::Value,
@@ -1696,7 +1724,7 @@ macro_rules! function {
             $crate::Value,
         ) -> $crate::Value
     }};
-    ($name:expr, 7) => {{
+    ($name:expr_2021, 7) => {{
         unsafe extern "C" fn anon(
             rb_self: $crate::Value,
             a: $crate::Value,
@@ -1721,7 +1749,7 @@ macro_rules! function {
             $crate::Value,
         ) -> $crate::Value
     }};
-    ($name:expr, 8) => {{
+    ($name:expr_2021, 8) => {{
         unsafe extern "C" fn anon(
             rb_self: $crate::Value,
             a: $crate::Value,
@@ -1748,7 +1776,7 @@ macro_rules! function {
             $crate::Value,
         ) -> $crate::Value
     }};
-    ($name:expr, 9) => {{
+    ($name:expr_2021, 9) => {{
         unsafe extern "C" fn anon(
             rb_self: $crate::Value,
             a: $crate::Value,
@@ -1777,7 +1805,7 @@ macro_rules! function {
             $crate::Value,
         ) -> $crate::Value
     }};
-    ($name:expr, 10) => {{
+    ($name:expr_2021, 10) => {{
         unsafe extern "C" fn anon(
             rb_self: $crate::Value,
             a: $crate::Value,
@@ -1808,7 +1836,7 @@ macro_rules! function {
             $crate::Value,
         ) -> $crate::Value
     }};
-    ($name:expr, 11) => {{
+    ($name:expr_2021, 11) => {{
         unsafe extern "C" fn anon(
             rb_self: $crate::Value,
             a: $crate::Value,
@@ -1841,7 +1869,7 @@ macro_rules! function {
             $crate::Value,
         ) -> $crate::Value
     }};
-    ($name:expr, 12) => {{
+    ($name:expr_2021, 12) => {{
         unsafe extern "C" fn anon(
             rb_self: $crate::Value,
             a: $crate::Value,
@@ -1876,7 +1904,7 @@ macro_rules! function {
             $crate::Value,
         ) -> $crate::Value
     }};
-    ($name:expr, 13) => {{
+    ($name:expr_2021, 13) => {{
         unsafe extern "C" fn anon(
             rb_self: $crate::Value,
             a: $crate::Value,
@@ -1913,7 +1941,7 @@ macro_rules! function {
             $crate::Value,
         ) -> $crate::Value
     }};
-    ($name:expr, 14) => {{
+    ($name:expr_2021, 14) => {{
         unsafe extern "C" fn anon(
             rb_self: $crate::Value,
             a: $crate::Value,
@@ -1952,7 +1980,7 @@ macro_rules! function {
             $crate::Value,
         ) -> $crate::Value
     }};
-    ($name:expr, 15) => {{
+    ($name:expr_2021, 15) => {{
         unsafe extern "C" fn anon(
             rb_self: $crate::Value,
             a: $crate::Value,
@@ -1993,7 +2021,7 @@ macro_rules! function {
             $crate::Value,
         ) -> $crate::Value
     }};
-    ($name:expr, $arity:expr) => {
+    ($name:expr_2021, $arity:expr_2021) => {
         compile_error!("arity must be an integer literal between -2..=15")
     };
 }

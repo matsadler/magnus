@@ -1,16 +1,16 @@
 use std::fmt;
 
-use rb_sys::{rb_float_new_in_heap, VALUE};
+use rb_sys::{VALUE, rb_float_new_in_heap};
 
 use crate::{
+    Error, Float, RFloat, Ruby, TryConvert, Value,
     into_value::IntoValue,
     numeric::Numeric,
     try_convert::TryConvertOwned,
     value::{
-        private::{self, ReprValue as _},
         NonZeroValue, ReprValue,
+        private::{self, ReprValue as _},
     },
-    Error, Float, RFloat, Ruby, TryConvert, Value,
 };
 
 /// # `Flonum`
@@ -28,7 +28,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let f = ruby.flonum_from_f64(1.7272337110188893e-77).unwrap();
@@ -65,7 +65,7 @@ impl Flonum {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, Flonum};
+    /// use magnus::{Flonum, eval};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// assert!(Flonum::from_value(eval("1.7272337110188893e-77").unwrap()).is_some());
@@ -84,7 +84,7 @@ impl Flonum {
 
     #[inline]
     pub(crate) unsafe fn from_rb_value_unchecked(val: VALUE) -> Self {
-        Self(NonZeroValue::new_unchecked(Value::new(val)))
+        unsafe { Self(NonZeroValue::new_unchecked(Value::new(val))) }
     }
 
     #[inline]
@@ -113,7 +113,7 @@ impl Flonum {
     ///
     /// ```
     /// # #![allow(deprecated)]
-    /// use magnus::{rb_assert, Flonum};
+    /// use magnus::{Flonum, rb_assert};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let f = Flonum::from_f64(1.7272337110188893e-77).unwrap();
@@ -137,7 +137,7 @@ impl Flonum {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, Flonum};
+    /// use magnus::{Flonum, eval};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let f: Flonum = eval("2.0").unwrap();

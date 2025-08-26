@@ -1,6 +1,6 @@
-use magnus::{block::Yield, eval, method, prelude::*, rb_assert, Ruby, Value};
+use magnus::{Ruby, Value, block::Yield, eval, method, prelude::*, rb_assert};
 
-fn count_to_3(ruby: &Ruby, rb_self: Value) -> Yield<impl Iterator<Item = u8>> {
+fn count_to_3(ruby: &Ruby, rb_self: Value) -> Yield<impl Iterator<Item = u8> + use<>> {
     if ruby.block_given() {
         Yield::Iter(1..=3)
     } else {
@@ -40,5 +40,9 @@ fn it_converts_iterator_to_yields() {
         "
     )
     .unwrap();
-    rb_assert!(ruby, "enumerator.next == 1 && enumerator.next == 2 && enumerator.next == 3 && raises { enumerator.next }", enumerator);
+    rb_assert!(
+        ruby,
+        "enumerator.next == 1 && enumerator.next == 2 && enumerator.next == 3 && raises { enumerator.next }",
+        enumerator
+    );
 }

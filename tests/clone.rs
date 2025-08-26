@@ -1,6 +1,6 @@
 use magnus::{
-    eval, function, gc, method, prelude::*, typed_data, value::Opaque, DataTypeFunctions,
-    TypedData, Value,
+    DataTypeFunctions, TypedData, Value, eval, function, gc, method, prelude::*, typed_data,
+    value::Opaque,
 };
 
 #[derive(TypedData, Clone)]

@@ -2,17 +2,17 @@
 
 use std::fmt;
 
-use rb_sys::{rb_num_coerce_bin, rb_num_coerce_bit, rb_num_coerce_cmp, rb_num_coerce_relop, VALUE};
+use rb_sys::{VALUE, rb_num_coerce_bin, rb_num_coerce_bit, rb_num_coerce_cmp, rb_num_coerce_relop};
 
 use crate::{
-    error::{protect, Error},
+    Ruby,
+    error::{Error, protect},
     into_value::IntoValue,
     try_convert::TryConvert,
     value::{
-        private::{self, ReprValue as _},
         IntoId, NonZeroValue, ReprValue, Value,
+        private::{self, ReprValue as _},
     },
-    Ruby,
 };
 
 /// Functions available for all of Ruby's Numeric types.
@@ -233,7 +233,7 @@ pub trait Numeric: ReprValue + Copy {
 /// ```
 /// use std::num::NonZeroI64;
 ///
-/// use magnus::{numeric::NumericValue, prelude::*, Error, Ruby};
+/// use magnus::{Error, Ruby, numeric::NumericValue, prelude::*};
 ///
 /// fn example(ruby: &Ruby) -> Result<(), Error> {
 ///     let a = ruby.integer_from_i64(1);
@@ -257,7 +257,7 @@ pub struct NumericValue(NonZeroValue);
 impl NumericValue {
     #[inline]
     unsafe fn from_rb_value_unchecked(val: VALUE) -> Self {
-        Self(NonZeroValue::new_unchecked(Value::new(val)))
+        unsafe { Self(NonZeroValue::new_unchecked(Value::new(val))) }
     }
 }
 

@@ -1,4 +1,4 @@
-use magnus::{rb_assert, StaticSymbol, Symbol, Value};
+use magnus::{StaticSymbol, Symbol, Value, rb_assert};
 
 #[test]
 fn it_makes_a_symbol() {

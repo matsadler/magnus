@@ -1,8 +1,7 @@
 //! Types and functions for working with Ruby’s Hash class.
 
 use std::{
-    collections::BTreeMap,
-    collections::HashMap,
+    collections::{BTreeMap, HashMap},
     convert::Infallible,
     fmt,
     hash::Hash,
@@ -13,21 +12,21 @@ use std::{
 #[cfg(ruby_gte_3_2)]
 use rb_sys::rb_hash_new_capa;
 use rb_sys::{
-    rb_check_hash_type, rb_hash_aref, rb_hash_aset, rb_hash_bulk_insert, rb_hash_clear,
+    VALUE, rb_check_hash_type, rb_hash_aref, rb_hash_aset, rb_hash_bulk_insert, rb_hash_clear,
     rb_hash_delete, rb_hash_fetch, rb_hash_foreach, rb_hash_lookup, rb_hash_lookup2, rb_hash_new,
-    rb_hash_size, rb_hash_size_num, rb_hash_update_by, ruby_value_type, VALUE,
+    rb_hash_size, rb_hash_size_num, rb_hash_update_by, ruby_value_type,
 };
 
 use crate::{
-    error::{protect, raise, Error},
+    Ruby,
+    error::{Error, protect, raise},
     into_value::{IntoValue, IntoValueFromNative},
     object::Object,
     try_convert::{TryConvert, TryConvertOwned},
     value::{
+        Fixnum, NonZeroValue, QUNDEF, ReprValue, Value,
         private::{self, ReprValue as _},
-        Fixnum, NonZeroValue, ReprValue, Value, QUNDEF,
     },
-    Ruby,
 };
 
 /// Iteration state for [`RHash::foreach`].
@@ -59,15 +58,17 @@ where
 
     #[inline]
     unsafe fn call_handle_error(self, key: Value, value: Value) -> ForEach {
-        let res = match std::panic::catch_unwind(AssertUnwindSafe(|| {
-            self.call_convert_value(key, value)
-        })) {
-            Ok(v) => v,
-            Err(e) => Err(Error::from_panic(e)),
-        };
-        match res {
-            Ok(v) => v,
-            Err(e) => raise(e),
+        unsafe {
+            let res = match std::panic::catch_unwind(AssertUnwindSafe(|| {
+                self.call_convert_value(key, value)
+            })) {
+                Ok(v) => v,
+                Err(e) => Err(Error::from_panic(e)),
+            };
+            match res {
+                Ok(v) => v,
+                Err(e) => raise(e),
+            }
         }
     }
 }
@@ -131,7 +132,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let hash = ruby.hash_from_iter(["a", "b", "c"].into_iter().zip(1..4));
@@ -159,7 +160,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let hash = ruby.hash_try_from_iter("a,1;b,2;c,3".split(';').map(|s| {
@@ -249,7 +250,7 @@ impl RHash {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, RHash};
+    /// use magnus::{RHash, eval};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// assert!(RHash::from_value(eval(r#"{"answer" => 42}"#).unwrap()).is_some());
@@ -266,7 +267,7 @@ impl RHash {
 
     #[inline]
     pub(crate) unsafe fn from_rb_value_unchecked(val: VALUE) -> Self {
-        Self(NonZeroValue::new_unchecked(Value::new(val)))
+        unsafe { Self(NonZeroValue::new_unchecked(Value::new(val))) }
     }
 
     /// Create a new empty `RHash`.
@@ -333,7 +334,7 @@ impl RHash {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let hash = ruby.hash_new();
@@ -369,7 +370,7 @@ impl RHash {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, prelude::*, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let hash = ruby.hash_new();
@@ -407,7 +408,7 @@ impl RHash {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, RHash, Ruby};
+    /// use magnus::{Error, RHash, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let a: RHash = ruby.eval("{a: 1, b: 2}")?;
@@ -446,7 +447,7 @@ impl RHash {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{value::Qnil, Error, Ruby};
+    /// use magnus::{Error, Ruby, value::Qnil};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let hash = ruby.hash_new();
@@ -499,7 +500,7 @@ impl RHash {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{value::Qnil, Error, RHash, Ruby};
+    /// use magnus::{Error, RHash, Ruby, value::Qnil};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let hash: RHash = ruby.eval(
@@ -662,7 +663,7 @@ impl RHash {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{value::Qnil, Error, RHash, Ruby};
+    /// use magnus::{Error, RHash, Ruby, value::Qnil};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let hash: RHash = ruby.eval(r#"hash = {"answer" => 42}"#)?;
@@ -719,7 +720,7 @@ impl RHash {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{r_hash::ForEach, Error, RHash, Ruby};
+    /// use magnus::{Error, RHash, Ruby, r_hash::ForEach};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let hash: RHash = ruby.eval(r#"{"foo" => 1, "bar" => 2, "baz" => 4, "qux" => 8}"#)?;
@@ -750,8 +751,10 @@ impl RHash {
             K: TryConvert,
             V: TryConvert,
         {
-            let closure = &mut *(arg as *mut F);
-            closure.call_handle_error(Value::new(key), Value::new(value)) as c_int
+            unsafe {
+                let closure = &mut *(arg as *mut F);
+                closure.call_handle_error(Value::new(key), Value::new(value)) as c_int
+            }
         }
 
         unsafe {

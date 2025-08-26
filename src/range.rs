@@ -9,16 +9,16 @@ use std::{
 use rb_sys::{rb_range_beg_len, rb_range_new};
 
 use crate::{
-    error::{protect, Error},
+    Ruby,
+    error::{Error, protect},
     into_value::{IntoValue, IntoValueFromNative},
     object::Object,
     r_struct::RStruct,
     try_convert::TryConvert,
     value::{
-        private::{self, ReprValue as _},
         ReprValue, Value,
+        private::{self, ReprValue as _},
     },
-    Ruby,
 };
 
 /// # `Range`
@@ -34,7 +34,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let range = ruby.range_new(2, 7, false)?;
@@ -46,7 +46,7 @@ impl Ruby {
     /// ```
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let range = ruby.range_new(2, 7, true)?;

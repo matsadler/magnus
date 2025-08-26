@@ -1,4 +1,4 @@
-use magnus::{prelude::*, Value};
+use magnus::{Value, prelude::*};
 
 #[test]
 fn it_can_call_method_with_block() {

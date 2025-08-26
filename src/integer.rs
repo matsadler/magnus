@@ -5,22 +5,22 @@ use std::{
 };
 
 use rb_sys::{
-    rb_big_cmp, rb_big_div, rb_big_eq, rb_big_minus, rb_big_mul, rb_big_norm, rb_big_plus,
-    rb_int2big, rb_ll2inum, rb_to_int, rb_ull2inum, ruby_special_consts, ruby_value_type, Qtrue,
-    VALUE,
+    Qtrue, VALUE, rb_big_cmp, rb_big_div, rb_big_eq, rb_big_minus, rb_big_mul, rb_big_norm,
+    rb_big_plus, rb_int2big, rb_ll2inum, rb_to_int, rb_ull2inum, ruby_special_consts,
+    ruby_value_type,
 };
 
 use crate::{
-    error::{protect, Error},
+    Ruby,
+    error::{Error, protect},
     into_value::IntoValue,
     numeric::Numeric,
     r_bignum::RBignum,
     try_convert::TryConvert,
     value::{
-        private::{self, ReprValue as _},
         Fixnum, NonZeroValue, ReprValue, Value,
+        private::{self, ReprValue as _},
     },
-    Ruby,
 };
 
 pub(crate) enum IntegerType {
@@ -39,7 +39,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(ruby, "i == 0", i = ruby.integer_from_i64(0));
@@ -74,7 +74,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!("i == 0", i = ruby.integer_from_u64(0));
@@ -103,7 +103,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(ruby, "i == 0", i = ruby.integer_from_i128(0));
@@ -138,7 +138,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!("i == 0", i = ruby.integer_from_u128(0));
@@ -177,7 +177,7 @@ impl Integer {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, Integer};
+    /// use magnus::{Integer, eval};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// assert!(Integer::from_value(eval("0").unwrap()).is_some());
@@ -199,7 +199,7 @@ impl Integer {
 
     #[inline]
     pub(crate) unsafe fn from_rb_value_unchecked(val: VALUE) -> Self {
-        Self(NonZeroValue::new_unchecked(Value::new(val)))
+        unsafe { Self(NonZeroValue::new_unchecked(Value::new(val))) }
     }
 
     pub(crate) fn integer_type(self) -> IntegerType {
@@ -223,7 +223,7 @@ impl Integer {
     ///
     /// ```
     /// # #![allow(deprecated)]
-    /// use magnus::{rb_assert, Integer};
+    /// use magnus::{Integer, rb_assert};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// rb_assert!("i == 0", i = Integer::from_i64(0));
@@ -257,7 +257,7 @@ impl Integer {
     ///
     /// ```
     /// # #![allow(deprecated)]
-    /// use magnus::{rb_assert, Integer};
+    /// use magnus::{Integer, rb_assert};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// rb_assert!("i == 0", i = Integer::from_u64(0));
@@ -282,7 +282,7 @@ impl Integer {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, Integer};
+    /// use magnus::{Integer, eval};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// assert_eq!(eval::<Integer>("127").unwrap().to_i8().unwrap(), 127);
@@ -307,7 +307,7 @@ impl Integer {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, Integer};
+    /// use magnus::{Integer, eval};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// assert_eq!(eval::<Integer>("32767").unwrap().to_i16().unwrap(), 32767);
@@ -332,7 +332,7 @@ impl Integer {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, Integer};
+    /// use magnus::{Integer, eval};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// assert_eq!(
@@ -360,7 +360,7 @@ impl Integer {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, Integer};
+    /// use magnus::{Integer, eval};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// assert_eq!(
@@ -377,14 +377,18 @@ impl Integer {
     ///         .unwrap(),
     ///     -4611686018427387904
     /// );
-    /// assert!(eval::<Integer>("9223372036854775808")
-    ///     .unwrap()
-    ///     .to_i64()
-    ///     .is_err());
-    /// assert!(eval::<Integer>("-9223372036854775809")
-    ///     .unwrap()
-    ///     .to_i64()
-    ///     .is_err());
+    /// assert!(
+    ///     eval::<Integer>("9223372036854775808")
+    ///         .unwrap()
+    ///         .to_i64()
+    ///         .is_err()
+    /// );
+    /// assert!(
+    ///     eval::<Integer>("-9223372036854775809")
+    ///         .unwrap()
+    ///         .to_i64()
+    ///         .is_err()
+    /// );
     /// ```
     #[inline]
     pub fn to_i64(self) -> Result<i64, Error> {
@@ -400,7 +404,7 @@ impl Integer {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, Integer};
+    /// use magnus::{Integer, eval};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// assert_eq!(
@@ -417,14 +421,18 @@ impl Integer {
     ///         .unwrap(),
     ///     -170141183460469231731687303715884105728
     /// );
-    /// assert!(eval::<Integer>("170141183460469231731687303715884105728")
-    ///     .unwrap()
-    ///     .to_i128()
-    ///     .is_err());
-    /// assert!(eval::<Integer>("-170141183460469231731687303715884105729")
-    ///     .unwrap()
-    ///     .to_i128()
-    ///     .is_err());
+    /// assert!(
+    ///     eval::<Integer>("170141183460469231731687303715884105728")
+    ///         .unwrap()
+    ///         .to_i128()
+    ///         .is_err()
+    /// );
+    /// assert!(
+    ///     eval::<Integer>("-170141183460469231731687303715884105729")
+    ///         .unwrap()
+    ///         .to_i128()
+    ///         .is_err()
+    /// );
     /// ```
     #[inline]
     pub fn to_i128(self) -> Result<i128, Error> {
@@ -440,7 +448,7 @@ impl Integer {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, Integer};
+    /// use magnus::{Integer, eval};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// assert_eq!(
@@ -472,7 +480,7 @@ impl Integer {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, Integer};
+    /// use magnus::{Integer, eval};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// assert_eq!(eval::<Integer>("255").unwrap().to_u8().unwrap(), 255);
@@ -496,7 +504,7 @@ impl Integer {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, Integer};
+    /// use magnus::{Integer, eval};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// assert_eq!(eval::<Integer>("65535").unwrap().to_u16().unwrap(), 65535);
@@ -520,7 +528,7 @@ impl Integer {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, Integer};
+    /// use magnus::{Integer, eval};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// assert_eq!(
@@ -544,7 +552,7 @@ impl Integer {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, Integer};
+    /// use magnus::{Integer, eval};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// assert_eq!(
@@ -555,10 +563,12 @@ impl Integer {
     ///     4611686018427387903
     /// );
     /// assert!(eval::<Integer>("-1").unwrap().to_u64().is_err());
-    /// assert!(eval::<Integer>("18446744073709551616")
-    ///     .unwrap()
-    ///     .to_u64()
-    ///     .is_err());
+    /// assert!(
+    ///     eval::<Integer>("18446744073709551616")
+    ///         .unwrap()
+    ///         .to_u64()
+    ///         .is_err()
+    /// );
     /// ```
     #[inline]
     pub fn to_u64(self) -> Result<u64, Error> {
@@ -574,7 +584,7 @@ impl Integer {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, Integer};
+    /// use magnus::{Integer, eval};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// assert_eq!(
@@ -585,10 +595,12 @@ impl Integer {
     ///     340282366920938463463374607431768211455
     /// );
     /// assert!(eval::<Integer>("-1").unwrap().to_u128().is_err());
-    /// assert!(eval::<Integer>("340282366920938463463374607431768211456")
-    ///     .unwrap()
-    ///     .to_u128()
-    ///     .is_err());
+    /// assert!(
+    ///     eval::<Integer>("340282366920938463463374607431768211456")
+    ///         .unwrap()
+    ///         .to_u128()
+    ///         .is_err()
+    /// );
     /// ```
     #[inline]
     pub fn to_u128(self) -> Result<u128, Error> {
@@ -604,7 +616,7 @@ impl Integer {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, Integer};
+    /// use magnus::{Integer, eval};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// assert_eq!(

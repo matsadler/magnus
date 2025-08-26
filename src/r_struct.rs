@@ -7,28 +7,28 @@ use std::{
     ffi::CString,
     fmt,
     os::raw::c_char,
-    ptr::{null, NonNull},
+    ptr::{NonNull, null},
     slice,
 };
 
 #[cfg(ruby_gte_3_3)]
 use rb_sys::rb_data_define;
 use rb_sys::{
-    rb_struct_aref, rb_struct_aset, rb_struct_define, rb_struct_getmember, rb_struct_members,
-    rb_struct_size, ruby_value_type, VALUE,
+    VALUE, rb_struct_aref, rb_struct_aset, rb_struct_define, rb_struct_getmember,
+    rb_struct_members, rb_struct_size, ruby_value_type,
 };
 use seq_macro::seq;
 
 use crate::{
+    Ruby,
     class::RClass,
-    error::{protect, Error},
+    error::{Error, protect},
     into_value::IntoValue,
     object::Object,
     r_array::RArray,
     symbol::Symbol,
     try_convert::TryConvert,
-    value::{self, private::ReprValue as _, IntoId, NonZeroValue, ReprValue, Value},
-    Ruby,
+    value::{self, IntoId, NonZeroValue, ReprValue, Value, private::ReprValue as _},
 };
 
 // Ruby provides some inline functions to get a pointer to the struct's
@@ -40,7 +40,7 @@ mod sys {
     use rb_sys::ruby_fl_type::RUBY_FL_USHIFT;
     #[cfg(ruby_gte_3_0)]
     use rb_sys::ruby_fl_ushift::RUBY_FL_USHIFT;
-    use rb_sys::{ruby_fl_type, RBasic, VALUE};
+    use rb_sys::{RBasic, VALUE, ruby_fl_type};
 
     pub const EMBED_LEN_MAX: u32 = rb_sys::ruby_rvalue_flags::RVALUE_EMBED_LEN_MAX as u32;
 
@@ -105,7 +105,7 @@ impl RStruct {
     }
 
     pub(crate) unsafe fn from_rb_value_unchecked(val: VALUE) -> Self {
-        Self(NonZeroValue::new_unchecked(Value::new(val)))
+        unsafe { Self(NonZeroValue::new_unchecked(Value::new(val))) }
     }
 
     fn as_internal(self) -> NonNull<sys::RStruct> {
@@ -122,22 +122,24 @@ impl RStruct {
     /// Ruby may modify or free the memory backing the returned slice, the
     /// caller must ensure this does not happen.
     unsafe fn as_slice(&self) -> &[Value] {
-        self.as_slice_unconstrained()
+        unsafe { self.as_slice_unconstrained() }
     }
 
     unsafe fn as_slice_unconstrained<'a>(self) -> &'a [Value] {
-        debug_assert_value!(self);
-        let r_basic = self.r_basic_unchecked();
-        let flags = r_basic.as_ref().flags;
-        if (flags & sys::EMBED_LEN_MASK as VALUE) != 0 {
-            let len = (flags & sys::EMBED_LEN_MASK as VALUE) >> sys::EMBED_LEN_SHIFT as VALUE;
-            slice::from_raw_parts(
-                &self.as_internal().as_ref().as_.ary as *const VALUE as *const Value,
-                len as usize,
-            )
-        } else {
-            let h = self.as_internal().as_ref().as_.heap;
-            slice::from_raw_parts(h.ptr as *const Value, h.len as usize)
+        unsafe {
+            debug_assert_value!(self);
+            let r_basic = self.r_basic_unchecked();
+            let flags = r_basic.as_ref().flags;
+            if (flags & sys::EMBED_LEN_MASK as VALUE) != 0 {
+                let len = (flags & sys::EMBED_LEN_MASK as VALUE) >> sys::EMBED_LEN_SHIFT as VALUE;
+                slice::from_raw_parts(
+                    &self.as_internal().as_ref().as_.ary as *const VALUE as *const Value,
+                    len as usize,
+                )
+            } else {
+                let h = self.as_internal().as_ref().as_.heap;
+                slice::from_raw_parts(h.ptr as *const Value, h.len as usize)
+            }
         }
     }
 
@@ -147,7 +149,7 @@ impl RStruct {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, Error, RStruct, Ruby};
+    /// use magnus::{Error, RStruct, Ruby, prelude::*};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let struct_class = ruby.define_struct(None, ("foo", "bar"))?;
@@ -189,7 +191,7 @@ impl RStruct {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, Error, RStruct, Ruby};
+    /// use magnus::{Error, RStruct, Ruby, prelude::*};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let struct_class = ruby.define_struct(None, ("foo", "bar", "baz"))?;
@@ -219,7 +221,7 @@ impl RStruct {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, rb_assert, Error, RStruct, Ruby};
+    /// use magnus::{Error, RStruct, Ruby, prelude::*, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let struct_class = ruby.define_struct(None, ("foo", "bar", "baz"))?;
@@ -263,7 +265,7 @@ impl RStruct {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, Error, RStruct, Ruby};
+    /// use magnus::{Error, RStruct, Ruby, prelude::*};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let struct_class = ruby.define_struct(None, ("foo", "bar", "baz"))?;
@@ -284,7 +286,7 @@ impl RStruct {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, Error, RStruct, Ruby};
+    /// use magnus::{Error, RStruct, Ruby, prelude::*};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let struct_class = ruby.define_struct(None, ("foo", "bar", "baz"))?;
@@ -312,7 +314,7 @@ impl RStruct {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, Error, RStruct, Ruby};
+    /// use magnus::{Error, RStruct, Ruby, prelude::*};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let struct_class = ruby.define_struct(None, ("foo", "bar"))?;
@@ -389,7 +391,7 @@ impl Ruby {
     /// taken from the first constant it is assigned to:
     ///
     /// ```
-    /// use magnus::{prelude::*, Error, Ruby};
+    /// use magnus::{Error, Ruby, prelude::*};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let struct_class = ruby.define_struct(None, ("foo", "bar"))?;
@@ -409,7 +411,7 @@ impl Ruby {
     /// under `Struct`:
     ///
     /// ```
-    /// use magnus::{prelude::*, Error, Ruby};
+    /// use magnus::{Error, Ruby, prelude::*};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let struct_class = ruby.define_struct(Some("Example"), ("foo", "bar"))?;

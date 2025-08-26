@@ -1,4 +1,4 @@
-use magnus::{embed::init, eval, rb_assert, Ruby, Value};
+use magnus::{Ruby, Value, embed::init, eval, rb_assert};
 
 #[magnus::wrap(class = "Example", free_immediately)]
 struct Example {

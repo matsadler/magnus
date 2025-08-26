@@ -1,4 +1,4 @@
-use magnus::{function, rb_assert, Ruby};
+use magnus::{Ruby, function, rb_assert};
 
 #[test]
 fn it_makes_a_proc() {

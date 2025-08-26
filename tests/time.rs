@@ -1,6 +1,6 @@
 use std::time::SystemTime;
 
-use magnus::{rb_assert, Error, Ruby};
+use magnus::{Error, Ruby, rb_assert};
 
 #[test]
 fn test_all() {

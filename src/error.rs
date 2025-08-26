@@ -5,17 +5,17 @@
 use std::{any::Any, borrow::Cow, ffi::CString, fmt, mem::transmute, os::raw::c_int};
 
 use rb_sys::{
-    rb_bug, rb_ensure, rb_errinfo, rb_exc_fatal, rb_exc_raise, rb_iter_break_value, rb_jump_tag,
-    rb_protect, rb_set_errinfo, rb_warning, ruby_special_consts, VALUE,
+    VALUE, rb_bug, rb_ensure, rb_errinfo, rb_exc_fatal, rb_exc_raise, rb_iter_break_value,
+    rb_jump_tag, rb_protect, rb_set_errinfo, rb_warning, ruby_special_consts,
 };
 
 use crate::{
+    ExceptionClass, Ruby,
     class::Class,
     exception::Exception,
     into_value::IntoValue,
     module::Module,
-    value::{private::ReprValue as _, ReprValue, Value},
-    ExceptionClass, Ruby,
+    value::{ReprValue, Value, private::ReprValue as _},
 };
 
 /// An error returned to indicate an attempt to interact with the Ruby API from
@@ -50,7 +50,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, Error, Ruby};
+    /// use magnus::{Error, Ruby, prelude::*};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let i: i64 =
@@ -116,7 +116,7 @@ impl Error {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{function, prelude::*, Error, Exception, Ruby};
+    /// use magnus::{Error, Exception, Ruby, function, prelude::*};
     ///
     /// fn bang(ruby: &Ruby) -> Result<(), Error> {
     ///     Err(Error::new(ruby.exception_runtime_error(), "BANG"))
@@ -165,7 +165,7 @@ impl Error {
     ///
     /// ```
     /// # #![allow(deprecated)]
-    /// use magnus::{prelude::*, Error};
+    /// use magnus::{Error, prelude::*};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let i: i64 = magnus::Range::new(1, 100, false)
@@ -201,7 +201,7 @@ impl Error {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{exception::ExceptionClass, prelude::*, Error, RModule, Ruby, TryConvert, Value};
+    /// use magnus::{Error, RModule, Ruby, TryConvert, Value, exception::ExceptionClass, prelude::*};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let err: Error = ruby
@@ -362,7 +362,7 @@ impl OpaqueError {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{error::OpaqueError, Error, Ruby};
+    /// use magnus::{Error, Ruby, error::OpaqueError};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let ruby = Ruby::get().unwrap(); // errors on non-Ruby thread
@@ -457,8 +457,10 @@ where
         F: FnOnce() -> T,
         T: ReprValue,
     {
-        let closure = (*(arg as *mut Option<F>)).take().unwrap();
-        (closure)().as_rb_value()
+        unsafe {
+            let closure = (*(arg as *mut Option<F>)).take().unwrap();
+            (closure)().as_rb_value()
+        }
     }
 
     // Tag::None
@@ -505,17 +507,21 @@ where
         F1: FnOnce() -> T,
         T: ReprValue,
     {
-        let closure = (*(arg as *mut Option<F1>)).take().unwrap();
-        (closure)().as_rb_value()
+        unsafe {
+            let closure = (*(arg as *mut Option<F1>)).take().unwrap();
+            (closure)().as_rb_value()
+        }
     }
 
     unsafe extern "C" fn call_ensure<F2>(arg: VALUE) -> VALUE
     where
         F2: FnOnce(),
     {
-        let closure = (*(arg as *mut Option<F2>)).take().unwrap();
-        (closure)();
-        ruby_special_consts::RUBY_Qnil as VALUE
+        unsafe {
+            let closure = (*(arg as *mut Option<F2>)).take().unwrap();
+            (closure)();
+            ruby_special_consts::RUBY_Qnil as VALUE
+        }
     }
 
     let result = unsafe {

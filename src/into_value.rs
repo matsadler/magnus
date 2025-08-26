@@ -1,10 +1,10 @@
 use seq_macro::seq;
 
 use crate::{
+    Ruby,
     r_array::RArray,
     r_hash::RHash,
     value::{ReprValue, Value},
-    Ruby,
 };
 
 /// # Conversion to `Value`
@@ -49,7 +49,7 @@ pub trait IntoValue: Sized {
     /// This method should only be called from a Ruby thread.
     #[inline]
     unsafe fn into_value_unchecked(self) -> Value {
-        self.into_value_with(&Ruby::get_unchecked())
+        unsafe { self.into_value_with(&Ruby::get_unchecked()) }
     }
 
     /// Convert `self` into [`Value`].
@@ -132,7 +132,7 @@ pub struct KwArgs(pub RHash);
 /// ```
 #[macro_export]
 macro_rules! kwargs {
-    ($ruby:expr, $($k:literal => $v:expr),+) => {{
+    ($ruby:expr_2021, $($k:literal => $v:expr_2021),+) => {{
         use $crate::IntoValue;
         let h = $ruby.hash_new();
         $(
@@ -143,7 +143,7 @@ macro_rules! kwargs {
         )+
         $crate::KwArgs(h)
     }};
-    ($($k:literal => $v:expr),+) => {{
+    ($($k:literal => $v:expr_2021),+) => {{
         $crate::kwargs!(&$crate::Ruby::get().unwrap(), $($k => $v),+)
     }};
 }

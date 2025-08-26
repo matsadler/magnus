@@ -7,27 +7,27 @@ use std::{borrow::Cow, ffi::CStr, fmt, mem::transmute, os::raw::c_int};
 #[cfg(ruby_gte_3_1)]
 use rb_sys::rb_cRefinement;
 use rb_sys::{
-    self, rb_alloc_func_t, rb_cArray, rb_cBasicObject, rb_cBinding, rb_cClass, rb_cComplex,
+    self, VALUE, rb_alloc_func_t, rb_cArray, rb_cBasicObject, rb_cBinding, rb_cClass, rb_cComplex,
     rb_cDir, rb_cEncoding, rb_cEnumerator, rb_cFalseClass, rb_cFile, rb_cFloat, rb_cHash, rb_cIO,
     rb_cInteger, rb_cMatch, rb_cMethod, rb_cModule, rb_cNameErrorMesg, rb_cNilClass, rb_cNumeric,
     rb_cObject, rb_cProc, rb_cRandom, rb_cRange, rb_cRational, rb_cRegexp, rb_cStat, rb_cString,
-    rb_cStruct, rb_cSymbol, rb_cThread, rb_cTime, rb_cTrueClass, rb_cUnboundMethod, rb_class2name,
-    rb_class_new, rb_class_new_instance_kw, rb_class_superclass, rb_define_alloc_func,
-    rb_get_alloc_func, rb_obj_alloc, rb_undef_alloc_func, ruby_value_type, VALUE,
+    rb_cStruct, rb_cSymbol, rb_cThread, rb_cTime, rb_cTrueClass, rb_cUnboundMethod, rb_class_new,
+    rb_class_new_instance_kw, rb_class_superclass, rb_class2name, rb_define_alloc_func,
+    rb_get_alloc_func, rb_obj_alloc, rb_undef_alloc_func, ruby_value_type,
 };
 
 use crate::{
-    error::{protect, Error},
-    into_value::{kw_splat, ArgList, IntoValue},
+    Ruby,
+    error::{Error, protect},
+    into_value::{ArgList, IntoValue, kw_splat},
     module::Module,
     object::Object,
     try_convert::TryConvert,
     typed_data::TypedData,
     value::{
-        private::{self, ReprValue as _},
         NonZeroValue, ReprValue, Value,
+        private::{self, ReprValue as _},
     },
-    Ruby,
 };
 
 /// A Value pointer to a RClass struct, Ruby's internal representation of
@@ -49,7 +49,7 @@ impl RClass {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, RClass};
+    /// use magnus::{RClass, eval};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// assert!(RClass::from_value(eval("String").unwrap()).is_some());
@@ -66,7 +66,7 @@ impl RClass {
 
     #[inline]
     pub(crate) unsafe fn from_rb_value_unchecked(val: VALUE) -> Self {
-        Self(NonZeroValue::new_unchecked(Value::new(val)))
+        unsafe { Self(NonZeroValue::new_unchecked(Value::new(val))) }
     }
 }
 
@@ -120,7 +120,7 @@ pub trait Class: Module {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, Error, RClass, Ruby};
+    /// use magnus::{Error, RClass, Ruby, prelude::*};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let class = RClass::new(ruby.class_object())?;
@@ -132,7 +132,7 @@ pub trait Class: Module {
     /// ```
     ///
     /// ```
-    /// use magnus::{prelude::*, Error, ExceptionClass, Ruby};
+    /// use magnus::{Error, ExceptionClass, Ruby, prelude::*};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     assert!(ExceptionClass::new(ruby.exception_standard_error()).is_ok());
@@ -149,7 +149,7 @@ pub trait Class: Module {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, Error, Ruby};
+    /// use magnus::{Error, Ruby, prelude::*};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let s = ruby.class_string().new_instance(())?;
@@ -193,7 +193,7 @@ pub trait Class: Module {
     /// ```
     ///
     /// ```
-    /// use magnus::{prelude::*, Error, Ruby};
+    /// use magnus::{Error, Ruby, prelude::*};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let s = ruby.exception_standard_error().new_instance(("bang!",))?;
@@ -239,7 +239,7 @@ pub trait Class: Module {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, Error, Ruby};
+    /// use magnus::{Error, Ruby, prelude::*};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let s = ruby.class_string().obj_alloc()?;
@@ -251,7 +251,7 @@ pub trait Class: Module {
     /// ```
     ///
     /// ```
-    /// use magnus::{prelude::*, Error, Ruby};
+    /// use magnus::{Error, Ruby, prelude::*};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let s = ruby.exception_standard_error().obj_alloc()?;
@@ -270,7 +270,7 @@ pub trait Class: Module {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, Error, Ruby};
+    /// use magnus::{Error, Ruby, prelude::*};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let klass = ruby.class_hash().superclass()?;
@@ -282,7 +282,7 @@ pub trait Class: Module {
     /// ```
     ///
     /// ```
-    /// use magnus::{prelude::*, Error, Ruby};
+    /// use magnus::{Error, Ruby, prelude::*};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let klass = ruby.exception_exception().superclass()?;
@@ -311,7 +311,7 @@ pub trait Class: Module {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, Error, Ruby};
+    /// use magnus::{Error, Ruby, prelude::*};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let value = ruby.class_hash();
@@ -325,7 +325,7 @@ pub trait Class: Module {
     /// ```
     ///
     /// ```
-    /// use magnus::{prelude::*, Error, Ruby};
+    /// use magnus::{Error, Ruby, prelude::*};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let value = ruby.exception_standard_error();
@@ -338,9 +338,11 @@ pub trait Class: Module {
     /// # Ruby::init(example).unwrap()
     /// ```
     unsafe fn name(&self) -> Cow<'_, str> {
-        let ptr = rb_class2name(self.as_rb_value());
-        let cstr = CStr::from_ptr(ptr);
-        cstr.to_string_lossy()
+        unsafe {
+            let ptr = rb_class2name(self.as_rb_value());
+            let cstr = CStr::from_ptr(ptr);
+            cstr.to_string_lossy()
+        }
     }
 
     /// Return `self` as an [`RClass`].
@@ -378,7 +380,7 @@ pub trait Class: Module {
     /// ```
     /// use std::cell::RefCell;
     ///
-    /// use magnus::{function, method, prelude::*, wrap, Error, RClass, Ruby, Value};
+    /// use magnus::{Error, RClass, Ruby, Value, function, method, prelude::*, wrap};
     ///
     /// #[derive(Default)]
     /// struct Point {
@@ -563,7 +565,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(ruby, "klass == Array", klass = ruby.class_array());
@@ -581,7 +583,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(
@@ -603,7 +605,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(ruby, "klass == Binding", klass = ruby.class_binding());
@@ -621,7 +623,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(ruby, "klass == Class", klass = ruby.class_class());
@@ -639,7 +641,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(ruby, "klass == Complex", klass = ruby.class_complex());
@@ -657,7 +659,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(ruby, "klass == Dir", klass = ruby.class_dir());
@@ -675,7 +677,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(ruby, "klass == Encoding", klass = ruby.class_encoding());
@@ -693,7 +695,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(ruby, "klass == Enumerator", klass = ruby.class_enumerator());
@@ -711,7 +713,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(
@@ -733,7 +735,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(ruby, "klass == File", klass = ruby.class_file());
@@ -751,7 +753,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(ruby, "klass == Float", klass = ruby.class_float());
@@ -769,7 +771,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(ruby, "klass == Hash", klass = ruby.class_hash());
@@ -787,7 +789,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(ruby, "klass == IO", klass = ruby.class_io());
@@ -805,7 +807,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(ruby, "klass == Integer", klass = ruby.class_integer());
@@ -823,7 +825,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(ruby, "klass == MatchData", klass = ruby.class_match());
@@ -841,7 +843,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(ruby, "klass == Method", klass = ruby.class_method());
@@ -859,7 +861,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(ruby, "klass == Module", klass = ruby.class_module());
@@ -877,7 +879,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(
@@ -899,7 +901,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(ruby, "klass == NilClass", klass = ruby.class_nil_class());
@@ -917,7 +919,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(ruby, "klass == Numeric", klass = ruby.class_numeric());
@@ -935,7 +937,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(ruby, "klass == Object", klass = ruby.class_object());
@@ -953,7 +955,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(ruby, "klass == Proc", klass = ruby.class_proc());
@@ -971,7 +973,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(ruby, "klass == Random", klass = ruby.class_random());
@@ -989,7 +991,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(ruby, "klass == Range", klass = ruby.class_range());
@@ -1007,7 +1009,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(ruby, "klass == Rational", klass = ruby.class_rational());
@@ -1025,7 +1027,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(ruby, "klass == Refinement", klass = ruby.class_refinement());
@@ -1045,7 +1047,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(ruby, "klass == Regexp", klass = ruby.class_regexp());
@@ -1063,7 +1065,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(ruby, "klass == File::Stat", klass = ruby.class_stat());
@@ -1081,7 +1083,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(ruby, "klass == String", klass = ruby.class_string());
@@ -1099,7 +1101,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(ruby, "klass == Struct", klass = ruby.class_struct());
@@ -1117,7 +1119,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(ruby, "klass == Symbol", klass = ruby.class_symbol());
@@ -1135,7 +1137,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(ruby, "klass == Thread", klass = ruby.class_thread());
@@ -1153,7 +1155,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(ruby, "klass == Time", klass = ruby.class_time());
@@ -1171,7 +1173,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(ruby, "klass == TrueClass", klass = ruby.class_true_class());
@@ -1189,7 +1191,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(

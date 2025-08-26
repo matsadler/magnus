@@ -22,12 +22,12 @@ use std::{
 #[cfg(ruby_use_flonum)]
 pub use flonum::Flonum;
 use rb_sys::{
-    rb_any_to_s, rb_block_call_kw, rb_check_funcall_kw, rb_check_id, rb_check_id_cstr,
-    rb_check_symbol_cstr, rb_enumeratorize_with_size_kw, rb_eql, rb_equal,
+    ID, RBasic, VALUE, rb_any_to_s, rb_block_call_kw, rb_check_funcall_kw, rb_check_id,
+    rb_check_id_cstr, rb_check_symbol_cstr, rb_enumeratorize_with_size_kw, rb_eql, rb_equal,
     rb_funcall_with_block_kw, rb_funcallv_kw, rb_funcallv_public_kw, rb_gc_register_address,
     rb_gc_unregister_address, rb_hash, rb_id2name, rb_id2sym, rb_inspect, rb_intern3, rb_ll2inum,
     rb_obj_as_string, rb_obj_classname, rb_obj_freeze, rb_obj_is_kind_of, rb_obj_respond_to,
-    rb_sym2id, rb_ull2inum, ruby_fl_type, ruby_special_consts, ruby_value_type, RBasic, ID, VALUE,
+    rb_sym2id, rb_ull2inum, ruby_fl_type, ruby_special_consts, ruby_value_type,
 };
 
 // These don't seem to appear consistently in bindgen output, not sure if they
@@ -37,14 +37,15 @@ const RUBY_FIXNUM_MAX: c_ulong = (c_long::MAX / 2) as c_ulong;
 const RUBY_FIXNUM_MIN: c_long = c_long::MIN / 2;
 
 use crate::{
+    Ruby,
     block::Proc,
     class::RClass,
     encoding::EncodingCapable,
     enumerator::Enumerator,
-    error::{protect, Error},
+    error::{Error, protect},
     gc,
     integer::{Integer, IntegerType},
-    into_value::{kw_splat, ArgList, IntoValue, IntoValueFromNative},
+    into_value::{ArgList, IntoValue, IntoValueFromNative, kw_splat},
     method::{Block, BlockReturn},
     module::Module,
     numeric::Numeric,
@@ -52,7 +53,6 @@ use crate::{
     r_string::RString,
     symbol::{IntoSymbol, Symbol},
     try_convert::{TryConvert, TryConvertOwned},
-    Ruby,
 };
 
 /// Ruby's `VALUE` type, which can represent any Ruby object.
@@ -245,7 +245,7 @@ impl TryConvert for Value {
 /// # Examples
 ///
 /// ```
-/// use magnus::{rb_assert, value::Opaque, Ruby};
+/// use magnus::{Ruby, rb_assert, value::Opaque};
 /// # let _cleanup = unsafe { magnus::embed::init() };
 ///
 /// let ruby = Ruby::get().unwrap();
@@ -311,9 +311,8 @@ pub trait InnerValue {
     ///
     /// ```
     /// use magnus::{
-    ///     rb_assert,
+    ///     Ruby, rb_assert,
     ///     value::{InnerValue, Opaque},
-    ///     Ruby,
     /// };
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
@@ -329,9 +328,8 @@ pub trait InnerValue {
     ///
     /// ```
     /// use magnus::{
-    ///     rb_assert,
+    ///     RString, Ruby, rb_assert,
     ///     value::{InnerValue, Lazy},
-    ///     RString, Ruby,
     /// };
     ///
     /// static STATIC_STR: Lazy<RString> = Lazy::new(|ruby| ruby.str_new("example"));
@@ -399,7 +397,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, value::Opaque, Ruby};
+    /// use magnus::{Ruby, rb_assert, value::Opaque};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let ruby = Ruby::get().unwrap();
@@ -413,7 +411,7 @@ impl Ruby {
     /// ```
     ///
     /// ```
-    /// use magnus::{rb_assert, value::Lazy, RString, Ruby};
+    /// use magnus::{RString, Ruby, rb_assert, value::Lazy};
     ///
     /// static STATIC_STR: Lazy<RString> = Lazy::new(|ruby| ruby.str_new("example"));
     /// # let _cleanup = unsafe { magnus::embed::init() };
@@ -460,7 +458,7 @@ unsafe impl<T: ReprValue> Sync for Opaque<T> {}
 /// # Examples
 ///
 /// ```
-/// use magnus::{rb_assert, value::Lazy, RString, Ruby};
+/// use magnus::{RString, Ruby, rb_assert, value::Lazy};
 ///
 /// static STATIC_STR: Lazy<RString> = Lazy::new(|ruby| ruby.str_new("example"));
 /// # let _cleanup = unsafe { magnus::embed::init() };
@@ -494,7 +492,7 @@ where
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, value::Lazy, RString, Ruby};
+    /// use magnus::{RString, Ruby, rb_assert, value::Lazy};
     ///
     /// static STATIC_STR: Lazy<RString> = Lazy::new(|ruby| ruby.str_new("example"));
     ///
@@ -536,7 +534,7 @@ where
     /// # Examples
     ///
     /// ```
-    /// use magnus::{value::Lazy, RString, Ruby};
+    /// use magnus::{RString, Ruby, value::Lazy};
     ///
     /// static STATIC_STR: Lazy<RString> = Lazy::new(|ruby| ruby.str_new("example"));
     ///
@@ -563,7 +561,7 @@ where
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, value::Lazy, RString, Ruby};
+    /// use magnus::{RString, Ruby, rb_assert, value::Lazy};
     ///
     /// static STATIC_STR: Lazy<RString> = Lazy::new(|ruby| ruby.str_new("example"));
     ///
@@ -642,12 +640,12 @@ pub(crate) mod private {
         // invariants of `Self`. It is recommended not to use this method.
         #[inline]
         unsafe fn from_value_unchecked(val: Value) -> Self {
-            *(&val as *const Value as *const Self)
+            unsafe { *(&val as *const Value as *const Self) }
         }
 
         #[inline]
         unsafe fn ref_from_ref_value_unchecked(val: &Value) -> &Self {
-            &*(val as *const Value as *const Self)
+            unsafe { &*(val as *const Value as *const Self) }
         }
 
         #[inline]
@@ -671,11 +669,13 @@ pub(crate) mod private {
 
         #[inline]
         unsafe fn r_basic_unchecked(self) -> ptr::NonNull<RBasic> {
-            #[cfg(debug_assertions)]
-            if self.is_immediate() {
-                panic!("attempting to access immediate value as pointer");
+            unsafe {
+                #[cfg(debug_assertions)]
+                if self.is_immediate() {
+                    panic!("attempting to access immediate value as pointer");
+                }
+                ptr::NonNull::new_unchecked(self.copy_as_value().0 as *mut RBasic)
             }
-            ptr::NonNull::new_unchecked(self.copy_as_value().0 as *mut RBasic)
         }
 
         /// Returns whether `self` is an 'immediate' value.
@@ -777,13 +777,15 @@ pub(crate) mod private {
         /// str, the caller must ensure this does not happen.
         #[allow(clippy::wrong_self_convention)]
         unsafe fn to_s_infallible(&self) -> Cow<'_, str> {
-            match self.as_value_ref().to_s() {
-                Ok(v) => v,
-                Err(_) => Cow::Owned(
-                    RString::from_rb_value_unchecked(rb_any_to_s(self.as_rb_value()))
-                        .to_string_lossy()
-                        .into_owned(),
-                ),
+            unsafe {
+                match self.as_value_ref().to_s() {
+                    Ok(v) => v,
+                    Err(_) => Cow::Owned(
+                        RString::from_rb_value_unchecked(rb_any_to_s(self.as_rb_value()))
+                            .to_string_lossy()
+                            .into_owned(),
+                    ),
+                }
             }
         }
     }
@@ -808,7 +810,7 @@ pub trait ReprValue: private::ReprValue {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, Error, Ruby, Value};
+    /// use magnus::{Error, Ruby, Value, prelude::*};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     assert!(ruby.eval::<Value>("nil")?.is_nil());
@@ -835,7 +837,7 @@ pub trait ReprValue: private::ReprValue {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, Error, Ruby};
+    /// use magnus::{Error, Ruby, prelude::*};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let a = ruby.ary_from_vec(vec![1, 2, 3]);
@@ -853,7 +855,7 @@ pub trait ReprValue: private::ReprValue {
     /// ```
     ///
     /// ```
-    /// use magnus::{eval, prelude::*, Error, Ruby, Value};
+    /// use magnus::{Error, Ruby, Value, eval, prelude::*};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let (a, b): (Value, Value) = eval!(
@@ -896,7 +898,7 @@ pub trait ReprValue: private::ReprValue {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, Error, Ruby};
+    /// use magnus::{Error, Ruby, prelude::*};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let a = ruby.ary_from_vec(vec![1, 2, 3]);
@@ -914,7 +916,7 @@ pub trait ReprValue: private::ReprValue {
     /// ```
     ///
     /// ```
-    /// use magnus::{eval, prelude::*, Error, Ruby, Value};
+    /// use magnus::{Error, Ruby, Value, eval, prelude::*};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let (a, b): (Value, Value) = eval!(
@@ -959,13 +961,14 @@ pub trait ReprValue: private::ReprValue {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, Error, Ruby};
+    /// use magnus::{Error, Ruby, prelude::*};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
-    ///     assert!(ruby
-    ///         .str_new("test")
-    ///         .hash()?
-    ///         .equal(ruby.str_new("test").hash()?)?);
+    ///     assert!(
+    ///         ruby.str_new("test")
+    ///             .hash()?
+    ///             .equal(ruby.str_new("test").hash()?)?
+    ///     );
     ///
     ///     Ok(())
     /// }
@@ -984,7 +987,7 @@ pub trait ReprValue: private::ReprValue {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, Error, Ruby, Value};
+    /// use magnus::{Error, Ruby, Value, prelude::*};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     assert_eq!(ruby.eval::<Value>("true")?.class().inspect(), "TrueClass");
@@ -1029,7 +1032,7 @@ pub trait ReprValue: private::ReprValue {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, Error, Ruby, Value};
+    /// use magnus::{Error, Ruby, Value, prelude::*};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     assert!(ruby.eval::<Value>(":foo")?.is_frozen());
@@ -1056,7 +1059,7 @@ pub trait ReprValue: private::ReprValue {
     ///
     /// # Examples
     /// ```
-    /// use magnus::{prelude::*, Error, Ruby, Value};
+    /// use magnus::{Error, Ruby, Value, prelude::*};
     ///
     /// fn mutate(val: Value) -> Result<(), Error> {
     ///     val.check_frozen()?;
@@ -1089,7 +1092,7 @@ pub trait ReprValue: private::ReprValue {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, Error, Ruby};
+    /// use magnus::{Error, Ruby, prelude::*};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let ary = ruby.ary_new();
@@ -1111,7 +1114,7 @@ pub trait ReprValue: private::ReprValue {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, Error, Ruby, Value};
+    /// use magnus::{Error, Ruby, Value, prelude::*};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     assert!(!ruby.eval::<Value>("false")?.to_bool());
@@ -1141,7 +1144,7 @@ pub trait ReprValue: private::ReprValue {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, Error, RArray, Ruby};
+    /// use magnus::{Error, RArray, Ruby, prelude::*};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let values = ruby.eval::<RArray>(r#"["foo", 1, :bar]"#)?;
@@ -1211,7 +1214,7 @@ pub trait ReprValue: private::ReprValue {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, prelude::*, Error, RObject, Ruby, Symbol};
+    /// use magnus::{Error, RObject, Ruby, Symbol, eval, prelude::*};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let object: RObject = eval!(
@@ -1276,7 +1279,7 @@ pub trait ReprValue: private::ReprValue {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, Error, Integer, Ruby};
+    /// use magnus::{Error, Integer, Ruby, prelude::*};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let val = ruby.float_from_f64(1.23);
@@ -1330,7 +1333,7 @@ pub trait ReprValue: private::ReprValue {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, Error, RArray, Ruby, Value};
+    /// use magnus::{Error, RArray, Ruby, Value, prelude::*};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let values = ruby.eval::<RArray>(r#"["foo", 1, :bar]"#)?;
@@ -1389,7 +1392,7 @@ pub trait ReprValue: private::ReprValue {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, Error, RArray, Ruby, Value};
+    /// use magnus::{Error, RArray, Ruby, Value, prelude::*};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let values = ruby.eval::<RArray>(r#"["foo", 1, :bar]"#)?;
@@ -1424,10 +1427,13 @@ pub trait ReprValue: private::ReprValue {
         where
             R: BlockReturn,
         {
-            let func =
-                std::mem::transmute::<VALUE, fn(&Ruby, &[Value], Option<Proc>) -> R>(callback_arg);
-            func.call_handle_error(argc, argv as *const Value, Value::new(blockarg))
-                .as_rb_value()
+            unsafe {
+                let func = std::mem::transmute::<VALUE, fn(&Ruby, &[Value], Option<Proc>) -> R>(
+                    callback_arg,
+                );
+                func.call_handle_error(argc, argv as *const Value, Value::new(blockarg))
+                    .as_rb_value()
+            }
         }
 
         let handle = Ruby::get_with(self);
@@ -1463,7 +1469,7 @@ pub trait ReprValue: private::ReprValue {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, Error, Ruby};
+    /// use magnus::{Error, Ruby, prelude::*};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let s = ruby.str_new("example");
@@ -1502,7 +1508,7 @@ pub trait ReprValue: private::ReprValue {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, Error, Ruby, Value};
+    /// use magnus::{Error, Ruby, Value, prelude::*};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let value = ruby.eval::<Value>("[]")?;
@@ -1535,7 +1541,7 @@ pub trait ReprValue: private::ReprValue {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, Error, Ruby};
+    /// use magnus::{Error, Ruby, prelude::*};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let value = ruby.qtrue();
@@ -1549,15 +1555,17 @@ pub trait ReprValue: private::ReprValue {
     /// ```
     #[allow(clippy::wrong_self_convention)]
     unsafe fn to_s(&self) -> Result<Cow<'_, str>, Error> {
-        if let Some(s) = RString::ref_from_value(self.as_value_ref()) {
-            if s.is_utf8_compatible_encoding() {
-                return s.as_str().map(Cow::Borrowed);
-            } else {
-                return (*s).to_string().map(Cow::Owned);
+        unsafe {
+            if let Some(s) = RString::ref_from_value(self.as_value_ref()) {
+                if s.is_utf8_compatible_encoding() {
+                    return s.as_str().map(Cow::Borrowed);
+                } else {
+                    return (*s).to_string().map(Cow::Owned);
+                }
             }
+            self.to_r_string()
+                .and_then(|s| s.to_string().map(Cow::Owned))
         }
-        self.to_r_string()
-            .and_then(|s| s.to_string().map(Cow::Owned))
     }
 
     /// Convert `self` to its Ruby debug representation.
@@ -1565,7 +1573,7 @@ pub trait ReprValue: private::ReprValue {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, Error, Ruby};
+    /// use magnus::{Error, Ruby, prelude::*};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     assert_eq!(ruby.qnil().inspect(), "nil");
@@ -1602,7 +1610,7 @@ pub trait ReprValue: private::ReprValue {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, Error, Ruby};
+    /// use magnus::{Error, Ruby, prelude::*};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let value = ruby.hash_new();
@@ -1615,9 +1623,11 @@ pub trait ReprValue: private::ReprValue {
     /// # Ruby::init(example).unwrap()
     /// ```
     unsafe fn classname(&self) -> Cow<'_, str> {
-        let ptr = rb_obj_classname(self.as_rb_value());
-        let cstr = CStr::from_ptr(ptr);
-        cstr.to_string_lossy()
+        unsafe {
+            let ptr = rb_obj_classname(self.as_rb_value());
+            let cstr = CStr::from_ptr(ptr);
+            cstr.to_string_lossy()
+        }
     }
 
     /// Returns whether or not `self` is an instance of `class`.
@@ -1625,7 +1635,7 @@ pub trait ReprValue: private::ReprValue {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, Error, Ruby, Value};
+    /// use magnus::{Error, Ruby, Value, prelude::*};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let value = ruby.eval::<Value>("[]")?;
@@ -1648,7 +1658,7 @@ pub trait ReprValue: private::ReprValue {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{prelude::*, r_string, Error, Ruby};
+    /// use magnus::{Error, Ruby, prelude::*, r_string};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let s = r_string!("foo\\bar\\baz");
@@ -1696,10 +1706,12 @@ pub(crate) struct NonZeroValue(NonZeroUsize, PhantomData<ptr::NonNull<RBasic>>);
 impl NonZeroValue {
     #[inline]
     pub(crate) const unsafe fn new_unchecked(val: Value) -> Self {
-        Self(
-            NonZeroUsize::new_unchecked(val.as_rb_value() as usize),
-            PhantomData,
-        )
+        unsafe {
+            Self(
+                NonZeroUsize::new_unchecked(val.as_rb_value() as usize),
+                PhantomData,
+            )
+        }
     }
 
     #[inline]
@@ -1723,7 +1735,7 @@ where
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, value::BoxValue, Error, RString, Ruby, Value};
+    /// use magnus::{Error, RString, Ruby, Value, eval, value::BoxValue};
     ///
     /// # #[inline(never)]
     /// fn box_value(ruby: &Ruby) -> BoxValue<RString> {
@@ -1802,7 +1814,7 @@ where
     T: ReprValue,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", unsafe { self.as_value().to_s_infallible() })
+        unsafe { write!(f, "{}", self.as_value().to_s_infallible()) }
     }
 }
 
@@ -1838,7 +1850,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(ruby, "val == false", val = ruby.qfalse());
@@ -1967,7 +1979,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(ruby, "val == nil", val = ruby.qnil());
@@ -2124,7 +2136,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     rb_assert!(ruby, "val == true", val = ruby.qtrue());
@@ -2386,7 +2398,7 @@ impl Fixnum {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, Fixnum};
+    /// use magnus::{Fixnum, eval};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// assert!(Fixnum::from_value(eval("0").unwrap()).is_some());
@@ -2405,7 +2417,7 @@ impl Fixnum {
 
     #[inline]
     pub(crate) unsafe fn from_rb_value_unchecked(val: VALUE) -> Self {
-        Self(NonZeroValue::new_unchecked(Value::new(val)))
+        unsafe { Self(NonZeroValue::new_unchecked(Value::new(val))) }
     }
 
     #[inline]
@@ -2418,6 +2430,9 @@ impl Fixnum {
                 .map(|n| n >= RUBY_FIXNUM_MIN)
                 .unwrap_or(false))
         .then(|| unsafe {
+            // the isize::cast_unsigned this suggests isn't available until
+            // rust 1.87 and we support back to 1.85
+            #[allow(unnecessary_transmutes)]
             let x = transmute::<_, usize>(n as isize);
             Self::from_rb_value_unchecked(x.wrapping_add(x.wrapping_add(1)) as VALUE)
         })
@@ -2922,7 +2937,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let sym = ruby.sym_new("example");
@@ -2986,7 +3001,7 @@ impl StaticSymbol {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{eval, StaticSymbol};
+    /// use magnus::{StaticSymbol, eval};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// assert!(StaticSymbol::from_value(eval(":foo").unwrap()).is_some());
@@ -3013,7 +3028,7 @@ impl StaticSymbol {
 
     #[inline]
     pub(crate) unsafe fn from_rb_value_unchecked(val: VALUE) -> Self {
-        Self(NonZeroValue::new_unchecked(Value::new(val)))
+        unsafe { Self(NonZeroValue::new_unchecked(Value::new(val))) }
     }
 
     /// Create a new StaticSymbol.
@@ -3026,7 +3041,7 @@ impl StaticSymbol {
     /// # Examples
     /// ```
     /// # #![allow(deprecated)]
-    /// use magnus::{rb_assert, StaticSymbol};
+    /// use magnus::{StaticSymbol, rb_assert};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// let sym = StaticSymbol::new("example");
@@ -3056,7 +3071,7 @@ impl StaticSymbol {
     ///
     /// ```
     /// # #![allow(deprecated)]
-    /// use magnus::{eval, StaticSymbol};
+    /// use magnus::{StaticSymbol, eval};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// assert!(StaticSymbol::check("example").is_none());
@@ -3289,7 +3304,7 @@ impl Id {
     ///
     /// ```
     /// # #![allow(deprecated)]
-    /// use magnus::{value::Id, StaticSymbol};
+    /// use magnus::{StaticSymbol, value::Id};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
     /// assert!(Id::check("example").is_none());
@@ -3369,7 +3384,7 @@ pub trait IntoId: Sized {
     /// This method should only be called from a Ruby thread.
     #[inline]
     unsafe fn into_id_unchecked(self) -> Id {
-        self.into_id_with(&Ruby::get_unchecked())
+        unsafe { self.into_id_with(&Ruby::get_unchecked()) }
     }
 
     /// Convert `self` into [`Id`].
@@ -3578,7 +3593,7 @@ impl LazyId {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, value::LazyId, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert, value::LazyId};
     ///
     /// static EXAMPLE: LazyId = LazyId::new("example");
     ///
@@ -3609,7 +3624,7 @@ impl LazyId {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{value::LazyId, Ruby};
+    /// use magnus::{Ruby, value::LazyId};
     ///
     /// static EXAMPLE: LazyId = LazyId::new("example");
     ///
@@ -3636,7 +3651,7 @@ impl LazyId {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{value::LazyId, Error, Ruby};
+    /// use magnus::{Error, Ruby, value::LazyId};
     ///
     /// static EXAMPLE: LazyId = LazyId::new("example");
     ///
@@ -3670,7 +3685,7 @@ impl LazyId {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{rb_assert, value::LazyId, Error, Ruby};
+    /// use magnus::{Error, Ruby, rb_assert, value::LazyId};
     ///
     /// static EXAMPLE: LazyId = LazyId::new("example");
     ///

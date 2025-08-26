@@ -1,4 +1,4 @@
-use magnus::{block::Proc, eval, value::Opaque, Ruby, Value};
+use magnus::{Ruby, Value, block::Proc, eval, value::Opaque};
 
 fn make_proc(ruby: &Ruby) -> Proc {
     let x = String::from("foo");
