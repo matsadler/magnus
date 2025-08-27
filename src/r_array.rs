@@ -19,7 +19,6 @@ use seq_macro::seq;
 
 use crate::{
     Ruby,
-    enumerator::Enumerator,
     error::{Error, protect},
     gc,
     into_value::{IntoValue, IntoValueFromNative},
@@ -1331,30 +1330,6 @@ impl RArray {
             handle.qnil()
         })?;
         Ok(())
-    }
-
-    /// Returns an [`Enumerator`] over `self`.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use magnus::{RArray, eval, prelude::*};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
-    ///
-    /// let mut res = Vec::new();
-    /// # #[allow(deprecated)]
-    /// for i in eval::<RArray>("[1, 2, 3]").unwrap().each() {
-    ///     res.push(i64::try_convert(i.unwrap()).unwrap());
-    /// }
-    /// assert_eq!(res, vec![1, 2, 3]);
-    /// ```
-    #[deprecated(
-        since = "0.7.0",
-        note = "Please use `ary.into_iter()` or `ary.enumeratorize(\"each\", ())` instead."
-    )]
-    pub fn each(self) -> Enumerator {
-        // TODO why doesn't rb_ary_each work?
-        self.enumeratorize("each", ())
     }
 
     /// Returns true if both `self` and `other` share the same backing storage.

@@ -10,6 +10,8 @@
 ### Deprecated
 
 ### Removed
+- `RArray::each`, use `ary.into_iter()` or `ary.enumeratorize(\"each\", ())`
+  instead.
 
 ### Fixed
 
