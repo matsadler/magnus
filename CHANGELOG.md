@@ -4,6 +4,8 @@
 ### Added
 
 ### Changed
+- Minimum supported Rust version is now 1.85.
+- Magnus will no longer compile with Ruby 2.7 and 3.0
 
 ### Deprecated
 
