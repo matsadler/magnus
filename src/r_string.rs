@@ -328,10 +328,8 @@ impl RString {
     /// let val = RString::new("example");
     /// rb_assert!(r#"val == "example""#, val);
     /// ```
-    #[cfg_attr(
-        not(feature = "old-api"),
-        deprecated(note = "please use `Ruby::str_new` instead")
-    )]
+    #[deprecated(note = "please use `Ruby::str_new` instead")]
+    #[cfg(feature = "old-api")]
     #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn new(s: &str) -> Self {
@@ -366,10 +364,8 @@ impl RString {
     /// buf.cat(&[13, 14, 10, 13, 11, 14, 14, 15]);
     /// rb_assert!(r#"buf == "\r\x0E\n\r\v\x0E\x0E\x0F""#, buf);
     /// ```
-    #[cfg_attr(
-        not(feature = "old-api"),
-        deprecated(note = "please use `Ruby::str_buf_new` instead")
-    )]
+    #[deprecated(note = "please use `Ruby::str_buf_new` instead")]
+    #[cfg(feature = "old-api")]
     #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn buf_new(n: usize) -> Self {
@@ -399,10 +395,8 @@ impl RString {
     /// s.cat("baz");
     /// rb_assert!(r#"s == "foobarbaz""#, s);
     /// ```
-    #[cfg_attr(
-        not(feature = "old-api"),
-        deprecated(note = "please use `Ruby::str_with_capacity` instead")
-    )]
+    #[deprecated(note = "please use `Ruby::str_with_capacity` instead")]
+    #[cfg(feature = "old-api")]
     #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn with_capacity(n: usize) -> Self {
@@ -428,10 +422,8 @@ impl RString {
     /// let buf = RString::from_slice(&[13, 14, 10, 13, 11, 14, 14, 15]);
     /// rb_assert!(r#"buf == "\r\x0E\n\r\v\x0E\x0E\x0F""#, buf);
     /// ```
-    #[cfg_attr(
-        not(feature = "old-api"),
-        deprecated(note = "please use `Ruby::str_from_slice` instead")
-    )]
+    #[deprecated(note = "please use `Ruby::str_from_slice` instead")]
+    #[cfg(feature = "old-api")]
     #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn from_slice(s: &[u8]) -> Self {
@@ -464,10 +456,8 @@ impl RString {
     /// let val = RString::enc_new([255, 128, 128], RbEncoding::ascii8bit());
     /// rb_assert!(r#"val == "\xFF\x80\x80".force_encoding("BINARY")"#, val);
     /// ```
-    #[cfg_attr(
-        not(feature = "old-api"),
-        deprecated(note = "please use `Ruby::enc_str_new` instead")
-    )]
+    #[deprecated(note = "please use `Ruby::enc_str_new` instead")]
+    #[cfg(feature = "old-api")]
     #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn enc_new<T, E>(s: T, enc: E) -> Self
@@ -506,10 +496,8 @@ impl RString {
     /// let c = RString::from_char('🦀');
     /// rb_assert!(r#"c == "🦀""#, c);
     /// ```
-    #[cfg_attr(
-        not(feature = "old-api"),
-        deprecated(note = "please use `Ruby::str_from_char` instead")
-    )]
+    #[deprecated(note = "please use `Ruby::str_from_char` instead")]
+    #[cfg(feature = "old-api")]
     #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn from_char(c: char) -> Self {
@@ -545,10 +533,8 @@ impl RString {
     /// let c = RString::chr(129408, RbEncoding::utf8()).unwrap();
     /// rb_assert!(r#"c == "🦀""#, c);
     /// ```
-    #[cfg_attr(
-        not(feature = "old-api"),
-        deprecated(note = "please use `Ruby::chr` instead")
-    )]
+    #[deprecated(note = "please use `Ruby::chr` instead")]
+    #[cfg(feature = "old-api")]
     #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn chr<T>(code: u32, enc: T) -> Result<Self, Error>
@@ -1785,10 +1771,8 @@ pub trait IntoRString: Sized {
     ///
     /// Panics if called from a non-Ruby thread. See
     /// [`IntoRString::into_r_string_with`] for the non-panicking version.
-    #[cfg_attr(
-        not(feature = "old-api"),
-        deprecated(note = "please use `IntoRString::into_r_string_with` instead")
-    )]
+    #[deprecated(note = "please use `IntoRString::into_r_string_with` instead")]
+    #[cfg(feature = "old-api")]
     #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     fn into_r_string(self) -> RString {

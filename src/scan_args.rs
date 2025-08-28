@@ -905,10 +905,8 @@ impl Ruby {
 ///     "wrong number of arguments (given 5, expected 2..4)"
 /// );
 /// ```
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::check_arity` instead")
-)]
+#[deprecated(note = "please use `Ruby::check_arity` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn check_arity<T>(len: usize, bounds: T) -> Result<(), Error>

@@ -1895,10 +1895,8 @@ const QFALSE: Qfalse = Qfalse::new();
 ///
 /// rb_assert!("val == false", val = qfalse());
 /// ```
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::qfalse` instead")
-)]
+#[deprecated(note = "please use `Ruby::qfalse` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn qfalse() -> Qfalse {
@@ -2024,10 +2022,8 @@ const QNIL: Qnil = Qnil::new();
 ///
 /// rb_assert!("val == nil", val = qnil());
 /// ```
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::qnil` instead")
-)]
+#[deprecated(note = "please use `Ruby::qnil` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn qnil() -> Qnil {
@@ -2181,10 +2177,8 @@ const QTRUE: Qtrue = Qtrue::new();
 ///
 /// rb_assert!("val == true", val = qtrue());
 /// ```
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::qtrue` instead")
-)]
+#[deprecated(note = "please use `Ruby::qtrue` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn qtrue() -> Qtrue {
@@ -2460,10 +2454,8 @@ impl Fixnum {
     /// assert!(Fixnum::from_i64(4611686018427387904).is_err());
     /// assert!(Fixnum::from_i64(-4611686018427387905).is_err());
     /// ```
-    #[cfg_attr(
-        not(feature = "old-api"),
-        deprecated(note = "please use `Ruby::fixnum_from_i64` instead")
-    )]
+    #[deprecated(note = "please use `Ruby::fixnum_from_i64` instead")]
+    #[cfg(feature = "old-api")]
     #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn from_i64(n: i64) -> Result<Self, RBignum> {
@@ -2491,10 +2483,8 @@ impl Fixnum {
     /// // too big
     /// assert!(Fixnum::from_u64(4611686018427387904).is_err());
     /// ```
-    #[cfg_attr(
-        not(feature = "old-api"),
-        deprecated(note = "please use `Ruby::fixnum_from_u64` instead")
-    )]
+    #[deprecated(note = "please use `Ruby::fixnum_from_u64` instead")]
+    #[cfg(feature = "old-api")]
     #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn from_u64(n: u64) -> Result<Self, RBignum> {
@@ -3047,10 +3037,8 @@ impl StaticSymbol {
     /// let sym = StaticSymbol::new("example");
     /// rb_assert!(":example == sym", sym);
     /// ```
-    #[cfg_attr(
-        not(feature = "old-api"),
-        deprecated(note = "please use `Ruby::sym_new` instead")
-    )]
+    #[deprecated(note = "please use `Ruby::sym_new` instead")]
+    #[cfg(feature = "old-api")]
     #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn new<T>(name: T) -> Self
@@ -3078,10 +3066,8 @@ impl StaticSymbol {
     /// let _: StaticSymbol = eval(":example").unwrap();
     /// assert!(StaticSymbol::check("example").is_some());
     /// ```
-    #[cfg_attr(
-        not(feature = "old-api"),
-        deprecated(note = "please use `Ruby::check_symbol` instead")
-    )]
+    #[deprecated(note = "please use `Ruby::check_symbol` instead")]
+    #[cfg(feature = "old-api")]
     #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn check(name: &str) -> Option<Self> {
@@ -3271,10 +3257,8 @@ impl Id {
     /// let id = Id::new("example");
     /// assert_eq!(id.name().unwrap(), "example");
     /// ```
-    #[cfg_attr(
-        not(feature = "old-api"),
-        deprecated(note = "please use `Ruby::intern` instead")
-    )]
+    #[deprecated(note = "please use `Ruby::intern` instead")]
+    #[cfg(feature = "old-api")]
     #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     pub fn new<T>(name: T) -> Self
     where
@@ -3311,10 +3295,8 @@ impl Id {
     /// StaticSymbol::new("example");
     /// assert!(Id::check("example").is_some());
     /// ```
-    #[cfg_attr(
-        not(feature = "old-api"),
-        deprecated(note = "please use `Ruby::check_id` instead")
-    )]
+    #[deprecated(note = "please use `Ruby::check_id` instead")]
+    #[cfg(feature = "old-api")]
     #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn check(name: &str) -> Option<Self> {
@@ -3367,10 +3349,8 @@ pub trait IntoId: Sized {
     ///
     /// Panics if called from a non-Ruby thread. See [`IntoId::into_id_with`]
     /// for the non-panicking version.
-    #[cfg_attr(
-        not(feature = "old-api"),
-        deprecated(note = "please use `IntoId::into_id_with` instead")
-    )]
+    #[deprecated(note = "please use `IntoId::into_id_with` instead")]
+    #[cfg(feature = "old-api")]
     #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     fn into_id(self) -> Id {

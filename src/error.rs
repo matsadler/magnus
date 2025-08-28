@@ -182,10 +182,8 @@ impl Error {
     ///
     /// assert_eq!(i, 15);
     /// ```
-    #[cfg_attr(
-        not(feature = "old-api"),
-        deprecated(note = "please use `Ruby::iter_break_value` instead")
-    )]
+    #[deprecated(note = "please use `Ruby::iter_break_value` instead")]
+    #[cfg(feature = "old-api")]
     #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn iter_break<T>(val: T) -> Self
@@ -591,10 +589,8 @@ pub fn bug(s: &str) -> ! {
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::warning`] for the
 /// non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::warning` instead")
-)]
+#[deprecated(note = "please use `Ruby::warning` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn warning(s: &str) {

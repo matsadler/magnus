@@ -1211,10 +1211,8 @@ impl Ruby {
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::class_array`] for the
 /// non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::class_array` instead")
-)]
+#[deprecated(note = "please use `Ruby::class_array` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn array() -> RClass {
@@ -1227,10 +1225,8 @@ pub fn array() -> RClass {
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::class_basic_object`]
 /// for the non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::class_basic_object` instead")
-)]
+#[deprecated(note = "please use `Ruby::class_basic_object` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn basic_object() -> RClass {
@@ -1243,10 +1239,8 @@ pub fn basic_object() -> RClass {
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::class_binding`] for
 /// the non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::class_binding` instead")
-)]
+#[deprecated(note = "please use `Ruby::class_binding` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn binding() -> RClass {
@@ -1259,10 +1253,8 @@ pub fn binding() -> RClass {
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::class_class`] for the
 /// non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::class_class` instead")
-)]
+#[deprecated(note = "please use `Ruby::class_class` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn class() -> RClass {
@@ -1275,10 +1267,8 @@ pub fn class() -> RClass {
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::class_complex`] for
 /// the non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::class_complex` instead")
-)]
+#[deprecated(note = "please use `Ruby::class_complex` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn complex() -> RClass {
@@ -1291,10 +1281,8 @@ pub fn complex() -> RClass {
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::class_dir`] for the
 /// non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::class_dir` instead")
-)]
+#[deprecated(note = "please use `Ruby::class_dir` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn dir() -> RClass {
@@ -1307,10 +1295,8 @@ pub fn dir() -> RClass {
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::class_encoding`] for
 /// the non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::class_encoding` instead")
-)]
+#[deprecated(note = "please use `Ruby::class_encoding` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn encoding() -> RClass {
@@ -1323,10 +1309,8 @@ pub fn encoding() -> RClass {
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::class_enumerator`]
 /// for the non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::class_enumerator` instead")
-)]
+#[deprecated(note = "please use `Ruby::class_enumerator` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn enumerator() -> RClass {
@@ -1339,10 +1323,8 @@ pub fn enumerator() -> RClass {
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::class_false_class`]
 /// for the non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::class_false_class` instead")
-)]
+#[deprecated(note = "please use `Ruby::class_false_class` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn false_class() -> RClass {
@@ -1355,10 +1337,8 @@ pub fn false_class() -> RClass {
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::class_file`] for the
 /// non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::class_file` instead")
-)]
+#[deprecated(note = "please use `Ruby::class_file` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn file() -> RClass {
@@ -1371,10 +1351,8 @@ pub fn file() -> RClass {
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::class_float`] for the
 /// non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::class_float` instead")
-)]
+#[deprecated(note = "please use `Ruby::class_float` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn float() -> RClass {
@@ -1387,10 +1365,8 @@ pub fn float() -> RClass {
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::class_hash`] for the
 /// non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::class_hash` instead")
-)]
+#[deprecated(note = "please use `Ruby::class_hash` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn hash() -> RClass {
@@ -1403,10 +1379,8 @@ pub fn hash() -> RClass {
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::class_io`] for the
 /// non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::class_io` instead")
-)]
+#[deprecated(note = "please use `Ruby::class_io` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn io() -> RClass {
@@ -1419,10 +1393,8 @@ pub fn io() -> RClass {
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::class_integer`] for
 /// the non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::class_integer` instead")
-)]
+#[deprecated(note = "please use `Ruby::class_integer` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn integer() -> RClass {
@@ -1435,10 +1407,8 @@ pub fn integer() -> RClass {
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::class_match`]
 /// for the non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::class_match` instead")
-)]
+#[deprecated(note = "please use `Ruby::class_match` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn match_class() -> RClass {
@@ -1451,10 +1421,8 @@ pub fn match_class() -> RClass {
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::class_method`] for the
 /// non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::class_method` instead")
-)]
+#[deprecated(note = "please use `Ruby::class_method` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn method() -> RClass {
@@ -1467,10 +1435,8 @@ pub fn method() -> RClass {
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::class_module`] for the
 /// non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::class_module` instead")
-)]
+#[deprecated(note = "please use `Ruby::class_module` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn module() -> RClass {
@@ -1483,10 +1449,8 @@ pub fn module() -> RClass {
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::class_name_error_mesg`]
 /// for the non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::class_name_error_mesg` instead")
-)]
+#[deprecated(note = "please use `Ruby::class_name_error_mesg` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn name_error_mesg() -> RClass {
@@ -1499,10 +1463,8 @@ pub fn name_error_mesg() -> RClass {
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::class_nil_class`] for
 /// the non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::class_nil_class` instead")
-)]
+#[deprecated(note = "please use `Ruby::class_nil_class` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn nil_class() -> RClass {
@@ -1515,10 +1477,8 @@ pub fn nil_class() -> RClass {
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::class_numeric`] for
 /// the non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::class_numeric` instead")
-)]
+#[deprecated(note = "please use `Ruby::class_numeric` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn numeric() -> RClass {
@@ -1531,10 +1491,8 @@ pub fn numeric() -> RClass {
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::class_object`] for the
 /// non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::class_object` instead")
-)]
+#[deprecated(note = "please use `Ruby::class_object` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn object() -> RClass {
@@ -1547,10 +1505,8 @@ pub fn object() -> RClass {
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::class_proc`] for the
 /// non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::class_proc` instead")
-)]
+#[deprecated(note = "please use `Ruby::class_proc` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn proc() -> RClass {
@@ -1563,10 +1519,8 @@ pub fn proc() -> RClass {
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::class_random`] for the
 /// non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::class_random` instead")
-)]
+#[deprecated(note = "please use `Ruby::class_random` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn random() -> RClass {
@@ -1579,10 +1533,8 @@ pub fn random() -> RClass {
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::class_range`] for the
 /// non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::class_range` instead")
-)]
+#[deprecated(note = "please use `Ruby::class_range` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn range() -> RClass {
@@ -1595,10 +1547,8 @@ pub fn range() -> RClass {
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::class_rational`] for
 /// the non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::class_rational` instead")
-)]
+#[deprecated(note = "please use `Ruby::class_rational` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn rational() -> RClass {
@@ -1611,10 +1561,8 @@ pub fn rational() -> RClass {
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::class_refinement`] for
 /// the non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::class_refinement` instead")
-)]
+#[deprecated(note = "please use `Ruby::class_refinement` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn refinement() -> RClass {
@@ -1627,10 +1575,8 @@ pub fn refinement() -> RClass {
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::class_regexp`] for the
 /// non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::class_regexp` instead")
-)]
+#[deprecated(note = "please use `Ruby::class_regexp` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn regexp() -> RClass {
@@ -1643,10 +1589,8 @@ pub fn regexp() -> RClass {
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::class_stat`] for the
 /// non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::class_stat` instead")
-)]
+#[deprecated(note = "please use `Ruby::class_stat` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn stat() -> RClass {
@@ -1659,10 +1603,8 @@ pub fn stat() -> RClass {
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::class_string`] for the
 /// non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::class_string` instead")
-)]
+#[deprecated(note = "please use `Ruby::class_string` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn string() -> RClass {
@@ -1675,10 +1617,8 @@ pub fn string() -> RClass {
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::class_struct`]
 /// for the non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::class_struct` instead")
-)]
+#[deprecated(note = "please use `Ruby::class_struct` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn struct_class() -> RClass {
@@ -1691,10 +1631,8 @@ pub fn struct_class() -> RClass {
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::class_symbol`] for the
 /// non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::class_symbol` instead")
-)]
+#[deprecated(note = "please use `Ruby::class_symbol` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn symbol() -> RClass {
@@ -1707,10 +1645,8 @@ pub fn symbol() -> RClass {
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::class_thread`] for the
 /// non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::class_thread` instead")
-)]
+#[deprecated(note = "please use `Ruby::class_thread` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn thread() -> RClass {
@@ -1723,10 +1659,8 @@ pub fn thread() -> RClass {
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::class_time`] for the
 /// non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::class_time` instead")
-)]
+#[deprecated(note = "please use `Ruby::class_time` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn time() -> RClass {
@@ -1739,10 +1673,8 @@ pub fn time() -> RClass {
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::class_true_class`] for
 /// the non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::class_true_class` instead")
-)]
+#[deprecated(note = "please use `Ruby::class_true_class` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn true_class() -> RClass {
@@ -1755,10 +1687,8 @@ pub fn true_class() -> RClass {
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::class_unbound_method`]
 /// for the non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::class_unbound_method` instead")
-)]
+#[deprecated(note = "please use `Ruby::class_unbound_method` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn unbound_method() -> RClass {

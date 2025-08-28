@@ -309,10 +309,8 @@ impl RArray {
     /// let ary = RArray::new();
     /// assert!(ary.is_empty());
     /// ```
-    #[cfg_attr(
-        not(feature = "old-api"),
-        deprecated(note = "please use `Ruby::ary_new` instead")
-    )]
+    #[deprecated(note = "please use `Ruby::ary_new` instead")]
+    #[cfg(feature = "old-api")]
     #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn new() -> Self {
@@ -337,10 +335,8 @@ impl RArray {
     /// let ary = RArray::with_capacity(16);
     /// assert!(ary.is_empty());
     /// ```
-    #[cfg_attr(
-        not(feature = "old-api"),
-        deprecated(note = "please use `Ruby::ary_new_capa` instead")
-    )]
+    #[deprecated(note = "please use `Ruby::ary_new_capa` instead")]
+    #[cfg(feature = "old-api")]
     #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn with_capacity(n: usize) -> Self {
@@ -691,10 +687,8 @@ impl RArray {
     /// let ary = RArray::from_slice(&[Symbol::new("a"), Symbol::new("b"), Symbol::new("c")]);
     /// rb_assert!("ary == [:a, :b, :c]", ary);
     /// ```
-    #[cfg_attr(
-        not(feature = "old-api"),
-        deprecated(note = "please use `Ruby::ary_new_from_values` instead")
-    )]
+    #[deprecated(note = "please use `Ruby::ary_new_from_values` instead")]
+    #[cfg(feature = "old-api")]
     #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn from_slice<T>(slice: &[T]) -> Self
@@ -1064,10 +1058,8 @@ impl RArray {
     /// let ary = RArray::from_vec(vec![1, 2, 3]);
     /// rb_assert!("ary == [1, 2, 3]", ary);
     /// ```
-    #[cfg_attr(
-        not(feature = "old-api"),
-        deprecated(note = "please use `Ruby::ary_from_vec` instead")
-    )]
+    #[deprecated(note = "please use `Ruby::ary_from_vec` instead")]
+    #[cfg(feature = "old-api")]
     #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn from_vec<T>(vec: Vec<T>) -> Self

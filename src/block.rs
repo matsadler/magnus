@@ -227,10 +227,8 @@ impl Proc {
     ///
     /// rb_assert!("[1, 2, 3, 4, 5].inject(&proc) == 15", proc);
     /// ```
-    #[cfg_attr(
-        not(feature = "old-api"),
-        deprecated(note = "please use `Ruby::proc_new` instead")
-    )]
+    #[deprecated(note = "please use `Ruby::proc_new` instead")]
+    #[cfg(feature = "old-api")]
     #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn new<R>(block: fn(&Ruby, &[Value], Option<Proc>) -> R) -> Self
@@ -269,10 +267,8 @@ impl Proc {
     /// rb_assert!("proc.call(1) == 2", proc);
     /// rb_assert!("proc.call(2) == 4", proc);
     /// ```
-    #[cfg_attr(
-        not(feature = "old-api"),
-        deprecated(note = "please use `Ruby::proc_from_fn` instead")
-    )]
+    #[deprecated(note = "please use `Ruby::proc_from_fn` instead")]
+    #[cfg(feature = "old-api")]
     #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn from_fn<F, R>(block: F) -> Self
@@ -776,10 +772,8 @@ impl Ruby {
 /// rb_assert!("got_block? {} == true");
 /// rb_assert!("got_block? == false");
 /// ```
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::block_given` instead")
-)]
+#[deprecated(note = "please use `Ruby::block_given` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn block_given() -> bool {
@@ -812,10 +806,8 @@ pub fn block_given() -> bool {
 ///
 /// rb_assert!("make_proc {}.is_a?(Proc)");
 /// ```
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::block_proc` instead")
-)]
+#[deprecated(note = "please use `Ruby::block_proc` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn block_proc() -> Result<Proc, Error> {
@@ -859,10 +851,8 @@ pub fn block_proc() -> Result<Proc, Error> {
 /// rb_assert!("metasyntactic_variables {|var| vars << var} == nil", vars);
 /// rb_assert!(r#"vars == ["foo", "bar", "baz"]"#, vars);
 /// ```
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::yield_value` instead")
-)]
+#[deprecated(note = "please use `Ruby::yield_value` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn yield_value<T, U>(val: T) -> Result<U, Error>
@@ -913,10 +903,8 @@ where
 /// );
 /// rb_assert!(r#"vars == [[0, "foo"], [1, "bar"], [2, "baz"]]"#, vars);
 /// ```
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::yield_values` instead")
-)]
+#[deprecated(note = "please use `Ruby::yield_values` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn yield_values<T, U>(vals: T) -> Result<U, Error>
@@ -976,10 +964,8 @@ where
 /// );
 /// rb_assert!(r#"vars == [[0, "foo"], [1, "bar"], [2, "baz"]]"#, vars);
 /// ```
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::yield_splat` instead")
-)]
+#[deprecated(note = "please use `Ruby::yield_splat` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn yield_splat<T>(vals: RArray) -> Result<T, Error>

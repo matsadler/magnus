@@ -110,10 +110,8 @@ impl RRegexp {
     /// let regexp = RRegexp::new("foo", Opts::new().ignorecase()).unwrap();
     /// rb_assert!(r#"regexp == /foo/i"#, regexp);
     /// ```
-    #[cfg_attr(
-        not(feature = "old-api"),
-        deprecated(note = "please use `Ruby::reg_new` instead")
-    )]
+    #[deprecated(note = "please use `Ruby::reg_new` instead")]
+    #[cfg(feature = "old-api")]
     #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn new(pattern: &str, opts: Opts) -> Result<Self, Error> {

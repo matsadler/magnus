@@ -112,10 +112,8 @@ impl Encoding {
     ///
     /// Panics if called from a non-Ruby thread. See
     /// [`Ruby::enc_default_external`] for the non-panicking version.
-    #[cfg_attr(
-        not(feature = "old-api"),
-        deprecated(note = "please use `Ruby::enc_default_external` instead")
-    )]
+    #[deprecated(note = "please use `Ruby::enc_default_external` instead")]
+    #[cfg(feature = "old-api")]
     #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn default_external() -> Self {
@@ -131,10 +129,8 @@ impl Encoding {
     ///
     /// Panics if called from a non-Ruby thread. See
     /// [`Ruby::enc_default_internal`] for the non-panicking version.
-    #[cfg_attr(
-        not(feature = "old-api"),
-        deprecated(note = "please use `Ruby::enc_default_internal` instead")
-    )]
+    #[deprecated(note = "please use `Ruby::enc_default_internal` instead")]
+    #[cfg(feature = "old-api")]
     #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn default_internal() -> Option<Self> {
@@ -324,10 +320,8 @@ impl RbEncoding {
     ///
     /// Panics if called from a non-Ruby thread. See
     /// [`Ruby::ascii8bit_encoding`] for the non-panicking version.
-    #[cfg_attr(
-        not(feature = "old-api"),
-        deprecated(note = "please use `Ruby::ascii8bit_encoding` instead")
-    )]
+    #[deprecated(note = "please use `Ruby::ascii8bit_encoding` instead")]
+    #[cfg(feature = "old-api")]
     #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn ascii8bit() -> Self {
@@ -340,10 +334,8 @@ impl RbEncoding {
     ///
     /// Panics if called from a non-Ruby thread. See [`Ruby::utf8_encoding`]
     /// for the non-panicking version.
-    #[cfg_attr(
-        not(feature = "old-api"),
-        deprecated(note = "please use `Ruby::utf8_encoding` instead")
-    )]
+    #[deprecated(note = "please use `Ruby::utf8_encoding` instead")]
+    #[cfg(feature = "old-api")]
     #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn utf8() -> Self {
@@ -356,10 +348,8 @@ impl RbEncoding {
     ///
     /// Panics if called from a non-Ruby thread. See [`Ruby::usascii_encoding`]
     /// for the non-panicking version.
-    #[cfg_attr(
-        not(feature = "old-api"),
-        deprecated(note = "please use `Ruby::usascii_encoding` instead")
-    )]
+    #[deprecated(note = "please use `Ruby::usascii_encoding` instead")]
+    #[cfg(feature = "old-api")]
     #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn usascii() -> Self {
@@ -375,10 +365,8 @@ impl RbEncoding {
     ///
     /// Panics if called from a non-Ruby thread. See [`Ruby::locale_encoding`]
     /// for the non-panicking version.
-    #[cfg_attr(
-        not(feature = "old-api"),
-        deprecated(note = "please use `Ruby::locale_encoding` instead")
-    )]
+    #[deprecated(note = "please use `Ruby::locale_encoding` instead")]
+    #[cfg(feature = "old-api")]
     #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn locale() -> Self {
@@ -394,10 +382,8 @@ impl RbEncoding {
     ///
     /// Panics if called from a non-Ruby thread. See
     /// [`Ruby::filesystem_encoding`] for the non-panicking version.
-    #[cfg_attr(
-        not(feature = "old-api"),
-        deprecated(note = "please use `Ruby::filesystem_encoding` instead")
-    )]
+    #[deprecated(note = "please use `Ruby::filesystem_encoding` instead")]
+    #[cfg(feature = "old-api")]
     #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn filesystem() -> Self {
@@ -413,10 +399,8 @@ impl RbEncoding {
     ///
     /// Panics if called from a non-Ruby thread. See
     /// [`Ruby::default_external_encoding`] for the non-panicking version.
-    #[cfg_attr(
-        not(feature = "old-api"),
-        deprecated(note = "please use `Ruby::default_external_encoding` instead")
-    )]
+    #[deprecated(note = "please use `Ruby::default_external_encoding` instead")]
+    #[cfg(feature = "old-api")]
     #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn default_external() -> Self {
@@ -432,10 +416,8 @@ impl RbEncoding {
     ///
     /// Panics if called from a non-Ruby thread. See
     /// [`Ruby::default_internal_encoding`] for the non-panicking version.
-    #[cfg_attr(
-        not(feature = "old-api"),
-        deprecated(note = "please use `Ruby::default_internal_encoding` instead")
-    )]
+    #[deprecated(note = "please use `Ruby::default_internal_encoding` instead")]
+    #[cfg(feature = "old-api")]
     #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn default_internal() -> Option<Self> {
@@ -459,10 +441,8 @@ impl RbEncoding {
     /// assert_eq!(RbEncoding::find("UTF-8").unwrap().name(), "UTF-8");
     /// assert_eq!(RbEncoding::find("BINARY").unwrap().name(), "ASCII-8BIT");
     /// ```
-    #[cfg_attr(
-        not(feature = "old-api"),
-        deprecated(note = "please use `Ruby::find_encoding` instead")
-    )]
+    #[deprecated(note = "please use `Ruby::find_encoding` instead")]
+    #[cfg(feature = "old-api")]
     #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn find(name: &str) -> Option<Self> {
@@ -1068,10 +1048,8 @@ impl Index {
     ///
     /// Panics if called from a non-Ruby thread. See
     /// [`Ruby::ascii8bit_encindex`] for the non-panicking version.
-    #[cfg_attr(
-        not(feature = "old-api"),
-        deprecated(note = "please use `Ruby::ascii8bit_encindex` instead")
-    )]
+    #[deprecated(note = "please use `Ruby::ascii8bit_encindex` instead")]
+    #[cfg(feature = "old-api")]
     #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn ascii8bit() -> Self {
@@ -1084,10 +1062,8 @@ impl Index {
     ///
     /// Panics if called from a non-Ruby thread. See [`Ruby::utf8_encindex`]
     /// for the non-panicking version.
-    #[cfg_attr(
-        not(feature = "old-api"),
-        deprecated(note = "please use `Ruby::utf8_encindex` instead")
-    )]
+    #[deprecated(note = "please use `Ruby::utf8_encindex` instead")]
+    #[cfg(feature = "old-api")]
     #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn utf8() -> Self {
@@ -1100,10 +1076,8 @@ impl Index {
     ///
     /// Panics if called from a non-Ruby thread. See [`Ruby::usascii_encindex`]
     /// for the non-panicking version.
-    #[cfg_attr(
-        not(feature = "old-api"),
-        deprecated(note = "please use `Ruby::usascii_encindex` instead")
-    )]
+    #[deprecated(note = "please use `Ruby::usascii_encindex` instead")]
+    #[cfg(feature = "old-api")]
     #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn usascii() -> Self {
@@ -1119,10 +1093,8 @@ impl Index {
     ///
     /// Panics if called from a non-Ruby thread. See [`Ruby::locale_encindex`]
     /// for the non-panicking version.
-    #[cfg_attr(
-        not(feature = "old-api"),
-        deprecated(note = "please use `Ruby::locale_encindex` instead")
-    )]
+    #[deprecated(note = "please use `Ruby::locale_encindex` instead")]
+    #[cfg(feature = "old-api")]
     #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn locale() -> Self {
@@ -1138,10 +1110,8 @@ impl Index {
     ///
     /// Panics if called from a non-Ruby thread. See
     /// [`Ruby::filesystem_encindex`] for the non-panicking version.
-    #[cfg_attr(
-        not(feature = "old-api"),
-        deprecated(note = "please use `Ruby::filesystem_encindex` instead")
-    )]
+    #[deprecated(note = "please use `Ruby::filesystem_encindex` instead")]
+    #[cfg(feature = "old-api")]
     #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn filesystem() -> Self {
@@ -1166,10 +1136,8 @@ impl Index {
     /// assert!(encoding::Index::find("BINARY").is_ok());
     /// assert!(encoding::Index::find("none").is_err());
     /// ```
-    #[cfg_attr(
-        not(feature = "old-api"),
-        deprecated(note = "please use `Ruby::find_encindex` instead")
-    )]
+    #[deprecated(note = "please use `Ruby::find_encindex` instead")]
+    #[cfg(feature = "old-api")]
     #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn find(name: &str) -> Result<Self, Error> {

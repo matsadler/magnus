@@ -216,10 +216,8 @@ impl Ruby {
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::script`] for the
 /// non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::script` instead")
-)]
+#[deprecated(note = "please use `Ruby::script` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn ruby_script<T>(name: T)

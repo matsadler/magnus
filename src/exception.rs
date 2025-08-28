@@ -1049,10 +1049,8 @@ impl Ruby {
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::exception_arg_error`]
 /// for the non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::exception_arg_error` instead")
-)]
+#[deprecated(note = "please use `Ruby::exception_arg_error` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn arg_error() -> ExceptionClass {
@@ -1065,10 +1063,8 @@ pub fn arg_error() -> ExceptionClass {
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::exception_eof_error`]
 /// for the non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::exception_eof_error` instead")
-)]
+#[deprecated(note = "please use `Ruby::exception_eof_error` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn eof_error() -> ExceptionClass {
@@ -1081,10 +1077,8 @@ pub fn eof_error() -> ExceptionClass {
 ///
 /// Panics if called from a non-Ruby thread. See
 /// [`Ruby::exception_enc_compat_error`] for the non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::exception_enc_compat_error` instead")
-)]
+#[deprecated(note = "please use `Ruby::exception_enc_compat_error` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn enc_compat_error() -> ExceptionClass {
@@ -1097,10 +1091,8 @@ pub fn enc_compat_error() -> ExceptionClass {
 ///
 /// Panics if called from a non-Ruby thread. See
 /// [`Ruby::exception_encoding_error`] for the non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::exception_encoding_error` instead")
-)]
+#[deprecated(note = "please use `Ruby::exception_encoding_error` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn encoding_error() -> ExceptionClass {
@@ -1113,10 +1105,8 @@ pub fn encoding_error() -> ExceptionClass {
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::exception_exception`]
 /// for the non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::exception_exception` instead")
-)]
+#[deprecated(note = "please use `Ruby::exception_exception` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn exception() -> ExceptionClass {
@@ -1129,10 +1119,8 @@ pub fn exception() -> ExceptionClass {
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::exception_fatal`] for
 /// the non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::exception_fatal` instead")
-)]
+#[deprecated(note = "please use `Ruby::exception_fatal` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn fatal() -> ExceptionClass {
@@ -1145,10 +1133,8 @@ pub fn fatal() -> ExceptionClass {
 ///
 /// Panics if called from a non-Ruby thread. See
 /// [`Ruby::exception_float_domain_error`] for the non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::exception_float_domain_error` instead")
-)]
+#[deprecated(note = "please use `Ruby::exception_float_domain_error` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn float_domain_error() -> ExceptionClass {
@@ -1161,10 +1147,8 @@ pub fn float_domain_error() -> ExceptionClass {
 ///
 /// Panics if called from a non-Ruby thread. See
 /// [`Ruby::exception_frozen_error`] for the non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::exception_frozen_error` instead")
-)]
+#[deprecated(note = "please use `Ruby::exception_frozen_error` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn frozen_error() -> ExceptionClass {
@@ -1177,10 +1161,8 @@ pub fn frozen_error() -> ExceptionClass {
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::exception_io_error`]
 /// for the non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::exception_io_error` instead")
-)]
+#[deprecated(note = "please use `Ruby::exception_io_error` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn io_error() -> ExceptionClass {
@@ -1193,10 +1175,8 @@ pub fn io_error() -> ExceptionClass {
 ///
 /// Panics if called from a non-Ruby thread. See
 /// [`Ruby::exception_index_error`] for the non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::exception_index_error` instead")
-)]
+#[deprecated(note = "please use `Ruby::exception_index_error` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn index_error() -> ExceptionClass {
@@ -1209,10 +1189,8 @@ pub fn index_error() -> ExceptionClass {
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::exception_interrupt`]
 /// for the non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::exception_interrupt` instead")
-)]
+#[deprecated(note = "please use `Ruby::exception_interrupt` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn interrupt() -> ExceptionClass {
@@ -1225,10 +1203,8 @@ pub fn interrupt() -> ExceptionClass {
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::exception_key_error`]
 /// for the non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::exception_key_error` instead")
-)]
+#[deprecated(note = "please use `Ruby::exception_key_error` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn key_error() -> ExceptionClass {
@@ -1241,10 +1217,8 @@ pub fn key_error() -> ExceptionClass {
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::exception_load_error`]
 /// for the non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::exception_load_error` instead")
-)]
+#[deprecated(note = "please use `Ruby::exception_load_error` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn load_error() -> ExceptionClass {
@@ -1257,10 +1231,8 @@ pub fn load_error() -> ExceptionClass {
 ///
 /// Panics if called from a non-Ruby thread. See
 /// [`Ruby::exception_local_jump_error`] for the non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::exception_local_jump_error` instead")
-)]
+#[deprecated(note = "please use `Ruby::exception_local_jump_error` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn local_jump_error() -> ExceptionClass {
@@ -1273,10 +1245,8 @@ pub fn local_jump_error() -> ExceptionClass {
 ///
 /// Panics if called from a non-Ruby thread. See
 /// [`Ruby::exception_math_domain_error`] for the non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::exception_math_domain_error` instead")
-)]
+#[deprecated(note = "please use `Ruby::exception_math_domain_error` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn math_domain_error() -> ExceptionClass {
@@ -1289,10 +1259,8 @@ pub fn math_domain_error() -> ExceptionClass {
 ///
 /// Panics if called from a non-Ruby thread. See
 /// [`Ruby::exception_name_error`] for the non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::exception_name_error` instead")
-)]
+#[deprecated(note = "please use `Ruby::exception_name_error` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn name_error() -> ExceptionClass {
@@ -1305,10 +1273,8 @@ pub fn name_error() -> ExceptionClass {
 ///
 /// Panics if called from a non-Ruby thread. See
 /// [`Ruby::exception_no_matching_pattern_error`] for the non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::exception_no_matching_pattern_error` instead")
-)]
+#[deprecated(note = "please use `Ruby::exception_no_matching_pattern_error` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn no_matching_pattern_error() -> ExceptionClass {
@@ -1322,10 +1288,8 @@ pub fn no_matching_pattern_error() -> ExceptionClass {
 /// Panics if called from a non-Ruby thread. See
 /// [`Ruby::exception_no_matching_pattern_key_error`] for the non-panicking
 /// version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::exception_no_matching_pattern_key_error` instead")
-)]
+#[deprecated(note = "please use `Ruby::exception_no_matching_pattern_key_error` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn no_matching_pattern_key_error() -> ExceptionClass {
@@ -1338,10 +1302,8 @@ pub fn no_matching_pattern_key_error() -> ExceptionClass {
 ///
 /// Panics if called from a non-Ruby thread. See
 /// [`Ruby::exception_no_mem_error`] for the non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::exception_no_mem_error` instead")
-)]
+#[deprecated(note = "please use `Ruby::exception_no_mem_error` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn no_mem_error() -> ExceptionClass {
@@ -1354,10 +1316,8 @@ pub fn no_mem_error() -> ExceptionClass {
 ///
 /// Panics if called from a non-Ruby thread. See
 /// [`Ruby::exception_no_method_error`] for the non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::exception_no_method_error` instead")
-)]
+#[deprecated(note = "please use `Ruby::exception_no_method_error` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn no_method_error() -> ExceptionClass {
@@ -1370,10 +1330,8 @@ pub fn no_method_error() -> ExceptionClass {
 ///
 /// Panics if called from a non-Ruby thread. See
 /// [`Ruby::exception_not_imp_error`] for the non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::exception_not_imp_error` instead")
-)]
+#[deprecated(note = "please use `Ruby::exception_not_imp_error` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn not_imp_error() -> ExceptionClass {
@@ -1386,10 +1344,8 @@ pub fn not_imp_error() -> ExceptionClass {
 ///
 /// Panics if called from a non-Ruby thread. See
 /// [`Ruby::exception_range_error`] for the non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::exception_range_error` instead")
-)]
+#[deprecated(note = "please use `Ruby::exception_range_error` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn range_error() -> ExceptionClass {
@@ -1402,10 +1358,8 @@ pub fn range_error() -> ExceptionClass {
 ///
 /// Panics if called from a non-Ruby thread. See
 /// [`Ruby::exception_regexp_error`] for the non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::exception_regexp_error` instead")
-)]
+#[deprecated(note = "please use `Ruby::exception_regexp_error` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn regexp_error() -> ExceptionClass {
@@ -1418,10 +1372,8 @@ pub fn regexp_error() -> ExceptionClass {
 ///
 /// Panics if called from a non-Ruby thread. See
 /// [`Ruby::exception_runtime_error`] for the non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::exception_runtime_error` instead")
-)]
+#[deprecated(note = "please use `Ruby::exception_runtime_error` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn runtime_error() -> ExceptionClass {
@@ -1434,10 +1386,8 @@ pub fn runtime_error() -> ExceptionClass {
 ///
 /// Panics if called from a non-Ruby thread. See
 /// [`Ruby::exception_script_error`] for the non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::exception_script_error` instead")
-)]
+#[deprecated(note = "please use `Ruby::exception_script_error` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn script_error() -> ExceptionClass {
@@ -1450,10 +1400,8 @@ pub fn script_error() -> ExceptionClass {
 ///
 /// Panics if called from a non-Ruby thread. See
 /// [`Ruby::exception_security_error`] for the non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::exception_security_error` instead")
-)]
+#[deprecated(note = "please use `Ruby::exception_security_error` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn security_error() -> ExceptionClass {
@@ -1466,10 +1414,8 @@ pub fn security_error() -> ExceptionClass {
 ///
 /// Panics if called from a non-Ruby thread. See
 /// [`Ruby::exception_signal`] for the non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::exception_signal` instead")
-)]
+#[deprecated(note = "please use `Ruby::exception_signal` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn signal() -> ExceptionClass {
@@ -1482,10 +1428,8 @@ pub fn signal() -> ExceptionClass {
 ///
 /// Panics if called from a non-Ruby thread. See
 /// [`Ruby::exception_standard_error`] for the non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::exception_standard_error` instead")
-)]
+#[deprecated(note = "please use `Ruby::exception_standard_error` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn standard_error() -> ExceptionClass {
@@ -1498,10 +1442,8 @@ pub fn standard_error() -> ExceptionClass {
 ///
 /// Panics if called from a non-Ruby thread. See
 /// [`Ruby::exception_stop_iteration`] for the non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::exception_stop_iteration` instead")
-)]
+#[deprecated(note = "please use `Ruby::exception_stop_iteration` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn stop_iteration() -> ExceptionClass {
@@ -1514,10 +1456,8 @@ pub fn stop_iteration() -> ExceptionClass {
 ///
 /// Panics if called from a non-Ruby thread. See
 /// [`Ruby::exception_syntax_error`] for the non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::exception_syntax_error` instead")
-)]
+#[deprecated(note = "please use `Ruby::exception_syntax_error` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn syntax_error() -> ExceptionClass {
@@ -1530,10 +1470,8 @@ pub fn syntax_error() -> ExceptionClass {
 ///
 /// Panics if called from a non-Ruby thread. See
 /// [`Ruby::exception_sys_stack_error`] for the non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::exception_sys_stack_error` instead")
-)]
+#[deprecated(note = "please use `Ruby::exception_sys_stack_error` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn sys_stack_error() -> ExceptionClass {
@@ -1546,10 +1484,8 @@ pub fn sys_stack_error() -> ExceptionClass {
 ///
 /// Panics if called from a non-Ruby thread. See
 /// [`Ruby::exception_system_call_error`] for the non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::exception_system_call_error` instead")
-)]
+#[deprecated(note = "please use `Ruby::exception_system_call_error` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn system_call_error() -> ExceptionClass {
@@ -1562,10 +1498,8 @@ pub fn system_call_error() -> ExceptionClass {
 ///
 /// Panics if called from a non-Ruby thread. See
 /// [`Ruby::exception_system_exit`] for the non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::exception_system_exit` instead")
-)]
+#[deprecated(note = "please use `Ruby::exception_system_exit` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn system_exit() -> ExceptionClass {
@@ -1578,10 +1512,8 @@ pub fn system_exit() -> ExceptionClass {
 ///
 /// Panics if called from a non-Ruby thread. See
 /// [`Ruby::exception_thread_error`] for the non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::exception_thread_error` instead")
-)]
+#[deprecated(note = "please use `Ruby::exception_thread_error` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn thread_error() -> ExceptionClass {
@@ -1594,10 +1526,8 @@ pub fn thread_error() -> ExceptionClass {
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::exception_type_error`]
 /// for the non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::exception_type_error` instead")
-)]
+#[deprecated(note = "please use `Ruby::exception_type_error` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn type_error() -> ExceptionClass {
@@ -1610,10 +1540,8 @@ pub fn type_error() -> ExceptionClass {
 ///
 /// Panics if called from a non-Ruby thread. See
 /// [`Ruby::exception_zero_div_error`] for the non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::exception_zero_div_error` instead")
-)]
+#[deprecated(note = "please use `Ruby::exception_zero_div_error` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn zero_div_error() -> ExceptionClass {

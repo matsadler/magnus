@@ -2473,10 +2473,8 @@ impl Ruby {
 /// define_class("Example", class::object()).unwrap();
 /// rb_assert!("Example.is_a?(Class)");
 /// ```
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::define_class` instead")
-)]
+#[deprecated(note = "please use `Ruby::define_class` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn define_class(name: &str, superclass: RClass) -> Result<RClass, Error> {
@@ -2501,10 +2499,8 @@ pub fn define_class(name: &str, superclass: RClass) -> Result<RClass, Error> {
 /// rb_assert!("Example.is_a?(Module)");
 /// rb_assert!("!Example.is_a?(Class)");
 /// ```
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::define_module` instead")
-)]
+#[deprecated(note = "please use `Ruby::define_module` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn define_module(name: &str) -> Result<RModule, Error> {
@@ -2529,10 +2525,8 @@ pub fn define_module(name: &str) -> Result<RModule, Error> {
 /// rb_assert!("ExampleError.is_a?(Class)");
 /// rb_assert!("ExampleError < Exception");
 /// ```
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::define_error` instead")
-)]
+#[deprecated(note = "please use `Ruby::define_error` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn define_error(name: &str, superclass: ExceptionClass) -> Result<ExceptionClass, Error> {
@@ -2562,10 +2556,8 @@ pub fn define_error(name: &str, superclass: ExceptionClass) -> Result<ExceptionC
 /// }
 /// rb_assert!(r#"$example == "answer""#);
 /// ```
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::define_variable` instead")
-)]
+#[deprecated(note = "please use `Ruby::define_variable` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn define_variable<T>(name: &str, initial: T) -> Result<*mut Value, Error>
@@ -2592,10 +2584,8 @@ where
 /// define_global_const("EXAMPLE", 42).unwrap();
 /// rb_assert!("EXAMPLE == 42");
 /// ```
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::define_global_const` instead")
-)]
+#[deprecated(note = "please use `Ruby::define_global_const` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn define_global_const<T>(name: &str, value: T) -> Result<(), Error>
@@ -2626,10 +2616,8 @@ where
 /// define_global_function("greet", function!(greet, 1));
 /// rb_assert!(r#"greet("world") == "Hello, world!""#);
 /// ```
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::define_global_function` instead")
-)]
+#[deprecated(note = "please use `Ruby::define_global_function` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn define_global_function<M>(name: &str, func: M)
@@ -2667,10 +2655,8 @@ where
 ///     Some(String::from("a"))
 /// );
 /// ```
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::backref_get` instead")
-)]
+#[deprecated(note = "please use `Ruby::backref_get` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn backref_get() -> Option<RMatch> {
@@ -2702,10 +2688,8 @@ pub fn backref_get() -> Option<RMatch> {
 ///
 /// rb_assert!("example");
 /// ```
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::current_receiver` instead")
-)]
+#[deprecated(note = "please use `Ruby::current_receiver` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn current_receiver<T>() -> Result<T, Error>
@@ -2754,10 +2738,8 @@ where
 ///
 /// rb_assert!(r#"B.new.example == "Hello from A, and hello from B""#)
 /// ```
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::call_super` instead")
-)]
+#[deprecated(note = "please use `Ruby::call_super` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn call_super<A, T>(args: A) -> Result<T, Error>
@@ -2784,10 +2766,8 @@ where
 ///
 /// assert!(require("net/http").unwrap());
 /// ```
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::require` instead")
-)]
+#[deprecated(note = "please use `Ruby::require` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn require<T>(feature: T) -> Result<bool, Error>

@@ -119,10 +119,8 @@ impl Float {
     /// let f = Float::from_f64(1.7272337110188890e-77);
     /// rb_assert!("f == 1.7272337110188890e-77", f);
     /// ```
-    #[cfg_attr(
-        not(feature = "old-api"),
-        deprecated(note = "please use `Ruby::float_from_f64` instead")
-    )]
+    #[deprecated(note = "please use `Ruby::float_from_f64` instead")]
+    #[cfg(feature = "old-api")]
     #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn from_f64(n: f64) -> Self {

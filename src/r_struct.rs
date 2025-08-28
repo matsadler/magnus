@@ -504,10 +504,8 @@ impl Ruby {
 /// let instance = struct_class.new_instance((1, 2)).unwrap();
 /// assert_eq!(instance.inspect(), "#<struct Struct::Example foo=1, bar=2>")
 /// ```
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::define_struct` instead")
-)]
+#[deprecated(note = "please use `Ruby::define_struct` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn define_struct<T>(name: Option<&str>, members: T) -> Result<RClass, Error>

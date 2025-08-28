@@ -501,10 +501,8 @@ impl Ruby {
 ///     gc::enable();
 /// }
 /// ```
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::gc_disable` instead")
-)]
+#[deprecated(note = "please use `Ruby::gc_disable` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn disable() -> bool {
@@ -539,10 +537,8 @@ pub fn disable() -> bool {
 ///     gc::disable();
 /// }
 /// ```
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::gc_enable` instead")
-)]
+#[deprecated(note = "please use `Ruby::gc_enable` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn enable() -> bool {
@@ -573,10 +569,8 @@ pub fn enable() -> bool {
 ///
 /// gc::start();
 /// ```
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::gc_start` instead")
-)]
+#[deprecated(note = "please use `Ruby::gc_start` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn start() {
@@ -613,10 +607,8 @@ pub fn start() {
 /// drop(buf);
 /// gc::adjust_memory_usage(-(mem_size as isize));
 /// ```
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::gc_adjust_memory_usage` instead")
-)]
+#[deprecated(note = "please use `Ruby::gc_adjust_memory_usage` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn adjust_memory_usage(diff: isize) {
@@ -642,10 +634,8 @@ pub fn adjust_memory_usage(diff: isize) {
 /// gc::start();
 /// assert!(gc::count() > before);
 /// ```
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::gc_count` instead")
-)]
+#[deprecated(note = "please use `Ruby::gc_count` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn count() -> usize {
@@ -668,10 +658,8 @@ pub fn count() -> usize {
 ///
 /// assert!(gc::stat("heap_live_slots").unwrap() > 1);
 /// ```
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::gc_stat` instead")
-)]
+#[deprecated(note = "please use `Ruby::gc_stat` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn stat<T>(key: T) -> Result<usize, Error>
@@ -700,10 +688,8 @@ where
 /// let live_slots: usize = stats.fetch(Symbol::new("heap_live_slots")).unwrap();
 /// assert!(live_slots > 1);
 /// ```
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::gc_all_stats` instead")
-)]
+#[deprecated(note = "please use `Ruby::gc_all_stats` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn all_stats() -> RHash {

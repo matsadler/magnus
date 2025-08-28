@@ -111,10 +111,8 @@ impl RModule {
     /// let module = RModule::new();
     /// assert!(module.is_kind_of(class::module()));
     /// ```
-    #[cfg_attr(
-        not(feature = "old-api"),
-        deprecated(note = "please use `Ruby::module_new` instead")
-    )]
+    #[deprecated(note = "please use `Ruby::module_new` instead")]
+    #[cfg(feature = "old-api")]
     #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn new() -> Self {
@@ -997,10 +995,8 @@ impl Ruby {
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::module_comparable`]
 /// for the non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::module_comparable` instead")
-)]
+#[deprecated(note = "please use `Ruby::module_comparable` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn comparable() -> RModule {
@@ -1013,10 +1009,8 @@ pub fn comparable() -> RModule {
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::module_enumerable`]
 /// for the non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::module_enumerable` instead")
-)]
+#[deprecated(note = "please use `Ruby::module_enumerable` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn enumerable() -> RModule {
@@ -1029,10 +1023,8 @@ pub fn enumerable() -> RModule {
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::module_errno`] for the
 /// non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::module_errno` instead")
-)]
+#[deprecated(note = "please use `Ruby::module_errno` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn errno() -> RModule {
@@ -1045,10 +1037,8 @@ pub fn errno() -> RModule {
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::module_file_test`] for
 /// the non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::module_file_test` instead")
-)]
+#[deprecated(note = "please use `Ruby::module_file_test` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn file_test() -> RModule {
@@ -1061,10 +1051,8 @@ pub fn file_test() -> RModule {
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::module_gc`] for the
 /// non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::module_gc` instead")
-)]
+#[deprecated(note = "please use `Ruby::module_gc` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn gc() -> RModule {
@@ -1077,10 +1065,8 @@ pub fn gc() -> RModule {
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::module_kernel`] for
 /// the non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::module_kernel` instead")
-)]
+#[deprecated(note = "please use `Ruby::module_kernel` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn kernel() -> RModule {
@@ -1093,10 +1079,8 @@ pub fn kernel() -> RModule {
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::module_math`] for the
 /// non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::module_math` instead")
-)]
+#[deprecated(note = "please use `Ruby::module_math` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn math() -> RModule {
@@ -1109,10 +1093,8 @@ pub fn math() -> RModule {
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::module_process`] for
 /// the non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::module_process` instead")
-)]
+#[deprecated(note = "please use `Ruby::module_process` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn process() -> RModule {
@@ -1125,10 +1107,8 @@ pub fn process() -> RModule {
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::module_wait_readable`]
 /// for the non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::module_wait_readable` instead")
-)]
+#[deprecated(note = "please use `Ruby::module_wait_readable` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn wait_readable() -> RModule {
@@ -1141,10 +1121,8 @@ pub fn wait_readable() -> RModule {
 ///
 /// Panics if called from a non-Ruby thread. See [`Ruby::module_wait_writable`]
 /// for the non-panicking version.
-#[cfg_attr(
-    not(feature = "old-api"),
-    deprecated(note = "please use `Ruby::module_wait_writable` instead")
-)]
+#[deprecated(note = "please use `Ruby::module_wait_writable` instead")]
+#[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
 pub fn wait_writable() -> RModule {

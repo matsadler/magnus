@@ -100,10 +100,8 @@ impl Symbol {
     /// let sym = Symbol::new("example");
     /// rb_assert!(":example == sym", sym);
     /// ```
-    #[cfg_attr(
-        not(feature = "old-api"),
-        deprecated(note = "please use `Ruby::to_symbol` instead")
-    )]
+    #[deprecated(note = "please use `Ruby::to_symbol` instead")]
+    #[cfg(feature = "old-api")]
     #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn new<T: AsRef<str>>(name: T) -> Self {
@@ -256,10 +254,8 @@ pub trait IntoSymbol: Sized {
     /// let sym = "example".into_symbol();
     /// rb_assert!("sym == :example", sym);
     /// ```
-    #[cfg_attr(
-        not(feature = "old-api"),
-        deprecated(note = "please use `IntoSymbol::into_symbol_with` instead")
-    )]
+    #[deprecated(note = "please use `IntoSymbol::into_symbol_with` instead")]
+    #[cfg(feature = "old-api")]
     #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     fn into_symbol(self) -> Symbol {

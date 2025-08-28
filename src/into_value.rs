@@ -32,10 +32,8 @@ pub trait IntoValue: Sized {
     ///
     /// Panics if called from a non-Ruby thread. See
     /// [`IntoValue::into_value_with`] for the non-panicking version.
-    #[cfg_attr(
-        not(feature = "old-api"),
-        deprecated(note = "please use `IntoValue::into_value_with` instead")
-    )]
+    #[deprecated(note = "please use `IntoValue::into_value_with` instead")]
+    #[cfg(feature = "old-api")]
     #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     fn into_value(self) -> Value {

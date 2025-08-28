@@ -145,10 +145,8 @@ impl RBignum {
     /// // too small
     /// assert!(RBignum::from_i64(0).is_err());
     /// ```
-    #[cfg_attr(
-        not(feature = "old-api"),
-        deprecated(note = "please use `Ruby::bignum_from_i64` instead")
-    )]
+    #[deprecated(note = "please use `Ruby::bignum_from_i64` instead")]
+    #[cfg(feature = "old-api")]
     #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn from_i64(n: i64) -> Result<Self, Fixnum> {
@@ -176,10 +174,8 @@ impl RBignum {
     /// // too small
     /// assert!(RBignum::from_u64(0).is_err());
     /// ```
-    #[cfg_attr(
-        not(feature = "old-api"),
-        deprecated(note = "please use `Ruby::bignum_from_u64` instead")
-    )]
+    #[deprecated(note = "please use `Ruby::bignum_from_u64` instead")]
+    #[cfg(feature = "old-api")]
     #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
     pub fn from_u64(n: u64) -> Result<Self, Fixnum> {
