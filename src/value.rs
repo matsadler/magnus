@@ -2426,6 +2426,7 @@ impl Fixnum {
         .then(|| unsafe {
             // the isize::cast_unsigned this suggests isn't available until
             // rust 1.87 and we support back to 1.85
+            #[allow(unknown_lints)]
             #[allow(unnecessary_transmutes)]
             let x = transmute::<isize, usize>(n as isize);
             Self::from_rb_value_unchecked(x.wrapping_add(x.wrapping_add(1)) as VALUE)

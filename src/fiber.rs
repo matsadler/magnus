@@ -102,6 +102,10 @@ impl Ruby {
             call::<R> as unsafe extern "C" fn(VALUE, VALUE, c_int, *const VALUE, VALUE) -> VALUE;
 
         unsafe {
+            // VALUE is defined as u64/u32, so clippy thinks it's not
+            // pointer-sized and wants us to cast to usize, but it doesn't know
+            // the definition of VALUE changes based on pointer size
+            #[allow(clippy::fn_to_numeric_cast)]
             protect(|| {
                 #[cfg(ruby_gte_3_2)]
                 let value =

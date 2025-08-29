@@ -50,6 +50,8 @@ impl Ruby {
     /// ```
     pub fn time_new(&self, seconds: i64, microseconds: i64) -> Result<Time, Error> {
         protect(|| unsafe {
+            // types vary by plaftom so conversion isn't always useless
+            #[allow(clippy::useless_conversion)]
             Time::from_rb_value_unchecked(rb_time_new(
                 seconds.try_into().unwrap(),
                 microseconds.try_into().unwrap(),
@@ -75,6 +77,8 @@ impl Ruby {
     /// ```
     pub fn time_nano_new(&self, seconds: i64, nanoseconds: i64) -> Result<Time, Error> {
         protect(|| unsafe {
+            // types vary by plaftom so conversion isn't always useless
+            #[allow(clippy::useless_conversion)]
             Time::from_rb_value_unchecked(rb_time_nano_new(
                 seconds.try_into().unwrap(),
                 nanoseconds.try_into().unwrap(),
@@ -148,7 +152,7 @@ impl From<Timespec> for timespec {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum OffsetType {
     Local,
-    UTC,
+    Utc,
     Offset(c_int),
 }
 
@@ -182,13 +186,13 @@ impl Offset {
 
     /// Create a new `Offset` representing UTC.
     pub fn utc() -> Self {
-        Self(OffsetType::UTC)
+        Self(OffsetType::Utc)
     }
 
     fn as_c_int(&self) -> c_int {
         match self.0 {
             OffsetType::Local => c_int::MAX,
-            OffsetType::UTC => c_int::MAX - 1,
+            OffsetType::Utc => c_int::MAX - 1,
             OffsetType::Offset(i) => i,
         }
     }

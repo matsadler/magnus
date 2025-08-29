@@ -1760,6 +1760,8 @@ impl<T> TypedArray<T> {
     }
 
     /// See [`RArray::as_slice`].
+    // safty is covered in linked doc
+    #[allow(clippy::missing_safety_doc)]
     pub unsafe fn as_slice(&self) -> &[Value] {
         unsafe { RArray::from_value_unchecked(self.0.get()).as_slice_unconstrained() }
     }
