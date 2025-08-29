@@ -68,12 +68,10 @@ jobs:
               run: bundle exec rake test
 
             - name: Example gem tests (custom exception defined in Ruby)
-              if: matrix.ruby-version != 'head'
               working-directory: examples/custom_exception_ruby
               run: bundle exec rake test
 
             - name: Example gem tests (custom exception defined in Rust)
-              if: matrix.ruby-version != 'head'
               working-directory: examples/custom_exception_rust
               run: bundle exec rake test
 
