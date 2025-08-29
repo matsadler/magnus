@@ -1,7 +1,8 @@
-use std::{ffi::CString, mem::transmute};
+use std::{ffi::CString, mem::transmute, os::raw::c_void};
 
 use rb_sys::{
-    rb_define_singleton_method, rb_extend_object, rb_ivar_get, rb_ivar_set, rb_singleton_class,
+    VALUE, rb_define_singleton_method, rb_extend_object, rb_ivar_get, rb_ivar_set,
+    rb_singleton_class,
 };
 
 use crate::{
@@ -78,7 +79,9 @@ pub trait Object: ReprValue + Copy {
                 rb_define_singleton_method(
                     self.as_rb_value(),
                     name.as_ptr(),
-                    transmute(func.as_ptr()),
+                    transmute::<*mut c_void, Option<unsafe extern "C" fn() -> VALUE>>(
+                        func.as_ptr(),
+                    ),
                     M::arity().into(),
                 )
             };

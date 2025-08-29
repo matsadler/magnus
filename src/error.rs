@@ -490,7 +490,7 @@ where
             rb_set_errinfo(Ruby::get_unchecked().qnil().as_rb_value());
             Err(ex.into())
         },
-        other => Err(Error::from_tag(unsafe { transmute(other) })),
+        other => Err(Error::from_tag(unsafe { transmute::<i32, Tag>(other) })),
     }
 }
 

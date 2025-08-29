@@ -461,7 +461,12 @@ pub trait Class: Module {
         unsafe {
             rb_define_alloc_func(
                 self.as_rb_value(),
-                Some(transmute(allocate::<T> as extern "C" fn(RClass) -> Value)),
+                Some(transmute::<
+                    extern "C" fn(RClass) -> Value,
+                    unsafe extern "C" fn(VALUE) -> VALUE,
+                >(
+                    allocate::<T> as extern "C" fn(RClass) -> Value
+                )),
             )
         }
     }

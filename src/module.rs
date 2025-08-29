@@ -2,7 +2,12 @@
 //!
 //! See also [`Ruby`](Ruby#core-modules) for more module related methods.
 
-use std::{ffi::CString, fmt, mem::transmute, os::raw::c_int};
+use std::{
+    ffi::CString,
+    fmt,
+    mem::transmute,
+    os::raw::{c_int, c_void},
+};
 
 use rb_sys::{
     VALUE, rb_alias, rb_attr, rb_class_inherited_p, rb_const_get, rb_const_set,
@@ -161,7 +166,9 @@ impl RModule {
                 rb_define_module_function(
                     self.as_rb_value(),
                     name.as_ptr(),
-                    transmute(func.as_ptr()),
+                    transmute::<*mut c_void, Option<unsafe extern "C" fn() -> VALUE>>(
+                        func.as_ptr(),
+                    ),
                     M::arity().into(),
                 )
             };
@@ -540,7 +547,9 @@ pub trait Module: Object + ReprValue + Copy {
                 rb_define_method_id(
                     self.as_rb_value(),
                     id.as_rb_id(),
-                    transmute(func.as_ptr()),
+                    transmute::<*mut c_void, Option<unsafe extern "C" fn() -> VALUE>>(
+                        func.as_ptr(),
+                    ),
                     M::arity().into(),
                 )
             };
@@ -601,7 +610,9 @@ pub trait Module: Object + ReprValue + Copy {
                 rb_define_private_method(
                     self.as_rb_value(),
                     name.as_ptr(),
-                    transmute(func.as_ptr()),
+                    transmute::<*mut c_void, Option<unsafe extern "C" fn() -> VALUE>>(
+                        func.as_ptr(),
+                    ),
                     M::arity().into(),
                 )
             };
@@ -667,7 +678,9 @@ pub trait Module: Object + ReprValue + Copy {
                 rb_define_protected_method(
                     self.as_rb_value(),
                     name.as_ptr(),
-                    transmute(func.as_ptr()),
+                    transmute::<*mut c_void, Option<unsafe extern "C" fn() -> VALUE>>(
+                        func.as_ptr(),
+                    ),
                     M::arity().into(),
                 )
             };

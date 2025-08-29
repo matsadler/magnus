@@ -1844,7 +1844,11 @@ pub mod try_convert;
 pub mod typed_data;
 pub mod value;
 
-use std::{ffi::CString, mem::transmute, os::raw::c_int};
+use std::{
+    ffi::CString,
+    mem::transmute,
+    os::raw::{c_int, c_void},
+};
 
 use ::rb_sys::{
     VALUE, rb_alias_variable, rb_backref_get, rb_call_super_kw, rb_current_receiver,
@@ -2265,7 +2269,11 @@ impl Ruby {
     {
         let name = CString::new(name).unwrap();
         unsafe {
-            rb_define_global_function(name.as_ptr(), transmute(func.as_ptr()), M::arity().into());
+            rb_define_global_function(
+                name.as_ptr(),
+                transmute::<*mut c_void, Option<unsafe extern "C" fn() -> VALUE>>(func.as_ptr()),
+                M::arity().into(),
+            );
         }
     }
 
@@ -2451,7 +2459,9 @@ impl Ruby {
                 rb_set_errinfo(self.qnil().as_rb_value());
                 Err(ex.into())
             },
-            other => Err(Error::from_tag(unsafe { transmute(other) })),
+            other => Err(Error::from_tag(unsafe {
+                transmute::<i32, error::Tag>(other)
+            })),
         }
     }
 }

@@ -742,7 +742,7 @@ pub(crate) mod private {
                         // this bit is safe, ruby_value_type is #[repr(u32)], the flags
                         // value set by Ruby, and Ruby promises that flags masked like
                         // this will always be a valid entry in this enum
-                        std::mem::transmute(ret as u32)
+                        std::mem::transmute::<u32, ruby_value_type>(ret as u32)
                     }
                 }
                 None => {
@@ -2427,7 +2427,7 @@ impl Fixnum {
             // the isize::cast_unsigned this suggests isn't available until
             // rust 1.87 and we support back to 1.85
             #[allow(unnecessary_transmutes)]
-            let x = transmute::<_, usize>(n as isize);
+            let x = transmute::<isize, usize>(n as isize);
             Self::from_rb_value_unchecked(x.wrapping_add(x.wrapping_add(1)) as VALUE)
         })
     }
@@ -2492,7 +2492,7 @@ impl Fixnum {
     }
 
     fn is_negative(self) -> bool {
-        unsafe { transmute::<_, isize>(self.0) < 0 }
+        unsafe { transmute::<NonZeroValue, isize>(self.0) < 0 }
     }
 
     /// Convert `self` to an `i8`. Returns `Err` if `self` is out of range for
@@ -2672,7 +2672,7 @@ impl Fixnum {
     /// ```
     #[inline]
     pub fn to_isize(self) -> isize {
-        unsafe { transmute::<_, isize>(self) >> 1 }
+        unsafe { transmute::<Fixnum, isize>(self) >> 1 }
     }
 
     /// Convert `self` to a `u8`. Returns `Err` if `self` is negative or out of
