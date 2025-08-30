@@ -1,6 +1,6 @@
 //! Types and functions for working with Ruby's Fiber class.
 
-use std::{fmt, mem::size_of, os::raw::c_int, slice};
+use std::{ffi::c_int, fmt, mem::size_of, slice};
 
 #[cfg(ruby_lt_3_2)]
 use rb_sys::rb_fiber_new;

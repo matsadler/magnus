@@ -3,8 +3,8 @@
 //! See also [`Ruby`](Ruby#time) for more Time related methods.
 
 use std::{
+    ffi::c_int,
     fmt,
-    os::raw::c_int,
     time::{Duration, SystemTime},
 };
 

@@ -1,4 +1,7 @@
-use std::{ffi::CString, mem::transmute, os::raw::c_void};
+use std::{
+    ffi::{CString, c_void},
+    mem::transmute,
+};
 
 use rb_sys::{
     VALUE, rb_define_singleton_method, rb_extend_object, rb_ivar_get, rb_ivar_set,

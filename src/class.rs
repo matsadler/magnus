@@ -2,7 +2,12 @@
 //!
 //! See also [`Ruby`](Ruby#core-classes) for more class related methods.
 
-use std::{borrow::Cow, ffi::CStr, fmt, mem::transmute, os::raw::c_int};
+use std::{
+    borrow::Cow,
+    ffi::{CStr, c_int},
+    fmt,
+    mem::transmute,
+};
 
 use rb_sys::{
     self, VALUE, rb_alloc_func_t, rb_cArray, rb_cBasicObject, rb_cBinding, rb_cClass, rb_cComplex,

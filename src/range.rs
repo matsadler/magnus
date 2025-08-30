@@ -1,9 +1,9 @@
 //! Types for working with Ruby ranges.
 
 use std::{
+    ffi::{c_int, c_long},
     fmt,
     ops::{Range as StdRange, RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToInclusive},
-    os::raw::{c_int, c_long},
 };
 
 use rb_sys::{rb_range_beg_len, rb_range_new};

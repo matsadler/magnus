@@ -30,11 +30,10 @@
 //! See also [`Ruby`](Ruby#argument-parsing).
 
 use std::{
-    ffi::CString,
+    ffi::{CString, c_int},
     fmt,
     mem::transmute,
     ops::{Bound, RangeBounds},
-    os::raw::c_int,
 };
 
 use rb_sys::{ID, VALUE, rb_error_arity, rb_get_kwargs, rb_scan_args};

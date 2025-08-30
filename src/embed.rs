@@ -86,7 +86,7 @@ pub unsafe fn setup() -> Cleanup {
                 #[cfg(windows)]
                 {
                     let mut argc = 0;
-                    let mut argv: [*mut std::os::raw::c_char; 0] = [];
+                    let mut argv: [*mut std::ffi::c_char; 0] = [];
                     let mut argv = argv.as_mut_ptr();
                     rb_w32_sysinit(&mut argc, &mut argv);
                 }

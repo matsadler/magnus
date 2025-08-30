@@ -4,9 +4,8 @@
 
 use std::{
     borrow::Cow,
-    ffi::CString,
+    ffi::{CString, c_char},
     fmt,
-    os::raw::c_char,
     ptr::{NonNull, null},
     slice,
 };
@@ -59,7 +58,7 @@ mod sys {
     #[repr(C)]
     #[derive(Debug, Copy, Clone)]
     pub struct Heap {
-        pub len: std::os::raw::c_long,
+        pub len: std::ffi::c_long,
         pub ptr: *const VALUE,
     }
 }

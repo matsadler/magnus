@@ -2,7 +2,13 @@
 //!
 //! See also [`Ruby`](Ruby#errors) for more error related methods.
 
-use std::{any::Any, borrow::Cow, ffi::CString, fmt, mem::transmute, os::raw::c_int};
+use std::{
+    any::Any,
+    borrow::Cow,
+    ffi::{CString, c_int},
+    fmt,
+    mem::transmute,
+};
 
 use rb_sys::{
     VALUE, rb_bug, rb_ensure, rb_errinfo, rb_exc_fatal, rb_exc_raise, rb_iter_break_value,

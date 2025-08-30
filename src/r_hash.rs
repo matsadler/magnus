@@ -3,9 +3,9 @@
 use std::{
     collections::{BTreeMap, HashMap},
     convert::Infallible,
+    ffi::{c_int, c_long},
     fmt,
     hash::Hash,
-    os::raw::{c_int, c_long},
     panic::AssertUnwindSafe,
 };
 

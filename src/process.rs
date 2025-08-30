@@ -6,7 +6,7 @@
 use std::os::unix::process::ExitStatusExt;
 #[cfg(windows)]
 use std::os::windows::process::ExitStatusExt;
-use std::{num::NonZeroU32, os::raw::c_int, process::ExitStatus, ptr::null};
+use std::{ffi::c_int, num::NonZeroU32, process::ExitStatus, ptr::null};
 
 use rb_sys::{rb_sys_fail, rb_waitpid};
 

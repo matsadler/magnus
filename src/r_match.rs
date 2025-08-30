@@ -1,4 +1,4 @@
-use std::{fmt, os::raw::c_int};
+use std::{ffi::c_int, fmt};
 
 use rb_sys::{
     VALUE, rb_reg_backref_number, rb_reg_last_match, rb_reg_match_last, rb_reg_match_post,

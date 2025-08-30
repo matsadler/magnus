@@ -1,4 +1,4 @@
-use std::os::raw::c_long;
+use std::ffi::c_long;
 
 use magnus::{Error, Integer, Ruby, eval};
 

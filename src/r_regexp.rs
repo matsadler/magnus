@@ -1,8 +1,8 @@
 //! Types for working with Ruby’s Regexp class.
 
 use std::{
+    ffi::{c_char, c_int, c_long, c_uint},
     fmt,
-    os::raw::{c_char, c_int, c_long, c_uint},
 };
 
 use rb_sys::{

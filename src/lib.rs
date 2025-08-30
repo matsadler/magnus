@@ -1845,9 +1845,8 @@ pub mod typed_data;
 pub mod value;
 
 use std::{
-    ffi::CString,
+    ffi::{CString, c_int, c_void},
     mem::transmute,
-    os::raw::{c_int, c_void},
 };
 
 use ::rb_sys::{

@@ -1,6 +1,6 @@
 use std::{
+    ffi::{c_long, c_longlong, c_ulong, c_ulonglong},
     fmt,
-    os::raw::{c_long, c_longlong, c_ulong, c_ulonglong},
 };
 
 use rb_sys::{

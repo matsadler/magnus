@@ -1,7 +1,7 @@
 use std::{
+    ffi::c_long,
     fmt,
     ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign},
-    os::raw::c_long,
 };
 
 use rb_sys::{

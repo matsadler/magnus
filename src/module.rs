@@ -3,10 +3,9 @@
 //! See also [`Ruby`](Ruby#core-modules) for more module related methods.
 
 use std::{
-    ffi::CString,
+    ffi::{CString, c_int, c_void},
     fmt,
     mem::transmute,
-    os::raw::{c_int, c_void},
 };
 
 use rb_sys::{

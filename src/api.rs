@@ -10,7 +10,7 @@ use rb_sys::ruby_native_thread_p;
 // Ruby's source, that comment and the code have been unchanged singe 1.9.2,
 // 14 years ago as of writing.
 unsafe extern "C" {
-    fn ruby_thread_has_gvl_p() -> ::std::os::raw::c_int;
+    fn ruby_thread_has_gvl_p() -> ::std::ffi::c_int;
 }
 
 use crate::{error::RubyUnavailableError, value::ReprValue};

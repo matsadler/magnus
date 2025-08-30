@@ -4,7 +4,11 @@
 #![allow(clippy::many_single_char_names)]
 #![allow(clippy::missing_safety_doc)]
 
-use std::{ffi::c_void, os::raw::c_int, panic::AssertUnwindSafe, slice};
+use std::{
+    ffi::{c_int, c_void},
+    panic::AssertUnwindSafe,
+    slice,
+};
 
 use seq_macro::seq;
 
@@ -862,7 +866,7 @@ macro_rules! method {
     }};
     ($name:expr_2021, -1) => {{
         unsafe extern "C" fn anon(
-            argc: std::os::raw::c_int,
+            argc: std::ffi::c_int,
             argv: *const $crate::Value,
             rb_self: $crate::Value,
         ) -> $crate::Value {
@@ -870,7 +874,7 @@ macro_rules! method {
             $name.call_handle_error(argc, argv, rb_self)
         }
         anon as unsafe extern "C" fn(
-            std::os::raw::c_int,
+            std::ffi::c_int,
             *const $crate::Value,
             $crate::Value,
         ) -> $crate::Value
@@ -1606,7 +1610,7 @@ macro_rules! function {
     }};
     ($name:expr_2021, -1) => {{
         unsafe extern "C" fn anon(
-            argc: std::os::raw::c_int,
+            argc: std::ffi::c_int,
             argv: *const $crate::Value,
             rb_self: $crate::Value,
         ) -> $crate::Value {
@@ -1614,7 +1618,7 @@ macro_rules! function {
             $name.call_handle_error(argc, argv)
         }
         anon as unsafe extern "C" fn(
-            std::os::raw::c_int,
+            std::ffi::c_int,
             *const $crate::Value,
             $crate::Value,
         ) -> $crate::Value

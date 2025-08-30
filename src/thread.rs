@@ -1,4 +1,4 @@
-use std::{fmt, mem::size_of, os::raw::c_void, slice, time::Duration};
+use std::{ffi::c_void, fmt, mem::size_of, slice, time::Duration};
 
 #[allow(deprecated)]
 use rb_sys::rb_thread_fd_close;

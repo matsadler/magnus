@@ -3,9 +3,9 @@
 //! See also [`Ruby`](Ruby#blocks) for more block related methods.
 
 use std::{
+    ffi::c_int,
     fmt,
     mem::{forget, size_of},
-    os::raw::c_int,
     slice,
 };
 

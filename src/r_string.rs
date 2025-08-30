@@ -3,11 +3,10 @@
 use std::{
     borrow::Cow,
     cmp::Ordering,
-    ffi::CString,
+    ffi::{CString, c_char, c_long},
     fmt, io,
     iter::Iterator,
     mem::transmute,
-    os::raw::{c_char, c_long},
     path::{Path, PathBuf},
     ptr, slice, str,
 };

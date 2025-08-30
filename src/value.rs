@@ -7,14 +7,13 @@ mod flonum;
 use std::{
     borrow::{Borrow, Cow},
     cell::UnsafeCell,
-    ffi::CStr,
+    ffi::{CStr, c_char, c_int, c_long, c_ulong},
     fmt,
     hash::{Hash, Hasher},
     marker::PhantomData,
     mem::transmute,
     num::NonZeroUsize,
     ops::{Deref, DerefMut},
-    os::raw::{c_char, c_int, c_long, c_ulong},
     ptr,
     sync::Once,
 };

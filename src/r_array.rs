@@ -1,6 +1,6 @@
 //! Types and functions for working with Ruby’s Array class.
 
-use std::{cmp::Ordering, convert::Infallible, fmt, marker::PhantomData, os::raw::c_long, slice};
+use std::{cmp::Ordering, convert::Infallible, ffi::c_long, fmt, marker::PhantomData, slice};
 
 #[cfg(ruby_gte_3_2)]
 use rb_sys::rb_ary_hidden_new;

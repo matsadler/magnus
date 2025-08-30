@@ -170,9 +170,9 @@ impl Ruby {
         option: &RHash,
     ) -> Result<(OpenFlags, FMode, IoEncoding), Error> {
         // `rb_io_extract_modeenc` will fill these variables:
-        let mut oflags: std::os::raw::c_int = 0; // with O_ flags; flags are available in `File::Constants`.
+        let mut oflags: std::ffi::c_int = 0; // with O_ flags; flags are available in `File::Constants`.
         #[cfg(ruby_lte_3_4)]
-        let mut fmode: std::os::raw::c_int = 0; // with FMODE_ flags
+        let mut fmode: std::ffi::c_int = 0; // with FMODE_ flags
         #[cfg(ruby_gt_3_4)]
         let mut fmode: rb_io_mode = rb_io_mode::RUBY_IO_MODE_EXTERNAL; // arbitrary initialization value
         let mut io_encoding: rb_io_encoding = unsafe { std::mem::zeroed() }; // with IO encoding options

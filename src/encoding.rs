@@ -17,10 +17,9 @@
 //! string of an encoding name, and convert to an instance of `Encoding`.
 
 use std::{
-    ffi::{CStr, CString},
+    ffi::{CStr, CString, c_char, c_int},
     fmt,
     ops::Range,
-    os::raw::{c_char, c_int},
     ptr::{self, NonNull},
 };
 

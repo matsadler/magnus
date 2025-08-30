@@ -99,7 +99,7 @@ impl TryConvert for RFile {
 
 #[cfg(not(unix))]
 pub mod fd {
-    use std::os::raw::c_int;
+    use std::ffi::c_int;
 
     pub type RawFd = c_int;
 
