@@ -1,6 +1,6 @@
 [package]
 name = "magnus"
-version = "0.8.0"
+version = "0.9.0"
 edition = "2024"
 rust-version = "1.85"
 description = "High level Ruby bindings. Write Ruby extension gems in Rust, or call Ruby code from a Rust binary."
@@ -33,7 +33,7 @@ io = []
 [dependencies]
 bytes = { version = "1", optional = true }
 chrono = { version = "0.4.38", optional = true }
-magnus-macros = { version = "0.8.0", path = "magnus-macros" }
+magnus-macros = { version = "0.9.0", path = "magnus-macros" }
 rb-sys = { version = ">=0.9.113", default-features = false, features = [
     "bindgen-rbimpls",
     "bindgen-deprecated-types",
