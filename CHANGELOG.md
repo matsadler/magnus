@@ -11,6 +11,8 @@
   optional.
 
 ### Deprecated
+- The `data_type_builder!` macro. Please use
+  `DataTypeBuilder::<Example>::new(c\"example\")` instead.
 
 ### Removed
 - `RArray::each`, use `ary.into_iter()` or `ary.enumeratorize(\"each\", ())`

@@ -12,7 +12,6 @@ use rb_sys::{
 
 use crate::{
     api::Ruby,
-    data_type_builder,
     error::{Error, protect},
     gc,
     into_value::IntoValue,
@@ -21,7 +20,7 @@ use crate::{
     r_file::fd::AsRawFd,
     r_typed_data::RTypedData,
     try_convert::TryConvert,
-    typed_data::{DataType, DataTypeFunctions},
+    typed_data::{DataType, DataTypeBuilder, DataTypeFunctions},
     value::{
         IntoId, ReprValue, Value,
         private::{self, ReprValue as _},
@@ -676,7 +675,7 @@ where
         }
     }
 
-    let data_type = data_type_builder!(Closure<F>, "rust closure")
+    let data_type = DataTypeBuilder::<Closure<F>>::new(c"rust closure")
         .free_immediately()
         .mark()
         .build();

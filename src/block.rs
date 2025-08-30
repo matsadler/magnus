@@ -16,7 +16,7 @@ use rb_sys::{
 };
 
 use crate::{
-    Ruby, data_type_builder,
+    Ruby,
     enumerator::Enumerator,
     error::{Error, ensure, protect},
     gc,
@@ -25,7 +25,7 @@ use crate::{
     object::Object,
     r_array::RArray,
     try_convert::TryConvert,
-    typed_data::{DataType, DataTypeFunctions},
+    typed_data::{DataType, DataTypeBuilder, DataTypeFunctions},
     value::{
         NonZeroValue, ReprValue, Value,
         private::{self, ReprValue as _},
@@ -506,7 +506,7 @@ where
         }
     }
 
-    let data_type = data_type_builder!(Closure<F>, "rust closure")
+    let data_type = DataTypeBuilder::<Closure<F>>::new(c"rust closure")
         .free_immediately()
         .mark()
         .build();

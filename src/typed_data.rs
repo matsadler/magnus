@@ -52,6 +52,16 @@ impl DataType {
     ///
     /// See [`data_type_builder`](macro@crate::data_type_builder) to create a
     /// `DataTypeBuilder` with a `'static CStr` `name` from a string literal.
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::DataType;
+    /// # use magnus::DataTypeFunctions;
+    /// # #[derive(DataTypeFunctions)]
+    /// # struct Example();
+    ///
+    /// DataType::builder::<Example>(c"example");
+    /// ```
     pub const fn builder<T>(name: &'static CStr) -> DataTypeBuilder<T>
     where
         T: DataTypeFunctions,
@@ -237,6 +247,7 @@ pub struct DataTypeBuilder<T> {
 /// `data_type_builder!(Example, "example")` is equivalent to
 /// `DataTypeBuilder::<Example>::new` with a `name` argument of `"example"` as
 /// a `'static CStr`.
+#[deprecated(note = "please use `DataTypeBuilder::<Example>::new(c\"example\")` instead")]
 #[macro_export]
 macro_rules! data_type_builder {
     ($t:ty, $name:literal) => {
@@ -255,8 +266,16 @@ where
     /// `name` should be unique per wrapped type. It does not need to be a
     /// valid Ruby identifier.
     ///
-    /// See [`data_type_builder`](macro@crate::data_type_builder) to create a
-    /// `DataTypeBuilder` with a `'static CStr` `name` from a string literal.
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::typed_data::DataTypeBuilder;
+    /// # use magnus::DataTypeFunctions;
+    /// # #[derive(DataTypeFunctions)]
+    /// # struct Example();
+    ///
+    /// DataTypeBuilder::<Example>::new(c"example");
+    /// ```
     pub const fn new(name: &'static CStr) -> Self {
         Self {
             name,
@@ -429,7 +448,7 @@ where
     /// # Examples
     ///
     /// ```
-    /// use magnus::{DataType, DataTypeFunctions, TypedData, data_type_builder};
+    /// use magnus::{DataType, DataTypeFunctions, TypedData, typed_data::DataTypeBuilder};
     /// # use magnus::{RClass, Ruby};
     ///
     /// #[derive(DataTypeFunctions)]
@@ -440,7 +459,7 @@ where
     ///     // ...
     ///
     ///     fn data_type() -> &'static DataType {
-    ///         static DATA_TYPE: DataType = data_type_builder!(Example, "example").build();
+    ///         static DATA_TYPE: DataType = DataTypeBuilder::<Example>::new(c"example").build();
     ///         &DATA_TYPE
     ///     }
     /// }

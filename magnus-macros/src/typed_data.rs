@@ -1,3 +1,5 @@
+use std::ffi::CString;
+
 use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
 use syn::{
@@ -93,7 +95,8 @@ pub fn expand_derive_typed_data(input: DeriveInput) -> Result<TokenStream, Error
         Some(v) => v,
         None => return Err(Error::new(attrs.span(), "missing attribute: `class = ...`")),
     };
-    let name = name.unwrap_or_else(|| class.clone());
+    let name = CString::new(name.unwrap_or_else(|| class.clone()))
+        .expect("name should not contain null byte");
 
     let ident = &input.ident;
     let generics = &input.generics;
@@ -194,7 +197,7 @@ pub fn expand_derive_typed_data(input: DeriveInput) -> Result<TokenStream, Error
     };
 
     let mut builder = Vec::new();
-    builder.push(quote! { magnus::data_type_builder!(#ident, #name) });
+    builder.push(quote! { magnus::typed_data::DataTypeBuilder::<#ident>::new(#name) });
     if mark {
         builder.push(quote! { .mark() });
     }
