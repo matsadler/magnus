@@ -13,6 +13,8 @@
 ### Deprecated
 - The `data_type_builder!` macro. Please use
   `DataTypeBuilder::<Example>::new(c\"example\")` instead.
+- The `r_string!` macro. Please use `Ruby::utf8_str_new_static(c\"example\")`
+  instead.
 
 ### Removed
 - `RArray::each`, use `ary.into_iter()` or `ary.enumeratorize(\"each\", ())`

@@ -133,7 +133,7 @@ impl RModule {
     /// use magnus::{Error, RString, Ruby, function, r_string, rb_assert};
     ///
     /// fn greet(ruby: &Ruby) -> RString {
-    ///     r_string!(ruby, "Hello, world!")
+    ///     ruby.utf8_str_new_static(c"Hello, world!")
     /// }
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {

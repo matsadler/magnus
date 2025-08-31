@@ -628,9 +628,9 @@
 //! * `rb_enc_str_coderange`: [`RString::enc_coderange_scan`].
 //! * `rb_enc_str_new`: [`RString::enc_new`].
 // * `rb_enc_str_new_cstr`:
-// * `rb_enc_str_new_lit`:
-// * `rb_enc_str_new_literal`:
-// * `rb_enc_str_new_static`:
+//! * `rb_enc_str_new_lit`: See [`Ruby::enc_str_new_static`].
+//! * `rb_enc_str_new_literal`: See [`Ruby::enc_str_new_static`].
+//! * `rb_enc_str_new_static`: [`Ruby::enc_str_new_static`].
 // * `rb_enc_symname2_p`:
 // * `rb_enc_symname_p`:
 // * `rb_enc_tolower`:
@@ -1409,10 +1409,10 @@
 //! * `rb_str_new`: [`RString::from_slice`].
 // * `rb_str_new_cstr`:
 //! * `rb_str_new_frozen`: [`RString::new_frozen`].
-//! * `rb_str_new_lit`: Similar to [`r_string!`].
-//! * `rb_str_new_literal`: Similar to [`r_string!`].
+//! * `rb_str_new_lit`: See [`Ruby::str_new_static`].
+//! * `rb_str_new_literal`: See [`Ruby::str_new_static`].
 //! * `rb_str_new_shared`: [`RString::new_shared`].
-// * `rb_str_new_static`: Similar to [`r_string!`].
+//! * `rb_str_new_static`: [`Ruby::str_new_static`].
 // * `rb_str_new_with_class`:
 //! * `rb_str_offset`: [`RString::offset`].
 //! * `rb_str_plus`: [`RString::plus`].
@@ -1606,9 +1606,9 @@
 //! * `rb_utf8_encoding`: [`RbEncoding::utf8`](encoding::RbEncoding::utf8).
 //! * `rb_utf8_str_new`: [`RString::new`].
 //! * `rb_utf8_str_new_cstr`: See [`RString::new`].
-//! * `rb_utf8_str_new_lit`: Similar to [`r_string!`].
-//! * `rb_utf8_str_new_literal`: Similar to [`r_string!`].
-//! * `rb_utf8_str_new_static`: [`r_string!`].
+//! * `rb_utf8_str_new_lit`: See [`Ruby::utf8_str_new_static`].
+//! * `rb_utf8_str_new_literal`: See [`Ruby::utf8_str_new_static`].
+//! * `rb_utf8_str_new_static`: [`Ruby::utf8_str_new_static`].
 // * `rb_uv_to_utf8`:
 //!
 //! ## `rb_v`-`rb_z`

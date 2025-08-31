@@ -3,7 +3,7 @@
 use std::{
     borrow::Cow,
     cmp::Ordering,
-    ffi::{CString, c_char, c_long},
+    ffi::{CStr, CString, c_char, c_long},
     fmt, io,
     iter::Iterator,
     mem::transmute,
@@ -12,13 +12,14 @@ use std::{
 };
 
 use rb_sys::{
-    self, RSTRING_LEN, RSTRING_PTR, VALUE, rb_enc_str_coderange, rb_enc_str_new, rb_str_buf_append,
-    rb_str_buf_new, rb_str_capacity, rb_str_cat, rb_str_cmp, rb_str_comparable, rb_str_conv_enc,
-    rb_str_drop_bytes, rb_str_dump, rb_str_ellipsize, rb_str_new, rb_str_new_frozen,
-    rb_str_new_shared, rb_str_offset, rb_str_plus, rb_str_replace, rb_str_scrub,
-    rb_str_shared_replace, rb_str_split, rb_str_strlen, rb_str_times, rb_str_to_interned_str,
-    rb_str_to_str, rb_str_update, rb_utf8_str_new, rb_utf8_str_new_static, ruby_coderange_type,
-    ruby_rstring_flags, ruby_value_type,
+    self, RSTRING_LEN, RSTRING_PTR, VALUE, rb_enc_str_coderange, rb_enc_str_new,
+    rb_enc_str_new_static, rb_str_buf_append, rb_str_buf_new, rb_str_capacity, rb_str_cat,
+    rb_str_cmp, rb_str_comparable, rb_str_conv_enc, rb_str_drop_bytes, rb_str_dump,
+    rb_str_ellipsize, rb_str_new, rb_str_new_frozen, rb_str_new_shared, rb_str_new_static,
+    rb_str_offset, rb_str_plus, rb_str_replace, rb_str_scrub, rb_str_shared_replace, rb_str_split,
+    rb_str_strlen, rb_str_times, rb_str_to_interned_str, rb_str_to_str, rb_str_update,
+    rb_utf8_str_new, rb_utf8_str_new_static, ruby_coderange_type, ruby_rstring_flags,
+    ruby_value_type,
 };
 
 use crate::{
@@ -66,7 +67,96 @@ impl Ruby {
         }
     }
 
+    /// Create a new Ruby string from the static C string `s`.
+    ///
+    /// The encoding of the Ruby string will be ASCII-8BIT (aka BINARY).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Error, Ruby, rb_assert};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let val = ruby.str_new_static(c"example");
+    ///     rb_assert!(ruby, r#"val == "example""#, val);
+    ///     rb_assert!(ruby, r#"val.encoding == Encoding::ASCII_8BIT"#, val);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
+    pub fn str_new_static(&self, s: &'static CStr) -> RString {
+        let len = s.count_bytes();
+        let ptr = s.as_ptr();
+        unsafe {
+            RString::from_rb_value_unchecked(rb_str_new_static(ptr as *const c_char, len as c_long))
+        }
+    }
+
+    /// Create a new Ruby string from the static C string `s`.
+    ///
+    /// The encoding of the Ruby string will be UTF-8.
+    /// This method does not check the string is valid UTF-8.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Error, Ruby, rb_assert};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let val = ruby.utf8_str_new_static(c"example");
+    ///     rb_assert!(ruby, r#"val == "example""#, val);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
+    pub fn utf8_str_new_static(&self, s: &'static CStr) -> RString {
+        let len = s.count_bytes();
+        let ptr = s.as_ptr();
+        unsafe {
+            RString::from_rb_value_unchecked(rb_utf8_str_new_static(
+                ptr as *const c_char,
+                len as c_long,
+            ))
+        }
+    }
+
+    /// Create a new Ruby string from the static C string `s`.
+    ///
+    /// The encoding of the Ruby string will be UTF-8.
+    /// This method does not check the string is valid UTF-8.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Error, Ruby, rb_assert};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let val = ruby.enc_str_new_static(c"example", ruby.usascii_encoding());
+    ///     rb_assert!(ruby, r#"val == "example""#, val);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
+    pub fn enc_str_new_static<E>(&self, s: &'static CStr, enc: E) -> RString
+    where
+        E: Into<RbEncoding>,
+    {
+        let len = s.count_bytes();
+        let ptr = s.as_ptr();
+        unsafe {
+            RString::from_rb_value_unchecked(rb_enc_str_new_static(
+                ptr as *const c_char,
+                len as c_long,
+                enc.into().as_ptr(),
+            ))
+        }
+    }
+
     /// Implementation detail of [`r_string`].
+    #[deprecated(note = "please use `Ruby::utf8_str_new_static(c\"example\")` instead")]
     #[doc(hidden)]
     #[inline]
     pub unsafe fn str_new_lit(&self, ptr: *const c_char, len: c_long) -> RString {
@@ -336,10 +426,14 @@ impl RString {
     }
 
     /// Implementation detail of [`r_string`].
+    #[deprecated(note = "please use `Ruby::utf8_str_new_static(c\"example\")` instead")]
     #[doc(hidden)]
     #[inline]
     pub unsafe fn new_lit(ptr: *const c_char, len: c_long) -> Self {
-        unsafe { get_ruby!().str_new_lit(ptr, len) }
+        #[allow(deprecated)]
+        unsafe {
+            get_ruby!().str_new_lit(ptr, len)
+        }
     }
 
     /// Create a new Ruby string with capacity `n`.
@@ -1985,19 +2079,26 @@ impl<'a> Iterator for CharBytes<'a> {
 /// use magnus::{Error, Ruby, r_string, rb_assert};
 ///
 /// fn example(ruby: &Ruby) -> Result<(), Error> {
-///     let s = r_string!("Hello, world!");
+///     let s = ruby.utf8_str_new_static(c"Hello, world!");
 ///     rb_assert!(ruby, r#"s == "Hello, world!""#, s);
 ///
 ///     Ok(())
 /// }
 /// # Ruby::init(example).unwrap()
 /// ```
+#[deprecated(note = "please use `Ruby::utf8_str_new_static(c\"example\")` instead")]
 #[macro_export]
 macro_rules! r_string {
-    ($lit:expr_2021) => {{ $crate::r_string!($crate::Ruby::get().unwrap(), $lit) }};
+    ($lit:expr_2021) => {{
+        #[allow(deprecated)]
+        $crate::r_string!($crate::Ruby::get().unwrap(), $lit)
+    }};
     ($ruby:expr_2021, $lit:expr_2021) => {{
         let s = concat!($lit, "\0");
         let len = s.len() - 1;
-        unsafe { $ruby.str_new_lit(s.as_ptr() as *const _, len as _) }
+        unsafe {
+            #[allow(deprecated)]
+            $ruby.str_new_lit(s.as_ptr() as *const _, len as _)
+        }
     }};
 }

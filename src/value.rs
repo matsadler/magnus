@@ -1660,7 +1660,7 @@ pub trait ReprValue: private::ReprValue {
     /// use magnus::{Error, Ruby, prelude::*, r_string};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
-    ///     let s = r_string!("foo\\bar\\baz");
+    ///     let s = ruby.utf8_str_new_static(c"foo\\bar\\baz");
     ///     let mut i = 0;
     ///     for line in s.enumeratorize("each_line", ("\\",)) {
     ///         assert!(line?.is_kind_of(ruby.class_string()));
