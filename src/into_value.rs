@@ -25,6 +25,10 @@ impl Ruby {
 }
 
 /// Conversions from Rust types into [`Value`].
+///
+/// See also [`TypedData`](crate::typed_data::TypedData) and
+/// [`#[wrap]`](macro@crate::wrap). A type implementing `TypedData` (either
+/// manually or via `#[wrap]`) will automatically implement `IntoValue`.
 pub trait IntoValue: Sized {
     /// Convert `self` into [`Value`].
     ///

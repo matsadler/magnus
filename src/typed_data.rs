@@ -541,6 +541,9 @@ where
     }
 }
 
+// This impl causes rustc to recommend `TypedData` in places it would be much
+// more helpful to instead `IntoValue`, so tell it not to.
+#[diagnostic::do_not_recommend]
 impl<T> IntoValue for T
 where
     T: TypedData,
