@@ -1417,7 +1417,7 @@
 // * `rb_str_length`:
 // * `rb_str_locktmp`:
 // * `rb_str_modify`:
-// * `rb_str_modify_expand`:
+//! * `rb_str_modify_expand`: [`RString::modify_expand`].
 //! * `rb_str_new`: [`RString::from_slice`].
 // * `rb_str_new_cstr`:
 //! * `rb_str_new_frozen`: [`RString::new_frozen`].

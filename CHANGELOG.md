@@ -14,6 +14,7 @@
 - Conversions for C strings with `Ruby::str_from_c_str`, `RString::to_c_string`,
   and implementations of `IntoRString` for `&CStr`, `IntoValue` for `&CStr`, and
   `TryConvert` for `CString`.
+- `RString::modify_expand` to grow the capacity of a Ruby string.
 
 ### Changed
 - Minimum supported Rust version is now 1.85.

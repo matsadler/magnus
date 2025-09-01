@@ -15,8 +15,8 @@ use rb_sys::{
     self, RSTRING_LEN, RSTRING_PTR, VALUE, rb_enc_str_coderange, rb_enc_str_new,
     rb_enc_str_new_static, rb_str_buf_append, rb_str_buf_new, rb_str_capacity, rb_str_cat,
     rb_str_cmp, rb_str_comparable, rb_str_conv_enc, rb_str_drop_bytes, rb_str_dump,
-    rb_str_ellipsize, rb_str_new, rb_str_new_cstr, rb_str_new_frozen, rb_str_new_shared,
-    rb_str_new_static, rb_str_offset, rb_str_plus, rb_str_replace, rb_str_scrub,
+    rb_str_ellipsize, rb_str_modify_expand, rb_str_new, rb_str_new_cstr, rb_str_new_frozen,
+    rb_str_new_shared, rb_str_new_static, rb_str_offset, rb_str_plus, rb_str_replace, rb_str_scrub,
     rb_str_shared_replace, rb_str_split, rb_str_strlen, rb_str_times, rb_str_to_interned_str,
     rb_str_to_str, rb_str_update, rb_utf8_str_new, rb_utf8_str_new_static, ruby_coderange_type,
     ruby_rstring_flags, ruby_value_type,
@@ -1748,6 +1748,35 @@ impl RString {
     /// ```
     pub fn capacity(self) -> usize {
         unsafe { rb_str_capacity(self.as_rb_value()) as usize }
+    }
+
+    /// Expands the capacity of `self`.
+    ///
+    /// Returns `Err` if `self` is frozen.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let s = ruby.str_new("foo");
+    ///     s.modify_expand(128)?;
+    ///     assert_eq!(3, s.len());
+    ///     assert!(s.capacity() >= 128);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
+    pub fn modify_expand(self, capa: usize) -> Result<(), Error> {
+        protect(|| {
+            unsafe {
+                rb_str_modify_expand(self.as_rb_value(), capa as c_long);
+            }
+            Ruby::get_with(self).qnil()
+        })?;
+        Ok(())
     }
 
     /// Return whether self contains any characters or not.
