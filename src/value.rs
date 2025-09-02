@@ -6,7 +6,6 @@ mod flonum;
 
 use std::{
     borrow::{Borrow, Cow},
-    cell::UnsafeCell,
     ffi::{CStr, c_char, c_int, c_long, c_ulong},
     fmt,
     hash::{Hash, Hasher},
@@ -15,7 +14,7 @@ use std::{
     num::NonZeroUsize,
     ops::{Deref, DerefMut},
     ptr,
-    sync::Once,
+    sync::OnceLock,
 };
 
 #[cfg(ruby_use_flonum)]
@@ -467,10 +466,9 @@ unsafe impl<T: ReprValue> Sync for Opaque<T> {}
 /// rb_assert!(ruby, r#"str == "example""#, str);
 /// ```
 pub struct Lazy<T: ReprValue> {
-    init: Once,
     mark: bool,
     func: fn(&Ruby) -> T,
-    value: UnsafeCell<Value>,
+    value: OnceLock<T>,
 }
 
 impl<T> Lazy<T>
@@ -502,10 +500,9 @@ where
     /// ```
     pub const fn new(func: fn(&Ruby) -> T) -> Self {
         Self {
-            init: Once::new(),
             mark: true,
             func,
-            value: UnsafeCell::new(QNIL.0.get()),
+            value: OnceLock::new(),
         }
     }
 
@@ -518,10 +515,9 @@ where
     /// the inner value otherwise protected from Ruby's garbage collector.
     pub const unsafe fn new_without_mark(func: fn(&Ruby) -> T) -> Self {
         Self {
-            init: Once::new(),
             mark: false,
             func,
-            value: UnsafeCell::new(QNIL.0.get()),
+            value: OnceLock::new(),
         }
     }
 
@@ -574,11 +570,7 @@ where
     /// assert!(Lazy::try_get_inner(&STATIC_STR).is_some());
     /// ```
     pub fn try_get_inner(this: &Self) -> Option<Opaque<T>> {
-        unsafe {
-            this.init
-                .is_completed()
-                .then(|| T::from_value_unchecked(*this.value.get()).into())
-        }
+        this.value.get().map(|v| Opaque::from(*v))
     }
 }
 
@@ -603,18 +595,13 @@ where
     type Value = T;
 
     fn get_inner_ref_with<'a>(&'a self, ruby: &Ruby) -> &'a Self::Value {
-        unsafe {
-            if !self.init.is_completed() {
-                let value = (self.func)(ruby);
-                self.init.call_once(|| {
-                    if self.mark {
-                        gc::register_mark_object(value);
-                    }
-                    *self.value.get() = value.as_value();
-                });
+        self.value.get_or_init(|| {
+            let value = (self.func)(ruby);
+            if self.mark {
+                gc::register_mark_object(value);
             }
-            T::ref_from_ref_value_unchecked(&*self.value.get())
-        }
+            value
+        })
     }
 }
 
@@ -3554,17 +3541,11 @@ impl PartialEq<Symbol> for OpaqueId {
 /// An [`Id`] that can be assigned to a `static` and [`Deref`]s to [`OpaqueId`].
 ///
 /// The underlying Ruby Symbol will be lazily initialised when the `LazyId` is
-/// first used. This initialisation must happen on a Ruby thread. If the first
-/// use is from a non-Ruby thread the `LazyId` will panic and then become
-/// *poisoned* and all future use of it will panic.
+/// first used. This initialisation must happen on a Ruby thread otherwise that
+/// access will panic.
 pub struct LazyId {
-    init: Once,
-    inner: UnsafeCell<LazyIdInner>,
-}
-
-union LazyIdInner {
     name: &'static str,
-    value: OpaqueId,
+    value: OnceLock<OpaqueId>,
 }
 
 impl LazyId {
@@ -3586,8 +3567,8 @@ impl LazyId {
     /// ```
     pub const fn new(name: &'static str) -> Self {
         Self {
-            init: Once::new(),
-            inner: UnsafeCell::new(LazyIdInner { name }),
+            name,
+            value: OnceLock::new(),
         }
     }
 
@@ -3596,10 +3577,6 @@ impl LazyId {
     /// This can be used in, for example, your [`init`](macro@crate::init)
     /// function to force initialisation of the `LazyId`, to ensure that use
     /// of the `LazyId` can't possibly panic.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the `LazyId` is *poisoned*. See [`LazyId`].
     ///
     /// # Examples
     ///
@@ -3624,10 +3601,6 @@ impl LazyId {
 
     /// Get a [`Id`] from a `LazyId`.
     ///
-    /// # Panics
-    ///
-    /// Panics if the `LazyId` is *poisoned*. See [`LazyId`].
-    ///
     /// # Examples
     ///
     /// ```
@@ -3644,13 +3617,9 @@ impl LazyId {
     /// ```
     #[inline]
     pub fn get_inner_with(this: &Self, handle: &Ruby) -> Id {
-        unsafe {
-            this.init.call_once(|| {
-                let inner = this.inner.get();
-                (*inner).value = handle.intern((*inner).name).into();
-            });
-            (*this.inner.get()).value.into_id_with(handle)
-        }
+        this.value
+            .get_or_init(|| handle.intern(this.name).into())
+            .into_id_with(handle)
     }
 
     /// Get an [`OpaqueId`] from a `LazyId`, if it has already been evaluated.
@@ -3658,9 +3627,6 @@ impl LazyId {
     /// This function will not call Ruby and will not initialise the inner
     /// `OpaqueId`. If the `LazyId` has not yet been initialised, returns
     /// `None`.
-    ///
-    /// This function will not panic, if the `LazyId` is *poisoned* it will
-    /// return `None`.
     ///
     /// # Examples
     ///
@@ -3681,7 +3647,7 @@ impl LazyId {
     /// # Ruby::init(example).unwrap()
     /// ```
     pub fn try_get_inner(this: &Self) -> Option<OpaqueId> {
-        unsafe { this.init.is_completed().then(|| (*this.inner.get()).value) }
+        this.value.get().copied()
     }
 }
 
@@ -3710,24 +3676,19 @@ impl Deref for LazyId {
 
     /// # Panics
     ///
-    /// Panics if the first call is from a non-Ruby thread. This `LazyId` will
-    /// then be *poisoned* and all future use of it will panic.
+    /// Panics if called from a non-Ruby thread when the `LazyId` has not yet
+    /// been initialised on a Ruby thread.
     fn deref(&self) -> &Self::Target {
-        unsafe {
-            self.init.call_once(|| {
-                let inner = self.inner.get();
-                (*inner).value = Ruby::get().unwrap().intern((*inner).name).into();
-            });
-            &(*self.inner.get()).value
-        }
+        self.value
+            .get_or_init(|| Ruby::get().unwrap().intern(self.name).into())
     }
 }
 
 impl Hash for LazyId {
     /// # Panics
     ///
-    /// Panics if the first call is from a non-Ruby thread. This `LazyId` will
-    /// then be *poisoned* and all future use of it will panic.
+    /// Panics if called from a non-Ruby thread when the `LazyId` has not yet
+    /// been initialised on a Ruby thread.
     #[inline]
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.deref().hash(state);
@@ -3737,8 +3698,8 @@ impl Hash for LazyId {
 impl PartialEq for LazyId {
     /// # Panics
     ///
-    /// Panics if the first call is from a non-Ruby thread. This `LazyId` will
-    /// then be *poisoned* and all future use of it will panic.
+    /// Panics if called from a non-Ruby thread when the `LazyId` has not yet
+    /// been initialised on a Ruby thread.
     #[inline]
     fn eq(&self, other: &Self) -> bool {
         self.deref() == other.deref()
@@ -3749,8 +3710,8 @@ impl Eq for LazyId {}
 impl PartialEq<Id> for LazyId {
     /// # Panics
     ///
-    /// Panics if the first call is from a non-Ruby thread. This `LazyId` will
-    /// then be *poisoned* and all future use of it will panic.
+    /// Panics if called from a non-Ruby thread when the `LazyId` has not yet
+    /// been initialised on a Ruby thread.
     #[inline]
     fn eq(&self, other: &Id) -> bool {
         *self.deref() == *other
@@ -3760,8 +3721,8 @@ impl PartialEq<Id> for LazyId {
 impl PartialEq<StaticSymbol> for LazyId {
     /// # Panics
     ///
-    /// Panics if the first call is from a non-Ruby thread. This `LazyId` will
-    /// then be *poisoned* and all future use of it will panic.
+    /// Panics if called from a non-Ruby thread when the `LazyId` has not yet
+    /// been initialised on a Ruby thread.
     #[inline]
     fn eq(&self, other: &StaticSymbol) -> bool {
         *self == other.into_id_with(&Ruby::get_with(*other))
@@ -3771,8 +3732,8 @@ impl PartialEq<StaticSymbol> for LazyId {
 impl PartialEq<Symbol> for LazyId {
     /// # Panics
     ///
-    /// Panics if the first call is from a non-Ruby thread. This `LazyId` will
-    /// then be *poisoned* and all future use of it will panic.
+    /// Panics if called from a non-Ruby thread when the `LazyId` has not yet
+    /// been initialised on a Ruby thread.
     #[inline]
     fn eq(&self, other: &Symbol) -> bool {
         other.as_static().map(|o| *self == o).unwrap_or(false)
