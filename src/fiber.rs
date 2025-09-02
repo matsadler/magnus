@@ -519,8 +519,10 @@ impl TryConvert for Fiber {
 }
 
 /// Options for initialising Fiber-local storage.
+#[derive(Default)]
 pub enum Storage {
     /// Inherit the storage from the current Fiber.
+    #[default]
     Inherit,
     /// Initialise a new empty storage when needed.
     #[cfg(any(ruby_gte_3_2, docsrs))]
@@ -546,12 +548,6 @@ impl Storage {
                 Self::Use(hash) => hash.as_rb_value(),
             }
         }
-    }
-}
-
-impl Default for Storage {
-    fn default() -> Self {
-        Self::Inherit
     }
 }
 

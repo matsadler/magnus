@@ -84,7 +84,7 @@ const WUNTRACED: c_int = 0x00000002;
 const WUNTRACED: c_int = 0x04;
 
 /// Argument type for [`Ruby::waitpid`].
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Default)]
 pub enum WaitTarget {
     /// Wait for the given child process
     ChildPid(u32),
@@ -92,6 +92,7 @@ pub enum WaitTarget {
     /// process.
     ProcessGroup, // 0
     /// Wait for any child process.
+    #[default]
     AnyChild, // -1
     /// Wait for any child process with the given process group.
     ChildProcessGroup(u32), // negative
@@ -108,14 +109,8 @@ impl WaitTarget {
     }
 }
 
-impl Default for WaitTarget {
-    fn default() -> Self {
-        Self::AnyChild
-    }
-}
-
 /// Argument type for [`Ruby::waitpid`].
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Default)]
 pub struct Flags(c_int);
 
 impl Flags {
@@ -137,11 +132,5 @@ impl Flags {
     /// Set the `UNTRACED` flag.
     pub const fn untraced(self) -> Self {
         Self(self.0 | WUNTRACED)
-    }
-}
-
-impl Default for Flags {
-    fn default() -> Self {
-        Self::new()
     }
 }
