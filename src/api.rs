@@ -1,7 +1,7 @@
 //! This module/file's name is a hack to get the `impl Ruby` defined here to
 //! show first in docs. This module shouldn't be exposed publicly.
 
-use std::{cell::RefCell, marker::PhantomData};
+use std::{cell::Cell, marker::PhantomData};
 
 use rb_sys::ruby_native_thread_p;
 
@@ -23,7 +23,7 @@ enum RubyGvlState {
 }
 
 thread_local! {
-    static RUBY_GVL_STATE: RefCell<Option<RubyGvlState>> = const { RefCell::new(None) };
+    static RUBY_GVL_STATE: Cell<Option<RubyGvlState>> = const { Cell::new(None) };
 }
 
 impl RubyGvlState {
@@ -35,26 +35,21 @@ impl RubyGvlState {
         } else {
             Self::NonRubyThread
         };
-        RUBY_GVL_STATE.with(|ruby_gvl_state| {
-            *ruby_gvl_state.borrow_mut() = Some(current);
-        });
+        RUBY_GVL_STATE.replace(Some(current));
         current
     }
 
     fn cached() -> Self {
-        RUBY_GVL_STATE.with(|ruby_gvl_state| {
-            let x = *ruby_gvl_state.borrow();
-            match x {
-                // assumed not to change because there's currently no api to
-                // unlock.
-                Some(Self::Locked) => Self::Locked,
-                None => Self::current(),
-                // Don't expect without an api to unlock, so skip cache
-                Some(Self::Unlocked) => Self::current(),
-                // assumed not to change
-                Some(Self::NonRubyThread) => Self::NonRubyThread,
-            }
-        })
+        match RUBY_GVL_STATE.get() {
+            // assumed not to change because there's currently no api to
+            // unlock.
+            Some(Self::Locked) => Self::Locked,
+            None => Self::current(),
+            // Don't expect without an api to unlock, so skip cache
+            Some(Self::Unlocked) => Self::current(),
+            // assumed not to change
+            Some(Self::NonRubyThread) => Self::NonRubyThread,
+        }
     }
 
     fn ok<T>(self, value: T) -> Result<T, RubyUnavailableError> {
