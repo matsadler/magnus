@@ -50,8 +50,8 @@
 //! or `Box`. This must be avoided at all costs.
 //!
 //! While it would be possible to mark any functions that could expose this
-//! unsafty as `unsafe`, that would mean that almost every interaction with
-//! Ruby would be `unsafe`. This would leave no way to differentiate the
+//! lack of safety as `unsafe`, that would mean that almost every interaction
+//! with Ruby would be `unsafe`. This would leave no way to differentiate the
 //! *really* unsafe functions that need much more care to use.
 //!
 //! # Examples

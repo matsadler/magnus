@@ -465,9 +465,9 @@ An example of something that breaks this rule would be storing a Ruby object in
 a Rust heap allocated data structure, such as `Vec`, `HashMap`, or `Box`. This
 must be avoided at all costs.
 
-While it would be possible to mark any functions that could expose this unsafty
-as `unsafe`, that would mean that almost every interaction with Ruby would
-be `unsafe`. This would leave no way to differentiate the *really* unsafe
+While it would be possible to mark any functions that could expose this lack of
+safety as `unsafe`, that would mean that almost every interaction with Ruby
+would be `unsafe`. This would leave no way to differentiate the *really* unsafe
 functions that need much more care to use.
 
 Other than this, Magnus strives to match Rust's usual safety guaranties for
@@ -481,8 +481,8 @@ use `unsafe`.
 Ruby versions 3.2, 3.3 and 3.4 are supported.
 
 Magnus currently has code to support, but is not tested against, Ruby 3.1. As
-thi version of the language is no longer supported by the Ruby developers it is
-not recommended and future support in Magnus is not guaranteed.
+this version of the language is no longer supported by the Ruby developers it
+is not recommended and future support in Magnus is not guaranteed.
 
 Ruby bindings will be generated at compile time, this may require libclang to
 be installed.
