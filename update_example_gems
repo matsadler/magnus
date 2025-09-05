@@ -1,0 +1,12 @@
+#!/bin/sh
+
+set -euxo pipefail
+
+DIR=$(cd "$(dirname "$0")" && pwd)
+
+for ext_path in $(find "$DIR/examples/" -name Cargo.toml -exec dirname {} \;); do
+  cd "$ext_path"
+  cargo update
+  cd "../../"
+  rake test
+done
