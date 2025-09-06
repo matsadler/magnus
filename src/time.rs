@@ -403,7 +403,7 @@ impl TryConvert for SystemTime {
             Ruby::get_unchecked().qnil()
         })?;
         if timespec.tv_nsec >= 0 {
-            let mut duration = Duration::from_secs(timespec.tv_sec.unsigned_abs());
+            let mut duration = Duration::from_secs(timespec.tv_sec.unsigned_abs() as _);
             duration += Duration::from_nanos(timespec.tv_nsec as _);
             if timespec.tv_sec >= 0 {
                 Ok(Self::UNIX_EPOCH + duration)
