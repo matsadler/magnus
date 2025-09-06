@@ -1790,6 +1790,7 @@ mod macros;
 mod api;
 pub mod block;
 pub mod class;
+pub mod debug;
 #[cfg(feature = "embed")]
 #[cfg_attr(docsrs, doc(cfg(feature = "embed")))]
 pub mod embed;
