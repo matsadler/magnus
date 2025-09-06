@@ -13,6 +13,10 @@
 
 ### Security
 
+## [0.8.1] - 2025-09-06
+### Fixed
+- Fixed error compiling on 32-bit platforms.
+
 ## [0.8.0] - 2025-08-25
 ### Added
 - `Ruby::time_nano_new`, `Ruby::time_timespec_new`, and `Time::timespec`.
@@ -534,6 +538,7 @@
   generated bindings otherwise.
 
 [Unreleased]: https://github.com/matsadler/magnus/compare/0.8.0...HEAD
+[0.8.1]: https://github.com/matsadler/magnus/compare/0.8.0...0.8.1
 [0.8.0]: https://github.com/matsadler/magnus/compare/0.7.1...0.8.0
 [0.7.1]: https://github.com/matsadler/magnus/compare/0.7.0...0.7.1
 [0.7.0]: https://github.com/matsadler/magnus/compare/0.6.4...0.7.0
