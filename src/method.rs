@@ -860,7 +860,7 @@ macro_rules! method {
     ($name:expr_2021, -2) => {{
         unsafe extern "C" fn anon(rb_self: $crate::Value, args: $crate::RArray) -> $crate::Value {
             use $crate::method::{MethodRbAry, RubyMethodRbAry};
-            $name.call_handle_error(rb_self, args)
+            unsafe { $name.call_handle_error(rb_self, args) }
         }
         anon as unsafe extern "C" fn($crate::Value, $crate::RArray) -> $crate::Value
     }};
@@ -871,7 +871,7 @@ macro_rules! method {
             rb_self: $crate::Value,
         ) -> $crate::Value {
             use $crate::method::{MethodCAry, RubyMethodCAry};
-            $name.call_handle_error(argc, argv, rb_self)
+            unsafe { $name.call_handle_error(argc, argv, rb_self) }
         }
         anon as unsafe extern "C" fn(
             std::ffi::c_int,
@@ -882,14 +882,14 @@ macro_rules! method {
     ($name:expr_2021, 0) => {{
         unsafe extern "C" fn anon(rb_self: $crate::Value) -> $crate::Value {
             use $crate::method::{Method0, RubyMethod0};
-            $name.call_handle_error(rb_self)
+            unsafe { $name.call_handle_error(rb_self) }
         }
         anon as unsafe extern "C" fn($crate::Value) -> $crate::Value
     }};
     ($name:expr_2021, 1) => {{
         unsafe extern "C" fn anon(rb_self: $crate::Value, a: $crate::Value) -> $crate::Value {
             use $crate::method::{Method1, RubyMethod1};
-            $name.call_handle_error(rb_self, a)
+            unsafe { $name.call_handle_error(rb_self, a) }
         }
         anon as unsafe extern "C" fn($crate::Value, $crate::Value) -> $crate::Value
     }};
@@ -900,7 +900,7 @@ macro_rules! method {
             b: $crate::Value,
         ) -> $crate::Value {
             use $crate::method::{Method2, RubyMethod2};
-            $name.call_handle_error(rb_self, a, b)
+            unsafe { $name.call_handle_error(rb_self, a, b) }
         }
         anon as unsafe extern "C" fn($crate::Value, $crate::Value, $crate::Value) -> $crate::Value
     }};
@@ -912,7 +912,7 @@ macro_rules! method {
             c: $crate::Value,
         ) -> $crate::Value {
             use $crate::method::{Method3, RubyMethod3};
-            $name.call_handle_error(rb_self, a, b, c)
+            unsafe { $name.call_handle_error(rb_self, a, b, c) }
         }
         anon as unsafe extern "C" fn(
             $crate::Value,
@@ -930,7 +930,7 @@ macro_rules! method {
             d: $crate::Value,
         ) -> $crate::Value {
             use $crate::method::{Method4, RubyMethod4};
-            $name.call_handle_error(rb_self, a, b, c, d)
+            unsafe { $name.call_handle_error(rb_self, a, b, c, d) }
         }
         anon as unsafe extern "C" fn(
             $crate::Value,
@@ -950,7 +950,7 @@ macro_rules! method {
             e: $crate::Value,
         ) -> $crate::Value {
             use $crate::method::{Method5, RubyMethod5};
-            $name.call_handle_error(rb_self, a, b, c, d, e)
+            unsafe { $name.call_handle_error(rb_self, a, b, c, d, e) }
         }
         anon as unsafe extern "C" fn(
             $crate::Value,
@@ -972,7 +972,7 @@ macro_rules! method {
             f: $crate::Value,
         ) -> $crate::Value {
             use $crate::method::{Method6, RubyMethod6};
-            $name.call_handle_error(rb_self, a, b, c, d, e, f)
+            unsafe { $name.call_handle_error(rb_self, a, b, c, d, e, f) }
         }
         anon as unsafe extern "C" fn(
             $crate::Value,
@@ -996,7 +996,7 @@ macro_rules! method {
             g: $crate::Value,
         ) -> $crate::Value {
             use $crate::method::{Method7, RubyMethod7};
-            $name.call_handle_error(rb_self, a, b, c, d, e, f, g)
+            unsafe { $name.call_handle_error(rb_self, a, b, c, d, e, f, g) }
         }
         anon as unsafe extern "C" fn(
             $crate::Value,
@@ -1022,7 +1022,7 @@ macro_rules! method {
             h: $crate::Value,
         ) -> $crate::Value {
             use $crate::method::{Method8, RubyMethod8};
-            $name.call_handle_error(rb_self, a, b, c, d, e, f, g, h)
+            unsafe { $name.call_handle_error(rb_self, a, b, c, d, e, f, g, h) }
         }
         anon as unsafe extern "C" fn(
             $crate::Value,
@@ -1050,7 +1050,7 @@ macro_rules! method {
             i: $crate::Value,
         ) -> $crate::Value {
             use $crate::method::{Method9, RubyMethod9};
-            $name.call_handle_error(rb_self, a, b, c, d, e, f, g, h, i)
+            unsafe { $name.call_handle_error(rb_self, a, b, c, d, e, f, g, h, i) }
         }
         anon as unsafe extern "C" fn(
             $crate::Value,
@@ -1080,7 +1080,7 @@ macro_rules! method {
             j: $crate::Value,
         ) -> $crate::Value {
             use $crate::method::{Method10, RubyMethod10};
-            $name.call_handle_error(rb_self, a, b, c, d, e, f, g, h, i, j)
+            unsafe { $name.call_handle_error(rb_self, a, b, c, d, e, f, g, h, i, j) }
         }
         anon as unsafe extern "C" fn(
             $crate::Value,
@@ -1112,7 +1112,7 @@ macro_rules! method {
             k: $crate::Value,
         ) -> $crate::Value {
             use $crate::method::{Method11, RubyMethod11};
-            $name.call_handle_error(rb_self, a, b, c, d, e, f, g, h, i, j, k)
+            unsafe { $name.call_handle_error(rb_self, a, b, c, d, e, f, g, h, i, j, k) }
         }
         anon as unsafe extern "C" fn(
             $crate::Value,
@@ -1146,7 +1146,7 @@ macro_rules! method {
             l: $crate::Value,
         ) -> $crate::Value {
             use $crate::method::{Method12, RubyMethod12};
-            $name.call_handle_error(rb_self, a, b, c, d, e, f, g, h, i, j, k, l)
+            unsafe { $name.call_handle_error(rb_self, a, b, c, d, e, f, g, h, i, j, k, l) }
         }
         anon as unsafe extern "C" fn(
             $crate::Value,
@@ -1182,7 +1182,7 @@ macro_rules! method {
             m: $crate::Value,
         ) -> $crate::Value {
             use $crate::method::{Method13, RubyMethod13};
-            $name.call_handle_error(rb_self, a, b, c, d, e, f, g, h, i, j, k, l, m)
+            unsafe { $name.call_handle_error(rb_self, a, b, c, d, e, f, g, h, i, j, k, l, m) }
         }
         anon as unsafe extern "C" fn(
             $crate::Value,
@@ -1220,7 +1220,7 @@ macro_rules! method {
             n: $crate::Value,
         ) -> $crate::Value {
             use $crate::method::{Method14, RubyMethod14};
-            $name.call_handle_error(rb_self, a, b, c, d, e, f, g, h, i, j, k, l, m, n)
+            unsafe { $name.call_handle_error(rb_self, a, b, c, d, e, f, g, h, i, j, k, l, m, n) }
         }
         anon as unsafe extern "C" fn(
             $crate::Value,
@@ -1260,7 +1260,7 @@ macro_rules! method {
             o: $crate::Value,
         ) -> $crate::Value {
             use $crate::method::{Method15, RubyMethod15};
-            $name.call_handle_error(rb_self, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o)
+            unsafe { $name.call_handle_error(rb_self, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o) }
         }
         anon as unsafe extern "C" fn(
             $crate::Value,
@@ -1604,7 +1604,7 @@ macro_rules! function {
     ($name:expr_2021, -2) => {{
         unsafe extern "C" fn anon(rb_self: $crate::Value, args: $crate::RArray) -> $crate::Value {
             use $crate::method::{FunctionRbAry, RubyFunctionRbAry};
-            $name.call_handle_error(args)
+            unsafe { $name.call_handle_error(args) }
         }
         anon as unsafe extern "C" fn($crate::Value, $crate::RArray) -> $crate::Value
     }};
@@ -1615,7 +1615,7 @@ macro_rules! function {
             rb_self: $crate::Value,
         ) -> $crate::Value {
             use $crate::method::{FunctionCAry, RubyFunctionCAry};
-            $name.call_handle_error(argc, argv)
+            unsafe { $name.call_handle_error(argc, argv) }
         }
         anon as unsafe extern "C" fn(
             std::ffi::c_int,
@@ -1626,14 +1626,14 @@ macro_rules! function {
     ($name:expr_2021, 0) => {{
         unsafe extern "C" fn anon(rb_self: $crate::Value) -> $crate::Value {
             use $crate::method::{Function0, RubyFunction0};
-            $name.call_handle_error()
+            unsafe { $name.call_handle_error() }
         }
         anon as unsafe extern "C" fn($crate::Value) -> $crate::Value
     }};
     ($name:expr_2021, 1) => {{
         unsafe extern "C" fn anon(rb_self: $crate::Value, a: $crate::Value) -> $crate::Value {
             use $crate::method::{Function1, RubyFunction1};
-            $name.call_handle_error(a)
+            unsafe { $name.call_handle_error(a) }
         }
         anon as unsafe extern "C" fn($crate::Value, $crate::Value) -> $crate::Value
     }};
@@ -1644,7 +1644,7 @@ macro_rules! function {
             b: $crate::Value,
         ) -> $crate::Value {
             use $crate::method::{Function2, RubyFunction2};
-            $name.call_handle_error(a, b)
+            unsafe { $name.call_handle_error(a, b) }
         }
         anon as unsafe extern "C" fn($crate::Value, $crate::Value, $crate::Value) -> $crate::Value
     }};
@@ -1656,7 +1656,7 @@ macro_rules! function {
             c: $crate::Value,
         ) -> $crate::Value {
             use $crate::method::{Function3, RubyFunction3};
-            $name.call_handle_error(a, b, c)
+            unsafe { $name.call_handle_error(a, b, c) }
         }
         anon as unsafe extern "C" fn(
             $crate::Value,
@@ -1674,7 +1674,7 @@ macro_rules! function {
             d: $crate::Value,
         ) -> $crate::Value {
             use $crate::method::{Function4, RubyFunction4};
-            $name.call_handle_error(a, b, c, d)
+            unsafe { $name.call_handle_error(a, b, c, d) }
         }
         anon as unsafe extern "C" fn(
             $crate::Value,
@@ -1694,7 +1694,7 @@ macro_rules! function {
             e: $crate::Value,
         ) -> $crate::Value {
             use $crate::method::{Function5, RubyFunction5};
-            $name.call_handle_error(a, b, c, d, e)
+            unsafe { $name.call_handle_error(a, b, c, d, e) }
         }
         anon as unsafe extern "C" fn(
             $crate::Value,
@@ -1716,7 +1716,7 @@ macro_rules! function {
             f: $crate::Value,
         ) -> $crate::Value {
             use $crate::method::{Function6, RubyFunction6};
-            $name.call_handle_error(a, b, c, d, e, f)
+            unsafe { $name.call_handle_error(a, b, c, d, e, f) }
         }
         anon as unsafe extern "C" fn(
             $crate::Value,
@@ -1740,7 +1740,7 @@ macro_rules! function {
             g: $crate::Value,
         ) -> $crate::Value {
             use $crate::method::{Function7, RubyFunction7};
-            $name.call_handle_error(a, b, c, d, e, f, g)
+            unsafe { $name.call_handle_error(a, b, c, d, e, f, g) }
         }
         anon as unsafe extern "C" fn(
             $crate::Value,
@@ -1766,7 +1766,7 @@ macro_rules! function {
             h: $crate::Value,
         ) -> $crate::Value {
             use $crate::method::{Function8, RubyFunction8};
-            $name.call_handle_error(a, b, c, d, e, f, g, h)
+            unsafe { $name.call_handle_error(a, b, c, d, e, f, g, h) }
         }
         anon as unsafe extern "C" fn(
             $crate::Value,
@@ -1794,7 +1794,7 @@ macro_rules! function {
             i: $crate::Value,
         ) -> $crate::Value {
             use $crate::method::{Function9, RubyFunction9};
-            $name.call_handle_error(a, b, c, d, e, f, g, h, i)
+            unsafe { $name.call_handle_error(a, b, c, d, e, f, g, h, i) }
         }
         anon as unsafe extern "C" fn(
             $crate::Value,
@@ -1824,7 +1824,7 @@ macro_rules! function {
             j: $crate::Value,
         ) -> $crate::Value {
             use $crate::method::{Function10, RubyFunction10};
-            $name.call_handle_error(a, b, c, d, e, f, g, h, i, j)
+            unsafe { $name.call_handle_error(a, b, c, d, e, f, g, h, i, j) }
         }
         anon as unsafe extern "C" fn(
             $crate::Value,
@@ -1856,7 +1856,7 @@ macro_rules! function {
             k: $crate::Value,
         ) -> $crate::Value {
             use $crate::method::{Function11, RubyFunction11};
-            $name.call_handle_error(a, b, c, d, e, f, g, h, i, j, k)
+            unsafe { $name.call_handle_error(a, b, c, d, e, f, g, h, i, j, k) }
         }
         anon as unsafe extern "C" fn(
             $crate::Value,
@@ -1890,7 +1890,7 @@ macro_rules! function {
             l: $crate::Value,
         ) -> $crate::Value {
             use $crate::method::{Function12, RubyFunction12};
-            $name.call_handle_error(a, b, c, d, e, f, g, h, i, j, k, l)
+            unsafe { $name.call_handle_error(a, b, c, d, e, f, g, h, i, j, k, l) }
         }
         anon as unsafe extern "C" fn(
             $crate::Value,
@@ -1926,7 +1926,7 @@ macro_rules! function {
             m: $crate::Value,
         ) -> $crate::Value {
             use $crate::method::{Function13, RubyFunction13};
-            $name.call_handle_error(a, b, c, d, e, f, g, h, i, j, k, l, m)
+            unsafe { $name.call_handle_error(a, b, c, d, e, f, g, h, i, j, k, l, m) }
         }
         anon as unsafe extern "C" fn(
             $crate::Value,
@@ -1964,7 +1964,7 @@ macro_rules! function {
             n: $crate::Value,
         ) -> $crate::Value {
             use $crate::method::{Function14, RubyFunction14};
-            $name.call_handle_error(a, b, c, d, e, f, g, h, i, j, k, l, m, n)
+            unsafe { $name.call_handle_error(a, b, c, d, e, f, g, h, i, j, k, l, m, n) }
         }
         anon as unsafe extern "C" fn(
             $crate::Value,
@@ -2004,7 +2004,7 @@ macro_rules! function {
             o: $crate::Value,
         ) -> $crate::Value {
             use $crate::method::{Function15, RubyFunction15};
-            $name.call_handle_error(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o)
+            unsafe { $name.call_handle_error(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o) }
         }
         anon as unsafe extern "C" fn(
             $crate::Value,
