@@ -1,10 +1,10 @@
-use magnus::{RArray, Ruby, Value, debug::Frame, eval, function, value::ReprValue};
+use magnus::{RArray, Ruby, Value, debug::FrameBuf, eval, function, value::ReprValue};
 
 fn test(ruby: &Ruby) -> RArray {
-    let mut frames = [Frame::EMPTY; 128];
-    let count = ruby.profile_frames(0, &mut frames, None);
+    let mut buf = FrameBuf::<1024>::new();
+    ruby.profile_frames(&mut buf);
 
-    ruby.ary_from_iter(frames[0..count].iter().map(|frame| frame.full_label()))
+    ruby.ary_from_iter(buf.iter().map(|(frame, _line)| frame.full_label()))
 }
 
 #[test]

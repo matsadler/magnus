@@ -1216,17 +1216,17 @@
 //! * `rb_proc_lambda_p`: [`Proc::is_lambda`](block::Proc::is_lambda).
 //! * `rb_proc_new`: [`Proc::new`](block::Proc::new) & [`Proc::from_fn`](block::Proc::from_fn).
 // * `rb_proc_times`:
-// * `rb_profile_frames`:
-// * `rb_profile_frame_absolute_path`:
-// * `rb_profile_frame_base_label`:
-// * `rb_profile_frame_classpath`:
-// * `rb_profile_frame_first_lineno`:
-// * `rb_profile_frame_full_label`:
-// * `rb_profile_frame_label`:
-// * `rb_profile_frame_method_name`:
-// * `rb_profile_frame_path`:
-// * `rb_profile_frame_qualified_method_name`:
-// * `rb_profile_frame_singleton_method_p`:
+//! * `rb_profile_frames`: [`Ruby::profile_frames`]/[`Ruby::profile_frames_starting`].
+//! * `rb_profile_frame_absolute_path`: [`Frame::absolute_path`](debug::Frame::absolute_path)
+//! * `rb_profile_frame_base_label`: [`Frame::base_label`](debug::Frame::base_label)
+//! * `rb_profile_frame_classpath`: [`Frame::classpath`](debug::Frame::classpath)
+//! * `rb_profile_frame_first_lineno`: [`Frame::first_lineno`](debug::Frame::first_lineno)
+//! * `rb_profile_frame_full_label`: [`Frame::full_label`](debug::Frame::full_label)
+//! * `rb_profile_frame_label`: [`Frame::label`](debug::Frame::label)
+//! * `rb_profile_frame_method_name`: [`Frame::method_name`](debug::Frame::method_name)
+//! * `rb_profile_frame_path`: [`Frame::path`](debug::Frame::path)
+//! * `rb_profile_frame_qualified_method_name`: [`Frame::qualified_method_name`](debug::Frame::qualified_method_name)
+//! * `rb_profile_frame_singleton_method_p`: [`Frame::is_singleton_method`](debug::Frame::is_singleton_method)
 //! * `rb_protect`: Called internally by Magnus when required. Available as
 //!   [`rb_sys::protect`] with `rb-sys` feature for calling raw Ruby api.
 // * `rb_provide`:

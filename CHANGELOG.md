@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 ### Added
+- `Ruby::profile_frames` to collect a lightweight backtrace for profiling.
 
 ### Changed
 - Minimum supported Rust version is now 1.85.
