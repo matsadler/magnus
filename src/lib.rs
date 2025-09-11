@@ -250,7 +250,7 @@
 //! * `rb_ary_delete_at`: [`RArray::delete_at`].
 // * `rb_ary_detransient`:
 //! * `rb_ary_dup`: Similar to [`RArray::dup`].
-//! * `rb_ary_each`: See [`RArray::each`].
+// * `rb_ary_each`:
 //! * `rb_ary_entry`: [`RArray::entry`].
 // * `rb_ary_free`:
 //! * `rb_ary_freeze`: See [`Value::freeze`].
