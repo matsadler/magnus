@@ -1,3 +1,7 @@
+//! Types and functions for working with Ruby's debugging tools.
+//!
+//! See also [`Ruby`](Ruby#debug) for more debugging related methods.
+
 use std::{ffi::c_int, ptr::null_mut};
 
 use rb_sys::{
@@ -14,6 +18,9 @@ use crate::{
     value::{ReprValue, Value},
 };
 
+/// # Debug
+///
+/// Ruby's debugging tools.
 impl Ruby {
     pub fn profile_frames<const N: usize>(&self, buf: &mut FrameBuf<N>) {
         unsafe {
@@ -30,6 +37,11 @@ impl Ruby {
     }
 }
 
+/// A backtrace frame pointer.
+///
+/// `Frame`s should be [treated as Ruby objects](crate#safety) as they are
+/// managed by Ruby GC, but are not object that can be returned to Ruby or
+/// work with Ruby's standard APIs.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct Frame(Value);
@@ -136,6 +148,9 @@ unsafe fn profile_frames_impl<const N: usize>(
     }
 }
 
+/// A buffer for storing [`Frame`]s.
+///
+/// See [`Ruby::profile_frames`].
 pub struct FrameBuf<const N: usize> {
     frames: [Frame; N],
     lines: [i32; N],

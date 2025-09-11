@@ -88,6 +88,7 @@ impl RubyGvlState {
 /// * [Core Classes](#core-classes) - access built-in classes
 /// * [Core Exceptions](#core-exceptions) - access built-in exceptions
 /// * [Core Modules](#core-modules) - access built-in modules
+/// * [Debug][#debug] - debugging tools
 /// * [Embedding](#embedding) - functions relevant when embedding Ruby in Rust
 /// * [`Encoding`](#encoding) - string encoding
 /// * [Encoding Index](#encoding-index) - string encoding
