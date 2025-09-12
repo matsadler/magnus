@@ -186,3 +186,9 @@ impl<const N: usize> FrameBuf<N> {
         self.filled == 0
     }
 }
+
+impl<const N: usize> Default for FrameBuf<N> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
