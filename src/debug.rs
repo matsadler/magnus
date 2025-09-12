@@ -158,7 +158,7 @@ pub struct FrameBuf<const N: usize> {
 }
 
 impl<const N: usize> FrameBuf<N> {
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
             frames: [Frame::EMPTY; N],
             lines: [0; N],
