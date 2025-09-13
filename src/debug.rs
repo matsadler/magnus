@@ -153,6 +153,7 @@ impl Frame {
     ///          def bar = baz"
     ///     )?;
     ///     let res: Vec<Option<String>> = ruby.class_object().funcall("foo", ())?;
+    /// #   #[cfg(ruby_gte_3_3)]
     ///     assert_eq!(
     ///         res,
     ///         &[
@@ -222,7 +223,10 @@ impl Frame {
     ///          def bar = baz"
     ///     )?;
     ///     let res: Vec<Option<String>> = ruby.class_object().funcall("foo", ())?;
-    ///     assert_eq!(res, &[None, Some(String::from("bar")), Some(String::from("foo"))]);
+    ///     assert_eq!(
+    ///         res,
+    ///         &[None, Some(String::from("bar")), Some(String::from("foo"))]
+    ///     );
     ///
     ///     Ok(())
     /// }
@@ -253,7 +257,10 @@ impl Frame {
     ///          def bar = baz"
     ///     )?;
     ///     let res: Vec<Option<String>> = ruby.class_object().funcall("foo", ())?;
-    ///     assert_eq!(res, &[None, Some(String::from("bar")), Some(String::from("foo"))]);
+    ///     assert_eq!(
+    ///         res,
+    ///         &[None, Some(String::from("bar")), Some(String::from("foo"))]
+    ///     );
     ///
     ///     Ok(())
     /// }
@@ -427,7 +434,10 @@ impl Frame {
     /// fn baz(ruby: &Ruby) -> RArray {
     ///     let mut buf = FrameBuf::<64>::new();
     ///     ruby.profile_frames(&mut buf);
-    ///     ruby.ary_from_iter(buf.iter().map(|(frame, _line)| frame.qualified_method_name()))
+    ///     ruby.ary_from_iter(
+    ///         buf.iter()
+    ///             .map(|(frame, _line)| frame.qualified_method_name()),
+    ///     )
     /// }
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
