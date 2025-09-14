@@ -135,6 +135,11 @@ pub struct Frame(Value);
 impl Frame {
     const EMPTY: Frame = Frame(Value::new(ruby_special_consts::RUBY_Qnil as VALUE));
 
+    /// Return the file path of the frame.
+    ///
+    /// The path may be a relative path. Returns `None` if there isn't a path
+    /// available, e.g. the method is implemented in C/Rust.
+    ///
     /// # Examples
     ///
     /// ```
@@ -174,6 +179,12 @@ impl Frame {
         }
     }
 
+    /// Return the expanded file path of the frame.
+    ///
+    /// Returns `"<cfunc>"` for C/Rust methods.
+    /// Returns `None` if there isn't a path available, e.g. the method was
+    /// defined via `eval`.
+    ///
     /// # Examples
     ///
     /// ```
@@ -205,6 +216,12 @@ impl Frame {
         }
     }
 
+    /// Return the label for the frame.
+    ///
+    /// This is usually the method name, but can be a string like `"<main>"`
+    /// for code running at the global toplevel. Blocks will get
+    /// `"block in method_name"`.
+    ///
     /// # Examples
     ///
     /// ```
@@ -239,6 +256,12 @@ impl Frame {
         }
     }
 
+    /// Return the unqualified label for the frame.
+    ///
+    /// This is usually the method name, but can be a string like `"<main>"`
+    /// for code running at the global toplevel. Blocks will not be qualified,
+    /// and so return just the method name.
+    ///
     /// # Examples
     ///
     /// ```
@@ -273,6 +296,12 @@ impl Frame {
         }
     }
 
+    /// Return the full label for the frame.
+    ///
+    /// This is usually the method name, but can be a string like `"<main>"`
+    /// for code running at the global toplevel. Methods will be fully
+    /// qualified with the class name.
+    ///
     /// # Examples
     ///
     /// ```
@@ -304,6 +333,8 @@ impl Frame {
         }
     }
 
+    /// Return the line number of the first line of the method for the frame.
+    ///
     /// # Examples
     ///
     /// ```
@@ -336,6 +367,8 @@ impl Frame {
         }
     }
 
+    /// Return the class path of the method for the frame.
+    ///
     /// # Examples
     ///
     /// ```
@@ -367,6 +400,8 @@ impl Frame {
         }
     }
 
+    /// Return if the method for the frame is a singleton method.
+    ///
     /// # Examples
     ///
     /// ```
@@ -395,6 +430,8 @@ impl Frame {
         unsafe { Value::new(rb_profile_frame_singleton_method_p(self.0.as_rb_value())).to_bool() }
     }
 
+    /// Return the name of the method for the frame.
+    ///
     /// # Examples
     ///
     /// ```
@@ -426,6 +463,10 @@ impl Frame {
         }
     }
 
+    /// Return the fully qualified name of the method for the frame.
+    ///
+    /// The method name will be qualified with the class.
+    ///
     /// # Examples
     ///
     /// ```
@@ -501,6 +542,18 @@ pub struct FrameBuf<const N: usize> {
 }
 
 impl<const N: usize> FrameBuf<N> {
+    /// Create a new `FrameBuf<N>`
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use std::cell::RefCell;
+    /// use magnus::debug::FrameBuf;
+    ///
+    /// thread_local! {
+    ///     static FRAMES: RefCell<FrameBuf<1024>> = const { RefCell::new(FrameBuf::new()) };
+    /// }
+    /// ```
     pub const fn new() -> Self {
         Self {
             frames: [Frame::EMPTY; N],
@@ -509,6 +562,7 @@ impl<const N: usize> FrameBuf<N> {
         }
     }
 
+    /// Return an [`Iterator`] over `self`.
     pub fn iter(&self) -> impl Iterator<Item = (Frame, usize)> {
         self.frames
             .iter()
@@ -517,14 +571,19 @@ impl<const N: usize> FrameBuf<N> {
             .zip(self.lines.iter().map(|v| *v as usize))
     }
 
+    /// Return the number of frames in the buffer.
     pub fn len(&self) -> usize {
         self.filled
     }
 
+    /// Clear the buffer.
+    ///
+    /// Note this method does no change the allocated capacity of the buffer.
     pub fn clear(&mut self) {
         self.filled = 0;
     }
 
+    /// Return `true` if the buffer contains no frames.
     pub fn is_empty(&self) -> bool {
         self.filled == 0
     }
