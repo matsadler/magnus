@@ -113,11 +113,11 @@ pub fn init(attrs: TokenStream, item: TokenStream) -> TokenStream {
 /// Allows a Rust type to be passed to Ruby, where it is automatically wrapped
 /// as a Ruby object.
 ///
-/// For more control over the wrapping behavior, see [`TypedData`].
+/// For more control over the wrapping behaviour, see [`TypedData`].
 ///
 /// # Attributes
 ///
-/// The `#[wrap]` macro supports several attributes to configure its behavior:
+/// The `#[wrap]` macro supports several attributes to configure its behaviour:
 ///
 /// * `class = "..."` (required):  
 ///   Specifies the Ruby class associated with the Rust type. Supports module
@@ -131,7 +131,7 @@ pub fn init(attrs: TokenStream, item: TokenStream) -> TokenStream {
 ///   Indicates that the Rust type should be dropped as soon as the Ruby object
 ///   is garbage collected. This is only safe if the type's [`Drop`]
 ///   implementation does not call Ruby, as calling Ruby during the garbage
-///   collection process is unsafe and can lead to undefined behavior.
+///   collection process is unsafe and can lead to undefined behaviour.
 ///
 /// * `size`:  
 ///   Reports the [`std::mem::size_of_val`] of the type to Ruby, helping Ruby's
@@ -145,7 +145,7 @@ pub fn init(attrs: TokenStream, item: TokenStream) -> TokenStream {
 /// # Variant Attributes
 ///
 /// When wrapping enums, the `#[magnus(...)]` attribute can also be applied to
-/// individual variants to define specific behavior for them:
+/// individual variants to define specific behaviour for them:
 ///
 /// * `class = "..."`:  
 ///   Specifies the Ruby class associated with a particular variant. This is
@@ -339,7 +339,7 @@ pub fn derive_data_type_functions(input: TokenStream) -> TokenStream {
 /// # Attributes
 ///
 /// The `#[magnus(...)]` attribute supports the following values to configure
-/// its behavior:
+/// its behaviour:
 ///
 /// * `class = "..."` (required):  
 ///   Specifies the Ruby class associated with the Rust type. Supports module

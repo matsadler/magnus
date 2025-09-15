@@ -46,7 +46,7 @@ impl OpenFlags {
 
 /// Ruby IO mode flags (`FMODE_*`), used to describe how a file or stream is opened.
 ///
-/// These are internal Ruby VM flags describing the open mode and encoding behavior
+/// These are internal Ruby VM flags describing the open mode and encoding behaviour
 /// of an IO stream.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct FMode(u32);
@@ -110,7 +110,7 @@ impl FMode {
 /// options (e.g., `:external_encoding`, `:internal_encoding`, or `:encoding`) using the
 /// internal Ruby C API `rb_io_extract_modeenc`.
 ///
-/// The data here includes both Ruby-side encodings and flags that affect transcoding behavior,
+/// The data here includes both Ruby-side encodings and flags that affect transcoding behaviour,
 /// such as BOM handling or newline modes. The optional `options` hash contains additional
 /// transcoding options as a Ruby `Hash`.
 ///
@@ -136,7 +136,7 @@ impl FMode {
 /// This struct should **not be stored beyond the stack frame** in which it was created.
 /// The Ruby VM may deallocate or reuse internal objects such as the `options` hash,
 /// which is **not automatically GC-pinned**. Copying this structure beyond a single
-/// call boundary can lead to undefined behavior or use-after-free.
+/// call boundary can lead to undefined behaviour or use-after-free.
 ///
 /// Always extract the fields you need and clone or persist Ruby values separately if necessary.
 pub struct IoEncoding {
@@ -144,7 +144,7 @@ pub struct IoEncoding {
     pub external: Option<Encoding>,
     /// The internal encoding used for transcoding, if any.
     pub internal: Option<Encoding>,
-    /// Encoding flags describing transcoding behavior (e.g., whether to
+    /// Encoding flags describing transcoding behaviour (e.g., whether to
     /// use BOM detection, or newline modes).
     pub flags: i32,
     /// A Ruby hash of encoding options passed in by the user, if present.
