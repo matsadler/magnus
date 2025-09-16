@@ -10,6 +10,8 @@ use rb_sys::{
     rb_thread_wakeup, rb_thread_wakeup_alive, timeval,
 };
 
+#[cfg(ruby_gte_3_3)]
+use crate::debug::{FrameBuf, profile_thread_frames_impl};
 use crate::{
     api::Ruby,
     error::{Error, protect},
@@ -607,6 +609,113 @@ impl Thread {
     /// be used to detect spurious wakeups.
     pub fn interrupted(self) -> bool {
         unsafe { rb_thread_interrupted(self.as_rb_value()) != 0 }
+    }
+
+    /// Fill `buf` with backtrace [`Frame`](crate::debug::Frame)s.
+    ///
+    /// See also [`Ruby::profile_frames`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use std::cell::RefCell;
+    ///
+    /// use magnus::{Error, Ruby, Value, debug::FrameBuf, eval, function, prelude::*};
+    ///
+    /// thread_local! {
+    ///     static FRAMES: RefCell<FrameBuf<1024>> = const { RefCell::new(FrameBuf::new()) };
+    /// }
+    ///
+    /// fn profile(ruby: &Ruby) {
+    ///     FRAMES.with_borrow_mut(|buf| {
+    ///         ruby.thread_current().profile_frames(buf);
+    ///     });
+    /// }
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     ruby.define_global_function("profile", function!(profile, 0));
+    ///
+    ///     let _: Value = eval!(
+    ///         "def foo = bar
+    ///          def bar = baz
+    ///          def baz = profile"
+    ///     )?;
+    ///     let _: Value = ruby.class_object().funcall("foo", ())?;
+    ///
+    ///     let unknown = ruby.str_new("<unknown>");
+    ///     let frames = FRAMES.with_borrow(|val| {
+    ///         val.iter()
+    ///             .map(|(frame, _line)| frame.full_label().unwrap_or(unknown).to_string())
+    ///             .collect::<Result<Vec<String>, Error>>()
+    ///     })?;
+    ///     assert_eq!(
+    ///         frames,
+    ///         &["Kernel#profile", "Object#baz", "Object#bar", "Object#foo"]
+    ///     );
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
+    #[cfg(any(ruby_gte_3_3, docsrs))]
+    #[cfg_attr(docsrs, doc(cfg(ruby_gte_3_3)))]
+    pub fn profile_frames<const N: usize>(self, buf: &mut FrameBuf<N>) {
+        unsafe {
+            buf.filled = profile_thread_frames_impl(self, 0, &mut buf.frames, Some(&mut buf.lines));
+        }
+    }
+
+    /// Fill `buf` with backtrace [`Frame`](crate::debug::Frame)s, skipping the
+    /// topmost `start` frames.
+    ///
+    /// See also [`Ruby::profile_frames_starting`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use std::cell::RefCell;
+    ///
+    /// use magnus::{Error, Ruby, Value, debug::FrameBuf, eval, function, prelude::*};
+    ///
+    /// thread_local! {
+    ///     static FRAMES: RefCell<FrameBuf<1024>> = const { RefCell::new(FrameBuf::new()) };
+    /// }
+    ///
+    /// fn profile(ruby: &Ruby) {
+    ///     FRAMES.with_borrow_mut(|buf| {
+    ///         ruby.thread_current().profile_frames_starting(1, buf);
+    ///     });
+    /// }
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     ruby.define_global_function("profile", function!(profile, 0));
+    ///
+    ///     let _: Value = eval!(
+    ///         "def foo = bar
+    ///          def bar = baz
+    ///          def baz = profile"
+    ///     )?;
+    ///     let _: Value = ruby.class_object().funcall("foo", ())?;
+    ///
+    ///     let unknown = ruby.str_new("<unknown>");
+    ///     let frames = FRAMES.with_borrow(|val| {
+    ///         val.iter()
+    ///             .map(|(frame, _line)| frame.full_label().unwrap_or(unknown).to_string())
+    ///             .collect::<Result<Vec<String>, Error>>()
+    ///     })?;
+    ///     assert_eq!(frames, &["Object#baz", "Object#bar", "Object#foo"]);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
+    #[cfg(any(ruby_gte_3_4, docsrs))]
+    #[cfg_attr(docsrs, doc(cfg(ruby_gte_3_4)))]
+    pub fn profile_frames_starting<const N: usize>(self, start: usize, buf: &mut FrameBuf<N>) {
+        unsafe {
+            buf.filled =
+                profile_thread_frames_impl(self, start, &mut buf.frames, Some(&mut buf.lines));
+        }
     }
 }
 

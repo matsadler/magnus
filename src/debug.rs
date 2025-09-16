@@ -4,6 +4,8 @@
 
 use std::{ffi::c_int, ptr::null_mut};
 
+#[cfg(ruby_gte_3_3)]
+use rb_sys::rb_profile_thread_frames;
 use rb_sys::{
     VALUE, rb_profile_frame_absolute_path, rb_profile_frame_base_label, rb_profile_frame_classpath,
     rb_profile_frame_first_lineno, rb_profile_frame_full_label, rb_profile_frame_label,
@@ -15,7 +17,8 @@ use crate::{
     Ruby, gc,
     integer::Integer,
     r_string::RString,
-    value::{ReprValue, Value},
+    thread::Thread,
+    value::{ReprValue, Value, private::ReprValue as _},
 };
 
 /// # Debug
@@ -23,6 +26,8 @@ use crate::{
 /// Ruby's debugging tools.
 impl Ruby {
     /// Fill `buf` with backtrace [`Frame`]s.
+    ///
+    /// See also [`Thread::profile_frames`].
     ///
     /// # Examples
     ///
@@ -74,6 +79,8 @@ impl Ruby {
 
     /// Fill `buf` with backtrace [`Frame`]s, skipping the topmost `start`
     /// frames.
+    ///
+    /// See also [`Thread::profile_frames_starting`].
     ///
     /// # Examples
     ///
@@ -532,13 +539,31 @@ unsafe fn profile_frames_impl<const N: usize>(
     }
 }
 
+#[cfg(ruby_gte_3_3)]
+pub(crate) unsafe fn profile_thread_frames_impl<const N: usize>(
+    thread: Thread,
+    start: usize,
+    frames: &mut [Frame; N],
+    lines: Option<&mut [i32; N]>,
+) -> usize {
+    unsafe {
+        rb_profile_thread_frames(
+            thread.as_rb_value(),
+            start as c_int,
+            N as c_int,
+            frames as *mut _ as *mut VALUE,
+            lines.map(|v| v as *mut c_int).unwrap_or(null_mut()),
+        ) as usize
+    }
+}
+
 /// A buffer for storing [`Frame`]s.
 ///
 /// See [`Ruby::profile_frames`].
 pub struct FrameBuf<const N: usize> {
-    frames: [Frame; N],
-    lines: [i32; N],
-    filled: usize,
+    pub(crate) frames: [Frame; N],
+    pub(crate) lines: [i32; N],
+    pub(crate) filled: usize,
 }
 
 impl<const N: usize> FrameBuf<N> {

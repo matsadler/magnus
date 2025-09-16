@@ -1227,6 +1227,7 @@
 //! * `rb_profile_frame_path`: [`Frame::path`](debug::Frame::path)
 //! * `rb_profile_frame_qualified_method_name`: [`Frame::qualified_method_name`](debug::Frame::qualified_method_name)
 //! * `rb_profile_frame_singleton_method_p`: [`Frame::is_singleton_method`](debug::Frame::is_singleton_method)
+//! * `rb_profile_thread_frames`: [`Thread::profile_frames`]/[`Thread::profile_frames_starting`].
 //! * `rb_protect`: Called internally by Magnus when required. Available as
 //!   [`rb_sys::protect`] with `rb-sys` feature for calling raw Ruby api.
 // * `rb_provide`:
