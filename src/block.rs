@@ -985,13 +985,12 @@ where
 // can still be `brake`/`return`ed though it can't be public as it's only safe
 // to call as the last thing in one of our method wrappers (where the raise
 // would normally go). Returning an iterator from a method will trigger this.
-pub(crate) unsafe fn do_yield_iter<I, T>(mut iter: I)
+pub(crate) unsafe fn do_yield_iter<I, T>(ruby: &Ruby, mut iter: I)
 where
     I: Iterator<Item = T>,
     T: IntoValue,
 {
     unsafe {
-        let handle = Ruby::get_unchecked();
         let ptr = &mut iter as *mut I;
         forget(iter); // we're going to drop this ourself;
         // ensure runs the first closure, but yield may raise, so the first
@@ -1001,9 +1000,9 @@ where
         ensure(
             || {
                 for val in &mut *ptr {
-                    rb_yield(handle.into_value(val).as_rb_value());
+                    rb_yield(ruby.into_value(val).as_rb_value());
                 }
-                handle.qnil()
+                ruby.qnil()
             },
             || {
                 ptr.drop_in_place();
@@ -1013,20 +1012,19 @@ where
 }
 
 // see do_yield_iter
-pub(crate) unsafe fn do_yield_values_iter<I, T>(mut iter: I)
+pub(crate) unsafe fn do_yield_values_iter<I, T>(ruby: &Ruby, mut iter: I)
 where
     I: Iterator<Item = T>,
     T: ArgList,
 {
     unsafe {
-        let handle = Ruby::get_unchecked();
         let ptr = &mut iter as *mut I;
         forget(iter);
         ensure(
             || {
                 for val in &mut *ptr {
                     let kw_splat = kw_splat(&val);
-                    let vals = val.into_arg_list_with(&handle);
+                    let vals = val.into_arg_list_with(ruby);
                     let slice = vals.as_ref();
                     rb_yield_values_kw(
                         slice.len() as c_int,
@@ -1034,7 +1032,7 @@ where
                         kw_splat as c_int,
                     );
                 }
-                handle.qnil()
+                ruby.qnil()
             },
             || {
                 ptr.drop_in_place();
@@ -1044,7 +1042,7 @@ where
 }
 
 // see do_yield_iter
-pub(crate) unsafe fn do_yield_splat_iter<I>(mut iter: I)
+pub(crate) unsafe fn do_yield_splat_iter<I>(ruby: &Ruby, mut iter: I)
 where
     I: Iterator<Item = RArray>,
 {
@@ -1056,7 +1054,7 @@ where
                 for val in &mut *ptr {
                     rb_yield_splat(val.as_rb_value());
                 }
-                Ruby::get_unchecked().qnil()
+                ruby.qnil()
             },
             || {
                 ptr.drop_in_place();

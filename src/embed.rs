@@ -132,13 +132,13 @@ pub unsafe fn setup() -> Cleanup {
 pub unsafe fn init() -> Cleanup {
     unsafe {
         let cleanup = setup();
-        init_options(&["-e", ""]);
+        init_options(&cleanup.0, &["-e", ""]);
         cleanup
     }
 }
 
 #[inline(always)]
-unsafe fn init_options(opts: &[&str]) {
+unsafe fn init_options(ruby: &Ruby, opts: &[&str]) {
     unsafe {
         let mut argv = vec![CString::new("ruby").unwrap()];
         argv.extend(opts.iter().map(|s| CString::new(*s).unwrap()));
@@ -149,7 +149,7 @@ unsafe fn init_options(opts: &[&str]) {
         let mut node = 0 as _;
         protect(|| {
             node = ruby_process_options(argv.len() as i32, argv.as_mut_ptr());
-            Ruby::get_unchecked().qnil()
+            ruby.qnil()
         })
         .unwrap();
         if ruby_exec_node(node) != 0 {

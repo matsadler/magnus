@@ -256,11 +256,11 @@ impl Error {
     ///
     /// Panics if called on an `Error::Jump`.
     fn exception(self) -> Exception {
-        let handle = unsafe { Ruby::get_unchecked() };
         match self.0 {
             ErrorType::Jump(_) => panic!("Error::exception() called on {}", self),
             ErrorType::Error(class, msg) => {
-                match class.new_instance((handle.str_new(msg.as_ref()),)) {
+                let ruby = Ruby::get_with(class);
+                match class.new_instance((ruby.str_new(msg.as_ref()),)) {
                     Ok(e) | Err(Error(ErrorType::Exception(e))) => e,
                     Err(err) => unreachable!("*very* unexpected error: {}", err),
                 }
@@ -550,8 +550,7 @@ pub(crate) fn raise(e: Error) -> ! {
     match e.0 {
         ErrorType::Jump(tag) => tag.resume(),
         ErrorType::Error(class, _)
-            if class.as_rb_value()
-                == unsafe { Ruby::get_unchecked().exception_fatal().as_rb_value() } =>
+            if class.as_rb_value() == Ruby::get_with(class).exception_fatal().as_rb_value() =>
         {
             unsafe { rb_exc_fatal(e.exception().as_rb_value()) }
             // friendly reminder: we really never get here, and as such won't

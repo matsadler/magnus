@@ -109,7 +109,7 @@ mod private {
             let ruby = unsafe { Ruby::get_unchecked() };
             self.map(|i| match i {
                 Yield::Iter(iter) => unsafe {
-                    do_yield_iter(iter);
+                    do_yield_iter(&ruby, iter);
                     ruby.qnil().as_value()
                 },
                 Yield::Enumerator(e) => e.into_value_with(&ruby),
@@ -138,7 +138,7 @@ mod private {
             let ruby = unsafe { Ruby::get_unchecked() };
             self.map(|i| match i {
                 YieldValues::Iter(iter) => unsafe {
-                    do_yield_values_iter(iter);
+                    do_yield_values_iter(&ruby, iter);
                     ruby.qnil().as_value()
                 },
                 YieldValues::Enumerator(e) => e.into_value_with(&ruby),
@@ -166,7 +166,7 @@ mod private {
             let ruby = unsafe { Ruby::get_unchecked() };
             self.map(|i| match i {
                 YieldSplat::Iter(iter) => unsafe {
-                    do_yield_splat_iter(iter);
+                    do_yield_splat_iter(&ruby, iter);
                     ruby.qnil().as_value()
                 },
                 YieldSplat::Enumerator(e) => e.into_value_with(&ruby),

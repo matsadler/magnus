@@ -108,7 +108,7 @@ impl Ruby {
             protect(|| {
                 #[cfg(ruby_gte_3_2)]
                 let value =
-                    rb_fiber_new_storage(Some(call_func), func as VALUE, storage.as_rb_value());
+                    rb_fiber_new_storage(Some(call_func), func as VALUE, storage.as_rb_value(self));
                 #[cfg(ruby_lt_3_2)]
                 let value = rb_fiber_new(Some(call_func), func as VALUE);
                 Fiber::from_rb_value_unchecked(value)
@@ -183,7 +183,7 @@ impl Ruby {
                 Fiber::from_rb_value_unchecked(rb_fiber_new_storage(
                     Some(call_func),
                     closure as VALUE,
-                    storage.as_rb_value(),
+                    storage.as_rb_value(self),
                 ))
             };
             #[cfg(ruby_lt_3_2)]
@@ -536,10 +536,8 @@ pub enum Storage {
 
 #[cfg(ruby_gte_3_2)]
 impl Storage {
-    unsafe fn as_rb_value(&self) -> VALUE {
+    unsafe fn as_rb_value(&self, ruby: &Ruby) -> VALUE {
         unsafe {
-            #[cfg(ruby_gte_3_2)]
-            let ruby = Ruby::get_unchecked();
             match self {
                 Self::Inherit => QUNDEF.as_value().as_rb_value(),
                 #[cfg(ruby_gte_3_2)]

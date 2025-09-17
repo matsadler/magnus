@@ -509,8 +509,8 @@ pub trait Class: Module {
         static mut RB_CLASS_ALLOCATE_INSTANCE: rb_alloc_func_t = None;
         let rb_class_allocate_instance = unsafe {
             INIT.call_once(|| {
-                RB_CLASS_ALLOCATE_INSTANCE =
-                    rb_get_alloc_func(Ruby::get_unchecked().class_object().as_rb_value());
+                let ruby = Ruby::get_with(self);
+                RB_CLASS_ALLOCATE_INSTANCE = rb_get_alloc_func(ruby.class_object().as_rb_value());
             });
             RB_CLASS_ALLOCATE_INSTANCE
         };
