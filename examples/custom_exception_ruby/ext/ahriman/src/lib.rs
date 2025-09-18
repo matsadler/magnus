@@ -1,7 +1,4 @@
-use magnus::{
-    exception::ExceptionClass, function, gc::register_mark_object, prelude::*, value::Lazy, Error,
-    RModule, Ruby,
-};
+use magnus::{Error, RModule, Ruby, exception::ExceptionClass, function, prelude::*, value::Lazy};
 
 static RUBRIC_ERROR: Lazy<ExceptionClass> = Lazy::new(|ruby| {
     let ex = ruby
@@ -12,7 +9,7 @@ static RUBRIC_ERROR: Lazy<ExceptionClass> = Lazy::new(|ruby| {
         .unwrap();
     // ensure `ex` is never garbage collected (e.g. if constant is
     // redefined) and also not moved under compacting GC.
-    register_mark_object(ex);
+    ruby.gc_register_mark_object(ex);
     ex
 });
 

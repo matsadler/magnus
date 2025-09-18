@@ -185,7 +185,7 @@ where
     #[doc(hidden)]
     unsafe extern "C" fn extern_mark(ptr: *mut c_void) {
         unsafe {
-            let marker = gc::Marker::new();
+            let marker = gc::Marker::new(Ruby::get_unchecked());
             if let Err(e) = catch_unwind(|| Self::mark(&*(ptr as *mut Self), &marker)) {
                 bug_from_panic(e, "panic in DataTypeFunctions::mark")
             }
@@ -219,7 +219,7 @@ where
     #[doc(hidden)]
     unsafe extern "C" fn extern_compact(ptr: *mut c_void) {
         unsafe {
-            let compactor = gc::Compactor::new();
+            let compactor = gc::Compactor::new(Ruby::get_unchecked());
             if let Err(e) = catch_unwind(|| Self::compact(&*(ptr as *mut Self), &compactor)) {
                 bug_from_panic(e, "panic in DataTypeFunctions::compact")
             }
@@ -1017,7 +1017,7 @@ pub trait Writebarrier: ReprValue {
     where
         T: Mark,
     {
-        unsafe { rb_gc_writebarrier(self.as_rb_value(), young.raw()) };
+        unsafe { rb_gc_writebarrier(self.as_rb_value(), young.raw_with(&Ruby::get_with(*self))) };
     }
 
     /// Opts `self` out of generational GC / write barrier protection.

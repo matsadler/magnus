@@ -1937,7 +1937,7 @@ where
 }
 
 impl<T> gc::private::Mark for TypedArray<T> {
-    fn raw(self) -> VALUE {
+    fn raw_with(self, _ruby: &Ruby) -> VALUE {
         self.0.get().as_rb_value()
     }
 }

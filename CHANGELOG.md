@@ -18,6 +18,9 @@
   `DataTypeBuilder::<Example>::new(c\"example\")` instead.
 - The `r_string!` macro. Please use `Ruby::utf8_str_new_static(c\"example\")`
   instead.
+- `gc::register_mark_object`. Pleas use `Ruby::gc_register_mark_object` instead.
+- `gc::register_address`. Pleas use `Ruby::gc_register_address` instead.
+- `gc::unregister_address`. Pleas use `Ruby::gc_unregister_address` instead.
 
 ### Removed
 - `RArray::each`, use `ary.into_iter()` or `ary.enumeratorize(\"each\", ())`

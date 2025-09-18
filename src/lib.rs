@@ -826,12 +826,12 @@
 //! * `rb_gc_mark_locations`: [`gc::Marker::mark_slice`].
 // * `rb_gc_mark_maybe`:
 //! * `rb_gc_mark_movable`: [`gc::Marker::mark_movable`].
-//! * `rb_gc_register_address`: [`gc::register_address`] or
+//! * `rb_gc_register_address`: [`Ruby::gc_register_address`] or
 //!   [`BoxValue`](value::BoxValue).
-//! * `rb_gc_register_mark_object`: [`gc::register_mark_object`].
+//! * `rb_gc_register_mark_object`: [`Ruby::gc_register_mark_object`].
 //! * `rb_gc_start`: [`Ruby::gc_start`].
 //! * `rb_gc_stat`: [`Ruby::gc_stat`] or [`Ruby::gc_all_stats`].
-//! * `rb_gc_unregister_address`: [`gc::unregister_address`].
+//! * `rb_gc_unregister_address`: [`Ruby::gc_unregister_address`].
 // * `rb_gc_update_tbl_refs`:
 //! * `rb_gc_writebarrier`: [`typed_data::Writebarrier::writebarrier`].
 //! * `rb_gc_writebarrier_unprotect`: [`typed_data::Writebarrier::writebarrier_unprotect`].

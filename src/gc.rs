@@ -2,7 +2,7 @@
 //!
 //! See also [`Ruby`](Ruby#gc) for more GC related methods.
 
-use std::{marker::PhantomData, ops::Range};
+use std::ops::Range;
 
 use rb_sys::{
     VALUE, rb_gc_adjust_memory_usage, rb_gc_count, rb_gc_disable, rb_gc_enable, rb_gc_location,
@@ -22,13 +22,13 @@ pub(crate) mod private {
     use super::*;
 
     pub trait Mark {
-        fn raw(self) -> VALUE;
+        fn raw_with(self, ruby: &Ruby) -> VALUE;
     }
 
     pub trait Locate {
-        fn raw(self) -> VALUE;
+        fn raw_with(self, ruby: &Ruby) -> VALUE;
 
-        fn from_raw(val: VALUE) -> Self;
+        fn from_raw_with(val: VALUE, ruby: &Ruby) -> Self;
     }
 }
 
@@ -41,7 +41,7 @@ impl<T> private::Mark for T
 where
     T: ReprValue,
 {
-    fn raw(self) -> VALUE {
+    fn raw_with(self, _ruby: &Ruby) -> VALUE {
         self.as_rb_value()
     }
 }
@@ -51,10 +51,8 @@ impl<T> private::Mark for crate::value::Opaque<T>
 where
     T: ReprValue,
 {
-    fn raw(self) -> VALUE {
-        unsafe { Ruby::get_unchecked() }
-            .get_inner(self)
-            .as_rb_value()
+    fn raw_with(self, ruby: &Ruby) -> VALUE {
+        ruby.get_inner(self).as_rb_value()
     }
 }
 impl<T> Mark for crate::value::Opaque<T> where T: ReprValue {}
@@ -63,11 +61,11 @@ impl<T> Mark for crate::value::Opaque<T> where T: ReprValue {}
 ///
 /// See also
 /// [`DataTypeFunctions::mark`](`crate::typed_data::DataTypeFunctions::mark`).
-pub struct Marker(PhantomData<*mut ()>);
+pub struct Marker(Ruby);
 
 impl Marker {
-    pub(crate) fn new() -> Self {
-        Self(PhantomData)
+    pub(crate) fn new(ruby: Ruby) -> Self {
+        Self(ruby)
     }
 
     /// Mark an Object.
@@ -78,7 +76,7 @@ impl Marker {
     where
         T: Mark,
     {
-        unsafe { rb_gc_mark(value.raw()) };
+        unsafe { rb_gc_mark(value.raw_with(&self.0)) };
     }
 
     /// Mark multiple Objects.
@@ -112,7 +110,7 @@ impl Marker {
     where
         T: Mark,
     {
-        unsafe { rb_gc_mark_movable(value.raw()) };
+        unsafe { rb_gc_mark_movable(value.raw_with(&self.0)) };
     }
 }
 
@@ -123,11 +121,11 @@ impl<T> private::Locate for T
 where
     T: ReprValue,
 {
-    fn raw(self) -> VALUE {
+    fn raw_with(self, _ruby: &Ruby) -> VALUE {
         self.as_rb_value()
     }
 
-    fn from_raw(val: VALUE) -> Self {
+    fn from_raw_with(val: VALUE, _ruby: &Ruby) -> Self {
         unsafe { Self::from_value_unchecked(Value::new(val)) }
     }
 }
@@ -137,13 +135,11 @@ impl<T> private::Locate for crate::value::Opaque<T>
 where
     T: ReprValue,
 {
-    fn raw(self) -> VALUE {
-        unsafe { Ruby::get_unchecked() }
-            .get_inner(self)
-            .as_rb_value()
+    fn raw_with(self, ruby: &Ruby) -> VALUE {
+        ruby.get_inner(self).as_rb_value()
     }
 
-    fn from_raw(val: VALUE) -> Self {
+    fn from_raw_with(val: VALUE, _ruby: &Ruby) -> Self {
         unsafe { T::from_value_unchecked(Value::new(val)) }.into()
     }
 }
@@ -153,16 +149,16 @@ impl<T> Locate for crate::value::Opaque<T> where T: ReprValue {}
 ///
 /// See also
 /// [`DataTypeFunctions::compact`](`crate::typed_data::DataTypeFunctions::compact`).
-pub struct Compactor(PhantomData<*mut ()>);
+pub struct Compactor(Ruby);
 
 impl Compactor {
-    pub(crate) fn new() -> Self {
-        Self(PhantomData)
+    pub(crate) fn new(ruby: Ruby) -> Self {
+        Self(ruby)
     }
 
     /// Get the new location of an object.
     ///
-    /// The [`Value`] type is effectly a pointer to a Ruby object. Ruby's
+    /// The [`Value`] type is effectively a pointer to a Ruby object. Ruby's
     /// garbage collector will avoid moving objects exposed to extensions,
     /// unless the object has been marked with
     /// [`mark_movable`](Marker::mark_movable). When implementing
@@ -175,13 +171,18 @@ impl Compactor {
     where
         T: Locate,
     {
-        unsafe { T::from_raw(rb_gc_location(value.raw())) }
+        unsafe { T::from_raw_with(rb_gc_location(value.raw_with(&self.0)), &self.0) }
     }
 }
 
 /// Registers `value` to never be garbage collected.
 ///
 /// This is essentially a deliberate memory leak.
+///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread. See
+/// [`Ruby::gc_register_mark_object`] for the non-panicking version.
 ///
 /// # Examples
 ///
@@ -191,6 +192,7 @@ impl Compactor {
 /// fn example(ruby: &Ruby) -> Result<(), Error> {
 ///     // will never be collected
 ///     let root = ruby.ary_new();
+/// #   #[allow(deprecated)]
 ///     gc::register_mark_object(root);
 ///
 ///     // won't be collected while it is in our `root` array
@@ -201,11 +203,12 @@ impl Compactor {
 /// }
 /// # Ruby::init(example).unwrap()
 /// ```
+#[deprecated(note = "please use `Ruby::gc_register_mark_object` instead")]
 pub fn register_mark_object<T>(value: T)
 where
     T: Mark,
 {
-    unsafe { rb_gc_register_mark_object(value.raw()) }
+    get_ruby!().gc_register_mark_object(value)
 }
 
 /// Inform Ruby's garbage collector that `valref` points to a live Ruby object.
@@ -216,6 +219,11 @@ where
 ///
 /// See also [`BoxValue`](crate::value::BoxValue).
 ///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread. See [`Ruby::gc_register_address`]
+/// for the non-panicking version.
+///
 /// # Examples
 ///
 /// ```
@@ -226,11 +234,13 @@ where
 ///
 ///     // s won't be collected even though it's on the heap
 ///     let boxed = Box::new(s);
+/// #   #[allow(deprecated)]
 ///     gc::register_address(&*boxed);
 ///
 ///     // ...
 ///
 ///     // allow s to be collected
+/// #   #[allow(deprecated)]
 ///     gc::unregister_address(&*boxed);
 ///     drop(boxed);
 ///
@@ -238,17 +248,23 @@ where
 /// }
 /// # Ruby::init(example).unwrap()
 /// ```
+#[deprecated(note = "please use `Ruby::gc_register_address` instead")]
 pub fn register_address<T>(valref: &T)
 where
     T: Mark,
 {
-    unsafe { rb_gc_register_address(valref as *const _ as *mut VALUE) }
+    get_ruby!().gc_register_address(valref)
 }
 
 /// Inform Ruby's garbage collector that `valref` that was previously
 /// registered with [`register_address`] no longer points to a live Ruby
 /// object.
 ///
+/// # Panics
+///
+/// Panics if called from a non-Ruby thread. See
+/// [`Ruby::gc_unregister_address`] for the non-panicking version.
+///
 /// # Examples
 ///
 /// ```
@@ -259,11 +275,13 @@ where
 ///
 ///     // s won't be collected even though it's on the heap
 ///     let boxed = Box::new(s);
+/// #   #[allow(deprecated)]
 ///     gc::register_address(&*boxed);
 ///
 ///     // ...
 ///
 ///     // allow s to be collected
+/// #   #[allow(deprecated)]
 ///     gc::unregister_address(&*boxed);
 ///     drop(boxed);
 ///
@@ -271,11 +289,12 @@ where
 /// }
 /// # Ruby::init(example).unwrap()
 /// ```
+#[deprecated(note = "please use `Ruby::gc_unregister_address` instead")]
 pub fn unregister_address<T>(valref: &T)
 where
     T: Mark,
 {
-    unsafe { rb_gc_unregister_address(valref as *const _ as *mut VALUE) }
+    get_ruby!().gc_unregister_address(valref)
 }
 
 /// # GC
@@ -470,6 +489,105 @@ impl Ruby {
         let res = self.hash_new();
         unsafe { rb_gc_stat(res.as_rb_value()) };
         res
+    }
+
+    /// Registers `value` to never be garbage collected.
+    ///
+    /// This is essentially a deliberate memory leak.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Error, Ruby, gc};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     // will never be collected
+    ///     let root = ruby.ary_new();
+    ///     ruby.gc_register_mark_object(root);
+    ///
+    ///     // won't be collected while it is in our `root` array
+    ///     let s = ruby.str_new("example");
+    ///     root.push(s).unwrap();
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
+    pub fn gc_register_mark_object<T>(&self, value: T)
+    where
+        T: Mark,
+    {
+        unsafe { rb_gc_register_mark_object(value.raw_with(self)) }
+    }
+
+    /// Inform Ruby's garbage collector that `valref` points to a live Ruby object.
+    ///
+    /// Prevents Ruby moving or collecting `valref`. This should be used on
+    /// `static` items to prevent them being collected instead of relying on Ruby
+    /// constants/globals to always reference the value.
+    ///
+    /// See also [`BoxValue`](crate::value::BoxValue).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Error, Ruby, gc};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let s = ruby.str_new("example");
+    ///
+    ///     // s won't be collected even though it's on the heap
+    ///     let boxed = Box::new(s);
+    ///     ruby.gc_register_address(&*boxed);
+    ///
+    ///     // ...
+    ///
+    ///     // allow s to be collected
+    ///     ruby.gc_unregister_address(&*boxed);
+    ///     drop(boxed);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
+    pub fn gc_register_address<T>(&self, valref: &T)
+    where
+        T: Mark,
+    {
+        unsafe { rb_gc_register_address(valref as *const _ as *mut VALUE) }
+    }
+
+    /// Inform Ruby's garbage collector that `valref` that was previously
+    /// registered with [`Ruby::gc_register_address`] no longer points to a
+    /// live Ruby object.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Error, Ruby, gc};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let s = ruby.str_new("example");
+    ///
+    ///     // s won't be collected even though it's on the heap
+    ///     let boxed = Box::new(s);
+    ///     ruby.gc_register_address(&*boxed);
+    ///
+    ///     // ...
+    ///
+    ///     // allow s to be collected
+    ///     ruby.gc_unregister_address(&*boxed);
+    ///     drop(boxed);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
+    pub fn gc_unregister_address<T>(&self, valref: &T)
+    where
+        T: Mark,
+    {
+        unsafe { rb_gc_unregister_address(valref as *const _ as *mut VALUE) }
     }
 }
 

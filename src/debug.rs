@@ -518,7 +518,7 @@ impl PartialEq for Frame {
 impl Eq for Frame {}
 
 impl gc::private::Mark for Frame {
-    fn raw(self) -> VALUE {
+    fn raw_with(self, _ruby: &Ruby) -> VALUE {
         self.0.as_rb_value()
     }
 }

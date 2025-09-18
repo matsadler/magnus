@@ -41,7 +41,6 @@ use crate::{
     encoding::EncodingCapable,
     enumerator::Enumerator,
     error::{Error, protect},
-    gc,
     integer::{Integer, IntegerType},
     into_value::{ArgList, IntoValue, IntoValueFromNative, kw_splat},
     method::{Block, BlockReturn},
@@ -598,7 +597,7 @@ where
         self.value.get_or_init(|| {
             let value = (self.func)(ruby);
             if self.mark {
-                gc::register_mark_object(value);
+                ruby.gc_register_mark_object(value);
             }
             value
         })
