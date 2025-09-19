@@ -573,6 +573,7 @@ impl<const N: usize> FrameBuf<N> {
     ///
     /// ```
     /// use std::cell::RefCell;
+    ///
     /// use magnus::debug::FrameBuf;
     ///
     /// thread_local! {
