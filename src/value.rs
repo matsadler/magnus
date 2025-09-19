@@ -1643,7 +1643,7 @@ pub trait ReprValue: private::ReprValue {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{Error, Ruby, prelude::*, r_string};
+    /// use magnus::{Error, Ruby, prelude::*};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let s = ruby.utf8_str_new_static(c"foo\\bar\\baz");

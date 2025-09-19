@@ -439,6 +439,7 @@ where
     ///     // ...
     /// #   fn data_type() -> &'static DataType { unimplemented!() }
     /// }
+    /// # Example();
     /// ```
     fn class(ruby: &Ruby) -> RClass;
 
@@ -463,6 +464,7 @@ where
     ///         &DATA_TYPE
     ///     }
     /// }
+    /// # Example();
     /// ```
     fn data_type() -> &'static DataType;
 
@@ -989,7 +991,7 @@ pub trait Writebarrier: ReprValue {
     ///         }
     ///     }
     ///
-    ///     fn push(ruby: &Ruby, rb_self: Obj<Self>, val: Value) -> Obj<Self> {
+    ///     fn push(rb_self: Obj<Self>, val: Value) -> Obj<Self> {
     ///         rb_self.values.borrow_mut().push(val.into());
     ///         rb_self.writebarrier(rb_self);
     ///         rb_self

@@ -2076,10 +2076,12 @@ impl<'a> Iterator for CharBytes<'a> {
 /// # Examples
 ///
 /// ```
+/// ##[allow(deprecated)]
 /// use magnus::{Error, Ruby, r_string, rb_assert};
 ///
 /// fn example(ruby: &Ruby) -> Result<(), Error> {
-///     let s = ruby.utf8_str_new_static(c"Hello, world!");
+/// #   #[allow(deprecated)]
+///     let s = r_string!("Hello, world!");
 ///     rb_assert!(ruby, r#"s == "Hello, world!""#, s);
 ///
 ///     Ok(())

@@ -498,7 +498,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{Error, Ruby, gc};
+    /// use magnus::{Error, Ruby};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     // will never be collected
@@ -531,7 +531,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{Error, Ruby, gc};
+    /// use magnus::{Error, Ruby};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let s = ruby.str_new("example");
@@ -564,7 +564,7 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use magnus::{Error, Ruby, gc};
+    /// use magnus::{Error, Ruby};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let s = ruby.str_new("example");
