@@ -1707,7 +1707,7 @@ impl NonZeroValue {
 
 /// Protects a Ruby Value from the garbage collector.
 ///
-/// See also [`gc::register_mark_object`] for a value that should be
+/// See also [`Ruby::gc_register_mark_object`] for a value that should be
 /// permanently excluded from garbage collection.
 pub struct BoxValue<T>(Box<T>);
 
