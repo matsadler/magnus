@@ -295,7 +295,7 @@ impl Time {
         };
         protect(|| unsafe {
             timespec = rb_time_timespec(self.as_rb_value());
-            Ruby::get_unchecked().qnil()
+            Ruby::get_with(self).qnil()
         })?;
         Ok(timespec.into())
     }
@@ -404,7 +404,7 @@ impl TryConvert for SystemTime {
         };
         protect(|| unsafe {
             timespec = rb_time_timespec(val.as_rb_value());
-            Ruby::get_unchecked().qnil()
+            Ruby::get_with(val).qnil()
         })?;
         if timespec.tv_nsec >= 0 {
             let mut duration = Duration::from_secs(timespec.tv_sec.unsigned_abs() as _);
@@ -433,7 +433,7 @@ impl TryConvert for chrono::DateTime<chrono::Utc> {
         };
         protect(|| unsafe {
             timespec = rb_time_timespec(val.as_rb_value());
-            Ruby::get_unchecked().qnil()
+            Ruby::get_with(val).qnil()
         })?;
         match chrono::Duration::new(timespec.tv_sec as _, timespec.tv_nsec as _) {
             Some(duration) => Ok(Self::UNIX_EPOCH + duration),

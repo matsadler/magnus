@@ -311,7 +311,7 @@ impl IntoSymbol for Id {
 
 impl From<Id> for Symbol {
     fn from(id: Id) -> Self {
-        unsafe { id.into_symbol_unchecked() }
+        unsafe { id.into_symbol_with(&Ruby::get_unchecked()) }
     }
 }
 

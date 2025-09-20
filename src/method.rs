@@ -212,7 +212,7 @@ mod private {
         T: IntoValue,
     {
         fn into_block_return(self) -> Result<Value, Error> {
-            self.map(|val| unsafe { val.into_value_unchecked() })
+            self.map(|val| unsafe { val.into_value_with(&Ruby::get_unchecked()) })
         }
     }
 

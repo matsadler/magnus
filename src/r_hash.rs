@@ -201,19 +201,19 @@ impl Ruby {
         V: IntoValue,
     {
         #[cfg(ruby_gte_3_2)]
-        pub fn hash_maybe_capa(n: usize) -> RHash {
-            unsafe { Ruby::get_unchecked() }.hash_new_capa(n)
+        pub fn hash_maybe_capa(ruby: &Ruby, n: usize) -> RHash {
+            ruby.hash_new_capa(n)
         }
 
         #[cfg(ruby_lt_3_2)]
-        pub fn hash_maybe_capa(_: usize) -> RHash {
-            unsafe { Ruby::get_unchecked() }.hash_new()
+        pub fn hash_maybe_capa(ruby: &Ruby, _: usize) -> RHash {
+            ruby.hash_new()
         }
 
         let iter = iter.into_iter();
         let (lower, _) = iter.size_hint();
         let hash = if lower > 0 {
-            hash_maybe_capa(lower)
+            hash_maybe_capa(self, lower)
         } else {
             self.hash_new()
         };

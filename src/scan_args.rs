@@ -778,7 +778,7 @@ where
     } else {
         optional.len() as i8
     };
-    let mut out = [unsafe { Ruby::get_unchecked().qnil().as_value() }; 19];
+    let mut out = [handle.qnil().as_value(); 19];
     let total = Req::LEN + Opt::LEN + Splat::REQ as usize;
 
     let mut parsed = 0;
@@ -791,7 +791,7 @@ where
                 optional_len as c_int,
                 out[..total].as_mut_ptr() as *mut VALUE,
             ) as usize;
-            Ruby::get_unchecked().qnil()
+            handle.qnil()
         })?;
     };
 
