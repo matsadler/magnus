@@ -3348,6 +3348,7 @@ pub trait IntoId: Sized {
     /// # Safety
     ///
     /// This method should only be called from a Ruby thread.
+    #[deprecated(note = "please use `IntoId::into_id_with(&Ruby::get_unchecked())` instead")]
     #[inline]
     unsafe fn into_id_unchecked(self) -> Id {
         unsafe { self.into_id_with(&Ruby::get_unchecked()) }

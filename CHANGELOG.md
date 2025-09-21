@@ -18,9 +18,13 @@
   `DataTypeBuilder::<Example>::new(c\"example\")` instead.
 - The `r_string!` macro. Please use `Ruby::utf8_str_new_static(c\"example\")`
   instead.
-- `gc::register_mark_object`. Pleas use `Ruby::gc_register_mark_object` instead.
-- `gc::register_address`. Pleas use `Ruby::gc_register_address` instead.
-- `gc::unregister_address`. Pleas use `Ruby::gc_unregister_address` instead.
+- `gc::register_mark_object`. Please use `Ruby::gc_register_mark_object` instead.
+- `gc::register_address`. Please use `Ruby::gc_register_address` instead.
+- `gc::unregister_address`. Please use `Ruby::gc_unregister_address` instead.
+- `IntoValue::into_value_unchecked`, `IntoRString::into_r_string_unchecked`,
+  `IntoSymbol::into_symbol_unchecked`, and `IntoId::into_id_unchecked`. Please
+  use the `_with` variant passing `&Ruby::get_unchecked()`, e.g.
+  `"example".into_r_string_with(&Ruby::get_unchecked())`.
 
 ### Removed
 - `RArray::each`, use `ary.into_iter()` or `ary.enumeratorize(\"each\", ())`

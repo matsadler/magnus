@@ -49,6 +49,8 @@ pub trait IntoValue: Sized {
     /// # Safety
     ///
     /// This method should only be called from a Ruby thread.
+    ///
+    #[deprecated(note = "please use `IntoValue::into_value_with(&Ruby::get_unchecked())` instead")]
     #[inline]
     unsafe fn into_value_unchecked(self) -> Value {
         unsafe { self.into_value_with(&Ruby::get_unchecked()) }

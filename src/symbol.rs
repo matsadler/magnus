@@ -271,6 +271,7 @@ pub trait IntoSymbol: Sized {
     /// # Examples
     ///
     /// ```
+    /// # #![allow(deprecated)]
     /// use magnus::{rb_assert, symbol::IntoSymbol};
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
@@ -278,6 +279,9 @@ pub trait IntoSymbol: Sized {
     /// let sym = unsafe { "example".into_symbol_unchecked() };
     /// rb_assert!("sym == :example", sym);
     /// ```
+    #[deprecated(
+        note = "please use `IntoSymbol::into_symbol_with(&Ruby::get_unchecked())` instead"
+    )]
     unsafe fn into_symbol_unchecked(self) -> Symbol {
         unsafe { self.into_symbol_with(&Ruby::get_unchecked()) }
     }

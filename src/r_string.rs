@@ -1877,6 +1877,9 @@ pub trait IntoRString: Sized {
     /// # Safety
     ///
     /// This method should only be called from a Ruby thread.
+    #[deprecated(
+        note = "please use `IntoRString::into_r_string_with(&Ruby::get_unchecked())` instead"
+    )]
     unsafe fn into_r_string_unchecked(self) -> RString {
         unsafe { self.into_r_string_with(&Ruby::get_unchecked()) }
     }
