@@ -313,6 +313,13 @@ impl RbEncoding {
         NonNull::new(inner).map(Self)
     }
 
+    fn ruby(&self) -> Ruby {
+        // self can only be created on a Ruby thread, and can't be
+        // sent/referenced across threads, so we must be on a Ruby thread, so
+        // this is safe
+        unsafe { Ruby::get_unchecked() }
+    }
+
     /// Returns the encoding that represents ASCII-8BIT a.k.a. binary.
     ///
     /// # Panics
@@ -764,7 +771,7 @@ impl RbEncoding {
                 &mut len as *mut _,
                 self.as_ptr(),
             );
-            Ruby::get_unchecked().qnil()
+            self.ruby().qnil()
         })?;
         Ok((c, len as usize))
     }
@@ -786,7 +793,7 @@ impl RbEncoding {
     /// # Ruby::init(example).unwrap()
     /// ```
     pub fn codelen(&self, code: u32) -> Result<usize, Error> {
-        let handle = unsafe { Ruby::get_unchecked() };
+        let handle = self.ruby();
         let code = code
             .try_into()
             .map_err(|e: <usize as TryInto<c_int>>::Error| {
@@ -955,7 +962,7 @@ impl TryConvert for RbEncoding {
         let mut ptr = ptr::null_mut();
         protect(|| unsafe {
             ptr = rb_to_encoding(val.as_rb_value());
-            Ruby::get_unchecked().qnil()
+            Ruby::get_with(val).qnil()
         })?;
         Ok(Self::new(ptr).unwrap())
     }
@@ -1234,7 +1241,7 @@ pub trait EncodingCapable: ReprValue + Copy {
     {
         protect(|| unsafe {
             rb_enc_set_index(self.as_rb_value(), enc.into().to_int());
-            Ruby::get_unchecked().qnil()
+            Ruby::get_with(self).qnil()
         })?;
         Ok(())
     }
