@@ -65,7 +65,7 @@ impl Ruby {
         {
             unsafe {
                 let func = std::mem::transmute::<*mut c_void, fn(&Ruby) -> R>(arg);
-                func.call_handle_error().as_rb_value()
+                func.call_handle_error(&Ruby::get_unchecked()).as_rb_value()
             }
         }
 
@@ -114,7 +114,9 @@ impl Ruby {
         {
             unsafe {
                 let closure = (*(arg as *mut Option<F>)).take().unwrap();
-                closure.call_handle_error().as_rb_value()
+                closure
+                    .call_handle_error(&Ruby::get_unchecked())
+                    .as_rb_value()
             }
         }
 

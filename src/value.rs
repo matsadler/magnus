@@ -1416,8 +1416,13 @@ pub trait ReprValue: private::ReprValue {
                 let func = std::mem::transmute::<VALUE, fn(&Ruby, &[Value], Option<Proc>) -> R>(
                     callback_arg,
                 );
-                func.call_handle_error(argc, argv as *const Value, Value::new(blockarg))
-                    .as_rb_value()
+                func.call_handle_error(
+                    &Ruby::get_unchecked(),
+                    argc,
+                    argv as *const Value,
+                    Value::new(blockarg),
+                )
+                .as_rb_value()
             }
         }
 

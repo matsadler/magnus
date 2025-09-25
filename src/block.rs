@@ -83,8 +83,13 @@ impl Ruby {
                 let func = std::mem::transmute::<VALUE, fn(&Ruby, &[Value], Option<Proc>) -> R>(
                     callback_arg,
                 );
-                func.call_handle_error(argc, argv as *const Value, Value::new(blockarg))
-                    .as_rb_value()
+                func.call_handle_error(
+                    &Ruby::get_unchecked(),
+                    argc,
+                    argv as *const Value,
+                    Value::new(blockarg),
+                )
+                .as_rb_value()
             }
         }
 
@@ -143,7 +148,12 @@ impl Ruby {
             unsafe {
                 let closure = &mut *(callback_arg as *mut F);
                 closure
-                    .call_handle_error(argc, argv as *const Value, Value::new(blockarg))
+                    .call_handle_error(
+                        &Ruby::get_unchecked(),
+                        argc,
+                        argv as *const Value,
+                        Value::new(blockarg),
+                    )
                     .as_rb_value()
             }
         }

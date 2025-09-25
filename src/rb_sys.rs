@@ -29,6 +29,7 @@ use std::panic::UnwindSafe;
 use rb_sys::{ID, VALUE};
 
 use crate::{
+    Ruby,
     error::{self, Error, raise},
     value::{Id, ReprValue, Value},
 };
@@ -204,7 +205,8 @@ pub fn catch_unwind<F, T>(func: F) -> Result<T, Error>
 where
     F: FnOnce() -> T + UnwindSafe,
 {
-    std::panic::catch_unwind(func).map_err(Error::from_panic)
+    std::panic::catch_unwind(func)
+        .map_err(|e| Error::from_panic(&unsafe { Ruby::get_unchecked() }, e))
 }
 
 /// Resumes an [`Error`] previously caught by [`protect`].

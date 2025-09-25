@@ -49,7 +49,12 @@ where
     V: TryConvert,
 {
     #[inline]
-    unsafe fn call_convert_value(mut self, key: Value, value: Value) -> Result<ForEach, Error> {
+    unsafe fn call_convert_value(
+        mut self,
+        _ruby: &Ruby,
+        key: Value,
+        value: Value,
+    ) -> Result<ForEach, Error> {
         (self)(
             TryConvert::try_convert(key)?,
             TryConvert::try_convert(value)?,
@@ -57,13 +62,13 @@ where
     }
 
     #[inline]
-    unsafe fn call_handle_error(self, key: Value, value: Value) -> ForEach {
+    unsafe fn call_handle_error(self, ruby: &Ruby, key: Value, value: Value) -> ForEach {
         unsafe {
             let res = match std::panic::catch_unwind(AssertUnwindSafe(|| {
-                self.call_convert_value(key, value)
+                self.call_convert_value(ruby, key, value)
             })) {
                 Ok(v) => v,
-                Err(e) => Err(Error::from_panic(e)),
+                Err(e) => Err(Error::from_panic(ruby, e)),
             };
             match res {
                 Ok(v) => v,
@@ -749,7 +754,11 @@ impl RHash {
         {
             unsafe {
                 let closure = &mut *(arg as *mut F);
-                closure.call_handle_error(Value::new(key), Value::new(value)) as c_int
+                closure.call_handle_error(
+                    &Ruby::get_unchecked(),
+                    Value::new(key),
+                    Value::new(value),
+                ) as c_int
             }
         }
 

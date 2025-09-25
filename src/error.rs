@@ -293,7 +293,7 @@ impl Error {
     ///
     /// The Ruby Exception will be `fatal`, terminating the Ruby process, but
     /// allowing cleanup code to run.
-    pub(crate) fn from_panic(e: Box<dyn Any + Send + 'static>) -> Self {
+    pub(crate) fn from_panic(ruby: &Ruby, e: Box<dyn Any + Send + 'static>) -> Self {
         let msg = if let Some(&m) = e.downcast_ref::<&'static str>() {
             m.into()
         } else if let Some(m) = e.downcast_ref::<String>() {
@@ -301,10 +301,7 @@ impl Error {
         } else {
             "panic".into()
         };
-        Self(ErrorType::Error(
-            unsafe { Ruby::get_unchecked().exception_fatal() },
-            msg,
-        ))
+        Self(ErrorType::Error(ruby.exception_fatal(), msg))
     }
 }
 

@@ -250,7 +250,9 @@ impl Mutex {
         {
             unsafe {
                 let closure = (*(arg as *mut Option<F>)).take().unwrap();
-                closure.call_handle_error().as_rb_value()
+                closure
+                    .call_handle_error(&Ruby::get_unchecked())
+                    .as_rb_value()
             }
         }
 
