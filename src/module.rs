@@ -115,6 +115,7 @@ impl RModule {
     /// let module = RModule::new();
     /// assert!(module.is_kind_of(class::module()));
     /// ```
+    #[allow(clippy::new_without_default)]
     #[deprecated(note = "please use `Ruby::module_new` instead")]
     #[cfg(feature = "old-api")]
     #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]

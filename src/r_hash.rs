@@ -292,6 +292,7 @@ impl RHash {
     /// let hash = RHash::new();
     /// assert!(hash.is_empty());
     /// ```
+    #[allow(clippy::new_without_default)]
     #[deprecated(note = "please use `Ruby::hash_new` instead")]
     #[cfg(feature = "old-api")]
     #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]

@@ -309,6 +309,7 @@ impl RArray {
     /// let ary = RArray::new();
     /// assert!(ary.is_empty());
     /// ```
+    #[allow(clippy::new_without_default)]
     #[deprecated(note = "please use `Ruby::ary_new` instead")]
     #[cfg(feature = "old-api")]
     #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
