@@ -529,6 +529,10 @@ deserialisation of Rust to Ruby data structures and vice versa.
   simplify using configuration files to manage options for experiments.
   It has a GitHub action to publish the gem for different architectures to RubyGems
   with a RBI file for type hints.
+* [`OpenDAL`](https://github.com/apache/opendal/tree/main/bindings/ruby) a Ruby
+  gem that access many object storage including S3 and file systems
+  with the same set of APIs. OpenDAL also offers many middlewares to integrate
+  more features. For example, retries and concucurrent limits.
 
 Please open a [pull request](https://github.com/matsadler/magnus/pulls) if
 you'd like your project listed here.
