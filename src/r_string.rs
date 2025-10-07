@@ -1100,7 +1100,7 @@ impl RString {
 
     unsafe fn as_str_unconstrained<'a>(self) -> Result<&'a str, Error> {
         self.test_as_str_unconstrained().ok_or_else(|| {
-            let msg: Cow<'static, str> = if self.is_utf8_compatible_encoding() {
+            let msg: Cow<'static, str> = if !self.is_utf8_compatible_encoding() {
                 format!(
                     "expected utf-8, got {}",
                     RbEncoding::from(self.enc_get()).name()
