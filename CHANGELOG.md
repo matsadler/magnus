@@ -13,6 +13,10 @@
 
 ### Security
 
+## [0.8.2] - 2025-10-07
+### Fixed
+- Fixed error message when converting Ruby string to a Rust string.
+
 ## [0.8.1] - 2025-09-06
 ### Fixed
 - Fixed error compiling on 32-bit platforms.
@@ -538,6 +542,7 @@
   generated bindings otherwise.
 
 [Unreleased]: https://github.com/matsadler/magnus/compare/0.8.0...HEAD
+[0.8.2]: https://github.com/matsadler/magnus/compare/0.8.1...0.8.2
 [0.8.1]: https://github.com/matsadler/magnus/compare/0.8.0...0.8.1
 [0.8.0]: https://github.com/matsadler/magnus/compare/0.7.1...0.8.0
 [0.7.1]: https://github.com/matsadler/magnus/compare/0.7.0...0.7.1
