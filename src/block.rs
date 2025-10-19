@@ -491,7 +491,7 @@ impl TryConvert for Proc {
 
 /// Wrap a closure in a Ruby object with no class.
 ///
-/// This effectivly makes the closure's lifetime managed by Ruby. It will be
+/// This effectively makes the closure's lifetime managed by Ruby. It will be
 /// dropped when the returned `Value` is garbage collected.
 fn wrap_closure<F, R>(func: F) -> (*mut F, Value)
 where
