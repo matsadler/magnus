@@ -1,4 +1,4 @@
-use magnus::{prelude::*, Value};
+use magnus::{Value, prelude::*};
 
 #[test]
 fn it_converts_to_utf8_string() {
