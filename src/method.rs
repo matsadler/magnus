@@ -18,6 +18,7 @@ use crate::{
         Proc, Yield, YieldSplat, YieldValues, do_yield_iter, do_yield_splat_iter,
         do_yield_values_iter,
     },
+    debug::DebugInspector,
     error::{Error, IntoError, raise},
     into_value::{ArgList, IntoValue},
     r_array::RArray,
@@ -503,6 +504,45 @@ where
 impl<Func, Res> Synchronize<Res> for Func
 where
     Func: FnOnce() -> Res,
+    Res: BlockReturn,
+{
+}
+
+/// Helper trait for wrapping a function with type conversions and error
+/// handling, when opening a debug inspector.
+///
+/// See the [`Ruby::debug_inspector_open`] function.
+#[doc(hidden)]
+pub trait DebugInspectorOpen<Res>
+where
+    Self: Sized + FnOnce(DebugInspector) -> Res,
+    Res: BlockReturn,
+{
+    #[inline]
+    unsafe fn call_convert_value(self, ruby: &Ruby, dc: DebugInspector) -> Result<Value, Error> {
+        (self)(dc).into_block_return_with(ruby)
+    }
+
+    #[inline]
+    unsafe fn call_handle_error(self, ruby: &Ruby, dc: DebugInspector) -> Value {
+        unsafe {
+            let res = match std::panic::catch_unwind(AssertUnwindSafe(|| {
+                self.call_convert_value(ruby, dc)
+            })) {
+                Ok(v) => v,
+                Err(e) => Err(Error::from_panic(ruby, e)),
+            };
+            match res {
+                Ok(v) => v,
+                Err(e) => raise(e),
+            }
+        }
+    }
+}
+
+impl<Func, Res> DebugInspectorOpen<Res> for Func
+where
+    Func: FnOnce(DebugInspector) -> Res,
     Res: BlockReturn,
 {
 }

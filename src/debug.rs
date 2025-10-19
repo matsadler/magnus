@@ -2,20 +2,27 @@
 //!
 //! See also [`Ruby`](Ruby#debug) for more debugging related methods.
 
-use std::{ffi::c_int, ptr::null_mut};
+use std::{
+    ffi::{c_int, c_void},
+    ptr::null_mut,
+};
 
 #[cfg(ruby_gte_3_3)]
 use rb_sys::rb_profile_thread_frames;
 use rb_sys::{
-    VALUE, rb_profile_frame_absolute_path, rb_profile_frame_base_label, rb_profile_frame_classpath,
-    rb_profile_frame_first_lineno, rb_profile_frame_full_label, rb_profile_frame_label,
-    rb_profile_frame_method_name, rb_profile_frame_path, rb_profile_frame_qualified_method_name,
+    VALUE, rb_debug_inspector_open, rb_debug_inspector_t, rb_profile_frame_absolute_path,
+    rb_profile_frame_base_label, rb_profile_frame_classpath, rb_profile_frame_first_lineno,
+    rb_profile_frame_full_label, rb_profile_frame_label, rb_profile_frame_method_name,
+    rb_profile_frame_path, rb_profile_frame_qualified_method_name,
     rb_profile_frame_singleton_method_p, rb_profile_frames, ruby_special_consts,
 };
 
 use crate::{
-    Ruby, gc,
+    Ruby,
+    error::{Error, protect},
+    gc,
     integer::Integer,
+    method::{BlockReturn, DebugInspectorOpen},
     r_string::RString,
     thread::Thread,
     value::{ReprValue, Value, private::ReprValue as _},
@@ -126,6 +133,38 @@ impl Ruby {
     pub fn profile_frames_starting<const N: usize>(&self, start: usize, buf: &mut FrameBuf<N>) {
         unsafe {
             buf.filled = profile_frames_impl(start, &mut buf.frames, Some(&mut buf.lines));
+        }
+    }
+
+    pub fn debug_inspector_open<F, R>(&self, func: F) -> Result<Value, Error>
+    where
+        F: FnOnce(DebugInspector) -> R,
+        R: BlockReturn,
+    {
+        unsafe extern "C" fn call<F, R>(dc: *const rb_debug_inspector_t, data: *mut c_void) -> VALUE
+        where
+            F: FnOnce(DebugInspector) -> R,
+            R: BlockReturn,
+        {
+            unsafe {
+                let closure = (*(data as *mut Option<F>)).take().unwrap();
+                let ruby = Ruby::get_unchecked();
+                closure
+                    .call_handle_error(&ruby, DebugInspector::from_ptr_with_lifetime(&ruby, dc))
+                    .as_rb_value()
+            }
+        }
+
+        let call_func = call::<F, R>
+            as unsafe extern "C" fn(dc: *const rb_debug_inspector_t, data: *mut c_void) -> VALUE;
+
+        unsafe {
+            protect(|| {
+                Value::new(rb_debug_inspector_open(
+                    Some(call_func),
+                    &mut Some(func) as *mut _ as *mut c_void,
+                ))
+            })
         }
     }
 }
@@ -618,5 +657,19 @@ impl<const N: usize> FrameBuf<N> {
 impl<const N: usize> Default for FrameBuf<N> {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+pub struct DebugInspector<'a> {
+    dc: &'a rb_debug_inspector_t,
+}
+
+impl<'a> DebugInspector<'a> {
+    fn from_ptr(ptr: *const rb_debug_inspector_t) -> Self {
+        unsafe { Self { dc: &*ptr } }
+    }
+
+    fn from_ptr_with_lifetime(_: &'a Ruby, ptr: *const rb_debug_inspector_t) -> Self {
+        Self::from_ptr(ptr)
     }
 }
