@@ -3,26 +3,30 @@
 //! See also [`Ruby`](Ruby#debug) for more debugging related methods.
 
 use std::{
-    ffi::{c_int, c_void},
+    ffi::{c_int, c_long, c_void},
     ptr::null_mut,
 };
 
 #[cfg(ruby_gte_3_3)]
 use rb_sys::rb_profile_thread_frames;
 use rb_sys::{
-    VALUE, rb_debug_inspector_open, rb_debug_inspector_t, rb_profile_frame_absolute_path,
-    rb_profile_frame_base_label, rb_profile_frame_classpath, rb_profile_frame_first_lineno,
-    rb_profile_frame_full_label, rb_profile_frame_label, rb_profile_frame_method_name,
-    rb_profile_frame_path, rb_profile_frame_qualified_method_name,
+    VALUE, rb_debug_inspector_backtrace_locations, rb_debug_inspector_frame_binding_get,
+    rb_debug_inspector_frame_class_get, rb_debug_inspector_frame_depth,
+    rb_debug_inspector_frame_self_get, rb_debug_inspector_open, rb_debug_inspector_t,
+    rb_profile_frame_absolute_path, rb_profile_frame_base_label, rb_profile_frame_classpath,
+    rb_profile_frame_first_lineno, rb_profile_frame_full_label, rb_profile_frame_label,
+    rb_profile_frame_method_name, rb_profile_frame_path, rb_profile_frame_qualified_method_name,
     rb_profile_frame_singleton_method_p, rb_profile_frames, ruby_special_consts,
 };
 
 use crate::{
     Ruby,
+    class::RClass,
     error::{Error, protect},
     gc,
     integer::Integer,
     method::{BlockReturn, DebugInspectorOpen},
+    r_array::RArray,
     r_string::RString,
     thread::Thread,
     value::{ReprValue, Value, private::ReprValue as _},
@@ -669,7 +673,56 @@ impl<'a> DebugInspector<'a> {
         unsafe { Self { dc: &*ptr } }
     }
 
-    fn from_ptr_with_lifetime(_: &'a Ruby, ptr: *const rb_debug_inspector_t) -> Self {
+    fn from_ptr_with_lifetime<T>(_: &'a T, ptr: *const rb_debug_inspector_t) -> Self {
         Self::from_ptr(ptr)
+    }
+
+    fn as_ptr(&self) -> *const rb_debug_inspector_t {
+        self.dc as *const rb_debug_inspector_t
+    }
+
+    pub fn backtrace_locations(&self) -> RArray {
+        unsafe {
+            RArray::from_rb_value_unchecked(rb_debug_inspector_backtrace_locations(self.as_ptr()))
+        }
+    }
+
+    pub fn frame_self_get(&self, index: usize) -> Result<Value, Error> {
+        protect(|| unsafe {
+            Value::new(rb_debug_inspector_frame_self_get(
+                self.as_ptr(),
+                index as c_long,
+            ))
+        })
+    }
+
+    pub fn frame_class_get(&self, index: usize) -> Result<RClass, Error> {
+        protect(|| unsafe {
+            RClass::from_rb_value_unchecked(rb_debug_inspector_frame_class_get(
+                self.as_ptr(),
+                index as c_long,
+            ))
+        })
+    }
+
+    pub fn frame_binding_get(&self, index: usize) -> Result<Value, Error> {
+        protect(|| unsafe {
+            Value::new(rb_debug_inspector_frame_binding_get(
+                self.as_ptr(),
+                index as c_long,
+            ))
+        })
+    }
+
+    // TODO rb_debug_inspector_frame_iseq_get
+
+    pub fn frame_depth(&self, index: usize) -> Result<usize, Error> {
+        protect(|| unsafe {
+            Integer::from_rb_value_unchecked(rb_debug_inspector_frame_depth(
+                self.as_ptr(),
+                index as c_long,
+            ))
+        })
+        .and_then(|i| i.to_usize())
     }
 }

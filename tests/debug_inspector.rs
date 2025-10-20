@@ -1,7 +1,7 @@
 use magnus::{Error, Ruby, Value, eval, function, prelude::*};
 
 fn debug(ruby: &Ruby) -> Result<Value, Error> {
-    ruby.debug_inspector_open(|_inspector| ruby.str_new("test"))
+    ruby.debug_inspector_open(|inspector| inspector.backtrace_locations())
 }
 
 #[test]
@@ -15,10 +15,10 @@ fn it_works() {
             def bar = baz
             def baz = qux
             def qux = quxx
-            def quxx = debug
+            def quxx = debug.map(&:base_label)
         "
     )
     .unwrap();
-    let res: String = ruby.class_object().funcall("foo", ()).unwrap();
-    assert_eq!(res, "test")
+    let res: Vec<String> = ruby.class_object().funcall("foo", ()).unwrap();
+    assert_eq!(res, &["debug", "quxx", "qux", "baz", "bar", "foo"])
 }
