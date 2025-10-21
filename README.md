@@ -533,6 +533,10 @@ deserialisation of Rust to Ruby data structures and vice versa.
   gem that access many object storage including S3 and file systems
   with the same set of APIs. OpenDAL also offers many middlewares to integrate
   more features. For example, retries and concucurrent limits.
+* [`Digest::SipHash`](https://github.com/havenwood/digest-sip_hash) a gem that
+  implements SipHash in Rust with a fallback to pure Ruby. SipHash is a fast,
+  cryptographically strong pseudorandom function optimized for small inputs.
+  Ruby's Hash class uses a C implementation of SipHash 1-3.
 
 Please open a [pull request](https://github.com/matsadler/magnus/pulls) if
 you'd like your project listed here.
