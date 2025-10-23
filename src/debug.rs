@@ -12,11 +12,12 @@ use rb_sys::rb_profile_thread_frames;
 use rb_sys::{
     VALUE, rb_debug_inspector_backtrace_locations, rb_debug_inspector_frame_binding_get,
     rb_debug_inspector_frame_class_get, rb_debug_inspector_frame_depth,
-    rb_debug_inspector_frame_self_get, rb_debug_inspector_open, rb_debug_inspector_t,
-    rb_profile_frame_absolute_path, rb_profile_frame_base_label, rb_profile_frame_classpath,
-    rb_profile_frame_first_lineno, rb_profile_frame_full_label, rb_profile_frame_label,
-    rb_profile_frame_method_name, rb_profile_frame_path, rb_profile_frame_qualified_method_name,
-    rb_profile_frame_singleton_method_p, rb_profile_frames, ruby_special_consts,
+    rb_debug_inspector_frame_iseq_get, rb_debug_inspector_frame_self_get, rb_debug_inspector_open,
+    rb_debug_inspector_t, rb_profile_frame_absolute_path, rb_profile_frame_base_label,
+    rb_profile_frame_classpath, rb_profile_frame_first_lineno, rb_profile_frame_full_label,
+    rb_profile_frame_label, rb_profile_frame_method_name, rb_profile_frame_path,
+    rb_profile_frame_qualified_method_name, rb_profile_frame_singleton_method_p, rb_profile_frames,
+    ruby_special_consts,
 };
 
 use crate::{
@@ -714,7 +715,15 @@ impl<'a> DebugInspector<'a> {
         })
     }
 
-    // TODO rb_debug_inspector_frame_iseq_get
+    pub fn frame_iseq_get(&self, index: usize) -> Result<Option<Value>, Error> {
+        protect(|| unsafe {
+            Value::new(rb_debug_inspector_frame_iseq_get(
+                self.as_ptr(),
+                index as c_long,
+            ))
+        })
+        .map(|v| (!v.is_nil()).then_some(v))
+    }
 
     pub fn frame_depth(&self, index: usize) -> Result<usize, Error> {
         protect(|| unsafe {
