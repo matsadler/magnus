@@ -443,23 +443,20 @@ where
     Res: BlockReturn,
 {
     #[inline]
-    unsafe fn call_convert_value(self, ruby: &Ruby) -> Result<Value, Error> {
+    fn call_convert_value(self, ruby: &Ruby) -> Result<Value, Error> {
         (self)(ruby).into_block_return_with(ruby)
     }
 
     #[inline]
     unsafe fn call_handle_error(self, ruby: &Ruby) -> Value {
-        unsafe {
-            let res = match std::panic::catch_unwind(AssertUnwindSafe(|| {
-                self.call_convert_value(ruby)
-            })) {
-                Ok(v) => v,
-                Err(e) => Err(Error::from_panic(ruby, e)),
-            };
-            match res {
-                Ok(v) => v,
-                Err(e) => raise(e),
-            }
+        let res = match std::panic::catch_unwind(AssertUnwindSafe(|| self.call_convert_value(ruby)))
+        {
+            Ok(v) => v,
+            Err(e) => Err(Error::from_panic(ruby, e)),
+        };
+        match res {
+            Ok(v) => v,
+            Err(e) => raise(e),
         }
     }
 }
@@ -480,23 +477,20 @@ where
     Res: BlockReturn,
 {
     #[inline]
-    unsafe fn call_convert_value(self, ruby: &Ruby) -> Result<Value, Error> {
+    fn call_convert_value(self, ruby: &Ruby) -> Result<Value, Error> {
         (self)().into_block_return_with(ruby)
     }
 
     #[inline]
     unsafe fn call_handle_error(self, ruby: &Ruby) -> Value {
-        unsafe {
-            let res = match std::panic::catch_unwind(AssertUnwindSafe(|| {
-                self.call_convert_value(ruby)
-            })) {
-                Ok(v) => v,
-                Err(e) => Err(Error::from_panic(ruby, e)),
-            };
-            match res {
-                Ok(v) => v,
-                Err(e) => raise(e),
-            }
+        let res = match std::panic::catch_unwind(AssertUnwindSafe(|| self.call_convert_value(ruby)))
+        {
+            Ok(v) => v,
+            Err(e) => Err(Error::from_panic(ruby, e)),
+        };
+        match res {
+            Ok(v) => v,
+            Err(e) => raise(e),
         }
     }
 }
@@ -519,23 +513,21 @@ where
     Res: BlockReturn,
 {
     #[inline]
-    unsafe fn call_convert_value(self, ruby: &Ruby, dc: DebugInspector) -> Result<Value, Error> {
+    fn call_convert_value(self, ruby: &Ruby, dc: DebugInspector) -> Result<Value, Error> {
         (self)(dc).into_block_return_with(ruby)
     }
 
     #[inline]
     unsafe fn call_handle_error(self, ruby: &Ruby, dc: DebugInspector) -> Value {
-        unsafe {
-            let res = match std::panic::catch_unwind(AssertUnwindSafe(|| {
-                self.call_convert_value(ruby, dc)
-            })) {
-                Ok(v) => v,
-                Err(e) => Err(Error::from_panic(ruby, e)),
-            };
-            match res {
-                Ok(v) => v,
-                Err(e) => raise(e),
-            }
+        let res = match std::panic::catch_unwind(AssertUnwindSafe(|| {
+            self.call_convert_value(ruby, dc)
+        })) {
+            Ok(v) => v,
+            Err(e) => Err(Error::from_panic(ruby, e)),
+        };
+        match res {
+            Ok(v) => v,
+            Err(e) => raise(e),
         }
     }
 }
@@ -1719,7 +1711,7 @@ macro_rules! function_n {
                 Res: ReturnValue,
             {
                 #[inline]
-                unsafe fn call_convert_value(self, ruby: &Ruby, #(arg~N: Value,)*) -> Result<Value, Error> {
+                fn call_convert_value(self, ruby: &Ruby, #(arg~N: Value,)*) -> Result<Value, Error> {
                     (self)(
                         ruby,
                         #(TryConvert::try_convert(arg~N)?,)*
@@ -1727,7 +1719,7 @@ macro_rules! function_n {
                 }
 
                 #[inline]
-                unsafe fn call_handle_error(self, ruby: &Ruby, #(arg~N: Value,)*) -> Value { unsafe {
+                unsafe fn call_handle_error(self, ruby: &Ruby, #(arg~N: Value,)*) -> Value {
                     let res =
                         match std::panic::catch_unwind(AssertUnwindSafe(|| {
                             self.call_convert_value(ruby, #(arg~N,)*)
@@ -1739,7 +1731,7 @@ macro_rules! function_n {
                         Ok(v) => v,
                         Err(e) => raise(e),
                     }
-                }}
+                }
             }
 
             impl<Func, #(T~N,)* Res> $ruby_name<#(T~N,)* Res> for Func
