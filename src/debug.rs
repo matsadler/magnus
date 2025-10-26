@@ -4,6 +4,7 @@
 
 use std::{
     ffi::{c_int, c_long, c_void},
+    marker::PhantomData,
     ptr::null_mut,
 };
 
@@ -141,6 +142,9 @@ impl Ruby {
         }
     }
 
+    /// Open, execute, and clean up a debug session.
+    ///
+    /// Returns the value returned by `func` converted to a [`Value`].
     pub fn debug_inspector_open<F, R>(&self, func: F) -> Result<Value, Error>
     where
         F: FnOnce(DebugInspector) -> R,
@@ -155,7 +159,7 @@ impl Ruby {
                 let closure = (*(data as *mut Option<F>)).take().unwrap();
                 let ruby = Ruby::get_unchecked();
                 closure
-                    .call_handle_error(&ruby, DebugInspector::from_ptr_with_lifetime(&ruby, dc))
+                    .call_handle_error(&ruby, DebugInspector::from_ptr_with_lifetime(dc, &ruby))
                     .as_rb_value()
             }
         }
@@ -701,70 +705,72 @@ impl<const N: usize> Default for FrameBuf<N> {
     }
 }
 
+/// A pointer to a Ruby Debug Inspector returned from
+/// [`Ruby::debug_inspector_open`].
+#[repr(transparent)]
 pub struct DebugInspector<'a> {
-    dc: &'a rb_debug_inspector_t,
+    ptr: *const rb_debug_inspector_t,
+    lifetime: PhantomData<&'a ()>,
 }
 
 impl<'a> DebugInspector<'a> {
-    fn from_ptr(ptr: *const rb_debug_inspector_t) -> Self {
-        unsafe { Self { dc: &*ptr } }
-    }
-
-    fn from_ptr_with_lifetime<T>(_: &'a T, ptr: *const rb_debug_inspector_t) -> Self {
-        Self::from_ptr(ptr)
-    }
-
-    fn as_ptr(&self) -> *const rb_debug_inspector_t {
-        self.dc as *const rb_debug_inspector_t
-    }
-
-    pub fn backtrace_locations(&self) -> RArray {
-        unsafe {
-            RArray::from_rb_value_unchecked(rb_debug_inspector_backtrace_locations(self.as_ptr()))
+    fn from_ptr_with_lifetime<T>(ptr: *const rb_debug_inspector_t, _: &'a T) -> Self {
+        Self {
+            ptr,
+            lifetime: PhantomData,
         }
     }
 
+    /// Return a backtrace from the point the `DebugInspector` was opened.
+    ///
+    /// Returns a Ruby array of `Thread::Backtrace::Location` objects.
+    pub fn backtrace_locations(&self) -> RArray {
+        unsafe { RArray::from_rb_value_unchecked(rb_debug_inspector_backtrace_locations(self.ptr)) }
+    }
+
+    /// Get Ruby's `self` for the frame at `index`.
     pub fn frame_self_get(&self, index: usize) -> Result<Value, Error> {
         protect(|| unsafe {
-            Value::new(rb_debug_inspector_frame_self_get(
-                self.as_ptr(),
-                index as c_long,
-            ))
+            Value::new(rb_debug_inspector_frame_self_get(self.ptr, index as c_long))
         })
     }
 
+    /// Get the Ruby class for the frame at `index`.
     pub fn frame_class_get(&self, index: usize) -> Result<RClass, Error> {
         protect(|| unsafe {
             RClass::from_rb_value_unchecked(rb_debug_inspector_frame_class_get(
-                self.as_ptr(),
+                self.ptr,
                 index as c_long,
             ))
         })
     }
 
+    /// Get the Ruby `Binding` object for the frame at `index`.
     pub fn frame_binding_get(&self, index: usize) -> Result<Value, Error> {
         protect(|| unsafe {
             Value::new(rb_debug_inspector_frame_binding_get(
-                self.as_ptr(),
+                self.ptr,
                 index as c_long,
             ))
         })
     }
 
+    /// Get the `RubyVM::InstructionSequence` for the frame at `index`.
     pub fn frame_iseq_get(&self, index: usize) -> Result<Option<Value>, Error> {
         protect(|| unsafe {
-            Value::new(rb_debug_inspector_frame_iseq_get(
-                self.as_ptr(),
-                index as c_long,
-            ))
+            Value::new(rb_debug_inspector_frame_iseq_get(self.ptr, index as c_long))
         })
         .map(|v| (!v.is_nil()).then_some(v))
     }
 
+    /// Return the depth of the frame at `index`.
+    ///
+    /// The depth is not same as the frame index as Ruby's debug inspector
+    /// skips some special frames but the depth counts all frames.
     pub fn frame_depth(&self, index: usize) -> Result<usize, Error> {
         protect(|| unsafe {
             Integer::from_rb_value_unchecked(rb_debug_inspector_frame_depth(
-                self.as_ptr(),
+                self.ptr,
                 index as c_long,
             ))
         })
