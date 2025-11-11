@@ -280,6 +280,43 @@ impl Ruby {
             .and_then(TryConvert::try_convert)
         }
     }
+
+    /// Turns a rust future into a ruby fiber
+    /// Note: this function is not a fully fledged async runtime, it is expected that the future is
+    /// running in a proper runtime
+    ///
+    /// # Examples
+    /// ```
+    /// use magnus::{Error, Ruby, Value, rb_assert, value::Opaque};
+    ///
+    /// fn sleep(time: u64, ruby: &Ruby) -> Result<Fiber, Error> {
+    ///     let tokio_runtime = todo!();
+    ///     let future = self.runtime.spawn(async move {
+    ///         tokio::time::sleep(Duration::from_millis(time)).await;
+    ///     });
+    ///     ruby.future_to_fiber(future)
+    /// }
+    /// ```
+    pub fn future_to_fiber<T, R>(&self, future: T) -> Result<Fiber, Error>
+    where
+        T: Future<Output = R> + Unpin + Send + 'static,
+        R: BlockReturn,
+    {
+        self.fiber_new_from_fn(Default::default(), move |ruby, _args, _block| {
+            let mut pinned = std::pin::pin!(future);
+            loop {
+                let result = pinned
+                    .as_mut()
+                    .poll(&mut std::task::Context::from_waker(std::task::Waker::noop()));
+                match result {
+                    std::task::Poll::Ready(x) => return x,
+                    std::task::Poll::Pending => {
+                        let _: Value = ruby.fiber_yield(()).unwrap();
+                    }
+                };
+            }
+        })
+    }
 }
 
 /// Wrapper type for a Value known to be an instance of Ruby's Fiber class.
