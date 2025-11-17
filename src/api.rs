@@ -41,9 +41,7 @@ impl RubyGvlState {
 
     fn cached() -> Self {
         match RUBY_GVL_STATE.get() {
-            // assumed not to change because there's currently no api to
-            // unlock.
-            Some(Self::Locked) => Self::Locked,
+            Some(Self::Locked) => Self::current(),
             None => Self::current(),
             // Don't expect without an api to unlock, so skip cache
             Some(Self::Unlocked) => Self::current(),
