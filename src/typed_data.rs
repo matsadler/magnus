@@ -364,12 +364,21 @@ where
         };
         DataType(rb_data_type_t {
             wrap_struct_name: self.name.as_ptr() as _,
+            #[cfg(ruby_lt_4_1)]
             function: rb_data_type_struct__bindgen_ty_1 {
                 dmark,
                 dfree,
                 dsize,
                 dcompact,
                 reserved: [ptr::null_mut(); 1],
+            },
+            #[cfg(ruby_gte_4_1)]
+            function: rb_data_type_struct__bindgen_ty_1 {
+                dmark,
+                dfree,
+                dsize,
+                dcompact,
+                handle_weak_references: None,
             },
             parent: ptr::null(),
             data: ptr::null_mut(),

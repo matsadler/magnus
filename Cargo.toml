@@ -34,10 +34,11 @@ io = []
 bytes = { version = "1", optional = true }
 chrono = { version = "0.4.38", optional = true }
 magnus-macros = { version = "0.9.0", path = "magnus-macros" }
-rb-sys = { version = ">=0.9.113", default-features = false, features = [
+rb-sys = { path = "../rb-sys/crates/rb-sys", default-features = false, features = [
     "bindgen-rbimpls",
     "bindgen-deprecated-types",
     "stable-api",
+    "stable-api-compiled-fallback",
 ] }
 seq-macro = "0.3"
 
@@ -49,12 +50,12 @@ magnus = { path = ".", default-features = false, features = [
     "chrono",
     "io",
 ] }
-rb-sys = { version = "0.9.113", default-features = false, features = [
+rb-sys = { path = "../rb-sys/crates/rb-sys", default-features = false, features = [
     "stable-api-compiled-fallback",
 ] }
 
 [build-dependencies]
-rb-sys-env = "0.2.2"
+rb-sys-env = { path = "../rb-sys/crates/rb-sys-env" }
 
 [lib]
 doc-scrape-examples = false
