@@ -55,7 +55,7 @@ rb-sys = { path = "../rb-sys/crates/rb-sys", default-features = false, features 
 ] }
 
 [build-dependencies]
-rb-sys-env = { path = "../rb-sys/crates/rb-sys-env" }
+rb-sys-env = "0.2.3"
 
 [lib]
 doc-scrape-examples = false
