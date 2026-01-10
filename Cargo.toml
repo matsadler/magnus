@@ -34,7 +34,7 @@ io = []
 bytes = { version = "1", optional = true }
 chrono = { version = "0.4.38", optional = true }
 magnus-macros = { version = "0.9.0", path = "magnus-macros" }
-rb-sys = { path = "../rb-sys/crates/rb-sys", default-features = false, features = [
+rb-sys = { version = ">=0.9.124", default-features = false, features = [
     "bindgen-rbimpls",
     "bindgen-deprecated-types",
     "stable-api",
