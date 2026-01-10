@@ -50,7 +50,7 @@ magnus = { path = ".", default-features = false, features = [
     "chrono",
     "io",
 ] }
-rb-sys = { path = "../rb-sys/crates/rb-sys", default-features = false, features = [
+rb-sys = { version = ">= 0.9.124", default-features = false, features = [
     "stable-api-compiled-fallback",
 ] }
 
