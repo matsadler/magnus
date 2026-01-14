@@ -27,19 +27,19 @@ jobs:
                     - "4.0"
                     - head
                 rustup-toolchain:
-                    - "1.65"
+                    - "1.71"
                     - stable
                 exclude:
                     - os: windows-latest
                       ruby-version: head
                     # weird "exit code: 0xc0000139" error on doctests with
-                    # Ruby 3.2 and 3.3, plus Rust 1.65. Resolved with *either*
+                    # Ruby 3.2 and 3.3, plus Rust 1.71. Resolved with *either*
                     # newer Ruby or newer Rust
                     - os: windows-latest
-                      rustup-toolchain: "1.65"
+                      rustup-toolchain: "1.71"
                       ruby-version: "3.2"
                     - os: windows-latest
-                      rustup-toolchain: "1.65"
+                      rustup-toolchain: "1.71"
                       ruby-version: "3.3"
                     # some tests never exit on CI, but run fine locally
                     - os: macos-latest # macos-15 at time of writing
