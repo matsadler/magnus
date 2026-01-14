@@ -34,7 +34,7 @@ io = []
 bytes = { version = "1", optional = true }
 chrono = { version = "0.4.38", optional = true }
 magnus-macros = { version = "0.9.0", path = "magnus-macros" }
-rb-sys = { version = ">=0.9.113", default-features = false, features = [
+rb-sys = { version = "0.9.124", default-features = false, features = [
     "bindgen-rbimpls",
     "bindgen-deprecated-types",
     "stable-api",
@@ -49,12 +49,12 @@ magnus = { path = ".", default-features = false, features = [
     "chrono",
     "io",
 ] }
-rb-sys = { version = "0.9.113", default-features = false, features = [
+rb-sys = { version = "0.9.124", default-features = false, features = [
     "stable-api-compiled-fallback",
 ] }
 
 [build-dependencies]
-rb-sys-env = "0.2.2"
+rb-sys-env = "0.2.3"
 
 [lib]
 doc-scrape-examples = false
