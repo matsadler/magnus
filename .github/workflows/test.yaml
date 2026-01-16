@@ -18,6 +18,7 @@ jobs:
                     - "3.2"
                     - "3.3"
                     - "3.4"
+                    - "4.0"
                     - head
                 rustup-toolchain:
                     - "1.85"

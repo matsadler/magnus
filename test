@@ -1,6 +1,6 @@
 #!/bin/sh
 
-RUBY_VERSIONS="3.2.9 3.3.9 3.4.5"
+RUBY_VERSIONS="3.2.9 3.3.9 3.4.5 4.0.1"
 ERRORS=""
 
 for VERSION in $RUBY_VERSIONS; do
