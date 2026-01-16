@@ -13,9 +13,9 @@ jobs:
                 os:
                     - ubuntu-latest
                     # intel
-                    - macos-13
+                    - macos-15-intel
                     # arm
-                    - macos-14
+                    - macos-latest
                     - windows-latest
                 ruby-version:
                     - "2.7"
@@ -24,6 +24,7 @@ jobs:
                     - "3.2"
                     - "3.3"
                     - "3.4"
+                    - "4.0"
                     - head
                 rustup-toolchain:
                     - "1.65"
