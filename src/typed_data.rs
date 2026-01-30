@@ -352,6 +352,8 @@ where
                 #[cfg(ruby_lt_4_1)]
                 reserved: [ptr::null_mut(); 1],
                 #[cfg(ruby_gte_4_1)]
+                reserved: [ptr::null_mut(); 1],
+                #[cfg(ruby_gte_4_1)]
                 handle_weak_references: None,
             },
             parent: ptr::null(),
