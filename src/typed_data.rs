@@ -352,7 +352,9 @@ where
                 #[cfg(ruby_lt_4_1)]
                 reserved: [ptr::null_mut(); 1],
                 #[cfg(ruby_gte_4_1)]
-                reserved: [ptr::null_mut(); 1],
+                // Ruby 4.1 expands rtypeddata's reserved slots; keep in sync with
+                // https://github.com/ruby/ruby/blob/master/include/ruby/internal/core/rtypeddata.h
+                reserved: [ptr::null_mut(); 7],
                 #[cfg(ruby_gte_4_1)]
                 handle_weak_references: None,
             },
