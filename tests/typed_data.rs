@@ -22,5 +22,5 @@ fn it_wraps_rust_struct() {
     rb_assert!(ruby, "val.class == Example", val);
 
     let ex: &Example = eval!(ruby, "val", val).unwrap();
-    assert_eq!("foo", ex.value)
+    assert_eq!("foo", ex.value);
 }
