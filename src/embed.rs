@@ -189,15 +189,17 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
+    /// # fn main() -> Result<(), magnus::Error> {
     /// magnus::Ruby::init(|ruby| {
     ///     let result: i64 = ruby.eval("2 + 2")?;
     ///     assert_eq!(result, 4);
     ///     Ok(())
-    /// })
-    /// .unwrap()
+    /// })?;
+    /// # Ok(())
+    /// # }
     /// ```
-    pub fn init(func: fn(&Ruby) -> Result<(), Error>) -> Result<(), String> {
-        unsafe { func(&init()) }.map_err(|e| e.to_string())
+    pub fn init<T>(func: fn(&Ruby) -> Result<T, Error>) -> Result<T, Error> {
+        unsafe { func(&init()) }
     }
 
     /// Sets the current script name.

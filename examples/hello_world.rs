@@ -2,7 +2,7 @@ fn hello(subject: String) -> String {
     format!("hello, {}", subject)
 }
 
-fn main() {
+fn main() -> Result<(), magnus::Error> {
     magnus::Ruby::init(|ruby| {
         ruby.define_global_function("hello", magnus::function!(hello, 1));
 
@@ -11,5 +11,4 @@ fn main() {
 
         Ok(())
     })
-    .unwrap()
 }

@@ -315,6 +315,8 @@ impl fmt::Display for Error {
     }
 }
 
+impl std::error::Error for Error {}
+
 impl From<Exception> for Error {
     fn from(val: Exception) -> Self {
         Self(ErrorType::Exception(val))

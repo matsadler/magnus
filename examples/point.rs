@@ -24,7 +24,7 @@ impl Point {
     }
 }
 
-fn main() -> Result<(), String> {
+fn main() -> Result<(), magnus::Error> {
     magnus::Ruby::init(|ruby| {
         let class = ruby.define_class("Point", ruby.class_object())?;
         class.define_singleton_method("new", function!(Point::new, 2))?;

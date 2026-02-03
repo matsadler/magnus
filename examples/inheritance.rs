@@ -31,7 +31,7 @@ fn print_area(s: &Shape) {
     println!("{}", s.area());
 }
 
-fn main() -> Result<(), String> {
+fn main() -> Result<(), magnus::Error> {
     // Normal Rust code
     let a = Shape::Circle { radius: 10.0 };
     let b = Shape::Rectangle { x: 10.0, y: 2.0 };

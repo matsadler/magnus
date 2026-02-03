@@ -6,7 +6,7 @@ fn fib(n: usize) -> usize {
     }
 }
 
-fn main() {
+fn main() -> Result<(), magnus::Error> {
     magnus::Ruby::init(|ruby| {
         ruby.define_global_function("fib", magnus::function!(fib, 1));
 
@@ -15,5 +15,4 @@ fn main() {
 
         Ok(())
     })
-    .unwrap()
 }
