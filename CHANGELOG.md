@@ -5,6 +5,8 @@
 - `Ruby::profile_frames` to collect a lightweight backtrace for profiling.
 - `Thread::profile_frames` to collect a lightweight backtrace for profiling a
   specific thread.
+- `Ruby::debug_inspector_open` to acquire a `DebugInspector` struct that gives
+  access to the current frame's self, class, binding, and instruction sequence.
 
 ### Changed
 - Minimum supported Rust version is now 1.85.
