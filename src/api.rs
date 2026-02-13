@@ -1,7 +1,7 @@
 //! This module/file's name is a hack to get the `impl Ruby` defined here to
 //! show first in docs. This module shouldn't be exposed publicly.
 
-use std::{cell::Cell, marker::PhantomData};
+use std::marker::PhantomData;
 
 use rb_sys::ruby_native_thread_p;
 
@@ -22,10 +22,6 @@ enum RubyGvlState {
     NonRubyThread,
 }
 
-thread_local! {
-    static RUBY_GVL_STATE: Cell<Option<RubyGvlState>> = const { Cell::new(None) };
-}
-
 impl RubyGvlState {
     fn current() -> Self {
         let current = if unsafe { ruby_thread_has_gvl_p() } != 0 {
@@ -35,21 +31,7 @@ impl RubyGvlState {
         } else {
             Self::NonRubyThread
         };
-        RUBY_GVL_STATE.replace(Some(current));
         current
-    }
-
-    fn cached() -> Self {
-        match RUBY_GVL_STATE.get() {
-            // assumed not to change because there's currently no api to
-            // unlock.
-            Some(Self::Locked) => Self::Locked,
-            None => Self::current(),
-            // Don't expect without an api to unlock, so skip cache
-            Some(Self::Unlocked) => Self::current(),
-            // assumed not to change
-            Some(Self::NonRubyThread) => Self::NonRubyThread,
-        }
     }
 
     fn ok<T>(self, value: T) -> Result<T, RubyUnavailableError> {
@@ -144,9 +126,18 @@ impl Ruby {
     /// Returns a new handle to Ruby's API if it can be verified the current
     /// thread is a Ruby thread.
     ///
-    /// If the Ruby API is not useable, returns `Err(RubyUnavailableError)`.
+    /// If the Ruby API is not usable, returns `Err(RubyUnavailableError)`.
+    ///
+    /// # Performance
+    ///
+    /// This function calls into Ruby's C APIs to check the current thread is a
+    /// Ruby thread and that the GVL is locked, which will have some overhead.
+    /// Other methods of getting a `&Ruby` reference (for example all methods
+    /// bound to Ruby with [`method`](crate::method!) or
+    /// [`function`](crate::function!) macros can have an optional first
+    /// argument of `&Ruby`) are zero-cost.
     pub fn get() -> Result<Self, RubyUnavailableError> {
-        RubyGvlState::cached().ok(Self(PhantomData))
+        RubyGvlState::current().ok(Self(PhantomData))
     }
 
     /// Get a handle to Ruby's API.

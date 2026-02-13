@@ -14,6 +14,7 @@
 - 'old-api' feature, which previously disabled deprecation warnings for the old
   api now enables/disables the old api, with deprecation warnings no longer
   optional.
+- `Ruby::get` no longer caches the GVL state of the current thread.
 
 ### Deprecated
 - The `data_type_builder!` macro. Please use
