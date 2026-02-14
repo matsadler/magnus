@@ -11,14 +11,19 @@ use std::{
 #[cfg(ruby_gte_3_3)]
 use rb_sys::rb_profile_thread_frames;
 use rb_sys::{
-    VALUE, rb_debug_inspector_backtrace_locations, rb_debug_inspector_current_depth,
-    rb_debug_inspector_frame_binding_get, rb_debug_inspector_frame_class_get,
-    rb_debug_inspector_frame_depth, rb_debug_inspector_frame_iseq_get,
-    rb_debug_inspector_frame_self_get, rb_debug_inspector_open, rb_debug_inspector_t,
-    rb_profile_frame_absolute_path, rb_profile_frame_base_label, rb_profile_frame_classpath,
-    rb_profile_frame_first_lineno, rb_profile_frame_full_label, rb_profile_frame_label,
-    rb_profile_frame_method_name, rb_profile_frame_path, rb_profile_frame_qualified_method_name,
-    rb_profile_frame_singleton_method_p, rb_profile_frames, ruby_special_consts,
+    RUBY_EVENT_ALL, RUBY_EVENT_B_CALL, RUBY_EVENT_B_RETURN, RUBY_EVENT_C_CALL, RUBY_EVENT_C_RETURN,
+    RUBY_EVENT_CALL, RUBY_EVENT_CLASS, RUBY_EVENT_END, RUBY_EVENT_FIBER_SWITCH, RUBY_EVENT_LINE,
+    RUBY_EVENT_NONE, RUBY_EVENT_RAISE, RUBY_EVENT_RESCUE, RUBY_EVENT_RETURN,
+    RUBY_EVENT_SCRIPT_COMPILED, RUBY_EVENT_THREAD_BEGIN, RUBY_EVENT_THREAD_END,
+    RUBY_EVENT_TRACEPOINT_ALL, VALUE, rb_debug_inspector_backtrace_locations,
+    rb_debug_inspector_current_depth, rb_debug_inspector_frame_binding_get,
+    rb_debug_inspector_frame_class_get, rb_debug_inspector_frame_depth,
+    rb_debug_inspector_frame_iseq_get, rb_debug_inspector_frame_self_get, rb_debug_inspector_open,
+    rb_debug_inspector_t, rb_event_flag_t, rb_profile_frame_absolute_path,
+    rb_profile_frame_base_label, rb_profile_frame_classpath, rb_profile_frame_first_lineno,
+    rb_profile_frame_full_label, rb_profile_frame_label, rb_profile_frame_method_name,
+    rb_profile_frame_path, rb_profile_frame_qualified_method_name,
+    rb_profile_frame_singleton_method_p, rb_profile_frames, rb_tracepoint_new, ruby_special_consts,
 };
 
 use crate::{
@@ -31,7 +36,7 @@ use crate::{
     r_array::RArray,
     r_string::RString,
     thread::Thread,
-    value::{Fixnum, ReprValue, Value, private::ReprValue as _},
+    value::{Fixnum, NonZeroValue, ReprValue, Value, private::ReprValue as _},
 };
 
 /// # Debug
@@ -211,6 +216,13 @@ impl Ruby {
         unsafe { Fixnum::from_rb_value_unchecked(rb_debug_inspector_current_depth()) }
             .to_usize()
             .unwrap()
+    }
+
+    pub fn tracepoint_new<F>(&self, events: Events, func: F) -> TracePoint
+    where
+        F: FnMut(&Ruby) -> (), // todo: can this be -> Result<(), Error>?
+    {
+        todo!()
     }
 }
 
@@ -777,3 +789,195 @@ impl<'a> DebugInspector<'a> {
         .and_then(|i| i.to_usize())
     }
 }
+
+/// Event types for use with [`Ruby::tracepoint_new`].
+#[derive(Clone, Copy, Default)]
+#[repr(transparent)]
+pub struct Events(rb_event_flag_t);
+
+impl Events {
+    /// Create a new `Events` with no flags set.
+    pub const fn new() -> Self {
+        Self(RUBY_EVENT_NONE)
+    }
+
+    /// Set the `RUBY_EVENT_LINE` flag
+    pub const fn line(self) -> Self {
+        Self(self.0 | RUBY_EVENT_LINE)
+    }
+
+    /// Return if `self` contains the `RUBY_EVENT_LINE` flag
+    pub const fn is_line(self) -> bool {
+        self.0 & RUBY_EVENT_LINE != 0
+    }
+
+    /// Set the `RUBY_EVENT_CLASS` flag
+    pub const fn class(self) -> Self {
+        Self(self.0 | RUBY_EVENT_CLASS)
+    }
+
+    /// Return if `self` contains the `RUBY_EVENT_CLASS` flag
+    pub const fn is_class(self) -> bool {
+        self.0 & RUBY_EVENT_CLASS != 0
+    }
+
+    /// Set the `RUBY_EVENT_END` flag
+    pub const fn end(self) -> Self {
+        Self(self.0 | RUBY_EVENT_END)
+    }
+
+    /// Return if `self` contains the `RUBY_EVENT_END` flag
+    pub const fn is_end(self) -> bool {
+        self.0 & RUBY_EVENT_END != 0
+    }
+
+    /// Set the `RUBY_EVENT_CALL` flag
+    pub const fn call(self) -> Self {
+        Self(self.0 | RUBY_EVENT_CALL)
+    }
+
+    /// Return if `self` contains the `RUBY_EVENT_CALL` flag
+    pub const fn is_call(self) -> bool {
+        self.0 & RUBY_EVENT_CALL != 0
+    }
+
+    /// Set the `RUBY_EVENT_RETURN` flag
+    pub const fn event_return(self) -> Self {
+        Self(self.0 | RUBY_EVENT_RETURN)
+    }
+
+    /// Return if `self` contains the `RUBY_EVENT_RETURN` flag
+    pub const fn is_return(self) -> bool {
+        self.0 & RUBY_EVENT_RETURN != 0
+    }
+
+    /// Set the `RUBY_EVENT_C_CALL` flag
+    pub const fn c_call(self) -> Self {
+        Self(self.0 | RUBY_EVENT_C_CALL)
+    }
+
+    /// Return if `self` contains the `RUBY_EVENT_C_CALL` flag
+    pub const fn is_c_call(self) -> bool {
+        self.0 & RUBY_EVENT_C_CALL != 0
+    }
+
+    /// Set the `RUBY_EVENT_C_RETURN` flag
+    pub const fn c_return(self) -> Self {
+        Self(self.0 | RUBY_EVENT_C_RETURN)
+    }
+
+    /// Return if `self` contains the `RUBY_EVENT_C_RETURN` flag
+    pub const fn is_c_return(self) -> bool {
+        self.0 & RUBY_EVENT_C_RETURN != 0
+    }
+
+    /// Set the `RUBY_EVENT_RAISE` flag
+    pub const fn raise(self) -> Self {
+        Self(self.0 | RUBY_EVENT_RAISE)
+    }
+
+    /// Return if `self` contains the `RUBY_EVENT_RAISE` flag
+    pub const fn is_raise(self) -> bool {
+        self.0 & RUBY_EVENT_RAISE != 0
+    }
+
+    /// Set the `RUBY_EVENT_ALL` flag
+    ///
+    /// This is not all events, but the subset originally usable with the
+    /// `set_trace_func` api. See [`tracepoint_all`](Events::tracepoint_all).
+    pub const fn all(self) -> Self {
+        Self(self.0 | RUBY_EVENT_ALL)
+    }
+
+    /// Return if `self` contains the `RUBY_EVENT_ALL` flag
+    ///
+    /// This is not all events, but the subset originally usable with the
+    /// `set_trace_func` api. See [`is_tracepoint_all`](Events::is_tracepoint_all).
+    pub const fn is_all(self) -> bool {
+        self.0 & RUBY_EVENT_ALL != 0
+    }
+
+    /// Set the `RUBY_EVENT_B_CALL` flag
+    pub const fn b_call(self) -> Self {
+        Self(self.0 | RUBY_EVENT_B_CALL)
+    }
+
+    /// Return if `self` contains the `RUBY_EVENT_B_CALL` flag
+    pub const fn is_b_call(self) -> bool {
+        self.0 & RUBY_EVENT_B_CALL != 0
+    }
+
+    /// Set the `RUBY_EVENT_B_RETURN` flag
+    pub const fn b_return(self) -> Self {
+        Self(self.0 | RUBY_EVENT_B_RETURN)
+    }
+
+    /// Return if `self` contains the `RUBY_EVENT_B_RETURN` flag
+    pub const fn is_b_return(self) -> bool {
+        self.0 & RUBY_EVENT_B_RETURN != 0
+    }
+
+    /// Set the `RUBY_EVENT_THREAD_BEGIN` flag
+    pub const fn thread_begin(self) -> Self {
+        Self(self.0 | RUBY_EVENT_THREAD_BEGIN)
+    }
+
+    /// Return if `self` contains the `RUBY_EVENT_THREAD_BEGIN` flag
+    pub const fn is_thread_begin(self) -> bool {
+        self.0 & RUBY_EVENT_THREAD_BEGIN != 0
+    }
+
+    /// Set the `RUBY_EVENT_THREAD_END` flag
+    pub const fn thread_end(self) -> Self {
+        Self(self.0 | RUBY_EVENT_THREAD_END)
+    }
+
+    /// Return if `self` contains the `RUBY_EVENT_THREAD_END` flag
+    pub const fn is_thread_end(self) -> bool {
+        self.0 & RUBY_EVENT_THREAD_END != 0
+    }
+
+    /// Set the `RUBY_EVENT_FIBER_SWITCH` flag
+    pub const fn fiber_switch(self) -> Self {
+        Self(self.0 | RUBY_EVENT_FIBER_SWITCH)
+    }
+
+    /// Return if `self` contains the `RUBY_EVENT_FIBER_SWITCH` flag
+    pub const fn is_fiber_switch(self) -> bool {
+        self.0 & RUBY_EVENT_FIBER_SWITCH != 0
+    }
+
+    /// Set the `RUBY_EVENT_SCRIPT_COMPILED` flag
+    pub const fn script_compiled(self) -> Self {
+        Self(self.0 | RUBY_EVENT_SCRIPT_COMPILED)
+    }
+
+    /// Return if `self` contains the `RUBY_EVENT_SCRIPT_COMPILED` flag
+    pub const fn is_script_compiled(self) -> bool {
+        self.0 & RUBY_EVENT_SCRIPT_COMPILED != 0
+    }
+
+    /// Set the `RUBY_EVENT_RESCUE` flag
+    pub const fn rescue(self) -> Self {
+        Self(self.0 | RUBY_EVENT_RESCUE)
+    }
+
+    /// Return if `self` contains the `RUBY_EVENT_RESCUE` flag
+    pub const fn is_rescue(self) -> bool {
+        self.0 & RUBY_EVENT_RESCUE != 0
+    }
+
+    /// Set the `RUBY_EVENT_TRACEPOINT_ALL` flag
+    pub const fn tracepoint_all(self) -> Self {
+        Self(self.0 | RUBY_EVENT_TRACEPOINT_ALL)
+    }
+
+    /// Return if `self` contains the `RUBY_EVENT_TRACEPOINT_ALL` flag
+    pub const fn is_tracepoint_all(self) -> bool {
+        self.0 & RUBY_EVENT_TRACEPOINT_ALL != 0
+    }
+}
+
+#[derive(Clone, Copy)]
+#[repr(transparent)]
+pub struct TracePoint(NonZeroValue);
