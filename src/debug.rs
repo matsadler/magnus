@@ -8,23 +8,23 @@ use std::{
     ptr::null_mut,
 };
 
-#[cfg(ruby_gte_3_3)]
-use rb_sys::rb_profile_thread_frames;
 use rb_sys::{
     RUBY_EVENT_ALL, RUBY_EVENT_B_CALL, RUBY_EVENT_B_RETURN, RUBY_EVENT_C_CALL, RUBY_EVENT_C_RETURN,
     RUBY_EVENT_CALL, RUBY_EVENT_CLASS, RUBY_EVENT_END, RUBY_EVENT_FIBER_SWITCH, RUBY_EVENT_LINE,
-    RUBY_EVENT_NONE, RUBY_EVENT_RAISE, RUBY_EVENT_RESCUE, RUBY_EVENT_RETURN,
-    RUBY_EVENT_SCRIPT_COMPILED, RUBY_EVENT_THREAD_BEGIN, RUBY_EVENT_THREAD_END,
-    RUBY_EVENT_TRACEPOINT_ALL, VALUE, rb_debug_inspector_backtrace_locations,
-    rb_debug_inspector_current_depth, rb_debug_inspector_frame_binding_get,
-    rb_debug_inspector_frame_class_get, rb_debug_inspector_frame_depth,
-    rb_debug_inspector_frame_iseq_get, rb_debug_inspector_frame_self_get, rb_debug_inspector_open,
-    rb_debug_inspector_t, rb_event_flag_t, rb_profile_frame_absolute_path,
-    rb_profile_frame_base_label, rb_profile_frame_classpath, rb_profile_frame_first_lineno,
-    rb_profile_frame_full_label, rb_profile_frame_label, rb_profile_frame_method_name,
-    rb_profile_frame_path, rb_profile_frame_qualified_method_name,
-    rb_profile_frame_singleton_method_p, rb_profile_frames, rb_tracepoint_new, ruby_special_consts,
+    RUBY_EVENT_NONE, RUBY_EVENT_RAISE, RUBY_EVENT_RETURN, RUBY_EVENT_SCRIPT_COMPILED,
+    RUBY_EVENT_THREAD_BEGIN, RUBY_EVENT_THREAD_END, RUBY_EVENT_TRACEPOINT_ALL, VALUE,
+    rb_debug_inspector_backtrace_locations, rb_debug_inspector_current_depth,
+    rb_debug_inspector_frame_binding_get, rb_debug_inspector_frame_class_get,
+    rb_debug_inspector_frame_depth, rb_debug_inspector_frame_iseq_get,
+    rb_debug_inspector_frame_self_get, rb_debug_inspector_open, rb_debug_inspector_t,
+    rb_event_flag_t, rb_profile_frame_absolute_path, rb_profile_frame_base_label,
+    rb_profile_frame_classpath, rb_profile_frame_first_lineno, rb_profile_frame_full_label,
+    rb_profile_frame_label, rb_profile_frame_method_name, rb_profile_frame_path,
+    rb_profile_frame_qualified_method_name, rb_profile_frame_singleton_method_p, rb_profile_frames,
+    rb_tracepoint_new, ruby_special_consts,
 };
+#[cfg(ruby_gte_3_3)]
+use rb_sys::{RUBY_EVENT_RESCUE, rb_profile_thread_frames};
 
 use crate::{
     Ruby,
@@ -958,11 +958,13 @@ impl Events {
     }
 
     /// Set the `RUBY_EVENT_RESCUE` flag
+    #[cfg(ruby_gte_3_3)]
     pub const fn rescue(self) -> Self {
         Self(self.0 | RUBY_EVENT_RESCUE)
     }
 
     /// Return if `self` contains the `RUBY_EVENT_RESCUE` flag
+    #[cfg(ruby_gte_3_3)]
     pub const fn is_rescue(self) -> bool {
         self.0 & RUBY_EVENT_RESCUE != 0
     }
