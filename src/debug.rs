@@ -6,6 +6,7 @@ use std::{
     ffi::{c_int, c_long, c_void},
     marker::PhantomData,
     ptr::null_mut,
+    slice,
 };
 
 use rb_sys::{
@@ -13,30 +14,36 @@ use rb_sys::{
     RUBY_EVENT_CALL, RUBY_EVENT_CLASS, RUBY_EVENT_END, RUBY_EVENT_FIBER_SWITCH, RUBY_EVENT_LINE,
     RUBY_EVENT_NONE, RUBY_EVENT_RAISE, RUBY_EVENT_RETURN, RUBY_EVENT_SCRIPT_COMPILED,
     RUBY_EVENT_THREAD_BEGIN, RUBY_EVENT_THREAD_END, RUBY_EVENT_TRACEPOINT_ALL, VALUE,
-    rb_debug_inspector_backtrace_locations, rb_debug_inspector_current_depth,
-    rb_debug_inspector_frame_binding_get, rb_debug_inspector_frame_class_get,
-    rb_debug_inspector_frame_depth, rb_debug_inspector_frame_iseq_get,
-    rb_debug_inspector_frame_self_get, rb_debug_inspector_open, rb_debug_inspector_t,
-    rb_event_flag_t, rb_profile_frame_absolute_path, rb_profile_frame_base_label,
-    rb_profile_frame_classpath, rb_profile_frame_first_lineno, rb_profile_frame_full_label,
-    rb_profile_frame_label, rb_profile_frame_method_name, rb_profile_frame_path,
-    rb_profile_frame_qualified_method_name, rb_profile_frame_singleton_method_p, rb_profile_frames,
-    rb_tracepoint_new, ruby_special_consts,
+    rb_data_typed_object_wrap, rb_debug_inspector_backtrace_locations,
+    rb_debug_inspector_current_depth, rb_debug_inspector_frame_binding_get,
+    rb_debug_inspector_frame_class_get, rb_debug_inspector_frame_depth,
+    rb_debug_inspector_frame_iseq_get, rb_debug_inspector_frame_self_get, rb_debug_inspector_open,
+    rb_debug_inspector_t, rb_event_flag_t, rb_profile_frame_absolute_path,
+    rb_profile_frame_base_label, rb_profile_frame_classpath, rb_profile_frame_first_lineno,
+    rb_profile_frame_full_label, rb_profile_frame_label, rb_profile_frame_method_name,
+    rb_profile_frame_path, rb_profile_frame_qualified_method_name,
+    rb_profile_frame_singleton_method_p, rb_profile_frames, rb_tracepoint_new, ruby_special_consts,
 };
 #[cfg(ruby_gte_3_3)]
 use rb_sys::{RUBY_EVENT_RESCUE, rb_profile_thread_frames};
 
 use crate::{
-    Ruby,
+    Module, Ruby,
     class::RClass,
     error::{Error, protect},
     gc,
     integer::Integer,
-    method::{BlockReturn, DebugInspectorOpen},
+    method::{BlockReturn, DebugInspectorOpen, InitReturn},
+    object::Object,
     r_array::RArray,
     r_string::RString,
     thread::Thread,
-    value::{Fixnum, NonZeroValue, ReprValue, Value, private::ReprValue as _},
+    try_convert::TryConvert,
+    typed_data::{DataType, DataTypeBuilder, DataTypeFunctions},
+    value::{
+        Fixnum, NonZeroValue, ReprValue, Value,
+        private::{self, ReprValue as _},
+    },
 };
 
 /// # Debug
@@ -218,9 +225,15 @@ impl Ruby {
             .unwrap()
     }
 
-    pub fn tracepoint_new<F>(&self, events: Events, func: F) -> TracePoint
+    pub fn tracepoint_new<F, R>(
+        &self,
+        thread: Option<Thread>,
+        events: Events,
+        func: F,
+    ) -> TracePoint
     where
-        F: FnMut(&Ruby) -> (), // todo: can this be -> Result<(), Error>?
+        F: 'static + Send + FnMut(&Ruby) -> R,
+        R: InitReturn,
     {
         todo!()
     }
@@ -983,3 +996,86 @@ impl Events {
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct TracePoint(NonZeroValue);
+
+impl TracePoint {
+    #[inline]
+    pub fn from_value(val: Value) -> Option<Self> {
+        unsafe {
+            val.is_kind_of(
+                Ruby::get_with(val)
+                    .class_object()
+                    .const_get::<_, RClass>("TracePoint")
+                    .unwrap(),
+            )
+            .then(|| Self(NonZeroValue::new_unchecked(val)))
+        }
+    }
+
+    #[inline]
+    pub(crate) unsafe fn from_rb_value_unchecked(val: VALUE) -> Self {
+        unsafe { Self(NonZeroValue::new_unchecked(Value::new(val))) }
+    }
+}
+
+impl Object for TracePoint {}
+
+unsafe impl private::ReprValue for TracePoint {}
+
+impl ReprValue for TracePoint {}
+
+impl TryConvert for TracePoint {
+    fn try_convert(val: Value) -> Result<Self, Error> {
+        Self::from_value(val).ok_or_else(|| {
+            Error::new(
+                Ruby::get_with(val).exception_type_error(),
+                format!("no implicit conversion of {} into TracePoint", unsafe {
+                    val.classname()
+                },),
+            )
+        })
+    }
+}
+
+/// Wrap a closure in a Ruby object with no class.
+///
+/// This effectively makes the closure's lifetime managed by Ruby. It will be
+/// dropped when the returned `Value` is garbage collected.
+fn wrap_closure<F, R>(func: F) -> (*mut F, Value)
+where
+    F: FnMut(&Ruby) -> R,
+    R: InitReturn,
+{
+    struct Closure<F>(F, DataType);
+    unsafe impl<F> Send for Closure<F> {}
+    impl<F> DataTypeFunctions for Closure<F> {
+        fn mark(&self, marker: &gc::Marker) {
+            // Attempt to mark any Ruby values captured in a closure.
+            // Rust's closures are structs that contain all the values they
+            // have captured. This reads that struct as a slice of VALUEs and
+            // calls rb_gc_mark_locations which calls gc_mark_maybe which
+            // marks VALUEs and ignores non-VALUEs
+            marker.mark_slice(unsafe {
+                slice::from_raw_parts(
+                    &self.0 as *const _ as *const Value,
+                    size_of::<F>() / size_of::<Value>(),
+                )
+            });
+        }
+    }
+
+    let data_type = DataTypeBuilder::<Closure<F>>::new(c"rust closure")
+        .free_immediately()
+        .mark()
+        .build();
+
+    let boxed = Box::new(Closure(func, data_type));
+    let ptr = Box::into_raw(boxed);
+    let value = unsafe {
+        Value::new(rb_data_typed_object_wrap(
+            0, // using 0 for the class will hide the object from ObjectSpace
+            ptr as *mut _,
+            (*ptr).1.as_rb_data_type() as *const _,
+        ))
+    };
+    unsafe { (&mut (*ptr).0 as *mut F, value) }
+}
