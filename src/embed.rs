@@ -98,6 +98,8 @@ pub unsafe fn setup() -> Cleanup {
 
                 ruby_init_loadpath();
 
+                cleanup.0.require("enc/encdb").unwrap();
+
                 cleanup
             }
             Err(true) => panic!("Ruby already initialized"),
