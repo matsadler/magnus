@@ -52,7 +52,7 @@ jobs:
           git clone https://github.com/rbenv/ruby-build.git
           PREFIX=/usr/local sudo ./ruby-build/install.sh
           export MAKEFLAGS="-j$(nproc)"
-          export RUBY_CONFIGURE_OPTS="--enable-load-relative --disable-shared --disable-install-doc --disable-install-rdoc"
+          export RUBY_CONFIGURE_OPTS="--enable-load-relative --with-static-linked-ext --disable-shared --disable-install-doc --disable-install-rdoc"
           sudo -E ruby-build ${{ matrix.ruby-version }} /opt/rubies/${{ matrix.ruby-version }}
           echo "PATH=/opt/rubies/${{ matrix.ruby-version }}/bin:$PATH" >> $GITHUB_ENV
 
