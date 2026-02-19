@@ -33,7 +33,7 @@ use crate::{
     error::{Error, protect},
     gc,
     integer::Integer,
-    method::{BlockReturn, DebugInspectorOpen, InitReturn},
+    method::{BlockReturn, DebugInspectorOpen, InitReturn, TracePointNew},
     object::Object,
     r_array::RArray,
     r_string::RString,
@@ -232,10 +232,37 @@ impl Ruby {
         func: F,
     ) -> TracePoint
     where
-        F: 'static + Send + FnMut(&Ruby) -> R,
+        F: 'static + Send + FnMut(TracePoint) -> R,
         R: InitReturn,
     {
-        todo!()
+        unsafe extern "C" fn call<F, R>(tpval: VALUE, data: *mut c_void)
+        where
+            F: FnMut(TracePoint) -> R,
+            R: InitReturn,
+        {
+            unsafe {
+                let closure = &mut *(data as *mut F);
+                closure.call_handle_error(TracePoint::from_rb_value_unchecked(tpval))
+            }
+        }
+
+        let (closure, keepalive) = wrap_closure(func);
+        let call_func = call::<F, R> as unsafe extern "C" fn(VALUE, *mut c_void);
+
+        let tp = unsafe {
+            TracePoint::from_rb_value_unchecked(rb_tracepoint_new(
+                thread
+                    .map(|t| t.as_value())
+                    .unwrap_or(self.qnil().as_value())
+                    .as_rb_value(),
+                events.0,
+                Some(call_func),
+                closure as *mut c_void,
+            ))
+        };
+        // ivar without @ prefix is invisible from Ruby
+        tp.ivar_set("__rust_closure", keepalive).unwrap();
+        tp
     }
 }
 
@@ -1042,7 +1069,7 @@ impl TryConvert for TracePoint {
 /// dropped when the returned `Value` is garbage collected.
 fn wrap_closure<F, R>(func: F) -> (*mut F, Value)
 where
-    F: FnMut(&Ruby) -> R,
+    F: FnMut(TracePoint) -> R,
     R: InitReturn,
 {
     struct Closure<F>(F, DataType);

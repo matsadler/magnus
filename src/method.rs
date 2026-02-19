@@ -18,7 +18,7 @@ use crate::{
         Proc, Yield, YieldSplat, YieldValues, do_yield_iter, do_yield_splat_iter,
         do_yield_values_iter,
     },
-    debug::DebugInspector,
+    debug::{DebugInspector, TracePoint},
     error::{Error, IntoError, raise},
     into_value::{ArgList, IntoValue},
     r_array::RArray,
@@ -536,6 +536,39 @@ impl<Func, Res> DebugInspectorOpen<Res> for Func
 where
     Func: FnOnce(DebugInspector) -> Res,
     Res: BlockReturn,
+{
+}
+
+/// Helper trait for wrapping a function with type conversions and error
+/// handling, for use as a TracePoint callback.
+///
+/// See the [`Ruby::tracepoint_new`] function.
+#[doc(hidden)]
+pub trait TracePointNew<Res>
+where
+    Self: Sized + FnMut(TracePoint) -> Res,
+    Res: InitReturn,
+{
+    #[inline]
+    unsafe fn call_handle_error(mut self, tp: TracePoint) {
+        let ruby = Ruby::get_with(tp);
+        let res = match std::panic::catch_unwind(AssertUnwindSafe(|| {
+            (self)(tp).into_init_return_with(&ruby)
+        })) {
+            Ok(v) => v,
+            Err(e) => Err(Error::from_panic(&ruby, e)),
+        };
+        match res {
+            Ok(v) => v,
+            Err(e) => raise(e),
+        }
+    }
+}
+
+impl<Func, Res> TracePointNew<Res> for Func
+where
+    Func: FnMut(TracePoint) -> Res,
+    Res: InitReturn,
 {
 }
 
