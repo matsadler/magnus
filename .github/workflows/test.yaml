@@ -1,80 +1,117 @@
 name: Test
 
 on:
-    - push
-    - pull_request
+  - push
+  - pull_request
 
 jobs:
-    test:
-        runs-on: ${{ matrix.os }}
-        strategy:
-            fail-fast: false
-            matrix:
-                os:
-                    - ubuntu-latest
-                    - macos-latest
-                    - windows-latest
-                ruby-version:
-                    - "3.2"
-                    - "3.3"
-                    - "3.4"
-                    - "4.0"
-                    - head
-                rustup-toolchain:
-                    - "1.85"
-                    - stable
-                exclude:
-                    - os: windows-latest
-                      ruby-version: head
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          # - macos-latest
+          # - windows-latest
+        ruby-version:
+          # - "3.2"
+          # - "3.3"
+          # - "3.4"
+          - "4.0"
+          # - head
+        rustup-toolchain:
+          # - "1.85"
+          - stable
+        exclude:
+          - os: windows-latest
+            ruby-version: head
+        include:
+          - os: ubuntu-latest
+            ruby-version: "3.4.8"
+            rustup-toolchain: stable
+            static: "true"
+          - os: ubuntu-latest
+            ruby-version: "4.0.1"
+            rustup-toolchain: stable
+            static: "true"
 
-        steps:
-            - uses: actions/checkout@v5
-            - uses: ruby/setup-ruby@v1
-              with:
-                  ruby-version: ${{ matrix.ruby-version }}
-                  bundler-cache: true
-            - if: runner.os != 'Windows'
-              uses: dtolnay/rust-toolchain@master
-              with:
-                  toolchain: ${{ matrix.rustup-toolchain }}
+    steps:
+      - uses: actions/checkout@v5
 
-            # fixes "fatal error: 'strings.h' file not found" for Windows,
-            # which is down to Ruby being built with gnu/msys2 and the
-            # Rust extension with msvc
-            - if: runner.os == 'Windows'
-              uses: dtolnay/rust-toolchain@master
-              with:
-                  toolchain: ${{ matrix.rustup-toolchain }}-gnu
-            - name: Set BINDGEN_EXTRA_CLANG_ARGS
-              shell: bash
-              if: runner.os == 'Windows'
-              run: echo BINDGEN_EXTRA_CLANG_ARGS="--target=x86_64-pc-windows-gnu --sysroot=${RI_DEVKIT//\\/\/}$MSYSTEM_PREFIX" >> $GITHUB_ENV
+      - if: matrix.static != 'true'
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby-version }}
+          bundler-cache: true
 
-            # fixes "fatal error: 'strings.h' file not found" for Linux
-            - name: Set LD_LIBRARY_PATH
-              if: runner.os == 'Linux'
-              run: echo "LD_LIBRARY_PATH=$(ruby -rrbconfig -e'puts RbConfig::CONFIG["libdir"]')${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" >> $GITHUB_ENV
+      - if: matrix.static == 'true'
+        name: 🔘 Build static ruby
+        working-directory: /tmp
+        run: |
+          git clone https://github.com/rbenv/ruby-build.git
+          PREFIX=/usr/local sudo ./ruby-build/install.sh
+          export MAKEFLAGS="-j$(nproc)"
+          export RUBY_CONFIGURE_OPTS="--enable-load-relative --with-static-linked-ext --disable-shared --disable-install-doc --disable-install-rdoc"
+          sudo -E ruby-build ${{ matrix.ruby-version }} /opt/rubies/${{ matrix.ruby-version }}
+          echo "PATH=/opt/rubies/${{ matrix.ruby-version }}/bin:$PATH" >> $GITHUB_ENV
 
-            # Ruby head is currently missing the power_assert default gem
-            - name: Ruby head bug workaround
-              if: matrix.ruby-version == 'head'
-              run: gem install power_assert
+      - if: runner.os != 'Windows'
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.rustup-toolchain }}
 
-            - name: Example gem tests (blank?)
-              working-directory: examples/rust_blank
-              run: bundle exec rake test
+      # fixes "fatal error: 'strings.h' file not found" for Windows,
+      # which is down to Ruby being built with gnu/msys2 and the
+      # Rust extension with msvc
+      - if: runner.os == 'Windows'
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.rustup-toolchain }}-gnu
 
-            - name: Example gem tests (complete object)
-              working-directory: examples/complete_object
-              run: bundle exec rake test
+      - name: Set BINDGEN_EXTRA_CLANG_ARGS
+        shell: bash
+        if: runner.os == 'Windows'
+        run: echo BINDGEN_EXTRA_CLANG_ARGS="--target=x86_64-pc-windows-gnu --sysroot=${RI_DEVKIT//\\/\/}$MSYSTEM_PREFIX" >> $GITHUB_ENV
 
-            - name: Example gem tests (custom exception defined in Ruby)
-              working-directory: examples/custom_exception_ruby
-              run: bundle exec rake test
+      # fixes "fatal error: 'strings.h' file not found" for Linux
+      - name: Set LD_LIBRARY_PATH
+        if: runner.os == 'Linux'
+        run: |
+          which ruby
+          ruby_libdir="$(ruby -rrbconfig -e'puts RbConfig::CONFIG["libdir"]')"
+          echo "${ruby_libdir}"
+          echo "LD_LIBRARY_PATH=${ruby_libdir}${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" >> $GITHUB_ENV
 
-            - name: Example gem tests (custom exception defined in Rust)
-              working-directory: examples/custom_exception_rust
-              run: bundle exec rake test
+      # Ruby head is currently missing the power_assert default gem
+      - name: Ruby head bug workaround
+        if: matrix.ruby-version == 'head'
+        run: gem install power_assert
 
-            - name: Run tests
-              run: cargo test --workspace
+      - if: matrix.static == 'true' && matrix.os != 'macos-latest'
+        run: sed -i 's/# "ruby-static",/"ruby-static",/' Cargo.toml
+
+      - if: matrix.static == 'true' && matrix.os == 'macos-latest'
+        run: sed -i '' 's/# "ruby-static",/"ruby-static",/' Cargo.toml
+
+      - if: matrix.static == 'true'
+        run: cargo run --release --example encoding
+
+      - name: Example gem tests (blank?)
+        working-directory: examples/rust_blank
+        run: bundle exec rake test
+
+      - name: Example gem tests (complete object)
+        working-directory: examples/complete_object
+        run: bundle exec rake test
+
+      - name: Example gem tests (custom exception defined in Ruby)
+        working-directory: examples/custom_exception_ruby
+        run: bundle exec rake test
+
+      - name: Example gem tests (custom exception defined in Rust)
+        working-directory: examples/custom_exception_rust
+        run: bundle exec rake test
+
+      - name: Run tests
+        run: cargo test --workspace

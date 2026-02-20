@@ -38,6 +38,7 @@ rb-sys = { version = "0.9.124", default-features = false, features = [
     "bindgen-rbimpls",
     "bindgen-deprecated-types",
     "stable-api",
+    # "ruby-static",
 ] }
 seq-macro = "0.3"
 

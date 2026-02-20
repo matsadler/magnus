@@ -12,7 +12,7 @@ use std::{
 use rb_sys::rb_w32_sysinit;
 use rb_sys::{
     VALUE, ruby_cleanup, ruby_exec_node, ruby_init_stack, ruby_process_options,
-    ruby_set_script_name, ruby_setup,
+    ruby_set_script_name, ruby_setup, ruby_init_loadpath,
 };
 
 use crate::{
@@ -94,7 +94,13 @@ pub unsafe fn setup() -> Cleanup {
                 if ruby_setup() != 0 {
                     panic!("Failed to setup Ruby");
                 };
-                Cleanup(Ruby::get_unchecked())
+                let cleanup = Cleanup(Ruby::get_unchecked());
+
+                ruby_init_loadpath();
+
+                cleanup.0.require("enc/encdb").unwrap();
+
+                cleanup
             }
             Err(true) => panic!("Ruby already initialized"),
             r => panic!("unexpected INIT state {:?}", r),
