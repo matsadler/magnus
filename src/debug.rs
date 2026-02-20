@@ -4,6 +4,7 @@
 
 use std::{
     ffi::{c_int, c_long, c_void},
+    fmt,
     marker::PhantomData,
     ptr::null_mut,
     slice,
@@ -22,18 +23,21 @@ use rb_sys::{
     rb_profile_frame_base_label, rb_profile_frame_classpath, rb_profile_frame_first_lineno,
     rb_profile_frame_full_label, rb_profile_frame_label, rb_profile_frame_method_name,
     rb_profile_frame_path, rb_profile_frame_qualified_method_name,
-    rb_profile_frame_singleton_method_p, rb_profile_frames, rb_tracepoint_new, ruby_special_consts,
+    rb_profile_frame_singleton_method_p, rb_profile_frames, rb_tracepoint_disable,
+    rb_tracepoint_enable, rb_tracepoint_enabled_p, rb_tracepoint_new, ruby_special_consts,
 };
 #[cfg(ruby_gte_3_3)]
 use rb_sys::{RUBY_EVENT_RESCUE, rb_profile_thread_frames};
 
 use crate::{
-    Module, Ruby,
+    api::Ruby,
     class::RClass,
     error::{Error, protect},
     gc,
     integer::Integer,
+    into_value::IntoValue,
     method::{BlockReturn, DebugInspectorOpen, InitReturn, TracePointNew},
+    module::Module,
     object::Object,
     r_array::RArray,
     r_string::RString,
@@ -1041,6 +1045,42 @@ impl TracePoint {
     #[inline]
     pub(crate) unsafe fn from_rb_value_unchecked(val: VALUE) -> Self {
         unsafe { Self(NonZeroValue::new_unchecked(Value::new(val))) }
+    }
+
+    pub fn enable(&self) -> Result<(), Error> {
+        unsafe {
+            protect(|| Value::new(rb_tracepoint_enable(self.as_rb_value())))?;
+        }
+        Ok(())
+    }
+
+    pub fn disable(&self) {
+        unsafe {
+            rb_tracepoint_disable(self.as_rb_value());
+        }
+    }
+
+    pub fn is_enabled(&self) -> bool {
+        unsafe { Value::new(rb_tracepoint_enabled_p(self.as_rb_value())).to_bool() }
+    }
+}
+
+impl fmt::Display for TracePoint {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", unsafe { self.to_s_infallible() })
+    }
+}
+
+impl fmt::Debug for TracePoint {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.inspect())
+    }
+}
+
+impl IntoValue for TracePoint {
+    #[inline]
+    fn into_value_with(self, _: &Ruby) -> Value {
+        self.0.get()
     }
 }
 
