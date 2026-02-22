@@ -23,8 +23,10 @@ use rb_sys::{
     rb_profile_frame_base_label, rb_profile_frame_classpath, rb_profile_frame_first_lineno,
     rb_profile_frame_full_label, rb_profile_frame_label, rb_profile_frame_method_name,
     rb_profile_frame_path, rb_profile_frame_qualified_method_name,
-    rb_profile_frame_singleton_method_p, rb_profile_frames, rb_tracepoint_disable,
-    rb_tracepoint_enable, rb_tracepoint_enabled_p, rb_tracepoint_new, ruby_special_consts,
+    rb_profile_frame_singleton_method_p, rb_profile_frames, rb_trace_arg_t, rb_tracearg_event,
+    rb_tracearg_event_flag, rb_tracearg_from_tracepoint, rb_tracearg_method_id,
+    rb_tracepoint_disable, rb_tracepoint_enable, rb_tracepoint_enabled_p, rb_tracepoint_new,
+    ruby_special_consts,
 };
 #[cfg(ruby_gte_3_3)]
 use rb_sys::{RUBY_EVENT_RESCUE, rb_profile_thread_frames};
@@ -45,7 +47,7 @@ use crate::{
     try_convert::TryConvert,
     typed_data::{DataType, DataTypeBuilder, DataTypeFunctions},
     value::{
-        Fixnum, NonZeroValue, ReprValue, Value,
+        Fixnum, NonZeroValue, ReprValue, StaticSymbol, Value,
         private::{self, ReprValue as _},
     },
 };
@@ -763,6 +765,7 @@ impl<const N: usize> Default for FrameBuf<N> {
 
 /// A pointer to a Ruby Debug Inspector returned from
 /// [`Ruby::debug_inspector_open`].
+#[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct DebugInspector<'a> {
     ptr: *const rb_debug_inspector_t,
@@ -780,19 +783,19 @@ impl<'a> DebugInspector<'a> {
     /// Return a backtrace from the point the `DebugInspector` was opened.
     ///
     /// Returns a Ruby array of `Thread::Backtrace::Location` objects.
-    pub fn backtrace_locations(&self) -> RArray {
+    pub fn backtrace_locations(self) -> RArray {
         unsafe { RArray::from_rb_value_unchecked(rb_debug_inspector_backtrace_locations(self.ptr)) }
     }
 
     /// Get Ruby's `self` for the frame at `index`.
-    pub fn frame_self_get(&self, index: usize) -> Result<Value, Error> {
+    pub fn frame_self_get(self, index: usize) -> Result<Value, Error> {
         protect(|| unsafe {
             Value::new(rb_debug_inspector_frame_self_get(self.ptr, index as c_long))
         })
     }
 
     /// Get the Ruby class for the frame at `index`.
-    pub fn frame_class_get(&self, index: usize) -> Result<RClass, Error> {
+    pub fn frame_class_get(self, index: usize) -> Result<RClass, Error> {
         protect(|| unsafe {
             RClass::from_rb_value_unchecked(rb_debug_inspector_frame_class_get(
                 self.ptr,
@@ -802,7 +805,7 @@ impl<'a> DebugInspector<'a> {
     }
 
     /// Get the Ruby `Binding` object for the frame at `index`.
-    pub fn frame_binding_get(&self, index: usize) -> Result<Value, Error> {
+    pub fn frame_binding_get(self, index: usize) -> Result<Value, Error> {
         protect(|| unsafe {
             Value::new(rb_debug_inspector_frame_binding_get(
                 self.ptr,
@@ -812,7 +815,7 @@ impl<'a> DebugInspector<'a> {
     }
 
     /// Get the `RubyVM::InstructionSequence` for the frame at `index`.
-    pub fn frame_iseq_get(&self, index: usize) -> Result<Option<Value>, Error> {
+    pub fn frame_iseq_get(self, index: usize) -> Result<Option<Value>, Error> {
         protect(|| unsafe {
             Value::new(rb_debug_inspector_frame_iseq_get(self.ptr, index as c_long))
         })
@@ -823,7 +826,7 @@ impl<'a> DebugInspector<'a> {
     ///
     /// The depth is not same as the frame index as Ruby's debug inspector
     /// skips some special frames but the depth counts all frames.
-    pub fn frame_depth(&self, index: usize) -> Result<usize, Error> {
+    pub fn frame_depth(self, index: usize) -> Result<usize, Error> {
         protect(|| unsafe {
             Integer::from_rb_value_unchecked(rb_debug_inspector_frame_depth(
                 self.ptr,
@@ -1047,21 +1050,35 @@ impl TracePoint {
         unsafe { Self(NonZeroValue::new_unchecked(Value::new(val))) }
     }
 
-    pub fn enable(&self) -> Result<(), Error> {
+    pub fn enable(self) -> Result<(), Error> {
         unsafe {
             protect(|| Value::new(rb_tracepoint_enable(self.as_rb_value())))?;
         }
         Ok(())
     }
 
-    pub fn disable(&self) {
+    pub fn disable(self) {
         unsafe {
             rb_tracepoint_disable(self.as_rb_value());
         }
     }
 
-    pub fn is_enabled(&self) -> bool {
+    pub fn is_enabled(self) -> bool {
         unsafe { Value::new(rb_tracepoint_enabled_p(self.as_rb_value())).to_bool() }
+    }
+
+    pub fn tracearg(&self) -> Result<TraceArg, Error> {
+        let mut tracearg = TraceArg::from_ptr_with_lifetime(std::ptr::null_mut(), self);
+        unsafe {
+            protect(|| {
+                tracearg = TraceArg::from_ptr_with_lifetime(
+                    rb_tracearg_from_tracepoint(self.as_rb_value()),
+                    self,
+                );
+                Ruby::get_with(*self).qnil().as_value()
+            })?;
+        }
+        Ok(tracearg)
     }
 }
 
@@ -1101,6 +1118,61 @@ impl TryConvert for TracePoint {
             )
         })
     }
+}
+
+#[derive(Clone, Copy)]
+#[repr(transparent)]
+pub struct TraceArg<'a> {
+    ptr: *mut rb_trace_arg_t,
+    lifetime: PhantomData<&'a ()>,
+}
+
+impl<'a> TraceArg<'a> {
+    fn from_ptr_with_lifetime<T>(ptr: *mut rb_trace_arg_t, _: &'a T) -> Self {
+        Self {
+            ptr,
+            lifetime: PhantomData,
+        }
+    }
+
+    pub fn event_flag(self) -> Events {
+        unsafe { Events(rb_tracearg_event_flag(self.ptr)) }
+    }
+
+    pub fn event(self) -> StaticSymbol {
+        unsafe { StaticSymbol::from_rb_value_unchecked(rb_tracearg_event(self.ptr)) }
+    }
+
+    // rb_tracearg_lineno
+
+    // rb_tracearg_path
+
+    // rb_tracearg_parameters
+
+    pub fn method_id(self) -> Option<StaticSymbol> {
+        unsafe {
+            let val = rb_tracearg_method_id(self.ptr);
+            (!Value::new(val).is_nil()).then_some(StaticSymbol::from_rb_value_unchecked(val))
+        }
+    }
+
+    // rb_tracearg_callee_id
+
+    // rb_tracearg_defined_class
+
+    // rb_tracearg_binding
+
+    // rb_tracearg_self
+
+    // rb_tracearg_return_value
+
+    // rb_tracearg_raised_exception
+
+    // rb_tracearg_eval_script
+
+    // rb_tracearg_instruction_sequence
+
+    // rb_tracearg_object
 }
 
 /// Wrap a closure in a Ruby object with no class.
