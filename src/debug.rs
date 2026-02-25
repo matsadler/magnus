@@ -23,18 +23,23 @@ use rb_sys::{
     rb_profile_frame_base_label, rb_profile_frame_classpath, rb_profile_frame_first_lineno,
     rb_profile_frame_full_label, rb_profile_frame_label, rb_profile_frame_method_name,
     rb_profile_frame_path, rb_profile_frame_qualified_method_name,
-    rb_profile_frame_singleton_method_p, rb_profile_frames, rb_trace_arg_t, rb_tracearg_event,
-    rb_tracearg_event_flag, rb_tracearg_from_tracepoint, rb_tracearg_method_id,
+    rb_profile_frame_singleton_method_p, rb_profile_frames, rb_trace_arg_t, rb_tracearg_binding,
+    rb_tracearg_callee_id, rb_tracearg_defined_class, rb_tracearg_event, rb_tracearg_event_flag,
+    rb_tracearg_from_tracepoint, rb_tracearg_lineno, rb_tracearg_method_id, rb_tracearg_path,
+    rb_tracearg_raised_exception, rb_tracearg_return_value, rb_tracearg_self,
     rb_tracepoint_disable, rb_tracepoint_enable, rb_tracepoint_enabled_p, rb_tracepoint_new,
     ruby_special_consts,
 };
 #[cfg(ruby_gte_3_3)]
 use rb_sys::{RUBY_EVENT_RESCUE, rb_profile_thread_frames};
+#[cfg(ruby_gte_4_0)]
+use rb_sys::{rb_tracearg_eval_script, rb_tracearg_instruction_sequence, rb_tracearg_parameters};
 
 use crate::{
     api::Ruby,
     class::RClass,
     error::{Error, protect},
+    exception::Exception,
     gc,
     integer::Integer,
     into_value::IntoValue,
@@ -1143,11 +1148,24 @@ impl<'a> TraceArg<'a> {
         unsafe { StaticSymbol::from_rb_value_unchecked(rb_tracearg_event(self.ptr)) }
     }
 
-    // rb_tracearg_lineno
+    pub fn lineno(self) -> usize {
+        unsafe { Fixnum::from_rb_value_unchecked(rb_tracearg_lineno(self.ptr)) }
+            .to_usize()
+            .unwrap()
+    }
 
-    // rb_tracearg_path
+    pub fn path(self) -> Option<RString> {
+        unsafe {
+            let val = rb_tracearg_path(self.ptr);
+            (!Value::new(val).is_nil()).then_some(RString::from_rb_value_unchecked(val))
+        }
+    }
 
-    // rb_tracearg_parameters
+    #[cfg(ruby_gte_4_0)]
+    pub fn parameters(self) -> Result<Option<RArray>, Error> {
+        protect(|| unsafe { Value::new(rb_tracearg_parameters(self.ptr)) })
+            .and_then(TryConvert::try_convert)
+    }
 
     pub fn method_id(self) -> Option<StaticSymbol> {
         unsafe {
@@ -1156,23 +1174,54 @@ impl<'a> TraceArg<'a> {
         }
     }
 
-    // rb_tracearg_callee_id
+    pub fn callee_id(self) -> Option<StaticSymbol> {
+        unsafe {
+            let val = rb_tracearg_callee_id(self.ptr);
+            (!Value::new(val).is_nil()).then_some(StaticSymbol::from_rb_value_unchecked(val))
+        }
+    }
 
-    // rb_tracearg_defined_class
+    pub fn defined_class(self) -> Option<RClass> {
+        unsafe {
+            let val = rb_tracearg_defined_class(self.ptr);
+            (!Value::new(val).is_nil()).then_some(RClass::from_rb_value_unchecked(val))
+        }
+    }
 
-    // rb_tracearg_binding
+    pub fn binding(self) -> Option<Value> {
+        unsafe {
+            let val = Value::new(rb_tracearg_binding(self.ptr));
+            (!val.is_nil()).then_some(val)
+        }
+    }
 
-    // rb_tracearg_self
+    pub fn tracearg_self(self) -> Value {
+        unsafe { Value::new(rb_tracearg_self(self.ptr)) }
+    }
 
-    // rb_tracearg_return_value
+    pub fn return_value(self) -> Result<Value, Error> {
+        protect(|| unsafe { Value::new(rb_tracearg_return_value(self.ptr)) })
+    }
 
-    // rb_tracearg_raised_exception
+    pub fn raised_exception(self) -> Result<Exception, Error> {
+        unsafe {
+            protect(|| Value::new(rb_tracearg_raised_exception(self.ptr)))
+                .map(|v| Exception::from_rb_value_unchecked(v.as_rb_value()))
+        }
+    }
 
-    // rb_tracearg_eval_script
+    #[cfg(ruby_gte_4_0)]
+    pub fn eval_script(self) -> Result<Option<Value>, Error> {
+        protect(|| unsafe { Value::new(rb_tracearg_eval_script(self.ptr)) })
+            .map(|v| (!v.is_nil()).then_some(v))
+    }
 
-    // rb_tracearg_instruction_sequence
+    #[cfg(ruby_gte_4_0)]
+    pub fn instruction_sequence(self) -> Result<Value, Error> {
+        protect(|| unsafe { Value::new(rb_tracearg_instruction_sequence(self.ptr)) })
+    }
 
-    // rb_tracearg_object
+    // rb_tracearg_object is just for GC events that we don't expose (yet?)
 }
 
 /// Wrap a closure in a Ruby object with no class.
