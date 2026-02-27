@@ -1072,7 +1072,7 @@ impl TracePoint {
         unsafe { Value::new(rb_tracepoint_enabled_p(self.as_rb_value())).to_bool() }
     }
 
-    pub fn tracearg(&self) -> Result<TraceArg, Error> {
+    pub fn tracearg<'a>(&'a self) -> Result<TraceArg<'a>, Error> {
         let mut tracearg = TraceArg::from_ptr_with_lifetime(std::ptr::null_mut(), self);
         unsafe {
             protect(|| {
