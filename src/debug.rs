@@ -6,6 +6,7 @@ use std::{
     ffi::{c_int, c_long, c_void},
     fmt,
     marker::PhantomData,
+    num::NonZero,
     ptr::null_mut,
     slice,
 };
@@ -236,6 +237,11 @@ impl Ruby {
             .unwrap()
     }
 
+    /// Create a new [`TracePoint`], registering a callback for a set of
+    /// [`Events`].
+    ///
+    /// An instance of `TracePoint` does not start tracing on creation, it must
+    /// be started [`Tracepoint::enable`] to take effect.
     pub fn tracepoint_new<F, R>(
         &self,
         thread: Option<Thread>,
@@ -1032,11 +1038,13 @@ impl Events {
     }
 }
 
+/// Wrapper type for a Value known to be an instance of Ruby's TracePoint class.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct TracePoint(NonZeroValue);
 
 impl TracePoint {
+    /// Return `Some(TracePoint)` if `val` is an `TracePoint`, `None` otherwise.
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
         unsafe {
@@ -1055,6 +1063,10 @@ impl TracePoint {
         unsafe { Self(NonZeroValue::new_unchecked(Value::new(val))) }
     }
 
+    /// Start the tracing defined by `self`.
+    ///
+    /// An instance of `TracePoint` does not start tracing on creation, it must
+    /// be started with this method to take effect.
     pub fn enable(self) -> Result<(), Error> {
         unsafe {
             protect(|| Value::new(rb_tracepoint_enable(self.as_rb_value())))?;
@@ -1062,16 +1074,19 @@ impl TracePoint {
         Ok(())
     }
 
+    /// Stop the tracing defined by `self`.
     pub fn disable(self) {
         unsafe {
             rb_tracepoint_disable(self.as_rb_value());
         }
     }
 
+    /// Return `true` if `self` is currently enabled, `false` otherwise.
     pub fn is_enabled(self) -> bool {
         unsafe { Value::new(rb_tracepoint_enabled_p(self.as_rb_value())).to_bool() }
     }
 
+    /// Return the current event for `self` as a [`TraceArg`].
     pub fn tracearg<'a>(&'a self) -> Result<TraceArg<'a>, Error> {
         let mut tracearg = TraceArg::from_ptr_with_lifetime(std::ptr::null_mut(), self);
         unsafe {
@@ -1125,6 +1140,7 @@ impl TryConvert for TracePoint {
     }
 }
 
+/// A pointer to a Ruby `trace_arg` struct, representing a specific trace event.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct TraceArg<'a> {
@@ -1140,20 +1156,29 @@ impl<'a> TraceArg<'a> {
         }
     }
 
+    /// Return the event type as an [`Events`] type.
     pub fn event_flag(self) -> Events {
         unsafe { Events(rb_tracearg_event_flag(self.ptr)) }
     }
 
+    /// Return the event name as a Ruby symbol.
     pub fn event(self) -> StaticSymbol {
         unsafe { StaticSymbol::from_rb_value_unchecked(rb_tracearg_event(self.ptr)) }
     }
 
-    pub fn lineno(self) -> usize {
-        unsafe { Fixnum::from_rb_value_unchecked(rb_tracearg_lineno(self.ptr)) }
+    /// Return the line number where the trace event occurred.
+    ///
+    /// Returns `None` if there is no line number associated with the event.
+    pub fn lineno(self) -> Option<NonZero<usize>> {
+        let n = unsafe { Fixnum::from_rb_value_unchecked(rb_tracearg_lineno(self.ptr)) }
             .to_usize()
-            .unwrap()
+            .unwrap();
+        NonZero::new(n)
     }
 
+    /// Return the name of the file where the trace event occurred.
+    ///
+    /// Returns `None` if there is no file name associated with the event.
     pub fn path(self) -> Option<RString> {
         unsafe {
             let val = rb_tracearg_path(self.ptr);
@@ -1161,12 +1186,22 @@ impl<'a> TraceArg<'a> {
         }
     }
 
+    /// Return the method or `return` parameters associated with the event.
+    ///
+    /// Returns `Err` if the event type does not support parameters.
+    ///
+    /// Returns `Ok(None)` if the event type supports parameters, but there are
+    /// none associated with the event.
     #[cfg(ruby_gte_4_0)]
     pub fn parameters(self) -> Result<Option<RArray>, Error> {
         protect(|| unsafe { Value::new(rb_tracearg_parameters(self.ptr)) })
             .and_then(TryConvert::try_convert)
     }
 
+    /// Return the method name associated with the event.
+    ///
+    /// This will always return the defined name of the method, not the name
+    /// used to call the method (e.g. in the case of an alias)
     pub fn method_id(self) -> Option<StaticSymbol> {
         unsafe {
             let val = rb_tracearg_method_id(self.ptr);
@@ -1174,6 +1209,10 @@ impl<'a> TraceArg<'a> {
         }
     }
 
+    /// Return the method name associated with the event.
+    ///
+    /// This will return method name called, which may not match the name of
+    /// the method as defined (e.g. in the case of an alias).
     pub fn callee_id(self) -> Option<StaticSymbol> {
         unsafe {
             let val = rb_tracearg_callee_id(self.ptr);
@@ -1181,6 +1220,10 @@ impl<'a> TraceArg<'a> {
         }
     }
 
+    /// Return the class that defines the method associated with the event.
+    ///
+    /// This may not be the class the method is being called on (e.g. in the
+    /// case of inheritance).
     pub fn defined_class(self) -> Option<RClass> {
         unsafe {
             let val = rb_tracearg_defined_class(self.ptr);
@@ -1188,6 +1231,7 @@ impl<'a> TraceArg<'a> {
         }
     }
 
+    /// Return a `Binding` object for the point the trace event is at.
     pub fn binding(self) -> Option<Value> {
         unsafe {
             let val = Value::new(rb_tracearg_binding(self.ptr));
@@ -1195,14 +1239,21 @@ impl<'a> TraceArg<'a> {
         }
     }
 
+    /// Return the current Ruby `self` associated with the event.
     pub fn tracearg_self(self) -> Value {
         unsafe { Value::new(rb_tracearg_self(self.ptr)) }
     }
 
+    /// Return the `return` value associated with the event.
+    ///
+    /// Returns `Err` if the event type does not support return values.
     pub fn return_value(self) -> Result<Value, Error> {
         protect(|| unsafe { Value::new(rb_tracearg_return_value(self.ptr)) })
     }
 
+    /// Return the raised exception associated with the event.
+    ///
+    /// Returns `Err` if the event type is not exception related.
     pub fn raised_exception(self) -> Result<Exception, Error> {
         unsafe {
             protect(|| Value::new(rb_tracearg_raised_exception(self.ptr)))
@@ -1210,12 +1261,19 @@ impl<'a> TraceArg<'a> {
         }
     }
 
+    /// Return the compiled source code if `self` is a `script_compiled` event.
+    ///
+    /// Returns `Err` if the event type is not `script_compiled`.
     #[cfg(ruby_gte_4_0)]
     pub fn eval_script(self) -> Result<Option<Value>, Error> {
         protect(|| unsafe { Value::new(rb_tracearg_eval_script(self.ptr)) })
             .map(|v| (!v.is_nil()).then_some(v))
     }
 
+    /// Return the compiled instruction sequence if `self` is a
+    /// `script_compiled` event.
+    ///
+    /// Returns `Err` if the event type is not `script_compiled`.
     #[cfg(ruby_gte_4_0)]
     pub fn instruction_sequence(self) -> Result<Value, Error> {
         protect(|| unsafe { Value::new(rb_tracearg_instruction_sequence(self.ptr)) })
