@@ -100,12 +100,12 @@ pub trait Numeric: ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use std::num::NonZeroI64;
+    /// use std::num::NonZero;
     ///
     /// use magnus::{Error, Numeric, Ruby};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
-    ///     let a = ruby.rational_new(1, NonZeroI64::new(4).unwrap());
+    ///     let a = ruby.rational_new(1, NonZero::new(4).unwrap());
     ///     let b = ruby.float_from_f64(0.3);
     ///     let result: i64 = a.coerce_cmp(b, "<=>")?;
     ///     assert_eq!(result, -1);
@@ -147,13 +147,13 @@ pub trait Numeric: ReprValue + Copy {
     /// # Examples
     ///
     /// ```
-    /// use std::num::NonZeroI64;
+    /// use std::num::NonZero;
     ///
     /// use magnus::{Error, Numeric, Ruby};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let a = ruby.float_from_f64(0.3);
-    ///     let b = ruby.rational_new(1, NonZeroI64::new(4).unwrap());
+    ///     let b = ruby.rational_new(1, NonZero::new(4).unwrap());
     ///     let result: bool = a.coerce_cmp(b, "<=")?;
     ///     assert_eq!(result, false);
     ///
@@ -231,13 +231,13 @@ pub trait Numeric: ReprValue + Copy {
 /// # Examples
 ///
 /// ```
-/// use std::num::NonZeroI64;
+/// use std::num::NonZero;
 ///
 /// use magnus::{Error, Ruby, numeric::NumericValue, prelude::*};
 ///
 /// fn example(ruby: &Ruby) -> Result<(), Error> {
 ///     let a = ruby.integer_from_i64(1);
-///     let b = ruby.rational_new(1, NonZeroI64::new(2).unwrap());
+///     let b = ruby.rational_new(1, NonZero::new(2).unwrap());
 ///     let c = ruby.float_from_f64(0.3);
 ///     let d = ruby.integer_from_i64(4);
 ///

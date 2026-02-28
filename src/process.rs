@@ -6,7 +6,7 @@
 use std::os::unix::process::ExitStatusExt;
 #[cfg(windows)]
 use std::os::windows::process::ExitStatusExt;
-use std::{ffi::c_int, num::NonZeroU32, process::ExitStatus, ptr::null};
+use std::{ffi::c_int, num::NonZero, process::ExitStatus, ptr::null};
 
 use rb_sys::{rb_sys_fail, rb_waitpid};
 
@@ -59,7 +59,7 @@ impl Ruby {
         &self,
         pid: WaitTarget,
         flags: Flags,
-    ) -> Result<Option<(NonZeroU32, ExitStatus)>, Error> {
+    ) -> Result<Option<(NonZero<u32>, ExitStatus)>, Error> {
         let mut out_pid = 0;
         let mut status: c_int = 0;
         protect(|| unsafe {
@@ -69,7 +69,7 @@ impl Ruby {
             }
             self.qnil()
         })?;
-        Ok(NonZeroU32::new(out_pid as u32).map(|pid| (pid, ExitStatus::from_raw(status as _))))
+        Ok(NonZero::new(out_pid as u32).map(|pid| (pid, ExitStatus::from_raw(status as _))))
     }
 }
 

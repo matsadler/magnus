@@ -11,7 +11,7 @@ use std::{
     hash::{Hash, Hasher},
     marker::PhantomData,
     mem::transmute,
-    num::NonZeroUsize,
+    num::NonZero,
     ops::{Deref, DerefMut},
     ptr,
     sync::OnceLock,
@@ -1691,22 +1691,17 @@ impl ReprValue for Value {}
 
 #[derive(Clone, Copy, Eq, Hash, PartialEq)]
 #[repr(transparent)]
-pub(crate) struct NonZeroValue(NonZeroUsize, PhantomData<ptr::NonNull<RBasic>>);
+pub(crate) struct NonZeroValue(NonZero<VALUE>, PhantomData<ptr::NonNull<RBasic>>);
 
 impl NonZeroValue {
     #[inline]
     pub(crate) const unsafe fn new_unchecked(val: Value) -> Self {
-        unsafe {
-            Self(
-                NonZeroUsize::new_unchecked(val.as_rb_value() as usize),
-                PhantomData,
-            )
-        }
+        unsafe { Self(NonZero::new_unchecked(val.as_rb_value()), PhantomData) }
     }
 
     #[inline]
     pub(crate) const fn get(self) -> Value {
-        Value::new(self.0.get() as VALUE)
+        Value::new(self.0.get())
     }
 }
 

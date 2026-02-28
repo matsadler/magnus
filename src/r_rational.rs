@@ -1,4 +1,4 @@
-use std::{fmt, num::NonZeroI64};
+use std::{fmt, num::NonZero};
 
 use rb_sys::{VALUE, rb_rational_den, rb_rational_new, rb_rational_num, ruby_value_type};
 
@@ -26,19 +26,19 @@ impl Ruby {
     /// # Examples
     ///
     /// ```
-    /// use std::num::NonZeroI64;
+    /// use std::num::NonZero;
     ///
     /// use magnus::{Error, Ruby};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
-    ///     let rational = ruby.rational_new(2, NonZeroI64::new(4).unwrap());
+    ///     let rational = ruby.rational_new(2, NonZero::new(4).unwrap());
     ///     assert_eq!(rational.to_string(), "1/2");
     ///
     ///     Ok(())
     /// }
     /// # Ruby::init(example).unwrap()
     /// ```
-    pub fn rational_new(&self, num: i64, den: NonZeroI64) -> RRational {
+    pub fn rational_new(&self, num: i64, den: NonZero<i64>) -> RRational {
         let num = self.into_value(num);
         let den = self.into_value(den.get());
         unsafe {
@@ -95,19 +95,19 @@ impl RRational {
     ///
     /// ```
     /// # #![allow(deprecated)]
-    /// use std::num::NonZeroI64;
+    /// use std::num::NonZero;
     ///
     /// use magnus::RRational;
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
-    /// let rational = RRational::new(2, NonZeroI64::new(4).unwrap());
+    /// let rational = RRational::new(2, NonZero::new(4).unwrap());
     /// assert_eq!(rational.to_string(), "1/2");
     /// ```
     #[deprecated(note = "please use `Ruby::rational_new` instead")]
     #[cfg(feature = "old-api")]
     #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
     #[inline]
-    pub fn new(num: i64, den: NonZeroI64) -> Self {
+    pub fn new(num: i64, den: NonZero<i64>) -> Self {
         get_ruby!().rational_new(num, den)
     }
 
@@ -116,12 +116,12 @@ impl RRational {
     /// # Examples
     ///
     /// ```
-    /// use std::num::NonZeroI64;
+    /// use std::num::NonZero;
     ///
     /// use magnus::{Error, Ruby};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
-    ///     let rational = ruby.rational_new(6, NonZeroI64::new(9).unwrap());
+    ///     let rational = ruby.rational_new(6, NonZero::new(9).unwrap());
     ///     assert_eq!(rational.num().to_i64()?, 2);
     ///
     ///     Ok(())
@@ -137,12 +137,12 @@ impl RRational {
     /// # Examples
     ///
     /// ```
-    /// use std::num::NonZeroI64;
+    /// use std::num::NonZero;
     ///
     /// use magnus::{Error, Ruby};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
-    ///     let rational = ruby.rational_new(6, NonZeroI64::new(9).unwrap());
+    ///     let rational = ruby.rational_new(6, NonZero::new(9).unwrap());
     ///     assert_eq!(rational.den().to_i64()?, 3);
     ///
     ///     Ok(())
