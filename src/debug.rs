@@ -859,87 +859,108 @@ impl Events {
         Self(RUBY_EVENT_NONE)
     }
 
-    /// Set the `RUBY_EVENT_LINE` flag
+    /// Return if `self` is empty with no flags set.
+    pub const fn is_none(self) -> bool {
+        self.0 == RUBY_EVENT_NONE
+    }
+
+    /// Set the `RUBY_EVENT_LINE` flag.
+    ///
+    /// Triggered when executing an expression or statement on a new line.
     pub const fn line(self) -> Self {
         Self(self.0 | RUBY_EVENT_LINE)
     }
 
-    /// Return if `self` contains the `RUBY_EVENT_LINE` flag
+    /// Return if `self` contains the `RUBY_EVENT_LINE` flag.
     pub const fn is_line(self) -> bool {
         self.0 & RUBY_EVENT_LINE != 0
     }
 
-    /// Set the `RUBY_EVENT_CLASS` flag
+    /// Set the `RUBY_EVENT_CLASS` flag.
+    ///
+    /// Triggered on the start a class or module definition.
     pub const fn class(self) -> Self {
         Self(self.0 | RUBY_EVENT_CLASS)
     }
 
-    /// Return if `self` contains the `RUBY_EVENT_CLASS` flag
+    /// Return if `self` contains the `RUBY_EVENT_CLASS` flag.
     pub const fn is_class(self) -> bool {
         self.0 & RUBY_EVENT_CLASS != 0
     }
 
-    /// Set the `RUBY_EVENT_END` flag
+    /// Set the `RUBY_EVENT_END` flag.
+    ///
+    /// Triggered when finishing a class or module definition.
     pub const fn end(self) -> Self {
         Self(self.0 | RUBY_EVENT_END)
     }
 
-    /// Return if `self` contains the `RUBY_EVENT_END` flag
+    /// Return if `self` contains the `RUBY_EVENT_END` flag.
     pub const fn is_end(self) -> bool {
         self.0 & RUBY_EVENT_END != 0
     }
 
-    /// Set the `RUBY_EVENT_CALL` flag
+    /// Set the `RUBY_EVENT_CALL` flag.
+    ///
+    /// Triggered on calling a Ruby method.
     pub const fn call(self) -> Self {
         Self(self.0 | RUBY_EVENT_CALL)
     }
 
-    /// Return if `self` contains the `RUBY_EVENT_CALL` flag
+    /// Return if `self` contains the `RUBY_EVENT_CALL` flag.
     pub const fn is_call(self) -> bool {
         self.0 & RUBY_EVENT_CALL != 0
     }
 
-    /// Set the `RUBY_EVENT_RETURN` flag
+    /// Set the `RUBY_EVENT_RETURN` flag.
+    ///
+    /// Triggered on return from a Ruby method.
     pub const fn event_return(self) -> Self {
         Self(self.0 | RUBY_EVENT_RETURN)
     }
 
-    /// Return if `self` contains the `RUBY_EVENT_RETURN` flag
+    /// Return if `self` contains the `RUBY_EVENT_RETURN` flag.
     pub const fn is_return(self) -> bool {
         self.0 & RUBY_EVENT_RETURN != 0
     }
 
-    /// Set the `RUBY_EVENT_C_CALL` flag
+    /// Set the `RUBY_EVENT_C_CALL` flag.
+    ///
+    /// Triggered when calling a native function, e.g. defined in C or Rust.
     pub const fn c_call(self) -> Self {
         Self(self.0 | RUBY_EVENT_C_CALL)
     }
 
-    /// Return if `self` contains the `RUBY_EVENT_C_CALL` flag
+    /// Return if `self` contains the `RUBY_EVENT_C_CALL` flag.
     pub const fn is_c_call(self) -> bool {
         self.0 & RUBY_EVENT_C_CALL != 0
     }
 
-    /// Set the `RUBY_EVENT_C_RETURN` flag
+    /// Set the `RUBY_EVENT_C_RETURN` flag.
+    ///
+    /// Triggered on return from native function, e.g. defined in C or Rust.
     pub const fn c_return(self) -> Self {
         Self(self.0 | RUBY_EVENT_C_RETURN)
     }
 
-    /// Return if `self` contains the `RUBY_EVENT_C_RETURN` flag
+    /// Return if `self` contains the `RUBY_EVENT_C_RETURN` flag.
     pub const fn is_c_return(self) -> bool {
         self.0 & RUBY_EVENT_C_RETURN != 0
     }
 
-    /// Set the `RUBY_EVENT_RAISE` flag
+    /// Set the `RUBY_EVENT_RAISE` flag.
+    ///
+    /// Triggered on raising an exception.
     pub const fn raise(self) -> Self {
         Self(self.0 | RUBY_EVENT_RAISE)
     }
 
-    /// Return if `self` contains the `RUBY_EVENT_RAISE` flag
+    /// Return if `self` contains the `RUBY_EVENT_RAISE` flag.
     pub const fn is_raise(self) -> bool {
         self.0 & RUBY_EVENT_RAISE != 0
     }
 
-    /// Set the `RUBY_EVENT_ALL` flag
+    /// Set the `RUBY_EVENT_ALL` flag.
     ///
     /// This is not all events, but the subset originally usable with the
     /// `set_trace_func` api. See [`tracepoint_all`](Events::tracepoint_all).
@@ -947,7 +968,7 @@ impl Events {
         Self(self.0 | RUBY_EVENT_ALL)
     }
 
-    /// Return if `self` contains the `RUBY_EVENT_ALL` flag
+    /// Return if `self` contains the `RUBY_EVENT_ALL` flag.
     ///
     /// This is not all events, but the subset originally usable with the
     /// `set_trace_func` api. See [`is_tracepoint_all`](Events::is_tracepoint_all).
@@ -955,57 +976,69 @@ impl Events {
         self.0 & RUBY_EVENT_ALL != 0
     }
 
-    /// Set the `RUBY_EVENT_B_CALL` flag
+    /// Set the `RUBY_EVENT_B_CALL` flag.
+    ///
+    /// Triggered at block entry.
     pub const fn b_call(self) -> Self {
         Self(self.0 | RUBY_EVENT_B_CALL)
     }
 
-    /// Return if `self` contains the `RUBY_EVENT_B_CALL` flag
+    /// Return if `self` contains the `RUBY_EVENT_B_CALL` flag.
     pub const fn is_b_call(self) -> bool {
         self.0 & RUBY_EVENT_B_CALL != 0
     }
 
-    /// Set the `RUBY_EVENT_B_RETURN` flag
+    /// Set the `RUBY_EVENT_B_RETURN` flag.
+    ///
+    /// Triggered at block ending.
     pub const fn b_return(self) -> Self {
         Self(self.0 | RUBY_EVENT_B_RETURN)
     }
 
-    /// Return if `self` contains the `RUBY_EVENT_B_RETURN` flag
+    /// Return if `self` contains the `RUBY_EVENT_B_RETURN` flag.
     pub const fn is_b_return(self) -> bool {
         self.0 & RUBY_EVENT_B_RETURN != 0
     }
 
-    /// Set the `RUBY_EVENT_THREAD_BEGIN` flag
+    /// Set the `RUBY_EVENT_THREAD_BEGIN` flag.
+    ///
+    /// Triggered on thread beginning.
     pub const fn thread_begin(self) -> Self {
         Self(self.0 | RUBY_EVENT_THREAD_BEGIN)
     }
 
-    /// Return if `self` contains the `RUBY_EVENT_THREAD_BEGIN` flag
+    /// Return if `self` contains the `RUBY_EVENT_THREAD_BEGIN` flag.
     pub const fn is_thread_begin(self) -> bool {
         self.0 & RUBY_EVENT_THREAD_BEGIN != 0
     }
 
-    /// Set the `RUBY_EVENT_THREAD_END` flag
+    /// Set the `RUBY_EVENT_THREAD_END` flag.
+    ///
+    /// Triggered at thread ending.
     pub const fn thread_end(self) -> Self {
         Self(self.0 | RUBY_EVENT_THREAD_END)
     }
 
-    /// Return if `self` contains the `RUBY_EVENT_THREAD_END` flag
+    /// Return if `self` contains the `RUBY_EVENT_THREAD_END` flag.
     pub const fn is_thread_end(self) -> bool {
         self.0 & RUBY_EVENT_THREAD_END != 0
     }
 
-    /// Set the `RUBY_EVENT_FIBER_SWITCH` flag
+    /// Set the `RUBY_EVENT_FIBER_SWITCH` flag.
+    ///
+    /// Triggered at fiber switch.
     pub const fn fiber_switch(self) -> Self {
         Self(self.0 | RUBY_EVENT_FIBER_SWITCH)
     }
 
-    /// Return if `self` contains the `RUBY_EVENT_FIBER_SWITCH` flag
+    /// Return if `self` contains the `RUBY_EVENT_FIBER_SWITCH` flag.
     pub const fn is_fiber_switch(self) -> bool {
         self.0 & RUBY_EVENT_FIBER_SWITCH != 0
     }
 
-    /// Set the `RUBY_EVENT_SCRIPT_COMPILED` flag
+    /// Set the `RUBY_EVENT_SCRIPT_COMPILED` flag.
+    ///
+    /// Triggered when new Ruby is code compiled (with eval, load, or require).
     pub const fn script_compiled(self) -> Self {
         Self(self.0 | RUBY_EVENT_SCRIPT_COMPILED)
     }
@@ -1015,24 +1048,26 @@ impl Events {
         self.0 & RUBY_EVENT_SCRIPT_COMPILED != 0
     }
 
-    /// Set the `RUBY_EVENT_RESCUE` flag
+    /// Set the `RUBY_EVENT_RESCUE` flag.
+    ///
+    /// Triggered when rescuing an exception.
     #[cfg(ruby_gte_3_3)]
     pub const fn rescue(self) -> Self {
         Self(self.0 | RUBY_EVENT_RESCUE)
     }
 
-    /// Return if `self` contains the `RUBY_EVENT_RESCUE` flag
+    /// Return if `self` contains the `RUBY_EVENT_RESCUE` flag.
     #[cfg(ruby_gte_3_3)]
     pub const fn is_rescue(self) -> bool {
         self.0 & RUBY_EVENT_RESCUE != 0
     }
 
-    /// Set the `RUBY_EVENT_TRACEPOINT_ALL` flag
+    /// Set the `RUBY_EVENT_TRACEPOINT_ALL` flag.
     pub const fn tracepoint_all(self) -> Self {
         Self(self.0 | RUBY_EVENT_TRACEPOINT_ALL)
     }
 
-    /// Return if `self` contains the `RUBY_EVENT_TRACEPOINT_ALL` flag
+    /// Return if `self` contains the `RUBY_EVENT_TRACEPOINT_ALL` flag.
     pub const fn is_tracepoint_all(self) -> bool {
         self.0 & RUBY_EVENT_TRACEPOINT_ALL != 0
     }
