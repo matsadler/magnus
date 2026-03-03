@@ -1080,6 +1080,17 @@ pub struct TracePoint(NonZeroValue);
 
 impl TracePoint {
     /// Return `Some(TracePoint)` if `val` is an `TracePoint`, `None` otherwise.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{debug::TracePoint, eval};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// assert!(TracePoint::from_value(eval("TracePoint.new {}").unwrap()).is_some());
+    /// assert!(TracePoint::from_value(eval("Proc.new {}").unwrap()).is_none());
+    /// assert!(TracePoint::from_value(eval("nil").unwrap()).is_none());
+    /// ```
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
         unsafe {
@@ -1102,6 +1113,25 @@ impl TracePoint {
     ///
     /// An instance of `TracePoint` does not start tracing on creation, it must
     /// be started with this method to take effect.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Error, Ruby, debug::Events};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let tp = ruby.tracepoint_new(None, Events::new().call(), |tp| {
+    ///         dbg!(tp.tracearg()?.defined_class());
+    ///         Ok::<_, Error>(())
+    ///     });
+    ///     assert!(!tp.is_enabled());
+    ///     tp.enable()?;
+    ///     assert!(tp.is_enabled());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     pub fn enable(self) -> Result<(), Error> {
         unsafe {
             protect(|| Value::new(rb_tracepoint_enable(self.as_rb_value())))?;
@@ -1110,6 +1140,26 @@ impl TracePoint {
     }
 
     /// Stop the tracing defined by `self`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Error, Ruby, debug::Events};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let tp = ruby.tracepoint_new(None, Events::new().call(), |tp| {
+    ///         dbg!(tp.tracearg()?.defined_class());
+    ///         Ok::<_, Error>(())
+    ///     });
+    ///     tp.enable()?;
+    ///     assert!(tp.is_enabled());
+    ///     tp.disable();
+    ///     assert!(!tp.is_enabled());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     pub fn disable(self) {
         unsafe {
             rb_tracepoint_disable(self.as_rb_value());
@@ -1117,11 +1167,67 @@ impl TracePoint {
     }
 
     /// Return `true` if `self` is currently enabled, `false` otherwise.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Error, Ruby, debug::Events};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let tp = ruby.tracepoint_new(None, Events::new().call(), |tp| {
+    ///         dbg!(tp.tracearg()?.defined_class());
+    ///         Ok::<_, Error>(())
+    ///     });
+    ///     assert!(!tp.is_enabled());
+    ///     tp.enable()?;
+    ///     assert!(tp.is_enabled());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     pub fn is_enabled(self) -> bool {
         unsafe { Value::new(rb_tracepoint_enabled_p(self.as_rb_value())).to_bool() }
     }
 
     /// Return the current event for `self` as a [`TraceArg`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use std::sync::Mutex;
+    ///
+    /// use magnus::{Error, Ruby, Value, debug::Events, eval, prelude::*};
+    ///
+    /// static CALLS: Mutex<Vec<String>> = Mutex::new(Vec::new());
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let tp = ruby.tracepoint_new(None, Events::new().call(), |tp| {
+    ///         let id = tp.tracearg()?.method_id();
+    ///         CALLS
+    ///             .lock()
+    ///             .unwrap()
+    ///             .push(id.map(|i| i.to_string()).unwrap_or(String::from("<none>")));
+    ///         Ok::<_, Error>(())
+    ///     });
+    ///     let _: Value = eval!(
+    ///         "
+    ///             def foo = bar
+    ///             def bar = baz
+    ///             def baz = qux
+    ///             def qux = 1
+    ///         "
+    ///     )?;
+    ///
+    ///     tp.enable()?;
+    ///
+    ///     let _: Value = ruby.class_object().funcall("foo", ())?;
+    ///     assert_eq!(*CALLS.lock().unwrap(), &["foo", "bar", "baz", "qux"]);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     pub fn tracearg<'a>(&'a self) -> Result<TraceArg<'a>, Error> {
         let mut tracearg = TraceArg::from_ptr_with_lifetime(std::ptr::null_mut(), self);
         unsafe {
