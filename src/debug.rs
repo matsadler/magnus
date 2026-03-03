@@ -1120,13 +1120,13 @@ impl TracePoint {
     /// use magnus::{Error, Ruby, debug::Events};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
-    ///     let tp = ruby.tracepoint_new(None, Events::new().call(), |tp| {
+    ///     let trace = ruby.tracepoint_new(None, Events::new().call(), |tp| {
     ///         dbg!(tp.tracearg()?.defined_class());
     ///         Ok::<_, Error>(())
     ///     });
-    ///     assert!(!tp.is_enabled());
-    ///     tp.enable()?;
-    ///     assert!(tp.is_enabled());
+    ///     assert!(!trace.is_enabled());
+    ///     trace.enable()?;
+    ///     assert!(trace.is_enabled());
     ///
     ///     Ok(())
     /// }
@@ -1147,14 +1147,14 @@ impl TracePoint {
     /// use magnus::{Error, Ruby, debug::Events};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
-    ///     let tp = ruby.tracepoint_new(None, Events::new().call(), |tp| {
+    ///     let trace = ruby.tracepoint_new(None, Events::new().call(), |tp| {
     ///         dbg!(tp.tracearg()?.defined_class());
     ///         Ok::<_, Error>(())
     ///     });
-    ///     tp.enable()?;
-    ///     assert!(tp.is_enabled());
-    ///     tp.disable();
-    ///     assert!(!tp.is_enabled());
+    ///     trace.enable()?;
+    ///     assert!(trace.is_enabled());
+    ///     trace.disable();
+    ///     assert!(!trace.is_enabled());
     ///
     ///     Ok(())
     /// }
@@ -1174,13 +1174,13 @@ impl TracePoint {
     /// use magnus::{Error, Ruby, debug::Events};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
-    ///     let tp = ruby.tracepoint_new(None, Events::new().call(), |tp| {
+    ///     let trace = ruby.tracepoint_new(None, Events::new().call(), |tp| {
     ///         dbg!(tp.tracearg()?.defined_class());
     ///         Ok::<_, Error>(())
     ///     });
-    ///     assert!(!tp.is_enabled());
-    ///     tp.enable()?;
-    ///     assert!(tp.is_enabled());
+    ///     assert!(!trace.is_enabled());
+    ///     trace.enable()?;
+    ///     assert!(trace.is_enabled());
     ///
     ///     Ok(())
     /// }
@@ -1202,7 +1202,7 @@ impl TracePoint {
     /// static CALLS: Mutex<Vec<String>> = Mutex::new(Vec::new());
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
-    ///     let tp = ruby.tracepoint_new(None, Events::new().call(), |tp| {
+    ///     let trace = ruby.tracepoint_new(None, Events::new().call(), |tp| {
     ///         let id = tp.tracearg()?.method_id();
     ///         CALLS
     ///             .lock()
@@ -1219,7 +1219,7 @@ impl TracePoint {
     ///         "
     ///     )?;
     ///
-    ///     tp.enable()?;
+    ///     trace.enable()?;
     ///
     ///     let _: Value = ruby.class_object().funcall("foo", ())?;
     ///     assert_eq!(*CALLS.lock().unwrap(), &["foo", "bar", "baz", "qux"]);
@@ -1298,11 +1298,57 @@ impl<'a> TraceArg<'a> {
     }
 
     /// Return the event type as an [`Events`] type.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::sync::atomic::{AtomicBool, Ordering};
+    /// use magnus::{Error, Ruby, Value, debug::Events, function, prelude::*};
+    ///
+    /// # static CALLED: AtomicBool = AtomicBool::new(false);
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let trace = ruby.tracepoint_new(None, Events::new().c_call(), |tp| {
+    /// #       CALLED.store(true, Ordering::Relaxed);
+    ///         assert!(tp.tracearg()?.event_flag().is_c_call());
+    ///         Ok::<_, Error>(())
+    ///     });
+    ///
+    ///     ruby.define_global_function("foo", function!(|| (), 0));
+    ///     trace.enable()?;
+    ///     let _: Value = ruby.class_object().funcall("foo", ())?;
+    /// #   assert!(CALLED.load(Ordering::Relaxed));
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     pub fn event_flag(self) -> Events {
         unsafe { Events(rb_tracearg_event_flag(self.ptr)) }
     }
 
     /// Return the event name as a Ruby symbol.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::sync::atomic::{AtomicBool, Ordering};
+    /// use magnus::{Error, Ruby, Value, debug::Events, function, prelude::*};
+    ///
+    /// # static CALLED: AtomicBool = AtomicBool::new(false);
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let trace = ruby.tracepoint_new(None, Events::new().c_call(), |tp| {
+    /// #       CALLED.store(true, Ordering::Relaxed);
+    ///         assert_eq!(tp.tracearg()?.event(), Ruby::get_with(tp).sym_new("c_call"));
+    ///         Ok::<_, Error>(())
+    ///     });
+    ///
+    ///     ruby.define_global_function("foo", function!(|| (), 0));
+    ///     trace.enable()?;
+    ///     let _: Value = ruby.class_object().funcall("foo", ())?;
+    /// #   assert!(CALLED.load(Ordering::Relaxed));
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     pub fn event(self) -> StaticSymbol {
         unsafe { StaticSymbol::from_rb_value_unchecked(rb_tracearg_event(self.ptr)) }
     }
@@ -1310,6 +1356,29 @@ impl<'a> TraceArg<'a> {
     /// Return the line number where the trace event occurred.
     ///
     /// Returns `None` if there is no line number associated with the event.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::sync::atomic::{AtomicBool, Ordering};
+    /// use magnus::{Error, Ruby, Value, debug::Events, function, prelude::*};
+    ///
+    /// # static CALLED: AtomicBool = AtomicBool::new(false);
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let trace = ruby.tracepoint_new(None, Events::new().c_call(), |tp| {
+    /// #       CALLED.store(true, Ordering::Relaxed);
+    ///         assert!(tp.tracearg()?.lineno().is_none());
+    ///         Ok::<_, Error>(())
+    ///     });
+    ///
+    ///     ruby.define_global_function("foo", function!(|| (), 0));
+    ///     trace.enable()?;
+    ///     let _: Value = ruby.class_object().funcall("foo", ())?;
+    /// #   assert!(CALLED.load(Ordering::Relaxed));
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     pub fn lineno(self) -> Option<NonZero<usize>> {
         let n = unsafe { Fixnum::from_rb_value_unchecked(rb_tracearg_lineno(self.ptr)) }
             .to_usize()
@@ -1320,6 +1389,34 @@ impl<'a> TraceArg<'a> {
     /// Return the name of the file where the trace event occurred.
     ///
     /// Returns `None` if there is no file name associated with the event.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::sync::atomic::{AtomicBool, Ordering};
+    /// use magnus::{Error, Ruby, Value, debug::Events, function, prelude::*};
+    ///
+    /// # static CALLED: AtomicBool = AtomicBool::new(false);
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let trace = ruby.tracepoint_new(None, Events::new().c_call(), |tp| {
+    /// #       CALLED.store(true, Ordering::Relaxed);
+    ///         assert_eq!(
+    ///             tp.tracearg()?.path().and_then(|p| p.to_string().ok()),
+    ///             // note, the path being "-e" in this example is an
+    ///             // implementation detail of Magnus' test runner
+    ///             Some(String::from("-e"))
+    ///         );
+    ///         Ok::<_, Error>(())
+    ///     });
+    ///
+    ///     ruby.define_global_function("foo", function!(|| (), 0));
+    ///     trace.enable()?;
+    ///     let _: Value = ruby.class_object().funcall("foo", ())?;
+    /// #   assert!(CALLED.load(Ordering::Relaxed));
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     pub fn path(self) -> Option<RString> {
         unsafe {
             let val = rb_tracearg_path(self.ptr);
@@ -1343,6 +1440,33 @@ impl<'a> TraceArg<'a> {
     ///
     /// This will always return the defined name of the method, not the name
     /// used to call the method (e.g. in the case of an alias)
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::sync::atomic::{AtomicBool, Ordering};
+    /// use magnus::{Error, Ruby, Value, debug::Events, function, prelude::*};
+    ///
+    /// # static CALLED: AtomicBool = AtomicBool::new(false);
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let trace = ruby.tracepoint_new(None, Events::new().c_call(), |tp| {
+    /// #       CALLED.store(true, Ordering::Relaxed);
+    ///         assert_eq!(
+    ///             tp.tracearg()?.method_id(),
+    ///             Some(Ruby::get_with(tp).sym_new("foo"))
+    ///         );
+    ///         Ok::<_, Error>(())
+    ///     });
+    ///
+    ///     ruby.define_global_function("foo", function!(|| (), 0));
+    ///     ruby.class_object().define_alias("bar", "foo")?;
+    ///     trace.enable()?;
+    ///     let _: Value = ruby.class_object().funcall("bar", ())?;
+    /// #   assert!(CALLED.load(Ordering::Relaxed));
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     pub fn method_id(self) -> Option<StaticSymbol> {
         unsafe {
             let val = rb_tracearg_method_id(self.ptr);
@@ -1354,6 +1478,33 @@ impl<'a> TraceArg<'a> {
     ///
     /// This will return method name called, which may not match the name of
     /// the method as defined (e.g. in the case of an alias).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::sync::atomic::{AtomicBool, Ordering};
+    /// use magnus::{Error, Ruby, Value, debug::Events, function, prelude::*};
+    ///
+    /// # static CALLED: AtomicBool = AtomicBool::new(false);
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let trace = ruby.tracepoint_new(None, Events::new().c_call(), |tp| {
+    /// #       CALLED.store(true, Ordering::Relaxed);
+    ///         assert_eq!(
+    ///             tp.tracearg()?.callee_id(),
+    ///             Some(Ruby::get_with(tp).sym_new("bar"))
+    ///         );
+    ///         Ok::<_, Error>(())
+    ///     });
+    ///
+    ///     ruby.define_global_function("foo", function!(|| (), 0));
+    ///     ruby.class_object().define_alias("bar", "foo")?;
+    ///     trace.enable()?;
+    ///     let _: Value = ruby.class_object().funcall("bar", ())?;
+    /// #   assert!(CALLED.load(Ordering::Relaxed));
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     pub fn callee_id(self) -> Option<StaticSymbol> {
         unsafe {
             let val = rb_tracearg_callee_id(self.ptr);
