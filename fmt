@@ -1,0 +1,5 @@
+#!/bin/sh
+
+set -euo pipefail
+
+cargo +nightly fmt -- --config format_code_in_doc_comments=true,imports_granularity=Crate,group_imports=StdExternalCrate
