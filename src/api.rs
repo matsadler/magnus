@@ -24,14 +24,13 @@ enum RubyGvlState {
 
 impl RubyGvlState {
     fn current() -> Self {
-        let current = if unsafe { ruby_thread_has_gvl_p() } != 0 {
+        if unsafe { ruby_thread_has_gvl_p() } != 0 {
             Self::Locked
         } else if unsafe { ruby_native_thread_p() != 0 } {
             Self::Unlocked
         } else {
             Self::NonRubyThread
-        };
-        current
+        }
     }
 
     fn ok<T>(self, value: T) -> Result<T, RubyUnavailableError> {
