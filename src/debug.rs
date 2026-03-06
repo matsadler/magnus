@@ -1438,12 +1438,40 @@ impl<'a> TraceArg<'a> {
         }
     }
 
-    /// Return the method or `return` parameters associated with the event.
+    /// Return the method parameters associated with the call or return event.
     ///
     /// Returns `Err` if the event type does not support parameters.
     ///
     /// Returns `Ok(None)` if the event type supports parameters, but there are
     /// none associated with the event.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::sync::atomic::{AtomicBool, Ordering};
+    /// use magnus::{Error, Ruby, Value, debug::Events, eval, prelude::*};
+    ///
+    /// # static CALLED: AtomicBool = AtomicBool::new(false);
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let trace = ruby.tracepoint_new(None, Events::new().event_return(), |tp| {
+    /// #       CALLED.store(true, Ordering::Relaxed);
+    ///         let res: bool = eval!(
+    ///             Ruby::get_with(tp),
+    ///             "parameters == [[:req, :bar], [:opt, :baz], [:key, :qux]]",
+    ///             parameters = tp.tracearg()?.parameters()?
+    ///         )?;
+    ///         assert!(res);
+    ///         Ok::<_, Error>(())
+    ///     });
+    ///
+    ///     let _: Value = eval!(ruby, "def foo(bar, baz=nil, qux: nil); end")?;
+    ///     trace.enable()?;
+    ///     let _: Value = ruby.class_object().funcall("foo", (1,))?;
+    /// #   assert!(CALLED.load(Ordering::Relaxed));
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     #[cfg(ruby_gte_4_0)]
     pub fn parameters(self) -> Result<Option<RArray>, Error> {
         protect(|| unsafe { Value::new(rb_tracearg_parameters(self.ptr)) })
@@ -1530,6 +1558,49 @@ impl<'a> TraceArg<'a> {
     ///
     /// This may not be the class the method is being called on (e.g. in the
     /// case of inheritance).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::sync::atomic::{AtomicBool, Ordering};
+    /// use magnus::{Error, RClass, Ruby, Value, debug::Events, eval, prelude::*};
+    ///
+    /// # static CALLED: AtomicBool = AtomicBool::new(false);
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let trace = ruby.tracepoint_new(None, Events::new().call(), |tp| {
+    /// #       CALLED.store(true, Ordering::Relaxed);
+    ///         assert!(
+    ///             tp.tracearg()?.defined_class().unwrap().equal(
+    ///                 Ruby::get_with(tp)
+    ///                     .class_object()
+    ///                     .const_get::<_, RClass>("Foo")?
+    ///             )?
+    ///         );
+    ///         Ok::<_, Error>(())
+    ///     });
+    ///
+    ///     let _: Value = eval!(
+    ///         ruby,
+    ///         "
+    ///             class Foo
+    ///               def example
+    ///               end
+    ///             end
+    ///             class Bar < Foo
+    ///             end
+    ///         "
+    ///     )?;
+    ///     trace.enable()?;
+    ///     let _: Value = ruby
+    ///         .class_object()
+    ///         .const_get::<_, RClass>("Bar")?
+    ///         .new_instance(())?
+    ///         .funcall("example", ())?;
+    /// #   assert!(CALLED.load(Ordering::Relaxed));
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     pub fn defined_class(self) -> Option<RClass> {
         unsafe {
             let val = rb_tracearg_defined_class(self.ptr);
