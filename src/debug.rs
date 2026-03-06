@@ -87,6 +87,7 @@ impl Ruby {
     ///     ruby.define_global_function("profile", function!(profile, 0));
     ///
     ///     let _: Value = eval!(
+    ///         ruby,
     ///         "def foo = bar
     ///          def bar = baz
     ///          def baz = profile"
@@ -140,6 +141,7 @@ impl Ruby {
     ///     ruby.define_global_function("profile", function!(profile, 0));
     ///
     ///     let _: Value = eval!(
+    ///         ruby,
     ///         "def foo = bar
     ///          def bar = baz
     ///          def baz = profile"
@@ -216,6 +218,7 @@ impl Ruby {
     ///     ruby.define_global_function("depth", function!(depth, 0));
     ///
     ///     let _: Value = eval!(
+    ///         ruby,
     ///         "def foo = bar
     ///          def bar = baz
     ///          def baz = depth"
@@ -314,6 +317,7 @@ impl Frame {
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     ruby.define_global_function("baz", function!(baz, 0));
     ///     let _: Value = eval!(
+    ///         ruby,
     ///         "def foo = bar
     ///          def bar = baz"
     ///     )?;
@@ -359,6 +363,7 @@ impl Frame {
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     ruby.define_global_function("baz", function!(baz, 0));
     ///     let _: Value = eval!(
+    ///         ruby,
     ///         "def foo = bar
     ///          def bar = baz"
     ///     )?;
@@ -396,6 +401,7 @@ impl Frame {
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     ruby.define_global_function("baz", function!(baz, 0));
     ///     let _: Value = eval!(
+    ///         ruby,
     ///         "def foo = bar
     ///          def bar = baz"
     ///     )?;
@@ -436,6 +442,7 @@ impl Frame {
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     ruby.define_global_function("baz", function!(baz, 0));
     ///     let _: Value = eval!(
+    ///         ruby,
     ///         "def foo = bar
     ///          def bar = baz"
     ///     )?;
@@ -476,6 +483,7 @@ impl Frame {
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     ruby.define_global_function("baz", function!(baz, 0));
     ///     let _: Value = eval!(
+    ///         ruby,
     ///         "def foo = bar
     ///          def bar = baz"
     ///     )?;
@@ -509,6 +517,7 @@ impl Frame {
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     ruby.define_global_function("baz", function!(baz, 0));
     ///     let _: Value = eval!(
+    ///         ruby,
     ///         "def foo = bar
     ///          def bar = baz"
     ///     )?;
@@ -543,6 +552,7 @@ impl Frame {
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     ruby.define_global_function("baz", function!(baz, 0));
     ///     let _: Value = eval!(
+    ///         ruby,
     ///         "def foo = bar
     ///          def bar = baz"
     ///     )?;
@@ -576,6 +586,7 @@ impl Frame {
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     ruby.define_global_function("baz", function!(baz, 0));
     ///     let _: Value = eval!(
+    ///         ruby,
     ///         "def foo = bar
     ///          def bar = baz"
     ///     )?;
@@ -606,6 +617,7 @@ impl Frame {
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     ruby.define_global_function("baz", function!(baz, 0));
     ///     let _: Value = eval!(
+    ///         ruby,
     ///         "def foo = bar
     ///          def bar = baz"
     ///     )?;
@@ -644,6 +656,7 @@ impl Frame {
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     ruby.define_global_function("baz", function!(baz, 0));
     ///     let _: Value = eval!(
+    ///         ruby,
     ///         "def foo = bar
     ///          def bar = baz"
     ///     )?;
@@ -1211,6 +1224,7 @@ impl TracePoint {
     ///         Ok::<_, Error>(())
     ///     });
     ///     let _: Value = eval!(
+    ///         ruby,
     ///         "
     ///             def foo = bar
     ///             def bar = baz
