@@ -12,14 +12,13 @@ use std::{
 };
 
 use rb_sys::{
-    self, RSTRING_LEN, RSTRING_PTR, VALUE, rb_enc_str_coderange, rb_enc_str_new,
-    rb_enc_str_new_static, rb_str_buf_append, rb_str_buf_new, rb_str_capacity, rb_str_cat,
-    rb_str_cmp, rb_str_comparable, rb_str_conv_enc, rb_str_drop_bytes, rb_str_dump,
+    self, RSTRING_LEN, RSTRING_PTR, StableApiDefinition, VALUE, rb_enc_str_coderange,
+    rb_enc_str_new, rb_enc_str_new_static, rb_str_buf_append, rb_str_buf_new, rb_str_capacity,
+    rb_str_cat, rb_str_cmp, rb_str_comparable, rb_str_conv_enc, rb_str_drop_bytes, rb_str_dump,
     rb_str_ellipsize, rb_str_new, rb_str_new_frozen, rb_str_new_shared, rb_str_new_static,
     rb_str_offset, rb_str_plus, rb_str_replace, rb_str_scrub, rb_str_shared_replace, rb_str_split,
     rb_str_strlen, rb_str_times, rb_str_to_interned_str, rb_str_to_str, rb_str_update,
-    rb_utf8_str_new, rb_utf8_str_new_static, ruby_coderange_type, ruby_rstring_flags,
-    ruby_value_type,
+    rb_utf8_str_new, rb_utf8_str_new_static, ruby_coderange_type, ruby_value_type, stable_api,
 };
 
 use crate::{
@@ -1383,9 +1382,7 @@ impl RString {
     /// # Ruby::init(example).unwrap()
     /// ```
     pub fn is_interned(self) -> bool {
-        unsafe {
-            self.r_basic_unchecked().as_ref().flags & ruby_rstring_flags::RSTRING_FSTR as VALUE != 0
-        }
+        unsafe { stable_api::get_default().rstring_interned_p(self.as_rb_value()) }
     }
 
     /// Interns `self`, returning an interned string.
