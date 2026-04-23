@@ -24,8 +24,8 @@ use rb_sys::{
     rb_check_id_cstr, rb_check_symbol_cstr, rb_enumeratorize_with_size_kw, rb_eql, rb_equal,
     rb_funcall_with_block_kw, rb_funcallv_kw, rb_funcallv_public_kw, rb_gc_register_address,
     rb_gc_unregister_address, rb_hash, rb_id2name, rb_id2sym, rb_inspect, rb_intern3, rb_ll2inum,
-    rb_obj_as_string, rb_obj_classname, rb_obj_freeze, rb_obj_is_kind_of, rb_obj_respond_to,
-    rb_sym2id, rb_ull2inum, ruby_fl_type, ruby_special_consts, ruby_value_type,
+    rb_obj_as_string, rb_obj_class, rb_obj_classname, rb_obj_freeze, rb_obj_is_kind_of,
+    rb_obj_respond_to, rb_sym2id, rb_ull2inum, ruby_fl_type, ruby_special_consts, ruby_value_type,
 };
 
 // These don't seem to appear consistently in bindgen output, not sure if they
@@ -983,31 +983,7 @@ pub trait ReprValue: private::ReprValue {
     /// # Ruby::init(example).unwrap()
     /// ```
     fn class(self) -> RClass {
-        let handle = Ruby::get_with(self);
-        unsafe {
-            match self.r_basic() {
-                Some(r_basic) => RClass::from_rb_value_unchecked(r_basic.as_ref().klass),
-                None => {
-                    if self.is_false() {
-                        handle.class_false_class()
-                    } else if self.is_nil() {
-                        handle.class_nil_class()
-                    } else if self.is_true() {
-                        handle.class_true_class()
-                    } else if self.is_undef() {
-                        panic!("undef does not have a class")
-                    } else if self.is_fixnum() {
-                        handle.class_integer()
-                    } else if self.is_static_symbol() {
-                        handle.class_symbol()
-                    } else if self.is_flonum() {
-                        handle.class_float()
-                    } else {
-                        unreachable!()
-                    }
-                }
-            }
-        }
+        unsafe { RClass::from_rb_value_unchecked(rb_obj_class(self.as_rb_value())) }
     }
 
     /// Returns whether `self` is 'frozen'.
