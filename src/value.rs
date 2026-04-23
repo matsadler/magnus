@@ -20,7 +20,7 @@ use std::{
 #[cfg(ruby_use_flonum)]
 pub use flonum::Flonum;
 use rb_sys::{
-    ID, RBasic, VALUE, rb_any_to_s, rb_block_call_kw, rb_check_funcall_kw, rb_check_id,
+    ID, RB_TYPE, RBasic, VALUE, rb_any_to_s, rb_block_call_kw, rb_check_funcall_kw, rb_check_id,
     rb_check_id_cstr, rb_check_symbol_cstr, rb_enumeratorize_with_size_kw, rb_eql, rb_equal,
     rb_funcall_with_block_kw, rb_funcallv_kw, rb_funcallv_public_kw, rb_gc_register_address,
     rb_gc_unregister_address, rb_hash, rb_id2name, rb_id2sym, rb_inspect, rb_intern3, rb_ll2inum,
@@ -720,36 +720,7 @@ pub(crate) mod private {
         // process's memory space if the Value has been allowed to get GC'd
         #[inline]
         fn rb_type(self) -> ruby_value_type {
-            match self.r_basic() {
-                Some(r_basic) => {
-                    unsafe {
-                        let ret = r_basic.as_ref().flags & (ruby_value_type::RUBY_T_MASK as VALUE);
-                        // this bit is safe, ruby_value_type is #[repr(u32)], the flags
-                        // value set by Ruby, and Ruby promises that flags masked like
-                        // this will always be a valid entry in this enum
-                        std::mem::transmute::<u32, ruby_value_type>(ret as u32)
-                    }
-                }
-                None => {
-                    if self.is_false() {
-                        ruby_value_type::RUBY_T_FALSE
-                    } else if self.copy_as_value().is_nil() {
-                        ruby_value_type::RUBY_T_NIL
-                    } else if self.is_true() {
-                        ruby_value_type::RUBY_T_TRUE
-                    } else if self.is_undef() {
-                        ruby_value_type::RUBY_T_UNDEF
-                    } else if self.is_fixnum() {
-                        ruby_value_type::RUBY_T_FIXNUM
-                    } else if self.is_static_symbol() {
-                        ruby_value_type::RUBY_T_SYMBOL
-                    } else if self.is_flonum() {
-                        ruby_value_type::RUBY_T_FLOAT
-                    } else {
-                        unreachable!()
-                    }
-                }
-            }
+            unsafe { RB_TYPE(self.as_rb_value()) }
         }
 
         /// Convert `self` to a string. If an error is encountered returns a
