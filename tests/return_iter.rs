@@ -1,6 +1,6 @@
 use magnus::{Ruby, Value, block::Yield, eval, method, prelude::*, rb_assert};
 
-fn count_to_3(ruby: &Ruby, rb_self: Value) -> Yield<impl Iterator<Item = u8> + use<>> {
+fn count_to_3(rb_self: Value, ruby: &Ruby) -> Yield<impl Iterator<Item = u8> + use<>> {
     if ruby.block_given() {
         Yield::Iter(1..=3)
     } else {

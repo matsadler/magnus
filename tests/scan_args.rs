@@ -2,12 +2,12 @@ use magnus::{
     RArray, RHash, Ruby, Symbol,
     block::Proc,
     error::Error,
-    method,
+    function,
     scan_args::{get_kwargs, scan_args},
     value::Value,
 };
 
-fn example(ruby: &Ruby, _rb_self: Value, args: &[Value]) -> Result<RArray, Error> {
+fn example(ruby: &Ruby, args: &[Value]) -> Result<RArray, Error> {
     let args = scan_args(args)?;
     let (a,): (String,) = args.required;
     let (b,): (Option<String>,) = args.optional;
@@ -44,7 +44,7 @@ fn example(ruby: &Ruby, _rb_self: Value, args: &[Value]) -> Result<RArray, Error
 fn it_scans_args() {
     let ruby = unsafe { magnus::embed::init() };
 
-    ruby.define_global_function("example", method!(example, -1));
+    ruby.define_global_function("example", function!(example, -1));
 
     let res = ruby.eval::<bool>(r#"
         example("a", "b", "splat1", "splat2", :c, d: 1, f: 2, h: 3) == ["a", "b", ["splat1", "splat2"], :c, 1, 2, {h: 3}]
