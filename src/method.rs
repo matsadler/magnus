@@ -728,7 +728,7 @@ where
 #[doc(hidden)]
 pub trait RubyMethodCAry<RbSelf, Res>
 where
-    Self: Sized + Fn(&Ruby, RbSelf, &[Value]) -> Res,
+    Self: Sized + Fn(RbSelf, &Ruby, &[Value]) -> Res,
     RbSelf: TryConvert,
     Res: ReturnValue,
 {
@@ -742,7 +742,7 @@ where
     ) -> Result<Value, Error> {
         unsafe {
             let args = slice::from_raw_parts(argv, argc as usize);
-            (self)(ruby, TryConvert::try_convert(rb_self)?, args).into_return_value_with(ruby)
+            (self)(TryConvert::try_convert(rb_self)?, ruby, args).into_return_value_with(ruby)
         }
     }
 
@@ -771,7 +771,7 @@ where
 
 impl<Func, RbSelf, Res> RubyMethodCAry<RbSelf, Res> for Func
 where
-    Func: Fn(&Ruby, RbSelf, &[Value]) -> Res,
+    Func: Fn(RbSelf, &Ruby, &[Value]) -> Res,
     RbSelf: TryConvert,
     Res: ReturnValue,
 {
@@ -832,7 +832,7 @@ macro_rules! method_n {
             #[doc(hidden)]
             pub trait $ruby_name<RbSelf, #(T~N,)* Res>
             where
-                Self: Sized + Fn(&Ruby, RbSelf, #(T~N,)*) -> Res,
+                Self: Sized + Fn(RbSelf, &Ruby, #(T~N,)*) -> Res,
                 RbSelf: TryConvert,
                 #(T~N: TryConvert,)*
                 Res: ReturnValue,
@@ -840,8 +840,8 @@ macro_rules! method_n {
                 #[inline]
                 fn call_convert_value(self, ruby: &Ruby, rb_self: Value, #(arg~N: Value,)*) -> Result<Value, Error> {
                     (self)(
-                        ruby,
                         TryConvert::try_convert(rb_self)?,
+                        ruby,
                         #(TryConvert::try_convert(arg~N)?,)*
                     ).into_return_value_with(ruby)
                 }
@@ -864,7 +864,7 @@ macro_rules! method_n {
 
             impl<Func, RbSelf, #(T~N,)* Res> $ruby_name<RbSelf, #(T~N,)* Res> for Func
             where
-                Func: Fn(&Ruby, RbSelf, #(T~N,)*) -> Res,
+                Func: Fn(RbSelf, &Ruby, #(T~N,)*) -> Res,
                 RbSelf: TryConvert,
                 #(T~N: TryConvert,)*
                 Res: ReturnValue,

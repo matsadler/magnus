@@ -1,6 +1,6 @@
-use magnus::{Error, Ruby, Value, eval, method, rb_assert};
+use magnus::{Error, Ruby, Value, eval, function, rb_assert};
 
-fn flipflop(ruby: &Ruby, _rb_self: Value, mut val: bool) -> Result<(), Error> {
+fn flipflop(ruby: &Ruby, mut val: bool) -> Result<(), Error> {
     val = ruby.yield_value(val)?;
     loop {
         val = ruby.yield_value(!val)?;
@@ -11,7 +11,7 @@ fn flipflop(ruby: &Ruby, _rb_self: Value, mut val: bool) -> Result<(), Error> {
 fn it_yields() {
     let ruby = unsafe { magnus::embed::init() };
 
-    ruby.define_global_function("flipflop", method!(flipflop, 1));
+    ruby.define_global_function("flipflop", function!(flipflop, 1));
 
     let values = ruby.ary_new();
     let i: Value = eval!(
