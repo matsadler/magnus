@@ -157,7 +157,7 @@ impl Range {
     where
         T: TryConvert,
     {
-        self.0.get(0)
+        self.0.aref(0)
     }
 
     /// Return the value that defines the end of the range, converting it
@@ -178,7 +178,7 @@ impl Range {
     where
         T: TryConvert,
     {
-        self.0.get(1)
+        self.0.aref(1)
     }
 
     /// Returns `true` if the range excludes its end value, `false` if the end
@@ -190,11 +190,20 @@ impl Range {
     /// use magnus::eval;
     /// # let _cleanup = unsafe { magnus::embed::init() };
     ///
+    /// let range: magnus::Range = eval("2...7").unwrap();
+    /// assert_eq!(range.excl(), true);
+    ///
     /// let range: magnus::Range = eval("2..7").unwrap();
     /// assert_eq!(range.excl(), false);
     /// ```
     pub fn excl(self) -> bool {
-        self.0.get::<Value>(2).unwrap().to_bool()
+        #[cfg(ruby_lt_4_1)]
+        let result = self.0.aref::<i64, Value>(2).unwrap().to_bool();
+        #[cfg(ruby_gte_4_1)]
+        // should be RANGE_FL_EXCL / FL_USER19 but for some reason it doesn't
+        // make it through the bindings intact
+        let result = unsafe { self.r_basic_unchecked().as_ref().flags & (2147483648) != 0 };
+        result
     }
 
     /// Given a total `length`, returns a beginning index and length of the
