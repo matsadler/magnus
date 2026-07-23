@@ -1,14 +1,14 @@
 GEM
   remote: https://rubygems.org/
   specs:
-    power_assert (2.0.5)
-    rake (13.3.0)
-    rake-compiler (1.2.0)
+    power_assert (3.0.1)
+    rake (13.4.2)
+    rake-compiler (1.3.1)
       rake
-    rake-compiler-dock (1.9.1)
-    rb_sys (0.9.117)
-      rake-compiler-dock (= 1.9.1)
-    test-unit (3.7.0)
+    rake-compiler-dock (1.12.0)
+    rb_sys (0.9.128)
+      rake-compiler-dock (= 1.12.0)
+    test-unit (3.7.8)
       power_assert
 
 PLATFORMS
@@ -20,8 +20,8 @@ PLATFORMS
 
 DEPENDENCIES
   rake
-  rake-compiler (= 1.2.0)
-  rb_sys (~> 0.9.56)
+  rake-compiler
+  rb_sys
   test-unit
 
 BUNDLED WITH
