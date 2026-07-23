@@ -60,6 +60,19 @@ jobs:
               if: matrix.ruby-version == 'head'
               run: gem install power_assert
 
+            # workaround Bundler::CorruptBundlerInstallError
+            # I didn't look into this in enough detail to be sure, but it seems
+            # like `bundle exec rake test` is re-invoking ruby when compiling
+            # and that ruby sub process is getting confused about which bundler
+            # version it should be running.
+            # Forcing the lockfile bundler version to the same as the default
+            # removes any possibility of confusion
+            - name: Bundler Ruby head bug workaround
+              if: matrix.ruby-version == 'head'
+              run: |
+                      bundle config set frozen false
+                      bundle update --bundler $(BUNDLE_GEMFILE=/dev/null bundle -v | cut -d' ' -f 3)
+
             - name: Example gem tests (blank?)
               working-directory: examples/rust_blank
               run: bundle exec rake test
