@@ -21,8 +21,8 @@ fn it_defines_a_struct() {
     );
 
     let obj = RStruct::from_value(obj).unwrap();
-    assert_eq!(1, obj.get(0).unwrap());
-    assert_eq!(2, obj.get(1).unwrap());
+    assert_eq!(1, obj.aref(0).unwrap());
+    assert_eq!(2, obj.aref(1).unwrap());
 
     assert_eq!(&["bar", "baz"], obj.members().unwrap().as_slice())
 }

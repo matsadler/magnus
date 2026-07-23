@@ -32,6 +32,7 @@
 ### Removed
 - `RArray::each`, use `ary.into_iter()` or `ary.enumeratorize(\"each\", ())`
   instead.
+- `RStruct::get`/`RStruct::set`, use `RStruct::aref`/`RStruct::aset` instead.
 
 ### Fixed
 
