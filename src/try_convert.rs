@@ -1,5 +1,6 @@
 //! Traits for converting from Ruby [`Value`]s to Rust types.
 
+use std::ffi::CString;
 use std::path::PathBuf;
 
 use rb_sys::{rb_get_path, rb_num2dbl};
@@ -214,6 +215,15 @@ impl TryConvert for String {
     }
 }
 unsafe impl TryConvertOwned for String {}
+
+impl TryConvert for CString {
+    #[inline]
+    fn try_convert(val: Value) -> Result<Self, Error> {
+        debug_assert_value!(val);
+        RString::try_convert(val)?.to_c_string()
+    }
+}
+unsafe impl TryConvertOwned for CString {}
 
 #[cfg(feature = "bytes")]
 impl TryConvert for bytes::Bytes {
