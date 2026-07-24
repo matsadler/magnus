@@ -1609,6 +1609,44 @@ impl<'a> TraceArg<'a> {
     }
 
     /// Return a `Binding` object for the point the trace event is at.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::sync::atomic::{AtomicBool, Ordering};
+    /// use magnus::{Error, RArray, Ruby, Value, debug::Events, eval, prelude::*};
+    ///
+    /// # static CALLED: AtomicBool = AtomicBool::new(false);
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let trace = ruby.tracepoint_new(None, Events::new().call(), |tp| {
+    /// #       CALLED.store(true, Ordering::Relaxed);
+    ///         let ruby = Ruby::get_with(tp);
+    ///         let binding = tp
+    ///             .tracearg()?
+    ///             .binding()
+    ///             .expect("binding available for method defined in Ruby");
+    ///         let vars: RArray = binding.funcall("local_variables", ())?;
+    ///         let expected = ruby.ary_new_from_values(&[ruby.to_symbol("a"), ruby.to_symbol("b")]);
+    ///         assert!(vars.equal(expected)?);
+    ///         Ok::<_, Error>(())
+    ///     });
+    ///
+    ///     let _: Value = eval!(
+    ///         ruby,
+    ///         "
+    ///             def example
+    ///               a = 1
+    ///               b = 2
+    ///             end
+    ///         "
+    ///     )?;
+    ///     trace.enable()?;
+    ///     let _: Value = ruby.class_object().funcall("example", ())?;
+    /// #   assert!(CALLED.load(Ordering::Relaxed));
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     pub fn binding(self) -> Option<Value> {
         unsafe {
             let val = Value::new(rb_tracearg_binding(self.ptr));
