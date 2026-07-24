@@ -15,11 +15,11 @@ use rb_sys::{
     self, RSTRING_LEN, RSTRING_PTR, VALUE, rb_enc_str_coderange, rb_enc_str_new,
     rb_enc_str_new_static, rb_str_buf_append, rb_str_buf_new, rb_str_capacity, rb_str_cat,
     rb_str_cmp, rb_str_comparable, rb_str_conv_enc, rb_str_drop_bytes, rb_str_dump,
-    rb_str_ellipsize, rb_str_new, rb_str_new_frozen, rb_str_new_shared, rb_str_new_static,
-    rb_str_offset, rb_str_plus, rb_str_replace, rb_str_scrub, rb_str_shared_replace, rb_str_split,
-    rb_str_strlen, rb_str_times, rb_str_to_interned_str, rb_str_to_str, rb_str_update,
-    rb_utf8_str_new, rb_utf8_str_new_static, ruby_coderange_type, ruby_rstring_flags,
-    ruby_value_type,
+    rb_str_ellipsize, rb_str_new, rb_str_new_cstr, rb_str_new_frozen, rb_str_new_shared,
+    rb_str_new_static, rb_str_offset, rb_str_plus, rb_str_replace, rb_str_scrub,
+    rb_str_shared_replace, rb_str_split, rb_str_strlen, rb_str_times, rb_str_to_interned_str,
+    rb_str_to_str, rb_str_update, rb_utf8_str_new, rb_utf8_str_new_static, ruby_coderange_type,
+    ruby_rstring_flags, ruby_value_type,
 };
 
 use crate::{
@@ -234,6 +234,26 @@ impl Ruby {
         let len = s.len();
         let ptr = s.as_ptr();
         unsafe { RString::from_rb_value_unchecked(rb_str_new(ptr as *const c_char, len as c_long)) }
+    }
+
+    /// Create a new Ruby string from the Rust C string `s`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Error, Ruby, rb_assert};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let val = ruby.str_from_c_str(c"example");
+    ///     rb_assert!(ruby, r#"val == "example""#, val);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
+    pub fn str_from_c_str(&self, s: &CStr) -> RString {
+        let ptr = s.as_ptr();
+        unsafe { RString::from_rb_value_unchecked(rb_str_new_cstr(ptr as *const c_char)) }
     }
 
     /// Create a new Ruby string from the value `s` with the encoding `enc`.
@@ -1264,6 +1284,30 @@ impl RString {
         }
     }
 
+    /// Returns `self` as an owned Rust `CString`. Errors if the string contains
+    /// a nul byte.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use std::ffi::CString;
+    ///
+    /// use magnus::{Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let s = ruby.str_new("example");
+    ///     assert_eq!(s.to_c_string()?, CString::new("example").unwrap());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
+    pub fn to_c_string(self) -> Result<CString, Error> {
+        let handle = Ruby::get_with(self);
+        CString::new(unsafe { self.as_slice() })
+            .map_err(|e| Error::new(handle.exception_encoding_error(), format!("{}", e)))
+    }
+
     /// Returns `self` as an owned Rust `Bytes`.
     ///
     /// # Examples
@@ -1906,6 +1950,18 @@ impl IntoRString for String {
     }
 }
 
+impl IntoRString for &CStr {
+    fn into_r_string_with(self, handle: &Ruby) -> RString {
+        handle.str_from_c_str(self)
+    }
+}
+
+impl IntoRString for CString {
+    fn into_r_string_with(self, handle: &Ruby) -> RString {
+        handle.str_from_c_str(&self)
+    }
+}
+
 #[cfg(unix)]
 impl IntoRString for &Path {
     fn into_r_string_with(self, handle: &Ruby) -> RString {
@@ -1976,6 +2032,26 @@ impl IntoValue for String {
 }
 
 unsafe impl IntoValueFromNative for String {}
+
+impl IntoValue for &CStr {
+    #[inline]
+    fn into_value_with(self, handle: &Ruby) -> Value {
+        handle.str_from_c_str(self).into_value_with(handle)
+    }
+}
+
+unsafe impl IntoValueFromNative for &CStr {}
+
+impl IntoValue for CString {
+    #[inline]
+    fn into_value_with(self, handle: &Ruby) -> Value {
+        handle
+            .str_from_c_str(self.as_c_str())
+            .into_value_with(handle)
+    }
+}
+
+unsafe impl IntoValueFromNative for CString {}
 
 impl IntoValue for char {
     #[inline]
