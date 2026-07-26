@@ -1655,6 +1655,37 @@ impl<'a> TraceArg<'a> {
     }
 
     /// Return the current Ruby `self` associated with the event.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::sync::atomic::{AtomicBool, Ordering};
+    /// use magnus::{Error, RClass, Ruby, Value, debug::Events, function, prelude::*};
+    ///
+    /// # static CALLED: AtomicBool = AtomicBool::new(false);
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let trace = ruby.tracepoint_new(None, Events::new().c_call(), |tp| {
+    /// #       CALLED.store(true, Ordering::Relaxed);
+    ///         let trace_self = tp.tracearg()?.tracearg_self();
+    ///         assert!(
+    ///             trace_self.is_kind_of(
+    ///                 Ruby::get_with(tp)
+    ///                     .class_object()
+    ///                     .const_get::<_, RClass>("Example")?
+    ///             )
+    ///         );
+    ///         Ok::<_, Error>(())
+    ///     });
+    ///
+    ///     let class = ruby.define_class("Example", ruby.class_object())?;
+    ///     class.define_method("example", function!(|| {}, 0))?;
+    ///     trace.enable()?;
+    ///     let _: Value = class.new_instance(())?.funcall("example", ())?;
+    /// #   assert!(CALLED.load(Ordering::Relaxed));
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     pub fn tracearg_self(self) -> Value {
         unsafe { Value::new(rb_tracearg_self(self.ptr)) }
     }
@@ -1662,6 +1693,30 @@ impl<'a> TraceArg<'a> {
     /// Return the `return` value associated with the event.
     ///
     /// Returns `Err` if the event type does not support return values.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::sync::atomic::{AtomicBool, Ordering};
+    /// use magnus::{Error, Ruby, Value, debug::Events, function, prelude::*};
+    ///
+    /// # static CALLED: AtomicBool = AtomicBool::new(false);
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let trace = ruby.tracepoint_new(None, Events::new().c_return(), |tp| {
+    /// #       CALLED.store(true, Ordering::Relaxed);
+    ///         let return_value = tp.tracearg()?.return_value()?;
+    ///         assert_eq!(String::try_convert(return_value)?, "foo");
+    ///         Ok::<_, Error>(())
+    ///     });
+    ///
+    ///     ruby.define_global_function("example", function!(|| "foo", 0));
+    ///     trace.enable()?;
+    ///     let _: Value = ruby.class_object().funcall("example", ())?;
+    /// #   assert!(CALLED.load(Ordering::Relaxed));
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     pub fn return_value(self) -> Result<Value, Error> {
         protect(|| unsafe { Value::new(rb_tracearg_return_value(self.ptr)) })
     }
@@ -1669,6 +1724,36 @@ impl<'a> TraceArg<'a> {
     /// Return the raised exception associated with the event.
     ///
     /// Returns `Err` if the event type is not exception related.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use std::sync::atomic::{AtomicBool, Ordering};
+    /// use magnus::{Error, Ruby, Value, debug::Events, function, prelude::*};
+    ///
+    /// # static CALLED: AtomicBool = AtomicBool::new(false);
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let trace = ruby.tracepoint_new(None, Events::new().raise(), |tp| {
+    /// #       CALLED.store(true, Ordering::Relaxed);
+    ///         let err = tp.tracearg()?.raised_exception()?;
+    ///         assert!(err.is_kind_of(Ruby::get_with(tp).exception_type_error()));
+    ///         Ok::<_, Error>(())
+    ///     });
+    ///
+    ///     ruby.define_global_function(
+    ///         "example",
+    ///         function!(
+    ///             |ruby: &Ruby| { Err::<(), _>(Error::new(ruby.exception_type_error(), "on no!")) },
+    ///             0
+    ///         ),
+    ///     );
+    ///     trace.enable()?;
+    ///     let _: Result<Value, Error> = ruby.class_object().funcall("example", ());
+    /// #   assert!(CALLED.load(Ordering::Relaxed));
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
     pub fn raised_exception(self) -> Result<Exception, Error> {
         unsafe {
             protect(|| Value::new(rb_tracearg_raised_exception(self.ptr)))
