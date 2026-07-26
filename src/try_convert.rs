@@ -1,7 +1,6 @@
 //! Traits for converting from Ruby [`Value`]s to Rust types.
 
-use std::ffi::CString;
-use std::path::PathBuf;
+use std::{ffi::CString, path::PathBuf};
 
 use rb_sys::{rb_get_path, rb_num2dbl};
 use seq_macro::seq;
