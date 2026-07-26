@@ -37,8 +37,8 @@ fn c_to_f(c: f64) -> f64 {
 
 impl Temperature {
     fn initialize(
+        &self,
         ruby: &Ruby,
-        rb_self: typed_data::Obj<Self>,
         args: &[Value],
     ) -> Result<(), Error> {
         let args = scan_args::<(), (), (), (), _, ()>(args)?;
@@ -47,7 +47,7 @@ impl Temperature {
             &[],
             &["kelvin", "celsius", "fahrenheit"],
         )?;
-        *rb_self.microkelvin.borrow_mut() = match kwargs.optional {
+        *self.microkelvin.borrow_mut() = match kwargs.optional {
             (Some(k), None, None) => (k * FACTOR) as u64,
             (None, Some(c), None) => ((c + C_OFFSET) * FACTOR) as u64,
             (None, None, Some(f)) => ((f_to_c(f) + C_OFFSET) * FACTOR) as u64,

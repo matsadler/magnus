@@ -32,8 +32,8 @@ struct Point {
 // The syntax for methods like `add_x` differs slightly from typical Rust
 // struct methods because it uses the
 // [`method!` macro](https://docs.rs/magnus/latest/magnus/macro.method.html):
-// * The first parameter, `ruby`, gives access to Ruby's runtime.
-// * The second parameter, `rb_self`, is the Ruby object being called.
+// * The first parameter, `rb_self`, is the Ruby object being called.
+// * The second parameter, `ruby`, gives access to Ruby's runtime.
 //
 // See [`DataTypeFunctions`](https://docs.rs/magnus/latest/magnus/derive.DataTypeFunctions.html)
 // and [`TypedData`](https://docs.rs/magnus/latest/magnus/derive.TypedData.html)
@@ -53,10 +53,10 @@ impl MutPoint {
         self.0.borrow_mut().x = val;
     }
 
-    fn add_x(ruby: &Ruby, rb_self: &Self, val: isize) -> Result<isize, Error> {
-        match rb_self.0.borrow().x.checked_add(val) {
+    fn add_x(&self, ruby: &Ruby, val: isize) -> Result<isize, Error> {
+        match self.0.borrow().x.checked_add(val) {
             Some(sum) => {
-                rb_self.0.borrow_mut().x = sum;
+                self.0.borrow_mut().x = sum;
                 Ok(sum)
             }
             _ => Err(Error::new(
@@ -74,10 +74,10 @@ impl MutPoint {
         self.0.borrow_mut().y = val;
     }
 
-    fn add_y(ruby: &Ruby, rb_self: &Self, val: isize) -> Result<isize, Error> {
-        match rb_self.0.borrow().y.checked_add(val) {
+    fn add_y(&self, ruby: &Ruby, val: isize) -> Result<isize, Error> {
+        match self.0.borrow().y.checked_add(val) {
             Some(sum) => {
-                rb_self.0.borrow_mut().y = sum;
+                self.0.borrow_mut().y = sum;
                 Ok(sum)
             }
             _ => Err(Error::new(
