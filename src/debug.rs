@@ -1319,18 +1319,18 @@ impl<'a> TraceArg<'a> {
     /// # use std::sync::atomic::{AtomicBool, Ordering};
     /// use magnus::{Error, Ruby, Value, debug::Events, function, prelude::*};
     ///
-    /// # static CALLED: AtomicBool = AtomicBool::new(false);
+    /// # static SUCCESS: AtomicBool = AtomicBool::new(false);
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let trace = ruby.tracepoint_new(None, Events::new().c_call(), |tp| {
-    /// #       CALLED.store(true, Ordering::Relaxed);
     ///         assert!(tp.tracearg()?.event_flag().is_c_call());
+    /// #       SUCCESS.store(true, Ordering::Relaxed);
     ///         Ok::<_, Error>(())
     ///     });
     ///
     ///     ruby.define_global_function("foo", function!(|| (), 0));
     ///     trace.enable()?;
     ///     let _: Value = ruby.class_object().funcall("foo", ())?;
-    /// #   assert!(CALLED.load(Ordering::Relaxed));
+    /// #   assert!(SUCCESS.load(Ordering::Relaxed));
     ///     Ok(())
     /// }
     /// # Ruby::init(example).unwrap()
@@ -1347,18 +1347,18 @@ impl<'a> TraceArg<'a> {
     /// # use std::sync::atomic::{AtomicBool, Ordering};
     /// use magnus::{Error, Ruby, Value, debug::Events, function, prelude::*};
     ///
-    /// # static CALLED: AtomicBool = AtomicBool::new(false);
+    /// # static SUCCESS: AtomicBool = AtomicBool::new(false);
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let trace = ruby.tracepoint_new(None, Events::new().c_call(), |tp| {
-    /// #       CALLED.store(true, Ordering::Relaxed);
     ///         assert_eq!(tp.tracearg()?.event(), Ruby::get_with(tp).sym_new("c_call"));
+    /// #       SUCCESS.store(true, Ordering::Relaxed);
     ///         Ok::<_, Error>(())
     ///     });
     ///
     ///     ruby.define_global_function("foo", function!(|| (), 0));
     ///     trace.enable()?;
     ///     let _: Value = ruby.class_object().funcall("foo", ())?;
-    /// #   assert!(CALLED.load(Ordering::Relaxed));
+    /// #   assert!(SUCCESS.load(Ordering::Relaxed));
     ///     Ok(())
     /// }
     /// # Ruby::init(example).unwrap()
@@ -1377,18 +1377,18 @@ impl<'a> TraceArg<'a> {
     /// # use std::sync::atomic::{AtomicBool, Ordering};
     /// use magnus::{Error, Ruby, Value, debug::Events, function, prelude::*};
     ///
-    /// # static CALLED: AtomicBool = AtomicBool::new(false);
+    /// # static SUCCESS: AtomicBool = AtomicBool::new(false);
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let trace = ruby.tracepoint_new(None, Events::new().c_call(), |tp| {
-    /// #       CALLED.store(true, Ordering::Relaxed);
     ///         assert!(tp.tracearg()?.lineno().is_none());
+    /// #       SUCCESS.store(true, Ordering::Relaxed);
     ///         Ok::<_, Error>(())
     ///     });
     ///
     ///     ruby.define_global_function("foo", function!(|| (), 0));
     ///     trace.enable()?;
     ///     let _: Value = ruby.class_object().funcall("foo", ())?;
-    /// #   assert!(CALLED.load(Ordering::Relaxed));
+    /// #   assert!(SUCCESS.load(Ordering::Relaxed));
     ///     Ok(())
     /// }
     /// # Ruby::init(example).unwrap()
@@ -1410,23 +1410,23 @@ impl<'a> TraceArg<'a> {
     /// # use std::sync::atomic::{AtomicBool, Ordering};
     /// use magnus::{Error, Ruby, Value, debug::Events, function, prelude::*};
     ///
-    /// # static CALLED: AtomicBool = AtomicBool::new(false);
+    /// # static SUCCESS: AtomicBool = AtomicBool::new(false);
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let trace = ruby.tracepoint_new(None, Events::new().c_call(), |tp| {
-    /// #       CALLED.store(true, Ordering::Relaxed);
     ///         assert_eq!(
     ///             tp.tracearg()?.path().and_then(|p| p.to_string().ok()),
     ///             // note, the path being "-e" in this example is an
     ///             // implementation detail of Magnus' test runner
     ///             Some(String::from("-e"))
     ///         );
+    /// #       SUCCESS.store(true, Ordering::Relaxed);
     ///         Ok::<_, Error>(())
     ///     });
     ///
     ///     ruby.define_global_function("foo", function!(|| (), 0));
     ///     trace.enable()?;
     ///     let _: Value = ruby.class_object().funcall("foo", ())?;
-    /// #   assert!(CALLED.load(Ordering::Relaxed));
+    /// #   assert!(SUCCESS.load(Ordering::Relaxed));
     ///     Ok(())
     /// }
     /// # Ruby::init(example).unwrap()
@@ -1451,23 +1451,23 @@ impl<'a> TraceArg<'a> {
     /// # use std::sync::atomic::{AtomicBool, Ordering};
     /// use magnus::{Error, Ruby, Value, debug::Events, eval, prelude::*};
     ///
-    /// # static CALLED: AtomicBool = AtomicBool::new(false);
+    /// # static SUCCESS: AtomicBool = AtomicBool::new(false);
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let trace = ruby.tracepoint_new(None, Events::new().event_return(), |tp| {
-    /// #       CALLED.store(true, Ordering::Relaxed);
     ///         let res: bool = eval!(
     ///             Ruby::get_with(tp),
     ///             "parameters == [[:req, :bar], [:opt, :baz], [:key, :qux]]",
     ///             parameters = tp.tracearg()?.parameters()?
     ///         )?;
     ///         assert!(res);
+    /// #       SUCCESS.store(true, Ordering::Relaxed);
     ///         Ok::<_, Error>(())
     ///     });
     ///
     ///     let _: Value = eval!(ruby, "def foo(bar, baz=nil, qux: nil); end")?;
     ///     trace.enable()?;
     ///     let _: Value = ruby.class_object().funcall("foo", (1,))?;
-    /// #   assert!(CALLED.load(Ordering::Relaxed));
+    /// #   assert!(SUCCESS.load(Ordering::Relaxed));
     ///     Ok(())
     /// }
     /// # Ruby::init(example).unwrap()
@@ -1489,14 +1489,14 @@ impl<'a> TraceArg<'a> {
     /// # use std::sync::atomic::{AtomicBool, Ordering};
     /// use magnus::{Error, Ruby, Value, debug::Events, function, prelude::*};
     ///
-    /// # static CALLED: AtomicBool = AtomicBool::new(false);
+    /// # static SUCCESS: AtomicBool = AtomicBool::new(false);
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let trace = ruby.tracepoint_new(None, Events::new().c_call(), |tp| {
-    /// #       CALLED.store(true, Ordering::Relaxed);
     ///         assert_eq!(
     ///             tp.tracearg()?.method_id(),
     ///             Some(Ruby::get_with(tp).sym_new("foo"))
     ///         );
+    /// #       SUCCESS.store(true, Ordering::Relaxed);
     ///         Ok::<_, Error>(())
     ///     });
     ///
@@ -1504,7 +1504,7 @@ impl<'a> TraceArg<'a> {
     ///     ruby.class_object().define_alias("bar", "foo")?;
     ///     trace.enable()?;
     ///     let _: Value = ruby.class_object().funcall("bar", ())?;
-    /// #   assert!(CALLED.load(Ordering::Relaxed));
+    /// #   assert!(SUCCESS.load(Ordering::Relaxed));
     ///     Ok(())
     /// }
     /// # Ruby::init(example).unwrap()
@@ -1527,14 +1527,14 @@ impl<'a> TraceArg<'a> {
     /// # use std::sync::atomic::{AtomicBool, Ordering};
     /// use magnus::{Error, Ruby, Value, debug::Events, function, prelude::*};
     ///
-    /// # static CALLED: AtomicBool = AtomicBool::new(false);
+    /// # static SUCCESS: AtomicBool = AtomicBool::new(false);
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let trace = ruby.tracepoint_new(None, Events::new().c_call(), |tp| {
-    /// #       CALLED.store(true, Ordering::Relaxed);
     ///         assert_eq!(
     ///             tp.tracearg()?.callee_id(),
     ///             Some(Ruby::get_with(tp).sym_new("bar"))
     ///         );
+    /// #       SUCCESS.store(true, Ordering::Relaxed);
     ///         Ok::<_, Error>(())
     ///     });
     ///
@@ -1542,7 +1542,7 @@ impl<'a> TraceArg<'a> {
     ///     ruby.class_object().define_alias("bar", "foo")?;
     ///     trace.enable()?;
     ///     let _: Value = ruby.class_object().funcall("bar", ())?;
-    /// #   assert!(CALLED.load(Ordering::Relaxed));
+    /// #   assert!(SUCCESS.load(Ordering::Relaxed));
     ///     Ok(())
     /// }
     /// # Ruby::init(example).unwrap()
@@ -1565,10 +1565,9 @@ impl<'a> TraceArg<'a> {
     /// # use std::sync::atomic::{AtomicBool, Ordering};
     /// use magnus::{Error, RClass, Ruby, Value, debug::Events, eval, prelude::*};
     ///
-    /// # static CALLED: AtomicBool = AtomicBool::new(false);
+    /// # static SUCCESS: AtomicBool = AtomicBool::new(false);
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let trace = ruby.tracepoint_new(None, Events::new().call(), |tp| {
-    /// #       CALLED.store(true, Ordering::Relaxed);
     ///         assert!(
     ///             tp.tracearg()?.defined_class().unwrap().equal(
     ///                 Ruby::get_with(tp)
@@ -1576,6 +1575,7 @@ impl<'a> TraceArg<'a> {
     ///                     .const_get::<_, RClass>("Foo")?
     ///             )?
     ///         );
+    /// #       SUCCESS.store(true, Ordering::Relaxed);
     ///         Ok::<_, Error>(())
     ///     });
     ///
@@ -1596,7 +1596,7 @@ impl<'a> TraceArg<'a> {
     ///         .const_get::<_, RClass>("Bar")?
     ///         .new_instance(())?
     ///         .funcall("example", ())?;
-    /// #   assert!(CALLED.load(Ordering::Relaxed));
+    /// #   assert!(SUCCESS.load(Ordering::Relaxed));
     ///     Ok(())
     /// }
     /// # Ruby::init(example).unwrap()
@@ -1616,10 +1616,9 @@ impl<'a> TraceArg<'a> {
     /// # use std::sync::atomic::{AtomicBool, Ordering};
     /// use magnus::{Error, RArray, Ruby, Value, debug::Events, eval, prelude::*};
     ///
-    /// # static CALLED: AtomicBool = AtomicBool::new(false);
+    /// # static SUCCESS: AtomicBool = AtomicBool::new(false);
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let trace = ruby.tracepoint_new(None, Events::new().call(), |tp| {
-    /// #       CALLED.store(true, Ordering::Relaxed);
     ///         let ruby = Ruby::get_with(tp);
     ///         let binding = tp
     ///             .tracearg()?
@@ -1628,6 +1627,7 @@ impl<'a> TraceArg<'a> {
     ///         let vars: RArray = binding.funcall("local_variables", ())?;
     ///         let expected = ruby.ary_new_from_values(&[ruby.to_symbol("a"), ruby.to_symbol("b")]);
     ///         assert!(vars.equal(expected)?);
+    /// #       SUCCESS.store(true, Ordering::Relaxed);
     ///         Ok::<_, Error>(())
     ///     });
     ///
@@ -1642,7 +1642,7 @@ impl<'a> TraceArg<'a> {
     ///     )?;
     ///     trace.enable()?;
     ///     let _: Value = ruby.class_object().funcall("example", ())?;
-    /// #   assert!(CALLED.load(Ordering::Relaxed));
+    /// #   assert!(SUCCESS.load(Ordering::Relaxed));
     ///     Ok(())
     /// }
     /// # Ruby::init(example).unwrap()
@@ -1662,10 +1662,9 @@ impl<'a> TraceArg<'a> {
     /// # use std::sync::atomic::{AtomicBool, Ordering};
     /// use magnus::{Error, RClass, Ruby, Value, debug::Events, function, prelude::*};
     ///
-    /// # static CALLED: AtomicBool = AtomicBool::new(false);
+    /// # static SUCCESS: AtomicBool = AtomicBool::new(false);
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let trace = ruby.tracepoint_new(None, Events::new().c_call(), |tp| {
-    /// #       CALLED.store(true, Ordering::Relaxed);
     ///         let trace_self = tp.tracearg()?.tracearg_self();
     ///         assert!(
     ///             trace_self.is_kind_of(
@@ -1674,6 +1673,7 @@ impl<'a> TraceArg<'a> {
     ///                     .const_get::<_, RClass>("Example")?
     ///             )
     ///         );
+    /// #       SUCCESS.store(true, Ordering::Relaxed);
     ///         Ok::<_, Error>(())
     ///     });
     ///
@@ -1681,7 +1681,7 @@ impl<'a> TraceArg<'a> {
     ///     class.define_method("example", function!(|| {}, 0))?;
     ///     trace.enable()?;
     ///     let _: Value = class.new_instance(())?.funcall("example", ())?;
-    /// #   assert!(CALLED.load(Ordering::Relaxed));
+    /// #   assert!(SUCCESS.load(Ordering::Relaxed));
     ///     Ok(())
     /// }
     /// # Ruby::init(example).unwrap()
@@ -1700,19 +1700,19 @@ impl<'a> TraceArg<'a> {
     /// # use std::sync::atomic::{AtomicBool, Ordering};
     /// use magnus::{Error, Ruby, Value, debug::Events, function, prelude::*};
     ///
-    /// # static CALLED: AtomicBool = AtomicBool::new(false);
+    /// # static SUCCESS: AtomicBool = AtomicBool::new(false);
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let trace = ruby.tracepoint_new(None, Events::new().c_return(), |tp| {
-    /// #       CALLED.store(true, Ordering::Relaxed);
     ///         let return_value = tp.tracearg()?.return_value()?;
     ///         assert_eq!(String::try_convert(return_value)?, "foo");
+    /// #       SUCCESS.store(true, Ordering::Relaxed);
     ///         Ok::<_, Error>(())
     ///     });
     ///
     ///     ruby.define_global_function("example", function!(|| "foo", 0));
     ///     trace.enable()?;
     ///     let _: Value = ruby.class_object().funcall("example", ())?;
-    /// #   assert!(CALLED.load(Ordering::Relaxed));
+    /// #   assert!(SUCCESS.load(Ordering::Relaxed));
     ///     Ok(())
     /// }
     /// # Ruby::init(example).unwrap()
@@ -1731,12 +1731,12 @@ impl<'a> TraceArg<'a> {
     /// # use std::sync::atomic::{AtomicBool, Ordering};
     /// use magnus::{Error, Ruby, Value, debug::Events, function, prelude::*};
     ///
-    /// # static CALLED: AtomicBool = AtomicBool::new(false);
+    /// # static SUCCESS: AtomicBool = AtomicBool::new(false);
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let trace = ruby.tracepoint_new(None, Events::new().raise(), |tp| {
-    /// #       CALLED.store(true, Ordering::Relaxed);
     ///         let err = tp.tracearg()?.raised_exception()?;
     ///         assert!(err.is_kind_of(Ruby::get_with(tp).exception_type_error()));
+    /// #       SUCCESS.store(true, Ordering::Relaxed);
     ///         Ok::<_, Error>(())
     ///     });
     ///
@@ -1749,7 +1749,7 @@ impl<'a> TraceArg<'a> {
     ///     );
     ///     trace.enable()?;
     ///     let _: Result<Value, Error> = ruby.class_object().funcall("example", ());
-    /// #   assert!(CALLED.load(Ordering::Relaxed));
+    /// #   assert!(SUCCESS.load(Ordering::Relaxed));
     ///     Ok(())
     /// }
     /// # Ruby::init(example).unwrap()
