@@ -20,12 +20,12 @@ use std::{
 #[cfg(ruby_use_flonum)]
 pub use flonum::Flonum;
 use rb_sys::{
-    ID, RBasic, VALUE, rb_any_to_s, rb_block_call_kw, rb_check_funcall_kw, rb_check_id,
-    rb_check_id_cstr, rb_check_symbol_cstr, rb_enumeratorize_with_size_kw, rb_eql, rb_equal,
-    rb_funcall_with_block_kw, rb_funcallv_kw, rb_funcallv_public_kw, rb_gc_register_address,
-    rb_gc_unregister_address, rb_hash, rb_id2name, rb_id2sym, rb_inspect, rb_intern3, rb_ll2inum,
-    rb_obj_as_string, rb_obj_classname, rb_obj_freeze, rb_obj_is_kind_of, rb_obj_respond_to,
-    rb_sym2id, rb_ull2inum, ruby_fl_type, ruby_special_consts, ruby_value_type,
+    ID, RBasic, StableApiDefinition, VALUE, rb_any_to_s, rb_block_call_kw, rb_check_funcall_kw,
+    rb_check_id, rb_check_id_cstr, rb_check_symbol_cstr, rb_enumeratorize_with_size_kw, rb_eql,
+    rb_equal, rb_funcall_with_block_kw, rb_funcallv_kw, rb_funcallv_public_kw,
+    rb_gc_register_address, rb_gc_unregister_address, rb_hash, rb_id2name, rb_id2sym, rb_inspect,
+    rb_intern3, rb_ll2inum, rb_obj_as_string, rb_obj_classname, rb_obj_freeze, rb_obj_is_kind_of,
+    rb_obj_respond_to, rb_sym2id, rb_ull2inum, ruby_special_consts, ruby_value_type, stable_api,
 };
 
 // These don't seem to appear consistently in bindgen output, not sure if they
@@ -1031,9 +1031,7 @@ pub trait ReprValue: private::ReprValue {
     fn is_frozen(self) -> bool {
         match self.r_basic() {
             None => true,
-            Some(r_basic) => unsafe {
-                r_basic.as_ref().flags & ruby_fl_type::RUBY_FL_FREEZE as VALUE != 0
-            },
+            Some(_) => unsafe { stable_api::get_default().frozen_p(self.as_rb_value()) },
         }
     }
 
