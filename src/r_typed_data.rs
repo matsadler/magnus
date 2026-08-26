@@ -108,7 +108,7 @@ impl Ruby {
     /// }
     ///
     /// impl Point {
-    ///     fn new(ruby: &Ruby, class: RClass, x: isize, y: isize) -> RTypedData {
+    ///     fn new(class: RClass, ruby: &Ruby, x: isize, y: isize) -> RTypedData {
     ///         ruby.wrap_as(Self { x, y }, class)
     ///     }
     /// }

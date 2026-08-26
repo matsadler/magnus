@@ -1083,7 +1083,7 @@ where
 /// ```
 /// use magnus::{Error, Ruby, Value, block::Yield, method, prelude::*, rb_assert};
 ///
-/// fn count_to_3(ruby: &Ruby, rb_self: Value) -> Yield<impl Iterator<Item = u8> + use<>> {
+/// fn count_to_3(rb_self: Value, ruby: &Ruby) -> Yield<impl Iterator<Item = u8> + use<>> {
 ///     if ruby.block_given() {
 ///         Yield::Iter(1..=3)
 ///     } else {
@@ -1127,8 +1127,8 @@ pub enum Yield<I> {
 /// use magnus::{Error, Ruby, Value, block::YieldValues, method, prelude::*, rb_assert};
 ///
 /// fn count_to_3_abc(
-///     ruby: &Ruby,
 ///     rb_self: Value,
+///     ruby: &Ruby,
 /// ) -> YieldValues<impl Iterator<Item = (u8, char)> + use<>> {
 ///     if ruby.block_given() {
 ///         YieldValues::Iter((1..=3).zip('a'..='c'))
@@ -1173,8 +1173,8 @@ pub enum YieldValues<I> {
 /// use magnus::{Error, RArray, Ruby, Value, block::YieldSplat, method, prelude::*, rb_assert};
 ///
 /// fn count_to_3_abc(
-///     ruby: &Ruby,
 ///     rb_self: Value,
+///     ruby: &Ruby,
 /// ) -> YieldSplat<impl Iterator<Item = RArray> + use<>> {
 ///     if ruby.block_given() {
 ///         YieldSplat::Iter((1..=3).zip('a'..='c').map(|(i, c)| {

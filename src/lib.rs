@@ -2318,7 +2318,7 @@ impl Ruby {
     /// ```
     /// use magnus::{Error, Ruby, Value, method, prelude::*, rb_assert};
     ///
-    /// fn test(ruby: &Ruby, rb_self: Value) -> Result<bool, Error> {
+    /// fn test(rb_self: Value, ruby: &Ruby) -> Result<bool, Error> {
     ///     rb_self.equal(ruby.current_receiver::<Value>()?)
     /// }
     ///
