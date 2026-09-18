@@ -1204,6 +1204,8 @@
 // * `rb_path_to_class`:
 // * `rb_pipe`:
 // * `RB_POSFIXABLE`:
+//! * `rb_postponed_job_preregister`: [`Ruby::postponed_job_preregister`].
+//! * `rb_postponed_job_trigger`: [`PostponedJobHandle::trigger`](debug::PostponedJobHandle::trigger).
 // * `rb_postponed_job_register`:
 // * `rb_postponed_job_register_one`:
 // * `rb_prepend_module`: [`Module::prepend_module`].

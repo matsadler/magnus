@@ -7,6 +7,9 @@
   specific thread.
 - `Ruby::debug_inspector_open` to acquire a `DebugInspector` struct that gives
   access to the current frame's self, class, binding, and instruction sequence.
+- `Ruby::postponed_job_preregister` and `PostponedJobHandle::trigger` to
+  register and trigger postponed jobs that can be triggered from non-Ruby
+  threads/without the GVL to be run later from a Ruby thread with the GVL.
 
 ### Changed
 - Minimum supported Rust version is now 1.85.

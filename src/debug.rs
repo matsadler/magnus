@@ -2,6 +2,8 @@
 //!
 //! See also [`Ruby`](Ruby#debug) for more debugging related methods.
 
+#[cfg(ruby_gte_3_3)]
+use std::panic::{AssertUnwindSafe, catch_unwind};
 use std::{
     ffi::{c_int, c_long, c_void},
     fmt,
@@ -32,10 +34,15 @@ use rb_sys::{
     ruby_special_consts,
 };
 #[cfg(ruby_gte_3_3)]
-use rb_sys::{RUBY_EVENT_RESCUE, rb_profile_thread_frames};
+use rb_sys::{
+    RUBY_EVENT_RESCUE, rb_postponed_job_handle_t, rb_postponed_job_preregister,
+    rb_postponed_job_trigger, rb_profile_thread_frames,
+};
 #[cfg(ruby_gte_4_0)]
 use rb_sys::{rb_tracearg_eval_script, rb_tracearg_instruction_sequence, rb_tracearg_parameters};
 
+#[cfg(ruby_gte_3_3)]
+use crate::error::bug_from_panic;
 use crate::{
     api::Ruby,
     class::RClass,
@@ -283,6 +290,104 @@ impl Ruby {
         // ivar without @ prefix is invisible from Ruby
         tp.ivar_set("__rust_closure", keepalive).unwrap();
         tp
+    }
+
+    /// Register a function in Ruby's postponed job table.
+    ///
+    /// Returns a handle which can be used to trigger the job later. Job may be
+    /// triggered without holding the GVL, from non-Ruby threads, or from
+    /// signal handlers. The function will be queued to run later with the GVL
+    /// from a Ruby thread.
+    ///
+    /// The postponed job table is very small, extensions should only register
+    /// one or two functions. Returns `None` when the table is full.
+    ///
+    /// The registered function must not panic, the Ruby process will exit if
+    /// it does.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use std::sync::atomic::{AtomicUsize, Ordering};
+    ///
+    /// use magnus::{Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     static COUNT: AtomicUsize = AtomicUsize::new(0);
+    ///     let handle = ruby
+    ///         .postponed_job_preregister(|_ruby| {
+    ///             COUNT.fetch_add(1, Ordering::SeqCst);
+    ///         })
+    ///         .unwrap();
+    ///
+    ///     assert_eq!(COUNT.load(Ordering::SeqCst), 0);
+    ///
+    ///     handle.trigger();
+    ///
+    ///     // Just for this example we need to give Ruby the chance to drain
+    ///     // the postponed job queue
+    ///     ruby.thread_schedule();
+    ///
+    ///     assert_eq!(COUNT.load(Ordering::SeqCst), 1);
+    ///
+    ///     // multiple calls to trigger before the next interrupt are coalesced
+    ///     handle.trigger();
+    ///     handle.trigger();
+    ///     ruby.thread_schedule();
+    ///
+    ///     assert_eq!(COUNT.load(Ordering::SeqCst), 2);
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
+    #[cfg(ruby_gte_3_3)]
+    pub fn postponed_job_preregister<F>(&self, func: F) -> Option<PostponedJobHandle>
+    where
+        F: 'static + Send + FnMut(&Ruby),
+    {
+        unsafe extern "C" fn call<F>(data: *mut c_void)
+        where
+            F: FnMut(&Ruby),
+        {
+            unsafe {
+                let closure = &mut *(data as *mut F);
+                if let Err(e) = catch_unwind(AssertUnwindSafe(|| (closure)(&Ruby::get_unchecked())))
+                {
+                    bug_from_panic(e, "panic in postponed_job")
+                }
+            }
+        }
+
+        let closure = register_closure(func);
+        let call_func = call::<F> as unsafe extern "C" fn(*mut c_void);
+
+        let handle =
+            unsafe { rb_postponed_job_preregister(0, Some(call_func), closure as *mut c_void) };
+        (handle != rb_postponed_job_handle_t::MAX).then_some(PostponedJobHandle(handle))
+    }
+}
+
+/// A handle to a function registered in Ruby's postponed job table.
+///
+/// See [`Ruby::postponed_job_preregister`].
+#[cfg(ruby_gte_3_3)]
+#[derive(Clone, Copy)]
+pub struct PostponedJobHandle(rb_postponed_job_handle_t);
+
+#[cfg(ruby_gte_3_3)]
+impl PostponedJobHandle {
+    /// Trigger registered postponed job.
+    ///
+    /// Schedules the postponed job function it for execution the next time
+    /// Ruby checks for interrupts. This method can be called from any thread,
+    /// at any time, including in signal handlers.
+    ///
+    /// If this method is called multiple times, Ruby will coalesce this into
+    /// only one call to the job the next time it checks for interrupts.
+    ///
+    /// See [`Ruby::postponed_job_preregister`].
+    pub fn trigger(&self) {
+        unsafe { rb_postponed_job_trigger(self.0) };
     }
 }
 
@@ -1824,4 +1929,47 @@ where
         ))
     };
     unsafe { (&mut (*ptr).0 as *mut F, value) }
+}
+
+/// Wrap a closure in a Ruby object and register the object as a GC root
+#[cfg(ruby_gte_3_3)]
+fn register_closure<F>(func: F) -> *mut F
+where
+    F: FnMut(&Ruby),
+{
+    struct Closure<F>(F, DataType);
+    unsafe impl<F> Send for Closure<F> {}
+    impl<F> DataTypeFunctions for Closure<F> {
+        fn mark(&self, marker: &gc::Marker) {
+            // Attempt to mark any Ruby values captured in a closure.
+            // Rust's closures are structs that contain all the values they
+            // have captured. This reads that struct as a slice of VALUEs and
+            // calls rb_gc_mark_locations which calls gc_mark_maybe which
+            // marks VALUEs and ignores non-VALUEs
+            marker.mark_slice(unsafe {
+                slice::from_raw_parts(
+                    &self.0 as *const _ as *const Value,
+                    size_of::<F>() / size_of::<Value>(),
+                )
+            });
+        }
+    }
+
+    let data_type = DataTypeBuilder::<Closure<F>>::new(c"rust closure")
+        .free_immediately()
+        .mark()
+        .build();
+
+    let boxed = Box::new(Closure(func, data_type));
+    let ptr = Box::into_raw(boxed);
+    let value = unsafe {
+        Value::new(rb_data_typed_object_wrap(
+            0, // using 0 for the class will hide the object from ObjectSpace
+            ptr as *mut _,
+            (*ptr).1.as_rb_data_type() as *const _,
+        ))
+    };
+
+    Ruby::get_with(value).gc_register_mark_object(value);
+    unsafe { &mut (*ptr).0 as *mut F }
 }
