@@ -251,7 +251,7 @@ impl Ruby {
     /// [`Events`].
     ///
     /// An instance of `TracePoint` does not start tracing on creation, it must
-    /// be started [`Tracepoint::enable`] to take effect.
+    /// be started [`TracePoint::enable`] to take effect.
     pub fn tracepoint_new<F, R>(
         &self,
         thread: Option<Thread>,

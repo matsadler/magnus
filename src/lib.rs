@@ -1555,23 +1555,26 @@
 // * `rb_to_id`:
 //! * `rb_to_int`: [`TryConvert`] or [`Value::try_convert`].
 //! * `rb_to_symbol`: [`std::convert::From`].
-// * `rb_tracearg_binding`:
-// * `rb_tracearg_callee_id`:
-// * `rb_tracearg_defined_class`:
-// * `rb_tracearg_event`:
-// * `rb_tracearg_event_flag`:
-// * `rb_tracearg_from_tracepoint`:
-// * `rb_tracearg_lineno`:
-// * `rb_tracearg_method_id`:
+//! * `rb_tracearg_binding`: [`TraceArg::binding`](debug::TraceArg::binding).
+//! * `rb_tracearg_callee_id`: [`TraceArg::callee_id`](debug::TraceArg::callee_id).
+//! * `rb_tracearg_defined_class`: [`TraceArg::defined_class`](debug::TraceArg::defined_class).
+//! * `rb_tracearg_eval_script`: [`TraceArg::eval_script`](debug::TraceArg::eval_script).
+//! * `rb_tracearg_event`: [`TraceArg::event`](debug::TraceArg::event).
+//! * `rb_tracearg_event_flag`: [`TraceArg::event_flag`](debug::TraceArg::event_flag).
+//! * `rb_tracearg_from_tracepoint`: [`TracePoint::tracearg`](debug::TracePoint::tracearg).
+//! * `rb_tracearg_instruction_sequence`: [`TraceArg::instruction_sequence`](debug::TraceArg::instruction_sequence).
+//! * `rb_tracearg_lineno`: [`TraceArg::lineno`](debug::TraceArg::lineno).
+//! * `rb_tracearg_method_id`: [`TraceArg::method_id`](debug::TraceArg::method_id).
 // * `rb_tracearg_object`:
-// * `rb_tracearg_path`:
-// * `rb_tracearg_raised_exception`:
-// * `rb_tracearg_return_value`:
-// * `rb_tracearg_self`:
-// * `rb_tracepoint_disable`:
-// * `rb_tracepoint_enable`:
-// * `rb_tracepoint_enabled_p`:
-// * `rb_tracepoint_new`:
+//! * `rb_tracearg_path`: [`TraceArg::path`](debug::TraceArg::path).
+//! * `rb_tracearg_parameters`: [`TraceArg::parameters`](debug::TraceArg::parameters).
+//! * `rb_tracearg_raised_exception`: [`TraceArg::raised_exception`](debug::TraceArg::raised_exception).
+//! * `rb_tracearg_return_value`: [`TraceArg::return_value`](debug::TraceArg::return_value).
+//! * `rb_tracearg_self`: [`TraceArg::tracearg_self`](debug::TraceArg::tracearg_self).
+//! * `rb_tracepoint_disable`: [`TracePoint::disable`](debug::TracePoint::disable).
+//! * `rb_tracepoint_enable`: [`TracePoint::enable`](debug::TracePoint::enable).
+//! * `rb_tracepoint_enabled_p`: [`TracePoint::is_enabled`](debug::TracePoint::is_enabled).
+//! * `rb_tracepoint_new`: [`Ruby::tracepoint_new`].
 // * `rb_trap_exit`:
 // * `rb_type`:
 // * `rb_typeddata_inherited_p`:
