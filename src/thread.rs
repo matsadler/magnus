@@ -10,8 +10,10 @@ use rb_sys::{
     rb_thread_wakeup, rb_thread_wakeup_alive, timeval,
 };
 
+#[cfg(any(ruby_gte_3_3, docsrs))]
+use crate::debug::FrameBuf;
 #[cfg(ruby_gte_3_3)]
-use crate::debug::{FrameBuf, profile_thread_frames_impl};
+use crate::debug::profile_thread_frames_impl;
 use crate::{
     api::Ruby,
     error::{Error, protect},

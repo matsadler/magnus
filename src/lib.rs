@@ -3,21 +3,30 @@
 //!
 //! # Overview
 //!
+//! The [`Ruby`] struct is where all methods that create Ruby objects or
+//! otherwise interact with the Ruby VM live.
+//!
 //! All Ruby objects are represented by [`Value`]. To make it easier to work
 //! with values that are instances of specific classes a number of wrapper
 //! types are available. These wrappers and [`Value`] all implement the
 //! [`ReprValue`] trait, so share many methods.
 //!
-//! | Ruby Class | Magnus Type |
-//! |------------|-------------|
-//! | `String`   | [`RString`] |
-//! | `Integer`  | [`Integer`] |
-//! | `Float`    | [`Float`]   |
-//! | `Array`    | [`RArray`]  |
-//! | `Hash`     | [`RHash`]   |
-//! | `Symbol`   | [`Symbol`]  |
-//! | `Class`    | [`RClass`]  |
-//! | `Module`   | [`RModule`] |
+//! | Ruby Class  |  Magnus Type  |          Methods under [`Ruby`]           |
+//! |-------------|---------------|-------------------------------------------|
+//! | `String`    | [`RString`]   | [§ `RString`](Ruby#rstring)               |
+//! | `Symbol`    | [`Symbol`]    | [§ `Symbol`](Ruby#symbol)                 |
+//! | `Array`     | [`RArray`]    | [§ `RArray`](Ruby#rarray)                 |
+//! | `Hash`      | [`RHash`]     | [§ `RHash`](Ruby#rhash)                   |
+//! | `Integer`   | [`Integer`]   | [§ `Integer`](Ruby#integer)               |
+//! | `Float`     | [`Float`]     | [§ `Float`](Ruby#float)                   |
+//! | `File`/`IO` | [`RFile`]     |                                           |
+//! | `Time`      | [`Time`]      | [§ `Time`](Ruby#time)                     |
+//! | `Regexp`    | [`RRegexp`]   | [§ `RRegexp`](Ruby#rregexp)               |
+//! | `Range`     | [`Range`]     | [§ `Range`](Ruby#range)                   |
+//! | `Exception` | [`Exception`] | [§ Core Exceptions](Ruby#core-exceptions) |
+//! | `Thread`    | [`Thread`]    | [§ `Thread`](Ruby#thread)                 |
+//! | `Class`     | [`RClass`]    | [§ Core Classes](Ruby#core-classes)       |
+//! | `Module`    | [`RModule`]   | [§ Core Modules](Ruby#core-modules)       |
 //!
 //! When writing Rust code to be called from Ruby the [`init`] attribute can
 //! be used to mark your init function that Ruby will call when your library

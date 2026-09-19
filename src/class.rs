@@ -566,7 +566,8 @@ impl Class for RClass {
 ///
 /// Functions to access Ruby's built-in classes.
 ///
-/// See also the [`class`](self) module.
+/// See also [`Ruby::define_class`], [`Class::new`], [`Module::define_class`],
+/// and the [`class`](self) module.
 impl Ruby {
     /// Return Ruby's `Array` class.
     ///

@@ -37,7 +37,8 @@ use crate::{
 ///
 /// Functions that can be used to create Ruby modules.
 ///
-/// See also the [`RModule`] type.
+/// See also [`Ruby::define_module`], [`Module::define_module`], and the
+/// [`RModule`] type.
 impl Ruby {
     /// Create a new anonymous module.
     ///
@@ -801,7 +802,8 @@ impl Attr {
 ///
 /// Functions to access Ruby's built-in modules.
 ///
-/// See also [`Ruby::define_module`] and the [`module`](self) module.
+/// See also [`Ruby::define_module`], [`Ruby::module_new`],
+/// [`Module::define_module`], and the [`module`](self) module.
 impl Ruby {
     /// Return Ruby's `Comparable` module.
     ///

@@ -242,7 +242,8 @@ impl Ruby {
     /// }
     /// # Ruby::init(example).unwrap()
     /// ```
-    #[cfg(ruby_gte_3_2)]
+    #[cfg(any(ruby_gte_3_2, docsrs))]
+    #[cfg_attr(docsrs, doc(cfg(ruby_gte_3_2)))]
     pub fn debug_inspector_current_depth(&self) -> usize {
         unsafe { Fixnum::from_rb_value_unchecked(rb_debug_inspector_current_depth()) }
             .to_usize()
@@ -342,7 +343,8 @@ impl Ruby {
     /// }
     /// # Ruby::init(example).unwrap()
     /// ```
-    #[cfg(ruby_gte_3_3)]
+    #[cfg(any(ruby_gte_3_3, docsrs))]
+    #[cfg_attr(docsrs, doc(cfg(ruby_gte_3_3)))]
     pub fn postponed_job_preregister<F>(&self, func: F) -> Option<PostponedJobHandle>
     where
         F: 'static + Send + FnMut(&Ruby),
@@ -373,10 +375,20 @@ impl Ruby {
 ///
 /// See [`Ruby::postponed_job_preregister`].
 #[cfg(ruby_gte_3_3)]
+#[cfg_attr(docsrs, doc(cfg(ruby_gte_3_3)))]
 #[derive(Clone, Copy)]
 pub struct PostponedJobHandle(rb_postponed_job_handle_t);
 
-#[cfg(ruby_gte_3_3)]
+/// A handle to a function registered in Ruby's postponed job table.
+///
+/// See [`Ruby::postponed_job_preregister`].
+#[cfg(all(ruby_lt_3_3, docsrs))]
+#[cfg_attr(docsrs, doc(cfg(ruby_gte_3_3)))]
+#[derive(Clone, Copy)]
+pub struct PostponedJobHandle(());
+
+#[cfg(any(ruby_gte_3_3, docsrs))]
+#[cfg_attr(docsrs, doc(cfg(ruby_gte_3_3)))]
 impl PostponedJobHandle {
     /// Trigger registered postponed job.
     ///
@@ -957,7 +969,8 @@ impl<'a> DebugInspector<'a> {
     ///
     /// The depth is not same as the frame index as Ruby's debug inspector
     /// skips some special frames but the depth counts all frames.
-    #[cfg(ruby_gte_3_2)]
+    #[cfg(any(ruby_gte_3_2, docsrs))]
+    #[cfg_attr(docsrs, doc(cfg(ruby_gte_3_2)))]
     pub fn frame_depth(self, index: usize) -> Result<usize, Error> {
         protect(|| unsafe {
             Integer::from_rb_value_unchecked(rb_debug_inspector_frame_depth(
@@ -1172,13 +1185,15 @@ impl Events {
     /// Set the `RUBY_EVENT_RESCUE` flag.
     ///
     /// Triggered when rescuing an exception.
-    #[cfg(ruby_gte_3_3)]
+    #[cfg(any(ruby_gte_3_3, docsrs))]
+    #[cfg_attr(docsrs, doc(cfg(ruby_gte_3_3)))]
     pub const fn rescue(self) -> Self {
         Self(self.0 | RUBY_EVENT_RESCUE)
     }
 
     /// Return if `self` contains the `RUBY_EVENT_RESCUE` flag.
-    #[cfg(ruby_gte_3_3)]
+    #[cfg(any(ruby_gte_3_3, docsrs))]
+    #[cfg_attr(docsrs, doc(cfg(ruby_gte_3_3)))]
     pub const fn is_rescue(self) -> bool {
         self.0 & RUBY_EVENT_RESCUE != 0
     }
@@ -1580,7 +1595,8 @@ impl<'a> TraceArg<'a> {
     /// }
     /// # Ruby::init(example).unwrap()
     /// ```
-    #[cfg(ruby_gte_4_0)]
+    #[cfg(any(ruby_gte_4_0, docsrs))]
+    #[cfg_attr(docsrs, doc(cfg(ruby_gte_4_0)))]
     pub fn parameters(self) -> Result<Option<RArray>, Error> {
         protect(|| unsafe { Value::new(rb_tracearg_parameters(self.ptr)) })
             .and_then(TryConvert::try_convert)
@@ -1872,7 +1888,8 @@ impl<'a> TraceArg<'a> {
     /// Return the compiled source code if `self` is a `script_compiled` event.
     ///
     /// Returns `Err` if the event type is not `script_compiled`.
-    #[cfg(ruby_gte_4_0)]
+    #[cfg(any(ruby_gte_4_0, docsrs))]
+    #[cfg_attr(docsrs, doc(cfg(ruby_gte_4_0)))]
     pub fn eval_script(self) -> Result<Option<Value>, Error> {
         protect(|| unsafe { Value::new(rb_tracearg_eval_script(self.ptr)) })
             .map(|v| (!v.is_nil()).then_some(v))
@@ -1882,7 +1899,8 @@ impl<'a> TraceArg<'a> {
     /// `script_compiled` event.
     ///
     /// Returns `Err` if the event type is not `script_compiled`.
-    #[cfg(ruby_gte_4_0)]
+    #[cfg(any(ruby_gte_4_0, docsrs))]
+    #[cfg_attr(docsrs, doc(cfg(ruby_gte_4_0)))]
     pub fn instruction_sequence(self) -> Result<Value, Error> {
         protect(|| unsafe { Value::new(rb_tracearg_instruction_sequence(self.ptr)) })
     }

@@ -252,7 +252,8 @@ impl TryConvert for ExceptionClass {
 ///
 /// Functions to access Ruby's built-in exception classes.
 ///
-/// See also the [`exception`](self) module.
+/// See also [`Ruby::define_error`], [`Class::new`], [`Module::define_error`],
+/// and the [`exception`](self) module.
 impl Ruby {
     /// Return Ruby's `ArgumentError` class.
     ///
