@@ -11,6 +11,9 @@
 - `Ruby::postponed_job_preregister` and `PostponedJobHandle::trigger` to
   register and trigger postponed jobs that can be triggered from non-Ruby
   threads/without the GVL to be run later from a Ruby thread with the GVL.
+- Conversions for C strings with `Ruby::str_from_c_str`, `RString::to_c_string`,
+  and implementations of `IntoRString` for `&CStr`, `IntoValue` for `&CStr`, and
+  `TryConvert` for `CString`.
 
 ### Changed
 - Minimum supported Rust version is now 1.85.
