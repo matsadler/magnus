@@ -17,7 +17,8 @@ fn profile(ruby: &Ruby) -> RArray {
 fn it_works() {
     let ruby = unsafe { magnus::embed::init() };
 
-    ruby.define_global_function("profile", function!(profile, 0));
+    ruby.define_global_function("profile", function!(profile, 0))
+        .unwrap();
     let _: Value = eval!(
         "
             def foo = bar

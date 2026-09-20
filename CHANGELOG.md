@@ -21,6 +21,7 @@
 - 'old-api' feature, which previously disabled deprecation warnings for the old
   api now enables/disables the old api, with deprecation warnings no longer
   optional.
+- `Ruby::define_global_function` now returns `Result<(), Error>` rather than `()`.
 - `Ruby::get` no longer caches the GVL state of the current thread.
 
 ### Deprecated

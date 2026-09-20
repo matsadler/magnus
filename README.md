@@ -38,7 +38,7 @@ fn fib(n: usize) -> usize {
 
 #[magnus::init]
 fn init(ruby: &magnus::Ruby) -> Result<(), Error> {
-    ruby.define_global_function("fib", magnus::function!(fib, 1));
+    ruby.define_global_function("fib", magnus::function!(fib, 1))?;
     Ok(())
 }
 ```
@@ -254,7 +254,8 @@ fn distance(a: (f64, f64), b: (f64, f64)) -> f64 {
 
 #[magnus::init]
 fn init(ruby: &Ruby) -> Result<(), Error> {
-    ruby.define_global_function("distance", function!(distance, 2));
+    ruby.define_global_function("distance", function!(distance, 2))?;
+    Ok(())
 }
 ```
 

@@ -19,7 +19,8 @@ fn example() -> Result<(), CustomError> {
 fn it_can_bind_function_returning_custom_error() {
     let ruby = unsafe { magnus::embed::init() };
 
-    ruby.define_global_function("example", function!(example, 0));
+    ruby.define_global_function("example", function!(example, 0))
+        .unwrap();
 
     rb_assert!(
         ruby,

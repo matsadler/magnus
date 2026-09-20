@@ -44,7 +44,8 @@ fn example(ruby: &Ruby, _rb_self: Value, args: &[Value]) -> Result<RArray, Error
 fn it_scans_args() {
     let ruby = unsafe { magnus::embed::init() };
 
-    ruby.define_global_function("example", method!(example, -1));
+    ruby.define_global_function("example", method!(example, -1))
+        .unwrap();
 
     let res = ruby.eval::<bool>(r#"
         example("a", "b", "splat1", "splat2", :c, d: 1, f: 2, h: 3) == ["a", "b", ["splat1", "splat2"], :c, 1, 2, {h: 3}]

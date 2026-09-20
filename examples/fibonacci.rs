@@ -8,7 +8,7 @@ fn fib(n: usize) -> usize {
 
 fn main() {
     magnus::Ruby::init(|ruby| {
-        ruby.define_global_function("fib", magnus::function!(fib, 1));
+        ruby.define_global_function("fib", magnus::function!(fib, 1))?;
 
         ruby.eval::<magnus::Value>("p (0..12).map {|n| fib(n)}")
             .unwrap();

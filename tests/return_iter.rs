@@ -12,7 +12,8 @@ fn count_to_3(ruby: &Ruby, rb_self: Value) -> Yield<impl Iterator<Item = u8> + u
 fn it_converts_iterator_to_yields() {
     let ruby = unsafe { magnus::embed::init() };
 
-    ruby.define_global_function("count_to_3", method!(count_to_3, 0));
+    ruby.define_global_function("count_to_3", method!(count_to_3, 0))
+        .unwrap();
 
     let a = ruby.ary_new();
     let _: Value = eval!(

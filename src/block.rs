@@ -551,7 +551,7 @@ impl Ruby {
     /// }
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
-    ///     ruby.define_global_function("got_block?", function!(got_block, 0));
+    ///     ruby.define_global_function("got_block?", function!(got_block, 0))?;
     ///
     ///     rb_assert!(ruby, "got_block? {} == true");
     ///     rb_assert!(ruby, "got_block? == false");
@@ -576,7 +576,7 @@ impl Ruby {
     /// }
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
-    ///     ruby.define_global_function("make_proc", function!(make_proc, 0));
+    ///     ruby.define_global_function("make_proc", function!(make_proc, 0))?;
     ///
     ///     rb_assert!(ruby, "make_proc {}.is_a?(Proc)");
     ///
@@ -612,7 +612,7 @@ impl Ruby {
     ///     ruby.define_global_function(
     ///         "metasyntactic_variables",
     ///         function!(metasyntactic_variables, 0),
-    ///     );
+    ///     )?;
     ///
     ///     let vars = ruby.ary_new();
     ///     rb_assert!(
@@ -660,7 +660,7 @@ impl Ruby {
     ///     ruby.define_global_function(
     ///         "metasyntactic_variables",
     ///         function!(metasyntactic_variables, 0),
-    ///     );
+    ///     )?;
     ///
     ///     let vars = ruby.ary_new();
     ///     rb_assert!(
@@ -730,7 +730,7 @@ impl Ruby {
     ///     ruby.define_global_function(
     ///         "metasyntactic_variables",
     ///         function!(metasyntactic_variables, 0),
-    ///     );
+    ///     )?;
     ///
     ///     let vars = ruby.ary_new();
     ///     rb_assert!(
@@ -1092,7 +1092,7 @@ where
 /// }
 ///
 /// fn example(ruby: &Ruby) -> Result<(), Error> {
-///     ruby.define_global_function("count_to_3", method!(count_to_3, 0));
+///     ruby.define_global_function("count_to_3", method!(count_to_3, 0))?;
 ///
 ///     // call Ruby method with a block.
 ///     let a = ruby.ary_new();
@@ -1138,7 +1138,7 @@ pub enum Yield<I> {
 /// }
 ///
 /// fn example(ruby: &Ruby) -> Result<(), Error> {
-///     ruby.define_global_function("count_to_3_abc", method!(count_to_3_abc, 0));
+///     ruby.define_global_function("count_to_3_abc", method!(count_to_3_abc, 0))?;
 ///
 ///     // call Ruby method with a block.
 ///     let a = ruby.ary_new();
@@ -1192,7 +1192,7 @@ pub enum YieldValues<I> {
 /// }
 ///
 /// fn example(ruby: &Ruby) -> Result<(), Error> {
-///     ruby.define_global_function("count_to_3_abc", method!(count_to_3_abc, 0));
+///     ruby.define_global_function("count_to_3_abc", method!(count_to_3_abc, 0))?;
 ///
 ///     // call Ruby method with a block.
 ///     let a = ruby.ary_new();

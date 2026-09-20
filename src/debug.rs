@@ -92,7 +92,7 @@ impl Ruby {
     /// }
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
-    ///     ruby.define_global_function("profile", function!(profile, 0));
+    ///     ruby.define_global_function("profile", function!(profile, 0))?;
     ///
     ///     let _: Value = eval!(
     ///         ruby,
@@ -146,7 +146,7 @@ impl Ruby {
     /// }
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
-    ///     ruby.define_global_function("profile", function!(profile, 0));
+    ///     ruby.define_global_function("profile", function!(profile, 0))?;
     ///
     ///     let _: Value = eval!(
     ///         ruby,
@@ -223,7 +223,7 @@ impl Ruby {
     /// }
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
-    ///     ruby.define_global_function("depth", function!(depth, 0));
+    ///     ruby.define_global_function("depth", function!(depth, 0))?;
     ///
     ///     let _: Value = eval!(
     ///         ruby,
@@ -434,7 +434,7 @@ impl Frame {
     /// }
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
-    ///     ruby.define_global_function("baz", function!(baz, 0));
+    ///     ruby.define_global_function("baz", function!(baz, 0))?;
     ///     let _: Value = eval!(
     ///         ruby,
     ///         "def foo = bar
@@ -480,7 +480,7 @@ impl Frame {
     /// }
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
-    ///     ruby.define_global_function("baz", function!(baz, 0));
+    ///     ruby.define_global_function("baz", function!(baz, 0))?;
     ///     let _: Value = eval!(
     ///         ruby,
     ///         "def foo = bar
@@ -518,7 +518,7 @@ impl Frame {
     /// }
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
-    ///     ruby.define_global_function("baz", function!(baz, 0));
+    ///     ruby.define_global_function("baz", function!(baz, 0))?;
     ///     let _: Value = eval!(
     ///         ruby,
     ///         "def foo = bar
@@ -559,7 +559,7 @@ impl Frame {
     /// }
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
-    ///     ruby.define_global_function("baz", function!(baz, 0));
+    ///     ruby.define_global_function("baz", function!(baz, 0))?;
     ///     let _: Value = eval!(
     ///         ruby,
     ///         "def foo = bar
@@ -600,7 +600,7 @@ impl Frame {
     /// }
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
-    ///     ruby.define_global_function("baz", function!(baz, 0));
+    ///     ruby.define_global_function("baz", function!(baz, 0))?;
     ///     let _: Value = eval!(
     ///         ruby,
     ///         "def foo = bar
@@ -634,7 +634,7 @@ impl Frame {
     /// }
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
-    ///     ruby.define_global_function("baz", function!(baz, 0));
+    ///     ruby.define_global_function("baz", function!(baz, 0))?;
     ///     let _: Value = eval!(
     ///         ruby,
     ///         "def foo = bar
@@ -669,7 +669,7 @@ impl Frame {
     /// }
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
-    ///     ruby.define_global_function("baz", function!(baz, 0));
+    ///     ruby.define_global_function("baz", function!(baz, 0))?;
     ///     let _: Value = eval!(
     ///         ruby,
     ///         "def foo = bar
@@ -703,7 +703,7 @@ impl Frame {
     /// }
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
-    ///     ruby.define_global_function("baz", function!(baz, 0));
+    ///     ruby.define_global_function("baz", function!(baz, 0))?;
     ///     let _: Value = eval!(
     ///         ruby,
     ///         "def foo = bar
@@ -734,7 +734,7 @@ impl Frame {
     /// }
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
-    ///     ruby.define_global_function("baz", function!(baz, 0));
+    ///     ruby.define_global_function("baz", function!(baz, 0))?;
     ///     let _: Value = eval!(
     ///         ruby,
     ///         "def foo = bar
@@ -773,7 +773,7 @@ impl Frame {
     /// }
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
-    ///     ruby.define_global_function("baz", function!(baz, 0));
+    ///     ruby.define_global_function("baz", function!(baz, 0))?;
     ///     let _: Value = eval!(
     ///         ruby,
     ///         "def foo = bar
@@ -1450,7 +1450,7 @@ impl<'a> TraceArg<'a> {
     ///         Ok::<_, Error>(())
     ///     });
     ///
-    ///     ruby.define_global_function("foo", function!(|| (), 0));
+    ///     ruby.define_global_function("foo", function!(|| (), 0))?;
     ///     trace.enable()?;
     ///     let _: Value = ruby.class_object().funcall("foo", ())?;
     /// #   assert!(SUCCESS.load(Ordering::Relaxed));
@@ -1478,7 +1478,7 @@ impl<'a> TraceArg<'a> {
     ///         Ok::<_, Error>(())
     ///     });
     ///
-    ///     ruby.define_global_function("foo", function!(|| (), 0));
+    ///     ruby.define_global_function("foo", function!(|| (), 0))?;
     ///     trace.enable()?;
     ///     let _: Value = ruby.class_object().funcall("foo", ())?;
     /// #   assert!(SUCCESS.load(Ordering::Relaxed));
@@ -1508,7 +1508,7 @@ impl<'a> TraceArg<'a> {
     ///         Ok::<_, Error>(())
     ///     });
     ///
-    ///     ruby.define_global_function("foo", function!(|| (), 0));
+    ///     ruby.define_global_function("foo", function!(|| (), 0))?;
     ///     trace.enable()?;
     ///     let _: Value = ruby.class_object().funcall("foo", ())?;
     /// #   assert!(SUCCESS.load(Ordering::Relaxed));
@@ -1546,7 +1546,7 @@ impl<'a> TraceArg<'a> {
     ///         Ok::<_, Error>(())
     ///     });
     ///
-    ///     ruby.define_global_function("foo", function!(|| (), 0));
+    ///     ruby.define_global_function("foo", function!(|| (), 0))?;
     ///     trace.enable()?;
     ///     let _: Value = ruby.class_object().funcall("foo", ())?;
     /// #   assert!(SUCCESS.load(Ordering::Relaxed));
@@ -1624,7 +1624,7 @@ impl<'a> TraceArg<'a> {
     ///         Ok::<_, Error>(())
     ///     });
     ///
-    ///     ruby.define_global_function("foo", function!(|| (), 0));
+    ///     ruby.define_global_function("foo", function!(|| (), 0))?;
     ///     ruby.class_object().define_alias("bar", "foo")?;
     ///     trace.enable()?;
     ///     let _: Value = ruby.class_object().funcall("bar", ())?;
@@ -1662,7 +1662,7 @@ impl<'a> TraceArg<'a> {
     ///         Ok::<_, Error>(())
     ///     });
     ///
-    ///     ruby.define_global_function("foo", function!(|| (), 0));
+    ///     ruby.define_global_function("foo", function!(|| (), 0))?;
     ///     ruby.class_object().define_alias("bar", "foo")?;
     ///     trace.enable()?;
     ///     let _: Value = ruby.class_object().funcall("bar", ())?;
@@ -1833,7 +1833,7 @@ impl<'a> TraceArg<'a> {
     ///         Ok::<_, Error>(())
     ///     });
     ///
-    ///     ruby.define_global_function("example", function!(|| "foo", 0));
+    ///     ruby.define_global_function("example", function!(|| "foo", 0))?;
     ///     trace.enable()?;
     ///     let _: Value = ruby.class_object().funcall("example", ())?;
     /// #   assert!(SUCCESS.load(Ordering::Relaxed));
@@ -1870,7 +1870,7 @@ impl<'a> TraceArg<'a> {
     ///             |ruby: &Ruby| { Err::<(), _>(Error::new(ruby.exception_type_error(), "on no!")) },
     ///             0
     ///         ),
-    ///     );
+    ///     )?;
     ///     trace.enable()?;
     ///     let _: Result<Value, Error> = ruby.class_object().funcall("example", ());
     /// #   assert!(SUCCESS.load(Ordering::Relaxed));

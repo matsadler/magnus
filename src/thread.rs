@@ -637,7 +637,7 @@ impl Thread {
     /// }
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
-    ///     ruby.define_global_function("profile", function!(profile, 0));
+    ///     ruby.define_global_function("profile", function!(profile, 0))?;
     ///
     ///     let _: Value = eval!(
     ///         "def foo = bar
@@ -692,7 +692,7 @@ impl Thread {
     /// }
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
-    ///     ruby.define_global_function("profile", function!(profile, 0));
+    ///     ruby.define_global_function("profile", function!(profile, 0))?;
     ///
     ///     let _: Value = eval!(
     ///         "def foo = bar

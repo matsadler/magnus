@@ -44,8 +44,8 @@ mod util;
 /// }
 ///
 /// #[magnus::init]
-/// fn init(ruby: &magnus::Ruby) {
-///     ruby.define_global_function("distance", magnus::function!(distance, 2));
+/// fn init(ruby: &magnus::Ruby) -> Result<(), magnus::Error> {
+///     ruby.define_global_function("distance", magnus::function!(distance, 2))
 /// }
 /// ```
 /// The init function can also return `Result<(), magnus::Error>`.
@@ -119,25 +119,25 @@ pub fn init(attrs: TokenStream, item: TokenStream) -> TokenStream {
 ///
 /// The `#[wrap]` macro supports several attributes to configure its behaviour:
 ///
-/// * `class = "..."` (required):  
+/// * `class = "..."` (required):
 ///   Specifies the Ruby class associated with the Rust type. Supports module
 ///   paths, such as `Foo::Bar::Baz`, to locate nested classes.
-///   
-/// * `name = "..."`:  
+///
+/// * `name = "..."`:
 ///   Specifies a debug name for the type. This name must be unique and
 ///   defaults to the class name if not explicitly provided.
 ///
-/// * `free_immediately`:  
+/// * `free_immediately`:
 ///   Indicates that the Rust type should be dropped as soon as the Ruby object
 ///   is garbage collected. This is only safe if the type's [`Drop`]
 ///   implementation does not call Ruby, as calling Ruby during the garbage
 ///   collection process is unsafe and can lead to undefined behaviour.
 ///
-/// * `size`:  
+/// * `size`:
 ///   Reports the [`std::mem::size_of_val`] of the type to Ruby, helping Ruby's
 ///   garbage collector determine when to run.
 ///
-/// * `unsafe_generics`:  
+/// * `unsafe_generics`:
 ///   Disables compile-time checks for types with generics, allowing their use
 ///   with `#[wrap]`. This should only be used if you are confident that the
 ///   derived implementation of [`TypedData`] is correct for your generic type.
@@ -147,7 +147,7 @@ pub fn init(attrs: TokenStream, item: TokenStream) -> TokenStream {
 /// When wrapping enums, the `#[magnus(...)]` attribute can also be applied to
 /// individual variants to define specific behaviour for them:
 ///
-/// * `class = "..."`:  
+/// * `class = "..."`:
 ///   Specifies the Ruby class associated with a particular variant. This is
 ///   useful for defining subclasses for the variants.
 ///
@@ -156,7 +156,7 @@ pub fn init(attrs: TokenStream, item: TokenStream) -> TokenStream {
 /// Wrapping a struct:
 ///
 /// ```
-/// use magnus::{function, prelude::*, wrap, Ruby};
+/// use magnus::{function, prelude::*, wrap, Error, Ruby};
 ///
 /// #[wrap(class = "Point", free_immediately, size)]
 /// struct Point {
@@ -173,9 +173,9 @@ pub fn init(attrs: TokenStream, item: TokenStream) -> TokenStream {
 /// }
 ///
 /// #[magnus::init]
-/// fn init(ruby: &Ruby) {
-///     ruby.define_global_function("point", function!(point, 2));
-///     ruby.define_global_function("distance", function!(distance, 2));
+/// fn init(ruby: &Ruby) -> Result<(), Error> {
+///     ruby.define_global_function("point", function!(point, 2))?;
+///     ruby.define_global_function("distance", function!(distance, 2))
 /// }
 /// ```
 ///
@@ -341,31 +341,31 @@ pub fn derive_data_type_functions(input: TokenStream) -> TokenStream {
 /// The `#[magnus(...)]` attribute supports the following values to configure
 /// its behaviour:
 ///
-/// * `class = "..."` (required):  
+/// * `class = "..."` (required):
 ///   Specifies the Ruby class associated with the Rust type. Supports module
 ///   paths, such as `Foo::Bar::Baz`.
 ///
-/// * `name = "..."`:  
+/// * `name = "..."`:
 ///   Specifies a debug name for the type. This name must be unique and
 ///   defaults to the class name if not explicitly provided.
 ///
-/// * `free_immediately`:  
+/// * `free_immediately`:
 ///   Indicates that the Rust type should be dropped as soon as the Ruby object
 ///   is garbage collected. This is only safe if the type's [`Drop`] and
 ///   `DataTypeFunctions::free` implementations do not call Ruby.
 ///   If safe this should be enabled as this performs better and is more
 ///   memory efficient.
 ///
-/// * `mark`:  
+/// * `mark`:
 ///   Enables Ruby to call the `DataTypeFunctions::mark` function.
 ///
-/// * `size`:  
+/// * `size`:
 ///   Enables Ruby to call the `DataTypeFunctions::size` function.
 ///
-/// * `compact`:  
+/// * `compact`:
 ///   Enables Ruby to call the `DataTypeFunctions::compact` function.
 ///
-/// * `wb_protected`:  
+/// * `wb_protected`:
 ///   Enable the 'write barrier protected' flag.
 ///
 ///   Types that contain Ruby values by default do not participate in
@@ -377,12 +377,12 @@ pub fn derive_data_type_functions(input: TokenStream) -> TokenStream {
 ///   The write barrier is hard to get right. Magnus recommends you do not use
 ///   this flag.
 ///
-/// * `frozen_shareable`:  
+/// * `frozen_shareable`:
 ///   Sets the `frozen_shareable` flag for objects that can be safely accessed
 ///   concurrently from multiple threads when frozen. This allows objects to
 ///   shared between Ractors.
 ///
-/// * `unsafe_generics`:  
+/// * `unsafe_generics`:
 ///   Disables compile-time checks for types with generics, allowing their use
 ///   with `#[magnus(...)]`. Use this only if you are confident the derived
 ///   implementation is correct for your generic type.
@@ -392,7 +392,7 @@ pub fn derive_data_type_functions(input: TokenStream) -> TokenStream {
 /// The `#[magnus(...)]` attribute can be set on struct fields with the
 /// following values:
 ///
-/// * `opaque_attr_reader`:  
+/// * `opaque_attr_reader`:
 ///   For a Ruby value wrapped in `Opaque`, creates an accessor method that
 ///   returns the unwrapped Ruby value.
 ///
@@ -401,7 +401,7 @@ pub fn derive_data_type_functions(input: TokenStream) -> TokenStream {
 /// The `#[magnus(...)]` attribute can be set on enum variants with the
 /// following values:
 ///
-/// * `class = "..."`:  
+/// * `class = "..."`:
 ///   Specifies the Ruby class associated with the variant. Supports module
 ///   paths, such as `Foo::Bar::Baz`.
 ///
@@ -410,7 +410,7 @@ pub fn derive_data_type_functions(input: TokenStream) -> TokenStream {
 /// Wrapping a struct
 ///
 /// ```
-/// use magnus::{function, prelude::*, DataTypeFunctions, Ruby, TypedData};
+/// use magnus::{function, prelude::*, DataTypeFunctions, Error, Ruby, TypedData};
 ///
 /// #[derive(DataTypeFunctions, TypedData)]
 /// #[magnus(class = "Point", size, free_immediately)]
@@ -431,9 +431,9 @@ pub fn derive_data_type_functions(input: TokenStream) -> TokenStream {
 /// }
 ///
 /// #[magnus::init]
-/// fn init(ruby: &Ruby) {
-///     ruby.define_global_function("point", function!(point, 2));
-///     ruby.define_global_function("distance", function!(distance, 2));
+/// fn init(ruby: &Ruby) -> Result<(), Error> {
+///     ruby.define_global_function("point", function!(point, 2))?;
+///     ruby.define_global_function("distance", function!(distance, 2))
 /// }
 /// ```
 ///

@@ -11,7 +11,8 @@ fn flipflop(ruby: &Ruby, _rb_self: Value, mut val: bool) -> Result<(), Error> {
 fn it_yields() {
     let ruby = unsafe { magnus::embed::init() };
 
-    ruby.define_global_function("flipflop", method!(flipflop, 1));
+    ruby.define_global_function("flipflop", method!(flipflop, 1))
+        .unwrap();
 
     let values = ruby.ary_new();
     let i: Value = eval!(

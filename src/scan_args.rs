@@ -823,7 +823,7 @@ impl Ruby {
     /// }
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
-    ///     ruby.define_global_function("test", function!(test, -1));
+    ///     ruby.define_global_function("test", function!(test, -1))?;
     ///
     ///     assert_eq!(
     ///         ruby.eval::<String>("test(1)").unwrap_err().to_string(),

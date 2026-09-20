@@ -2274,25 +2274,27 @@ impl Ruby {
     /// }
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
-    ///     ruby.define_global_function("greet", function!(greet, 1));
+    ///     ruby.define_global_function("greet", function!(greet, 1))?;
     ///     rb_assert!(ruby, r#"greet("world") == "Hello, world!""#);
     ///
     ///     Ok(())
     /// }
     /// # Ruby::init(example).unwrap()
     /// ```
-    pub fn define_global_function<M>(&self, name: &str, func: M)
+    pub fn define_global_function<M>(&self, name: &str, func: M) -> Result<(), Error>
     where
         M: Method,
     {
         let name = CString::new(name).unwrap();
-        unsafe {
+        protect(|| unsafe {
             rb_define_global_function(
                 name.as_ptr(),
                 transmute::<*mut c_void, Option<unsafe extern "C" fn() -> VALUE>>(func.as_ptr()),
                 M::arity().into(),
             );
-        }
+            self.qnil()
+        })?;
+        Ok(())
     }
 
     /// Returns the result of the most recent regexp match.
@@ -2340,7 +2342,7 @@ impl Ruby {
     /// }
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
-    ///     ruby.define_global_function("test", method!(test, 0));
+    ///     ruby.define_global_function("test", method!(test, 0))?;
     ///
     ///     rb_assert!(ruby, "test");
     ///
@@ -2641,14 +2643,14 @@ where
 ///     format!("Hello, {}!", subject)
 /// }
 ///
-/// define_global_function("greet", function!(greet, 1));
+/// define_global_function("greet", function!(greet, 1)).unwrap();
 /// rb_assert!(r#"greet("world") == "Hello, world!""#);
 /// ```
 #[deprecated(note = "please use `Ruby::define_global_function` instead")]
 #[cfg(feature = "old-api")]
 #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
 #[inline]
-pub fn define_global_function<M>(name: &str, func: M)
+pub fn define_global_function<M>(name: &str, func: M) -> Result<(), Error>
 where
     M: Method,
 {

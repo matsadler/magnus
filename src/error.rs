@@ -129,7 +129,7 @@ impl Error {
     /// }
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
-    ///     ruby.define_global_function("bang", function!(bang, 0));
+    ///     ruby.define_global_function("bang", function!(bang, 0))?;
     ///
     ///     let error: Exception = ruby.eval(
     ///         "

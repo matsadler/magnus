@@ -1827,8 +1827,8 @@ seq!(N in 0..=15 {
 /// }
 ///
 /// #[magnus::init]
-/// fn init(ruby: &magnus::Ruby) {
-///     ruby.define_global_function("distance", magnus::function!(distance, 2));
+/// fn init(ruby: &magnus::Ruby) -> Result<(), magnus::Error> {
+///     ruby.define_global_function("distance", magnus::function!(distance, 2))
 /// }
 /// # let cleanup = unsafe { magnus::embed::init() };
 /// # init(&cleanup);

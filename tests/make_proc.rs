@@ -4,7 +4,8 @@ use magnus::{Ruby, function, rb_assert};
 fn it_makes_a_proc() {
     let ruby = unsafe { magnus::embed::init() };
 
-    ruby.define_global_function("make_proc", function!(Ruby::block_proc, 0));
+    ruby.define_global_function("make_proc", function!(Ruby::block_proc, 0))
+        .unwrap();
 
     rb_assert!(ruby, "Proc === make_proc { 1 + 1 }");
     rb_assert!(ruby, "(make_proc { 1 + 1 }).call == 2");

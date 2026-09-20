@@ -8,7 +8,8 @@ fn debug(ruby: &Ruby) -> Result<Value, Error> {
 fn it_works() {
     let ruby = unsafe { magnus::embed::init() };
 
-    ruby.define_global_function("debug", function!(debug, 0));
+    ruby.define_global_function("debug", function!(debug, 0))
+        .unwrap();
     let _: Value = eval!(
         "
             def foo = bar
