@@ -19,8 +19,7 @@ use rb_sys::{
     RUBY_EVENT_NONE, RUBY_EVENT_RAISE, RUBY_EVENT_RETURN, RUBY_EVENT_SCRIPT_COMPILED,
     RUBY_EVENT_THREAD_BEGIN, RUBY_EVENT_THREAD_END, RUBY_EVENT_TRACEPOINT_ALL, VALUE,
     rb_data_typed_object_wrap, rb_debug_inspector_backtrace_locations,
-    rb_debug_inspector_current_depth, rb_debug_inspector_frame_binding_get,
-    rb_debug_inspector_frame_class_get, rb_debug_inspector_frame_depth,
+    rb_debug_inspector_frame_binding_get, rb_debug_inspector_frame_class_get,
     rb_debug_inspector_frame_iseq_get, rb_debug_inspector_frame_self_get, rb_debug_inspector_open,
     rb_debug_inspector_t, rb_event_flag_t, rb_profile_frame_absolute_path,
     rb_profile_frame_base_label, rb_profile_frame_classpath, rb_profile_frame_first_lineno,
@@ -38,6 +37,8 @@ use rb_sys::{
     RUBY_EVENT_RESCUE, rb_postponed_job_handle_t, rb_postponed_job_preregister,
     rb_postponed_job_trigger, rb_profile_thread_frames,
 };
+#[cfg(ruby_gte_3_2)]
+use rb_sys::{rb_debug_inspector_current_depth, rb_debug_inspector_frame_depth};
 #[cfg(ruby_gte_4_0)]
 use rb_sys::{rb_tracearg_eval_script, rb_tracearg_instruction_sequence, rb_tracearg_parameters};
 
@@ -241,6 +242,7 @@ impl Ruby {
     /// }
     /// # Ruby::init(example).unwrap()
     /// ```
+    #[cfg(ruby_gte_3_2)]
     pub fn debug_inspector_current_depth(&self) -> usize {
         unsafe { Fixnum::from_rb_value_unchecked(rb_debug_inspector_current_depth()) }
             .to_usize()
@@ -955,6 +957,7 @@ impl<'a> DebugInspector<'a> {
     ///
     /// The depth is not same as the frame index as Ruby's debug inspector
     /// skips some special frames but the depth counts all frames.
+    #[cfg(ruby_gte_3_2)]
     pub fn frame_depth(self, index: usize) -> Result<usize, Error> {
         protect(|| unsafe {
             Integer::from_rb_value_unchecked(rb_debug_inspector_frame_depth(
