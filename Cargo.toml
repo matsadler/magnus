@@ -7,7 +7,6 @@ description = "High level Ruby bindings. Write Ruby extension gems in Rust, or c
 keywords = ["ruby", "rubygem", "extension", "gem"]
 categories = ["api-bindings", "development-tools::ffi"]
 repository = "https://github.com/matsadler/magnus"
-homepage = "https://github.com/matsadler/magnus"
 documentation = "https://docs.rs/magnus/"
 license = "MIT"
 exclude = [".github", ".gitignore"]
