@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 ### Added
+
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Security
+
+## [0.9.0] - 2026-09-22
+### Added
 - `Ruby::profile_frames` to collect a lightweight backtrace for profiling.
 - `Thread::profile_frames` to collect a lightweight backtrace for profiling a
   specific thread.
@@ -578,7 +591,8 @@
 - Pre-built bindings for Ruby 2.6 - 3.1 on common platforms, build-time
   generated bindings otherwise.
 
-[Unreleased]: https://github.com/matsadler/magnus/compare/0.8.0...HEAD
+[Unreleased]: https://github.com/matsadler/magnus/compare/0.9.0...HEAD
+[0.9.0]: https://github.com/matsadler/magnus/compare/0.8.2...0.9.0
 [0.8.2]: https://github.com/matsadler/magnus/compare/0.8.1...0.8.2
 [0.8.1]: https://github.com/matsadler/magnus/compare/0.8.0...0.8.1
 [0.8.0]: https://github.com/matsadler/magnus/compare/0.7.1...0.8.0
