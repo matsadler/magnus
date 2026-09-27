@@ -9,12 +9,12 @@ use std::{
 };
 
 use rb_sys::{
-    VALUE, rb_alias, rb_attr, rb_class_inherited_p, rb_const_get, rb_const_set,
-    rb_define_class_id_under, rb_define_method_id, rb_define_module_function,
-    rb_define_module_id_under, rb_define_private_method, rb_define_protected_method,
-    rb_include_module, rb_mComparable, rb_mEnumerable, rb_mErrno, rb_mFileTest, rb_mGC, rb_mKernel,
-    rb_mMath, rb_mProcess, rb_mWaitReadable, rb_mWaitWritable, rb_mod_ancestors, rb_module_new,
-    rb_prepend_module, ruby_value_type,
+    VALUE, rb_alias, rb_attr, rb_class_inherited_p, rb_const_defined, rb_const_defined_at,
+    rb_const_get, rb_const_remove, rb_const_set, rb_define_class_id_under, rb_define_method_id,
+    rb_define_module_function, rb_define_module_id_under, rb_define_private_method,
+    rb_define_protected_method, rb_include_module, rb_mComparable, rb_mEnumerable, rb_mErrno,
+    rb_mFileTest, rb_mGC, rb_mKernel, rb_mMath, rb_mProcess, rb_mWaitReadable, rb_mWaitWritable,
+    rb_mod_ancestors, rb_module_new, rb_prepend_module, ruby_value_type,
 };
 
 use crate::{
@@ -453,6 +453,88 @@ pub trait Module: Object + ReprValue + Copy {
         let res =
             unsafe { protect(|| Value::new(rb_const_get(self.as_rb_value(), id.as_rb_id()))) };
         res.and_then(TryConvert::try_convert)
+    }
+
+    /// Remove the constant `name` directly defined in `self` and return its value.
+    ///
+    /// # Errors
+    ///
+    /// Returns `NameError` if no such constant is defined in `self`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Error, Module, Ruby, TryConvert};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let module = ruby.define_module("ConstRemovalExample")?;
+    ///     module.const_set("ANSWER", 42)?;
+    ///     let previous: i64 = TryConvert::try_convert(module.remove_const("ANSWER")?)?;
+    ///     assert_eq!(previous, 42);
+    ///     assert!(!module.const_defined_at("ANSWER"));
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
+    fn remove_const<T>(self, name: T) -> Result<Value, Error>
+    where
+        T: IntoId,
+    {
+        debug_assert_value!(self);
+        let id = name.into_id_with(&Ruby::get_with(self));
+        unsafe { protect(|| Value::new(rb_const_remove(self.as_rb_value(), id.as_rb_id()))) }
+    }
+
+    /// Returns whether `name` is defined in `self` or an ancestor.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Error, Module, RClass, Ruby, class::Class};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let child = RClass::new(ruby.class_object())?;
+    ///     assert!(child.const_defined("String"));
+    ///     assert!(!child.const_defined("MissingConstant"));
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
+    fn const_defined<T>(self, name: T) -> bool
+    where
+        T: IntoId,
+    {
+        debug_assert_value!(self);
+        let id = name.into_id_with(&Ruby::get_with(self));
+        unsafe {
+            Value::new(rb_const_defined(self.as_rb_value(), id.as_rb_id()) as VALUE).to_bool()
+        }
+    }
+
+    /// Returns whether `name` is defined directly in `self`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Error, Module, RClass, Ruby, class::Class};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let child = RClass::new(ruby.class_object())?;
+    ///     assert!(child.const_defined("String"));
+    ///     assert!(!child.const_defined_at("String"));
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
+    fn const_defined_at<T>(self, name: T) -> bool
+    where
+        T: IntoId,
+    {
+        debug_assert_value!(self);
+        let id = name.into_id_with(&Ruby::get_with(self));
+        unsafe {
+            Value::new(rb_const_defined_at(self.as_rb_value(), id.as_rb_id()) as VALUE).to_bool()
+        }
     }
 
     /// Returns whether or not `self` inherits from `other`.

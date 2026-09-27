@@ -352,8 +352,8 @@ These conversions follow the pattern set by Ruby's core and standard libraries,
 where many conversions will delegate to a `#to_<type>` method if the object is
 not of the requested type, but does implement the `#to_<type>` method.
 
-Below are tables outlining many common conversions. See the Magnus api
-documentation for the full list of types.
+The following tables list common conversions. See the Magnus
+[API documentation][API Docs] for the full list of types.
 
 ### Rust functions accepting values from Ruby
 
@@ -374,7 +374,11 @@ See `magnus::TryConvert` for more details.
 | `[T; N]`                                                             | `[T]`, `#to_ary`                        |
 | `magnus::RArray`                                                     | `Array`, `#to_ary`                      |
 | `magnus::RHash`                                                      | `Hash`, `#to_hash`                      |
-| `std::time::SystemTime`, `magnus::Time`, `chrono::DateTime<T>`§      | `Time`                                  |
+| `std::time::SystemTime`                                              | `Time`                                  |
+| `magnus::Time`                                                       | `Time`                                  |
+| `chrono::DateTime<T>`§                                               | `Time`                                  |
+| `jiff::Timestamp`‖                                                   | `Time`                                  |
+| `jiff::Zoned`¶                                                       | `Time`                                  |
 | `magnus::Value`                                                      | any object                              |
 | `Vec<T>`\*                                                           | `[T]`, `#to_ary`                        |
 | `HashMap<K, V>`\*                                                    | `{K => V}`, `#to_hash`                  |
@@ -387,6 +391,27 @@ See `magnus::TryConvert` for more details.
 ‡ when the `bytes` feature is enabled
 
 § when the `chrono` feature is enabled; `T` can be `Utc` or `FixedOffset`.
+
+#### Jiff conversion notes
+
+##### ‖ `jiff::Timestamp`
+
+Enable the `jiff` feature to convert Ruby `Time` values to `jiff::Timestamp`.
+Magnus ignores the Ruby `Time` timezone presentation and preserves the instant
+and nanoseconds.
+
+##### ¶ `jiff::Zoned`
+
+Enable the `jiff-zoned` feature to convert Ruby `Time` values to `jiff::Zoned`.
+Magnus accepts the following Ruby values:
+
+- A Ruby `Time` carrying a `Timezone` object retains the original Jiff
+  timezone without another database lookup.
+- A native UTC Ruby `Time` uses `jiff::tz::TimeZone::UTC`.
+- A numeric fixed-offset Ruby `Time` uses a fixed Jiff timezone.
+
+Magnus rejects other Ruby timezone objects because `Time#zone` and the optional
+`name` method do not fully describe the timezone transition rules.
 
 ### Rust returning / passing values to Ruby
 
@@ -406,10 +431,48 @@ and `magnus::ArgList` for some additional details.
 | `Result<T, magnus::Error>` (return only)           | `T` or raises error                     |
 | `(T, U)`, `(T, U, V)`, etc, `[T; N]`, `Vec<T>`     | `Array`                                 |
 | `HashMap<K, V>`                                    | `Hash`                                  |
-| `std::time::SystemTime`                            | `Time`                                  |
+| `std::time::SystemTime`                           | `Time`                                  |
+| `magnus::Time`                                    | `Time`                                  |
+| `chrono::DateTime<T>`§                            | `Time`                                  |
+| `jiff::Timestamp`‖                                | `Time`                                  |
+| `jiff::Zoned`¶                                    | `Time`                                  |
 | `T`, `typed_data::Obj<T>` where `T: TypedData`\*  | instance of `<T as TypedData>::class()` |
 
 \* see the `wrap` macro.
+
+§ when the `chrono` feature is enabled; `T` can be `Utc` or `FixedOffset`.
+
+#### Jiff conversion notes
+
+##### ‖ `jiff::Timestamp`
+
+Enable the `jiff` feature to convert `jiff::Timestamp` to Ruby `Time`.
+Magnus creates a UTC Ruby `Time` with the same instant and nanoseconds.
+
+##### ¶ `jiff::Zoned`
+
+Enable the `jiff-zoned` feature to convert `jiff::Zoned` to Ruby `Time`.
+Magnus creates one of the following Ruby values:
+
+- A `Zoned` value in UTC becomes a native UTC Ruby `Time`.
+- An explicit fixed-offset zone becomes a native fixed-offset Ruby `Time`.
+- Any other Jiff timezone becomes a Ruby `Time` with an immutable
+  `Timezone` object.
+
+`Timezone` implements Ruby's Timezone protocol, so Ruby `Time`
+continues to use Jiff's timezone rules. Magnus registers the class under a
+versioned name and uses `Timezone` as an alias when available.
+
+Magnus also resolves IANA names through Ruby's [Timezone Names] feature:
+
+```ruby
+Time.now(in: "America/New_York")
+```
+
+See the [time API docs] for alias, resolver, and conversion details.
+
+[Timezone Names]: https://docs.ruby-lang.org/en/master/Time.html#class-Time-label-Timezone+Names
+[time API docs]: https://docs.rs/magnus/latest/magnus/time/index.html
 
 ### Conversions via Serde
 
