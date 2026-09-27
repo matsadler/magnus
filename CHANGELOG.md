@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 ### Added
+- Automatic, nanosecond-precision conversion between Ruby `Time` and
+  `jiff::Timestamp`, plus rule-preserving conversion between Ruby `Time` and
+  `jiff::Zoned` through Ruby's timezone-object protocol, including the Ruby
+  `Timezone` class with IANA, UTC, fixed-offset, POSIX, and unknown
+  timezone constructors, timezone-name lookup, and Marshal restoration.
 
 ### Changed
 

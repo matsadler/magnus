@@ -29,7 +29,9 @@ pub fn expand(name: Option<String>, input: ItemFn) -> Result<TokenStream, Error>
         #[no_mangle]
         pub unsafe extern "C" fn #extern_init_name() {
             use magnus::method::{Init, RubyInit};
-            #init_name.call_handle_error(&unsafe { magnus::Ruby::get_unchecked() })
+            let ruby = unsafe { magnus::Ruby::get_unchecked() };
+            magnus::init_features.call_handle_error(&ruby);
+            #init_name.call_handle_error(&ruby)
         }
     })
 }
