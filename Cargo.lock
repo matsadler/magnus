@@ -233,7 +233,7 @@ checksum = "0ceec5bc11778974d1bcb055b18002eba7f4b3518b6a0081b3af5f21666da9ad"
 
 [[package]]
 name = "magnus"
-version = "0.9.0"
+version = "0.9.1"
 dependencies = [
  "bytes",
  "chrono",
@@ -246,7 +246,7 @@ dependencies = [
 
 [[package]]
 name = "magnus-macros"
-version = "0.9.0"
+version = "0.9.1"
 dependencies = [
  "magnus",
  "proc-macro2",
