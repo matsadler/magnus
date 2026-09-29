@@ -99,37 +99,6 @@ impl Flonum {
         None
     }
 
-    /// Create a new `Flonum` from a `f64.`
-    ///
-    /// Returns `Ok(Flonum)` if `n` can be represented as a `Flonum`, otherwise
-    /// returns `Err(RFloat)`.
-    ///
-    /// # Panics
-    ///
-    /// Panics if called from a non-Ruby thread. See [`Ruby::flonum_from_f64`]
-    /// for the non-panicking version.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # #![allow(deprecated)]
-    /// use magnus::{Flonum, rb_assert};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
-    ///
-    /// let f = Flonum::from_f64(1.7272337110188893e-77).unwrap();
-    /// rb_assert!("f == 1.7272337110188893e-77", f);
-    ///
-    /// // representable as a Float, but Flonum does not have enough precision
-    /// assert!(Flonum::from_f64(1.7272337110188890e-77).is_err());
-    /// ```
-    #[deprecated(note = "please use `Ruby::flonum_from_f64` instead")]
-    #[cfg(feature = "old-api")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
-    #[inline]
-    pub fn from_f64(n: f64) -> Result<Self, RFloat> {
-        get_ruby!().flonum_from_f64(n)
-    }
-
     /// Convert `self` to a `f64`.
     ///
     /// # Examples

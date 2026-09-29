@@ -1363,7 +1363,7 @@ pub trait ReprValue: private::ReprValue {
     ///
     /// As `block` is a function pointer, only functions and closures that do
     /// not capture any variables are permitted. For more flexibility (at the
-    /// cost of allocating) see [`Proc::from_fn`] and
+    /// cost of allocating) see [`Ruby::proc_from_fn`] and
     /// [`funcall_with_block`](Value::funcall_with_block).
     ///
     /// The function passed as `block` will receive values yielded to the block
@@ -1852,7 +1852,7 @@ impl Ruby {
 
 /// Ruby's `false` value.
 ///
-/// See [`Ruby::qfalse`]/[`qfalse`] to obtain a value of this type.
+/// See [`Ruby::qfalse`] to obtain a value of this type.
 ///
 /// See the [`ReprValue`] trait for additional methods available on this type.
 #[derive(Clone, Copy)]
@@ -1861,32 +1861,6 @@ pub struct Qfalse(Value);
 
 /// Ruby's `false` value.
 const QFALSE: Qfalse = Qfalse::new();
-
-/// Returns Ruby's `false` value.
-///
-/// This should optimise to a constant reference.
-///
-/// # Panics
-///
-/// Panics if called from a non-Ruby thread. See [`Ruby::qfalse`] for the
-/// non-panicking version.
-///
-/// # Examples
-///
-/// ```
-/// # #![allow(deprecated)]
-/// use magnus::{rb_assert, value::qfalse};
-/// # let _cleanup = unsafe { magnus::embed::init() };
-///
-/// rb_assert!("val == false", val = qfalse());
-/// ```
-#[deprecated(note = "please use `Ruby::qfalse` instead")]
-#[cfg(feature = "old-api")]
-#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
-#[inline]
-pub fn qfalse() -> Qfalse {
-    get_ruby!().qfalse()
-}
 
 impl Qfalse {
     /// Create a new `Qfalse`.
@@ -1979,7 +1953,7 @@ impl Ruby {
 
 /// Ruby's `nil` value.
 ///
-/// See [`Ruby::qnil`]/[`qnil`] to obtain a value of this type.
+/// See [`Ruby::qnil`] to obtain a value of this type.
 ///
 /// See the [`ReprValue`] trait for additional methods available on this type.
 #[derive(Clone, Copy)]
@@ -1988,32 +1962,6 @@ pub struct Qnil(NonZeroValue);
 
 /// Ruby's `nil` value.
 const QNIL: Qnil = Qnil::new();
-
-/// Returns Ruby's `nil` value.
-///
-/// This should optimise to a constant reference.
-///
-/// # Panics
-///
-/// Panics if called from a non-Ruby thread. See [`Ruby::qnil`] for the
-/// non-panicking version.
-///
-/// # Examples
-///
-/// ```
-/// # #![allow(deprecated)]
-/// use magnus::{rb_assert, value::qnil};
-/// # let _cleanup = unsafe { magnus::embed::init() };
-///
-/// rb_assert!("val == nil", val = qnil());
-/// ```
-#[deprecated(note = "please use `Ruby::qnil` instead")]
-#[cfg(feature = "old-api")]
-#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
-#[inline]
-pub fn qnil() -> Qnil {
-    get_ruby!().qnil()
-}
 
 impl Qnil {
     /// Create a new `Qnil`.
@@ -2134,7 +2082,7 @@ impl Ruby {
 
 /// Ruby's `true` value.
 ///
-/// See [`Ruby::qtrue`]/[`qtrue`] to obtain a value of this type.
+/// See [`Ruby::qtrue`] to obtain a value of this type.
 ///
 /// See the [`ReprValue`] trait for additional methods available on this type.
 #[derive(Clone, Copy)]
@@ -2143,32 +2091,6 @@ pub struct Qtrue(NonZeroValue);
 
 /// Ruby's `true` value.
 const QTRUE: Qtrue = Qtrue::new();
-
-/// Returns Ruby's `true` value.
-///
-/// This should optimise to a constant reference.
-///
-/// # Panics
-///
-/// Panics if called from a non-Ruby thread. See [`Ruby::qtrue`] for the
-/// non-panicking version.
-///
-/// # Examples
-///
-/// ```
-/// # #![allow(deprecated)]
-/// use magnus::{rb_assert, value::qtrue};
-/// # let _cleanup = unsafe { magnus::embed::init() };
-///
-/// rb_assert!("val == true", val = qtrue());
-/// ```
-#[deprecated(note = "please use `Ruby::qtrue` instead")]
-#[cfg(feature = "old-api")]
-#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
-#[inline]
-pub fn qtrue() -> Qtrue {
-    get_ruby!().qtrue()
-}
 
 impl Qtrue {
     /// Create a new `Qtrue`.
@@ -2416,65 +2338,6 @@ impl Fixnum {
             let x = transmute::<isize, usize>(n as isize);
             Self::from_rb_value_unchecked(x.wrapping_add(x.wrapping_add(1)) as VALUE)
         })
-    }
-
-    /// Create a new `Fixnum` from an `i64.`
-    ///
-    /// Returns `Ok(Fixnum)` if `n` is in range for `Fixnum`, otherwise returns
-    /// `Err(RBignum)`.
-    ///
-    /// # Panics
-    ///
-    /// Panics if called from a non-Ruby thread. See [`Ruby::fixnum_from_i64`]
-    /// for the non-panicking version.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # #![allow(deprecated)]
-    /// use magnus::Fixnum;
-    /// # let _cleanup = unsafe { magnus::embed::init() };
-    ///
-    /// assert!(Fixnum::from_i64(0).is_ok());
-    /// // too big
-    /// assert!(Fixnum::from_i64(4611686018427387904).is_err());
-    /// assert!(Fixnum::from_i64(-4611686018427387905).is_err());
-    /// ```
-    #[deprecated(note = "please use `Ruby::fixnum_from_i64` instead")]
-    #[cfg(feature = "old-api")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
-    #[inline]
-    pub fn from_i64(n: i64) -> Result<Self, RBignum> {
-        get_ruby!().fixnum_from_i64(n)
-    }
-
-    /// Create a new `Fixnum` from a `u64.`
-    ///
-    /// Returns `Ok(Fixnum)` if `n` is in range for `Fixnum`, otherwise returns
-    /// `Err(RBignum)`.
-    ///
-    /// # Panics
-    ///
-    /// Panics if called from a non-Ruby thread. See [`Ruby::fixnum_from_u64`]
-    /// for the non-panicking version.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # #![allow(deprecated)]
-    /// use magnus::Fixnum;
-    /// # let _cleanup = unsafe { magnus::embed::init() };
-    ///
-    /// assert!(Fixnum::from_u64(0).is_ok());
-    /// // too big
-    /// assert!(Fixnum::from_u64(4611686018427387904).is_err());
-    /// ```
-    #[deprecated(note = "please use `Ruby::fixnum_from_u64` instead")]
-    #[cfg(feature = "old-api")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
-    #[inline]
-    pub fn from_u64(n: u64) -> Result<Self, RBignum> {
-        get_ruby!().fixnum_from_u64(n)
     }
 
     fn is_negative(self) -> bool {
@@ -3007,59 +2870,6 @@ impl StaticSymbol {
         unsafe { Self(NonZeroValue::new_unchecked(Value::new(val))) }
     }
 
-    /// Create a new StaticSymbol.
-    ///
-    /// # Panics
-    ///
-    /// Panics if called from a non-Ruby thread. See [`Ruby::sym_new`] for the
-    /// non-panicking version.
-    ///
-    /// # Examples
-    /// ```
-    /// # #![allow(deprecated)]
-    /// use magnus::{StaticSymbol, rb_assert};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
-    ///
-    /// let sym = StaticSymbol::new("example");
-    /// rb_assert!(":example == sym", sym);
-    /// ```
-    #[deprecated(note = "please use `Ruby::sym_new` instead")]
-    #[cfg(feature = "old-api")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
-    #[inline]
-    pub fn new<T>(name: T) -> Self
-    where
-        T: IntoId,
-    {
-        get_ruby!().sym_new(name)
-    }
-
-    /// Return the `StaticSymbol` for `name`, if one exists.
-    ///
-    /// # Panics
-    ///
-    /// Panics if called from a non-Ruby thread. See [`Ruby::check_symbol`] for
-    /// the non-panicking version.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # #![allow(deprecated)]
-    /// use magnus::{StaticSymbol, eval};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
-    ///
-    /// assert!(StaticSymbol::check("example").is_none());
-    /// let _: StaticSymbol = eval(":example").unwrap();
-    /// assert!(StaticSymbol::check("example").is_some());
-    /// ```
-    #[deprecated(note = "please use `Ruby::check_symbol` instead")]
-    #[cfg(feature = "old-api")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
-    #[inline]
-    pub fn check(name: &str) -> Option<Self> {
-        get_ruby!().check_symbol(name)
-    }
-
     /// Return the symbol as a static string reference.
     ///
     /// May error if the name is not valid utf-8.
@@ -3226,33 +3036,6 @@ impl Ruby {
 pub struct Id(ID, PhantomData<*mut u8>);
 
 impl Id {
-    /// Create a new `Id` for `name`.
-    ///
-    /// # Panics
-    ///
-    /// Panics if called from a non-Ruby thread. See [`Ruby::intern`] for the
-    /// non-panicking version.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # #![allow(deprecated)]
-    /// use magnus::value::Id;
-    /// # let _cleanup = unsafe { magnus::embed::init() };
-    ///
-    /// let id = Id::new("example");
-    /// assert_eq!(id.name().unwrap(), "example");
-    /// ```
-    #[deprecated(note = "please use `Ruby::intern` instead")]
-    #[cfg(feature = "old-api")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
-    pub fn new<T>(name: T) -> Self
-    where
-        T: AsRef<str>,
-    {
-        get_ruby!().intern(name.as_ref())
-    }
-
     #[inline]
     pub(crate) fn from_rb_id(id: ID) -> Self {
         Self(id, PhantomData)
@@ -3261,32 +3044,6 @@ impl Id {
     #[inline]
     pub(crate) fn as_rb_id(self) -> ID {
         self.0
-    }
-
-    /// Return the `Id` for `name`, if one exists.
-    ///
-    /// # Panics
-    ///
-    /// Panics if called from a non-Ruby thread. See [`Ruby::check_id`] for the
-    /// non-panicking version.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # #![allow(deprecated)]
-    /// use magnus::{StaticSymbol, value::Id};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
-    ///
-    /// assert!(Id::check("example").is_none());
-    /// StaticSymbol::new("example");
-    /// assert!(Id::check("example").is_some());
-    /// ```
-    #[deprecated(note = "please use `Ruby::check_id` instead")]
-    #[cfg(feature = "old-api")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
-    #[inline]
-    pub fn check(name: &str) -> Option<Self> {
-        get_ruby!().check_id(name)
     }
 
     /// Return the symbol name associated with this Id as a static string
@@ -3329,20 +3086,6 @@ impl Borrow<OpaqueId> for Id {
 
 /// Conversions from Rust types into [`Id`].
 pub trait IntoId: Sized {
-    /// Convert `self` into [`Id`].
-    ///
-    /// # Panics
-    ///
-    /// Panics if called from a non-Ruby thread. See [`IntoId::into_id_with`]
-    /// for the non-panicking version.
-    #[deprecated(note = "please use `IntoId::into_id_with` instead")]
-    #[cfg(feature = "old-api")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
-    #[inline]
-    fn into_id(self) -> Id {
-        self.into_id_with(&get_ruby!())
-    }
-
     /// Convert `self` into [`Id`].
     ///
     /// # Safety

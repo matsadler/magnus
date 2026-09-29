@@ -266,10 +266,10 @@
 //! * `rb_ary_includes`: [`RArray::includes`].
 // * `rb_ary_join`: [`RArray::join`].
 // * `rb_ary_modify`:
-//! * `rb_ary_new`: [`RArray::new`].
-//! * `rb_ary_new_capa`: [`RArray::with_capacity`].
-//! * `rb_ary_new_from_args`: Not implemented, see [`RArray::from_slice`].
-//! * `rb_ary_new_from_values`: [`RArray::from_slice`].
+//! * `rb_ary_new`: [`Ruby::ary_new`].
+//! * `rb_ary_new_capa`: [`Ruby::ary_new_capa`].
+//! * `rb_ary_new_from_args`: Not implemented, see [`Ruby::ary_new_from_values`].
+//! * `rb_ary_new_from_values`: [`Ruby::ary_new_from_values`].
 //! * `rb_ary_plus`: [`RArray::plus`].
 //! * `rb_ary_pop`: [`RArray::pop`].
 // * `rb_ary_ptr_use_end`:
@@ -294,9 +294,8 @@
 //!
 //! ## `rb_as`-`rb_az`
 //!
-//! * `rb_ascii8bit_encindex`: [`encoding::Index::ascii8bit`].
-//! * `rb_ascii8bit_encoding`:
-//!   [`RbEncoding::ascii8bit`](encoding::RbEncoding::ascii8bit).
+//! * `rb_ascii8bit_encindex`: [`Ruby::ascii8bit_encindex`].
+//! * `rb_ascii8bit_encoding`: [`Ruby::ascii8bit_encoding`].
 // * `rb_assert_failure`:
 // * `rb_assoc_new`:
 //! * `rb_attr`: [`Module::define_attr`].
@@ -307,7 +306,7 @@
 //!
 //! ## `rb_b`
 //!
-//! * `rb_backref_get`: [`backref_get`].
+//! * `rb_backref_get`: [`Ruby::backref_get`].
 // * `rb_backref_set`:
 // * `rb_backtrace`:
 // * `rb_big2dbl`:
@@ -345,9 +344,9 @@
 // * `rb_big_xor`:
 //! * `rb_block_call`: See [`Value::block_call`].
 //! * `rb_block_call_kw`: [`Value::block_call`].
-//! * `rb_block_given_p`: [`block::block_given`].
+//! * `rb_block_given_p`: [`Ruby::block_given`].
 // * `rb_block_lambda`:
-//! * `rb_block_proc`: [`block::block_proc`].
+//! * `rb_block_proc`: [`Ruby::block_proc`].
 //! * `rb_bug`: [`error::bug`].
 // * `rb_bug_errno`:
 // * `RB_BUILTIN_TYPE`:
@@ -371,13 +370,13 @@
 //! * `rb_check_funcall`: See [`Value::check_funcall`].
 //! * `rb_check_funcall_kw`:  [`Value::check_funcall`].
 //! * `rb_check_hash_type`: See [`TryConvert`] and [`Value::try_convert`].
-//! * `rb_check_id`: Similar to [`Id::check`](value::Id::check).
-//! * `rb_check_id_cstr`: [`Id::check`](value::Id::check).
+//! * `rb_check_id`: Similar to [`Ruby::check_id`].
+//! * `rb_check_id_cstr`: [`Ruby::check_id`].
 // * `rb_check_inheritable`:
 // * `rb_check_safe_str`:
 //! * `rb_check_string_type`: See [`TryConvert`] and [`Value::try_convert`].
-//! * `rb_check_symbol`: Similar to [`StaticSymbol::check`].
-//! * `rb_check_symbol_cstr`: [`StaticSymbol::check`].
+//! * `rb_check_symbol`: Similar to [`Ruby::check_symbol`].
+//! * `rb_check_symbol_cstr`: [`Ruby::check_symbol`].
 //! * `rb_check_to_float`: See [`TryConvert`] and [`Value::try_convert`].
 //! * `rb_check_to_int`: See [`TryConvert`] and [`Value::try_convert`].
 // * `rb_check_to_integer`:
@@ -483,10 +482,8 @@
 // * `rb_debug_inspector_frame_self_get`:
 // * `rb_debug_inspector_open`:
 // * `rb_debug_rstring_null_ptr`:
-//! * `rb_default_external_encoding`:
-//!   [`RbEncoding::default_external`](encoding::RbEncoding::default_external).
-//! * `rb_default_internal_encoding`:
-//!   [`RbEncoding::default_internal`](encoding::RbEncoding::default_internal).
+//! * `rb_default_external_encoding`: [`Ruby::default_external_encoding`].
+//! * `rb_default_internal_encoding`: [`Ruby::default_internal_encoding`].
 //! * `rb_define_alias`: [`Module::define_alias`].
 // * `rb_define_alloc_func`:
 //! * `rb_define_attr`: See [`Module::define_attr`].
@@ -577,15 +574,13 @@
 // * `rb_enc_code_to_mbclen`:
 //! * `rb_enc_compatible`: [`encoding::compatible`].
 //! * `rb_enc_copy`: [`encoding::copy`].
-//! * `rb_enc_default_external`:
-//!   [`Encoding::default_external`](encoding::Encoding::default_external).
-// * `rb_enc_default_internal`:
-//!   [`Encoding::default_internal`](encoding::Encoding::default_internal).
+//! * `rb_enc_default_external`: [`Ruby::enc_default_external`].
+// * `rb_enc_default_internal`: [`Ruby::enc_default_internal`].
 // * `rb_enc_dummy_p`:
 //! * `rb_enc_fast_mbclen`:
 //!   [`RbEncoding::fast_mbclen`](encoding::RbEncoding::fast_mbclen).
-//! * `rb_enc_find`: [`RbEncoding::find`](encoding::RbEncoding::find).
-//! * `rb_enc_find_index`: [`encoding::Index::find`].
+//! * `rb_enc_find`: [`Ruby::find_encoding`].
+//! * `rb_enc_find_index`: [`Ruby::find_encindex`].
 //! * `rb_enc_from_encoding`: [`std::convert::From`].
 //! * `rb_enc_from_index`: [`std::convert::From`].
 //! * `rb_enc_get`: Use [`EncodingCapable::enc_get`](encoding::EncodingCapable::enc_get)
@@ -621,7 +616,7 @@
 //!   [`RbEncoding::precise_mbclen`](encoding::RbEncoding::precise_mbclen).
 // * `rb_enc_prev_char`:
 // * `rb_enc_raise`:
-//! * `rb_enc_reg_new`: [`RRegexp::new`].
+//! * `rb_enc_reg_new`: [`Ruby::reg_new`].
 // * `rb_enc_replicate`:
 // * `rb_enc_right_char_head`:
 // * `rb_enc_set_default_external`:
@@ -635,7 +630,7 @@
 // * `rb_enc_str_asciionly_p`:
 // * `rb_enc_str_buf_cat`:
 //! * `rb_enc_str_coderange`: [`RString::enc_coderange_scan`].
-//! * `rb_enc_str_new`: [`RString::enc_new`].
+//! * `rb_enc_str_new`: [`Ruby::enc_str_new`].
 // * `rb_enc_str_new_cstr`:
 //! * `rb_enc_str_new_lit`: See [`Ruby::enc_str_new_static`].
 //! * `rb_enc_str_new_literal`: See [`Ruby::enc_str_new_static`].
@@ -660,7 +655,7 @@
 //! * `rb_eql`: [`Value::eql`].
 //! * `rb_equal`: [`Value::equal`].
 // * `rb_errinfo`:
-//! * `rb_error_arity`: [`scan_args::check_arity`].
+//! * `rb_error_arity`: [`Ruby::check_arity`].
 // * `rb_error_frozen`:
 // * `rb_error_frozen_object`:
 // * `rb_eval_cmd_kw`:
@@ -738,9 +733,8 @@
 //! * `rb_fiber_transfer_kw`: [`Fiber::transfer`].
 //! * `rb_fiber_yield`: See [`Ruby::fiber_yield`].
 //! * `rb_fiber_yield_kw`: [`Ruby::fiber_yield`].
-//! * `rb_filesystem_encindex`: [`encoding::Index::filesystem`].
-//! * `rb_filesystem_encoding`:
-//!   [`RbEncoding::filesystem`](encoding::RbEncoding::filesystem).
+//! * `rb_filesystem_encindex`: [`Ruby::filesystem_encindex`].
+//! * `rb_filesystem_encoding`: [`Ruby::filesystem_encoding`].
 // * `rb_filesystem_str_new`:
 // * `rb_filesystem_str_new_cstr`:
 // * `rb_file_absolute_path`:
@@ -771,10 +765,10 @@
 // * `RB_FIXNUM_P`:
 // * `rb_fix_new`:
 // * `rb_Float`:
-//! * `rb_float_new`: [`RFloat::from_f64`] or [`Float::from_f64`].
-//! * `rb_float_new_in_heap`: See [`Float::from_f64`].
+//! * `rb_float_new`: [`Ruby::r_float_from_f64`] or [`Ruby::float_from_f64`].
+//! * `rb_float_new_in_heap`: [`Ruby::flonum_from_f64`].
 // * `RB_FLOAT_TYPE_P`:
-// * `rb_float_value`: [`RFloat::to_f64`] or [`Float::to_f64`].
+//! * `rb_float_value`: [`RFloat::to_f64`] or [`Float::to_f64`].
 // * `RB_FLONUM_P`:
 //! * `rb_flt_rationalize`: [`Float::rationalize`].
 //! * `rb_flt_rationalize_with_prec`: [`Float::rationalize_with_prec`].
@@ -882,8 +876,8 @@
 // * `rb_hash_iter_lev`:
 //! * `rb_hash_lookup`: [`RHash::lookup`].
 //! * `rb_hash_lookup2`: [`RHash::lookup2`].
-//! * `rb_hash_new`: [`RHash::new`].
-//! * `rb_hash_new_capa`: [`RHash::with_capacity`].
+//! * `rb_hash_new`: [`Ruby::hash_new`].
+//! * `rb_hash_new_capa`: [`Ruby::hash_new_capa`].
 // * `rb_hash_set_ifnone`:
 //! * `rb_hash_size`: [`RHash::size`].
 //! * `rb_hash_size_num`: [`RHash::len`].
@@ -994,8 +988,8 @@
 // * `rb_is_instance_id`:
 // * `rb_is_junk_id`:
 // * `rb_is_local_id`:
-//! * `rb_iter_break`: See [`Error::iter_break`].
-//! * `rb_iter_break_value`: [`Error::iter_break`].
+//! * `rb_iter_break`: See [`Ruby::iter_break_value`].
+//! * `rb_iter_break_value`: [`Ruby::iter_break_value`].
 // * `rb_ivar_count`:
 // * `rb_ivar_defined`:
 // * `rb_ivar_foreach`:
@@ -1025,8 +1019,8 @@
 // * `rb_load_file_str`:
 // * `rb_load_protect`:
 // * `rb_locale_charmap`:
-//! * `rb_locale_encindex`: [`encoding::Index::locale`].
-//! * `rb_locale_encoding`: [`RbEncoding::locale`](encoding::RbEncoding::locale).
+//! * `rb_locale_encindex`: [`Ruby::locale_encindex`].
+//! * `rb_locale_encoding`: [`Ruby::locale_encoding`].
 // * `rb_locale_str_new`:
 // * `rb_locale_str_new_cstr`:
 // * `RB_LONG2FIX`:
@@ -1073,7 +1067,7 @@
 // * `rb_method_call_kw`:
 // * `rb_method_call_with_block`:
 // * `rb_method_call_with_block_kw`:
-//! * `rb_module_new`: [`RModule::new`].
+//! * `rb_module_new`: [`Ruby::module_new`].
 //! * `rb_mod_ancestors`: [`Module::ancestors`].
 // * `rb_mod_class_variables`:
 // * `rb_mod_constants`:
@@ -1225,7 +1219,7 @@
 // * `rb_proc_call_with_block_kw`:
 // * `rb_proc_exec`:
 //! * `rb_proc_lambda_p`: [`Proc::is_lambda`](block::Proc::is_lambda).
-//! * `rb_proc_new`: [`Proc::new`](block::Proc::new) & [`Proc::from_fn`](block::Proc::from_fn).
+//! * `rb_proc_new`: [`Ruby::proc_new`] & [`Ruby::proc_from_fn`].
 // * `rb_proc_times`:
 //! * `rb_profile_frames`: [`Ruby::profile_frames`]/[`Ruby::profile_frames_starting`].
 //! * `rb_profile_frame_absolute_path`: [`Frame::absolute_path`](debug::Frame::absolute_path)
@@ -1283,7 +1277,7 @@
 // * `rb_Rational1`:
 // * `rb_Rational2`:
 //! * `rb_rational_den`: [`RRational::den`].
-//! * `rb_rational_new`: [`RRational::new`].
+//! * `rb_rational_new`: [`Ruby::rational_new`].
 // * `rb_rational_new1`:
 // * `rb_rational_new2`:
 //! * `rb_rational_num`: [`RRational::num`].
@@ -1304,7 +1298,7 @@
 //! * `rb_reg_match_last`: [`RMatch::last`].
 //! * `rb_reg_match_post`: [`RMatch::post`].
 //! * `rb_reg_match_pre`: [`RMatch::pre`].
-//! * `rb_reg_new`: See [`RRegexp::new`].
+//! * `rb_reg_new`: See [`Ruby::reg_new`].
 //! * `rb_reg_new_str`: [`RRegexp::new_str`].
 //! * `rb_reg_nth_defined`: [`RMatch::nth_defined`].
 //! * `rb_reg_nth_match`: [`RMatch::nth_match`].
@@ -1384,8 +1378,8 @@
 //! * `rb_str_buf_append`: [`RString::buf_append`].
 //! * `rb_str_buf_cat`: [`RString::cat`].
 //! * `rb_str_buf_cat_ascii`: See [`RString::cat`].
-//! * `rb_str_buf_new`: [`RString::buf_new`].
-//! * `rb_str_buf_new_cstr`: See [`RString::buf_new`] + [`RString::cat`].
+//! * `rb_str_buf_new`: [`Ruby::str_buf_new`].
+//! * `rb_str_buf_new_cstr`: See [`Ruby::str_buf_new`] + [`RString::cat`].
 //! * `rb_str_capacity`: [`RString::capacity`].
 //! * `rb_str_cat`: [`RString::cat`].
 // * `rb_str_catf`:
@@ -1418,7 +1412,7 @@
 // * `rb_str_locktmp`:
 // * `rb_str_modify`:
 //! * `rb_str_modify_expand`: [`RString::modify_expand`].
-//! * `rb_str_new`: [`RString::from_slice`].
+//! * `rb_str_new`: [`Ruby::str_from_slice`].
 // * `rb_str_new_cstr`:
 //! * `rb_str_new_frozen`: [`RString::new_frozen`].
 //! * `rb_str_new_lit`: See [`Ruby::str_new_static`].
@@ -1609,18 +1603,17 @@
 // * `rb_unexpected_type`:
 // * `RB_UNLIKELY`:
 // * `rb_update_max_fd`:
-//! * `rb_usascii_encindex`: [`encoding::Index::usascii`].
-//! * `rb_usascii_encoding`:
-//!   [`RbEncoding::usascii`](encoding::RbEncoding::usascii).
+//! * `rb_usascii_encindex`: [`Ruby::usascii_encindex`].
+//! * `rb_usascii_encoding`: [`Ruby::usascii_encoding`].
 // * `rb_usascii_str_new`:
 // * `rb_usascii_str_new_cstr`:
 // * `rb_usascii_str_new_lit`:
 // * `rb_usascii_str_new_literal`:
 // * `rb_usascii_str_new_static`:
-//! * `rb_utf8_encindex`: [`encoding::Index::utf8`].
-//! * `rb_utf8_encoding`: [`RbEncoding::utf8`](encoding::RbEncoding::utf8).
-//! * `rb_utf8_str_new`: [`RString::new`].
-//! * `rb_utf8_str_new_cstr`: See [`RString::new`].
+//! * `rb_utf8_encindex`: [`Ruby::utf8_encindex`].
+//! * `rb_utf8_encoding`: [`Ruby::utf8_encoding`].
+//! * `rb_utf8_str_new`: [`Ruby::str_new`].
+//! * `rb_utf8_str_new_cstr`: See [`Ruby::str_new`].
 //! * `rb_utf8_str_new_lit`: See [`Ruby::utf8_str_new_static`].
 //! * `rb_utf8_str_new_literal`: See [`Ruby::utf8_str_new_static`].
 //! * `rb_utf8_str_new_static`: [`Ruby::utf8_str_new_static`].
@@ -2484,327 +2477,6 @@ impl Ruby {
             })),
         }
     }
-}
-
-/// Define a class in the root scope.
-///
-/// # Panics
-///
-/// Panics if called from a non-Ruby thread. See [`Ruby::define_class`] for the
-/// non-panicking version.
-///
-/// # Examples
-///
-/// ```
-/// # #![allow(deprecated)]
-/// use magnus::{class, define_class, rb_assert};
-/// # let _cleanup = unsafe { magnus::embed::init() };
-///
-/// define_class("Example", class::object()).unwrap();
-/// rb_assert!("Example.is_a?(Class)");
-/// ```
-#[deprecated(note = "please use `Ruby::define_class` instead")]
-#[cfg(feature = "old-api")]
-#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
-#[inline]
-pub fn define_class(name: &str, superclass: RClass) -> Result<RClass, Error> {
-    get_ruby!().define_class(name, superclass)
-}
-
-/// Define a module in the root scope.
-///
-/// # Panics
-///
-/// Panics if called from a non-Ruby thread. See [`Ruby::define_module`] for
-/// the non-panicking version.
-///
-/// # Examples
-///
-/// ```
-/// # #![allow(deprecated)]
-/// use magnus::{define_module, rb_assert};
-/// # let _cleanup = unsafe { magnus::embed::init() };
-///
-/// define_module("Example").unwrap();
-/// rb_assert!("Example.is_a?(Module)");
-/// rb_assert!("!Example.is_a?(Class)");
-/// ```
-#[deprecated(note = "please use `Ruby::define_module` instead")]
-#[cfg(feature = "old-api")]
-#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
-#[inline]
-pub fn define_module(name: &str) -> Result<RModule, Error> {
-    get_ruby!().define_module(name)
-}
-
-/// Define an exception class in the root scope.
-///
-/// # Panics
-///
-/// Panics if called from a non-Ruby thread. See [`Ruby::define_error`] for the
-/// non-panicking version.
-///
-/// # Examples
-///
-/// ```
-/// # #![allow(deprecated)]
-/// use magnus::{define_error, exception, rb_assert};
-/// # let _cleanup = unsafe { magnus::embed::init() };
-///
-/// define_error("ExampleError", exception::standard_error()).unwrap();
-/// rb_assert!("ExampleError.is_a?(Class)");
-/// rb_assert!("ExampleError < Exception");
-/// ```
-#[deprecated(note = "please use `Ruby::define_error` instead")]
-#[cfg(feature = "old-api")]
-#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
-#[inline]
-pub fn define_error(name: &str, superclass: ExceptionClass) -> Result<ExceptionClass, Error> {
-    get_ruby!().define_error(name, superclass)
-}
-
-/// Define a global variable.
-///
-/// # Panics
-///
-/// Panics if called from a non-Ruby thread. See [`Ruby::define_variable`] for
-/// the non-panicking version.
-///
-/// # Examples
-///
-/// ```
-/// # #![allow(deprecated)]
-/// use magnus::{RString, define_variable, prelude::*, rb_assert};
-/// # let _cleanup = unsafe { magnus::embed::init() };
-///
-/// let v = define_variable("example", 42).unwrap();
-/// rb_assert!("$example == 42");
-///
-/// // safe as long as another thread isn't modifying v
-/// unsafe {
-///     *v = RString::new("answer").as_value();
-/// }
-/// rb_assert!(r#"$example == "answer""#);
-/// ```
-#[deprecated(note = "please use `Ruby::define_variable` instead")]
-#[cfg(feature = "old-api")]
-#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
-#[inline]
-pub fn define_variable<T>(name: &str, initial: T) -> Result<*mut Value, Error>
-where
-    T: IntoValue,
-{
-    get_ruby!().define_variable(name, initial)
-}
-
-/// Define a global constant.
-///
-/// # Panics
-///
-/// Panics if called from a non-Ruby thread. See [`Ruby::define_global_const`]
-/// for the non-panicking version.
-///
-/// # Examples
-///
-/// ```
-/// # #![allow(deprecated)]
-/// use magnus::{define_global_const, rb_assert};
-/// # let _cleanup = unsafe { magnus::embed::init() };
-///
-/// define_global_const("EXAMPLE", 42).unwrap();
-/// rb_assert!("EXAMPLE == 42");
-/// ```
-#[deprecated(note = "please use `Ruby::define_global_const` instead")]
-#[cfg(feature = "old-api")]
-#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
-#[inline]
-pub fn define_global_const<T>(name: &str, value: T) -> Result<(), Error>
-where
-    T: IntoValue,
-{
-    get_ruby!().define_global_const(name, value)
-}
-
-/// Define a method in the root scope.
-///
-/// # Panics
-///
-/// Panics if called from a non-Ruby thread. See
-/// [`Ruby::define_global_function`] for the non-panicking version.
-///
-/// # Examples
-///
-/// ```
-/// # #![allow(deprecated)]
-/// use magnus::{define_global_function, function, rb_assert};
-/// # let _cleanup = unsafe { magnus::embed::init() };
-///
-/// fn greet(subject: String) -> String {
-///     format!("Hello, {}!", subject)
-/// }
-///
-/// define_global_function("greet", function!(greet, 1)).unwrap();
-/// rb_assert!(r#"greet("world") == "Hello, world!""#);
-/// ```
-#[deprecated(note = "please use `Ruby::define_global_function` instead")]
-#[cfg(feature = "old-api")]
-#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
-#[inline]
-pub fn define_global_function<M>(name: &str, func: M) -> Result<(), Error>
-where
-    M: Method,
-{
-    get_ruby!().define_global_function(name, func)
-}
-
-/// Returns the result of the most recent regexp match.
-///
-/// # Panics
-///
-/// Panics if called from a non-Ruby thread. See [`Ruby::backref_get`] for the
-/// non-panicking version.
-///
-/// # Examples
-///
-/// ```
-/// # #![allow(deprecated)]
-/// use magnus::{RRegexp, backref_get};
-/// # let _cleanup = unsafe { magnus::embed::init() };
-///
-/// let regexp = RRegexp::new("b(.)r", Default::default()).unwrap();
-/// let result = regexp.reg_match("foo bar baz").unwrap();
-/// assert_eq!(result, Some(4));
-///
-/// let match_data = backref_get().unwrap();
-/// assert_eq!(
-///     match_data.matched().to_string().unwrap(),
-///     String::from("bar")
-/// );
-/// assert_eq!(
-///     match_data.nth_match(1).map(|v| v.to_string().unwrap()),
-///     Some(String::from("a"))
-/// );
-/// ```
-#[deprecated(note = "please use `Ruby::backref_get` instead")]
-#[cfg(feature = "old-api")]
-#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
-#[inline]
-pub fn backref_get() -> Option<RMatch> {
-    get_ruby!().backref_get()
-}
-
-/// Return the Ruby `self` of the current method context.
-///
-/// Returns `Err` if called outside a method context or the conversion fails.
-///
-/// # Panics
-///
-/// Panics if called from a non-Ruby thread. See [`Ruby::current_receiver`] for
-/// the non-panicking version.
-///
-/// # Examples
-///
-/// ```
-/// # #![allow(deprecated)]
-/// use magnus::{
-///     Error, Value, current_receiver, define_global_function, method, prelude::*, rb_assert,
-/// };
-/// # let _cleanup = unsafe { magnus::embed::init() };
-///
-/// fn example(rb_self: Value) -> Result<bool, Error> {
-///     rb_self.equal(current_receiver::<Value>()?)
-/// }
-/// define_global_function("example", method!(example, 0));
-///
-/// rb_assert!("example");
-/// ```
-#[deprecated(note = "please use `Ruby::current_receiver` instead")]
-#[cfg(feature = "old-api")]
-#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
-#[inline]
-pub fn current_receiver<T>() -> Result<T, Error>
-where
-    T: TryConvert,
-{
-    get_ruby!().current_receiver()
-}
-
-/// Call the super method of the current method context.
-///
-/// Returns `Ok(T)` if the super method exists and returns without error, and
-/// the return value converts to a `T`, or returns `Err` if there is no super
-/// method, the super method raises or the conversion fails.
-///
-/// # Panics
-///
-/// Panics if called from a non-Ruby thread. See [`Ruby::call_super`] for the
-/// non-panicking version.
-///
-/// # Examples
-///
-/// ```
-/// # #![allow(deprecated)]
-/// use magnus::{Error, call_super, define_class, eval, function, prelude::*, rb_assert};
-/// # let _cleanup = unsafe { magnus::embed::init() };
-///
-/// let a = eval(
-///     r#"
-///       class A
-///         def example
-///           "Hello from A"
-///         end
-///       end
-///       A
-///     "#,
-/// )
-/// .unwrap();
-///
-/// let b = define_class("B", a).unwrap();
-/// fn example() -> Result<String, Error> {
-///     let s: String = call_super(())?;
-///     Ok(format!("{}, and hello from B", s))
-/// }
-/// b.define_method("example", function!(example, 0)).unwrap();
-///
-/// rb_assert!(r#"B.new.example == "Hello from A, and hello from B""#)
-/// ```
-#[deprecated(note = "please use `Ruby::call_super` instead")]
-#[cfg(feature = "old-api")]
-#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
-#[inline]
-pub fn call_super<A, T>(args: A) -> Result<T, Error>
-where
-    A: ArgList,
-    T: TryConvert,
-{
-    get_ruby!().call_super(args)
-}
-
-/// Finds and loads the given feature if not already loaded.
-///
-/// # Panics
-///
-/// Panics if called from a non-Ruby thread. See [`Ruby::require`] for the
-/// non-panicking version.
-///
-/// # Examples
-///
-/// ```
-/// # #![allow(deprecated)]
-/// # let _cleanup = unsafe { magnus::embed::init() };
-/// use magnus::require;
-///
-/// assert!(require("net/http").unwrap());
-/// ```
-#[deprecated(note = "please use `Ruby::require` instead")]
-#[cfg(feature = "old-api")]
-#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
-#[inline]
-pub fn require<T>(feature: T) -> Result<bool, Error>
-where
-    T: IntoRString,
-{
-    get_ruby!().require(feature)
 }
 
 /// Evaluate a string of Ruby code, converting the result to a `T`.

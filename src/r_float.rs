@@ -117,67 +117,6 @@ impl RFloat {
         unsafe { Self(NonZeroValue::new_unchecked(Value::new(val))) }
     }
 
-    /// Create a new `RFloat` from an `f64.`
-    ///
-    /// Returns `Ok(RFloat)` if `n` requires a high precision float, otherwise
-    /// returns `Err(Flonum)`.
-    ///
-    /// # Panics
-    ///
-    /// Panics if called from a non-Ruby thread. See [`Ruby::r_float_from_f64`]
-    /// for the non-panicking version.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # #![allow(deprecated)]
-    /// use magnus::{RFloat, rb_assert};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
-    ///
-    /// let f = RFloat::from_f64(1.7272337110188890e-77).unwrap();
-    /// rb_assert!("f == 1.7272337110188890e-77", f);
-    ///
-    /// // can fit within a Flonum, so does not require an RFloat
-    /// assert!(RFloat::from_f64(1.7272337110188893e-77).is_err());
-    /// ```
-    #[deprecated(note = "please use `Ruby::r_float_from_f64` instead")]
-    #[cfg(feature = "old-api")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
-    #[cfg(ruby_use_flonum)]
-    #[inline]
-    pub fn from_f64(n: f64) -> Result<Self, Flonum> {
-        get_ruby!().r_float_from_f64(n)
-    }
-
-    /// Create a new `RFloat` from an `f64.`
-    ///
-    /// # Panics
-    ///
-    /// Panics if called from a non-Ruby thread. See [`Ruby::r_float_from_f64`]
-    /// for the non-panicking version.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # #![allow(deprecated)]
-    /// use magnus::{RFloat, rb_assert};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
-    ///
-    /// let f = RFloat::from_f64(1.7272337110188893e-77).unwrap();
-    /// rb_assert!("f == 1.7272337110188893e-77", f);
-    ///
-    /// let f = RFloat::from_f64(1.7272337110188890e-77).unwrap();
-    /// rb_assert!("f == 1.7272337110188890e-77", f);
-    /// ```
-    #[deprecated(note = "please use `Ruby::r_float_from_f64` instead")]
-    #[cfg(feature = "old-api")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
-    #[cfg(not(ruby_use_flonum))]
-    #[inline]
-    pub fn from_f64(n: f64) -> Result<Self, Self> {
-        get_ruby!().r_float_from_f64(n)
-    }
-
     /// Convert `self` to a `f64`.
     ///
     /// # Examples

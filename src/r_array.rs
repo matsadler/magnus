@@ -292,58 +292,6 @@ impl RArray {
         unsafe { Self(NonZeroValue::new_unchecked(Value::new(val))) }
     }
 
-    /// Create a new empty `RArray`.
-    ///
-    /// # Panics
-    ///
-    /// Panics if called from a non-Ruby thread. See [`Ruby::ary_new`] for the
-    /// non-panicking version.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # #![allow(deprecated)]
-    /// use magnus::RArray;
-    /// # let _cleanup = unsafe { magnus::embed::init() };
-    ///
-    /// let ary = RArray::new();
-    /// assert!(ary.is_empty());
-    /// ```
-    #[allow(clippy::new_without_default)]
-    #[deprecated(note = "please use `Ruby::ary_new` instead")]
-    #[cfg(feature = "old-api")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
-    #[inline]
-    pub fn new() -> Self {
-        get_ruby!().ary_new()
-    }
-
-    /// Create a new empty `RArray` with capacity for `n` elements
-    /// pre-allocated.
-    ///
-    /// # Panics
-    ///
-    /// Panics if called from a non-Ruby thread. See [`Ruby::ary_new_capa`] for
-    /// the non-panicking version.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # #![allow(deprecated)]
-    /// use magnus::RArray;
-    /// # let _cleanup = unsafe { magnus::embed::init() };
-    ///
-    /// let ary = RArray::with_capacity(16);
-    /// assert!(ary.is_empty());
-    /// ```
-    #[deprecated(note = "please use `Ruby::ary_new_capa` instead")]
-    #[cfg(feature = "old-api")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
-    #[inline]
-    pub fn with_capacity(n: usize) -> Self {
-        get_ruby!().ary_new_capa(n)
-    }
-
     /// Convert or wrap a Ruby [`Value`] to a `RArray`.
     ///
     /// If `val` responds to `#to_ary` calls that and passes on the returned
@@ -656,47 +604,6 @@ impl RArray {
         unsafe {
             Self::from_rb_value_unchecked(rb_ary_plus(self.as_rb_value(), other.as_rb_value()))
         }
-    }
-
-    /// Create a new `RArray` containing the elements in `slice`.
-    ///
-    /// # Panics
-    ///
-    /// Panics if called from a non-Ruby thread. See
-    /// [`Ruby::ary_new_from_values`] for the non-panicking version.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # #![allow(deprecated)]
-    /// use magnus::{Integer, RArray, Symbol, prelude::*, rb_assert, value::qnil};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
-    ///
-    /// let ary = RArray::from_slice(&[
-    ///     Symbol::new("a").as_value(),
-    ///     Integer::from_i64(1).as_value(),
-    ///     qnil().as_value(),
-    /// ]);
-    /// rb_assert!("ary == [:a, 1, nil]", ary);
-    /// ```
-    ///
-    /// ```
-    /// # #![allow(deprecated)]
-    /// use magnus::{RArray, Symbol, rb_assert};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
-    ///
-    /// let ary = RArray::from_slice(&[Symbol::new("a"), Symbol::new("b"), Symbol::new("c")]);
-    /// rb_assert!("ary == [:a, :b, :c]", ary);
-    /// ```
-    #[deprecated(note = "please use `Ruby::ary_new_from_values` instead")]
-    #[cfg(feature = "old-api")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
-    #[inline]
-    pub fn from_slice<T>(slice: &[T]) -> Self
-    where
-        T: ReprValue,
-    {
-        get_ruby!().ary_new_from_values(slice)
     }
 
     /// Add `item` to the end of `self`.
@@ -1040,34 +947,6 @@ impl RArray {
     pub fn sort(self) -> Result<(), Error> {
         protect(|| unsafe { Value::new(rb_ary_sort_bang(self.as_rb_value())) })?;
         Ok(())
-    }
-
-    /// Create a new `RArray` from a Rust vector.
-    ///
-    /// # Panics
-    ///
-    /// Panics if called from a non-Ruby thread. See [`Ruby::ary_from_vec`] for
-    /// the non-panicking version.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # #![allow(deprecated)]
-    /// use magnus::{RArray, rb_assert};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
-    ///
-    /// let ary = RArray::from_vec(vec![1, 2, 3]);
-    /// rb_assert!("ary == [1, 2, 3]", ary);
-    /// ```
-    #[deprecated(note = "please use `Ruby::ary_from_vec` instead")]
-    #[cfg(feature = "old-api")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
-    #[inline]
-    pub fn from_vec<T>(vec: Vec<T>) -> Self
-    where
-        T: IntoValueFromNative,
-    {
-        get_ruby!().ary_from_vec(vec)
     }
 
     /// Return `self` as a slice of [`Value`]s.
@@ -1646,25 +1525,6 @@ where
 }
 
 unsafe impl<T> IntoValueFromNative for Vec<T> where T: IntoValueFromNative {}
-
-#[cfg(feature = "old-api")]
-impl<T> FromIterator<T> for RArray
-where
-    T: IntoValue,
-{
-    /// Creates a Ruby array from an iterator.
-    ///
-    /// # Panics
-    ///
-    /// Panics if called from a non-Ruby thread. See [`Ruby::ary_from_iter`]
-    /// for the non-panicking version.
-    fn from_iter<I>(iter: I) -> Self
-    where
-        I: IntoIterator<Item = T>,
-    {
-        get_ruby!().ary_from_iter(iter)
-    }
-}
 
 impl Object for RArray {}
 

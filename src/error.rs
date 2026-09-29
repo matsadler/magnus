@@ -160,45 +160,6 @@ impl Error {
         Self(ErrorType::Jump(tag))
     }
 
-    /// Create a new error that will break from a loop when returned to Ruby.
-    ///
-    /// # Panics
-    ///
-    /// Panics if called from a non-Ruby thread. See [`Ruby::iter_break_value`]
-    /// for the non-panicking version.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # #![allow(deprecated)]
-    /// use magnus::{Error, prelude::*};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
-    ///
-    /// let i: i64 = magnus::Range::new(1, 100, false)
-    ///     .unwrap()
-    ///     .block_call("each", (), |_ruby, args, _block| {
-    ///         let i = i64::try_convert(*args.get(0).unwrap())?;
-    ///         if i % 3 == 0 && i % 5 == 0 {
-    ///             Err(Error::iter_break(i))
-    ///         } else {
-    ///             Ok(())
-    ///         }
-    ///     })
-    ///     .unwrap();
-    ///
-    /// assert_eq!(i, 15);
-    /// ```
-    #[deprecated(note = "please use `Ruby::iter_break_value` instead")]
-    #[cfg(feature = "old-api")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
-    #[inline]
-    pub fn iter_break<T>(val: T) -> Self
-    where
-        T: IntoValue,
-    {
-        get_ruby!().iter_break_value(val)
-    }
-
     /// Matches the internal `Exception` against `class` with same semantics as
     /// Ruby's `rescue`.
     ///
@@ -581,20 +542,4 @@ pub fn bug(s: &str) -> ! {
     unsafe { rb_bug(s.as_ptr()) };
     // as we never get here `s` isn't dropped, technically this is a memory
     // leak, in practice we don't care because we just hard crashed
-}
-
-/// Outputs `s` to Ruby's stderr if Ruby is configured to output warnings.
-///
-/// Otherwise does nothing.
-///
-/// # Panics
-///
-/// Panics if called from a non-Ruby thread. See [`Ruby::warning`] for the
-/// non-panicking version.
-#[deprecated(note = "please use `Ruby::warning` instead")]
-#[cfg(feature = "old-api")]
-#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
-#[inline]
-pub fn warning(s: &str) {
-    get_ruby!().warning(s)
 }

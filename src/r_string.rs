@@ -166,7 +166,7 @@ impl Ruby {
     /// Create a new Ruby string with capacity `n`.
     ///
     /// The encoding will be set to ASCII-8BIT (aka BINARY). See also
-    /// [`with_capacity`](RString::with_capacity).
+    /// [`str_with_capacity`](Ruby::str_with_capacity).
     ///
     /// # Examples
     ///
@@ -189,7 +189,7 @@ impl Ruby {
     /// Create a new Ruby string with capacity `n`.
     ///
     /// The encoding will be set to UTF-8. See also
-    /// [`buf_new`](RString::buf_new).
+    /// [`str_buf_new`](Ruby::str_buf_new).
     ///
     /// # Examples
     ///
@@ -418,33 +418,6 @@ impl RString {
         unsafe { Self(NonZeroValue::new_unchecked(Value::new(val))) }
     }
 
-    /// Create a new Ruby string from the Rust string `s`.
-    ///
-    /// The encoding of the Ruby string will be UTF-8.
-    ///
-    /// # Panics
-    ///
-    /// Panics if called from a non-Ruby thread. See [`Ruby::str_new`] for the
-    /// non-panicking version.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # #![allow(deprecated)]
-    /// use magnus::{RString, rb_assert};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
-    ///
-    /// let val = RString::new("example");
-    /// rb_assert!(r#"val == "example""#, val);
-    /// ```
-    #[deprecated(note = "please use `Ruby::str_new` instead")]
-    #[cfg(feature = "old-api")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
-    #[inline]
-    pub fn new(s: &str) -> Self {
-        get_ruby!().str_new(s)
-    }
-
     /// Implementation detail of [`r_string`].
     #[deprecated(note = "please use `Ruby::utf8_str_new_static(c\"example\")` instead")]
     #[doc(hidden)]
@@ -454,207 +427,6 @@ impl RString {
         unsafe {
             get_ruby!().str_new_lit(ptr, len)
         }
-    }
-
-    /// Create a new Ruby string with capacity `n`.
-    ///
-    /// The encoding will be set to ASCII-8BIT (aka BINARY). See also
-    /// [`with_capacity`](RString::with_capacity).
-    ///
-    /// # Panics
-    ///
-    /// Panics if called from a non-Ruby thread. See [`Ruby::str_buf_new`] for
-    /// the non-panicking version.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # #![allow(deprecated)]
-    /// use magnus::{RString, rb_assert};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
-    ///
-    /// let buf = RString::buf_new(4096);
-    /// buf.cat(&[13, 14, 10, 13, 11, 14, 14, 15]);
-    /// rb_assert!(r#"buf == "\r\x0E\n\r\v\x0E\x0E\x0F""#, buf);
-    /// ```
-    #[deprecated(note = "please use `Ruby::str_buf_new` instead")]
-    #[cfg(feature = "old-api")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
-    #[inline]
-    pub fn buf_new(n: usize) -> Self {
-        get_ruby!().str_buf_new(n)
-    }
-
-    /// Create a new Ruby string with capacity `n`.
-    ///
-    /// The encoding will be set to UTF-8. See also
-    /// [`buf_new`](RString::buf_new).
-    ///
-    /// # Panics
-    ///
-    /// Panics if called from a non-Ruby thread. See
-    /// [`Ruby::str_with_capacity`] for the non-panicking version.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # #![allow(deprecated)]
-    /// use magnus::{RString, rb_assert};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
-    ///
-    /// let s = RString::with_capacity(9);
-    /// s.cat("foo");
-    /// s.cat("bar");
-    /// s.cat("baz");
-    /// rb_assert!(r#"s == "foobarbaz""#, s);
-    /// ```
-    #[deprecated(note = "please use `Ruby::str_with_capacity` instead")]
-    #[cfg(feature = "old-api")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
-    #[inline]
-    pub fn with_capacity(n: usize) -> Self {
-        get_ruby!().str_with_capacity(n)
-    }
-
-    /// Create a new Ruby string from the Rust slice `s`.
-    ///
-    /// The encoding of the Ruby string will be set to ASCII-8BIT (aka BINARY).
-    ///
-    /// # Panics
-    ///
-    /// Panics if called from a non-Ruby thread. See [`Ruby::str_from_slice`]
-    /// for the non-panicking version.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # #![allow(deprecated)]
-    /// use magnus::{RString, rb_assert};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
-    ///
-    /// let buf = RString::from_slice(&[13, 14, 10, 13, 11, 14, 14, 15]);
-    /// rb_assert!(r#"buf == "\r\x0E\n\r\v\x0E\x0E\x0F""#, buf);
-    /// ```
-    #[deprecated(note = "please use `Ruby::str_from_slice` instead")]
-    #[cfg(feature = "old-api")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
-    #[inline]
-    pub fn from_slice(s: &[u8]) -> Self {
-        get_ruby!().str_from_slice(s)
-    }
-
-    /// Create a new Ruby string from the value `s` with the encoding `enc`.
-    ///
-    /// # Panics
-    ///
-    /// Panics if called from a non-Ruby thread. See [`Ruby::enc_str_new`] for
-    /// the non-panicking version.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # #![allow(deprecated)]
-    /// use magnus::{RString, encoding::RbEncoding, rb_assert};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
-    ///
-    /// let val = RString::enc_new("example", RbEncoding::usascii());
-    /// rb_assert!(r#"val == "example""#, val);
-    /// ```
-    ///
-    /// ```
-    /// # #![allow(deprecated)]
-    /// use magnus::{RString, encoding::RbEncoding, rb_assert};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
-    ///
-    /// let val = RString::enc_new([255, 128, 128], RbEncoding::ascii8bit());
-    /// rb_assert!(r#"val == "\xFF\x80\x80".force_encoding("BINARY")"#, val);
-    /// ```
-    #[deprecated(note = "please use `Ruby::enc_str_new` instead")]
-    #[cfg(feature = "old-api")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
-    #[inline]
-    pub fn enc_new<T, E>(s: T, enc: E) -> Self
-    where
-        T: AsRef<[u8]>,
-        E: Into<RbEncoding>,
-    {
-        get_ruby!().enc_str_new(s, enc)
-    }
-
-    /// Create a new Ruby string from the Rust char `c`.
-    ///
-    /// The encoding of the Ruby string will be UTF-8.
-    ///
-    /// # Panics
-    ///
-    /// Panics if called from a non-Ruby thread. See [`Ruby::str_from_char`]
-    /// for the non-panicking version.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # #![allow(deprecated)]
-    /// use magnus::{RString, rb_assert};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
-    ///
-    /// let c = RString::from_char('a');
-    /// rb_assert!(r#"c == "a""#, c);
-    /// ```
-    ///
-    /// ```
-    /// # #![allow(deprecated)]
-    /// use magnus::{RString, rb_assert};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
-    ///
-    /// let c = RString::from_char('🦀');
-    /// rb_assert!(r#"c == "🦀""#, c);
-    /// ```
-    #[deprecated(note = "please use `Ruby::str_from_char` instead")]
-    #[cfg(feature = "old-api")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
-    #[inline]
-    pub fn from_char(c: char) -> Self {
-        get_ruby!().str_from_char(c)
-    }
-
-    /// Create a new Ruby string containing the codepoint `code` in the
-    /// encoding `enc`.
-    ///
-    /// The encoding of the Ruby string will be the passed encoding `enc`.
-    ///
-    /// # Panics
-    ///
-    /// Panics if called from a non-Ruby thread. See [`Ruby::chr`] for the
-    /// non-panicking version.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # #![allow(deprecated)]
-    /// use magnus::{RString, encoding::RbEncoding, rb_assert};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
-    ///
-    /// let c = RString::chr(97, RbEncoding::usascii()).unwrap();
-    /// rb_assert!(r#"c == "a""#, c);
-    /// ```
-    ///
-    /// ```
-    /// # #![allow(deprecated)]
-    /// use magnus::{RString, encoding::RbEncoding, rb_assert};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
-    ///
-    /// let c = RString::chr(129408, RbEncoding::utf8()).unwrap();
-    /// rb_assert!(r#"c == "🦀""#, c);
-    /// ```
-    #[deprecated(note = "please use `Ruby::chr` instead")]
-    #[cfg(feature = "old-api")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
-    #[inline]
-    pub fn chr<T>(code: u32, enc: T) -> Result<Self, Error>
-    where
-        T: Into<RbEncoding>,
-    {
-        get_ruby!().chr(code, enc)
     }
 
     /// Create a new Ruby string that shares the same backing data as `s`.
@@ -1487,7 +1259,7 @@ impl RString {
     /// Note: This ignore's `self`'s encoding, and may result in `self`
     /// containing invalid bytes for its encoding. It's assumed this will more
     /// often be used with ASCII-8BIT (aka BINARY) encoded strings. See
-    /// [`buf_new`](RString::buf_new) and [`from_slice`](RString::from_slice).
+    /// [`Ruby::str_buf_new`] and [`Ruby::str_from_slice`].
     ///
     /// # Examples
     ///
@@ -1931,20 +1703,6 @@ impl io::Write for RString {
 
 /// Conversions from Rust types into [`RString`].
 pub trait IntoRString: Sized {
-    /// Convert `self` into [`RString`].
-    ///
-    /// # Panics
-    ///
-    /// Panics if called from a non-Ruby thread. See
-    /// [`IntoRString::into_r_string_with`] for the non-panicking version.
-    #[deprecated(note = "please use `IntoRString::into_r_string_with` instead")]
-    #[cfg(feature = "old-api")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
-    #[inline]
-    fn into_r_string(self) -> RString {
-        self.into_r_string_with(&get_ruby!())
-    }
-
     /// Convert `self` into [`RString`].
     ///
     /// # Safety

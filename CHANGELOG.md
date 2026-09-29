@@ -8,6 +8,7 @@
 ### Deprecated
 
 ### Removed
+- 'old-api' functions and the corresponding feature have been removed.
 
 ### Fixed
 

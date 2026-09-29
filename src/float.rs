@@ -99,34 +99,6 @@ impl Float {
         unsafe { Self(NonZeroValue::new_unchecked(Value::new(val))) }
     }
 
-    /// Create a new `Float` from an `f64`.
-    ///
-    /// # Panics
-    ///
-    /// Panics if called from a non-Ruby thread. See [`Ruby::float_from_f64`]
-    /// for the non-panicking version.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # #![allow(deprecated)]
-    /// use magnus::{Float, rb_assert};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
-    ///
-    /// let f = Float::from_f64(1.7272337110188893e-77);
-    /// rb_assert!("f == 1.7272337110188893e-77", f);
-    ///
-    /// let f = Float::from_f64(1.7272337110188890e-77);
-    /// rb_assert!("f == 1.7272337110188890e-77", f);
-    /// ```
-    #[deprecated(note = "please use `Ruby::float_from_f64` instead")]
-    #[cfg(feature = "old-api")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
-    #[inline]
-    pub fn from_f64(n: f64) -> Self {
-        get_ruby!().float_from_f64(n)
-    }
-
     /// Convert `self` to a `f64`.
     ///
     /// # Examples

@@ -83,31 +83,6 @@ impl Symbol {
         unsafe { Self(NonZeroValue::new_unchecked(Value::new(val))) }
     }
 
-    /// Create a new `Symbol` from `name`.
-    ///
-    /// # Panics
-    ///
-    /// Panics if called from a non-Ruby thread. See [`Ruby::to_symbol`] for
-    /// the non-panicking version.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # #![allow(deprecated)]
-    /// use magnus::{Symbol, rb_assert};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
-    ///
-    /// let sym = Symbol::new("example");
-    /// rb_assert!(":example == sym", sym);
-    /// ```
-    #[deprecated(note = "please use `Ruby::to_symbol` instead")]
-    #[cfg(feature = "old-api")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
-    #[inline]
-    pub fn new<T: AsRef<str>>(name: T) -> Self {
-        get_ruby!().to_symbol(name)
-    }
-
     /// Returns whether `self` is static or not.
     ///
     /// Static symbols won't be garbage collected, so should be safe to store
@@ -237,31 +212,6 @@ impl EncodingCapable for Symbol {}
 
 /// Conversions from Rust types into [`Symbol`].
 pub trait IntoSymbol: Sized {
-    /// Convert `self` into [`Symbol`].
-    ///
-    /// # Panics
-    ///
-    /// Panics if called from a non-Ruby thread. See
-    /// [`IntoSymbol::into_symbol_with`] for the non-panicking version.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # #![allow(deprecated)]
-    /// use magnus::{rb_assert, symbol::IntoSymbol};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
-    ///
-    /// let sym = "example".into_symbol();
-    /// rb_assert!("sym == :example", sym);
-    /// ```
-    #[deprecated(note = "please use `IntoSymbol::into_symbol_with` instead")]
-    #[cfg(feature = "old-api")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
-    #[inline]
-    fn into_symbol(self) -> Symbol {
-        self.into_symbol_with(&get_ruby!())
-    }
-
     /// Convert `self` into [`Symbol`].
     ///
     /// # Safety

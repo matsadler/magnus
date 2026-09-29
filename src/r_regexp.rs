@@ -91,33 +91,6 @@ impl RRegexp {
         unsafe { Self(NonZeroValue::new_unchecked(Value::new(val))) }
     }
 
-    /// Create a new `Regexp` from the Rust string `pattern`.
-    ///
-    /// The encoding of the Ruby regexp will be UTF-8.
-    ///
-    /// # Panics
-    ///
-    /// Panics if called from a non-Ruby thread. See [`Ruby::reg_new`] for the
-    /// non-panicking version.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # #![allow(deprecated)]
-    /// use magnus::{RRegexp, r_regexp::Opts, rb_assert};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
-    ///
-    /// let regexp = RRegexp::new("foo", Opts::new().ignorecase()).unwrap();
-    /// rb_assert!(r#"regexp == /foo/i"#, regexp);
-    /// ```
-    #[deprecated(note = "please use `Ruby::reg_new` instead")]
-    #[cfg(feature = "old-api")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
-    #[inline]
-    pub fn new(pattern: &str, opts: Opts) -> Result<Self, Error> {
-        get_ruby!().reg_new(pattern, opts)
-    }
-
     /// Create a new `Regexp` from the Ruby string `pattern`.
     ///
     /// # Examples

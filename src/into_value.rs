@@ -32,20 +32,6 @@ impl Ruby {
 pub trait IntoValue: Sized {
     /// Convert `self` into [`Value`].
     ///
-    /// # Panics
-    ///
-    /// Panics if called from a non-Ruby thread. See
-    /// [`IntoValue::into_value_with`] for the non-panicking version.
-    #[deprecated(note = "please use `IntoValue::into_value_with` instead")]
-    #[cfg(feature = "old-api")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
-    #[inline]
-    fn into_value(self) -> Value {
-        self.into_value_with(&get_ruby!())
-    }
-
-    /// Convert `self` into [`Value`].
-    ///
     /// # Safety
     ///
     /// This method should only be called from a Ruby thread.
@@ -61,10 +47,9 @@ pub trait IntoValue: Sized {
 
 /// Conversions from Rust types that do not contain [`Value`] into [`Value`].
 ///
-/// This trait is used as a bound in functions such as
-/// [`RArray::from_vec`](crate::r_array::RArray::from_vec) to prevent accepting
-/// heap allocated datastructures containing `Value`, as it is not safe to
-/// store a `Value` on the heap.
+/// This trait is used as a bound in functions such as [`Ruby::ary_from_vec`]
+/// to prevent accepting heap allocated data structures containing `Value`, as
+/// it is not safe to store a `Value` on the heap.
 ///
 /// # Safety
 ///

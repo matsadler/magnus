@@ -99,46 +99,6 @@ impl Range {
             .map(Self)
     }
 
-    /// Create a new `Range`.
-    ///
-    /// Returns `Err` if `beg` and `end` are not comparable.
-    ///
-    /// # Panics
-    ///
-    /// Panics if called from a non-Ruby thread. See [`Ruby::range_new`] for
-    /// the non-panicking version.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # #![allow(deprecated)]
-    /// use magnus::rb_assert;
-    /// # let _cleanup = unsafe { magnus::embed::init() };
-    ///
-    /// let range = magnus::Range::new(2, 7, false).unwrap();
-    /// rb_assert!("range == (2..7)", range);
-    /// ```
-    ///
-    /// ```
-    /// # #![allow(deprecated)]
-    /// use magnus::rb_assert;
-    /// # let _cleanup = unsafe { magnus::embed::init() };
-    ///
-    /// let range = magnus::Range::new(2, 7, true).unwrap();
-    /// rb_assert!("range == (2...7)", range);
-    /// ```
-    #[deprecated(note = "please use `Ruby::range_new` instead")]
-    #[cfg(feature = "old-api")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
-    #[inline]
-    pub fn new<T, U>(beg: T, end: U, excl: bool) -> Result<Self, Error>
-    where
-        T: IntoValue,
-        U: IntoValue,
-    {
-        get_ruby!().range_new(beg, end, excl)
-    }
-
     /// Return the value that defines the beginning of the range, converting it
     /// to a `T`.
     ///

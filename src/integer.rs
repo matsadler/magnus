@@ -212,66 +212,6 @@ impl Integer {
         }
     }
 
-    /// Create a new `Integer` from an `i64.`
-    ///
-    /// # Panics
-    ///
-    /// Panics if called from a non-Ruby thread. See [`Ruby::integer_from_i64`]
-    /// for the non-panicking version.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # #![allow(deprecated)]
-    /// use magnus::{Integer, rb_assert};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
-    ///
-    /// rb_assert!("i == 0", i = Integer::from_i64(0));
-    /// rb_assert!(
-    ///     "i == 4611686018427387904",
-    ///     i = Integer::from_i64(4611686018427387904),
-    /// );
-    /// rb_assert!(
-    ///     "i == -4611686018427387905",
-    ///     i = Integer::from_i64(-4611686018427387905),
-    /// );
-    /// ```
-    #[deprecated(note = "please use `Ruby::integer_from_i64` instead")]
-    #[cfg(feature = "old-api")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
-    #[inline]
-    pub fn from_i64(n: i64) -> Self {
-        get_ruby!().integer_from_i64(n)
-    }
-
-    /// Create a new `Integer` from a `u64.`
-    ///
-    /// # Panics
-    ///
-    /// Panics if called from a non-Ruby thread. See [`Ruby::integer_from_u64`]
-    /// for the non-panicking version.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # #![allow(deprecated)]
-    /// use magnus::{Integer, rb_assert};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
-    ///
-    /// rb_assert!("i == 0", i = Integer::from_u64(0));
-    /// rb_assert!(
-    ///     "i == 4611686018427387904",
-    ///     i = Integer::from_u64(4611686018427387904),
-    /// );
-    /// ```
-    #[deprecated(note = "please use `Ruby::integer_from_u64` instead")]
-    #[cfg(feature = "old-api")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
-    #[inline]
-    pub fn from_u64(n: u64) -> Self {
-        get_ruby!().integer_from_u64(n)
-    }
-
     /// Convert `self` to an `i8`. Returns `Err` if `self` is out of range for
     /// `i8`.
     ///

@@ -275,60 +275,6 @@ impl RHash {
         unsafe { Self(NonZeroValue::new_unchecked(Value::new(val))) }
     }
 
-    /// Create a new empty `RHash`.
-    ///
-    /// # Panics
-    ///
-    /// Panics if called from a non-Ruby thread. See [`Ruby::hash_new`] for the
-    /// non-panicking version.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # #![allow(deprecated)]
-    /// use magnus::RHash;
-    /// # let _cleanup = unsafe { magnus::embed::init() };
-    ///
-    /// let hash = RHash::new();
-    /// assert!(hash.is_empty());
-    /// ```
-    #[allow(clippy::new_without_default)]
-    #[deprecated(note = "please use `Ruby::hash_new` instead")]
-    #[cfg(feature = "old-api")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
-    #[inline]
-    pub fn new() -> RHash {
-        get_ruby!().hash_new()
-    }
-
-    /// Create a new empty `RHash` with capacity for `n` elements
-    /// pre-allocated.
-    ///
-    /// # Panics
-    ///
-    /// Panics if called from a non-Ruby thread. See [`Ruby::hash_new_capa`]
-    /// for the non-panicking version.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # #![allow(deprecated)]
-    /// use magnus::RHash;
-    /// # let _cleanup = unsafe { magnus::embed::init() };
-    ///
-    /// let ary = RHash::with_capacity(16);
-    /// assert!(ary.is_empty());
-    /// ```
-    #[deprecated(note = "please use `Ruby::hash_new_capa` instead")]
-    #[cfg(feature = "old-api")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
-    #[cfg(any(ruby_gte_3_2, docsrs))]
-    #[cfg_attr(docsrs, doc(cfg(ruby_gte_3_2)))]
-    #[inline]
-    pub fn with_capacity(n: usize) -> Self {
-        get_ruby!().hash_new_capa(n)
-    }
-
     /// Set the value `val` for the key `key`.
     ///
     /// Errors if `self` is frozen or `key` does not respond to `hash`.
@@ -1009,20 +955,6 @@ where
     K: IntoValueFromNative,
     V: IntoValueFromNative,
 {
-}
-
-#[cfg(feature = "old-api")]
-impl<K, V> FromIterator<(K, V)> for RHash
-where
-    K: IntoValue,
-    V: IntoValue,
-{
-    fn from_iter<I>(iter: I) -> Self
-    where
-        I: IntoIterator<Item = (K, V)>,
-    {
-        get_ruby!().hash_from_iter(iter)
-    }
 }
 
 impl Object for RHash {}

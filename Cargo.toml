@@ -21,11 +21,10 @@ exclude = [
 ]
 
 [features]
-default = ["old-api", "io"]
+default = ["io"]
 bytes = ["dep:bytes"]
 chrono = ["dep:chrono"]
 embed = ["rb-sys/link-ruby"]
-old-api = []
 rb-sys = []
 io = []
 

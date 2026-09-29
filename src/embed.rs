@@ -209,20 +209,3 @@ impl Ruby {
         unsafe { ruby_set_script_name(name.as_rb_value()) };
     }
 }
-
-/// Sets the current script name.
-///
-/// # Panics
-///
-/// Panics if called from a non-Ruby thread. See [`Ruby::script`] for the
-/// non-panicking version.
-#[deprecated(note = "please use `Ruby::script` instead")]
-#[cfg(feature = "old-api")]
-#[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
-#[inline]
-pub fn ruby_script<T>(name: T)
-where
-    T: IntoRString,
-{
-    get_ruby!().script(name)
-}

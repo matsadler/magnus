@@ -123,65 +123,6 @@ impl RBignum {
         unsafe { Self(NonZeroValue::new_unchecked(Value::new(val))) }
     }
 
-    /// Create a new `RBignum` from an `i64.`
-    ///
-    /// Returns `Ok(RBignum)` if `n` is large enough to require a bignum,
-    /// otherwise returns `Err(Fixnum)`.
-    ///
-    /// # Panics
-    ///
-    /// Panics if called from a non-Ruby thread. See [`Ruby::bignum_from_i64`]
-    /// for the non-panicking version.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # #![allow(deprecated)]
-    /// use magnus::RBignum;
-    /// # let _cleanup = unsafe { magnus::embed::init() };
-    ///
-    /// assert!(RBignum::from_i64(4611686018427387904).is_ok());
-    /// assert!(RBignum::from_i64(-4611686018427387905).is_ok());
-    /// // too small
-    /// assert!(RBignum::from_i64(0).is_err());
-    /// ```
-    #[deprecated(note = "please use `Ruby::bignum_from_i64` instead")]
-    #[cfg(feature = "old-api")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
-    #[inline]
-    pub fn from_i64(n: i64) -> Result<Self, Fixnum> {
-        get_ruby!().bignum_from_i64(n)
-    }
-
-    /// Create a new `RBignum` from an `u64.`
-    ///
-    /// Returns `Ok(RBignum)` if `n` is large enough to require a bignum,
-    /// otherwise returns `Err(Fixnum)`.
-    ///
-    /// # Panics
-    ///
-    /// Panics if called from a non-Ruby thread. See [`Ruby::bignum_from_u64`]
-    /// for the non-panicking version.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # #![allow(deprecated)]
-    /// use magnus::RBignum;
-    /// # let _cleanup = unsafe { magnus::embed::init() };
-    ///
-    /// assert!(RBignum::from_u64(4611686018427387904).is_ok());
-    /// // too small
-    /// assert!(RBignum::from_u64(0).is_err());
-    /// ```
-    #[deprecated(note = "please use `Ruby::bignum_from_u64` instead")]
-    #[cfg(feature = "old-api")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
-    #[inline]
-    pub fn from_u64(n: u64) -> Result<Self, Fixnum> {
-        get_ruby!().bignum_from_u64(n)
-    }
-
     /// Create a new `RBignum` from a `i32.`
     ///
     /// This will only succeed on a 32 bit system. On a 64 bit system bignum

@@ -84,33 +84,6 @@ impl RRational {
         unsafe { Self(NonZeroValue::new_unchecked(Value::new(val))) }
     }
 
-    /// Create a new `RRational`.
-    ///
-    /// # Panics
-    ///
-    /// Panics if called from a non-Ruby thread. See [`Ruby::rational_new`] for
-    /// the non-panicking version.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # #![allow(deprecated)]
-    /// use std::num::NonZero;
-    ///
-    /// use magnus::RRational;
-    /// # let _cleanup = unsafe { magnus::embed::init() };
-    ///
-    /// let rational = RRational::new(2, NonZero::new(4).unwrap());
-    /// assert_eq!(rational.to_string(), "1/2");
-    /// ```
-    #[deprecated(note = "please use `Ruby::rational_new` instead")]
-    #[cfg(feature = "old-api")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "old-api")))]
-    #[inline]
-    pub fn new(num: i64, den: NonZero<i64>) -> Self {
-        get_ruby!().rational_new(num, den)
-    }
-
     /// Returns `self`'s numerator.
     ///
     /// # Examples
