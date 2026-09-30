@@ -31,17 +31,6 @@ impl Ruby {
 /// manually or via `#[wrap]`) will automatically implement `IntoValue`.
 pub trait IntoValue: Sized {
     /// Convert `self` into [`Value`].
-    ///
-    /// # Safety
-    ///
-    /// This method should only be called from a Ruby thread.
-    #[deprecated(note = "please use `IntoValue::into_value_with(&Ruby::get_unchecked())` instead")]
-    #[inline]
-    unsafe fn into_value_unchecked(self) -> Value {
-        unsafe { self.into_value_with(&Ruby::get_unchecked()) }
-    }
-
-    /// Convert `self` into [`Value`].
     fn into_value_with(self, handle: &Ruby) -> Value;
 }
 

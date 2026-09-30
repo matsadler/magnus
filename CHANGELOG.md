@@ -9,6 +9,17 @@
 
 ### Removed
 - 'old-api' functions and the corresponding feature have been removed.
+- The `data_type_builder!` macro, use
+  `DataTypeBuilder::<Example>::new(c\"example\")` instead.
+- The `r_string!` macro, use `Ruby::utf8_str_new_static(c\"example\")`
+  instead.
+- `gc::register_mark_object`, use `Ruby::gc_register_mark_object` instead.
+- `gc::register_address`, use `Ruby::gc_register_address` instead.
+- `gc::unregister_address`, use `Ruby::gc_unregister_address` instead.
+- `IntoValue::into_value_unchecked`, `IntoRString::into_r_string_unchecked`,
+  `IntoSymbol::into_symbol_unchecked`, and `IntoId::into_id_unchecked`, use
+  the `_with` variant passing `&Ruby::get_unchecked()`, e.g.
+  `"example".into_r_string_with(&Ruby::get_unchecked())`.
 
 ### Fixed
 

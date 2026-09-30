@@ -3087,17 +3087,6 @@ impl Borrow<OpaqueId> for Id {
 /// Conversions from Rust types into [`Id`].
 pub trait IntoId: Sized {
     /// Convert `self` into [`Id`].
-    ///
-    /// # Safety
-    ///
-    /// This method should only be called from a Ruby thread.
-    #[deprecated(note = "please use `IntoId::into_id_with(&Ruby::get_unchecked())` instead")]
-    #[inline]
-    unsafe fn into_id_unchecked(self) -> Id {
-        unsafe { self.into_id_with(&Ruby::get_unchecked()) }
-    }
-
-    /// Convert `self` into [`Id`].
     fn into_id_with(self, handle: &Ruby) -> Id;
 }
 

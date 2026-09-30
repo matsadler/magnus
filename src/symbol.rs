@@ -214,30 +214,6 @@ impl EncodingCapable for Symbol {}
 pub trait IntoSymbol: Sized {
     /// Convert `self` into [`Symbol`].
     ///
-    /// # Safety
-    ///
-    /// This method should only be called from a Ruby thread.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # #![allow(deprecated)]
-    /// use magnus::{rb_assert, symbol::IntoSymbol};
-    /// # let _cleanup = unsafe { magnus::embed::init() };
-    ///
-    /// // only safe when called from a Ruby thread
-    /// let sym = unsafe { "example".into_symbol_unchecked() };
-    /// rb_assert!("sym == :example", sym);
-    /// ```
-    #[deprecated(
-        note = "please use `IntoSymbol::into_symbol_with(&Ruby::get_unchecked())` instead"
-    )]
-    unsafe fn into_symbol_unchecked(self) -> Symbol {
-        unsafe { self.into_symbol_with(&Ruby::get_unchecked()) }
-    }
-
-    /// Convert `self` into [`Symbol`].
-    ///
     /// # Examples
     ///
     /// ```

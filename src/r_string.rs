@@ -155,14 +155,6 @@ impl Ruby {
         }
     }
 
-    /// Implementation detail of [`r_string`].
-    #[deprecated(note = "please use `Ruby::utf8_str_new_static(c\"example\")` instead")]
-    #[doc(hidden)]
-    #[inline]
-    pub unsafe fn str_new_lit(&self, ptr: *const c_char, len: c_long) -> RString {
-        unsafe { RString::from_rb_value_unchecked(rb_utf8_str_new_static(ptr, len)) }
-    }
-
     /// Create a new Ruby string with capacity `n`.
     ///
     /// The encoding will be set to ASCII-8BIT (aka BINARY). See also
@@ -416,17 +408,6 @@ impl RString {
     #[inline]
     pub(crate) unsafe fn from_rb_value_unchecked(val: VALUE) -> Self {
         unsafe { Self(NonZeroValue::new_unchecked(Value::new(val))) }
-    }
-
-    /// Implementation detail of [`r_string`].
-    #[deprecated(note = "please use `Ruby::utf8_str_new_static(c\"example\")` instead")]
-    #[doc(hidden)]
-    #[inline]
-    pub unsafe fn new_lit(ptr: *const c_char, len: c_long) -> Self {
-        #[allow(deprecated)]
-        unsafe {
-            get_ruby!().str_new_lit(ptr, len)
-        }
     }
 
     /// Create a new Ruby string that shares the same backing data as `s`.
@@ -1704,18 +1685,6 @@ impl io::Write for RString {
 /// Conversions from Rust types into [`RString`].
 pub trait IntoRString: Sized {
     /// Convert `self` into [`RString`].
-    ///
-    /// # Safety
-    ///
-    /// This method should only be called from a Ruby thread.
-    #[deprecated(
-        note = "please use `IntoRString::into_r_string_with(&Ruby::get_unchecked())` instead"
-    )]
-    unsafe fn into_r_string_unchecked(self) -> RString {
-        unsafe { self.into_r_string_with(&Ruby::get_unchecked()) }
-    }
-
-    /// Convert `self` into [`RString`].
     fn into_r_string_with(self, handle: &Ruby) -> RString;
 }
 
@@ -1931,42 +1900,4 @@ impl<'a> Iterator for CharBytes<'a> {
         self.slice = &self.slice[len..];
         Some(bytes)
     }
-}
-
-/// Create a [`RString`] from a Rust str literal.
-///
-/// # Panics
-///
-/// Panics if called from a non-Ruby thread.
-///
-/// # Examples
-///
-/// ```
-/// ##[allow(deprecated)]
-/// use magnus::{Error, Ruby, r_string, rb_assert};
-///
-/// fn example(ruby: &Ruby) -> Result<(), Error> {
-/// #   #[allow(deprecated)]
-///     let s = r_string!("Hello, world!");
-///     rb_assert!(ruby, r#"s == "Hello, world!""#, s);
-///
-///     Ok(())
-/// }
-/// # Ruby::init(example).unwrap()
-/// ```
-#[deprecated(note = "please use `Ruby::utf8_str_new_static(c\"example\")` instead")]
-#[macro_export]
-macro_rules! r_string {
-    ($lit:expr_2021) => {{
-        #[allow(deprecated)]
-        $crate::r_string!($crate::Ruby::get().unwrap(), $lit)
-    }};
-    ($ruby:expr_2021, $lit:expr_2021) => {{
-        let s = concat!($lit, "\0");
-        let len = s.len() - 1;
-        unsafe {
-            #[allow(deprecated)]
-            $ruby.str_new_lit(s.as_ptr() as *const _, len as _)
-        }
-    }};
 }

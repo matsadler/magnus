@@ -50,8 +50,6 @@ impl DataType {
     /// `name` should be unique per wrapped type. It does not need to be a
     /// valid Ruby identifier.
     ///
-    /// See [`data_type_builder`](macro@crate::data_type_builder) to create a
-    /// `DataTypeBuilder` with a `'static CStr` `name` from a string literal.
     /// # Examples
     ///
     /// ```
@@ -237,24 +235,6 @@ pub struct DataTypeBuilder<T> {
     wb_protected: bool,
     frozen_shareable: bool,
     phantom: PhantomData<T>,
-}
-
-/// Create a new [`DataTypeBuilder`].
-///
-/// `name` should be unique per wrapped type. It does not need to be a
-/// valid Ruby identifier.
-///
-/// `data_type_builder!(Example, "example")` is equivalent to
-/// `DataTypeBuilder::<Example>::new` with a `name` argument of `"example"` as
-/// a `'static CStr`.
-#[deprecated(note = "please use `DataTypeBuilder::<Example>::new(c\"example\")` instead")]
-#[macro_export]
-macro_rules! data_type_builder {
-    ($t:ty, $name:literal) => {
-        $crate::typed_data::DataTypeBuilder::<$t>::new(unsafe {
-            std::ffi::CStr::from_bytes_with_nul_unchecked(concat!($name, "\0").as_bytes())
-        })
-    };
 }
 
 impl<T> DataTypeBuilder<T>

@@ -175,128 +175,6 @@ impl Compactor {
     }
 }
 
-/// Registers `value` to never be garbage collected.
-///
-/// This is essentially a deliberate memory leak.
-///
-/// # Panics
-///
-/// Panics if called from a non-Ruby thread. See
-/// [`Ruby::gc_register_mark_object`] for the non-panicking version.
-///
-/// # Examples
-///
-/// ```
-/// use magnus::{Error, Ruby, gc};
-///
-/// fn example(ruby: &Ruby) -> Result<(), Error> {
-///     // will never be collected
-///     let root = ruby.ary_new();
-/// #   #[allow(deprecated)]
-///     gc::register_mark_object(root);
-///
-///     // won't be collected while it is in our `root` array
-///     let s = ruby.str_new("example");
-///     root.push(s).unwrap();
-///
-///     Ok(())
-/// }
-/// # Ruby::init(example).unwrap()
-/// ```
-#[deprecated(note = "please use `Ruby::gc_register_mark_object` instead")]
-pub fn register_mark_object<T>(value: T)
-where
-    T: Mark,
-{
-    get_ruby!().gc_register_mark_object(value)
-}
-
-/// Inform Ruby's garbage collector that `valref` points to a live Ruby object.
-///
-/// Prevents Ruby moving or collecting `valref`. This should be used on
-/// `static` items to prevent them being collected instead of relying on Ruby
-/// constants/globals to always reference the value.
-///
-/// See also [`BoxValue`](crate::value::BoxValue).
-///
-/// # Panics
-///
-/// Panics if called from a non-Ruby thread. See [`Ruby::gc_register_address`]
-/// for the non-panicking version.
-///
-/// # Examples
-///
-/// ```
-/// use magnus::{Error, Ruby, gc};
-///
-/// fn example(ruby: &Ruby) -> Result<(), Error> {
-///     let s = ruby.str_new("example");
-///
-///     // s won't be collected even though it's on the heap
-///     let boxed = Box::new(s);
-/// #   #[allow(deprecated)]
-///     gc::register_address(&*boxed);
-///
-///     // ...
-///
-///     // allow s to be collected
-/// #   #[allow(deprecated)]
-///     gc::unregister_address(&*boxed);
-///     drop(boxed);
-///
-///     Ok(())
-/// }
-/// # Ruby::init(example).unwrap()
-/// ```
-#[deprecated(note = "please use `Ruby::gc_register_address` instead")]
-pub fn register_address<T>(valref: &T)
-where
-    T: Mark,
-{
-    get_ruby!().gc_register_address(valref)
-}
-
-/// Inform Ruby's garbage collector that `valref` that was previously
-/// registered with [`register_address`] no longer points to a live Ruby
-/// object.
-///
-/// # Panics
-///
-/// Panics if called from a non-Ruby thread. See
-/// [`Ruby::gc_unregister_address`] for the non-panicking version.
-///
-/// # Examples
-///
-/// ```
-/// use magnus::{Error, Ruby, gc};
-///
-/// fn example(ruby: &Ruby) -> Result<(), Error> {
-///     let s = ruby.str_new("example");
-///
-///     // s won't be collected even though it's on the heap
-///     let boxed = Box::new(s);
-/// #   #[allow(deprecated)]
-///     gc::register_address(&*boxed);
-///
-///     // ...
-///
-///     // allow s to be collected
-/// #   #[allow(deprecated)]
-///     gc::unregister_address(&*boxed);
-///     drop(boxed);
-///
-///     Ok(())
-/// }
-/// # Ruby::init(example).unwrap()
-/// ```
-#[deprecated(note = "please use `Ruby::gc_unregister_address` instead")]
-pub fn unregister_address<T>(valref: &T)
-where
-    T: Mark,
-{
-    get_ruby!().gc_unregister_address(valref)
-}
-
 /// # GC
 ///
 /// Functions for working with Ruby's Garbage Collector.
@@ -336,7 +214,7 @@ impl Ruby {
     /// Enable automatic GC run.
     ///
     /// Garbage Collection is enabled by default, calling this function only
-    /// makes sense if [`disable`] was previously called.
+    /// makes sense if [`Ruby::gc_disable`] was previously called.
     ///
     /// Returns `true` if GC was previously disabled, `false` otherwise.
     ///
@@ -469,7 +347,7 @@ impl Ruby {
         Ok(res)
     }
 
-    /// Returns all possible key/value pairs for [`stat`] as a Ruby Hash.
+    /// Returns all possible key/value pairs for [`Ruby::gc_stat`] as a Ruby Hash.
     ///
     /// # Examples
     ///
