@@ -1808,6 +1808,7 @@ pub mod exception;
 pub mod fiber;
 mod float;
 pub mod gc;
+pub mod gvl;
 mod integer;
 mod into_value;
 #[cfg(feature = "io")]
