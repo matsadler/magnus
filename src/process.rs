@@ -55,6 +55,8 @@ impl Ruby {
     /// # #[cfg(unix)]
     /// # Ruby::init(example).unwrap()
     /// ```
+    #[cfg(any(unix, windows))]
+    #[cfg_attr(docsrs, doc(cfg(any(unix, windows))))]
     pub fn waitpid(
         &self,
         pid: WaitTarget,
