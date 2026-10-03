@@ -13,6 +13,7 @@
 - `Ruby::waitpid` is now only available on Unix (this includes Linux and macOS)
   and Windows platforms so that Magnus may compile on non-unix/non-windows
   platforms, e.g wasi.
+- `Fixnum::to_u32` on 32-bit platforms would always return `RangeError`.
 
 ### Security
 
