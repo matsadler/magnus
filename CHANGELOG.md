@@ -10,26 +10,19 @@
 ### Removed
 
 ### Fixed
+
+### Security
+
+## [0.9.2] - 2026-10-02
+### Fixed
 - `Ruby::waitpid` is now only available on Unix (this includes Linux and macOS)
   and Windows platforms so that Magnus may compile on non-unix/non-windows
   platforms, e.g wasi.
 - `Fixnum::to_u32` on 32-bit platforms would always return `RangeError`.
 
-### Security
-
 ## [0.9.1] - 2026-09-28
-### Added
-
-### Changed
-
-### Deprecated
-
-### Removed
-
 ### Fixed
 - bump `quote` dependency to 1.0.37 in magnus-macros for `CString` support.
-
-### Security
 
 ## [0.9.0] - 2026-09-22
 ### Added
@@ -609,7 +602,8 @@
 - Pre-built bindings for Ruby 2.6 - 3.1 on common platforms, build-time
   generated bindings otherwise.
 
-[Unreleased]: https://github.com/matsadler/magnus/compare/0.9.1...HEAD
+[Unreleased]: https://github.com/matsadler/magnus/compare/0.9.2...HEAD
+[0.9.2]: https://github.com/matsadler/magnus/compare/0.9.1...0.9.2
 [0.9.1]: https://github.com/matsadler/magnus/compare/0.9.0...0.9.1
 [0.9.0]: https://github.com/matsadler/magnus/compare/0.8.2...0.9.0
 [0.8.2]: https://github.com/matsadler/magnus/compare/0.8.1...0.8.2
