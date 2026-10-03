@@ -10,6 +10,9 @@
 ### Removed
 
 ### Fixed
+- `Ruby::waitpid` is now only available on Unix (this includes Linux and macOS)
+  and Windows platforms so that Magnus may compile on non-unix/non-windows
+  platforms, e.g wasi.
 
 ### Security
 
