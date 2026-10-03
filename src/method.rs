@@ -12,13 +12,14 @@ use std::{
 
 use seq_macro::seq;
 
+#[cfg(feature = "debug")]
+use crate::debug::{DebugInspector, TracePoint};
 use crate::{
     Ruby,
     block::{
         Proc, Yield, YieldSplat, YieldValues, do_yield_iter, do_yield_splat_iter,
         do_yield_values_iter,
     },
-    debug::{DebugInspector, TracePoint},
     error::{Error, IntoError, raise},
     into_value::{ArgList, IntoValue},
     r_array::RArray,
@@ -507,6 +508,7 @@ where
 ///
 /// See the [`Ruby::debug_inspector_open`] function.
 #[doc(hidden)]
+#[cfg(feature = "debug")]
 pub trait DebugInspectorOpen<Res>
 where
     Self: Sized + FnOnce(DebugInspector) -> Res,
@@ -532,6 +534,7 @@ where
     }
 }
 
+#[cfg(feature = "debug")]
 impl<Func, Res> DebugInspectorOpen<Res> for Func
 where
     Func: FnOnce(DebugInspector) -> Res,
@@ -544,6 +547,7 @@ where
 ///
 /// See the [`Ruby::tracepoint_new`] function.
 #[doc(hidden)]
+#[cfg(feature = "debug")]
 pub trait TracePointNew<Res>
 where
     Self: Sized + FnMut(TracePoint) -> Res,
@@ -565,6 +569,7 @@ where
     }
 }
 
+#[cfg(feature = "debug")]
 impl<Func, Res> TracePointNew<Res> for Func
 where
     Func: FnMut(TracePoint) -> Res,

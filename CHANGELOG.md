@@ -2,8 +2,13 @@
 
 ## [Unreleased]
 ### Added
+- `Thread::tracepoint_new`.
 
 ### Changed
+- New `thread` and `debug` default features that can be disabled to skip
+  compilation of the `thread` and `debug` modules.
+- The `thread` argument to `Ruby::tracepoint_new` has been removed, see
+  `Thread::tracepoint_new` for tracing a specific thread.
 
 ### Deprecated
 

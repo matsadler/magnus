@@ -8,9 +8,9 @@ use rb_sys::{
     rb_thread_wakeup, rb_thread_wakeup_alive, timeval,
 };
 
-#[cfg(any(ruby_gte_3_3, docsrs))]
+#[cfg(any(all(ruby_gte_3_3, feature = "debug"), docsrs))]
 use crate::debug::FrameBuf;
-#[cfg(ruby_gte_3_3)]
+#[cfg(all(ruby_gte_3_3, feature = "debug"))]
 use crate::debug::profile_thread_frames_impl;
 use crate::{
     api::Ruby,
@@ -27,6 +27,11 @@ use crate::{
         IntoId, ReprValue, Value,
         private::{self, ReprValue as _},
     },
+};
+#[cfg(feature = "debug")]
+use crate::{
+    debug::{self, Events, TracePoint},
+    method::InitReturn,
 };
 
 /// # `Thread`
@@ -639,8 +644,8 @@ impl Thread {
     /// }
     /// # Ruby::init(example).unwrap()
     /// ```
-    #[cfg(any(ruby_gte_3_3, docsrs))]
-    #[cfg_attr(docsrs, doc(cfg(ruby_gte_3_3)))]
+    #[cfg(any(all(ruby_gte_3_3, feature = "debug"), docsrs))]
+    #[cfg_attr(docsrs, doc(cfg(all(ruby_gte_3_3, feature = "debug"))))]
     pub fn profile_frames<const N: usize>(self, buf: &mut FrameBuf<N>) {
         unsafe {
             buf.filled = profile_thread_frames_impl(self, 0, &mut buf.frames, Some(&mut buf.lines));
@@ -691,13 +696,30 @@ impl Thread {
     /// }
     /// # Ruby::init(example).unwrap()
     /// ```
-    #[cfg(any(ruby_gte_3_4, docsrs))]
-    #[cfg_attr(docsrs, doc(cfg(ruby_gte_3_4)))]
+    #[cfg(any(all(ruby_gte_3_4, feature = "debug"), docsrs))]
+    #[cfg_attr(docsrs, doc(cfg(all(ruby_gte_3_4, feature = "debug"))))]
     pub fn profile_frames_starting<const N: usize>(self, start: usize, buf: &mut FrameBuf<N>) {
         unsafe {
             buf.filled =
                 profile_thread_frames_impl(self, start, &mut buf.frames, Some(&mut buf.lines));
         }
+    }
+
+    /// Create a new [`TracePoint`], registering a callback for a set of
+    /// [`Events`].
+    ///
+    /// An instance of `TracePoint` does not start tracing on creation, it must
+    /// be started [`TracePoint::enable`] to take effect.
+    ///
+    /// See [`Ruby::tracepoint_new`] for tracing across all threads.
+    #[cfg(feature = "debug")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "debug")))]
+    pub fn tracepoint_new<F, R>(&self, events: Events, func: F) -> TracePoint
+    where
+        F: 'static + Send + FnMut(TracePoint) -> R,
+        R: InitReturn,
+    {
+        debug::tracepoint_new_impl(self.as_value(), events, func)
     }
 }
 

@@ -1797,6 +1797,8 @@ mod macros;
 mod api;
 pub mod block;
 pub mod class;
+#[cfg(feature = "debug")]
+#[cfg_attr(docsrs, doc(cfg(feature = "debug")))]
 pub mod debug;
 #[cfg(feature = "embed")]
 #[cfg_attr(docsrs, doc(cfg(feature = "embed")))]
@@ -1846,6 +1848,8 @@ mod range;
 pub mod rb_sys;
 pub mod scan_args;
 pub mod symbol;
+#[cfg(feature = "thread")]
+#[cfg_attr(docsrs, doc(cfg(feature = "thread")))]
 mod thread;
 pub mod time;
 pub mod try_convert;
@@ -1864,6 +1868,9 @@ use ::rb_sys::{
 };
 pub use magnus_macros::{DataTypeFunctions, TypedData, init, wrap};
 
+#[cfg(feature = "thread")]
+#[cfg_attr(docsrs, doc(cfg(feature = "thread")))]
+pub use crate::thread::Thread;
 #[cfg(ruby_use_flonum)]
 pub use crate::value::Flonum;
 pub use crate::{
@@ -1895,7 +1902,6 @@ pub use crate::{
     r_typed_data::RTypedData,
     range::Range,
     symbol::Symbol,
-    thread::Thread,
     time::Time,
     try_convert::TryConvert,
     typed_data::{DataType, DataTypeFunctions, TypedData},

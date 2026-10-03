@@ -1,0 +1,13 @@
+#!/bin/sh
+
+export RUSTFLAGS="-Dwarnings"
+
+FEATURES="$(cargo metadata --no-deps --format-version 1 | jq -r '.packages | first(.[] | select(.name == "magnus")).features | keys.[]')"
+
+for FEATURE in $FEATURES; do
+  if cargo check --no-default-features --features "$FEATURE" > /dev/null 2>&1; then
+    echo ✅ "$FEATURE"
+  else
+    echo ❌ cargo check --no-default-features --features "$FEATURE"
+  fi
+done

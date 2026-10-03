@@ -13,6 +13,8 @@ use std::{
     slice,
 };
 
+#[cfg(all(ruby_gte_3_3, feature = "thread"))]
+use rb_sys::rb_profile_thread_frames;
 use rb_sys::{
     RUBY_EVENT_ALL, RUBY_EVENT_B_CALL, RUBY_EVENT_B_RETURN, RUBY_EVENT_C_CALL, RUBY_EVENT_C_RETURN,
     RUBY_EVENT_CALL, RUBY_EVENT_CLASS, RUBY_EVENT_END, RUBY_EVENT_FIBER_SWITCH, RUBY_EVENT_LINE,
@@ -35,7 +37,7 @@ use rb_sys::{
 #[cfg(ruby_gte_3_3)]
 use rb_sys::{
     RUBY_EVENT_RESCUE, rb_postponed_job_handle_t, rb_postponed_job_preregister,
-    rb_postponed_job_trigger, rb_profile_thread_frames,
+    rb_postponed_job_trigger,
 };
 #[cfg(ruby_gte_3_2)]
 use rb_sys::{rb_debug_inspector_current_depth, rb_debug_inspector_frame_depth};
@@ -44,6 +46,8 @@ use rb_sys::{rb_tracearg_eval_script, rb_tracearg_instruction_sequence, rb_trace
 
 #[cfg(ruby_gte_3_3)]
 use crate::error::bug_from_panic;
+#[cfg(feature = "thread")]
+use crate::thread::Thread;
 use crate::{
     api::Ruby,
     class::RClass,
@@ -57,7 +61,6 @@ use crate::{
     object::Object,
     r_array::RArray,
     r_string::RString,
-    thread::Thread,
     try_convert::TryConvert,
     typed_data::{DataType, DataTypeBuilder, DataTypeFunctions},
     value::{
@@ -255,44 +258,14 @@ impl Ruby {
     ///
     /// An instance of `TracePoint` does not start tracing on creation, it must
     /// be started [`TracePoint::enable`] to take effect.
-    pub fn tracepoint_new<F, R>(
-        &self,
-        thread: Option<Thread>,
-        events: Events,
-        func: F,
-    ) -> TracePoint
+    ///
+    /// See [`Thread::tracepoint_new`] for tracing a specific thread.
+    pub fn tracepoint_new<F, R>(&self, events: Events, func: F) -> TracePoint
     where
         F: 'static + Send + FnMut(TracePoint) -> R,
         R: InitReturn,
     {
-        unsafe extern "C" fn call<F, R>(tpval: VALUE, data: *mut c_void)
-        where
-            F: FnMut(TracePoint) -> R,
-            R: InitReturn,
-        {
-            unsafe {
-                let closure = &mut *(data as *mut F);
-                closure.call_handle_error(TracePoint::from_rb_value_unchecked(tpval))
-            }
-        }
-
-        let (closure, keepalive) = wrap_closure(func);
-        let call_func = call::<F, R> as unsafe extern "C" fn(VALUE, *mut c_void);
-
-        let tp = unsafe {
-            TracePoint::from_rb_value_unchecked(rb_tracepoint_new(
-                thread
-                    .map(|t| t.as_value())
-                    .unwrap_or(self.qnil().as_value())
-                    .as_rb_value(),
-                events.0,
-                Some(call_func),
-                closure as *mut c_void,
-            ))
-        };
-        // ivar without @ prefix is invisible from Ruby
-        tp.ivar_set("__rust_closure", keepalive).unwrap();
-        tp
+        tracepoint_new_impl(self.qnil().as_value(), events, func)
     }
 
     /// Register a function in Ruby's postponed job table.
@@ -369,6 +342,38 @@ impl Ruby {
             unsafe { rb_postponed_job_preregister(0, Some(call_func), closure as *mut c_void) };
         (handle != rb_postponed_job_handle_t::MAX).then_some(PostponedJobHandle(handle))
     }
+}
+
+pub(crate) fn tracepoint_new_impl<F, R>(thread: Value, events: Events, func: F) -> TracePoint
+where
+    F: 'static + Send + FnMut(TracePoint) -> R,
+    R: InitReturn,
+{
+    unsafe extern "C" fn call<F, R>(tpval: VALUE, data: *mut c_void)
+    where
+        F: FnMut(TracePoint) -> R,
+        R: InitReturn,
+    {
+        unsafe {
+            let closure = &mut *(data as *mut F);
+            closure.call_handle_error(TracePoint::from_rb_value_unchecked(tpval))
+        }
+    }
+
+    let (closure, keepalive) = wrap_closure(func);
+    let call_func = call::<F, R> as unsafe extern "C" fn(VALUE, *mut c_void);
+
+    let tp = unsafe {
+        TracePoint::from_rb_value_unchecked(rb_tracepoint_new(
+            thread.as_rb_value(),
+            events.0,
+            Some(call_func),
+            closure as *mut c_void,
+        ))
+    };
+    // ivar without @ prefix is invisible from Ruby
+    tp.ivar_set("__rust_closure", keepalive).unwrap();
+    tp
 }
 
 /// A handle to a function registered in Ruby's postponed job table.
@@ -824,7 +829,7 @@ unsafe fn profile_frames_impl<const N: usize>(
     }
 }
 
-#[cfg(ruby_gte_3_3)]
+#[cfg(all(ruby_gte_3_3, feature = "thread"))]
 pub(crate) unsafe fn profile_thread_frames_impl<const N: usize>(
     thread: Thread,
     start: usize,
@@ -982,7 +987,8 @@ impl<'a> DebugInspector<'a> {
     }
 }
 
-/// Event types for use with [`Ruby::tracepoint_new`].
+/// Event types for use with [`Ruby::tracepoint_new`] and
+/// [`Thread::tracepoint_new`].
 #[derive(Clone, Copy, Default)]
 #[repr(transparent)]
 pub struct Events(rb_event_flag_t);
@@ -1210,6 +1216,9 @@ impl Events {
 }
 
 /// Wrapper type for a Value known to be an instance of Ruby's TracePoint class.
+///
+/// See [`Ruby::tracepoint_new`] and [`Thread::tracepoint_new`] for creating a
+/// `TracePoint`.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct TracePoint(NonZeroValue);
@@ -1256,7 +1265,7 @@ impl TracePoint {
     /// use magnus::{Error, Ruby, debug::Events};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
-    ///     let trace = ruby.tracepoint_new(None, Events::new().call(), |tp| {
+    ///     let trace = ruby.tracepoint_new(Events::new().call(), |tp| {
     ///         dbg!(tp.tracearg()?.defined_class());
     ///         Ok::<_, Error>(())
     ///     });
@@ -1283,7 +1292,7 @@ impl TracePoint {
     /// use magnus::{Error, Ruby, debug::Events};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
-    ///     let trace = ruby.tracepoint_new(None, Events::new().call(), |tp| {
+    ///     let trace = ruby.tracepoint_new(Events::new().call(), |tp| {
     ///         dbg!(tp.tracearg()?.defined_class());
     ///         Ok::<_, Error>(())
     ///     });
@@ -1310,7 +1319,7 @@ impl TracePoint {
     /// use magnus::{Error, Ruby, debug::Events};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
-    ///     let trace = ruby.tracepoint_new(None, Events::new().call(), |tp| {
+    ///     let trace = ruby.tracepoint_new(Events::new().call(), |tp| {
     ///         dbg!(tp.tracearg()?.defined_class());
     ///         Ok::<_, Error>(())
     ///     });
@@ -1338,7 +1347,7 @@ impl TracePoint {
     /// static CALLS: Mutex<Vec<String>> = Mutex::new(Vec::new());
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
-    ///     let trace = ruby.tracepoint_new(None, Events::new().call(), |tp| {
+    ///     let trace = ruby.tracepoint_new(Events::new().call(), |tp| {
     ///         let id = tp.tracearg()?.method_id();
     ///         CALLS
     ///             .lock()
@@ -1444,7 +1453,7 @@ impl<'a> TraceArg<'a> {
     ///
     /// # static SUCCESS: AtomicBool = AtomicBool::new(false);
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
-    ///     let trace = ruby.tracepoint_new(None, Events::new().c_call(), |tp| {
+    ///     let trace = ruby.tracepoint_new(Events::new().c_call(), |tp| {
     ///         assert!(tp.tracearg()?.event_flag().is_c_call());
     /// #       SUCCESS.store(true, Ordering::Relaxed);
     ///         Ok::<_, Error>(())
@@ -1472,7 +1481,7 @@ impl<'a> TraceArg<'a> {
     ///
     /// # static SUCCESS: AtomicBool = AtomicBool::new(false);
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
-    ///     let trace = ruby.tracepoint_new(None, Events::new().c_call(), |tp| {
+    ///     let trace = ruby.tracepoint_new(Events::new().c_call(), |tp| {
     ///         assert_eq!(tp.tracearg()?.event(), Ruby::get_with(tp).sym_new("c_call"));
     /// #       SUCCESS.store(true, Ordering::Relaxed);
     ///         Ok::<_, Error>(())
@@ -1502,7 +1511,7 @@ impl<'a> TraceArg<'a> {
     ///
     /// # static SUCCESS: AtomicBool = AtomicBool::new(false);
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
-    ///     let trace = ruby.tracepoint_new(None, Events::new().c_call(), |tp| {
+    ///     let trace = ruby.tracepoint_new(Events::new().c_call(), |tp| {
     ///         assert!(tp.tracearg()?.lineno().is_none());
     /// #       SUCCESS.store(true, Ordering::Relaxed);
     ///         Ok::<_, Error>(())
@@ -1535,7 +1544,7 @@ impl<'a> TraceArg<'a> {
     ///
     /// # static SUCCESS: AtomicBool = AtomicBool::new(false);
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
-    ///     let trace = ruby.tracepoint_new(None, Events::new().c_call(), |tp| {
+    ///     let trace = ruby.tracepoint_new(Events::new().c_call(), |tp| {
     ///         assert_eq!(
     ///             tp.tracearg()?.path().and_then(|p| p.to_string().ok()),
     ///             // note, the path being "-e" in this example is an
@@ -1576,7 +1585,7 @@ impl<'a> TraceArg<'a> {
     ///
     /// # static SUCCESS: AtomicBool = AtomicBool::new(false);
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
-    ///     let trace = ruby.tracepoint_new(None, Events::new().event_return(), |tp| {
+    ///     let trace = ruby.tracepoint_new(Events::new().event_return(), |tp| {
     ///         let res: bool = eval!(
     ///             Ruby::get_with(tp),
     ///             "parameters == [[:req, :bar], [:opt, :baz], [:key, :qux]]",
@@ -1615,7 +1624,7 @@ impl<'a> TraceArg<'a> {
     ///
     /// # static SUCCESS: AtomicBool = AtomicBool::new(false);
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
-    ///     let trace = ruby.tracepoint_new(None, Events::new().c_call(), |tp| {
+    ///     let trace = ruby.tracepoint_new(Events::new().c_call(), |tp| {
     ///         assert_eq!(
     ///             tp.tracearg()?.method_id(),
     ///             Some(Ruby::get_with(tp).sym_new("foo"))
@@ -1653,7 +1662,7 @@ impl<'a> TraceArg<'a> {
     ///
     /// # static SUCCESS: AtomicBool = AtomicBool::new(false);
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
-    ///     let trace = ruby.tracepoint_new(None, Events::new().c_call(), |tp| {
+    ///     let trace = ruby.tracepoint_new(Events::new().c_call(), |tp| {
     ///         assert_eq!(
     ///             tp.tracearg()?.callee_id(),
     ///             Some(Ruby::get_with(tp).sym_new("bar"))
@@ -1691,7 +1700,7 @@ impl<'a> TraceArg<'a> {
     ///
     /// # static SUCCESS: AtomicBool = AtomicBool::new(false);
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
-    ///     let trace = ruby.tracepoint_new(None, Events::new().call(), |tp| {
+    ///     let trace = ruby.tracepoint_new(Events::new().call(), |tp| {
     ///         assert!(
     ///             tp.tracearg()?.defined_class().unwrap().equal(
     ///                 Ruby::get_with(tp)
@@ -1742,7 +1751,7 @@ impl<'a> TraceArg<'a> {
     ///
     /// # static SUCCESS: AtomicBool = AtomicBool::new(false);
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
-    ///     let trace = ruby.tracepoint_new(None, Events::new().call(), |tp| {
+    ///     let trace = ruby.tracepoint_new(Events::new().call(), |tp| {
     ///         let ruby = Ruby::get_with(tp);
     ///         let binding = tp
     ///             .tracearg()?
@@ -1788,7 +1797,7 @@ impl<'a> TraceArg<'a> {
     ///
     /// # static SUCCESS: AtomicBool = AtomicBool::new(false);
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
-    ///     let trace = ruby.tracepoint_new(None, Events::new().c_call(), |tp| {
+    ///     let trace = ruby.tracepoint_new(Events::new().c_call(), |tp| {
     ///         let trace_self = tp.tracearg()?.tracearg_self();
     ///         assert!(
     ///             trace_self.is_kind_of(
@@ -1826,7 +1835,7 @@ impl<'a> TraceArg<'a> {
     ///
     /// # static SUCCESS: AtomicBool = AtomicBool::new(false);
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
-    ///     let trace = ruby.tracepoint_new(None, Events::new().c_return(), |tp| {
+    ///     let trace = ruby.tracepoint_new(Events::new().c_return(), |tp| {
     ///         let return_value = tp.tracearg()?.return_value()?;
     ///         assert_eq!(String::try_convert(return_value)?, "foo");
     /// #       SUCCESS.store(true, Ordering::Relaxed);
@@ -1857,7 +1866,7 @@ impl<'a> TraceArg<'a> {
     ///
     /// # static SUCCESS: AtomicBool = AtomicBool::new(false);
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
-    ///     let trace = ruby.tracepoint_new(None, Events::new().raise(), |tp| {
+    ///     let trace = ruby.tracepoint_new(Events::new().raise(), |tp| {
     ///         let err = tp.tracearg()?.raised_exception()?;
     ///         assert!(err.is_kind_of(Ruby::get_with(tp).exception_type_error()));
     /// #       SUCCESS.store(true, Ordering::Relaxed);
