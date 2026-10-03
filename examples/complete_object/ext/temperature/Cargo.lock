@@ -114,7 +114,7 @@ dependencies = [
 
 [[package]]
 name = "magnus"
-version = "0.8.2"
+version = "0.8.3"
 dependencies = [
  "magnus-macros",
  "rb-sys",
