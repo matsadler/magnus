@@ -2626,7 +2626,7 @@ impl Fixnum {
             ));
         }
         let res = self.to_isize();
-        if res > u32::MAX as isize {
+        if res as u64 > u32::MAX as u64 {
             return Err(Error::new(
                 handle.exception_range_error(),
                 "fixnum too big to convert into `u32`",
