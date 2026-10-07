@@ -425,6 +425,19 @@ where
         }
     }
 
+    // The exception Ruby was already handling, if any. `rb_protect` catching a
+    // raise is the equivalent of a Ruby `rescue`, so on catching an exception
+    // `$!` must be put back to this value, not cleared. Clearing it would
+    // destroy the state of an exception that is still propagating through an
+    // outer frame (for example when Ruby calls into Rust from a signal trap
+    // handler, an `ensure` block, or a `rescue` body), leaving the VM to unwind
+    // with `ec->errinfo == nil`, which segfaults the interpreter.
+    // See https://bugs.ruby-lang.org/issues/22240.
+    //
+    // This local is on the machine stack for the duration of the protected
+    // call, so Ruby's conservative stack scan keeps the exception alive even
+    // while `ec->errinfo` no longer references it.
+    let prev_errinfo = unsafe { rb_errinfo() };
     // Tag::None
     let mut state = 0;
     // rb_protect takes:
@@ -451,7 +464,7 @@ where
         // Tag::Raise
         6 => unsafe {
             let ex = Exception::from_rb_value_unchecked(rb_errinfo());
-            rb_set_errinfo(Ruby::get_unchecked().qnil().as_rb_value());
+            rb_set_errinfo(prev_errinfo);
             Err(ex.into())
         },
         other => Err(Error::from_tag(unsafe { transmute::<i32, Tag>(other) })),

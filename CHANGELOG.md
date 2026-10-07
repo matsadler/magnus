@@ -22,6 +22,12 @@
   `"example".into_r_string_with(&Ruby::get_unchecked())`.
 
 ### Fixed
+- Catching a Ruby exception (e.g. in `Ruby::eval`, or any API that may raise)
+  no longer clears `$!`. It is now restored to the exception Ruby was already
+  handling, matching the semantics of a Ruby `rescue`. Clearing it corrupted
+  the interpreter's unwind state when Rust was called while an exception was
+  propagating, crashing Ruby with `ec->errinfo == nil`
+  (https://bugs.ruby-lang.org/issues/22240).
 
 ### Security
 
