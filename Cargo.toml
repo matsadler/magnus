@@ -21,13 +21,15 @@ exclude = [
 ]
 
 [features]
-default = ["debug", "io", "fiber", "thread"]
+default = ["debug", "io", "fiber", "r_match", "r_regexp", "thread"]
 bytes = ["dep:bytes"]
 chrono = ["dep:chrono"]
 debug = []
 embed = ["rb-sys/link-ruby"]
 fiber = []
 io = []
+r_match = []
+r_regexp = []
 rb-sys = []
 thread = []
 

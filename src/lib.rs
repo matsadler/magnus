@@ -1837,9 +1837,13 @@ mod r_complex;
 mod r_file;
 mod r_float;
 pub mod r_hash;
+#[cfg(feature = "r_match")]
+#[cfg_attr(docsrs, doc(cfg(feature = "r_match")))]
 mod r_match;
 mod r_object;
 mod r_rational;
+#[cfg(feature = "r_regexp")]
+#[cfg_attr(docsrs, doc(cfg(feature = "r_regexp")))]
 pub mod r_regexp;
 pub mod r_string;
 pub mod r_struct;
@@ -1863,16 +1867,24 @@ use std::{
     mem::transmute,
 };
 
+#[cfg(feature = "r_match")]
+use ::rb_sys::rb_backref_get;
 use ::rb_sys::{
-    VALUE, rb_alias_variable, rb_backref_get, rb_call_super_kw, rb_current_receiver,
-    rb_define_class, rb_define_global_const, rb_define_global_function, rb_define_module,
-    rb_define_variable, rb_errinfo, rb_eval_string_protect, rb_require_string, rb_set_errinfo,
+    VALUE, rb_alias_variable, rb_call_super_kw, rb_current_receiver, rb_define_class,
+    rb_define_global_const, rb_define_global_function, rb_define_module, rb_define_variable,
+    rb_errinfo, rb_eval_string_protect, rb_require_string, rb_set_errinfo,
 };
 pub use magnus_macros::{DataTypeFunctions, TypedData, init, wrap};
 
 #[cfg(feature = "fiber")]
 #[cfg_attr(docsrs, doc(cfg(feature = "fiber")))]
 pub use crate::fiber::Fiber;
+#[cfg(feature = "r_match")]
+#[cfg_attr(docsrs, doc(cfg(feature = "r_match")))]
+pub use crate::r_match::RMatch;
+#[cfg(feature = "r_regexp")]
+#[cfg_attr(docsrs, doc(cfg(feature = "r_regexp")))]
+pub use crate::r_regexp::RRegexp;
 #[cfg(feature = "thread")]
 #[cfg_attr(docsrs, doc(cfg(feature = "thread")))]
 pub use crate::thread::Thread;
@@ -1897,10 +1909,8 @@ pub use crate::{
     r_file::RFile,
     r_float::RFloat,
     r_hash::RHash,
-    r_match::RMatch,
     r_object::RObject,
     r_rational::RRational,
-    r_regexp::RRegexp,
     r_string::RString,
     r_struct::RStruct,
     r_typed_data::RTypedData,
@@ -2322,6 +2332,8 @@ impl Ruby {
     /// }
     /// # Ruby::init(example).unwrap()
     /// ```
+    #[cfg(feature = "r_match")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "r_match")))]
     pub fn backref_get(&self) -> Option<RMatch> {
         unsafe {
             let value = Value::new(rb_backref_get());

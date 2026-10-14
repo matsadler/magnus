@@ -5,8 +5,8 @@
 - `Thread::tracepoint_new`.
 
 ### Changed
-- New `debug`, `fiber`, and `thread` default features that can be disabled to
-  skip compilation of the respective modules.
+- New `debug`, `fiber`, `r_match`, `r_regexp`, and `thread` default features
+  that can be disabled to skip compilation of the respective modules.
 - The `thread` argument to `Ruby::tracepoint_new` has been removed, see
   `Thread::tracepoint_new` for tracing a specific thread.
 
