@@ -1846,8 +1846,12 @@ mod r_rational;
 #[cfg_attr(docsrs, doc(cfg(feature = "r_regexp")))]
 pub mod r_regexp;
 pub mod r_string;
+#[cfg(feature = "r_struct")]
+#[cfg_attr(docsrs, doc(cfg(feature = "r_struct")))]
 pub mod r_struct;
 mod r_typed_data;
+#[cfg(feature = "range")]
+#[cfg_attr(docsrs, doc(cfg(feature = "range")))]
 mod range;
 #[cfg(feature = "rb-sys")]
 #[cfg_attr(docsrs, doc(cfg(feature = "rb-sys")))]
@@ -1885,6 +1889,12 @@ pub use crate::r_match::RMatch;
 #[cfg(feature = "r_regexp")]
 #[cfg_attr(docsrs, doc(cfg(feature = "r_regexp")))]
 pub use crate::r_regexp::RRegexp;
+#[cfg(feature = "r_struct")]
+#[cfg_attr(docsrs, doc(cfg(feature = "r_struct")))]
+pub use crate::r_struct::RStruct;
+#[cfg(feature = "range")]
+#[cfg_attr(docsrs, doc(cfg(feature = "range")))]
+pub use crate::range::Range;
 #[cfg(feature = "thread")]
 #[cfg_attr(docsrs, doc(cfg(feature = "thread")))]
 pub use crate::thread::Thread;
@@ -1912,9 +1922,7 @@ pub use crate::{
     r_object::RObject,
     r_rational::RRational,
     r_string::RString,
-    r_struct::RStruct,
     r_typed_data::RTypedData,
-    range::Range,
     symbol::Symbol,
     time::Time,
     try_convert::TryConvert,

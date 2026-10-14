@@ -12,8 +12,8 @@ use std::{
 #[cfg(ruby_gte_3_3)]
 use rb_sys::rb_data_define;
 use rb_sys::{
-    VALUE, rb_struct_aref, rb_struct_aset, rb_struct_define, rb_struct_getmember,
-    rb_struct_members, rb_struct_size, ruby_value_type,
+    rb_struct_aref, rb_struct_aset, rb_struct_define, rb_struct_getmember, rb_struct_members,
+    rb_struct_size, ruby_value_type,
 };
 use seq_macro::seq;
 
@@ -65,7 +65,8 @@ impl RStruct {
         }
     }
 
-    pub(crate) unsafe fn from_rb_value_unchecked(val: VALUE) -> Self {
+    #[cfg(feature = "range")]
+    pub(crate) unsafe fn from_rb_value_unchecked(val: rb_sys::VALUE) -> Self {
         unsafe { Self(NonZeroValue::new_unchecked(Value::new(val))) }
     }
 
