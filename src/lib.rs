@@ -1807,6 +1807,8 @@ pub mod encoding;
 mod enumerator;
 pub mod error;
 pub mod exception;
+#[cfg(feature = "fiber")]
+#[cfg_attr(docsrs, doc(cfg(feature = "fiber")))]
 pub mod fiber;
 mod float;
 pub mod gc;
@@ -1868,6 +1870,9 @@ use ::rb_sys::{
 };
 pub use magnus_macros::{DataTypeFunctions, TypedData, init, wrap};
 
+#[cfg(feature = "fiber")]
+#[cfg_attr(docsrs, doc(cfg(feature = "fiber")))]
+pub use crate::fiber::Fiber;
 #[cfg(feature = "thread")]
 #[cfg_attr(docsrs, doc(cfg(feature = "thread")))]
 pub use crate::thread::Thread;
@@ -1879,7 +1884,6 @@ pub use crate::{
     enumerator::Enumerator,
     error::Error,
     exception::{Exception, ExceptionClass},
-    fiber::Fiber,
     float::Float,
     integer::Integer,
     into_value::{ArgList, IntoValue, IntoValueFromNative, KwArgs, RArrayArgList},
