@@ -2,16 +2,20 @@ use std::{ffi::c_void, fmt, mem::size_of, slice, time::Duration};
 
 use rb_sys::{
     VALUE, rb_data_typed_object_wrap, rb_thread_alone, rb_thread_check_ints, rb_thread_create,
-    rb_thread_current, rb_thread_fd_writable, rb_thread_interrupted, rb_thread_kill,
-    rb_thread_local_aref, rb_thread_local_aset, rb_thread_main, rb_thread_run, rb_thread_schedule,
-    rb_thread_sleep_deadly, rb_thread_sleep_forever, rb_thread_wait_fd, rb_thread_wait_for,
-    rb_thread_wakeup, rb_thread_wakeup_alive, timeval,
+    rb_thread_current, rb_thread_interrupted, rb_thread_kill, rb_thread_local_aref,
+    rb_thread_local_aset, rb_thread_main, rb_thread_run, rb_thread_schedule,
+    rb_thread_sleep_deadly, rb_thread_sleep_forever, rb_thread_wait_for, rb_thread_wakeup,
+    rb_thread_wakeup_alive, timeval,
 };
+#[cfg(feature = "r_file")]
+use rb_sys::{rb_thread_fd_writable, rb_thread_wait_fd};
 
 #[cfg(any(all(ruby_gte_3_3, feature = "debug"), docsrs))]
 use crate::debug::FrameBuf;
 #[cfg(all(ruby_gte_3_3, feature = "debug"))]
 use crate::debug::profile_thread_frames_impl;
+#[cfg(feature = "r_file")]
+use crate::r_file::fd::AsRawFd;
 use crate::{
     api::Ruby,
     error::{Error, protect},
@@ -19,7 +23,6 @@ use crate::{
     into_value::IntoValue,
     method::{BlockReturn, Thread as _},
     object::Object,
-    r_file::fd::AsRawFd,
     r_typed_data::RTypedData,
     try_convert::TryConvert,
     typed_data::{DataType, DataTypeBuilder, DataTypeFunctions},
@@ -219,6 +222,8 @@ impl Ruby {
     /// # Ruby::init(example).unwrap()
     /// # }
     /// ```
+    #[cfg(feature = "r_file")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "r_file")))]
     pub fn thread_wait_fd<T>(&self, fd: &T) -> Result<(), Error>
     where
         T: AsRawFd,
@@ -263,6 +268,8 @@ impl Ruby {
     /// # Ruby::init(example).unwrap()
     /// # }
     /// ```
+    #[cfg(feature = "r_file")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "r_file")))]
     pub fn thread_fd_writable<T>(&self, fd: &T) -> Result<(), Error>
     where
         T: AsRawFd,

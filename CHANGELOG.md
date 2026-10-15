@@ -5,9 +5,9 @@
 - `Thread::tracepoint_new`.
 
 ### Changed
-- New `debug`, `fiber`, `mutex`, `numeric`, `range`, `r_complex`, `r_match`,
-  `r_rational`, `r_regexp`, `r_struct`, `thread`, and `time` default features
-  that can be disabled to skip compilation of the respective modules.
+- New `debug`, `fiber`, `mutex`, `numeric`, `range`, `r_complex`, `r_file`,
+  `r_match`, `r_rational`, `r_regexp`, `r_struct`, `thread`, and `time` default
+  features that can be disabled to skip compilation of the respective modules.
 - The `thread` argument to `Ruby::tracepoint_new` has been removed, see
   `Thread::tracepoint_new` for tracing a specific thread.
 

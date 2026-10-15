@@ -1842,6 +1842,8 @@ mod r_bignum;
 #[cfg(feature = "r_complex")]
 #[cfg_attr(docsrs, doc(cfg(feature = "r_complex")))]
 mod r_complex;
+#[cfg(feature = "r_file")]
+#[cfg_attr(docsrs, doc(cfg(feature = "r_file")))]
 mod r_file;
 mod r_float;
 pub mod r_hash;
@@ -1904,6 +1906,9 @@ pub use crate::numeric::Numeric;
 #[cfg(feature = "r_complex")]
 #[cfg_attr(docsrs, doc(cfg(feature = "r_complex")))]
 pub use crate::r_complex::RComplex;
+#[cfg(feature = "r_file")]
+#[cfg_attr(docsrs, doc(cfg(feature = "r_file")))]
+pub use crate::r_file::RFile;
 #[cfg(feature = "r_match")]
 #[cfg_attr(docsrs, doc(cfg(feature = "r_match")))]
 pub use crate::r_match::RMatch;
@@ -1940,7 +1945,6 @@ pub use crate::{
     object::Object,
     r_array::RArray,
     r_bignum::RBignum,
-    r_file::RFile,
     r_float::RFloat,
     r_hash::RHash,
     r_object::RObject,
