@@ -1820,19 +1820,25 @@ pub mod io;
 pub mod method;
 pub mod module;
 mod mutex;
+#[cfg(feature = "numeric")]
+#[cfg_attr(docsrs, doc(cfg(feature = "numeric")))]
 pub mod numeric;
 mod object;
 pub mod process;
 /// Traits that commonly should be in scope.
 pub mod prelude {
+    #[cfg(feature = "numeric")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "numeric")))]
+    pub use crate::numeric::Numeric as _;
     pub use crate::{
         class::Class as _, encoding::EncodingCapable as _, module::Module as _,
-        numeric::Numeric as _, object::Object as _, try_convert::TryConvert as _,
-        value::ReprValue as _,
+        object::Object as _, try_convert::TryConvert as _, value::ReprValue as _,
     };
 }
 pub mod r_array;
 mod r_bignum;
+#[cfg(feature = "r_complex")]
+#[cfg_attr(docsrs, doc(cfg(feature = "r_complex")))]
 mod r_complex;
 mod r_file;
 mod r_float;
@@ -1841,6 +1847,8 @@ pub mod r_hash;
 #[cfg_attr(docsrs, doc(cfg(feature = "r_match")))]
 mod r_match;
 mod r_object;
+#[cfg(feature = "r_rational")]
+#[cfg_attr(docsrs, doc(cfg(feature = "r_rational")))]
 mod r_rational;
 #[cfg(feature = "r_regexp")]
 #[cfg_attr(docsrs, doc(cfg(feature = "r_regexp")))]
@@ -1883,9 +1891,18 @@ pub use magnus_macros::{DataTypeFunctions, TypedData, init, wrap};
 #[cfg(feature = "fiber")]
 #[cfg_attr(docsrs, doc(cfg(feature = "fiber")))]
 pub use crate::fiber::Fiber;
+#[cfg(feature = "numeric")]
+#[cfg_attr(docsrs, doc(cfg(feature = "numeric")))]
+pub use crate::numeric::Numeric;
+#[cfg(feature = "r_complex")]
+#[cfg_attr(docsrs, doc(cfg(feature = "r_complex")))]
+pub use crate::r_complex::RComplex;
 #[cfg(feature = "r_match")]
 #[cfg_attr(docsrs, doc(cfg(feature = "r_match")))]
 pub use crate::r_match::RMatch;
+#[cfg(feature = "r_rational")]
+#[cfg_attr(docsrs, doc(cfg(feature = "r_rational")))]
+pub use crate::r_rational::RRational;
 #[cfg(feature = "r_regexp")]
 #[cfg_attr(docsrs, doc(cfg(feature = "r_regexp")))]
 pub use crate::r_regexp::RRegexp;
@@ -1911,16 +1928,13 @@ pub use crate::{
     into_value::{ArgList, IntoValue, IntoValueFromNative, KwArgs, RArrayArgList},
     module::{Attr, Module, RModule},
     mutex::Mutex,
-    numeric::Numeric,
     object::Object,
     r_array::RArray,
     r_bignum::RBignum,
-    r_complex::RComplex,
     r_file::RFile,
     r_float::RFloat,
     r_hash::RHash,
     r_object::RObject,
-    r_rational::RRational,
     r_string::RString,
     r_typed_data::RTypedData,
     symbol::Symbol,

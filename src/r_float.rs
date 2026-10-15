@@ -2,6 +2,8 @@ use std::fmt;
 
 use rb_sys::{VALUE, rb_float_new, rb_float_value, ruby_value_type};
 
+#[cfg(feature = "numeric")]
+use crate::numeric::Numeric;
 #[cfg(ruby_use_flonum)]
 use crate::value::Flonum;
 use crate::{
@@ -9,7 +11,6 @@ use crate::{
     error::Error,
     float::Float,
     into_value::IntoValue,
-    numeric::Numeric,
     try_convert::TryConvert,
     value::{
         NonZeroValue, ReprValue, Value,
@@ -153,6 +154,8 @@ impl IntoValue for RFloat {
     }
 }
 
+#[cfg(feature = "numeric")]
+#[cfg_attr(docsrs, doc(cfg(feature = "numeric")))]
 impl Numeric for RFloat {}
 
 unsafe impl private::ReprValue for RFloat {}

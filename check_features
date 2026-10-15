@@ -1,6 +1,14 @@
 #!/bin/sh
 
+set -e
+
 export RUSTFLAGS="-Dwarnings"
+
+echo cargo check --no-default-features ...
+cargo check --no-default-features
+
+echo cargo check --all-features ...
+cargo check --all-features
 
 FEATURES="$(cargo metadata --no-deps --format-version 1 | jq -r '.packages | first(.[] | select(.name == "magnus")).features | keys.[]')"
 

@@ -1,18 +1,19 @@
 use std::fmt;
 
-use rb_sys::{
-    VALUE, rb_float_new_in_heap, rb_float_value, rb_flt_rationalize, rb_flt_rationalize_with_prec,
-    rb_to_float, ruby_value_type,
-};
+use rb_sys::{VALUE, rb_float_new_in_heap, rb_float_value, rb_to_float, ruby_value_type};
+#[cfg(feature = "r_rational")]
+use rb_sys::{rb_flt_rationalize, rb_flt_rationalize_with_prec};
 
+#[cfg(feature = "numeric")]
+use crate::numeric::Numeric;
+#[cfg(feature = "r_rational")]
+use crate::r_rational::RRational;
 #[cfg(ruby_use_flonum)]
 use crate::value::Flonum;
 use crate::{
     Ruby,
     error::{Error, protect},
     into_value::IntoValue,
-    numeric::Numeric,
-    r_rational::RRational,
     try_convert::TryConvert,
     value::{
         NonZeroValue, ReprValue, Value,
@@ -145,6 +146,8 @@ impl Float {
     /// }
     /// # Ruby::init(example).unwrap()
     /// ```
+    #[cfg(feature = "r_rational")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "r_rational")))]
     pub fn rationalize_with_prec(self, prec: Self) -> RRational {
         unsafe {
             RRational::from_rb_value_unchecked(rb_flt_rationalize_with_prec(
@@ -169,6 +172,8 @@ impl Float {
     /// }
     /// # Ruby::init(example).unwrap()
     /// ```
+    #[cfg(feature = "r_rational")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "r_rational")))]
     pub fn rationalize(self) -> RRational {
         unsafe { RRational::from_rb_value_unchecked(rb_flt_rationalize(self.as_rb_value())) }
     }
@@ -195,6 +200,8 @@ impl IntoValue for Float {
 
 unsafe impl private::ReprValue for Float {}
 
+#[cfg(feature = "numeric")]
+#[cfg_attr(docsrs, doc(cfg(feature = "numeric")))]
 impl Numeric for Float {}
 
 impl ReprValue for Float {}

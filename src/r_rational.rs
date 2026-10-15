@@ -2,12 +2,13 @@ use std::{fmt, num::NonZero};
 
 use rb_sys::{VALUE, rb_rational_den, rb_rational_new, rb_rational_num, ruby_value_type};
 
+#[cfg(feature = "numeric")]
+use crate::numeric::Numeric;
 use crate::{
     Ruby,
     error::Error,
     integer::Integer,
     into_value::IntoValue,
-    numeric::Numeric,
     try_convert::TryConvert,
     value::{
         NonZeroValue, ReprValue, Value,
@@ -148,6 +149,8 @@ impl IntoValue for RRational {
 
 unsafe impl private::ReprValue for RRational {}
 
+#[cfg(feature = "numeric")]
+#[cfg_attr(docsrs, doc(cfg(feature = "numeric")))]
 impl Numeric for RRational {}
 
 impl ReprValue for RRational {}

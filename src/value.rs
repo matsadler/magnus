@@ -34,6 +34,8 @@ use rb_sys::{
 const RUBY_FIXNUM_MAX: c_ulong = (c_long::MAX / 2) as c_ulong;
 const RUBY_FIXNUM_MIN: c_long = c_long::MIN / 2;
 
+#[cfg(feature = "numeric")]
+use crate::numeric::Numeric;
 use crate::{
     Ruby,
     block::Proc,
@@ -45,7 +47,6 @@ use crate::{
     into_value::{ArgList, IntoValue, IntoValueFromNative, kw_splat},
     method::{Block, BlockReturn},
     module::Module,
-    numeric::Numeric,
     r_bignum::RBignum,
     r_string::RString,
     symbol::{IntoSymbol, Symbol},
@@ -2748,6 +2749,8 @@ impl IntoValue for Fixnum {
 
 unsafe impl private::ReprValue for Fixnum {}
 
+#[cfg(feature = "numeric")]
+#[cfg_attr(docsrs, doc(cfg(feature = "numeric")))]
 impl Numeric for Fixnum {}
 
 impl ReprValue for Fixnum {}

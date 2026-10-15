@@ -1,22 +1,25 @@
 use std::fmt;
 
 use rb_sys::{
-    VALUE, rb_complex_abs, rb_complex_arg, rb_complex_conjugate, rb_complex_imag, rb_complex_new,
-    rb_complex_new_polar, rb_complex_real, ruby_value_type,
+    VALUE, rb_complex_abs, rb_complex_arg, rb_complex_conjugate, rb_complex_imag, rb_complex_real,
+    ruby_value_type,
 };
+#[cfg(feature = "numeric")]
+use rb_sys::{rb_complex_new, rb_complex_new_polar};
 
 use crate::{
     Ruby,
-    error::{Error, protect},
+    error::Error,
     float::Float,
     into_value::IntoValue,
-    numeric::Numeric,
     try_convert::TryConvert,
     value::{
         NonZeroValue, ReprValue, Value,
         private::{self, ReprValue as _},
     },
 };
+#[cfg(feature = "numeric")]
+use crate::{error::protect, numeric::Numeric};
 
 /// A Value pointer to a RComplex struct, Ruby's internal representation of
 /// complex numbers.
@@ -66,6 +69,8 @@ impl RComplex {
     /// }
     /// # Ruby::init(example).unwrap()
     /// ```
+    #[cfg(feature = "numeric")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "numeric")))]
     pub fn new<T, U>(real: T, imag: U) -> RComplex
     where
         T: Numeric,
@@ -97,6 +102,8 @@ impl RComplex {
     /// }
     /// # Ruby::init(example).unwrap()
     /// ```
+    #[cfg(feature = "numeric")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "numeric")))]
     pub fn polar<T, U>(real: T, imag: U) -> Result<RComplex, Error>
     where
         T: Numeric,
@@ -237,6 +244,8 @@ impl IntoValue for RComplex {
 
 unsafe impl private::ReprValue for RComplex {}
 
+#[cfg(feature = "numeric")]
+#[cfg_attr(docsrs, doc(cfg(feature = "numeric")))]
 impl Numeric for RComplex {}
 
 impl ReprValue for RComplex {}

@@ -10,11 +10,12 @@ use rb_sys::{
     ruby_value_type,
 };
 
+#[cfg(feature = "numeric")]
+use crate::numeric::Numeric;
 use crate::{
     Ruby,
     error::{Error, protect},
     into_value::IntoValue,
-    numeric::Numeric,
     r_bignum::RBignum,
     try_convert::TryConvert,
     value::{
@@ -622,6 +623,8 @@ impl IntoValue for Integer {
     }
 }
 
+#[cfg(feature = "numeric")]
+#[cfg_attr(docsrs, doc(cfg(feature = "numeric")))]
 impl Numeric for Integer {}
 
 unsafe impl private::ReprValue for Integer {}
