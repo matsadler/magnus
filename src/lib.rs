@@ -1819,6 +1819,8 @@ mod into_value;
 pub mod io;
 pub mod method;
 pub mod module;
+#[cfg(feature = "mutex")]
+#[cfg_attr(docsrs, doc(cfg(feature = "mutex")))]
 mod mutex;
 #[cfg(feature = "numeric")]
 #[cfg_attr(docsrs, doc(cfg(feature = "numeric")))]
@@ -1893,6 +1895,9 @@ pub use magnus_macros::{DataTypeFunctions, TypedData, init, wrap};
 #[cfg(feature = "fiber")]
 #[cfg_attr(docsrs, doc(cfg(feature = "fiber")))]
 pub use crate::fiber::Fiber;
+#[cfg(feature = "mutex")]
+#[cfg_attr(docsrs, doc(cfg(feature = "mutex")))]
+pub use crate::mutex::Mutex;
 #[cfg(feature = "numeric")]
 #[cfg_attr(docsrs, doc(cfg(feature = "numeric")))]
 pub use crate::numeric::Numeric;
@@ -1932,7 +1937,6 @@ pub use crate::{
     integer::Integer,
     into_value::{ArgList, IntoValue, IntoValueFromNative, KwArgs, RArrayArgList},
     module::{Attr, Module, RModule},
-    mutex::Mutex,
     object::Object,
     r_array::RArray,
     r_bignum::RBignum,
