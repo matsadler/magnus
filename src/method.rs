@@ -16,15 +16,19 @@ use seq_macro::seq;
 use crate::debug::{DebugInspector, TracePoint};
 use crate::{
     Ruby,
+    error::{Error, IntoError, raise},
+    into_value::IntoValue,
+    r_array::RArray,
+    try_convert::TryConvert,
+    value::{ReprValue, Value},
+};
+#[cfg(feature = "block")]
+use crate::{
     block::{
         Proc, Yield, YieldSplat, YieldValues, do_yield_iter, do_yield_splat_iter,
         do_yield_values_iter,
     },
-    error::{Error, IntoError, raise},
-    into_value::{ArgList, IntoValue},
-    r_array::RArray,
-    try_convert::TryConvert,
-    value::{ReprValue, Value},
+    into_value::ArgList,
 };
 
 mod private {
@@ -100,6 +104,7 @@ mod private {
         }
     }
 
+    #[cfg(feature = "block")]
     impl<I, T, E> ReturnValue for Result<Yield<I>, E>
     where
         I: Iterator<Item = T>,
@@ -118,6 +123,7 @@ mod private {
         }
     }
 
+    #[cfg(feature = "block")]
     impl<I, T> ReturnValue for Yield<I>
     where
         I: Iterator<Item = T>,
@@ -128,6 +134,7 @@ mod private {
         }
     }
 
+    #[cfg(feature = "block")]
     impl<I, T, E> ReturnValue for Result<YieldValues<I>, E>
     where
         I: Iterator<Item = T>,
@@ -146,6 +153,7 @@ mod private {
         }
     }
 
+    #[cfg(feature = "block")]
     impl<I, T> ReturnValue for YieldValues<I>
     where
         I: Iterator<Item = T>,
@@ -156,6 +164,7 @@ mod private {
         }
     }
 
+    #[cfg(feature = "block")]
     impl<I, E> ReturnValue for Result<YieldSplat<I>, E>
     where
         I: Iterator<Item = RArray>,
@@ -173,6 +182,7 @@ mod private {
         }
     }
 
+    #[cfg(feature = "block")]
     impl<I> ReturnValue for YieldSplat<I>
     where
         I: Iterator<Item = RArray>,
@@ -384,6 +394,7 @@ where
 ///
 /// See the [`Value::block_call`] function.
 #[doc(hidden)]
+#[cfg(feature = "block")]
 pub trait Block<Res>
 where
     Self: Sized + FnOnce(&Ruby, &[Value], Option<Proc>) -> Res,
@@ -426,6 +437,7 @@ where
     }
 }
 
+#[cfg(feature = "block")]
 impl<Func, Res> Block<Res> for Func
 where
     Func: FnOnce(&Ruby, &[Value], Option<Proc>) -> Res,

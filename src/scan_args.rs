@@ -39,9 +39,10 @@ use std::{
 use rb_sys::{ID, VALUE, rb_error_arity, rb_get_kwargs, rb_scan_args};
 use seq_macro::seq;
 
+#[cfg(feature = "block")]
+use crate::block::Proc;
 use crate::{
     Ruby,
-    block::Proc,
     error::{Error, protect},
     r_array::RArray,
     r_hash::RHash,
@@ -353,6 +354,7 @@ mod private {
         }
     }
 
+    #[cfg(feature = "block")]
     impl ScanArgsBlock for Proc {
         const REQ: bool = true;
 
@@ -368,6 +370,7 @@ mod private {
         }
     }
 
+    #[cfg(feature = "block")]
     impl ScanArgsBlock for Option<Proc> {
         const REQ: bool = true;
 

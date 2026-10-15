@@ -1795,6 +1795,8 @@
 mod macros;
 
 mod api;
+#[cfg(feature = "block")]
+#[cfg_attr(docsrs, doc(cfg(feature = "block")))]
 pub mod block;
 pub mod class;
 #[cfg(feature = "debug")]

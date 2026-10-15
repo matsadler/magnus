@@ -1,34 +1,43 @@
 //! Types and functions for working with Ruby's Fiber class.
 
-use std::{ffi::c_int, fmt, mem::size_of, slice};
+use std::{ffi::c_int, fmt};
+#[cfg(feature = "block")]
+use std::{mem::size_of, slice};
 
-#[cfg(ruby_lt_3_2)]
+#[cfg(feature = "block")]
+use rb_sys::rb_data_typed_object_wrap;
+#[cfg(all(ruby_lt_3_2, feature = "block"))]
 use rb_sys::rb_fiber_new;
-#[cfg(ruby_gte_3_2)]
+#[cfg(all(ruby_gte_3_2, feature = "block"))]
 use rb_sys::rb_fiber_new_storage;
 use rb_sys::{
-    VALUE, rb_data_typed_object_wrap, rb_fiber_alive_p, rb_fiber_current, rb_fiber_raise,
-    rb_fiber_resume_kw, rb_fiber_transfer_kw, rb_fiber_yield_kw, rb_obj_is_fiber,
+    VALUE, rb_fiber_alive_p, rb_fiber_current, rb_fiber_raise, rb_fiber_resume_kw,
+    rb_fiber_transfer_kw, rb_fiber_yield_kw, rb_obj_is_fiber,
 };
 
 #[cfg(any(ruby_gte_3_2, docsrs))]
 use crate::r_hash::RHash;
 use crate::{
     api::Ruby,
-    block::Proc,
     error::{Error, protect},
     exception::Exception,
-    gc,
     into_value::{ArgList, IntoValue, kw_splat},
-    method::{Block, BlockReturn},
     object::Object,
     r_typed_data::RTypedData,
     try_convert::TryConvert,
-    typed_data::{DataType, DataTypeBuilder, DataTypeFunctions},
     value::{
-        QUNDEF, ReprValue, Value,
+        ReprValue, Value,
         private::{self, ReprValue as _},
     },
+};
+#[cfg(feature = "block")]
+use crate::{block::Proc, method::Block};
+#[cfg(feature = "block")]
+use crate::{
+    gc,
+    method::BlockReturn,
+    typed_data::{DataType, DataTypeBuilder, DataTypeFunctions},
+    value::QUNDEF,
 };
 
 /// # `Fiber`
@@ -70,6 +79,8 @@ impl Ruby {
     /// }
     /// # Ruby::init(example).unwrap()
     /// ```
+    #[cfg(feature = "block")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "block")))]
     pub fn fiber_new<R>(
         &self,
         storage: Storage,
@@ -154,6 +165,8 @@ impl Ruby {
     /// }
     /// # Ruby::init(example).unwrap()
     /// ```
+    #[cfg(feature = "block")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "block")))]
     pub fn fiber_new_from_fn<F, R>(&self, storage: Storage, func: F) -> Result<Fiber, Error>
     where
         F: 'static + Send + FnOnce(&Ruby, &[Value], Option<Proc>) -> R,
@@ -544,7 +557,7 @@ pub enum Storage {
     Use(RHash),
 }
 
-#[cfg(ruby_gte_3_2)]
+#[cfg(all(ruby_gte_3_2, feature = "block"))]
 impl Storage {
     unsafe fn as_rb_value(&self, ruby: &Ruby) -> VALUE {
         unsafe {
@@ -559,6 +572,7 @@ impl Storage {
     }
 }
 
+#[cfg(feature = "block")]
 fn wrap_closure<F, R>(func: F) -> (*mut Option<F>, Value)
 where
     F: FnOnce(&Ruby, &[Value], Option<Proc>) -> R,

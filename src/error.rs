@@ -11,9 +11,11 @@ use std::{
 };
 
 use rb_sys::{
-    VALUE, rb_bug, rb_ensure, rb_errinfo, rb_exc_fatal, rb_exc_raise, rb_iter_break_value,
-    rb_jump_tag, rb_protect, rb_set_errinfo, rb_warning, ruby_special_consts,
+    VALUE, rb_bug, rb_errinfo, rb_exc_fatal, rb_exc_raise, rb_iter_break_value, rb_jump_tag,
+    rb_protect, rb_set_errinfo, rb_warning,
 };
+#[cfg(feature = "block")]
+use rb_sys::{rb_ensure, ruby_special_consts};
 
 use crate::{
     ExceptionClass, Ruby,
@@ -458,6 +460,7 @@ where
     }
 }
 
+#[cfg(feature = "block")]
 pub(crate) fn ensure<F1, F2, T>(func: F1, ensure: F2) -> T
 where
     F1: FnOnce() -> T,
