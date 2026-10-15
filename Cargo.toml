@@ -21,7 +21,7 @@ exclude = [
 ]
 
 [features]
-default = ["debug", "fiber", "io", "numeric", "range", "r_complex", "r_match", "r_rational", "r_regexp", "r_struct", "thread"]
+default = ["debug", "fiber", "io", "numeric", "range", "r_complex", "r_match", "r_rational", "r_regexp", "r_struct", "thread", "time"]
 bytes = ["dep:bytes"]
 chrono = ["dep:chrono"]
 debug = []
@@ -37,6 +37,7 @@ r_regexp = []
 r_struct = []
 rb-sys = []
 thread = []
+time = []
 
 [dependencies]
 bytes = { version = "1", optional = true }

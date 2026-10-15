@@ -1869,6 +1869,8 @@ pub mod symbol;
 #[cfg(feature = "thread")]
 #[cfg_attr(docsrs, doc(cfg(feature = "thread")))]
 mod thread;
+#[cfg(feature = "time")]
+#[cfg_attr(docsrs, doc(cfg(feature = "time")))]
 pub mod time;
 pub mod try_convert;
 pub mod typed_data;
@@ -1915,6 +1917,9 @@ pub use crate::range::Range;
 #[cfg(feature = "thread")]
 #[cfg_attr(docsrs, doc(cfg(feature = "thread")))]
 pub use crate::thread::Thread;
+#[cfg(feature = "time")]
+#[cfg_attr(docsrs, doc(cfg(feature = "time")))]
+pub use crate::time::Time;
 #[cfg(ruby_use_flonum)]
 pub use crate::value::Flonum;
 pub use crate::{
@@ -1938,7 +1943,6 @@ pub use crate::{
     r_string::RString,
     r_typed_data::RTypedData,
     symbol::Symbol,
-    time::Time,
     try_convert::TryConvert,
     typed_data::{DataType, DataTypeFunctions, TypedData},
     value::{Fixnum, StaticSymbol, Value},
