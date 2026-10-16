@@ -10,14 +10,17 @@
 ### Removed
 
 ### Fixed
+
+### Security
+
+## [0.9.3] - 2026-10-15
+### Fixed
 - Catching a Ruby exception (e.g. in `Ruby::eval`, or any API that may raise)
   no longer clears `$!`. It is now restored to the exception Ruby was already
   handling, matching the semantics of a Ruby `rescue`. Clearing it corrupted
   the interpreter's unwind state when Rust was called while an exception was
   propagating, crashing Ruby with `ec->errinfo == nil`
   (https://bugs.ruby-lang.org/issues/22240).
-
-### Security
 
 ## [0.9.2] - 2026-10-02
 ### Fixed
@@ -608,7 +611,8 @@
 - Pre-built bindings for Ruby 2.6 - 3.1 on common platforms, build-time
   generated bindings otherwise.
 
-[Unreleased]: https://github.com/matsadler/magnus/compare/0.9.2...HEAD
+[Unreleased]: https://github.com/matsadler/magnus/compare/0.9.3...HEAD
+[0.9.3]: https://github.com/matsadler/magnus/compare/0.9.2...0.9.3
 [0.9.2]: https://github.com/matsadler/magnus/compare/0.9.1...0.9.2
 [0.9.1]: https://github.com/matsadler/magnus/compare/0.9.0...0.9.1
 [0.9.0]: https://github.com/matsadler/magnus/compare/0.8.2...0.9.0
