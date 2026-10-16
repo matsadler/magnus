@@ -2512,6 +2512,9 @@ impl Ruby {
     where
         T: TryConvert,
     {
+        // see the comment in `error::protect`: catching the exception must
+        // restore `$!` to the exception Ruby was already handling, not clear it
+        let prev_errinfo = unsafe { rb_errinfo() };
         let mut state = 0;
         // safe ffi to Ruby, captures raised errors (+ brake, throw, etc) as state
         let result = unsafe {
@@ -2526,7 +2529,7 @@ impl Ruby {
             // Tag::Raise
             6 => unsafe {
                 let ex = Exception::from_rb_value_unchecked(rb_errinfo());
-                rb_set_errinfo(self.qnil().as_rb_value());
+                rb_set_errinfo(prev_errinfo);
                 Err(ex.into())
             },
             other => Err(Error::from_tag(unsafe {
