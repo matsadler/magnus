@@ -1828,6 +1828,8 @@ mod mutex;
 #[cfg_attr(docsrs, doc(cfg(feature = "numeric")))]
 pub mod numeric;
 mod object;
+#[cfg(feature = "process")]
+#[cfg_attr(docsrs, doc(cfg(feature = "process")))]
 pub mod process;
 /// Traits that commonly should be in scope.
 pub mod prelude {
