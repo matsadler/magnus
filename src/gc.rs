@@ -64,6 +64,7 @@ impl<T> Mark for crate::value::Opaque<T> where T: ReprValue {}
 pub struct Marker(Ruby);
 
 impl Marker {
+    #[cfg(feature = "typed_data")]
     pub(crate) fn new(ruby: Ruby) -> Self {
         Self(ruby)
     }
@@ -152,6 +153,7 @@ impl<T> Locate for crate::value::Opaque<T> where T: ReprValue {}
 pub struct Compactor(Ruby);
 
 impl Compactor {
+    #[cfg(feature = "typed_data")]
     pub(crate) fn new(ruby: Ruby) -> Self {
         Self(ruby)
     }

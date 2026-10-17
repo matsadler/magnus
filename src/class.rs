@@ -2,13 +2,16 @@
 //!
 //! See also [`Ruby`](Ruby#core-classes) for more class related methods.
 
+#[cfg(feature = "typed_data")]
+use std::mem::transmute;
 use std::{
     borrow::Cow,
     ffi::{CStr, c_int},
     fmt,
-    mem::transmute,
 };
 
+#[cfg(feature = "typed_data")]
+use rb_sys::rb_define_alloc_func;
 use rb_sys::{
     self, VALUE, rb_alloc_func_t, rb_cArray, rb_cBasicObject, rb_cBinding, rb_cClass, rb_cComplex,
     rb_cDir, rb_cEncoding, rb_cEnumerator, rb_cFalseClass, rb_cFile, rb_cFloat, rb_cHash, rb_cIO,
@@ -16,9 +19,12 @@ use rb_sys::{
     rb_cObject, rb_cProc, rb_cRandom, rb_cRange, rb_cRational, rb_cRefinement, rb_cRegexp,
     rb_cStat, rb_cString, rb_cStruct, rb_cSymbol, rb_cThread, rb_cTime, rb_cTrueClass,
     rb_cUnboundMethod, rb_class_new, rb_class_new_instance_kw, rb_class_superclass, rb_class2name,
-    rb_define_alloc_func, rb_get_alloc_func, rb_obj_alloc, rb_undef_alloc_func, ruby_value_type,
+    rb_get_alloc_func, rb_obj_alloc, rb_undef_alloc_func, ruby_value_type,
 };
 
+#[cfg(feature = "typed_data")]
+#[cfg_attr(docsrs, doc(cfg(feature = "typed_data")))]
+use crate::typed_data::TypedData;
 use crate::{
     Ruby,
     error::{Error, protect},
@@ -26,7 +32,6 @@ use crate::{
     module::Module,
     object::Object,
     try_convert::TryConvert,
-    typed_data::TypedData,
     value::{
         NonZeroValue, ReprValue, Value,
         private::{self, ReprValue as _},
@@ -446,6 +451,8 @@ pub trait Class: Module {
     /// }
     /// # Ruby::init(example).unwrap()
     /// ```
+    #[cfg(feature = "typed_data")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "typed_data")))]
     fn define_alloc_func<T>(self)
     where
         T: Default + TypedData,

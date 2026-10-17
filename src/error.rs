@@ -540,6 +540,7 @@ pub(crate) fn raise(e: Error) -> ! {
     };
 }
 
+#[cfg(feature = "typed_data")]
 pub(crate) fn bug_from_panic(e: Box<dyn Any + Send + 'static>, or: &str) -> ! {
     let msg: Cow<'_, str> = if let Some(&m) = e.downcast_ref::<&'static str>() {
         m.into()

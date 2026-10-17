@@ -1865,6 +1865,7 @@ pub mod r_string;
 #[cfg(feature = "r_struct")]
 #[cfg_attr(docsrs, doc(cfg(feature = "r_struct")))]
 pub mod r_struct;
+#[cfg(feature = "typed_data")]
 mod r_typed_data;
 #[cfg(feature = "range")]
 #[cfg_attr(docsrs, doc(cfg(feature = "range")))]
@@ -1881,6 +1882,8 @@ mod thread;
 #[cfg_attr(docsrs, doc(cfg(feature = "time")))]
 pub mod time;
 pub mod try_convert;
+#[cfg(feature = "typed_data")]
+#[cfg_attr(docsrs, doc(cfg(feature = "typed_data")))]
 pub mod typed_data;
 pub mod value;
 
@@ -1953,10 +1956,8 @@ pub use crate::{
     r_hash::RHash,
     r_object::RObject,
     r_string::RString,
-    r_typed_data::RTypedData,
     symbol::Symbol,
     try_convert::TryConvert,
-    typed_data::{DataType, DataTypeFunctions, TypedData},
     value::{Fixnum, StaticSymbol, Value},
 };
 use crate::{
@@ -1964,6 +1965,12 @@ use crate::{
     method::Method,
     r_string::IntoRString,
     value::{IntoId, ReprValue, private::ReprValue as _},
+};
+#[cfg(feature = "typed_data")]
+#[cfg_attr(docsrs, doc(cfg(feature = "typed_data")))]
+pub use crate::{
+    r_typed_data::RTypedData,
+    typed_data::{DataType, DataTypeFunctions, TypedData},
 };
 
 /// Evaluate a literal string of Ruby code with the given local variables.
