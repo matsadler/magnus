@@ -15,6 +15,7 @@ Ruby code from a Rust binary.
 [Type Conversions]: #type-conversions
 [Safety]: #safety
 [Compatibility]: #compatibility
+[Cargo Features]: #cargo-features
 
 ## Examples
 
@@ -504,6 +505,64 @@ Magnus is not tested on 32 bit systems. Efforts are made to ensure it compiles.
 Patches are welcome.
 
 [plat]: https://github.com/oxidize-rb/rb-sys#supported-platforms
+
+### Forward Compatibility
+
+The low-level bindings provided by [rb-sys] are dynamically generated and can
+change between Ruby versions, platforms, or even options Ruby was compiled with.
+While Ruby's API is relatively stable, as Magnus covers a large amount of the
+Ruby C-API the change in a single type or function can cause the whole crate to
+fail to compile. Magnus provides a large number of default cargo features that
+can be disabled to turn off parts of the library to reduce the amount of the
+Ruby C-API it is exposed to and thus the chance of this happening, See
+[Cargo Features][#cargo-features] below.
+
+Features can be selected in your `Cargo.toml` like so:
+
+```toml
+[dependencies]
+magnus = { version = "0.9", default-features = false, features = ["block", "numeric", "typed_data"] }
+```
+
+As Ruby's development branch (often termed "Ruby head"), particularly through
+the first half of a version's development cycle (e.g. Jan-Jun), will introduce
+breaking changes without warning that may continue to evolve or be reverted
+Magnus typically does not put out releases for unreleased Ruby changes.
+
+As Magnus itself is tested against Ruby head the `main` branch is typically 
+compatible with Ruby head, such that if you wish to be compatible with Ruby
+head you can use a git dependency like so:
+
+```toml
+[dependencies]
+magnus = { git = "https://github.com/matsadler/magnus.git" }
+```
+
+## Cargo Features
+
+| Feature      | default | Module/Type/functionality               |
+| ------------ | ------- | --------------------------------------- |
+| `block`      | ✔︎       | `block`                                 |
+| `bytes`      |         | conversions for the bytes crate         |
+| `chrono`     |         | conversions for the chrono crate        |
+| `debug`      | ✔︎       | `debug`                                 |
+| `embed`      |         | `embed`                                 |
+| `fiber`      | ✔︎       | `fiber`, `Fiber`                        |
+| `io`         | ✔︎       | `io`                                    |
+| `mutex`      | ✔︎       | `Mutex`                                 |
+| `numeric`    | ✔︎       | `numeric`, `Numeric`                    |
+| `process`    | ✔︎       | `process`                               |
+| `range`      | ✔︎       | `Range`                                 |
+| `r_complex`  | ✔︎       | `RComplex`                              |
+| `r_file`     | ✔︎       | `RFile`                                 |
+| `r_match`    | ✔︎       | `RMatch`                                |
+| `r_rational` | ✔︎       | `RRational`                             |
+| `r_regexp`   | ✔︎       | `r_regexp`, `RRegexp`                   |
+| `r_struct`   | ✔︎       | `r_struct`, `RStruct`                   |
+| `rb-sys`     |         | `rb_sys`                                |
+| `thread`     | ✔︎       | `Thread`                                |
+| `time`       | ✔︎       | `time`, `Time`                          |
+| `typed_data` | ✔︎       | `RTypedData`, `typed_data`, `TypedData` |
 
 ## Crates that work with Magnus
 

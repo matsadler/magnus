@@ -105,6 +105,32 @@
 //! # Ruby::init(init).unwrap()
 //! ```
 //!
+//! # Cargo Features
+//!
+//! | Feature      | default | Module/Type/functionality                     |
+//! | ------------ | ------- | --------------------------------------------- |
+//! | `block`      | ✔︎       | [`block`]                                     |
+//! | `bytes`      |         | conversions for the bytes crate               |
+//! | `chrono`     |         | conversions for the chrono crate              |
+//! | `debug`      | ✔︎       | [`debug`]                                     |
+//! | `embed`      |         | [`embed`]                                     |
+//! | `fiber`      | ✔︎       | [`fiber`], [`Fiber`]                          |
+//! | `io`         | ✔︎       | [`io`]                                        |
+//! | `mutex`      | ✔︎       | [`Mutex`]                                     |
+//! | `numeric`    | ✔︎       | [`numeric`], [`Numeric`]                      |
+//! | `process`    | ✔︎       | [`process`]                                   |
+//! | `range`      | ✔︎       | [`Range`]                                     |
+//! | `r_complex`  | ✔︎       | [`RComplex`]                                  |
+//! | `r_file`     | ✔︎       | [`RFile`]                                     |
+//! | `r_match`    | ✔︎       | [`RMatch`]                                    |
+//! | `r_rational` | ✔︎       | [`RRational`]                                 |
+//! | `r_regexp`   | ✔︎       | [`r_regexp`], [`RRegexp`]                     |
+//! | `r_struct`   | ✔︎       | [`r_struct`], [`RStruct`]                     |
+//! | `rb-sys`     |         | [`rb_sys`]                                    |
+//! | `thread`     | ✔︎       | [`Thread`]                                    |
+//! | `time`       | ✔︎       | [`time`], [`Time`]                            |
+//! | `typed_data` | ✔︎       | [`RTypedData`], [`typed_data`], [`TypedData`] |
+//!
 //! # Crates that work with Magnus
 //!
 //! * [`rb-sys`](https://docs.rs/rb-sys) - low level bindings to Ruby.
@@ -1822,7 +1848,6 @@ pub mod io;
 pub mod method;
 pub mod module;
 #[cfg(feature = "mutex")]
-#[cfg_attr(docsrs, doc(cfg(feature = "mutex")))]
 mod mutex;
 #[cfg(feature = "numeric")]
 #[cfg_attr(docsrs, doc(cfg(feature = "numeric")))]
@@ -1844,19 +1869,15 @@ pub mod prelude {
 pub mod r_array;
 mod r_bignum;
 #[cfg(feature = "r_complex")]
-#[cfg_attr(docsrs, doc(cfg(feature = "r_complex")))]
 mod r_complex;
 #[cfg(feature = "r_file")]
-#[cfg_attr(docsrs, doc(cfg(feature = "r_file")))]
 mod r_file;
 mod r_float;
 pub mod r_hash;
 #[cfg(feature = "r_match")]
-#[cfg_attr(docsrs, doc(cfg(feature = "r_match")))]
 mod r_match;
 mod r_object;
 #[cfg(feature = "r_rational")]
-#[cfg_attr(docsrs, doc(cfg(feature = "r_rational")))]
 mod r_rational;
 #[cfg(feature = "r_regexp")]
 #[cfg_attr(docsrs, doc(cfg(feature = "r_regexp")))]
@@ -1868,7 +1889,6 @@ pub mod r_struct;
 #[cfg(feature = "typed_data")]
 mod r_typed_data;
 #[cfg(feature = "range")]
-#[cfg_attr(docsrs, doc(cfg(feature = "range")))]
 mod range;
 #[cfg(feature = "rb-sys")]
 #[cfg_attr(docsrs, doc(cfg(feature = "rb-sys")))]
@@ -1876,7 +1896,6 @@ pub mod rb_sys;
 pub mod scan_args;
 pub mod symbol;
 #[cfg(feature = "thread")]
-#[cfg_attr(docsrs, doc(cfg(feature = "thread")))]
 mod thread;
 #[cfg(feature = "time")]
 #[cfg_attr(docsrs, doc(cfg(feature = "time")))]
