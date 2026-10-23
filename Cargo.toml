@@ -51,7 +51,7 @@ magnus-macros = { version = "0.9.1", path = "magnus-macros" }
 rb-sys = { version = "0.9.124", default-features = false, features = [
     "bindgen-rbimpls",
     "bindgen-deprecated-types",
-    "stable-api",
+    "stable-api-compiled-fallback",
 ] }
 seq-macro = "0.3"
 

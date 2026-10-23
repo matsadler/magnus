@@ -91,3 +91,8 @@ jobs:
 
             - name: Run tests
               run: cargo test --workspace
+
+            # This separate workspace cannot inherit Magnus's dev-dependency
+            # features. Exercise the same dependency graph as a downstream gem.
+            - name: Downstream consumer (default and minimal features)
+              run: bundle exec ruby tests/fixtures/consumer/run.rb
