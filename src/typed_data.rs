@@ -9,15 +9,14 @@ use std::{
     fmt,
     hash::Hasher,
     marker::PhantomData,
-    mem::size_of_val,
+    mem::{self, size_of_val},
     ops::Deref,
     panic::catch_unwind,
-    ptr,
 };
 
 use rb_sys::{
-    self, RTYPEDDATA_GET_DATA, VALUE, rb_data_type_struct__bindgen_ty_1, rb_data_type_t,
-    rb_gc_writebarrier, rb_gc_writebarrier_unprotect, rb_obj_reveal, rb_singleton_class_attached,
+    self, RTYPEDDATA_GET_DATA, VALUE, rb_data_type_t, rb_gc_writebarrier,
+    rb_gc_writebarrier_unprotect, rb_obj_reveal, rb_singleton_class_attached,
     rb_singleton_class_clone,
     rbimpl_typeddata_flags::{self, RUBY_TYPED_FREE_IMMEDIATELY, RUBY_TYPED_WB_PROTECTED},
     size_t,
@@ -342,26 +341,21 @@ where
         } else {
             None
         };
-        DataType(rb_data_type_t {
-            wrap_struct_name: self.name.as_ptr() as _,
-            function: rb_data_type_struct__bindgen_ty_1 {
-                dmark,
-                dfree,
-                dsize,
-                dcompact,
-                #[cfg(ruby_lt_4_1)]
-                reserved: [ptr::null_mut(); 1],
-                #[cfg(ruby_gte_4_1)]
-                // Ruby 4.1 expands rtypeddata's reserved slots; keep in sync with
-                // https://github.com/ruby/ruby/blob/master/include/ruby/internal/core/rtypeddata.h
-                reserved: [ptr::null_mut(); 7],
-                #[cfg(ruby_gte_4_1)]
-                handle_weak_references: None,
-            },
-            parent: ptr::null(),
-            data: ptr::null_mut(),
-            flags,
-        })
+        // Follow Ruby's partial-initializer convention: leave unused fields
+        // zeroed so compatible field additions and reserved-slot changes do
+        // not require naming bindgen's anonymous function-table type here.
+        // SAFETY: rb_data_type_t contains raw pointers, integer flags, and
+        // Option<extern "C" fn> callbacks, all of which permit all-zero values.
+        // Ruby permits null unused pointers/callbacks and requires reserved
+        // slots to be zero. Set the name, callbacks, and flags we use below.
+        let mut data_type: rb_data_type_t = unsafe { mem::zeroed() };
+        data_type.wrap_struct_name = self.name.as_ptr() as _;
+        data_type.function.dmark = dmark;
+        data_type.function.dfree = dfree;
+        data_type.function.dsize = dsize;
+        data_type.function.dcompact = dcompact;
+        data_type.flags = flags;
+        DataType(data_type)
     }
 }
 
