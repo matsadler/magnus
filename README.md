@@ -9,7 +9,7 @@ Ruby code from a Rust binary.
 [GitHub]: https://github.com/matsadler/magnus
 [crates.io]: https://crates.io/crates/magnus
 
-[Getting Started] | [Type Conversions] | [Safety] | [Compatibility]
+[Getting Started] | [Type Conversions] | [Safety] | [Compatibility] | [Cargo Features]
 
 [Getting Started]: #getting-started
 [Type Conversions]: #type-conversions
@@ -515,7 +515,7 @@ Ruby C-API the change in a single type or function can cause the whole crate to
 fail to compile. Magnus provides a large number of default cargo features that
 can be disabled to turn off parts of the library to reduce the amount of the
 Ruby C-API it is exposed to and thus the chance of this happening, See
-[Cargo Features][#cargo-features] below.
+[Cargo Features] below.
 
 Features can be selected in your `Cargo.toml` like so:
 
