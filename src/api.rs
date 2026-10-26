@@ -4,11 +4,9 @@
 use std::marker::PhantomData;
 
 use rb_sys::ruby_native_thread_p;
-
-// Ruby does not expose this publicly, but it is used in the fiddle gem via
-// this kind of hack, and although the function is marked experimental in
-// Ruby's source, that comment and the code have been unchanged singe 1.9.2,
-// 14 years ago as of writing.
+#[cfg(ruby_gte_4_0)]
+use rb_sys::ruby_thread_has_gvl_p;
+#[cfg(ruby_lt_4_0)]
 unsafe extern "C" {
     fn ruby_thread_has_gvl_p() -> ::std::ffi::c_int;
 }
