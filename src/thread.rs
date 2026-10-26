@@ -1,5 +1,7 @@
 use std::{ffi::c_void, fmt, mem::size_of, slice, time::Duration};
 
+#[cfg(ruby_gte_3_4)]
+use rb_sys::rb_thread_lock_native_thread;
 use rb_sys::{
     VALUE, rb_data_typed_object_wrap, rb_thread_alone, rb_thread_check_ints, rb_thread_create,
     rb_thread_current, rb_thread_interrupted, rb_thread_kill, rb_thread_local_aref,
@@ -397,6 +399,20 @@ impl Ruby {
             self.qnil()
         })?;
         Ok(())
+    }
+
+    /// Fix the current Ruby thread to a dedicated native thread on M:N thread
+    /// scheduler.
+    ///
+    /// This may be useful when using native thread-local storage.
+    ///
+    /// Returns `true` if this function call has caused the thread to be locked
+    /// to a dedicated native thread, or `false` if the thread was already
+    /// locked to a dedicated native thread.
+    #[cfg(any(ruby_gte_3_4, docsrs))]
+    #[cfg_attr(docsrs, doc(cfg(all(ruby_gte_3_4, feature = "thread"))))]
+    pub fn thread_lock_native_thread(&self) -> bool {
+        unsafe { rb_thread_lock_native_thread() }
     }
 }
 

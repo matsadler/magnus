@@ -3,6 +3,7 @@
 ## [Unreleased]
 ### Added
 - `Thread::tracepoint_new`.
+- `Ruby::thread_lock_native_thread`.
 
 ### Changed
 - New `block`, `debug`, `fiber`, `mutex`, `numeric`, `process`, `range`,
