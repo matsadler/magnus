@@ -227,7 +227,6 @@ name = "rust_blank"
 version = "0.1.0"
 dependencies = [
  "magnus",
- "rb-sys",
 ]
 
 [[package]]

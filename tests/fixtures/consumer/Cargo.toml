@@ -1,0 +1,18 @@
+[package]
+name = "magnus_consumer"
+version = "0.0.0"
+edition = "2024"
+rust-version = "1.85"
+publish = false
+
+# Keep Magnus's dev-dependencies out of this consumer's feature graph.
+[workspace]
+
+[lib]
+crate-type = ["cdylib"]
+
+[features]
+default = ["magnus/default"]
+
+[dependencies]
+magnus = { path = "../../..", default-features = false }

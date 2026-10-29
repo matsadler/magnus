@@ -489,6 +489,39 @@ is not recommended and future support in Magnus is not guaranteed.
 Ruby bindings will be generated at compile time, this may require libclang to
 be installed.
 
+When rb-sys has no Rust implementation of Ruby's macros and inline functions
+for the detected Ruby version, Magnus enables its compiled C fallback. This
+uses the installed Ruby headers and requires a C compiler and archiver in
+addition to the Rust toolchain. When a Rust implementation exists, rb-sys
+continues to use it. The fallback does not guarantee compatibility with changes
+to API signatures used by Magnus, or with future Ruby development snapshots.
+
+### Selecting the APIs your extension needs
+
+Magnus compiles the wrappers for every enabled API, including methods your gem
+does not call. Disabling unused feature groups reduces the API surface affected
+by Ruby changes. For an extension using core strings, arrays, classes, and
+wrapped Rust types, start with:
+
+```toml
+[dependencies]
+magnus = { version = "0.10", default-features = false }
+```
+
+Enable additional groups when needed, for example `features = ["io", "fiber"]`.
+Other optional groups include `time`, `thread`, `numeric`, and `r_regexp`;
+see [Cargo.toml](Cargo.toml) for the complete list. The default feature set
+remains available for existing users. Cargo combines dependency features, so
+another dependency enabling Magnus's defaults can re-enable these groups.
+
+The `rust_blank` example demonstrates a minimal string extension. CI also
+builds and loads a separate consumer with default and minimal features, without
+inheriting Magnus's dev-dependencies. Keep testing your gem on supported Ruby
+versions and ruby-head: a smaller feature set reduces exposure but cannot
+prevent changes to the APIs your gem uses.
+
+### Toolchain and platform support
+
 The minimum supported Rust version is currently Rust 1.85.
 
 Support for statically linking Ruby is provided via the lower-level [rb-sys]
