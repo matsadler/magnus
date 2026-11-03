@@ -12,9 +12,14 @@ end
   raise "array data mismatch" unless MagnusConsumer.array_sum(array) == array.sum
 end
 
-number = MagnusConsumer::Number.new(42)
-raise "typed-data mismatch" unless number.value == 42
-GC.start
-GC.compact if GC.respond_to?(:compact)
-raise "typed-data mismatch after GC" unless number.value == 42
-puts "Strings, arrays, and typed data passed"
+if ARGV.fetch(1) == "minimal"
+  raise "typed data should be disabled" if defined?(MagnusConsumer::Number)
+  puts "Strings and arrays passed"
+else
+  number = MagnusConsumer::Number.new(42)
+  raise "typed-data mismatch" unless number.value == 42
+  GC.start
+  GC.compact if GC.respond_to?(:compact)
+  raise "typed-data mismatch after GC" unless number.value == 42
+  puts "Strings, arrays, and typed data passed"
+end

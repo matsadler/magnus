@@ -1,8 +1,12 @@
-use magnus::{Error, RArray, RString, Ruby, function, method, prelude::*};
+#[cfg(feature = "typed_data")]
+use magnus::method;
+use magnus::{Error, RArray, RString, Ruby, function, prelude::*};
 
+#[cfg(feature = "typed_data")]
 #[magnus::wrap(class = "MagnusConsumer::Number", free_immediately, size)]
 struct Number(i64);
 
+#[cfg(feature = "typed_data")]
 impl Number {
     fn new(value: i64) -> Self {
         Self(value)
@@ -38,8 +42,11 @@ fn init(ruby: &Ruby) -> Result<(), Error> {
     module.define_singleton_method("string_copy", function!(string_copy, 1))?;
     module.define_singleton_method("array_length", function!(array_length, 1))?;
     module.define_singleton_method("array_sum", function!(array_sum, 1))?;
-    let class = module.define_class("Number", ruby.class_object())?;
-    class.define_singleton_method("new", function!(Number::new, 1))?;
-    class.define_method("value", method!(Number::value, 0))?;
+    #[cfg(feature = "typed_data")]
+    {
+        let class = module.define_class("Number", ruby.class_object())?;
+        class.define_singleton_method("new", function!(Number::new, 1))?;
+        class.define_method("value", method!(Number::value, 0))?;
+    }
     Ok(())
 }

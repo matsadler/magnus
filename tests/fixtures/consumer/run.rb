@@ -23,6 +23,6 @@ build_env = {
       chdir: dir, exception: true)
     system(env, *make, "RB_SYS_CARGO_TARGET_DIR=#{target}", chdir: dir, exception: true)
     extension = File.join(dir, "magnus_consumer.#{RbConfig::CONFIG.fetch('DLEXT')}")
-    system(RbConfig.ruby, File.join(__dir__, "test.rb"), extension, exception: true)
+    system(RbConfig.ruby, File.join(__dir__, "test.rb"), extension, features, exception: true)
   end
 end

@@ -12,7 +12,8 @@ publish = false
 crate-type = ["cdylib"]
 
 [features]
-default = ["magnus/default"]
+default = ["magnus/default", "typed_data"]
+typed_data = ["magnus/typed_data"]
 
 [dependencies]
 magnus = { path = "../../..", default-features = false }
