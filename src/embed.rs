@@ -197,7 +197,10 @@ impl Ruby {
     /// .unwrap()
     /// ```
     pub fn init(func: fn(&Ruby) -> Result<(), Error>) -> Result<(), String> {
-        unsafe { func(&init()) }.map_err(|e| e.to_string())
+        unsafe {
+            let ruby = init();
+            func(&ruby).map_err(|e| e.to_string())
+        }
     }
 
     /// Sets the current script name.
