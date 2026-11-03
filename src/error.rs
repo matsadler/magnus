@@ -309,7 +309,7 @@ impl IntoError for Error {
 /// [`Sync`] by removing the ability use it with any Ruby APIs.
 ///
 /// [`OpaqueError::into_error_with`] provides a way to safely get an [`Error`]
-/// from a `OpaqueError`].
+/// from an `OpaqueError`.
 ///
 /// Note that `OpaqueError` contains a Ruby value, so must be kept on the stack
 /// of a Ruby thread to prevent it from being Garbage Collected (or otherwise
