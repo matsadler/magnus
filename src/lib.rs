@@ -1144,7 +1144,7 @@
 // * `rb_need_block`:
 // * `RB_NEGFIXABLE`:
 // * `RB_NIL_P`:
-// * `rb_nogvl`:
+//! * `rb_nogvl`: [`Ruby::nogvl`].
 // * `rb_notimplement`:
 // * `rb_num2char_inline`:
 // * `RB_NUM2CHR`:
@@ -1538,9 +1538,9 @@
 //! * `rb_thread_alone`: [`Ruby::thread_alone`].
 // * `rb_thread_atfork`:
 // * `rb_thread_atfork_before_exec`:
-// * `rb_thread_call_without_gvl`:
-// * `rb_thread_call_without_gvl2`:
-// * `rb_thread_call_with_gvl`:
+//! * `rb_thread_call_without_gvl`: [`Ruby::thread_call_without_gvl`].
+//! * `rb_thread_call_without_gvl2`: [`Ruby::thread_call_without_gvl2`].
+//! * `rb_thread_call_with_gvl`: [`GvlHandle::call_with_gvl`](gvl::GvlHandle::call_with_gvl).
 //! * `rb_thread_check_ints`: [`Ruby::thread_check_ints`].
 //! * `rb_thread_create`: [`Ruby::thread_create`] & [`Ruby::thread_create_from_fn`].
 //! * `rb_thread_current`: [`Ruby::thread_current`].
@@ -1840,6 +1840,9 @@ pub mod exception;
 pub mod fiber;
 mod float;
 pub mod gc;
+#[cfg(feature = "gvl")]
+#[cfg_attr(docsrs, doc(cfg(feature = "gvl")))]
+pub mod gvl;
 mod integer;
 mod into_value;
 #[cfg(feature = "io")]

@@ -548,6 +548,7 @@ magnus = { git = "https://github.com/matsadler/magnus.git" }
 | `debug`      | ✔︎       | `debug`                                 |
 | `embed`      |         | `embed`                                 |
 | `fiber`      | ✔︎       | `fiber`, `Fiber`                        |
+| `gvl`        |         | `gvl`, `Ruby::nogvl`                    |
 | `io`         | ✔︎       | `io`                                    |
 | `mutex`      | ✔︎       | `Mutex`                                 |
 | `numeric`    | ✔︎       | `numeric`, `Numeric`                    |
