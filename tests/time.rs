@@ -2,12 +2,17 @@ use std::time::SystemTime;
 
 use magnus::{Error, Ruby, rb_assert};
 
+#[cfg(feature = "jiff")]
+use magnus::value::ReprValue;
+
 #[test]
 fn test_all() {
     magnus::Ruby::init(|ruby| {
         test_supports_system_time(ruby)?;
         #[cfg(feature = "chrono")]
         test_supports_chrono(ruby)?;
+        #[cfg(feature = "jiff")]
+        test_supports_jiff(ruby)?;
         Ok(())
     })
     .unwrap();
@@ -23,6 +28,77 @@ fn test_supports_system_time(ruby: &Ruby) -> Result<(), Error> {
     Ok(())
 }
 
+#[cfg(feature = "jiff")]
+fn test_supports_jiff(ruby: &Ruby) -> Result<(), Error> {
+    use jiff::Timestamp;
+    use magnus::{IntoValue, TryConvert};
+
+    let cases = [
+        (0, 0),
+        (1, 0),
+        (-1, 0),
+        (1, 123_456_789),
+        (-1, 500_000_000),
+        (0, 1),
+        (0, 999_999_999),
+    ];
+    for (sec, nsec) in cases {
+        let time = ruby.time_nano_new(sec, nsec)?;
+        let got = Timestamp::try_convert(time.as_value())?;
+        assert_eq!(got, Timestamp::new(sec, nsec as i32).unwrap());
+    }
+
+    for expected in [Timestamp::MIN, Timestamp::MAX] {
+        let time = expected.into_value_with(ruby);
+        assert_eq!(Timestamp::try_convert(time)?, expected);
+        rb_assert!(ruby, "t.utc? && t.utc_offset == 0", t = time);
+    }
+
+    for nanos in [1_i128, 123_456_789, 999_999_999, -500_000_000] {
+        let expected = Timestamp::from_nanosecond(nanos).unwrap();
+        let time = expected.into_value_with(ruby);
+        let got = Timestamp::try_convert(time)?;
+        assert_eq!(got, expected);
+        rb_assert!(ruby, "t.utc? && t.utc_offset == 0", t = time);
+    }
+
+    let negative = Timestamp::from_nanosecond(-500_000_000)
+        .unwrap()
+        .into_value_with(ruby);
+    rb_assert!(ruby, "t.to_i == -1 && t.nsec == 500000000", t = negative);
+
+    let instant = Timestamp::new(1_654_013_280, 123_456_789).unwrap();
+    let utc = ruby.time_timespec_new(
+        magnus::time::Timespec {
+            tv_sec: 1_654_013_280,
+            tv_nsec: 123_456_789,
+        },
+        magnus::time::Offset::utc(),
+    )?;
+    let plus = ruby.eval("Time.at(1654013280, 123456789, :nsec, in: '+05:30')")?;
+    let minus = ruby.eval("Time.at(1654013280, 123456789, :nsec, in: '-07:00')")?;
+    assert_eq!(Timestamp::try_convert(utc.as_value())?, instant);
+    assert_eq!(Timestamp::try_convert(plus)?, instant);
+    assert_eq!(Timestamp::try_convert(minus)?, instant);
+
+    for value in [ruby.eval("nil")?, ruby.eval("0")?] {
+        let err = Timestamp::try_convert(value).unwrap_err();
+        assert!(err.is_kind_of(ruby.exception_type_error()), "{err}");
+    }
+
+    for value in [
+        ruby.eval("Time.at(-377705023202)")?,
+        ruby.eval("Time.at(253402207201)")?,
+    ] {
+        let err = Timestamp::try_convert(value).unwrap_err();
+        assert!(err.is_kind_of(ruby.exception_range_error()), "{err}");
+        assert!(err.to_string().contains("out of Time range"), "{err}");
+    }
+
+    Ok(())
+}
+
+#[cfg(feature = "chrono")]
 fn test_supports_chrono(ruby: &Ruby) -> Result<(), Error> {
     use chrono::{DateTime, Datelike, FixedOffset, Utc};
 

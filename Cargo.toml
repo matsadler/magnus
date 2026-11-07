@@ -26,6 +26,7 @@ block = ["typed_data"]
 bytes = ["dep:bytes"]
 chrono = ["dep:chrono", "time"]
 debug = ["typed_data"]
+jiff = ["dep:jiff", "time"]
 embed = ["rb-sys/link-ruby"]
 fiber = ["typed_data"]
 gvl = []
@@ -48,6 +49,7 @@ typed_data = []
 [dependencies]
 bytes = { version = "1", optional = true }
 chrono = { version = "0.4.38", optional = true }
+jiff = { version = "0.2.35", default-features = false, optional = true }
 magnus-macros = { version = "0.9.1", path = "magnus-macros" }
 rb-sys = { version = "0.9.124", default-features = false, features = [
     "bindgen-rbimpls",
@@ -61,6 +63,7 @@ magnus = { path = ".", features = [
     "bytes",
     "chrono",
     "embed",
+    "jiff",
     "io",
     "gvl",
     "rb-sys",
