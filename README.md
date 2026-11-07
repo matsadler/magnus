@@ -375,10 +375,7 @@ See `magnus::TryConvert` for more details.
 | `[T; N]`                                                             | `[T]`, `#to_ary`                        |
 | `magnus::RArray`                                                     | `Array`, `#to_ary`                      |
 | `magnus::RHash`                                                      | `Hash`, `#to_hash`                      |
-| `std::time::SystemTime`                                              | `Time`                                  |
-| `magnus::Time`                                                       | `Time`                                  |
-| `chrono::DateTime<T>`§                                               | `Time`                                  |
-| `jiff::Timestamp`‖                                                   | `Time`                                  |
+| `std::time::SystemTime`, `magnus::Time`, `chrono::DateTime<T>`§, `jiff::Timestamp`‖ | `Time`                                  |
 | `magnus::Value`                                                      | any object                              |
 | `Vec<T>`\*                                                           | `[T]`, `#to_ary`                        |
 | `HashMap<K, V>`\*                                                    | `{K => V}`, `#to_hash`                  |
@@ -392,9 +389,11 @@ See `magnus::TryConvert` for more details.
 
 § when the `chrono` feature is enabled; `T` can be `Utc` or `FixedOffset`.
 
+‖ when the `jiff` feature is enabled.
+
 #### Jiff conversion notes
 
-##### ‖ `jiff::Timestamp`
+##### `jiff::Timestamp`
 
 Enable the `jiff` feature to convert Ruby `Time` values to `jiff::Timestamp`.
 Magnus ignores the Ruby `Time` timezone presentation and preserves the instant
@@ -423,25 +422,21 @@ and `magnus::ArgList` for some additional details.
 | `Result<T, magnus::Error>` (return only)           | `T` or raises error                     |
 | `(T, U)`, `(T, U, V)`, etc, `[T; N]`, `Vec<T>`     | `Array`                                 |
 | `HashMap<K, V>`                                    | `Hash`                                  |
-| `std::time::SystemTime`                           | `Time`                                  |
-| `magnus::Time`                                    | `Time`                                  |
-| `chrono::DateTime<T>`§                            | `Time`                                  |
-| `jiff::Timestamp`‖                                | `Time`                                  |
+| `std::time::SystemTime`, `magnus::Time`, `chrono::DateTime<T>`§, `jiff::Timestamp`‖ | `Time`                                  |
 | `T`, `typed_data::Obj<T>` where `T: TypedData`\*  | instance of `<T as TypedData>::class()` |
 
 \* see the `wrap` macro.
 
 § when the `chrono` feature is enabled; `T` can be `Utc` or `FixedOffset`.
 
+‖ when the `jiff` feature is enabled.
+
 #### Jiff conversion notes
 
-##### ‖ `jiff::Timestamp`
+##### `jiff::Timestamp`
 
 Enable the `jiff` feature to convert `jiff::Timestamp` to Ruby `Time`.
 Magnus creates a UTC Ruby `Time` with the same instant and nanoseconds.
-
-Magnus disables Jiff's default features. Timestamp conversion requires no
-timezone database.
 
 To pass the instant from a `jiff::Zoned` value, convert it explicitly with
 `zoned.timestamp()`. The Ruby result is UTC; its original timezone rules are
