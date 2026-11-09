@@ -73,6 +73,7 @@ impl Ruby {
     ///
     ///     // example of a non-erroring interrupt
     ///     // change terminal window size to trigger
+    ///     # #[cfg(unix)]
     ///     let _: Value = ruby.eval("trap('WINCH') {puts 'hi'}")?;
     ///     // INT (sent with ctrl-c) is a good example of a erroring interrupt,
     ///     // generating `SystemExit`.
