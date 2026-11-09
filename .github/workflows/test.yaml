@@ -26,6 +26,16 @@ jobs:
                 exclude:
                     - os: windows-latest
                       ruby-version: head
+                    # workaround rb-sys not building for ubuntu-latest + 3.2
+                    - os: ubuntu-latest
+                      ruby-version: "3.2"
+                include:
+                    - os: ubuntu-22.04
+                      ruby-version: "3.2"
+                      rustup-toolchain: "1.85"
+                    - os: ubuntu-22.04
+                      ruby-version: "3.2"
+                      rustup-toolchain: stable
 
         steps:
             - uses: actions/checkout@v5
