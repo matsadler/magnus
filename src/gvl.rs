@@ -33,39 +33,7 @@ impl Ruby {
     ///     time::Duration,
     /// };
     ///
-    /// use magnus::{Error, Ruby, gvl::GvlHandle};
-    ///
-    /// fn example(ruby: &Ruby) -> Result<(), Error> {
-    ///     // switching to ~1 second may make it easier to play with this example
-    ///     const INTERVAL: Duration = Duration::from_millis(100);
-    ///
-    ///     static RUBY_THREAD_CALLED: AtomicBool = AtomicBool::new(false);
-    ///     static NOGVL_CALLED: AtomicBool = AtomicBool::new(false);
-    ///
-    ///     ruby.thread_create(|ruby| {
-    ///         ruby.thread_sleep(INTERVAL * 5)?;
-    ///         RUBY_THREAD_CALLED.store(true, Ordering::Relaxed);
-    ///         Ok(())
-    ///     });
-    ///
-    ///     let result = ruby.nogvl(|| {
-    ///         NOGVL_CALLED.store(true, Ordering::Relaxed);
-    ///         std::thread::sleep(INTERVAL * 10);
-    ///         assert!(RUBY_THREAD_CALLED.load(Ordering::Relaxed));
-    ///     });
-    ///     assert!(NOGVL_CALLED.load(Ordering::Relaxed));
-    ///     result
-    /// }
-    /// # Ruby::init(example).unwrap()
-    /// ```
-    ///
-    /// ```
-    /// use std::{
-    ///     sync::atomic::{AtomicBool, Ordering},
-    ///     time::Duration,
-    /// };
-    ///
-    /// use magnus::{Error, Ruby, Value, error::OpaqueError, gvl::NoGvl};
+    /// use magnus::{Error, Ruby, Value, error::OpaqueError};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     // switching to `from_secs` may make it easier to play with this example
@@ -85,8 +53,8 @@ impl Ruby {
     ///     });
     ///
     ///     let interrupt = AtomicBool::new(false);
-    ///     let result = ruby.nogvl(
-    ///         NoGvl::new(|gvl| {
+    ///     let result = ruby
+    ///         .nogvl(|gvl| {
     ///             for i in 0..6 {
     ///                 if interrupt.load(Ordering::Acquire) {
     ///                     // give Ruby a chance to run interrupts.
@@ -109,8 +77,8 @@ impl Ruby {
     ///         })
     ///         .unblock(|| interrupt.store(true, Ordering::Relaxed))
     ///         .ubf_async_safe()
-    ///         .offload_safe(),
-    ///     );
+    ///         .offload_safe()
+    ///         .call();
     ///     result
     ///         .map(|r| r.map_err(|e| OpaqueError::into_error_with(e, &ruby)))
     ///         .and_then(|e| e)
@@ -118,11 +86,60 @@ impl Ruby {
     /// # Ruby::init(example).unwrap()
     /// ```
     #[inline]
-    pub fn nogvl<F>(&self, func: F) -> F::Output
+    pub fn nogvl<F, T>(&self, func: F) -> NoGvl<'_, F, ()>
     where
-        F: CallWithoutGvl,
+        F: Send + FnOnce(&GvlHandle) -> T,
     {
-        func.call(self)
+        NoGvl::new(self, func)
+    }
+
+    /// Run `func` in parallel with other Ruby threads.
+    ///
+    /// Equivalent to `ruby.nogvl(|_| (func)()).call()`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use std::{
+    ///     sync::{
+    ///         Arc,
+    ///         atomic::{AtomicBool, Ordering},
+    ///     },
+    ///     time::Duration,
+    /// };
+    ///
+    /// use magnus::{Error, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     // switching to ~1 second may make it easier to play with this example
+    ///     const INTERVAL: Duration = Duration::from_millis(100);
+    ///
+    ///     let ruby_thread_called = Arc::new(AtomicBool::new(false));
+    ///     let thread_called = ruby_thread_called.clone();
+    ///
+    ///     ruby.thread_create_from_fn(move |ruby| {
+    ///         ruby.thread_sleep(INTERVAL * 5)?;
+    ///         thread_called.store(true, Ordering::Relaxed);
+    ///         Ok(())
+    ///     });
+    ///
+    ///     let nogvl_called: AtomicBool = AtomicBool::new(false);
+    ///     let result = ruby.call_without_gvl(|| {
+    ///         nogvl_called.store(true, Ordering::Relaxed);
+    ///         std::thread::sleep(INTERVAL * 10);
+    ///         assert!(ruby_thread_called.load(Ordering::Relaxed));
+    ///     });
+    ///     assert!(nogvl_called.load(Ordering::Relaxed));
+    ///     result
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
+    #[inline]
+    pub fn call_without_gvl<F, T>(&self, func: F) -> Result<T, Error>
+    where
+        F: Send + FnOnce() -> T,
+    {
+        self.nogvl(|_| (func)()).call()
     }
 
     fn nogvl_impl<F, U, T>(
@@ -209,38 +226,42 @@ impl Ruby {
     }
 }
 
-mod private {
-    pub trait CallWithoutGvl {}
-}
-
-pub trait CallWithoutGvl: private::CallWithoutGvl {
-    type Output;
-
-    fn call(self, ruby: &Ruby) -> Self::Output;
-}
-
 #[must_use]
-pub struct NoGvl<F, U> {
+pub struct NoGvl<'ruby, F, U> {
+    ruby: &'ruby Ruby,
     func: F,
-    unblock: Option<U>,
+    unblock: U,
     flags: NoGvlFlags,
 }
 
-impl<F, T> NoGvl<F, fn()>
+impl<'ruby, F, T> NoGvl<'ruby, F, ()>
 where
     F: Send + FnOnce(&GvlHandle) -> T,
 {
     #[inline]
-    pub fn new(func: F) -> Self {
+    fn new(ruby: &'ruby Ruby, func: F) -> Self {
         Self {
+            ruby,
             func,
-            unblock: None,
+            unblock: (),
             flags: NoGvlFlags::new(),
         }
     }
 }
 
-impl<F, U> NoGvl<F, U> {
+impl<'ruby, F> NoGvl<'ruby, F, ()> {
+    #[inline]
+    pub fn unblock<U>(self, unblock: U) -> NoGvl<'ruby, F, U> {
+        NoGvl {
+            ruby: self.ruby,
+            func: self.func,
+            unblock,
+            flags: self.flags,
+        }
+    }
+}
+
+impl<'ruby, F, U> NoGvl<'ruby, F, U> {
     #[inline]
     fn set_intr_fail(&mut self) {
         self.flags = self.flags.intr_fail();
@@ -257,16 +278,7 @@ impl<F, U> NoGvl<F, U> {
     }
 
     #[inline]
-    pub fn unblock<V>(self, unblock: V) -> NoGvl<F, V> {
-        NoGvl {
-            func: self.func,
-            unblock: Some(unblock),
-            flags: self.flags,
-        }
-    }
-
-    #[inline]
-    pub fn intr_fail(mut self) -> NoGvlIntrFail<F, U> {
+    pub fn intr_fail(mut self) -> NoGvlIntrFail<'ruby, F, U> {
         self.set_intr_fail();
         NoGvlIntrFail(self)
     }
@@ -278,37 +290,48 @@ impl<F, U> NoGvl<F, U> {
     }
 
     #[inline]
-    pub fn offload_safe(mut self) -> NoGvlOffload<F, U> {
+    pub fn offload_safe(mut self) -> NoGvlOffload<'ruby, F, U> {
         self.set_offload_safe();
         NoGvlOffload(self)
     }
 }
 
-impl<F, U> private::CallWithoutGvl for NoGvl<F, U> {}
-
-impl<F, U, T> CallWithoutGvl for NoGvl<F, U>
+impl<F, U, T> NoGvl<'_, F, U>
 where
     F: Send + FnOnce(&GvlHandle) -> T,
     U: Send + FnMut(),
 {
-    type Output = Result<T, Error>;
-
     #[inline]
-    fn call(self, ruby: &Ruby) -> Self::Output {
-        ruby.nogvl_impl(self.func, self.unblock, self.flags)
+    pub fn call(self) -> Result<T, Error> {
+        self.ruby
+            .nogvl_impl(self.func, Some(self.unblock), self.flags)
+            .map(|o| o.expect("func to have been called"))
+    }
+}
+
+impl<F, T> NoGvl<'_, F, ()>
+where
+    F: Send + FnOnce(&GvlHandle) -> T,
+{
+    #[inline]
+    pub fn call(self) -> Result<T, Error> {
+        self.ruby
+            .nogvl_impl(self.func, None::<fn()>, self.flags)
             .map(|o| o.expect("func to have been called"))
     }
 }
 
 #[must_use]
-pub struct NoGvlIntrFail<F, U>(NoGvl<F, U>);
+pub struct NoGvlIntrFail<'ruby, F, U>(NoGvl<'ruby, F, U>);
 
-impl<F, U> NoGvlIntrFail<F, U> {
+impl<'ruby, F> NoGvlIntrFail<'ruby, F, ()> {
     #[inline]
-    pub fn unblock<V>(self, unblock: V) -> NoGvlIntrFail<F, V> {
+    pub fn unblock<U>(self, unblock: U) -> NoGvlIntrFail<'ruby, F, U> {
         NoGvlIntrFail(self.0.unblock(unblock))
     }
+}
 
+impl<'ruby, F, U> NoGvlIntrFail<'ruby, F, U> {
     #[inline]
     pub fn ubf_async_safe(mut self) -> Self {
         self.0.set_ubf_async_safe();
@@ -316,39 +339,52 @@ impl<F, U> NoGvlIntrFail<F, U> {
     }
 
     #[inline]
-    pub fn offload_safe(mut self) -> NoGvlIntrFailOffload<F, U> {
+    pub fn offload_safe(mut self) -> NoGvlIntrFailOffload<'ruby, F, U> {
         self.0.set_offload_safe();
         NoGvlIntrFailOffload(self.0)
     }
 }
 
-impl<F, U> private::CallWithoutGvl for NoGvlIntrFail<F, U> {}
-
-impl<F, U, T> CallWithoutGvl for NoGvlIntrFail<F, U>
+impl<F, U, T> NoGvlIntrFail<'_, F, U>
 where
     F: Send + FnOnce(&GvlHandle) -> T,
     U: Send + FnMut(),
 {
-    type Output = Option<T>;
-
     #[inline]
-    fn call(self, ruby: &Ruby) -> Self::Output {
-        ruby.nogvl_impl(self.0.func, self.0.unblock, self.0.flags)
+    pub fn call(self) -> Option<T> {
+        self.0
+            .ruby
+            .nogvl_impl(self.0.func, Some(self.0.unblock), self.0.flags)
+            .expect("no error without interrupts")
+    }
+}
+
+impl<F, T> NoGvlIntrFail<'_, F, ()>
+where
+    F: Send + FnOnce(&GvlHandle) -> T,
+{
+    #[inline]
+    pub fn call(self) -> Option<T> {
+        self.0
+            .ruby
+            .nogvl_impl(self.0.func, None::<fn()>, self.0.flags)
             .expect("no error without interrupts")
     }
 }
 
 #[must_use]
-pub struct NoGvlOffload<F, U>(NoGvl<F, U>);
+pub struct NoGvlOffload<'ruby, F, U>(NoGvl<'ruby, F, U>);
 
-impl<F, U> NoGvlOffload<F, U> {
+impl<'ruby, F> NoGvlOffload<'ruby, F, ()> {
     #[inline]
-    pub fn unblock<V>(self, unblock: V) -> NoGvlOffload<F, V> {
+    pub fn unblock<U>(self, unblock: U) -> NoGvlOffload<'ruby, F, U> {
         NoGvlOffload(self.0.unblock(unblock))
     }
+}
 
+impl<'ruby, F, U> NoGvlOffload<'ruby, F, U> {
     #[inline]
-    pub fn intr_fail(mut self) -> NoGvlIntrFailOffload<F, U> {
+    pub fn intr_fail(mut self) -> NoGvlIntrFailOffload<'ruby, F, U> {
         self.0.set_intr_fail();
         NoGvlIntrFailOffload(self.0)
     }
@@ -360,31 +396,44 @@ impl<F, U> NoGvlOffload<F, U> {
     }
 }
 
-impl<F, U> private::CallWithoutGvl for NoGvlOffload<F, U> {}
-
-impl<F, U, T> CallWithoutGvl for NoGvlOffload<F, U>
+impl<F, U, T> NoGvlOffload<'_, F, U>
 where
     F: Send + FnOnce(&GvlHandle) -> T,
     U: Send + FnMut(),
 {
-    type Output = Result<T, Error>;
-
     #[inline]
-    fn call(self, ruby: &Ruby) -> Self::Output {
-        ruby.nogvl_impl(self.0.func, self.0.unblock, self.0.flags)
+    pub fn call(self) -> Result<T, Error> {
+        self.0
+            .ruby
+            .nogvl_impl(self.0.func, Some(self.0.unblock), self.0.flags)
+            .map(|o| o.expect("func to have been called"))
+    }
+}
+
+impl<F, T> NoGvlOffload<'_, F, ()>
+where
+    F: Send + FnOnce(&GvlHandle) -> T,
+{
+    #[inline]
+    pub fn call(self) -> Result<T, Error> {
+        self.0
+            .ruby
+            .nogvl_impl(self.0.func, None::<fn()>, self.0.flags)
             .map(|o| o.expect("func to have been called"))
     }
 }
 
 #[must_use]
-pub struct NoGvlIntrFailOffload<F, U>(NoGvl<F, U>);
+pub struct NoGvlIntrFailOffload<'ruby, F, U>(NoGvl<'ruby, F, U>);
 
-impl<F, U> NoGvlIntrFailOffload<F, U> {
+impl<'ruby, F> NoGvlIntrFailOffload<'ruby, F, ()> {
     #[inline]
-    pub fn unblock<V>(self, unblock: V) -> NoGvlIntrFailOffload<F, V> {
+    pub fn unblock<U>(self, unblock: U) -> NoGvlIntrFailOffload<'ruby, F, U> {
         NoGvlIntrFailOffload(self.0.unblock(unblock))
     }
+}
 
+impl<F, U> NoGvlIntrFailOffload<'_, F, U> {
     #[inline]
     pub fn ubf_async_safe(mut self) -> Self {
         self.0.set_ubf_async_safe();
@@ -392,32 +441,28 @@ impl<F, U> NoGvlIntrFailOffload<F, U> {
     }
 }
 
-impl<F, U> private::CallWithoutGvl for NoGvlIntrFailOffload<F, U> {}
-
-impl<F, U, T> CallWithoutGvl for NoGvlIntrFailOffload<F, U>
+impl<F, U, T> NoGvlIntrFailOffload<'_, F, U>
 where
     F: Send + FnOnce(&GvlHandle) -> T,
     U: Send + FnMut(),
 {
-    type Output = Result<Option<T>, Error>;
-
     #[inline]
-    fn call(self, ruby: &Ruby) -> Self::Output {
-        ruby.nogvl_impl(self.0.func, self.0.unblock, self.0.flags)
+    pub fn call(self) -> Result<Option<T>, Error> {
+        self.0
+            .ruby
+            .nogvl_impl(self.0.func, Some(self.0.unblock), self.0.flags)
     }
 }
 
-impl<F, T> private::CallWithoutGvl for F where F: Send + FnOnce() -> T {}
-
-impl<F, T> CallWithoutGvl for F
+impl<F, T> NoGvlIntrFailOffload<'_, F, ()>
 where
-    F: Send + FnOnce() -> T,
+    F: Send + FnOnce(&GvlHandle) -> T,
 {
-    type Output = Result<T, Error>;
-
     #[inline]
-    fn call(self, ruby: &Ruby) -> Self::Output {
-        NoGvl::new(|_| self()).call(ruby)
+    pub fn call(self) -> Result<Option<T>, Error> {
+        self.0
+            .ruby
+            .nogvl_impl(self.0.func, None::<fn()>, self.0.flags)
     }
 }
 
@@ -433,33 +478,35 @@ impl GvlHandle {
     /// # use std::sync::atomic::{AtomicBool, Ordering};
     /// use std::time::Duration;
     ///
-    /// use magnus::{Error, Ruby, Value, error::OpaqueError, gvl::NoGvl};
+    /// use magnus::{Error, Ruby, Value, error::OpaqueError};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     // switching to `from_secs` may make it easier to play with this example
     ///     const INTERVAL: Duration = Duration::from_millis(1);
-    ///     # static NOGVL_CALLED: AtomicBool = AtomicBool::new(false);
-    ///     # static WITH_GVL_CALLED: AtomicBool = AtomicBool::new(false);
+    ///     # let nogvl_called = AtomicBool::new(false);
+    ///     # let with_gvl_called = AtomicBool::new(false);
     ///
-    ///     let result = ruby.nogvl(NoGvl::new(|gvl| {
-    ///             # NOGVL_CALLED.store(true, Ordering::Relaxed);
-    ///         // do some work with GVL released
-    ///         std::thread::sleep(INTERVAL);
+    ///     let result = ruby
+    ///         .nogvl(|gvl| {
+    ///             # nogvl_called.store(true, Ordering::Relaxed);
+    ///             // do some work with GVL released
+    ///             std::thread::sleep(INTERVAL);
     ///
-    ///         // reacquire GVL
-    ///         gvl.call_with_gvl(|ruby| {
-    ///                 # WITH_GVL_CALLED.store(true, Ordering::Relaxed);
-    ///             let _: Value = ruby.eval("puts 'hi from ruby'")?;
+    ///             // reacquire GVL
+    ///             gvl.call_with_gvl(|ruby| {
+    ///             # with_gvl_called.store(true, Ordering::Relaxed);
+    ///                 let _: Value = ruby.eval("puts 'hi from ruby'")?;
+    ///                 Ok(())
+    ///             })?;
+    ///
+    ///             // do some work with gvl released
+    ///             std::thread::sleep(INTERVAL);
+    ///
     ///             Ok(())
-    ///         })?;
-    ///
-    ///         // do some work with gvl released
-    ///         std::thread::sleep(INTERVAL);
-    ///
-    ///         Ok(())
-    ///     }));
-    ///     # assert!(NOGVL_CALLED.load(Ordering::Relaxed));
-    ///     # assert!(WITH_GVL_CALLED.load(Ordering::Relaxed));
+    ///         })
+    ///         .call();
+    ///     # assert!(nogvl_called.load(Ordering::Relaxed));
+    ///     # assert!(with_gvl_called.load(Ordering::Relaxed));
     ///     result
     ///         .map(|r| r.map_err(|e| OpaqueError::into_error_with(e, &ruby)))
     ///         .and_then(|e| e)
