@@ -36,8 +36,8 @@ impl Ruby {
     /// use magnus::{Error, Ruby, gvl::GvlHandle};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
-    ///     // switching to `from_secs` may make it easier to play with this example
-    ///     const INTERVAL: Duration = Duration::from_millis(1);
+    ///     // switching to ~1 second may make it easier to play with this example
+    ///     const INTERVAL: Duration = Duration::from_millis(100);
     ///
     ///     static RUBY_THREAD_CALLED: AtomicBool = AtomicBool::new(false);
     ///     static NOGVL_CALLED: AtomicBool = AtomicBool::new(false);
@@ -437,7 +437,7 @@ impl GvlHandle {
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     // switching to `from_secs` may make it easier to play with this example
-    ///     const INTERVAL: Duration = Duration::from_secs(1);
+    ///     const INTERVAL: Duration = Duration::from_millis(1);
     ///     # static NOGVL_CALLED: AtomicBool = AtomicBool::new(false);
     ///     # static WITH_GVL_CALLED: AtomicBool = AtomicBool::new(false);
     ///
