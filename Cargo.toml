@@ -58,11 +58,12 @@ seq-macro = "0.3"
 
 [dev-dependencies]
 magnus = { path = ".", features = [
-    "embed",
-    "rb-sys",
     "bytes",
     "chrono",
+    "embed",
     "io",
+    "gvl",
+    "rb-sys",
 ] }
 rb-sys = { version = "0.9.124", default-features = false, features = [
     "stable-api-compiled-fallback",

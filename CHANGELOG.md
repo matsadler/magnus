@@ -4,7 +4,7 @@
 ### Added
 - `Thread::tracepoint_new`.
 - `Ruby::thread_lock_native_thread`.
-- `Ruby::nogvl`/`thread_call_without_gvl`/`thread_call_without_gvl2`.
+- `Ruby::nogvl`.
 
 ### Changed
 - New `block`, `debug`, `fiber`, `mutex`, `numeric`, `process`, `range`,

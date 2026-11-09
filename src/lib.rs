@@ -1538,8 +1538,8 @@
 //! * `rb_thread_alone`: [`Ruby::thread_alone`].
 // * `rb_thread_atfork`:
 // * `rb_thread_atfork_before_exec`:
-//! * `rb_thread_call_without_gvl`: [`Ruby::thread_call_without_gvl`].
-//! * `rb_thread_call_without_gvl2`: [`Ruby::thread_call_without_gvl2`].
+//! * `rb_thread_call_without_gvl`: See [`Ruby::nogvl`].
+//! * `rb_thread_call_without_gvl2`: See [`Ruby::nogvl`].
 //! * `rb_thread_call_with_gvl`: [`GvlHandle::call_with_gvl`](gvl::GvlHandle::call_with_gvl).
 //! * `rb_thread_check_ints`: [`Ruby::thread_check_ints`].
 //! * `rb_thread_create`: [`Ruby::thread_create`] & [`Ruby::thread_create_from_fn`].
