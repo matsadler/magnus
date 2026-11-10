@@ -1,5 +1,14 @@
 //! Types and functions for working with Ruby's Time class.
 //!
+//! With the `jiff` feature, [`jiff::Timestamp`] converts to and from Ruby
+//! `Time` as an exact instant. Magnus uses UTC for the Ruby representation
+//! because `jiff::Timestamp` carries no timezone presentation. Ruby-to-Jiff
+//! conversion inherits the platform range of Ruby's native `timespec` and
+//! raises `RangeError` with `"out of Time range"` for values outside
+//! [Jiff's supported timestamp range][jiff-timestamp-range].
+//!
+//! [jiff-timestamp-range]: https://docs.rs/jiff/latest/jiff/struct.Timestamp.html#associatedconstant.MIN
+//!
 //! See also [`Ruby`](Ruby#time) for more Time related methods.
 
 use std::{
@@ -344,6 +353,23 @@ impl IntoValue for SystemTime {
     }
 }
 
+#[cfg(feature = "jiff")]
+#[cfg_attr(docsrs, doc(cfg(feature = "jiff")))]
+impl IntoValue for jiff::Timestamp {
+    #[inline]
+    fn into_value_with(self, ruby: &Ruby) -> Value {
+        ruby.time_timespec_new(
+            Timespec {
+                tv_sec: self.as_second(),
+                tv_nsec: i64::from(self.subsec_nanosecond()),
+            },
+            Offset::utc(),
+        )
+        .expect("jiff timestamp to be in range for Ruby Time")
+        .as_value()
+    }
+}
+
 #[cfg(feature = "chrono")]
 #[cfg_attr(docsrs, doc(cfg(feature = "chrono")))]
 impl IntoValue for chrono::DateTime<chrono::Utc> {
@@ -393,6 +419,30 @@ impl TryConvert for Time {
                 },),
             )
         })
+    }
+}
+
+/// Converts a Ruby `Time` to a Jiff timestamp.
+///
+/// # Errors
+///
+/// Returns Ruby `RangeError` with `"out of Time range"` when the `Time` falls
+/// outside Jiff's [`Timestamp::MIN`](jiff::Timestamp::MIN) through
+/// [`Timestamp::MAX`](jiff::Timestamp::MAX) range.
+#[cfg(feature = "jiff")]
+#[cfg_attr(docsrs, doc(cfg(feature = "jiff")))]
+impl TryConvert for jiff::Timestamp {
+    fn try_convert(val: Value) -> Result<Self, Error> {
+        let time = Time::try_convert(val)?;
+        let ts = time.timespec()?;
+        let out_of_range = || {
+            Error::new(
+                Ruby::get_with(val).exception_range_error(),
+                "out of Time range",
+            )
+        };
+        let nanoseconds = i32::try_from(ts.tv_nsec).map_err(|_| out_of_range())?;
+        Self::new(ts.tv_sec, nanoseconds).map_err(|_| out_of_range())
     }
 }
 
