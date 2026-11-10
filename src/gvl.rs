@@ -17,6 +17,7 @@ use rb_sys::{RB_NOGVL_INTR_FAIL, RB_NOGVL_UBF_ASYNC_SAFE, rb_nogvl, rb_thread_ca
 use crate::{
     api::Ruby,
     error::{Error, OpaqueError, protect},
+    gvl_state::GvlState,
 };
 
 /// # `GVL`
@@ -466,6 +467,65 @@ where
     }
 }
 
+#[inline]
+pub fn call_with_gvl<F, T>(func: F) -> Option<T>
+where
+    F: Send + FnOnce(&Ruby) -> T,
+    T: Send,
+{
+    match GvlState::current() {
+        GvlState::Locked => Some((func)(&unsafe { Ruby::get_unchecked() })),
+        GvlState::Unlocked => Some(unsafe { call_with_gvl_unchecked(func) }),
+        GvlState::NonRubyThread => None,
+    }
+}
+
+pub unsafe fn call_with_gvl_unchecked<F, T>(func: F) -> T
+where
+    F: Send + FnOnce(&Ruby) -> T,
+    T: Send,
+{
+    struct Data<F, T> {
+        closure: Option<F>,
+        result: Option<T>,
+        panic: Option<Box<dyn Any + Send>>,
+    }
+
+    unsafe extern "C" fn call<F, T>(data: *mut c_void) -> *mut c_void
+    where
+        F: Send + FnOnce(&Ruby) -> T,
+        T: Send,
+    {
+        unsafe {
+            let data = &mut *(data as *mut Data<F, T>);
+            if let Err(e) = catch_unwind(AssertUnwindSafe(|| {
+                data.result = Some((data.closure.take().unwrap())(&Ruby::get_unchecked()));
+            })) {
+                data.panic = Some(e);
+            };
+            ptr::null_mut()
+        }
+    }
+
+    let mut data = Data {
+        closure: Some(func),
+        result: None,
+        panic: None,
+    };
+
+    unsafe {
+        rb_thread_call_with_gvl(
+            Some(call::<F, T>),
+            &mut data as *mut Data<F, T> as *mut c_void,
+        );
+    }
+
+    if let Some(e) = data.panic {
+        resume_unwind(e);
+    }
+    data.result.unwrap()
+}
+
 /// A handle to reacquire the GVL from within [`Ruby::nogvl`].
 pub struct GvlHandle(PhantomData<*mut ()>);
 
@@ -513,50 +573,22 @@ impl GvlHandle {
     /// }
     /// # Ruby::init(example).unwrap()
     /// ```
+    #[inline]
     pub fn call_with_gvl<F, T>(&self, func: F) -> Result<T, OpaqueError>
     where
-        F: Send + FnOnce(&Ruby) -> Result<T, OpaqueError>,
+        F: Send + FnOnce(&Ruby) -> Result<T, Error>,
         T: Send,
     {
-        struct Data<F, T> {
-            closure: Option<F>,
-            result: Option<Result<T, OpaqueError>>,
-            panic: Option<Box<dyn Any + Send>>,
-        }
+        self.call_with_gvl_any(|ruby| func(ruby).map_err(Into::into))
+    }
 
-        unsafe extern "C" fn call<F, T>(data: *mut c_void) -> *mut c_void
-        where
-            F: Send + FnOnce(&Ruby) -> Result<T, OpaqueError>,
-            T: Send,
-        {
-            unsafe {
-                let data = &mut *(data as *mut Data<F, T>);
-                if let Err(e) = catch_unwind(AssertUnwindSafe(|| {
-                    data.result = Some((data.closure.take().unwrap())(&Ruby::get_unchecked()));
-                })) {
-                    data.panic = Some(e);
-                };
-                ptr::null_mut()
-            }
-        }
-
-        let mut data = Data {
-            closure: Some(func),
-            result: None,
-            panic: None,
-        };
-
-        unsafe {
-            rb_thread_call_with_gvl(
-                Some(call::<F, T>),
-                &mut data as *mut Data<F, T> as *mut c_void,
-            );
-        }
-
-        if let Some(e) = data.panic {
-            resume_unwind(e);
-        }
-        data.result.unwrap()
+    #[inline]
+    pub fn call_with_gvl_any<F, T>(&self, func: F) -> T
+    where
+        F: Send + FnOnce(&Ruby) -> T,
+        T: Send,
+    {
+        unsafe { call_with_gvl_unchecked(func) }
     }
 }
 

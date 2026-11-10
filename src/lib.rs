@@ -1540,7 +1540,7 @@
 // * `rb_thread_atfork_before_exec`:
 //! * `rb_thread_call_without_gvl`: See [`Ruby::nogvl`].
 //! * `rb_thread_call_without_gvl2`: See [`Ruby::nogvl`].
-//! * `rb_thread_call_with_gvl`: [`GvlHandle::call_with_gvl`](gvl::GvlHandle::call_with_gvl).
+//! * `rb_thread_call_with_gvl`: [`GvlHandle::call_with_gvl`](gvl::GvlHandle::call_with_gvl) & [`gvl::call_with_gvl`].
 //! * `rb_thread_check_ints`: [`Ruby::thread_check_ints`].
 //! * `rb_thread_create`: [`Ruby::thread_create`] & [`Ruby::thread_create_from_fn`].
 //! * `rb_thread_current`: [`Ruby::thread_current`].
@@ -1843,6 +1843,7 @@ pub mod gc;
 #[cfg(feature = "gvl")]
 #[cfg_attr(docsrs, doc(cfg(feature = "gvl")))]
 pub mod gvl;
+mod gvl_state;
 mod integer;
 mod into_value;
 #[cfg(feature = "io")]
