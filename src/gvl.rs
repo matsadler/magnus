@@ -252,7 +252,10 @@ where
 
 impl<'ruby, F> NoGvl<'ruby, F, ()> {
     #[inline]
-    pub fn unblock<U>(self, unblock: U) -> NoGvl<'ruby, F, U> {
+    pub fn unblock<U>(self, unblock: U) -> NoGvl<'ruby, F, U>
+    where
+        U: Send + FnMut(),
+    {
         NoGvl {
             ruby: self.ruby,
             func: self.func,
@@ -327,7 +330,10 @@ pub struct NoGvlIntrFail<'ruby, F, U>(NoGvl<'ruby, F, U>);
 
 impl<'ruby, F> NoGvlIntrFail<'ruby, F, ()> {
     #[inline]
-    pub fn unblock<U>(self, unblock: U) -> NoGvlIntrFail<'ruby, F, U> {
+    pub fn unblock<U>(self, unblock: U) -> NoGvlIntrFail<'ruby, F, U>
+    where
+        U: Send + FnMut(),
+    {
         NoGvlIntrFail(self.0.unblock(unblock))
     }
 }
@@ -378,7 +384,10 @@ pub struct NoGvlOffload<'ruby, F, U>(NoGvl<'ruby, F, U>);
 
 impl<'ruby, F> NoGvlOffload<'ruby, F, ()> {
     #[inline]
-    pub fn unblock<U>(self, unblock: U) -> NoGvlOffload<'ruby, F, U> {
+    pub fn unblock<U>(self, unblock: U) -> NoGvlOffload<'ruby, F, U>
+    where
+        U: Send + FnMut(),
+    {
         NoGvlOffload(self.0.unblock(unblock))
     }
 }
@@ -429,7 +438,10 @@ pub struct NoGvlIntrFailOffload<'ruby, F, U>(NoGvl<'ruby, F, U>);
 
 impl<'ruby, F> NoGvlIntrFailOffload<'ruby, F, ()> {
     #[inline]
-    pub fn unblock<U>(self, unblock: U) -> NoGvlIntrFailOffload<'ruby, F, U> {
+    pub fn unblock<U>(self, unblock: U) -> NoGvlIntrFailOffload<'ruby, F, U>
+    where
+        U: Send + FnMut(),
+    {
         NoGvlIntrFailOffload(self.0.unblock(unblock))
     }
 }
