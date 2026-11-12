@@ -410,6 +410,7 @@ impl<F, U, T> NoGvlOffload<'_, F, U>
 where
     F: Send + FnOnce(&GvlHandle) -> T,
     U: Send + FnMut(),
+    T: Send,
 {
     #[inline]
     pub fn call(self) -> Result<T, Error> {
@@ -423,6 +424,7 @@ where
 impl<F, T> NoGvlOffload<'_, F, ()>
 where
     F: Send + FnOnce(&GvlHandle) -> T,
+    T: Send,
 {
     #[inline]
     pub fn call(self) -> Result<T, Error> {
@@ -458,6 +460,7 @@ impl<F, U, T> NoGvlIntrFailOffload<'_, F, U>
 where
     F: Send + FnOnce(&GvlHandle) -> T,
     U: Send + FnMut(),
+    T: Send,
 {
     #[inline]
     pub fn call(self) -> Result<Option<T>, Error> {
@@ -470,6 +473,7 @@ where
 impl<F, T> NoGvlIntrFailOffload<'_, F, ()>
 where
     F: Send + FnOnce(&GvlHandle) -> T,
+    T: Send,
 {
     #[inline]
     pub fn call(self) -> Result<Option<T>, Error> {
