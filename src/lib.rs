@@ -115,7 +115,9 @@
 //! | `debug`      | ✔︎       | [`debug`]                                     |
 //! | `embed`      |         | [`embed`]                                     |
 //! | `fiber`      | ✔︎       | [`fiber`], [`Fiber`]                          |
+//! | `gvl`        |         | [`gvl`], [`Ruby::nogvl`]                      |
 //! | `io`         | ✔︎       | [`io`]                                        |
+//! | `jiff`       |         | conversions for the jiff crate                |
 //! | `mutex`      | ✔︎       | [`Mutex`]                                     |
 //! | `numeric`    | ✔︎       | [`numeric`], [`Numeric`]                      |
 //! | `process`    | ✔︎       | [`process`]                                   |
