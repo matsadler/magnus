@@ -1,9 +1,8 @@
 use std::time::SystemTime;
 
-use magnus::{Error, Ruby, rb_assert};
-
 #[cfg(feature = "jiff")]
 use magnus::value::ReprValue;
+use magnus::{Error, Ruby, rb_assert};
 
 #[test]
 fn test_all() {
