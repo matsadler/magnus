@@ -652,3 +652,45 @@ impl NoGvlFlags {
         Self(val)
     }
 }
+
+/// A wrapper that falsely claims to be [`Send`] regardless of whether the
+/// contained type is.
+///
+/// This is provided as part of [Magnus'](crate) [`gvl`][crate::gvl] module
+/// specifically to work around limitations of [`Ruby::nogvl`] and
+/// [`GvlHandle::call_with_gvl`]. It should not be used with any other parts of
+/// Magnus, other crates, or the Rust std/core libs.
+///
+/// Do not take this type's existence as an encouragement to use it. It is a
+/// very simple implementation and is provided so that its dangers can be
+/// documented.
+#[repr(transparent)]
+pub struct UnsafeSend<T>(T);
+
+unsafe impl<T> Send for UnsafeSend<T> {}
+
+impl<T> UnsafeSend<T> {
+    /// Create a new `UnsafeSend`.
+    ///
+    /// Note that this function is unsafe as once the value is created it is
+    /// possible to move it to another thread where it could be dropped and
+    /// the drop implementation for `T` run on another thread.
+    ///
+    /// Do no use this to transit a value through another thread back to its
+    /// original thread as an error or panic in the other thread could cause it
+    /// to be dropped there, potentially triggering undefined behaviour.
+    ///
+    /// This should only be used when it can be verified it will not be moved
+    /// to another thread in the case of overly restrictive [`Send`] bounds of
+    /// [`Ruby::nogvl`] and [`GvlHandle::call_with_gvl`].
+    pub unsafe fn new(inner: T) -> Self {
+        Self(inner)
+    }
+
+    /// Extract the value from the `UnsafeSend` container.
+    ///
+    /// This must be called on the same thread `self` was created on.
+    pub unsafe fn into_inner(self) -> T {
+        self.0
+    }
+}
