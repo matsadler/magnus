@@ -1,0 +1,16 @@
+[package]
+name = "jiff-magnus"
+version = "0.0.1"
+edition = "2024"
+rust-version = "1.85"
+description = "Jiff timezone constructors and bundled timezone data for Ruby Time."
+repository = "https://github.com/matsadler/magnus"
+license = "MIT"
+
+[dependencies]
+jiff = { version = "1.0", default-features = false, features = ["std", "tzdb-bundle-always"] }
+magnus = { version = "0.10.0", path = "..", default-features = false, features = ["jiff-zoned", "rb-sys"] }
+rb-sys = { version = "0.9.124", default-features = false, features = ["stable-api-compiled-fallback"] }
+
+[dev-dependencies]
+magnus = { version = "0.10.0", path = "..", default-features = false, features = ["embed", "jiff-zoned", "rb-sys"] }

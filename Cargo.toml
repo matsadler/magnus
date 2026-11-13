@@ -12,7 +12,7 @@ license = "MIT"
 exclude = [".github", ".gitignore"]
 
 [workspace]
-members = ["magnus-macros"]
+members = ["magnus-macros", "jiff-magnus"]
 exclude = [
     "examples/rust_blank/ext/rust_blank",
     "examples/custom_exception_ruby/ext/ahriman",
@@ -27,6 +27,7 @@ bytes = ["dep:bytes"]
 chrono = ["dep:chrono", "time"]
 debug = ["typed_data"]
 jiff = ["dep:jiff", "time"]
+jiff-zoned = ["jiff", "jiff/alloc"]
 embed = ["rb-sys/link-ruby"]
 fiber = ["typed_data"]
 gvl = []
@@ -49,7 +50,7 @@ typed_data = []
 [dependencies]
 bytes = { version = "1", optional = true }
 chrono = { version = "0.4.38", optional = true }
-jiff = { version = "0.2.35", default-features = false, optional = true }
+jiff = { version = "1.0", default-features = false, optional = true }
 magnus-macros = { version = "0.9.1", path = "magnus-macros" }
 rb-sys = { version = "0.9.124", default-features = false, features = [
     "bindgen-rbimpls",
@@ -59,11 +60,12 @@ rb-sys = { version = "0.9.124", default-features = false, features = [
 seq-macro = "0.3"
 
 [dev-dependencies]
+jiff = { version = "1.0", default-features = false, features = ["std", "tzdb-bundle-always"] }
 magnus = { path = ".", features = [
     "bytes",
     "chrono",
     "embed",
-    "jiff",
+    "jiff-zoned",
     "io",
     "gvl",
     "rb-sys",

@@ -58,12 +58,12 @@ jobs:
       - name: Set BINDGEN_EXTRA_CLANG_ARGS
         shell: bash
         if: runner.os == 'Windows'
-        run: echo BINDGEN_EXTRA_CLANG_ARGS="--target=x86_64-pc-windows-gnu --sysroot=${RI_DEVKIT//\\/\/}$MSYSTEM_PREFIX" >> $GITHUB_ENV
+        run: echo BINDGEN_EXTRA_CLANG_ARGS="--target=x86_64-pc-windows-gnu --sysroot=${RI_DEVKIT//\\/\/}$MSYSTEM_PREFIX" >> "$GITHUB_ENV"
 
       # fixes "fatal error: 'strings.h' file not found" for Linux
       - name: Set LD_LIBRARY_PATH
         if: runner.os == 'Linux'
-        run: echo "LD_LIBRARY_PATH=$(ruby -rrbconfig -e'puts RbConfig::CONFIG["libdir"]')${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" >> $GITHUB_ENV
+        run: echo "LD_LIBRARY_PATH=$(ruby -rrbconfig -e'puts RbConfig::CONFIG["libdir"]')${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" >> "$GITHUB_ENV"
 
       # Ruby head is currently missing the power_assert default gem
       - name: Ruby head bug workaround
@@ -81,7 +81,8 @@ jobs:
         if: matrix.ruby-version == 'head'
         run: |
           bundle config set frozen false
-          bundle update --bundler $(BUNDLE_GEMFILE=/dev/null bundle -v | cut -d' ' -f 3)
+          default_bundler_version="$(BUNDLE_GEMFILE=/dev/null bundle --version)"
+          bundle update --bundler "${default_bundler_version##* }"
 
       - name: Example gem tests (blank?)
         working-directory: examples/rust_blank
