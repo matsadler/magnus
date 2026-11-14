@@ -85,8 +85,12 @@ impl Ruby {
 
     /// Outputs `s` to Ruby's stderr if Ruby is configured to output warnings.
     pub fn warning(&self, s: &str) {
+        let f = CString::new("%s").unwrap();
         let s = CString::new(s).unwrap();
-        unsafe { rb_warning(s.as_ptr()) };
+        let _ = protect(|| {
+            unsafe { rb_warning(f.as_ptr(), s.as_ptr()) };
+            self.qnil()
+        });
     }
 }
 
