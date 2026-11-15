@@ -1,103 +1,109 @@
 name: Test
 
 on:
-    - push
-    - pull_request
+  - push
+  - pull_request
 
 jobs:
-    test:
-        runs-on: ${{ matrix.os }}
-        strategy:
-            fail-fast: false
-            matrix:
-                os:
-                    - ubuntu-latest
-                    - macos-latest
-                    - windows-latest
-                ruby-version:
-                    - "3.2"
-                    - "3.3"
-                    - "3.4"
-                    - "4.0"
-                    - head
-                rustup-toolchain:
-                    - "1.85"
-                    - stable
-                exclude:
-                    - os: windows-latest
-                      ruby-version: head
-                    # workaround rb-sys not building for ubuntu-latest + 3.2
-                    - os: ubuntu-latest
-                      ruby-version: "3.2"
-                include:
-                    - os: ubuntu-22.04
-                      ruby-version: "3.2"
-                      rustup-toolchain: "1.85"
-                    - os: ubuntu-22.04
-                      ruby-version: "3.2"
-                      rustup-toolchain: stable
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+          - windows-latest
+        ruby-version:
+          - "3.2"
+          - "3.3"
+          - "3.4"
+          - "4.0"
+          - head
+        rustup-toolchain:
+          - "1.85"
+          - stable
+        exclude:
+          - os: windows-latest
+            ruby-version: head
+          # workaround rb-sys not building for ubuntu-latest + 3.2
+          - os: ubuntu-latest
+            ruby-version: "3.2"
+        include:
+          - os: ubuntu-24.04
+            ruby-version: "3.2"
+            rustup-toolchain: "1.85"
+          - os: ubuntu-24.04
+            ruby-version: "3.2"
+            rustup-toolchain: stable
+          - os: ubuntu-22.04
+            ruby-version: "3.2"
+            rustup-toolchain: "1.85"
+          - os: ubuntu-22.04
+            ruby-version: "3.2"
+            rustup-toolchain: stable
 
-        steps:
-            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-            - uses: ruby/setup-ruby@b3aaceaef7e0ee231b499e7b5f49c03fc1d32199 # v1.338.0
-              with:
-                  ruby-version: ${{ matrix.ruby-version }}
-                  bundler-cache: true
-            - if: runner.os != 'Windows'
-              uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # v1
-              with:
-                  toolchain: ${{ matrix.rustup-toolchain }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ruby/setup-ruby@b3aaceaef7e0ee231b499e7b5f49c03fc1d32199 # v1.338.0
+        with:
+          ruby-version: ${{ matrix.ruby-version }}
+          bundler-cache: true
+      - if: runner.os != 'Windows'
+        uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # v1
+        with:
+          toolchain: ${{ matrix.rustup-toolchain }}
 
-            # fixes "fatal error: 'strings.h' file not found" for Windows,
-            # which is down to Ruby being built with gnu/msys2 and the
-            # Rust extension with msvc
-            - if: runner.os == 'Windows'
-              uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # v1
-              with:
-                  toolchain: ${{ matrix.rustup-toolchain }}-gnu
-            - name: Set BINDGEN_EXTRA_CLANG_ARGS
-              shell: bash
-              if: runner.os == 'Windows'
-              run: echo BINDGEN_EXTRA_CLANG_ARGS="--target=x86_64-pc-windows-gnu --sysroot=${RI_DEVKIT//\\/\/}$MSYSTEM_PREFIX" >> $GITHUB_ENV
+      # fixes "fatal error: 'strings.h' file not found" for Windows,
+      # which is down to Ruby being built with gnu/msys2 and the
+      # Rust extension with msvc
+      - if: runner.os == 'Windows'
+        uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # v1
+        with:
+          toolchain: ${{ matrix.rustup-toolchain }}-gnu
+      - name: Set BINDGEN_EXTRA_CLANG_ARGS
+        shell: bash
+        if: runner.os == 'Windows'
+        run: echo BINDGEN_EXTRA_CLANG_ARGS="--target=x86_64-pc-windows-gnu --sysroot=${RI_DEVKIT//\\/\/}$MSYSTEM_PREFIX" >> $GITHUB_ENV
 
-            # fixes "fatal error: 'strings.h' file not found" for Linux
-            - name: Set LD_LIBRARY_PATH
-              if: runner.os == 'Linux'
-              run: echo "LD_LIBRARY_PATH=$(ruby -rrbconfig -e'puts RbConfig::CONFIG["libdir"]')${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" >> $GITHUB_ENV
+      # fixes "fatal error: 'strings.h' file not found" for Linux
+      - name: Set LD_LIBRARY_PATH
+        if: runner.os == 'Linux'
+        run: echo "LD_LIBRARY_PATH=$(ruby -rrbconfig -e'puts RbConfig::CONFIG["libdir"]')${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" >> $GITHUB_ENV
 
-            # Ruby head is currently missing the power_assert default gem
-            - name: Ruby head bug workaround
-              if: matrix.ruby-version == 'head'
-              run: gem install power_assert
+      # Ruby head is currently missing the power_assert default gem
+      - name: Ruby head bug workaround
+        if: matrix.ruby-version == 'head'
+        run: gem install power_assert
 
-            # workaround Bundler::CorruptBundlerInstallError
-            # I didn't look into this in enough detail to be sure, but it seems
-            # like `bundle exec rake test` is re-invoking ruby when compiling
-            # and that ruby sub process is getting confused about which bundler
-            # version it should be running.
-            # Forcing the lockfile bundler version to the same as the default
-            # removes any possibility of confusion
-            - name: Bundler Ruby head bug workaround
-              if: matrix.ruby-version == 'head'
-              run: |
-                      bundle config set frozen false
-                      bundle update --bundler $(BUNDLE_GEMFILE=/dev/null bundle -v | cut -d' ' -f 3)
+      # workaround Bundler::CorruptBundlerInstallError
+      # I didn't look into this in enough detail to be sure, but it seems
+      # like `bundle exec rake test` is re-invoking ruby when compiling
+      # and that ruby sub process is getting confused about which bundler
+      # version it should be running.
+      # Forcing the lockfile bundler version to the same as the default
+      # removes any possibility of confusion
+      - name: Bundler Ruby head bug workaround
+        if: matrix.ruby-version == 'head'
+        run: |
+          bundle config set frozen false
+          bundle update --bundler $(BUNDLE_GEMFILE=/dev/null bundle -v | cut -d' ' -f 3)
 
-            - name: Example gem tests (blank?)
-              working-directory: examples/rust_blank
-              run: bundle exec rake test
+      - name: Example gem tests (blank?)
+        working-directory: examples/rust_blank
+        run: bundle exec rake test
 
-            - name: Example gem tests (complete object)
-              working-directory: examples/complete_object
-              run: bundle exec rake test
+      - name: Example gem tests (complete object)
+        working-directory: examples/complete_object
+        run: bundle exec rake test
 
-            - name: Example gem tests (custom exception defined in Ruby)
-              working-directory: examples/custom_exception_ruby
-              run: bundle exec rake test
+      - name: Example gem tests (custom exception defined in Ruby)
+        working-directory: examples/custom_exception_ruby
+        run: bundle exec rake test
 
-            - name: Example gem tests (custom exception defined in Rust)
-              working-directory: examples/custom_exception_rust
-              run: bundle exec rake test
+      - name: Example gem tests (custom exception defined in Rust)
+        working-directory: examples/custom_exception_rust
+        run: bundle exec rake test
 
-            - name: Run tests
-              run: cargo test --workspace
+      - name: Run tests
+        run: cargo test --workspace
