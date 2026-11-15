@@ -38,13 +38,13 @@ jobs:
                       rustup-toolchain: stable
 
         steps:
-            - uses: actions/checkout@v5
-            - uses: ruby/setup-ruby@v1
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+            - uses: ruby/setup-ruby@b3aaceaef7e0ee231b499e7b5f49c03fc1d32199 # v1.338.0
               with:
                   ruby-version: ${{ matrix.ruby-version }}
                   bundler-cache: true
             - if: runner.os != 'Windows'
-              uses: dtolnay/rust-toolchain@master
+              uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # v1
               with:
                   toolchain: ${{ matrix.rustup-toolchain }}
 
@@ -52,7 +52,7 @@ jobs:
             # which is down to Ruby being built with gnu/msys2 and the
             # Rust extension with msvc
             - if: runner.os == 'Windows'
-              uses: dtolnay/rust-toolchain@master
+              uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # v1
               with:
                   toolchain: ${{ matrix.rustup-toolchain }}-gnu
             - name: Set BINDGEN_EXTRA_CLANG_ARGS
