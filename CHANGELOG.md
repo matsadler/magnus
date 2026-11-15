@@ -15,6 +15,7 @@
   skip compilation of the respective modules.
 - The `thread` argument to `Ruby::tracepoint_new` has been removed, see
   `Thread::tracepoint_new` for tracing a specific thread.
+- `Ruby::warning` returns `Result<(), Error>` rather than `()`.
 
 ### Deprecated
 

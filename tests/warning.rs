@@ -6,7 +6,7 @@ fn warning_prints_percent_sequences_literally() {
         let stderr: Value =
             ruby.eval("require 'stringio'; $VERBOSE = true; $stderr = StringIO.new")?;
 
-        ruby.warning("100%% complete");
+        ruby.warning("100%% complete")?;
 
         let output: String = stderr.funcall("string", ())?;
         assert!(
