@@ -469,7 +469,7 @@
 //! * `rb_complex_real`: [`RComplex::real`].
 // * `rb_complex_sub`:
 // * `rb_complex_uminus`:
-// * `rb_const_defined`:
+//! * `rb_const_defined`: [`Module::const_defined`].
 // * `rb_const_defined_at`:
 // * `rb_const_defined_from`:
 //! * `rb_const_get`: [`Module::const_get`].
@@ -1109,7 +1109,7 @@
 // * `rb_mod_module_eval`:
 // * `rb_mod_module_exec`:
 // * `rb_mod_name`:
-// * `rb_mod_remove_const`:
+//! * `rb_mod_remove_const`: [`Module::remove_const`].
 // * `rb_mod_remove_cvar`:
 // * `rb_mod_syserr_fail`:
 // * `rb_mod_syserr_fail_str`:
