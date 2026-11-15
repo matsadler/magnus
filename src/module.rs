@@ -9,12 +9,12 @@ use std::{
 };
 
 use rb_sys::{
-    VALUE, rb_alias, rb_attr, rb_class_inherited_p, rb_const_get, rb_const_set,
+    VALUE, rb_alias, rb_attr, rb_class_inherited_p, rb_const_defined, rb_const_get, rb_const_set,
     rb_define_class_id_under, rb_define_method_id, rb_define_module_function,
     rb_define_module_id_under, rb_define_private_method, rb_define_protected_method,
     rb_include_module, rb_mComparable, rb_mEnumerable, rb_mErrno, rb_mFileTest, rb_mGC, rb_mKernel,
-    rb_mMath, rb_mProcess, rb_mWaitReadable, rb_mWaitWritable, rb_mod_ancestors, rb_module_new,
-    rb_prepend_module, ruby_value_type,
+    rb_mMath, rb_mProcess, rb_mWaitReadable, rb_mWaitWritable, rb_mod_ancestors,
+    rb_mod_remove_const, rb_module_new, rb_prepend_module, ruby_value_type,
 };
 
 use crate::{
@@ -427,6 +427,87 @@ pub trait Module: Object + ReprValue + Copy {
         let res =
             unsafe { protect(|| Value::new(rb_const_get(self.as_rb_value(), id.as_rb_id()))) };
         res.and_then(TryConvert::try_convert)
+    }
+
+    /// Check whether `self` or its ancestors define the constant `name`.
+    ///
+    /// Search included modules too. For a module receiver, also search top-level
+    /// constants. Count private constants and autoload registrations as defined
+    /// without loading autoloaded values.
+    ///
+    /// Accept a single constant name, matching [`const_get`](Self::const_get).
+    /// Call Ruby's `const_defined?` through [`funcall`](ReprValue::funcall) for
+    /// name validation, `::` paths, or lookup without ancestors.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Class, Error, Module, RClass, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let parent = RClass::new(ruby.class_object())?;
+    ///     parent.const_set("EXAMPLE", 42)?;
+    ///     let child = RClass::new(parent)?;
+    ///
+    ///     assert!(child.const_defined("EXAMPLE")?);
+    ///     assert!(!child.const_defined("MISSING_EXAMPLE")?);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
+    fn const_defined<T>(self, name: T) -> Result<bool, Error>
+    where
+        T: IntoId,
+    {
+        debug_assert_value!(self);
+        let handle = Ruby::get_with(self);
+        let id = name.into_id_with(&handle);
+        let mut defined = false;
+        protect(|| {
+            defined = unsafe { rb_const_defined(self.as_rb_value(), id.as_rb_id()) != 0 };
+            handle.qnil()
+        })?;
+        Ok(defined)
+    }
+
+    /// Remove the constant `name` directly from `self` and return its value.
+    ///
+    /// Return `Err` if `name` is invalid, `self` lacks a direct definition, or
+    /// `self` is frozen. Leave inherited constants untouched. For an autoload
+    /// registration, return `nil` without loading its value.
+    ///
+    /// Remove the constant before converting its value to `U`, even if the
+    /// conversion fails.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Error, Module, Ruby};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let module = ruby.module_new();
+    ///     module.const_set("EXAMPLE", 42)?;
+    ///
+    ///     assert_eq!(module.remove_const::<_, i64>("EXAMPLE")?, 42);
+    ///     assert!(!module.const_defined("EXAMPLE")?);
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
+    fn remove_const<T, U>(self, name: T) -> Result<U, Error>
+    where
+        T: IntoId,
+        U: TryConvert,
+    {
+        debug_assert_value!(self);
+        let handle = Ruby::get_with(self);
+        let name = name.into_id_with(&handle).into_value_with(&handle);
+        protect(|| unsafe {
+            Value::new(rb_mod_remove_const(self.as_rb_value(), name.as_rb_value()))
+        })
+        .and_then(TryConvert::try_convert)
     }
 
     /// Returns whether or not `self` inherits from `other`.
