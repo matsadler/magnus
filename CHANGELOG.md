@@ -37,6 +37,18 @@
 
 ### Security
 
+## [0.9.4] - 2026-11-14
+
+### Fixed
+- `Ruby::warning`'s argument is no longer treated as a `printf` style format
+  string.
+
+## [0.8.5] - 2026-11-14
+
+### Fixed
+- `Ruby::warning`'s argument is no longer treated as a `printf` style format
+  string.
+
 ## [0.9.3] - 2026-10-15
 
 ### Fixed
@@ -653,7 +665,9 @@
 - Pre-built bindings for Ruby 2.6 - 3.1 on common platforms, build-time
   generated bindings otherwise.
 
-[Unreleased]: https://github.com/matsadler/magnus/compare/0.9.3...HEAD
+[Unreleased]: https://github.com/matsadler/magnus/compare/0.9.4...HEAD
+[0.9.4]: https://github.com/matsadler/magnus/compare/0.9.3...0.9.4
+[0.8.5]: https://github.com/matsadler/magnus/compare/0.8.4...0.8.5
 [0.9.3]: https://github.com/matsadler/magnus/compare/0.9.2...0.9.3
 [0.8.4]: https://github.com/matsadler/magnus/compare/0.8.3...0.8.4
 [0.9.2]: https://github.com/matsadler/magnus/compare/0.9.1...0.9.2
