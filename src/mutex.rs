@@ -71,10 +71,7 @@ impl Mutex {
     /// ```
     #[inline]
     pub fn from_value(val: Value) -> Option<Self> {
-        let mutex_class: RClass = Ruby::get_with(val)
-            .class_object()
-            .funcall("const_get", ("Mutex",))
-            .ok()?;
+        let mutex_class: RClass = Ruby::get_with(val).path_to_class("Mutex").ok()?;
         RTypedData::from_value(val)
             .filter(|_| val.is_kind_of(mutex_class))
             .map(Self)

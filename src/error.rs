@@ -191,7 +191,7 @@ impl Error {
     ///         .unwrap_err();
     ///
     ///     fn get<T: TryConvert>(ruby: &Ruby, name: &str) -> Result<T, Error> {
-    ///         ruby.class_object().const_get::<_, T>(name)
+    ///         ruby.class_object().const_get_from::<_, T>(name)
     ///     }
     ///     assert!(err.is_kind_of(get::<ExceptionClass>(ruby, "SpecificError")?));
     ///     assert!(err.is_kind_of(get::<ExceptionClass>(ruby, "ExampleError")?));

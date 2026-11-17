@@ -7,6 +7,12 @@
 - `Ruby::nogvl`.
 - Automatic, nanosecond-precision conversion between Ruby `Time` and
   `jiff::Timestamp` with the `jiff` feature.
+- `Ruby::path_to_class`.
+- `Module::const_defined`, `Module::class_path`, `Module::mod_name`,
+  `Module::set_class_path`, `Module::const_remove`.
+- `Module::const_get_at`, `Module::const_get_from`, `Module::const_defined_at`,
+  `Module::const_defined_from`.
+- The `ImplModule` type.
 
 ### Changed
 - New `block`, `debug`, `fiber`, `mutex`, `numeric`, `process`, `range`,
@@ -16,6 +22,7 @@
 - The `thread` argument to `Ruby::tracepoint_new` has been removed, see
   `Thread::tracepoint_new` for tracing a specific thread.
 - `Ruby::warning` returns `Result<(), Error>` rather than `()`.
+- `Class::name` has moved to `Module::name`.
 
 ### Deprecated
 

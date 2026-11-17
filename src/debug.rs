@@ -57,7 +57,6 @@ use crate::{
     integer::Integer,
     into_value::IntoValue,
     method::{BlockReturn, DebugInspectorOpen, InitReturn, TracePointNew},
-    module::Module,
     object::Object,
     r_array::RArray,
     r_string::RString,
@@ -1241,9 +1240,8 @@ impl TracePoint {
         unsafe {
             val.is_kind_of(
                 Ruby::get_with(val)
-                    .class_object()
-                    .const_get::<_, RClass>("TracePoint")
-                    .unwrap(),
+                    .path_to_class::<_, RClass>("TracePoint")
+                    .ok()?,
             )
             .then(|| Self(NonZeroValue::new_unchecked(val)))
         }
@@ -1702,11 +1700,10 @@ impl<'a> TraceArg<'a> {
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let trace = ruby.tracepoint_new(Events::new().call(), |tp| {
     ///         assert!(
-    ///             tp.tracearg()?.defined_class().unwrap().equal(
-    ///                 Ruby::get_with(tp)
-    ///                     .class_object()
-    ///                     .const_get::<_, RClass>("Foo")?
-    ///             )?
+    ///             tp.tracearg()?
+    ///                 .defined_class()
+    ///                 .unwrap()
+    ///                 .equal(Ruby::get_with(tp).path_to_class::<_, RClass>("Foo")?)?
     ///         );
     /// #       SUCCESS.store(true, Ordering::Relaxed);
     ///         Ok::<_, Error>(())
@@ -1725,8 +1722,7 @@ impl<'a> TraceArg<'a> {
     ///     )?;
     ///     trace.enable()?;
     ///     let _: Value = ruby
-    ///         .class_object()
-    ///         .const_get::<_, RClass>("Bar")?
+    ///         .path_to_class::<_, RClass>("Bar")?
     ///         .new_instance(())?
     ///         .funcall("example", ())?;
     /// #   assert!(SUCCESS.load(Ordering::Relaxed));
@@ -1800,11 +1796,7 @@ impl<'a> TraceArg<'a> {
     ///     let trace = ruby.tracepoint_new(Events::new().c_call(), |tp| {
     ///         let trace_self = tp.tracearg()?.tracearg_self();
     ///         assert!(
-    ///             trace_self.is_kind_of(
-    ///                 Ruby::get_with(tp)
-    ///                     .class_object()
-    ///                     .const_get::<_, RClass>("Example")?
-    ///             )
+    ///             trace_self.is_kind_of(Ruby::get_with(tp).path_to_class::<_, RClass>("Example")?)
     ///         );
     /// #       SUCCESS.store(true, Ordering::Relaxed);
     ///         Ok::<_, Error>(())

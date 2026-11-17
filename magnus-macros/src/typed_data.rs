@@ -124,7 +124,7 @@ pub fn expand_derive_typed_data(input: DeriveInput) -> Result<TokenStream, Error
             let ident = &variant.ident;
             let fetch_class = quote! {
                 static CLASS: Lazy<RClass> = Lazy::new(|ruby| {
-                    let class: RClass = ruby.class_object().funcall("const_get", (#class,)).unwrap();
+                    let class: RClass = ruby.path_to_class(#class).unwrap();
                     class.undef_default_alloc_func();
                     class
                 });
@@ -225,7 +225,7 @@ pub fn expand_derive_typed_data(input: DeriveInput) -> Result<TokenStream, Error
             fn class(ruby: &magnus::Ruby) -> magnus::RClass {
                 use magnus::{class, Module, Class, RClass, value::{Lazy, ReprValue}};
                 static CLASS: Lazy<RClass> = Lazy::new(|ruby| {
-                    let class: RClass = ruby.class_object().funcall("const_get", (#class,)).unwrap();
+                    let class: RClass = ruby.path_to_class(#class).unwrap();
                     class.undef_default_alloc_func();
                     class
                 });

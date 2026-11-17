@@ -1,12 +1,7 @@
-use magnus::{Error, RModule, Ruby, exception::ExceptionClass, function, prelude::*, value::Lazy};
+use magnus::{Error, Ruby, exception::ExceptionClass, function, prelude::*, value::Lazy};
 
 static RUBRIC_ERROR: Lazy<ExceptionClass> = Lazy::new(|ruby| {
-    let ex = ruby
-        .class_object()
-        .const_get::<_, RModule>("Ahriman")
-        .unwrap()
-        .const_get("RubricError")
-        .unwrap();
+    let ex = ruby.path_to_class("Ahriman::RubricError").unwrap();
     // ensure `ex` is never garbage collected (e.g. if constant is
     // redefined) and also not moved under compacting GC.
     ruby.gc_register_mark_object(ex);

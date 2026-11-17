@@ -3,18 +3,21 @@
 //! See also [`Ruby`](Ruby#core-modules) for more module related methods.
 
 use std::{
-    ffi::{CString, c_int, c_void},
+    borrow::Cow,
+    ffi::{CStr, CString, c_int, c_void},
     fmt,
     mem::transmute,
 };
 
 use rb_sys::{
-    VALUE, rb_alias, rb_attr, rb_class_inherited_p, rb_const_defined, rb_const_get, rb_const_set,
-    rb_define_class_id_under, rb_define_method_id, rb_define_module_function,
-    rb_define_module_id_under, rb_define_private_method, rb_define_protected_method,
-    rb_include_module, rb_mComparable, rb_mEnumerable, rb_mErrno, rb_mFileTest, rb_mGC, rb_mKernel,
-    rb_mMath, rb_mProcess, rb_mWaitReadable, rb_mWaitWritable, rb_mod_ancestors,
-    rb_mod_remove_const, rb_module_new, rb_prepend_module, ruby_value_type,
+    VALUE, rb_alias, rb_attr, rb_class_inherited_p, rb_class_path, rb_class2name, rb_const_defined,
+    rb_const_defined_at, rb_const_defined_from, rb_const_get, rb_const_get_at, rb_const_get_from,
+    rb_const_remove, rb_const_set, rb_define_class_id_under, rb_define_method_id,
+    rb_define_module_function, rb_define_module_id_under, rb_define_private_method,
+    rb_define_protected_method, rb_include_module, rb_mComparable, rb_mEnumerable, rb_mErrno,
+    rb_mFileTest, rb_mGC, rb_mKernel, rb_mMath, rb_mProcess, rb_mWaitReadable, rb_mWaitWritable,
+    rb_mod_ancestors, rb_mod_constants, rb_mod_name, rb_module_new, rb_path_to_class,
+    rb_prepend_module, rb_set_class_path_string, ruby_value_type,
 };
 
 use crate::{
@@ -26,6 +29,7 @@ use crate::{
     method::Method,
     object::Object,
     r_array::RArray,
+    r_string::{IntoRString, RString},
     try_convert::TryConvert,
     value::{
         IntoId, NonZeroValue, ReprValue, Value,
@@ -57,6 +61,41 @@ impl Ruby {
     /// ```
     pub fn module_new(&self) -> RModule {
         unsafe { RModule::from_rb_value_unchecked(rb_module_new()) }
+    }
+
+    /// Resolve a `Foo::Bar::Baz` path string to a class or module.
+    ///
+    /// Returns `Err` if there is no constant matching the path, or the
+    /// matching constant is not a module/class.
+    ///
+    /// [`ImplModule`] can be used as the return type if you want a value that
+    /// is either a module or a class but don't mind which.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Error, Ruby, module::ImplModule, prelude::*};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let m: ImplModule = ruby.path_to_class("Enumerator::Lazy")?;
+    ///     // safe as we never give Ruby a chance to free the string.
+    ///     let s = unsafe { m.name().into_owned() };
+    ///     assert_eq!(s, "Enumerator::Lazy");
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
+    pub fn path_to_class<T, U>(&self, path: T) -> Result<U, Error>
+    where
+        T: IntoRString,
+        U: FromImplModule,
+    {
+        let path = path.into_r_string_with(self);
+        protect(|| unsafe {
+            ImplModule::from_rb_value_unchecked(rb_path_to_class(path.as_rb_value()))
+        })
+        .and_then(FromImplModule::from_impl_module)
     }
 }
 
@@ -192,8 +231,188 @@ impl TryConvert for RModule {
     }
 }
 
+impl FromImplModule for RModule {
+    fn from_impl_module(value: ImplModule) -> Result<Self, Error> {
+        Self::try_convert(value.as_value())
+    }
+}
+
 /// Functions available on both classes and modules.
 pub trait Module: Object + ReprValue + Copy {
+    /// Return the name of `self`.
+    ///
+    /// See also [`class_path`](Module::class_path).
+    ///
+    /// # Safety
+    ///
+    /// Ruby may modify or free the memory backing the returned str, the caller
+    /// must ensure this does not happen.
+    ///
+    /// This can be used safely by immediately calling
+    /// [`into_owned`](Cow::into_owned) on the return value.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Error, Ruby, prelude::*};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let value = ruby.module_comparable();
+    ///     // safe as we never give Ruby a chance to free the string.
+    ///     let s = unsafe { value.name().into_owned() };
+    ///     assert_eq!(s, "Comparable");
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
+    ///
+    /// ```
+    /// use magnus::{Error, Ruby, prelude::*};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let value = ruby.class_hash();
+    ///     // safe as we never give Ruby a chance to free the string.
+    ///     let s = unsafe { value.name().into_owned() };
+    ///     assert_eq!(s, "Hash");
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
+    ///
+    /// ```
+    /// use magnus::{Error, Ruby, prelude::*};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let value = ruby.exception_standard_error();
+    ///     // safe as we never give Ruby a chance to free the string.
+    ///     let s = unsafe { value.name().into_owned() };
+    ///     assert_eq!(s, "StandardError");
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
+    unsafe fn name(&self) -> Cow<'_, str> {
+        unsafe {
+            let ptr = rb_class2name(self.as_rb_value());
+            if ptr.is_null() {
+                panic!("rb_class2name returned null");
+            }
+            let cstr = CStr::from_ptr(ptr);
+            cstr.to_string_lossy()
+        }
+    }
+
+    /// Return the name of `self` as a Ruby string.
+    ///
+    /// See also [`name`](Module::name) and [`mod_name`](Module::mod_name).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Error, Ruby, prelude::*};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let value = ruby.module_comparable();
+    ///     let s = value.class_path();
+    ///     assert_eq!(s.to_string()?, "Comparable");
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
+    fn class_path(self) -> RString {
+        debug_assert_value!(self);
+        let val = unsafe { Value::new(rb_class_path(self.as_rb_value())) };
+        RString::from_value(val).expect("rb_class_path to always return a path")
+    }
+
+    /// Return the name of `self` as a Ruby string.
+    ///
+    /// Returns `None` if `self` is an anonymous class.
+    ///
+    /// See also [`class_path`](Module::class_path).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Error, Ruby, prelude::*};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let value = ruby.class_hash();
+    ///     let s = value.mod_name().unwrap();
+    ///     assert_eq!(s.to_string()?, "Hash");
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
+    ///
+    /// ```
+    /// use magnus::{Error, RClass, Ruby, prelude::*};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let value = RClass::new(ruby.class_object())?;
+    ///     assert!(value.mod_name().is_none());
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
+    fn mod_name(self) -> Option<RString> {
+        debug_assert_value!(self);
+        RString::from_value(unsafe { Value::new(rb_mod_name(self.as_rb_value())) })
+    }
+
+    /// Name a Module/Class.
+    ///
+    /// The given `name` will be prefixed by the class path of `space`. Use
+    /// Ruby's `Object` class (see [`Ruby::class_object`]) as `space` for no
+    /// namespace prefix.
+    ///
+    /// This does not assign the class to a constant, and `name` does not need
+    /// to be a valid constant name.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Error, RClass, Ruby, prelude::*};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let obj = ruby.class_object();
+    ///     let foo = ruby.module_new();
+    ///     foo.set_class_path(obj, "Foo");
+    ///
+    ///     let bar = ruby.module_new();
+    ///     bar.set_class_path(foo, "Bar");
+    ///
+    ///     let baz = RClass::new(obj)?;
+    ///     assert!(baz.mod_name().is_none());
+    ///     baz.set_class_path(bar, "Baz");
+    ///
+    ///     assert_eq!(baz.mod_name().unwrap().to_string()?, "Foo::Bar::Baz");
+    ///
+    ///     baz.set_class_path(obj, "Qux");
+    ///     assert_eq!(baz.mod_name().unwrap().to_string()?, "Qux");
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
+    fn set_class_path<M, T>(self, space: M, name: T)
+    where
+        M: Module,
+        T: IntoRString,
+    {
+        let ruby = Ruby::get_with(self);
+        let name = name.into_r_string_with(&ruby);
+        unsafe {
+            rb_set_class_path_string(self.as_rb_value(), space.as_rb_value(), name.as_rb_value())
+        };
+    }
+
     /// Define a class in `self`'s scope.
     ///
     /// # Examples
@@ -394,25 +613,44 @@ pub trait Module: Object + ReprValue + Copy {
         Ok(())
     }
 
-    /// Get the value for the constant `name` within `self`'s scope.
+    /// Get the value for the constant `name` from `self`, its parent classes,
+    /// or the toplevel/root.
+    ///
+    /// See also [`const_get_at`](Module::const_get_at) and
+    /// [`const_get_from`](Module::const_get_from).
     ///
     /// # Examples
     ///
     /// ```
-    /// use magnus::{Error, Module, RClass, Ruby, Value, rb_assert};
+    /// use magnus::{Error, Module, Ruby, Value, module::ImplModule};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     ruby.eval::<Value>(
     ///         "
-    ///           class Example
-    ///             VALUE = 42
+    ///           TOPLEVEL = 1
+    ///           class Test
+    ///             INHERITED = 2
+    ///           end
+    ///           module Demo
+    ///             INCLUDED = 3
+    ///           end
+    ///           class Example < Test
+    ///             include Demo
+    ///             DIRECT = 4
+    ///           end
+    ///           class Other
+    ///             INACCESSIBLE = 5
     ///           end
     ///         ",
     ///     )?;
     ///
-    ///     let class = ruby.class_object().const_get::<_, RClass>("Example")?;
-    ///     rb_assert!(ruby, "klass::VALUE == 42", klass = class);
+    ///     let class = ruby.class_object().const_get::<_, ImplModule>("Example")?;
     ///
+    ///     assert_eq!(class.const_get::<_, i64>("DIRECT")?, 4);
+    ///     assert_eq!(class.const_get::<_, i64>("INCLUDED")?, 3);
+    ///     assert_eq!(class.const_get::<_, i64>("INHERITED")?, 2);
+    ///     assert_eq!(class.const_get::<_, i64>("TOPLEVEL")?, 1);
+    ///     assert!(class.const_get::<_, i64>("INACCESSIBLE").is_err());
     ///     Ok(())
     /// }
     /// # Ruby::init(example).unwrap()
@@ -429,29 +667,155 @@ pub trait Module: Object + ReprValue + Copy {
         res.and_then(TryConvert::try_convert)
     }
 
-    /// Check whether `self` or its ancestors define the constant `name`.
+    /// Get the value for the constant `name` from `self`.
     ///
-    /// Search included modules too. For a module receiver, also search top-level
-    /// constants. Count private constants and autoload registrations as defined
-    /// without loading autoloaded values.
-    ///
-    /// Accept a single constant name, matching [`const_get`](Self::const_get).
-    /// Call Ruby's `const_defined?` through [`funcall`](ReprValue::funcall) for
-    /// name validation, `::` paths, or lookup without ancestors.
+    /// See also [`const_get_at`](Module::const_get) and
+    /// [`const_get_from`](Module::const_get_from).
     ///
     /// # Examples
     ///
     /// ```
-    /// use magnus::{Class, Error, Module, RClass, Ruby};
+    /// use magnus::{Error, Module, Ruby, Value, module::ImplModule};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
-    ///     let parent = RClass::new(ruby.class_object())?;
-    ///     parent.const_set("EXAMPLE", 42)?;
-    ///     let child = RClass::new(parent)?;
+    ///     ruby.eval::<Value>(
+    ///         "
+    ///           TOPLEVEL = 1
+    ///           class Test
+    ///             INHERITED = 2
+    ///           end
+    ///           module Demo
+    ///             INCLUDED = 3
+    ///           end
+    ///           class Example < Test
+    ///             include Demo
+    ///             DIRECT = 4
+    ///           end
+    ///           class Other
+    ///             INACCESSIBLE = 5
+    ///           end
+    ///         ",
+    ///     )?;
     ///
-    ///     assert!(child.const_defined("EXAMPLE")?);
-    ///     assert!(!child.const_defined("MISSING_EXAMPLE")?);
+    ///     let class = ruby
+    ///         .class_object()
+    ///         .const_get_at::<_, ImplModule>("Example")?;
     ///
+    ///     assert_eq!(class.const_get_at::<_, i64>("DIRECT")?, 4);
+    ///     assert!(class.const_get_at::<_, i64>("INCLUDED").is_err());
+    ///     assert!(class.const_get_at::<_, i64>("INHERITED").is_err());
+    ///     assert!(class.const_get_at::<_, i64>("TOPLEVEL").is_err());
+    ///     assert!(class.const_get_at::<_, i64>("INACCESSIBLE").is_err());
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
+    fn const_get_at<T, U>(self, name: T) -> Result<U, Error>
+    where
+        T: IntoId,
+        U: TryConvert,
+    {
+        debug_assert_value!(self);
+        let id = name.into_id_with(&Ruby::get_with(self));
+        let res =
+            unsafe { protect(|| Value::new(rb_const_get_at(self.as_rb_value(), id.as_rb_id()))) };
+        res.and_then(TryConvert::try_convert)
+    }
+
+    /// Get the value for the constant `name` from `self`, or its parent
+    /// classes.
+    ///
+    /// See also [`const_get`](Module::const_get) and
+    /// [`const_get_at`](Module::const_get_at).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Error, Module, Ruby, Value, module::ImplModule};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     ruby.eval::<Value>(
+    ///         "
+    ///           TOPLEVEL = 1
+    ///           class Test
+    ///             INHERITED = 2
+    ///           end
+    ///           module Demo
+    ///             INCLUDED = 3
+    ///           end
+    ///           class Example < Test
+    ///             include Demo
+    ///             DIRECT = 4
+    ///           end
+    ///           class Other
+    ///             INACCESSIBLE = 5
+    ///           end
+    ///         ",
+    ///     )?;
+    ///
+    ///     let class = ruby
+    ///         .class_object()
+    ///         .const_get_from::<_, ImplModule>("Example")?;
+    ///
+    ///     assert_eq!(class.const_get_from::<_, i64>("DIRECT")?, 4);
+    ///     assert_eq!(class.const_get_from::<_, i64>("INCLUDED")?, 3);
+    ///     assert_eq!(class.const_get_from::<_, i64>("INHERITED")?, 2);
+    ///     assert!(class.const_get_from::<_, i64>("TOPLEVEL").is_err());
+    ///     assert!(class.const_get_from::<_, i64>("INACCESSIBLE").is_err());
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
+    fn const_get_from<T, U>(self, name: T) -> Result<U, Error>
+    where
+        T: IntoId,
+        U: TryConvert,
+    {
+        debug_assert_value!(self);
+        let id = name.into_id_with(&Ruby::get_with(self));
+        let res =
+            unsafe { protect(|| Value::new(rb_const_get_from(self.as_rb_value(), id.as_rb_id()))) };
+        res.and_then(TryConvert::try_convert)
+    }
+
+    /// Returns whether or not `self`, its parent classes, or the toplevel/root
+    /// define the constant `name`.
+    ///
+    /// See also [`const_defined_at`](Module::const_defined_at) and
+    /// [`const_defined_from`](Module::const_defined_from).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Error, Module, Ruby, Value, module::ImplModule};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     ruby.eval::<Value>(
+    ///         "
+    ///           TOPLEVEL = 1
+    ///           class Test
+    ///             INHERITED = 2
+    ///           end
+    ///           module Demo
+    ///             INCLUDED = 3
+    ///           end
+    ///           class Example < Test
+    ///             include Demo
+    ///             DIRECT = 4
+    ///           end
+    ///           class Other
+    ///             INACCESSIBLE = 5
+    ///           end
+    ///         ",
+    ///     )?;
+    ///
+    ///     let class = ruby.path_to_class::<_, ImplModule>("Example")?;
+    ///
+    ///     assert!(class.const_defined("DIRECT")?);
+    ///     assert!(class.const_defined("INCLUDED")?);
+    ///     assert!(class.const_defined("INHERITED")?);
+    ///     assert!(class.const_defined("TOPLEVEL")?);
+    ///     assert!(!class.const_defined("INACCESSIBLE")?);
     ///     Ok(())
     /// }
     /// # Ruby::init(example).unwrap()
@@ -471,43 +835,219 @@ pub trait Module: Object + ReprValue + Copy {
         Ok(defined)
     }
 
-    /// Remove the constant `name` directly from `self` and return its value.
+    /// Returns whether or not `self` defines the constant `name`.
     ///
-    /// Return `Err` if `name` is invalid, `self` lacks a direct definition, or
-    /// `self` is frozen. Leave inherited constants untouched. For an autoload
-    /// registration, return `nil` without loading its value.
-    ///
-    /// Remove the constant before converting its value to `U`, even if the
-    /// conversion fails.
+    /// See also [`const_defined`](Module::const_defined) and
+    /// [`const_defined_from`](Module::const_defined_from).
     ///
     /// # Examples
     ///
     /// ```
-    /// use magnus::{Error, Module, Ruby};
+    /// use magnus::{Error, Module, Ruby, Value, module::ImplModule};
     ///
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
-    ///     let module = ruby.module_new();
-    ///     module.const_set("EXAMPLE", 42)?;
+    ///     ruby.eval::<Value>(
+    ///         "
+    ///           TOPLEVEL = 1
+    ///           class Test
+    ///             INHERITED = 2
+    ///           end
+    ///           module Demo
+    ///             INCLUDED = 3
+    ///           end
+    ///           class Example < Test
+    ///             include Demo
+    ///             DIRECT = 4
+    ///           end
+    ///           class Other
+    ///             INACCESSIBLE = 5
+    ///           end
+    ///         ",
+    ///     )?;
     ///
-    ///     assert_eq!(module.remove_const::<_, i64>("EXAMPLE")?, 42);
-    ///     assert!(!module.const_defined("EXAMPLE")?);
+    ///     let class = ruby.path_to_class::<_, ImplModule>("Example")?;
     ///
+    ///     assert!(class.const_defined_at("DIRECT")?);
+    ///     assert!(!class.const_defined_at("INCLUDED")?);
+    ///     assert!(!class.const_defined_at("INHERITED")?);
+    ///     assert!(!class.const_defined_at("TOPLEVEL")?);
+    ///     assert!(!class.const_defined_at("INACCESSIBLE")?);
     ///     Ok(())
     /// }
     /// # Ruby::init(example).unwrap()
     /// ```
-    fn remove_const<T, U>(self, name: T) -> Result<U, Error>
+    fn const_defined_at<T>(self, name: T) -> Result<bool, Error>
+    where
+        T: IntoId,
+    {
+        debug_assert_value!(self);
+        let handle = Ruby::get_with(self);
+        let id = name.into_id_with(&handle);
+        let mut defined = false;
+        protect(|| {
+            defined = unsafe { rb_const_defined_at(self.as_rb_value(), id.as_rb_id()) != 0 };
+            handle.qnil()
+        })?;
+        Ok(defined)
+    }
+
+    /// Returns whether or not `self`, or its parent classes define the
+    /// constant `name`.
+    ///
+    /// See also [`const_defined`](Module::const_defined) and
+    /// [`const_defined_at`](Module::const_defined_at).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Error, Module, Ruby, Value, module::ImplModule};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     ruby.eval::<Value>(
+    ///         "
+    ///           TOPLEVEL = 1
+    ///           class Test
+    ///             INHERITED = 2
+    ///           end
+    ///           module Demo
+    ///             INCLUDED = 3
+    ///           end
+    ///           class Example < Test
+    ///             include Demo
+    ///             DIRECT = 4
+    ///           end
+    ///           class Other
+    ///             INACCESSIBLE = 5
+    ///           end
+    ///         ",
+    ///     )?;
+    ///
+    ///     let class = ruby.path_to_class::<_, ImplModule>("Example")?;
+    ///
+    ///     assert!(class.const_defined_from("DIRECT")?);
+    ///     assert!(class.const_defined_from("INCLUDED")?);
+    ///     assert!(class.const_defined_from("INHERITED")?);
+    ///     assert!(!class.const_defined_from("TOPLEVEL")?);
+    ///     assert!(!class.const_defined_from("INACCESSIBLE")?);
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
+    fn const_defined_from<T>(self, name: T) -> Result<bool, Error>
+    where
+        T: IntoId,
+    {
+        debug_assert_value!(self);
+        let handle = Ruby::get_with(self);
+        let id = name.into_id_with(&handle);
+        let mut defined = false;
+        protect(|| {
+            defined = unsafe { rb_const_defined_from(self.as_rb_value(), id.as_rb_id()) != 0 };
+            handle.qnil()
+        })?;
+        Ok(defined)
+    }
+
+    /// Remove the constant `name` directly from `self` and return its value.
+    ///
+    /// Return `Err` if `name` is invalid, `self` lacks a direct definition, or
+    /// `self` is frozen.
+    ///
+    /// An autoload registration will be removed, but return `nil` without
+    /// loading the value.
+    ///
+    /// Remove the constant before converting its value to `U`, even if the
+    /// conversion fails. Use [`Value`] as the return type to skip type
+    /// conversion.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Error, Module, Ruby, Value, module::ImplModule};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     ruby.eval::<Value>(
+    ///         "
+    ///           class Example
+    ///             VALUE = 42
+    ///           end
+    ///         ",
+    ///     )?;
+    ///
+    ///     let class = ruby.path_to_class::<_, ImplModule>("Example")?;
+    ///
+    ///     assert_eq!(class.const_remove::<_, i64>("VALUE")?, 42);
+    ///     assert!(!class.const_defined_at("VALUE")?);
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
+    fn const_remove<T, U>(self, name: T) -> Result<U, Error>
     where
         T: IntoId,
         U: TryConvert,
     {
         debug_assert_value!(self);
         let handle = Ruby::get_with(self);
-        let name = name.into_id_with(&handle).into_value_with(&handle);
-        protect(|| unsafe {
-            Value::new(rb_mod_remove_const(self.as_rb_value(), name.as_rb_value()))
-        })
-        .and_then(TryConvert::try_convert)
+        let name = name.into_id_with(&handle);
+        protect(|| unsafe { Value::new(rb_const_remove(self.as_rb_value(), name.as_rb_id())) })
+            .and_then(TryConvert::try_convert)
+    }
+
+    /// Return the names of the constants defined for `self`.
+    ///
+    /// Pass `true` for `inherit` to include constants defined in parent
+    /// classes and included modules.
+    ///
+    /// Returns an [`RArray`] of Ruby Symbols.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Error, Module, Ruby, Value, module::ImplModule, rb_assert};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     ruby.eval::<Value>(
+    ///         "
+    ///           TOPLEVEL = 1
+    ///           class Test
+    ///             INHERITED = 2
+    ///           end
+    ///           module Demo
+    ///             INCLUDED = 3
+    ///           end
+    ///           class Example < Test
+    ///             include Demo
+    ///             DIRECT = 4
+    ///           end
+    ///           class Other
+    ///             INACCESSIBLE = 5
+    ///           end
+    ///         ",
+    ///     )?;
+    ///
+    ///     let class = ruby.path_to_class::<_, ImplModule>("Example")?;
+    ///
+    ///     let inherited_constants = class.constants(true);
+    ///     rb_assert!(
+    ///         "inherited_constants.sort == [:DIRECT, :INCLUDED, :INHERITED]",
+    ///         inherited_constants
+    ///     );
+    ///
+    ///     let direct_constants = class.constants(false);
+    ///     rb_assert!("direct_constants == [:DIRECT]", direct_constants);
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
+    fn constants(self, inherit: bool) -> RArray {
+        unsafe {
+            RArray::from_rb_value_unchecked(rb_mod_constants(
+                1,
+                &inherit.into_value_with(&Ruby::get_with(self)).as_rb_value() as *const _,
+                self.as_rb_value(),
+            ))
+        }
     }
 
     /// Returns whether or not `self` inherits from `other`.
@@ -1056,5 +1596,136 @@ impl Ruby {
     #[inline]
     pub fn module_wait_writable(&self) -> RModule {
         unsafe { RModule::from_rb_value_unchecked(rb_mWaitWritable) }
+    }
+}
+
+/// A type wrapping either a [`RModule`] or a [`RClass`].
+///
+/// As Ruby's `Class` is a subclass of `Module` and they share many methods,
+/// particularly when being used as a namespace there may be cases where it's
+/// not important whether a value is a `Class` or `Module`, just that it shares
+/// the common methods of `Module`. This is what `ImplModule` is for. See the
+/// [`Module`] trait for the methods available on this type.
+///
+/// See the [`ReprValue`] trait for additional methods available on this type.
+/// See [`Ruby`](Ruby#rmodule) for methods to obtain an `ImplModule`.
+#[derive(Clone, Copy)]
+#[repr(transparent)]
+pub struct ImplModule(NonZeroValue);
+
+impl ImplModule {
+    /// Return `Some(ImplModule)` if `val` is a `Module` or a `Class`, `None`
+    /// otherwise.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{eval, module::ImplModule};
+    /// # let _cleanup = unsafe { magnus::embed::init() };
+    ///
+    /// assert!(ImplModule::from_value(eval("Comparable").unwrap()).is_some());
+    /// assert!(ImplModule::from_value(eval("Hash").unwrap()).is_some());
+    /// // not a module or class
+    /// assert!(ImplModule::from_value(eval("Object.new").unwrap()).is_none());
+    /// ```
+    #[inline]
+    pub fn from_value(val: Value) -> Option<Self> {
+        RModule::from_value(val)
+            .map(|m| Self(m.0))
+            .or_else(|| unsafe {
+                RClass::from_value(val).map(|c| Self(NonZeroValue::new_unchecked(c.as_value())))
+            })
+    }
+
+    #[inline]
+    pub(crate) unsafe fn from_rb_value_unchecked(val: VALUE) -> Self {
+        unsafe { Self(NonZeroValue::new_unchecked(Value::new(val))) }
+    }
+
+    /// Convert `self` into a concrete type, either [`RClass`], [`RModule`],
+    /// or [`ExceptionClass`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Error, ExceptionClass, RClass, RModule, Ruby, Value, module::ImplModule};
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     ruby.eval::<Value>(
+    ///         "
+    ///           class Example
+    ///           end
+    ///         ",
+    ///     )?;
+    ///
+    ///     let impl_mod = ruby.path_to_class::<_, ImplModule>("Example")?;
+    ///
+    ///     assert!(impl_mod.into::<RClass>().is_ok());
+    ///     assert!(impl_mod.into::<RModule>().is_err());
+    ///     assert!(impl_mod.into::<ExceptionClass>().is_err());
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap()
+    /// ```
+    #[inline]
+    pub fn into<T>(self) -> Result<T, Error>
+    where
+        T: FromImplModule,
+    {
+        T::from_impl_module(self)
+    }
+}
+
+impl fmt::Display for ImplModule {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", unsafe { self.to_s_infallible() })
+    }
+}
+
+impl fmt::Debug for ImplModule {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.inspect())
+    }
+}
+
+impl IntoValue for ImplModule {
+    #[inline]
+    fn into_value_with(self, _: &Ruby) -> Value {
+        self.0.get()
+    }
+}
+
+impl Object for ImplModule {}
+impl Module for ImplModule {}
+
+unsafe impl private::ReprValue for ImplModule {}
+
+impl ReprValue for ImplModule {}
+
+impl TryConvert for ImplModule {
+    fn try_convert(val: Value) -> Result<Self, Error> {
+        Self::from_value(val).ok_or_else(|| {
+            Error::new(
+                Ruby::get_with(val).exception_type_error(),
+                format!("no implicit conversion of {} into Module", unsafe {
+                    val.classname()
+                },),
+            )
+        })
+    }
+}
+
+/// Conversion from `ImplModule` to concrete types, such as [`RClass`],
+/// [`RModule`], or [`ExceptionClass`].
+pub trait FromImplModule: Sized {
+    /// Convert to `Self` from `ImplModule`.
+    ///
+    /// Returns `Err` if the `val` can not be converted to a `Self`.
+    fn from_impl_module(val: ImplModule) -> Result<Self, Error>;
+}
+
+impl FromImplModule for ImplModule {
+    fn from_impl_module(value: ImplModule) -> Result<Self, Error> {
+        Ok(value)
     }
 }

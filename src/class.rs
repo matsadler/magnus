@@ -4,11 +4,7 @@
 
 #[cfg(feature = "typed_data")]
 use std::mem::transmute;
-use std::{
-    borrow::Cow,
-    ffi::{CStr, c_int},
-    fmt,
-};
+use std::{ffi::c_int, fmt};
 
 #[cfg(feature = "typed_data")]
 use rb_sys::rb_define_alloc_func;
@@ -18,7 +14,7 @@ use rb_sys::{
     rb_cInteger, rb_cMatch, rb_cMethod, rb_cModule, rb_cNameErrorMesg, rb_cNilClass, rb_cNumeric,
     rb_cObject, rb_cProc, rb_cRandom, rb_cRange, rb_cRational, rb_cRefinement, rb_cRegexp,
     rb_cStat, rb_cString, rb_cStruct, rb_cSymbol, rb_cThread, rb_cTime, rb_cTrueClass,
-    rb_cUnboundMethod, rb_class_new, rb_class_new_instance_kw, rb_class_superclass, rb_class2name,
+    rb_cUnboundMethod, rb_class_new, rb_class_new_instance_kw, rb_class_superclass,
     rb_get_alloc_func, rb_obj_alloc, rb_undef_alloc_func, ruby_value_type,
 };
 
@@ -29,7 +25,7 @@ use crate::{
     Ruby,
     error::{Error, protect},
     into_value::{ArgList, IntoValue, kw_splat},
-    module::Module,
+    module::{FromImplModule, ImplModule, Module},
     object::Object,
     try_convert::TryConvert,
     value::{
@@ -115,6 +111,12 @@ impl TryConvert for RClass {
                 },),
             )),
         }
+    }
+}
+
+impl FromImplModule for RClass {
+    fn from_impl_module(value: ImplModule) -> Result<Self, Error> {
+        Self::try_convert(value.as_value())
     }
 }
 
@@ -304,53 +306,6 @@ pub trait Class: Module {
         protect(|| unsafe {
             RClass::from_rb_value_unchecked(rb_class_superclass(self.as_rb_value()))
         })
-    }
-
-    /// Return the name of `self`.
-    ///
-    /// # Safety
-    ///
-    /// Ruby may modify or free the memory backing the returned str, the caller
-    /// must ensure this does not happen.
-    ///
-    /// This can be used safely by immediately calling
-    /// [`into_owned`](Cow::into_owned) on the return value.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use magnus::{Error, Ruby, prelude::*};
-    ///
-    /// fn example(ruby: &Ruby) -> Result<(), Error> {
-    ///     let value = ruby.class_hash();
-    ///     // safe as we never give Ruby a chance to free the string.
-    ///     let s = unsafe { value.name() }.into_owned();
-    ///     assert_eq!(s, "Hash");
-    ///
-    ///     Ok(())
-    /// }
-    /// # Ruby::init(example).unwrap()
-    /// ```
-    ///
-    /// ```
-    /// use magnus::{Error, Ruby, prelude::*};
-    ///
-    /// fn example(ruby: &Ruby) -> Result<(), Error> {
-    ///     let value = ruby.exception_standard_error();
-    ///     // safe as we never give Ruby a chance to free the string.
-    ///     let s = unsafe { value.name() }.into_owned();
-    ///     assert_eq!(s, "StandardError");
-    ///
-    ///     Ok(())
-    /// }
-    /// # Ruby::init(example).unwrap()
-    /// ```
-    unsafe fn name(&self) -> Cow<'_, str> {
-        unsafe {
-            let ptr = rb_class2name(self.as_rb_value());
-            let cstr = CStr::from_ptr(ptr);
-            cstr.to_string_lossy()
-        }
     }
 
     /// Return `self` as an [`RClass`].

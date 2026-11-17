@@ -20,7 +20,7 @@ use crate::{
     class::{Class, RClass},
     error::Error,
     into_value::{ArgList, IntoValue},
-    module::Module,
+    module::{FromImplModule, ImplModule, Module},
     object::Object,
     r_array::RArray,
     try_convert::TryConvert,
@@ -245,6 +245,12 @@ impl TryConvert for ExceptionClass {
                 ),
             )
         })
+    }
+}
+
+impl FromImplModule for ExceptionClass {
+    fn from_impl_module(value: ImplModule) -> Result<Self, Error> {
+        Self::try_convert(value.as_value())
     }
 }
 

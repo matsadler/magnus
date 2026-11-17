@@ -674,7 +674,7 @@ impl Ruby {
     ///         "#,
     ///     )?;
     ///
-    ///     assert!(value.is_kind_of(ruby.class_object().const_get::<_, RClass>("SubPoint")?));
+    ///     assert!(value.is_kind_of(ruby.path_to_class::<_, RClass>("SubPoint")?));
     ///     assert!(value.is_kind_of(point_class));
     ///
     ///     Ok(())

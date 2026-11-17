@@ -1546,7 +1546,7 @@ pub trait ReprValue: private::ReprValue {
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let value = ruby.qtrue();
     ///     // safe as we never give Ruby a chance to free the string.
-    ///     let s = unsafe { value.to_s() }?.into_owned();
+    ///     let s = unsafe { value.to_s()?.into_owned() };
     ///     assert_eq!(s, "true");
     ///
     ///     Ok(())
@@ -1615,7 +1615,7 @@ pub trait ReprValue: private::ReprValue {
     /// fn example(ruby: &Ruby) -> Result<(), Error> {
     ///     let value = ruby.hash_new();
     ///     // safe as we never give Ruby a chance to free the string.
-    ///     let s = unsafe { value.classname() }.into_owned();
+    ///     let s = unsafe { value.classname().into_owned() };
     ///     assert_eq!(s, "Hash");
     ///
     ///     Ok(())
