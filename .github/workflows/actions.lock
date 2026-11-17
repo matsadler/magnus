@@ -3,11 +3,34 @@
 # Docs: https://gh.io/actions-lockfile
 version: 'v0.0.3'
 workflows:
+    '.github/workflows/actions-lock.yml':
+        - 'actions/checkout@v7'
+    '.github/workflows/jiff-magnus-lint.yml':
+        - 'actions/checkout@v7'
+        - 'dtolnay/rust-toolchain@v1'
+        - 'ruby/setup-ruby@v1'
+    '.github/workflows/jiff-magnus-release.yml':
+        - 'actions/attest@v4'
+        - 'actions/checkout@v7'
+        - 'dtolnay/rust-toolchain@v1'
+        - 'ruby/setup-ruby@v1'
+        - 'rubygems/release-gem@v1'
+        - 'swatinem/rust-cache@v2'
+    '.github/workflows/jiff-magnus-test.yml':
+        - 'actions/checkout@v7'
+        - 'dtolnay/rust-toolchain@v1'
+        - 'ruby/setup-ruby@v1'
+        - 'swatinem/rust-cache@v2'
     '.github/workflows/test.yaml':
         - 'actions/checkout@v7'
         - 'dtolnay/rust-toolchain@master'
         - 'ruby/setup-ruby@v1'
 dependencies:
+    'actions/attest@v4':
+        ref: 'v4'
+        commit: 'sha1-1e69f48acb82d1966a394da916b4c1698aa569d6'
+        owner_id: 44036562
+        repo_id: 760701061
     'actions/checkout@v7':
         ref: 'v7'
         commit: 'sha1-3d3c42e5aac5ba805825da76410c181273ba90b1'
@@ -18,8 +41,30 @@ dependencies:
         commit: 'sha1-df2a88e9fe4098bad09cb42c3dec7187f15861fc'
         owner_id: 1940490
         repo_id: 260749683
+    'dtolnay/rust-toolchain@v1':
+        ref: 'v1'
+        commit: 'sha1-683b588c487a69d01f6c6ddf40f036ff682cc2c8'
+        owner_id: 1940490
+        repo_id: 260749683
     'ruby/setup-ruby@v1':
         ref: 'v1'
         commit: 'sha1-b3aaceaef7e0ee231b499e7b5f49c03fc1d32199'
         owner_id: 210414
         repo_id: 231208785
+    'rubygems/configure-rubygems-credentials@dc5a8d8553e6ee01fc26761a49e99e733d17954a':
+        ref: 'v2.1.0'
+        commit: 'sha1-dc5a8d8553e6ee01fc26761a49e99e733d17954a'
+        owner_id: 208761
+        repo_id: 631633510
+    'rubygems/release-gem@v1':
+        ref: 'v1'
+        commit: 'sha1-5c53f5308233b7c0f47411f0471b3faae6fa57b2'
+        owner_id: 208761
+        repo_id: 731435765
+        uses:
+            - 'rubygems/configure-rubygems-credentials@dc5a8d8553e6ee01fc26761a49e99e733d17954a'
+    'swatinem/rust-cache@v2':
+        ref: 'v2'
+        commit: 'sha1-d1527c8f67ef9af357290475d4af4b0fab8f12e0'
+        owner_id: 580492
+        repo_id: 298565987
