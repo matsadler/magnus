@@ -1,0 +1,77 @@
+---
+name: jiff-magnus tests
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: jiff-magnus-tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        ruby-version: ["3.2", "3.3", "3.4", "4.0", head]
+        os: [ubuntu-latest]
+        exclude:
+          # workaround rb-sys not building for ubuntu-latest + 3.2
+          - os: ubuntu-latest
+            ruby-version: "3.2"
+        include:
+          - os: ubuntu-22.04
+            ruby-version: "3.2"
+          - os: ubuntu-24.04
+            ruby-version: "3.2"
+          - os: macos-latest
+            ruby-version: "3.2"
+          - os: macos-latest
+            ruby-version: "4.0"
+          - os: windows-latest
+            ruby-version: "4.0"
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+        working-directory: jiff-magnus
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ruby/setup-ruby@v1
+        with:
+          # Override .ruby-version to test each supported Ruby version.
+          ruby-version: ${{ matrix.ruby-version }}
+          bundler-cache: true
+          working-directory: jiff-magnus
+      - uses: dtolnay/rust-toolchain@v1
+        if: runner.os != 'Windows'
+        with:
+          toolchain: stable
+      - uses: dtolnay/rust-toolchain@v1
+        if: runner.os == 'Windows'
+        with:
+          toolchain: stable-gnu
+      - name: Match Ruby's GNU headers on Windows
+        if: runner.os == 'Windows'
+        run: |
+          devkit="${RI_DEVKIT//\\//}"
+          clang_args="--target=x86_64-pc-windows-gnu"
+          clang_args="$clang_args --sysroot=$devkit$MSYSTEM_PREFIX"
+          echo "BINDGEN_EXTRA_CLANG_ARGS=$clang_args" >> "$GITHUB_ENV"
+      - name: Locate Ruby's shared library on Linux
+        if: runner.os == 'Linux'
+        run: |
+          ruby_libdir="$(ruby -rrbconfig -e 'puts RbConfig::CONFIG["libdir"]')"
+          library_path="$ruby_libdir${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+          echo "LD_LIBRARY_PATH=$library_path" >> "$GITHUB_ENV"
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: . -> jiff-magnus/tmp/jiff_magnus/target
+      - name: Test the Ruby extension and build the source gem
+        run: bundle exec rake test build

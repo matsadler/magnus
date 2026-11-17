@@ -1,0 +1,12 @@
+# frozen_string_literal: true
+
+source "https://rubygems.org"
+
+gemspec
+
+group :development do
+  gem "minitest", "~> 5.0"
+  gem "rake", ">= 13.0"
+  gem "rubocop", "~> 1.91.0", require: false
+  gem "rubocop-minitest", "~> 0.41.0", require: false
+end

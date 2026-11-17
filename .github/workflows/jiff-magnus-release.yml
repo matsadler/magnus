@@ -1,0 +1,45 @@
+---
+name: jiff-magnus release
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+
+concurrency:
+  group: jiff-magnus-release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: jiff-magnus
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: ruby/setup-ruby@v1
+        with:
+          # Implicitly use .ruby-version.
+          bundler-cache: true
+          working-directory: jiff-magnus
+      - uses: dtolnay/rust-toolchain@v1
+        with:
+          toolchain: stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: . -> jiff-magnus/tmp/jiff_magnus/target
+      - name: Release gem
+        uses: rubygems/release-gem@v1
+        with:
+          working-directory: jiff-magnus
+          attestations: true
+      - name: Attest gem build provenance
+        uses: actions/attest@v4
+        with:
+          subject-path: '${{ github.workspace }}/jiff-magnus/pkg/*.gem'

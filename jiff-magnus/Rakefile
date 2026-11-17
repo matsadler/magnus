@@ -1,0 +1,63 @@
+# frozen_string_literal: true
+
+require "rake"
+require "rake/clean"
+require "bundler/gem_helper"
+require "rbconfig"
+require "rubygems/package"
+require "rubocop/rake_task"
+require "tmpdir"
+
+RuboCop::RakeTask.new
+
+ROOT = File.expand_path(__dir__)
+SPEC = Gem::Specification.load(File.join(ROOT, "jiff-magnus.gemspec"))
+PACKAGE = File.join(ROOT, "pkg", "#{SPEC.full_name}.gem")
+NATIVE_LIBRARY = File.join(ROOT, "tmp", "jiff_magnus", "jiff_magnus.#{RbConfig::CONFIG.fetch('DLEXT')}")
+
+# `rake clobber` removes generated files and keeps tmp/.gitignore.
+CLOBBER.include(File.join(ROOT, "pkg"), File.join(ROOT, "tmp", "*"))
+
+# Bundler's default build would package the checkout-only Magnus path.
+gem_helper = Bundler::GemHelper.new(ROOT)
+gem_helper.tag_prefix = "#{SPEC.name}-"
+def gem_helper.build_gem
+  Rake::Task["build:source"].invoke
+  PACKAGE
+end
+gem_helper.install
+
+desc "Build the native extension against the local Magnus checkout"
+task :compile do
+  FileUtils.mkdir_p(File.dirname(NATIVE_LIBRARY))
+  Dir.chdir(File.dirname(NATIVE_LIBRARY)) do
+    ruby File.join(ROOT, "extconf.rb")
+    sh RbConfig::CONFIG.fetch("MAKE", "make")
+  end
+end
+
+desc "Test the local native extension in Ruby"
+task test: :compile do
+  libraries = [File.join(ROOT, "lib"), File.join(ROOT, "tmp")].join(File::PATH_SEPARATOR)
+  loader = File.join(Gem.loaded_specs.fetch("rake").full_gem_path, "lib", "rake", "rake_test_loader.rb")
+  sh({ "RUBYLIB" => libraries }, RbConfig.ruby, loader, *FileList["test/**/*_test.rb"])
+end
+
+desc "Build a source gem (installation requires a published Magnus version)"
+task "build:source" do
+  FileUtils.mkdir_p([File.dirname(PACKAGE), File.join(ROOT, "tmp")])
+  Dir.mktmpdir("magnus-timezone-package-", File.join(ROOT, "tmp")) do |stage|
+    SPEC.files.each do |file|
+      destination = File.join(stage, file)
+      FileUtils.mkdir_p(File.dirname(destination))
+      FileUtils.cp(File.join(ROOT, file), destination)
+    end
+    # Keep local paths in the checkout; distributed gems resolve the declared
+    # Magnus version from the registry. No Git source or extra manifest needed.
+    manifest = File.join(stage, "Cargo.toml")
+    File.write(manifest, File.read(manifest).gsub(', path = ".."', ""))
+    Dir.chdir(stage) { Gem::Package.build(SPEC, false, false, PACKAGE) }
+  end
+end
+
+task default: %i[rubocop test]

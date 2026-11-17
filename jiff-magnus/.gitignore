@@ -1,0 +1,8 @@
+/pkg/
+!/tmp/
+/Gemfile.lock
+/Makefile
+/mkmf.log
+/*.so
+/*.bundle
+/*.dll

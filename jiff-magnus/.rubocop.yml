@@ -1,0 +1,82 @@
+plugins:
+  - rubocop-minitest
+
+AllCops:
+  TargetRubyVersion: 4.0
+  NewCops: disable
+  SuggestExtensions: false
+  Exclude:
+    - tmp/**/*
+    - pkg/**/*
+    - vendor/**/*
+
+Gemspec/RequiredRubyVersion:
+  # We retain Ruby 3.2 support. This rule requires the minimum version to match development Ruby.
+  Enabled: false
+
+Style/StringLiterals:
+  EnforcedStyle: double_quotes
+
+Style/Documentation:
+  Exclude:
+    - test/**/*.rb
+
+# Keep integration scenarios and their subprocess assertions together.
+Metrics/AbcSize:
+  Exclude:
+    - test/**/*_test.rb
+Metrics/MethodLength:
+  Exclude:
+    - test/**/*_test.rb
+Metrics/ClassLength:
+  Exclude:
+    - test/**/*_test.rb
+Metrics/BlockLength:
+  CountAsOne:
+    - heredoc
+
+Minitest/AssertPredicate:
+  Enabled: true
+
+Minitest/RefuteEmpty:
+  Enabled: false
+Minitest/RefuteEqual:
+  Enabled: false
+Minitest/RefuteFalse:
+  Enabled: false
+Minitest/RefuteInDelta:
+  Enabled: false
+Minitest/RefuteIncludes:
+  Enabled: false
+Minitest/RefuteInstanceOf:
+  Enabled: false
+Minitest/RefuteKindOf:
+  Enabled: false
+Minitest/RefuteMatch:
+  Enabled: false
+Minitest/RefuteNil:
+  Enabled: false
+Minitest/RefuteOperator:
+  Enabled: false
+Minitest/RefutePathExists:
+  Enabled: false
+Minitest/RefutePredicate:
+  Enabled: false
+Minitest/RefuteRespondTo:
+  Enabled: false
+Minitest/RefuteSame:
+  Enabled: false
+
+Style/MethodCallWithArgsParentheses:
+  Enabled: true
+  Include:
+    - test/**/*.rb
+  EnforcedStyle: require_parentheses
+  IgnoreMacros: true
+  AllowedPatterns:
+    - '\A(?!assert(?:_|\z))'
+
+Layout/FirstArrayElementLineBreak:
+  Enabled: true
+Layout/MultilineArrayLineBreaks:
+  Enabled: true

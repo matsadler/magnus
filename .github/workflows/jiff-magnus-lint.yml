@@ -1,0 +1,41 @@
+---
+name: jiff-magnus lint
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: jiff-magnus-lint-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: jiff-magnus
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ruby/setup-ruby@v1
+        with:
+          # Implicitly use .ruby-version.
+          bundler-cache: true
+          working-directory: jiff-magnus
+      - uses: dtolnay/rust-toolchain@v1
+        with:
+          toolchain: stable
+          components: rustfmt
+      - name: Check Ruby style
+        run: bundle exec rake rubocop
+      - name: Check Rust formatting
+        working-directory: .
+        run: cargo fmt --all -- --check
+      - name: Check workflow YAML
+        working-directory: .
+        run: yamllint --strict .github/workflows/jiff-magnus-*.yml
