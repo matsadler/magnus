@@ -1,7 +1,8 @@
 use std::{fmt, ptr::null_mut};
 
 use rb_sys::{
-    self, RTYPEDDATA_P, VALUE, rb_check_typeddata, rb_data_typed_object_wrap, ruby_value_type,
+    self, RTYPEDDATA_GET_DATA, RTYPEDDATA_P, VALUE, rb_check_typeddata, rb_data_typed_object_wrap,
+    rb_data_typed_object_zalloc, ruby_value_type,
 };
 
 use crate::{
@@ -139,20 +140,61 @@ impl Ruby {
     where
         T: TypedData,
     {
+        if T::data_type().is_make_eligible() {
+            self.make_as(data, class)
+        } else {
+            self.wrap_boxed_as(Box::new(data), class)
+        }
+    }
+
+    fn wrap_boxed_as<T>(&self, data: Box<T>, class: RClass) -> RTypedData
+    where
+        T: TypedData,
+    {
         debug_assert!(
             class.is_inherited(T::class(self)),
             "{} is not a subclass of {}",
             class,
             T::class(self)
         );
-        let boxed = Box::new(data);
         unsafe {
-            let value_ptr = rb_data_typed_object_wrap(
-                class.as_rb_value(),
-                Box::into_raw(boxed) as *mut _,
-                T::data_type().as_rb_data_type() as *const _,
-            );
-            RTypedData(NonZeroValue::new_unchecked(Value::new(value_ptr)))
+            protect(|| {
+                let value_ptr = rb_data_typed_object_wrap(
+                    class.as_rb_value(),
+                    Box::into_raw(data) as *mut _,
+                    T::data_type().as_rb_data_type() as *const _,
+                );
+                RTypedData(NonZeroValue::new_unchecked(Value::new(value_ptr)))
+            })
+            .unwrap()
+        }
+    }
+
+    // should only be used with types where `dfree` has been set to `None`
+    fn make_as<T>(&self, data: T, class: RClass) -> RTypedData
+    where
+        T: TypedData,
+    {
+        debug_assert!(
+            class.is_inherited(T::class(self)),
+            "{} is not a subclass of {}",
+            class,
+            T::class(self)
+        );
+        unsafe {
+            let value = protect(|| {
+                let val = rb_data_typed_object_zalloc(
+                    class.as_rb_value(),
+                    size_of::<T>() as _,
+                    T::data_type().as_rb_data_type() as *const _,
+                );
+                RTypedData(NonZeroValue::new_unchecked(Value::new(val)))
+            })
+            .unwrap();
+
+            (RTYPEDDATA_GET_DATA(value.as_rb_value()) as *mut T).write(data);
+
+            value
         }
     }
 }

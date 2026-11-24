@@ -9,11 +9,13 @@ use std::{
     fmt,
     hash::Hasher,
     marker::PhantomData,
-    mem::{self, size_of_val},
+    mem::{self, needs_drop, size_of_val},
     ops::Deref,
     panic::catch_unwind,
 };
 
+#[cfg(ruby_gte_4_1)]
+use rb_sys::rbimpl_typeddata_flags::{RUBY_TYPED_EMBEDDABLE, RUBY_TYPED_THREAD_SAFE_FREE};
 use rb_sys::{
     self, RTYPEDDATA_GET_DATA, VALUE, rb_data_type_t, rb_gc_writebarrier,
     rb_gc_writebarrier_unprotect, rb_obj_reveal, rb_singleton_class_attached,
@@ -70,6 +72,10 @@ impl DataType {
     pub(crate) fn as_rb_data_type(&self) -> &rb_data_type_t {
         &self.0
     }
+
+    pub(crate) fn is_make_eligible(&self) -> bool {
+        self.0.function.dfree.is_none()
+    }
 }
 
 unsafe impl Send for DataType {}
@@ -86,8 +92,11 @@ where
     /// type is no longer referenced from Ruby, but it is likely easier to do
     /// this in a [`Drop`] implementation for your type.
     ///
-    /// This function will always be called by Ruby on GC, it can not be opted
-    /// out of.
+    /// This function will not be called (and neither will the [`Drop`]
+    /// implementation for your type) if the `embeddable` plus one of the
+    /// `free_immediately` or `thread_safe_free` flags have been set with the
+    /// [`wrap`](macro@crate::wrap)/[`TypedData`](macro@crate::TypedData)
+    /// macro or [`DataTypeBuilder`].
     ///
     /// The default implementation simply drops `self`.
     ///
@@ -120,7 +129,7 @@ where
     ///
     /// This function is only called when the `size` flag is set with the
     /// [`wrap`](macro@crate::wrap)/[`TypedData`](macro@crate::TypedData)
-    /// macro or [`DataTypeBuilder::mark`].
+    /// macro or [`DataTypeBuilder::size`].
     ///
     /// The default implementation delegates to [`std::mem::size_of_val`].
     ///
@@ -132,11 +141,11 @@ where
 
     /// Called during garbage collection.
     ///
-    /// If your type contains any Ruby values that you have marked as moveable
+    /// If your type contains any Ruby values that you have marked as movable
     /// in your [`mark`](Self::mark) function, you must update them in this
     /// function using [`gc::Compactor::location`].
     ///
-    /// Ruby considers values are moveable if marked with the
+    /// Ruby considers values are movable if marked with the
     /// [`gc::Marker::mark_movable`] function. Other marking functions such as
     /// [`gc::Marker::mark`] will prevent values being moved.
     ///
@@ -231,6 +240,8 @@ pub struct DataTypeBuilder<T> {
     size: bool,
     compact: bool,
     free_immediately: bool,
+    thread_safe_free: bool,
+    embeddable: bool,
     wb_protected: bool,
     frozen_shareable: bool,
     phantom: PhantomData<T>,
@@ -262,6 +273,8 @@ where
             size: false,
             compact: false,
             free_immediately: false,
+            thread_safe_free: false,
+            embeddable: false,
             wb_protected: false,
             frozen_shareable: false,
             phantom: PhantomData,
@@ -298,6 +311,56 @@ where
         self
     }
 
+    /// Enable the 'thread_safe_free' flag.
+    ///
+    /// This is safe to do as long as the `<T as DataTypeFunctions>::free`
+    /// function or `T`'s drop function don't call Ruby in any way and don't
+    /// use any thread-local state.
+    ///
+    /// Setting `thread_safe_free` implies `free_immediately`.
+    /// This feature was introduced in Ruby 4.1 and is a no-op on earlier
+    /// versions (it will set `free_immediately` on earlier Ruby versions, so
+    /// only `thread_safe_free` need be called).
+    ///
+    /// If safe this should be enabled as this performs better and is more
+    /// memory efficient.
+    pub const fn thread_safe_free(mut self) -> Self {
+        self.thread_safe_free = true;
+        self.free_immediately()
+    }
+
+    /// Conditionality Enable the 'embeddable' flag if it can be used with this
+    /// type.
+    ///
+    /// Embedded types will not have their [`DataTypeFunctions::free`] function
+    /// or [`Drop`] implementation called, this function conditionally enabled
+    /// the `embeddable` flag based on the results of [`std::mem::needs_drop`].
+    ///
+    /// This feature was introduced in Ruby 4.1 and is a no-op on earlier
+    /// versions.
+    pub const fn embeddable(mut self) -> Self {
+        self.embeddable = !needs_drop::<T>();
+        self
+    }
+
+    /// Enable the 'embeddable' flag unconditionally.
+    ///
+    /// If you are sure that your type does not need to be dropped (neither it
+    /// or any type it contains implements [`Drop`]) and the results of
+    /// [`std::mem::needs_drop`] for your type are erroneous this can be used
+    /// to force setting the `embeddable` flag. Note that Ruby may still not
+    /// embed your type.
+    ///
+    /// This also sets `free_immediately`/`thread_safe_free` as they are a
+    /// requirement for embedding.
+    ///
+    /// This feature was introduced in Ruby 4.1 and is a no-op on earlier
+    /// versions.
+    pub const fn force_embeddable(mut self) -> Self {
+        self.embeddable = true;
+        self.thread_safe_free()
+    }
+
     /// Enable the 'write barrier protected' flag.
     ///
     /// Types that contain Ruby values by default do not participate in
@@ -313,11 +376,23 @@ where
         self
     }
 
+    const fn is_embeddable(&self) -> bool {
+        cfg!(ruby_gte_4_1) && self.embeddable && (self.free_immediately || self.thread_safe_free)
+    }
+
     /// Consume the builder and create a DataType.
     pub const fn build(self) -> DataType {
         let mut flags = 0_usize as VALUE;
         if self.free_immediately {
             flags |= RUBY_TYPED_FREE_IMMEDIATELY as VALUE;
+        }
+        #[cfg(ruby_gte_4_1)]
+        if self.thread_safe_free {
+            flags |= RUBY_TYPED_THREAD_SAFE_FREE as VALUE;
+        }
+        #[cfg(ruby_gte_4_1)]
+        if self.is_embeddable() {
+            flags |= RUBY_TYPED_EMBEDDABLE as VALUE;
         }
         if self.wb_protected || !self.mark {
             flags |= RUBY_TYPED_WB_PROTECTED as VALUE;
@@ -330,7 +405,11 @@ where
         } else {
             None
         };
-        let dfree = Some(T::extern_free as _);
+        let dfree = if self.is_embeddable() {
+            None
+        } else {
+            Some(T::extern_free as _)
+        };
         let dsize = if self.size {
             Some(T::extern_size as _)
         } else {

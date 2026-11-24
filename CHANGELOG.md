@@ -13,6 +13,10 @@
 - `Module::const_get_at`, `Module::const_get_from`, `Module::const_defined_at`,
   `Module::const_defined_from`.
 - The `ImplModule` type.
+- New `embeddable` flag for `DataTypeBuilder` and the `#[wrap]` macro to advise
+  Ruby a type may be directly embedded in a Ruby object (rather than the
+  object holding a pointer to the type). This flag is a no-op on Ruby versions
+  prior to 4.1.
 
 ### Changed
 - New `block`, `debug`, `fiber`, `mutex`, `numeric`, `process`, `range`,

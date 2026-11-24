@@ -133,6 +133,25 @@ pub fn init(attrs: TokenStream, item: TokenStream) -> TokenStream {
 ///   implementation does not call Ruby, as calling Ruby during the garbage
 ///   collection process is unsafe and can lead to undefined behaviour.
 ///
+/// * `thread_safe_free`:
+///   Indicates the `DataTypeFunctions::free`/[`Drop`] implementation for the
+///   Rust type may be called from concurrently and from any thread. Setting
+///   this implies `free_immediately`.
+///
+/// * `embeddable`:
+///   Advises Ruby that this type may be embedded directly within the Ruby
+///   object (rather than the object holding a pointer to the type). This must
+///   be coupled with either `free_immediately` or `thread_safe_free`, and the
+///   Rust type (or any type it contains) must not implement [`Drop`]. If these
+///   conditions are not met then the flag will not be set.
+///
+/// * `force_embeddable`:
+///   Set the `embeddable` flag plus `free_immediately` and `thread_safe_free`,
+///   regardless of whether a drop implementation is detected. If Ruby does
+///   embed the type, the `DataTypeFunctions::free`/[`Drop`] implementation
+///   will not be called, potentially resulting in memory leaks or logic errors
+///   if the type does in-fact require dropping.
+///
 /// * `size`:
 ///   Reports the [`std::mem::size_of_val`] of the type to Ruby, helping Ruby's
 ///   garbage collector determine when to run.

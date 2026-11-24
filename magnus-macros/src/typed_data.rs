@@ -36,6 +36,9 @@ pub fn expand_derive_typed_data(input: DeriveInput) -> Result<TokenStream, Error
     let mut size = false;
     let mut compact = false;
     let mut free_immediately = false;
+    let mut thread_safe_free = false;
+    let mut embeddable = false;
+    let mut force_embeddable = false;
     let mut wb_protected = false;
     let mut frozen_shareable = false;
     let mut unsafe_generics = false;
@@ -58,6 +61,15 @@ pub fn expand_derive_typed_data(input: DeriveInput) -> Result<TokenStream, Error
             Ok(())
         } else if meta.path.is_ident("free_immediately") {
             free_immediately = true;
+            Ok(())
+        } else if meta.path.is_ident("thread_safe_free") {
+            thread_safe_free = true;
+            Ok(())
+        } else if meta.path.is_ident("embeddable") {
+            embeddable = true;
+            Ok(())
+        } else if meta.path.is_ident("force_embeddable") {
+            force_embeddable = true;
             Ok(())
         } else if meta.path.is_ident("wb_protected") {
             wb_protected = true;
@@ -209,6 +221,15 @@ pub fn expand_derive_typed_data(input: DeriveInput) -> Result<TokenStream, Error
     }
     if free_immediately {
         builder.push(quote! { .free_immediately() });
+    }
+    if thread_safe_free {
+        builder.push(quote! { .thread_safe_free() });
+    }
+    if embeddable {
+        builder.push(quote! { .embeddable() });
+    }
+    if force_embeddable {
+        builder.push(quote! { .force_embeddable() });
     }
     if wb_protected {
         builder.push(quote! { .wb_protected() });
