@@ -476,7 +476,7 @@
 // * `rb_const_get_at`:
 // * `rb_const_get_from`:
 // * `rb_const_list`:
-// * `rb_const_remove`:
+//! * `rb_const_remove`: [`Module::const_remove`].
 //! * `rb_const_set`: [`Module::const_set`].
 // * `rb_convert_type`:
 // * `rb_copy_generic_ivar`:
@@ -1109,7 +1109,7 @@
 // * `rb_mod_module_eval`:
 // * `rb_mod_module_exec`:
 // * `rb_mod_name`:
-//! * `rb_mod_remove_const`: [`Module::remove_const`].
+//! * `rb_mod_remove_const`: See [`Module::const_remove`].
 // * `rb_mod_remove_cvar`:
 // * `rb_mod_syserr_fail`:
 // * `rb_mod_syserr_fail_str`:
