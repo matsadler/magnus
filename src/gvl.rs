@@ -155,6 +155,8 @@ use std::{
 
 #[cfg(ruby_gte_3_4)]
 use rb_sys::RB_NOGVL_OFFLOAD_SAFE;
+#[cfg(ruby_gte_4_1)]
+use rb_sys::RB_NOGVL_PENDING_INTR_FAIL;
 use rb_sys::{RB_NOGVL_INTR_FAIL, RB_NOGVL_UBF_ASYNC_SAFE, rb_nogvl, rb_thread_call_with_gvl};
 
 use crate::{
@@ -469,6 +471,12 @@ impl<'ruby, F, U> NoGvl<'ruby, F, U> {
         self.flags = self.flags.intr_fail();
     }
 
+    #[cfg(ruby_gte_4_1)]
+    #[inline]
+    fn set_pending_intr_fail(&mut self) {
+        self.flags = self.flags.pending_intr_fail();
+    }
+
     #[inline]
     fn set_ubf_async_safe(&mut self) {
         self.flags = self.flags.ubf_async_safe();
@@ -504,6 +512,28 @@ impl<'ruby, F, U> NoGvl<'ruby, F, U> {
     pub fn intr_fail(mut self) -> NoGvlIntrFail<'ruby, F, U> {
         self.set_intr_fail();
         NoGvlIntrFail(self)
+    }
+
+    /// Set the `pending_intr_fail` flag, skips running interrupts post-non-GVL
+    /// function.
+    ///
+    /// By default Ruby will check for and run interrupts before and after
+    /// running a non-GVL function. This means the call may return an error
+    /// without running the function, or return an error even though the
+    /// function ran successfully.
+    ///
+    /// Setting `pending_intr_fail` alters post-function behaviour, leaving the
+    /// pre-function behaviour intact.
+    ///
+    /// With `pending_intr_fail` set the post-function check for interrupts
+    /// will be skipped, so a successful function will always return a
+    /// successful result.
+    #[cfg(ruby_gte_4_1)]
+    #[cfg_attr(docsrs, doc(cfg(ruby_gte_4_1)))]
+    #[inline]
+    pub fn pending_intr_fail(mut self) -> Self {
+        self.set_pending_intr_fail();
+        self
     }
 
     /// Set the `ubf_async_safe` flag to indicate the unblocking function is
@@ -574,6 +604,15 @@ impl<'ruby, F> NoGvlIntrFail<'ruby, F, ()> {
 }
 
 impl<'ruby, F, U> NoGvlIntrFail<'ruby, F, U> {
+    /// See [`NoGvl::pending_intr_fail`].
+    #[cfg(ruby_gte_4_1)]
+    #[cfg_attr(docsrs, doc(cfg(ruby_gte_4_1)))]
+    #[inline]
+    pub fn pending_intr_fail(mut self) -> Self {
+        self.0.set_pending_intr_fail();
+        self
+    }
+
     /// See [`NoGvl::ubf_async_safe`].
     #[inline]
     pub fn ubf_async_safe(mut self) -> Self {
@@ -644,6 +683,15 @@ impl<'ruby, F, U> NoGvlOffload<'ruby, F, U> {
         NoGvlIntrFailOffload(self.0)
     }
 
+    /// See [`NoGvl::pending_intr_fail`].
+    #[cfg(ruby_gte_4_1)]
+    #[cfg_attr(docsrs, doc(cfg(ruby_gte_4_1)))]
+    #[inline]
+    pub fn pending_intr_fail(mut self) -> Self {
+        self.0.set_pending_intr_fail();
+        self
+    }
+
     /// See [`NoGvl::ubf_async_safe`].
     #[inline]
     pub fn ubf_async_safe(mut self) -> Self {
@@ -703,6 +751,15 @@ impl<'ruby, F> NoGvlIntrFailOffload<'ruby, F, ()> {
 }
 
 impl<F, U> NoGvlIntrFailOffload<'_, F, U> {
+    /// See [`NoGvl::pending_intr_fail`].
+    #[cfg(ruby_gte_4_1)]
+    #[cfg_attr(docsrs, doc(cfg(ruby_gte_4_1)))]
+    #[inline]
+    pub fn pending_intr_fail(mut self) -> Self {
+        self.0.set_pending_intr_fail();
+        self
+    }
+
     /// See [`NoGvl::ubf_async_safe`].
     #[inline]
     pub fn ubf_async_safe(mut self) -> Self {
@@ -945,6 +1002,19 @@ impl NoGvlFlags {
     /// should be called manually once your `nogvl` function has finished.
     pub const fn intr_fail(self) -> Self {
         Self(self.0 | RB_NOGVL_INTR_FAIL as c_int)
+    }
+
+    /// Set the `PENDING_INTR_FAIL` flag.
+    ///
+    /// Skips the post-function interrupt check (pre-function interrupts will
+    /// be checked/run).
+    ///
+    /// If supplying this to [`Ruby::nogvl`] then [`Ruby::thread_check_ints`]
+    /// should be called manually once your `nogvl` function has finished.
+    #[cfg(ruby_gte_4_1)]
+    #[cfg_attr(docsrs, doc(cfg(ruby_gte_4_1)))]
+    pub const fn pending_intr_fail(self) -> Self {
+        Self(self.0 | RB_NOGVL_PENDING_INTR_FAIL as c_int)
     }
 
     /// Set the `UBF_ASYNC_SAFE` flag.
