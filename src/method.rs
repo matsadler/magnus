@@ -242,7 +242,7 @@ mod private {
 /// have the type conversions or error handling usually provided by this
 /// library. See the [`method`](crate::method!) and
 /// [`function`](crate::function!) macros for converting functions to an
-/// implementor of this trait.
+/// implementer of this trait.
 ///
 /// This trait is implemented for the following function signatures:
 ///

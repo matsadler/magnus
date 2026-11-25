@@ -696,7 +696,7 @@ where
 {
     unsafe {
         let ptr = &mut iter as *mut I;
-        forget(iter); // we're going to drop this ourself;
+        forget(iter); // we're going to drop this our self;
         // ensure runs the first closure, but yield may raise, so the first
         // closure might never reach the end, so wouldn't drop. The second
         // closure is always run, and always after the first, so we do the

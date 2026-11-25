@@ -169,7 +169,7 @@ impl Ruby {
 
     /// Create a new `RArray` from a fallible Rust iterator.
     ///
-    /// Returns `Ok(RArray)` on sucess or `Err(E)` with the first error
+    /// Returns `Ok(RArray)` on success or `Err(E)` with the first error
     /// encountered.
     ///
     /// # Examples
@@ -339,7 +339,7 @@ impl RArray {
         protect(|| unsafe { Self::from_rb_value_unchecked(rb_ary_to_ary(val.as_rb_value())) })
     }
 
-    /// Iterates though `self` and checks each element is convertable to a `T`.
+    /// Iterates through `self` and checks each element is convertible to a `T`.
     ///
     /// Returns a typed copy of `self`. Mutating the returned copy will not
     /// mutate `self`.
@@ -786,7 +786,7 @@ impl RArray {
     /// Returns `Err` if `self` is frozen or if the conversion fails.
     ///
     /// The returned element will be Ruby's `nil` when `index` is out of bounds
-    /// this makes it impossible to distingush between out of bounds and
+    /// this makes it impossible to distinguish between out of bounds and
     /// removing `nil` without an additional length check.
     ///
     /// # Examples
@@ -926,7 +926,7 @@ impl RArray {
         Ok(())
     }
 
-    /// Storts the elements of `self` in place using Ruby's `<=>` operator.
+    /// Sorts the elements of `self` in place using Ruby's `<=>` operator.
     ///
     /// Returns `Err` if `self` is frozen.
     ///
@@ -997,7 +997,7 @@ impl RArray {
     ///
     /// This will only convert to a map of 'owned' Rust native types. The types
     /// representing Ruby objects can not be stored in a heap-allocated
-    /// datastructure like a [`Vec`] as they are hidden from the mark phase
+    /// data structure like a [`Vec`] as they are hidden from the mark phase
     /// of Ruby's garbage collector, and thus may be prematurely garbage
     /// collected in the following sweep phase.
     ///
@@ -1276,7 +1276,7 @@ impl RArray {
         Ok(())
     }
 
-    /// Create a new array from a subsequence of `self`.
+    /// Create a new array from a sub-sequence of `self`.
     ///
     /// This is a very cheap operation, as `self` and the new array will share
     /// their backing storage until one is modified.
@@ -1326,7 +1326,7 @@ impl RArray {
     ///         ary.assoc::<_, (String, i64)>("baz")?,
     ///         (String::from("baz"), 3)
     ///     );
-    ///     assert_eq!(ary.assoc::<_, Option<(String, i64)>>("quz")?, None);
+    ///     assert_eq!(ary.assoc::<_, Option<(String, i64)>>("qux")?, None);
     ///
     ///     Ok(())
     /// }

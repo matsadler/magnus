@@ -92,9 +92,9 @@ impl Marker {
         unsafe { rb_gc_mark_locations(start as *const VALUE, end as *const VALUE) }
     }
 
-    /// Mark an Object and let Ruby know it is moveable.
+    /// Mark an Object and let Ruby know it is movable.
     ///
-    /// The [`Value`] type is effectly a pointer to a Ruby object. Ruby's
+    /// The [`Value`] type is effectively a pointer to a Ruby object. Ruby's
     /// garbage collector will avoid moving objects exposed to extensions,
     /// unless you use this function to mark them during the GC marking phase.
     ///

@@ -646,7 +646,7 @@ impl RString {
         encindex == handle.utf8_encindex() || encindex == handle.usascii_encindex()
     }
 
-    /// Returns a new string by reencoding `self` from its current encoding to
+    /// Returns a new string by re-encoding `self` from its current encoding to
     /// the given `enc`.
     ///
     /// # Examples
@@ -744,7 +744,7 @@ impl RString {
     ///     let _: usize = s.funcall("length", ())?;
     ///     assert_eq!(s.enc_coderange(), Coderange::SevenBit);
     ///
-    ///     // Operations with two strings with known coderanges will set it
+    ///     // Operations with two strings with known code ranges will set it
     ///     // appropriately.
     ///     let t = ruby.str_new("🦀");
     ///     let _: usize = t.funcall("length", ())?;
@@ -1010,8 +1010,8 @@ impl RString {
     }
 
     /// Returns `self` as an owned Rust `String`. The Ruby string will be
-    /// reencoded as UTF-8 if required. Errors if the string can not be encoded
-    /// as UTF-8.
+    /// re-encoded as UTF-8 if required. Errors if the string can not be
+    /// encoded as UTF-8.
     ///
     /// # Examples
     ///
@@ -1237,7 +1237,7 @@ impl RString {
 
     /// Mutate `self`, adding `buf` to the end.
     ///
-    /// Note: This ignore's `self`'s encoding, and may result in `self`
+    /// Note: This ignores `self`'s encoding, and may result in `self`
     /// containing invalid bytes for its encoding. It's assumed this will more
     /// often be used with ASCII-8BIT (aka BINARY) encoded strings. See
     /// [`Ruby::str_buf_new`] and [`Ruby::str_from_slice`].

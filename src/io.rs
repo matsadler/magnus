@@ -174,7 +174,7 @@ impl Ruby {
         #[cfg(ruby_lte_3_4)]
         let mut fmode: std::ffi::c_int = 0; // with FMODE_ flags
         #[cfg(ruby_gt_3_4)]
-        let mut fmode: rb_io_mode = rb_io_mode::RUBY_IO_MODE_EXTERNAL; // arbitrary initialization value
+        let mut fmode: rb_io_mode = rb_io_mode::RUBY_IO_MODE_EXTERNAL; // arbitrary initialisation value
         let mut io_encoding: rb_io_encoding = unsafe { std::mem::zeroed() }; // with IO encoding options
 
         // Can raise:

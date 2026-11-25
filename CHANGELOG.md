@@ -277,7 +277,7 @@
 
 ## [0.6.2] - 2023-09-18
 ### Fixed
-- Compliation error in `bytes` feature.
+- Compilation error in `bytes` feature.
 
 ## [0.6.1] - 2023-08-20
 ### Changed

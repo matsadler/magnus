@@ -184,7 +184,7 @@ impl Mutex {
         Ok(())
     }
 
-    /// Release the lock for `timeout`, reaquiring it on wakeup.
+    /// Release the lock for `timeout`, reacquiring it on wakeup.
     ///
     /// Returns `Err` if the current thread does not own the lock.
     ///

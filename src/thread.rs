@@ -476,7 +476,7 @@ impl Thread {
         unsafe { rb_thread_wakeup_alive(self.as_rb_value()) };
     }
 
-    /// Mark `self` as eligible for scheduling and invoke the thread schedular.
+    /// Mark `self` as eligible for scheduling and invoke the thread scheduler.
     ///
     /// See also [`Thread::wakeup`] and [`Thread::wakeup_alive`].
     ///
@@ -616,7 +616,7 @@ impl Thread {
     /// Check if `self` has been interrupted.
     ///
     /// Returns true if the thread was interrupted, false otherwise. This can
-    /// be used to detect spurious wakeups.
+    /// be used to detect spurious wake-ups.
     pub fn interrupted(self) -> bool {
         unsafe { rb_thread_interrupted(self.as_rb_value()) != 0 }
     }

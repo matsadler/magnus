@@ -59,7 +59,7 @@ impl Ruby {
     /// ```
     pub fn time_new(&self, seconds: i64, microseconds: i64) -> Result<Time, Error> {
         protect(|| unsafe {
-            // types vary by plaftom so conversion isn't always useless
+            // types vary by platform so conversion isn't always useless
             #[allow(clippy::useless_conversion)]
             Time::from_rb_value_unchecked(rb_time_new(
                 seconds.try_into().unwrap(),
@@ -86,7 +86,7 @@ impl Ruby {
     /// ```
     pub fn time_nano_new(&self, seconds: i64, nanoseconds: i64) -> Result<Time, Error> {
         protect(|| unsafe {
-            // types vary by plaftom so conversion isn't always useless
+            // types vary by platform so conversion isn't always useless
             #[allow(clippy::useless_conversion)]
             Time::from_rb_value_unchecked(rb_time_nano_new(
                 seconds.try_into().unwrap(),

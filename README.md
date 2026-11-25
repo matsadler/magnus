@@ -265,14 +265,14 @@ If you wish to package your extension as a Gem, we recommend using the
 automatically build your Rust extension as a dynamic library, and then package
 it as a gem.
 
-*Note*: The newest version of rubygems does have beta support for compiling
+*Note*: The newest version of RubyGems does have beta support for compiling
 Rust, so in the future the `rb_sys` gem won't be necessary.
 
 **`my_example_gem.gemspec`**
 ```ruby
 spec.extensions = ["ext/my_example_gem/extconf.rb"]
 
-# needed until rubygems supports Rust support is out of beta
+# needed until RubyGems supports Rust support is out of beta
 spec.add_dependency "rb_sys", "~> 0.9.39"
 
 # only needed when developing or packaging your gem
@@ -625,10 +625,10 @@ deserialisation of Rust to Ruby data structures and vice versa.
 * [`OpenDAL`](https://github.com/apache/opendal/tree/main/bindings/ruby) a Ruby
   gem that access many object storage including S3 and file systems
   with the same set of APIs. OpenDAL also offers many middlewares to integrate
-  more features. For example, retries and concucurrent limits.
+  more features. For example, retries and concurrent limits.
 * [`Digest::SipHash`](https://github.com/havenwood/digest-sip_hash) a gem that
   implements SipHash in Rust with a fallback to pure Ruby. SipHash is a fast,
-  cryptographically strong pseudorandom function optimized for small inputs.
+  cryptographically strong pseudorandom function optimised for small inputs.
   Ruby's Hash class uses a C implementation of SipHash 1-3.
 
 Please open a [pull request](https://github.com/matsadler/magnus/pulls) if

@@ -357,7 +357,7 @@ impl RbEncoding {
     /// Returns the number of bytes of the first character in `slice`.
     ///
     /// If the first byte of `slice` is mid way through a character this will
-    /// return the number of bytes until the next character boundry.
+    /// return the number of bytes until the next character boundary.
     ///
     /// If the slice ends before the last byte of the character this will
     /// return the number of bytes until the end of the slice.
@@ -1080,9 +1080,9 @@ where
     Ok(RbEncoding::new(ptr).unwrap())
 }
 
-/// Compies the encoding from `src` to `dst`.
+/// Copies the encoding from `src` to `dst`.
 ///
-/// This does not reconcode `dst.`
+/// This does not re-encode `dst.`
 ///
 /// Similar to [`EncodingCapable::enc_associate`], except takes the encoding of
 /// `src` rather than an encoding object or index.
