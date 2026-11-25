@@ -3,6 +3,7 @@ use std::ffi::c_long;
 use magnus::{Error, Integer, Ruby, eval};
 
 const RUBY_FIXNUM_MAX: u64 = (c_long::MAX / 2) as u64;
+#[allow(clippy::unnecessary_cast)] // may be necessary on some platforms
 const RUBY_FIXNUM_MIN: i64 = (c_long::MIN / 2) as i64;
 
 #[test]

@@ -17,15 +17,15 @@ fn run_io_extract_modeenc(
     ruby: &Ruby,
     mode: &str,
 ) -> Result<(OpenFlags, FMode, IoEncoding), Error> {
-    let mut mode = ruby.str_new(mode).into_value_with(&ruby);
-    let mut permission = ruby.qnil().into_value_with(&ruby);
+    let mut mode = ruby.str_new(mode).into_value_with(ruby);
+    let mut permission = ruby.qnil().into_value_with(ruby);
     let kwargs = ruby.hash_new();
     let _ = kwargs.aset(ruby.to_symbol("encoding"), "GBK:UTF-8"); // follows "extern:intern". read more on `IO::new`
     ruby.io_extract_modeenc(&mut mode, &mut permission, &kwargs)
 }
 
 fn test_io_extract_modeenc_extracts_open_flags(ruby: &Ruby) -> Result<(), Error> {
-    let (open_flags, _, _) = run_io_extract_modeenc(&ruby, "a")?;
+    let (open_flags, _, _) = run_io_extract_modeenc(ruby, "a")?;
 
     let file_class = ruby.class_file();
     let append_flag = file_class.const_get_from::<_, Fixnum>("APPEND")?.to_i32()?;
@@ -35,7 +35,7 @@ fn test_io_extract_modeenc_extracts_open_flags(ruby: &Ruby) -> Result<(), Error>
 }
 
 fn test_io_extract_modeenc_extracts_fmode_flags(ruby: &Ruby) -> Result<(), Error> {
-    let (_, fmode_flags, _) = run_io_extract_modeenc(&ruby, "a")?;
+    let (_, fmode_flags, _) = run_io_extract_modeenc(ruby, "a")?;
 
     assert!(fmode_flags.contains(FMode::APPEND));
     assert!(fmode_flags.contains(FMode::READ_WRITE));
@@ -45,7 +45,7 @@ fn test_io_extract_modeenc_extracts_fmode_flags(ruby: &Ruby) -> Result<(), Error
 }
 
 fn test_io_extract_modeenc_extracts_io_encoding(ruby: &Ruby) -> Result<(), Error> {
-    let (_, _, io_encoding) = run_io_extract_modeenc(&ruby, "a")?;
+    let (_, _, io_encoding) = run_io_extract_modeenc(ruby, "a")?;
 
     assert!(io_encoding.internal.is_some());
     assert!(io_encoding.external.is_some());

@@ -851,6 +851,12 @@ where
 /// leaving `func`, but `func` is in-fact run on the same thread
 /// `call_with_gvl_unchecked` is called on. See the
 /// [module-level documentation](crate::gvl) for more details.
+///
+/// # Safety
+///
+/// This must only be called from a Ruby thread - that is one created by
+/// Ruby, or the main thread after [`embed::init`](crate::embed::init) has
+/// been called.
 pub unsafe fn call_with_gvl_unchecked<F, T>(func: F) -> T
 where
     F: Send + FnOnce(&Ruby) -> T,
@@ -1059,6 +1065,9 @@ unsafe impl<T> Send for UnsafeSend<T> {}
 impl<T> UnsafeSend<T> {
     /// Create a new `UnsafeSend`.
     ///
+    /// # Safety
+    ///
+    ///
     /// Note that this function is unsafe as once the value is created it is
     /// possible to move it to another thread where it could be dropped and
     /// the drop implementation for `T` run on another thread.
@@ -1075,6 +1084,8 @@ impl<T> UnsafeSend<T> {
     }
 
     /// Extract the value from the `UnsafeSend` container.
+    ///
+    /// # Safety
     ///
     /// This must be called on the same thread `self` was created on.
     pub unsafe fn into_inner(self) -> T {

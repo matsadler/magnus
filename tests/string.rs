@@ -18,6 +18,6 @@ fn it_converts_to_utf8_string() {
     assert!(
         err.to_string().contains(expected_error),
         "Expected \"{}\" to contain \"{expected_error}\" but it didn't",
-        err.to_string()
+        err
     );
 }

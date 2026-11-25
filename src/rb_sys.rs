@@ -58,6 +58,7 @@ pub trait AsRawValue {
     /// }
     /// # Ruby::init(example).unwrap()
     /// ```
+    #[allow(clippy::wrong_self_convention)]
     fn as_raw(self) -> VALUE;
 }
 
@@ -125,6 +126,7 @@ pub trait AsRawId {
     /// }
     /// # Ruby::init(example).unwrap()
     /// ```
+    #[allow(clippy::wrong_self_convention)]
     fn as_raw(self) -> ID;
 }
 

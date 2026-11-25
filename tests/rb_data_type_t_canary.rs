@@ -5,9 +5,7 @@ use std::{
 
 use rb_sys::{VALUE, rb_data_type_struct__bindgen_ty_1, rb_data_type_t, size_t};
 
-unsafe extern "C" fn data_func(_: *mut c_void) {
-    ()
-}
+unsafe extern "C" fn data_func(_: *mut c_void) {}
 
 unsafe extern "C" fn size(_: *const c_void) -> size_t {
     0
@@ -28,7 +26,7 @@ fn it_compiles() {
     let flags: VALUE = 0;
 
     static NAME: &CStr = c"example";
-    rb_data_type_t {
+    let _ = rb_data_type_t {
         wrap_struct_name: NAME.as_ptr(),
         function: rb_data_type_struct__bindgen_ty_1 {
             dmark: Some(data_func),
@@ -46,5 +44,4 @@ fn it_compiles() {
         data: ptr::null_mut(),
         flags,
     };
-    ()
 }
