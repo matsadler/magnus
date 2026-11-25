@@ -485,9 +485,9 @@ where
     /// This function can be called in a `const` context. `func` is evaluated
     /// when the `Lazy<T>` is first accessed (see [`Ruby::get_inner`]). If
     /// multiple threads attempt first access at the same time `func` may be
-    /// called more than once, but all threads will recieve the same value.
+    /// called more than once, but all threads will receive the same value.
     ///
-    /// This function assumes the `Lazy<T>` will be assinged to a `static`, so
+    /// This function assumes the `Lazy<T>` will be assigned to a `static`, so
     /// marks the inner Ruby value with Ruby's garbage collector to never be
     /// garbage collected. See [`Lazy::new_without_mark`] if this is not wanted.
     ///
@@ -1748,7 +1748,7 @@ where
     ///     ruby.gc_start();
     ///
     /// #   // try and use value
-    ///     // boxed is still useable
+    ///     // boxed is still usable
     ///     let result: String = eval!(ruby, r#"foo + "bar""#, foo = boxed)?;
     ///
     ///     assert_eq!(result, "foobar");

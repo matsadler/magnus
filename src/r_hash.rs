@@ -159,7 +159,7 @@ impl Ruby {
 
     /// Create a new `RHash` from a fallible Rust iterator.
     ///
-    /// Returns `Ok(RHash)` on sucess or `Err(E)` with the first error
+    /// Returns `Ok(RHash)` on success or `Err(E)` with the first error
     /// encountered.
     ///
     /// # Examples
@@ -663,7 +663,7 @@ impl RHash {
     /// will cause the iteration to stop, and [`ForEach::Delete`] will remove
     /// the key/value pair from `self` and then continue iteration.
     ///
-    /// Returing an error from `func` behaves like [`ForEach::Stop`].
+    /// Returning an error from `func` behaves like [`ForEach::Stop`].
     ///
     /// # Examples
     ///

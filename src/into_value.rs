@@ -127,7 +127,7 @@ macro_rules! kwargs {
 
 /// # Safety
 ///
-/// The implmentation of `ArgList` for slices is not intended to suggest that
+/// The implementation of `ArgList` for slices is not intended to suggest that
 /// it is valid to build a `Vec` of Ruby values to then convert to a slice.
 /// [Ruby values should never be put into a `Vec`](crate#safety).
 impl<'a, T> ArgList for &'a [T]

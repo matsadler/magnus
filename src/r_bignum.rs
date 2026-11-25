@@ -24,7 +24,7 @@ use crate::{
 
 /// # `RBignum`
 ///
-/// Functions that can be used to create instances of Ruby's large interger
+/// Functions that can be used to create instances of Ruby's large integer
 /// representation.
 ///
 /// See also the [`RBignum`] type.

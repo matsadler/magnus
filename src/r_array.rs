@@ -169,7 +169,7 @@ impl Ruby {
 
     /// Create a new `RArray` from a fallible Rust iterator.
     ///
-    /// Returns `Ok(RArray)` on sucess or `Err(E)` with the first error
+    /// Returns `Ok(RArray)` on success or `Err(E)` with the first error
     /// encountered.
     ///
     /// # Examples
@@ -339,7 +339,7 @@ impl RArray {
         protect(|| unsafe { Self::from_rb_value_unchecked(rb_ary_to_ary(val.as_rb_value())) })
     }
 
-    /// Iterates though `self` and checks each element is convertable to a `T`.
+    /// Iterates through `self` and checks each element is convertible to a `T`.
     ///
     /// Returns a typed copy of `self`. Mutating the returned copy will not
     /// mutate `self`.
@@ -786,7 +786,7 @@ impl RArray {
     /// Returns `Err` if `self` is frozen or if the conversion fails.
     ///
     /// The returned element will be Ruby's `nil` when `index` is out of bounds
-    /// this makes it impossible to distingush between out of bounds and
+    /// this makes it impossible to distinguish between out of bounds and
     /// removing `nil` without an additional length check.
     ///
     /// # Examples
