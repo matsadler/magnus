@@ -17,6 +17,8 @@
   Ruby a type may be directly embedded in a Ruby object (rather than the
   object holding a pointer to the type). This flag is a no-op on Ruby versions
   prior to 4.1.
+- `Ruby::wrap_boxed` as a counterpart to `Ruby::wrap` that reuses an existing
+  heap allocation.
 
 ### Changed
 - New `block`, `debug`, `fiber`, `mutex`, `numeric`, `process`, `range`,

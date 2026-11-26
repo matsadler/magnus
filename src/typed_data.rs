@@ -684,6 +684,45 @@ impl Ruby {
         }
     }
 
+    /// Wrap the Rust type `T` in a Ruby object, reusing an existing heap
+    /// allocation.
+    ///
+    /// See also [`obj_wrap`](Ruby::obj_wrap).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Error, Ruby, prelude::*};
+    ///
+    /// #[magnus::wrap(class = "Point")]
+    /// struct Point {
+    ///     x: isize,
+    ///     y: isize,
+    /// }
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let point_class = ruby.define_class("Point", ruby.class_object())?;
+    ///
+    ///     let p = Box::new(Point { x: 4, y: 2 });
+    ///
+    ///     let value = ruby.obj_wrap_boxed(p);
+    ///     assert!(value.is_kind_of(point_class));
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap();
+    /// # let _ = Point { x: 1, y: 2 }.x + Point { x: 3, y: 4 }.y;
+    /// ```
+    pub fn obj_wrap_boxed<T>(&self, data: Box<T>) -> Obj<T>
+    where
+        T: TypedData,
+    {
+        Obj {
+            inner: self.wrap_boxed(data),
+            phantom: PhantomData,
+        }
+    }
+
     /// Wrap the Rust type `T` in a Ruby object that is an instance of the
     /// given `class`.
     ///
@@ -767,6 +806,51 @@ impl Ruby {
     {
         Obj {
             inner: self.wrap_as(data, class),
+            phantom: PhantomData,
+        }
+    }
+
+    /// Wrap the Rust type `T` in a Ruby object that is an instance of the
+    /// given `class`, reusing an existing heap allocation.
+    ///
+    /// See also [`obj_wrap_as`](Ruby::obj_wrap_as).
+    ///
+    /// # Panics
+    ///
+    /// Panics if `class` is not a subclass of `<T as TypedData>::class()`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use magnus::{Error, Ruby, prelude::*};
+    ///
+    /// #[magnus::wrap(class = "Point")]
+    /// struct Point {
+    ///     x: isize,
+    ///     y: isize,
+    /// }
+    ///
+    /// fn example(ruby: &Ruby) -> Result<(), Error> {
+    ///     let point_class = ruby.define_class("Point", ruby.class_object())?;
+    ///     let point_sub_class = ruby.define_class("SubPoint", point_class)?;
+    ///
+    ///     let p = Box::new(Point { x: 4, y: 2 });
+    ///
+    ///     let value = ruby.obj_wrap_boxed_as(p, point_sub_class);
+    ///     assert!(value.is_kind_of(point_sub_class));
+    ///     assert!(value.is_kind_of(point_class));
+    ///
+    ///     Ok(())
+    /// }
+    /// # Ruby::init(example).unwrap();
+    /// # let _ = Point { x: 1, y: 2 }.x + Point { x: 3, y: 4 }.y;
+    /// ```
+    pub fn obj_wrap_boxed_as<T>(&self, data: Box<T>, class: RClass) -> Obj<T>
+    where
+        T: TypedData,
+    {
+        Obj {
+            inner: self.wrap_boxed_as(data, class),
             phantom: PhantomData,
         }
     }
