@@ -237,7 +237,7 @@ impl Ruby {
     /// # Ruby::init(example).unwrap()
     /// ```
     #[inline]
-    pub fn nogvl<F, T>(&self, func: F) -> NoGvl<'_, F, ()>
+    pub fn nogvl<F, T>(&self, func: F) -> NoGvl<'_, F, (), ()>
     where
         F: Send + FnOnce(&GvlHandle) -> T,
     {
@@ -382,18 +382,31 @@ impl Ruby {
     }
 }
 
+/// Type states for the [`NoGvl`] builder type.
+pub mod nogvl_state {
+    /// Type state indicating the `inter_fail` flag has been set.
+    pub struct IntrFail;
+    /// Type state indicating the `offload_safe` flag has been set.
+    pub struct Offload;
+    /// Type state indicating both the `inter_fail` and `offload_safe` flags
+    /// have been set.
+    pub struct IntrFailOffload;
+}
+use nogvl_state::*;
+
 /// A builder type used to configure calling a function without the GVL.
 ///
 /// See [`Ruby::nogvl`].
 #[must_use]
-pub struct NoGvl<'ruby, F, U> {
+pub struct NoGvl<'ruby, F, U, S> {
     ruby: &'ruby Ruby,
     func: F,
     unblock: U,
     flags: NoGvlFlags,
+    state: PhantomData<S>,
 }
 
-impl<'ruby, F, T> NoGvl<'ruby, F, ()>
+impl<'ruby, F, T> NoGvl<'ruby, F, (), ()>
 where
     F: Send + FnOnce(&GvlHandle) -> T,
 {
@@ -404,11 +417,149 @@ where
             func,
             unblock: (),
             flags: NoGvlFlags::new(),
+            state: PhantomData,
         }
     }
 }
 
-impl<'ruby, F> NoGvl<'ruby, F, ()> {
+impl<'ruby, F, U, S> NoGvl<'ruby, F, U, S> {
+    #[inline]
+    fn set_intr_fail(&mut self) {
+        self.flags = self.flags.intr_fail();
+    }
+
+    #[cfg(ruby_gte_4_1)]
+    #[inline]
+    fn set_pending_intr_fail(&mut self) {
+        self.flags = self.flags.pending_intr_fail();
+    }
+
+    #[inline]
+    fn set_ubf_async_safe(&mut self) {
+        self.flags = self.flags.ubf_async_safe();
+    }
+
+    #[inline]
+    fn set_offload_safe(&mut self) {
+        self.flags = self.flags.offload_safe();
+    }
+
+    /// Set the `pending_intr_fail` flag, skips running interrupts post-non-GVL
+    /// function.
+    ///
+    /// By default Ruby will check for and run interrupts before and after
+    /// running a non-GVL function. This means the call may return an error
+    /// without running the function, or return an error even though the
+    /// function ran successfully.
+    ///
+    /// Setting `pending_intr_fail` alters post-function behaviour, leaving the
+    /// pre-function behaviour intact.
+    ///
+    /// With `pending_intr_fail` set the post-function check for interrupts
+    /// will be skipped, so a successful function will always return a
+    /// successful result.
+    #[cfg(ruby_gte_4_1)]
+    #[cfg_attr(docsrs, doc(cfg(ruby_gte_4_1)))]
+    #[inline]
+    pub fn pending_intr_fail(mut self) -> Self {
+        self.set_pending_intr_fail();
+        self
+    }
+
+    /// Set the `ubf_async_safe` flag to indicate the unblocking function is
+    /// async-signal-safe.
+    ///
+    /// An async-signal-safe unblocking function can be run more efficiently.
+    #[inline]
+    pub fn ubf_async_safe(mut self) -> Self {
+        self.set_ubf_async_safe();
+        self
+    }
+}
+
+impl<'ruby, F, U> NoGvl<'ruby, F, U, ()> {
+    /// Set the `intr_fail` flag, skips running interrupts pre and post-non-GVL
+    /// function.
+    ///
+    /// By default Ruby will check for and run interrupts before and after
+    /// running a non-GVL function. This means the call may return an error
+    /// without running the function, or return an error even though the
+    /// function ran successfully.
+    ///
+    /// Setting `intr_fail` alters both the pre and post-function behaviour,
+    /// but differently for each.
+    ///
+    /// With `intr_fail` set Ruby will only check for, but not run interrupts
+    /// before the function. If an interrupt is pending the function will be
+    /// skipped, the interrupt will not be processed, and no error generated.
+    ///
+    /// With `intr_fail` set the post-function check for interrupts will be
+    /// skipped entirely, so a successful function will always return a
+    /// successful result.
+    ///
+    /// This change in behaviour means the return type of [`call`](NoGvl::call)
+    /// changes from `Result<T, Error>` to `Option<T>`.
+    #[inline]
+    pub fn intr_fail(mut self) -> NoGvl<'ruby, F, U, IntrFail> {
+        self.set_intr_fail();
+        NoGvl {
+            ruby: self.ruby,
+            func: self.func,
+            unblock: self.unblock,
+            flags: self.flags,
+            state: PhantomData,
+        }
+    }
+
+    /// Set the `offload_safe` flag to allow the non-GVL function to be run on
+    /// another thread.
+    ///
+    /// If combined with [`intr_fail`](NoGvl::intr_fail) return type of
+    /// [`call`](NoGvl::call) becomes `Result<Option<T>, Error>`.
+    #[inline]
+    pub fn offload_safe(mut self) -> NoGvl<'ruby, F, U, Offload> {
+        self.set_offload_safe();
+        NoGvl {
+            ruby: self.ruby,
+            func: self.func,
+            unblock: self.unblock,
+            flags: self.flags,
+            state: PhantomData,
+        }
+    }
+}
+
+impl<'ruby, F, U> NoGvl<'ruby, F, U, IntrFail> {
+    /// See [`NoGvl::offload_safe`].
+    #[inline]
+    pub fn offload_safe(mut self) -> NoGvl<'ruby, F, U, IntrFailOffload> {
+        self.set_offload_safe();
+        NoGvl {
+            ruby: self.ruby,
+            func: self.func,
+            unblock: self.unblock,
+            flags: self.flags,
+            state: PhantomData,
+        }
+    }
+}
+
+impl<'ruby, F, U> NoGvl<'ruby, F, U, Offload> {
+    /// See [`NoGvl::intr_fail`].
+    #[inline]
+    pub fn intr_fail(mut self) -> NoGvl<'ruby, F, U, IntrFailOffload> {
+        self.set_intr_fail();
+        NoGvl {
+            ruby: self.ruby,
+            func: self.func,
+            unblock: self.unblock,
+            flags: self.flags,
+            state: PhantomData,
+        }
+    }
+}
+
+impl<'ruby, F, S> NoGvl<'ruby, F, (), S> {
     /// Set an unblocking function to be run when an interrupt occurs.
     ///
     /// See the [module-level documentation](crate::gvl) for more details.
@@ -452,7 +603,7 @@ impl<'ruby, F> NoGvl<'ruby, F, ()> {
     /// # Ruby::init(example).unwrap()
     /// ```
     #[inline]
-    pub fn unblock<U>(self, unblock: U) -> NoGvl<'ruby, F, U>
+    pub fn unblock<U>(self, unblock: U) -> NoGvl<'ruby, F, U, S>
     where
         U: Send + FnMut(),
     {
@@ -461,104 +612,25 @@ impl<'ruby, F> NoGvl<'ruby, F, ()> {
             func: self.func,
             unblock,
             flags: self.flags,
+            state: PhantomData,
         }
     }
 }
 
-impl<'ruby, F, U> NoGvl<'ruby, F, U> {
+impl<F, T> NoGvl<'_, F, (), ()>
+where
+    F: Send + FnOnce(&GvlHandle) -> T,
+{
+    /// Run the non-GVL function.
     #[inline]
-    fn set_intr_fail(&mut self) {
-        self.flags = self.flags.intr_fail();
-    }
-
-    #[cfg(ruby_gte_4_1)]
-    #[inline]
-    fn set_pending_intr_fail(&mut self) {
-        self.flags = self.flags.pending_intr_fail();
-    }
-
-    #[inline]
-    fn set_ubf_async_safe(&mut self) {
-        self.flags = self.flags.ubf_async_safe();
-    }
-
-    #[inline]
-    fn set_offload_safe(&mut self) {
-        self.flags = self.flags.offload_safe();
-    }
-
-    /// Set the `intr_fail` flag, skips running interrupts pre and post-non-GVL
-    /// function.
-    ///
-    /// By default Ruby will check for and run interrupts before and after
-    /// running a non-GVL function. This means the call may return an error
-    /// without running the function, or return an error even though the
-    /// function ran successfully.
-    ///
-    /// Setting `intr_fail` alters both the pre and post-function behaviour,
-    /// but differently for each.
-    ///
-    /// With `intr_fail` set Ruby will only check for, but not run interrupts
-    /// before the function. If an interrupt is pending the function will be
-    /// skipped, the interrupt will not be processed, and no error generated.
-    ///
-    /// With `intr_fail` set the post-function check for interrupts will be
-    /// skipped entirely, so a successful function will always return a
-    /// successful result.
-    ///
-    /// This change in behaviour means the return type of [`call`](NoGvl::call)
-    /// changes from `Result<T, Error>` to `Option<T>`.
-    #[inline]
-    pub fn intr_fail(mut self) -> NoGvlIntrFail<'ruby, F, U> {
-        self.set_intr_fail();
-        NoGvlIntrFail(self)
-    }
-
-    /// Set the `pending_intr_fail` flag, skips running interrupts post-non-GVL
-    /// function.
-    ///
-    /// By default Ruby will check for and run interrupts before and after
-    /// running a non-GVL function. This means the call may return an error
-    /// without running the function, or return an error even though the
-    /// function ran successfully.
-    ///
-    /// Setting `pending_intr_fail` alters post-function behaviour, leaving the
-    /// pre-function behaviour intact.
-    ///
-    /// With `pending_intr_fail` set the post-function check for interrupts
-    /// will be skipped, so a successful function will always return a
-    /// successful result.
-    #[cfg(ruby_gte_4_1)]
-    #[cfg_attr(docsrs, doc(cfg(ruby_gte_4_1)))]
-    #[inline]
-    pub fn pending_intr_fail(mut self) -> Self {
-        self.set_pending_intr_fail();
-        self
-    }
-
-    /// Set the `ubf_async_safe` flag to indicate the unblocking function is
-    /// async-signal-safe.
-    ///
-    /// An async-signal-safe unblocking function can be run more efficiently.
-    #[inline]
-    pub fn ubf_async_safe(mut self) -> Self {
-        self.set_ubf_async_safe();
-        self
-    }
-
-    /// Set the `offload_safe` flag to allow the non-GVL function to be run on
-    /// another thread.
-    ///
-    /// If combined with [`intr_fail`](NoGvl::intr_fail) return type of
-    /// [`call`](NoGvl::call) becomes `Result<Option<T>, Error>`.
-    #[inline]
-    pub fn offload_safe(mut self) -> NoGvlOffload<'ruby, F, U> {
-        self.set_offload_safe();
-        NoGvlOffload(self)
+    pub fn call(self) -> Result<T, Error> {
+        self.ruby
+            .nogvl_impl(self.func, None::<fn()>, self.flags)
+            .map(|o| o.expect("func to have been called"))
     }
 }
 
-impl<F, U, T> NoGvl<'_, F, U>
+impl<F, U, T> NoGvl<'_, F, U, ()>
 where
     F: Send + FnOnce(&GvlHandle) -> T,
     U: Send + FnMut(),
@@ -572,9 +644,37 @@ where
     }
 }
 
-impl<F, T> NoGvl<'_, F, ()>
+impl<F, T> NoGvl<'_, F, (), IntrFail>
 where
     F: Send + FnOnce(&GvlHandle) -> T,
+{
+    /// Run the non-GVL function.
+    #[inline]
+    pub fn call(self) -> Option<T> {
+        self.ruby
+            .nogvl_impl(self.func, None::<fn()>, self.flags)
+            .expect("no error without interrupts")
+    }
+}
+
+impl<F, U, T> NoGvl<'_, F, U, IntrFail>
+where
+    F: Send + FnOnce(&GvlHandle) -> T,
+    U: Send + FnMut(),
+{
+    /// Run the non-GVL function.
+    #[inline]
+    pub fn call(self) -> Option<T> {
+        self.ruby
+            .nogvl_impl(self.func, Some(self.unblock), self.flags)
+            .expect("no error without interrupts")
+    }
+}
+
+impl<F, T> NoGvl<'_, F, (), Offload>
+where
+    F: Send + FnOnce(&GvlHandle) -> T,
+    T: Send,
 {
     /// Run the non-GVL function.
     #[inline]
@@ -585,215 +685,44 @@ where
     }
 }
 
-/// [`NoGvl`] with the [`intr_fail`](NoGvl::intr_fail) flag set.
-///
-/// Setting the [`intr_fail`](NoGvl::intr_fail) flag changes the return type
-/// of [`call`](NoGvl::call) so generates a new type.
-#[must_use]
-pub struct NoGvlIntrFail<'ruby, F, U>(NoGvl<'ruby, F, U>);
-
-impl<'ruby, F> NoGvlIntrFail<'ruby, F, ()> {
-    /// See [`NoGvl::unblock`].
-    #[inline]
-    pub fn unblock<U>(self, unblock: U) -> NoGvlIntrFail<'ruby, F, U>
-    where
-        U: Send + FnMut(),
-    {
-        NoGvlIntrFail(self.0.unblock(unblock))
-    }
-}
-
-impl<'ruby, F, U> NoGvlIntrFail<'ruby, F, U> {
-    /// See [`NoGvl::pending_intr_fail`].
-    #[cfg(ruby_gte_4_1)]
-    #[cfg_attr(docsrs, doc(cfg(ruby_gte_4_1)))]
-    #[inline]
-    pub fn pending_intr_fail(mut self) -> Self {
-        self.0.set_pending_intr_fail();
-        self
-    }
-
-    /// See [`NoGvl::ubf_async_safe`].
-    #[inline]
-    pub fn ubf_async_safe(mut self) -> Self {
-        self.0.set_ubf_async_safe();
-        self
-    }
-
-    /// See [`NoGvl::offload_safe`].
-    #[inline]
-    pub fn offload_safe(mut self) -> NoGvlIntrFailOffload<'ruby, F, U> {
-        self.0.set_offload_safe();
-        NoGvlIntrFailOffload(self.0)
-    }
-}
-
-impl<F, U, T> NoGvlIntrFail<'_, F, U>
-where
-    F: Send + FnOnce(&GvlHandle) -> T,
-    U: Send + FnMut(),
-{
-    /// See [`NoGvl::call`].
-    #[inline]
-    pub fn call(self) -> Option<T> {
-        self.0
-            .ruby
-            .nogvl_impl(self.0.func, Some(self.0.unblock), self.0.flags)
-            .expect("no error without interrupts")
-    }
-}
-
-impl<F, T> NoGvlIntrFail<'_, F, ()>
-where
-    F: Send + FnOnce(&GvlHandle) -> T,
-{
-    /// See [`NoGvl::call`].
-    #[inline]
-    pub fn call(self) -> Option<T> {
-        self.0
-            .ruby
-            .nogvl_impl(self.0.func, None::<fn()>, self.0.flags)
-            .expect("no error without interrupts")
-    }
-}
-
-/// [`NoGvl`] with the [`offload_safe`](NoGvl::offload_safe) flag set.
-///
-/// Setting the [`offload_safe`](NoGvl::offload_safe) flag may change the
-/// return type of [`call`](NoGvl::call) so generates a new type.
-#[must_use]
-pub struct NoGvlOffload<'ruby, F, U>(NoGvl<'ruby, F, U>);
-
-impl<'ruby, F> NoGvlOffload<'ruby, F, ()> {
-    /// See [`NoGvl::unblock`].
-    #[inline]
-    pub fn unblock<U>(self, unblock: U) -> NoGvlOffload<'ruby, F, U>
-    where
-        U: Send + FnMut(),
-    {
-        NoGvlOffload(self.0.unblock(unblock))
-    }
-}
-
-impl<'ruby, F, U> NoGvlOffload<'ruby, F, U> {
-    /// See [`NoGvl::intr_fail`].
-    #[inline]
-    pub fn intr_fail(mut self) -> NoGvlIntrFailOffload<'ruby, F, U> {
-        self.0.set_intr_fail();
-        NoGvlIntrFailOffload(self.0)
-    }
-
-    /// See [`NoGvl::pending_intr_fail`].
-    #[cfg(ruby_gte_4_1)]
-    #[cfg_attr(docsrs, doc(cfg(ruby_gte_4_1)))]
-    #[inline]
-    pub fn pending_intr_fail(mut self) -> Self {
-        self.0.set_pending_intr_fail();
-        self
-    }
-
-    /// See [`NoGvl::ubf_async_safe`].
-    #[inline]
-    pub fn ubf_async_safe(mut self) -> Self {
-        self.0.set_ubf_async_safe();
-        self
-    }
-}
-
-impl<F, U, T> NoGvlOffload<'_, F, U>
+impl<F, U, T> NoGvl<'_, F, U, Offload>
 where
     F: Send + FnOnce(&GvlHandle) -> T,
     U: Send + FnMut(),
     T: Send,
 {
-    /// See [`NoGvl::call`].
+    /// Run the non-GVL function.
     #[inline]
     pub fn call(self) -> Result<T, Error> {
-        self.0
-            .ruby
-            .nogvl_impl(self.0.func, Some(self.0.unblock), self.0.flags)
+        self.ruby
+            .nogvl_impl(self.func, Some(self.unblock), self.flags)
             .map(|o| o.expect("func to have been called"))
     }
 }
 
-impl<F, T> NoGvlOffload<'_, F, ()>
+impl<F, T> NoGvl<'_, F, (), IntrFailOffload>
 where
     F: Send + FnOnce(&GvlHandle) -> T,
     T: Send,
 {
-    /// See [`NoGvl::call`].
+    /// Run the non-GVL function.
     #[inline]
-    pub fn call(self) -> Result<T, Error> {
-        self.0
-            .ruby
-            .nogvl_impl(self.0.func, None::<fn()>, self.0.flags)
-            .map(|o| o.expect("func to have been called"))
+    pub fn call(self) -> Result<Option<T>, Error> {
+        self.ruby.nogvl_impl(self.func, None::<fn()>, self.flags)
     }
 }
 
-/// [`NoGvl`] with both the [`intr_fail`](NoGvl::intr_fail) and
-/// [`offload_safe`](NoGvl::offload_safe) flags set.
-///
-/// Setting the both flags changes the return type of [`call`](NoGvl::call) so
-/// generates a new type.
-#[must_use]
-pub struct NoGvlIntrFailOffload<'ruby, F, U>(NoGvl<'ruby, F, U>);
-
-impl<'ruby, F> NoGvlIntrFailOffload<'ruby, F, ()> {
-    /// See [`NoGvl::unblock`].
-    #[inline]
-    pub fn unblock<U>(self, unblock: U) -> NoGvlIntrFailOffload<'ruby, F, U>
-    where
-        U: Send + FnMut(),
-    {
-        NoGvlIntrFailOffload(self.0.unblock(unblock))
-    }
-}
-
-impl<F, U> NoGvlIntrFailOffload<'_, F, U> {
-    /// See [`NoGvl::pending_intr_fail`].
-    #[cfg(ruby_gte_4_1)]
-    #[cfg_attr(docsrs, doc(cfg(ruby_gte_4_1)))]
-    #[inline]
-    pub fn pending_intr_fail(mut self) -> Self {
-        self.0.set_pending_intr_fail();
-        self
-    }
-
-    /// See [`NoGvl::ubf_async_safe`].
-    #[inline]
-    pub fn ubf_async_safe(mut self) -> Self {
-        self.0.set_ubf_async_safe();
-        self
-    }
-}
-
-impl<F, U, T> NoGvlIntrFailOffload<'_, F, U>
+impl<F, U, T> NoGvl<'_, F, U, IntrFailOffload>
 where
     F: Send + FnOnce(&GvlHandle) -> T,
     U: Send + FnMut(),
     T: Send,
 {
-    /// See [`NoGvl::call`].
+    /// Run the non-GVL function.
     #[inline]
     pub fn call(self) -> Result<Option<T>, Error> {
-        self.0
-            .ruby
-            .nogvl_impl(self.0.func, Some(self.0.unblock), self.0.flags)
-    }
-}
-
-impl<F, T> NoGvlIntrFailOffload<'_, F, ()>
-where
-    F: Send + FnOnce(&GvlHandle) -> T,
-    T: Send,
-{
-    /// See [`NoGvl::call`].
-    #[inline]
-    pub fn call(self) -> Result<Option<T>, Error> {
-        self.0
-            .ruby
-            .nogvl_impl(self.0.func, None::<fn()>, self.0.flags)
+        self.ruby
+            .nogvl_impl(self.func, Some(self.unblock), self.flags)
     }
 }
 
