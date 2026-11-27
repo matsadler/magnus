@@ -114,6 +114,7 @@
 //! | `chrono`     |         | conversions for the chrono crate              |
 //! | `debug`      | ✔︎       | [`debug`]                                     |
 //! | `embed`      |         | [`embed`]                                     |
+//! | `encoding`   | ✔︎       | [`encoding`], RString to String conversion    |
 //! | `fiber`      | ✔︎       | [`fiber`], [`Fiber`]                          |
 //! | `gvl`        |         | [`gvl`], [`Ruby::nogvl`]                      |
 //! | `io`         | ✔︎       | [`io`]                                        |
@@ -1833,6 +1834,8 @@ pub mod debug;
 #[cfg(feature = "embed")]
 #[cfg_attr(docsrs, doc(cfg(feature = "embed")))]
 pub mod embed;
+#[cfg(feature = "encoding")]
+#[cfg_attr(docsrs, doc(cfg(feature = "encoding")))]
 pub mod encoding;
 mod enumerator;
 pub mod error;
@@ -1864,12 +1867,15 @@ mod object;
 pub mod process;
 /// Traits that commonly should be in scope.
 pub mod prelude {
+    #[cfg(feature = "encoding")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "encoding")))]
+    pub use crate::encoding::EncodingCapable as _;
     #[cfg(feature = "numeric")]
     #[cfg_attr(docsrs, doc(cfg(feature = "numeric")))]
     pub use crate::numeric::Numeric as _;
     pub use crate::{
-        class::Class as _, encoding::EncodingCapable as _, module::Module as _,
-        object::Object as _, try_convert::TryConvert as _, value::ReprValue as _,
+        class::Class as _, module::Module as _, object::Object as _, try_convert::TryConvert as _,
+        value::ReprValue as _,
     };
 }
 pub mod r_array;

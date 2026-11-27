@@ -24,8 +24,8 @@ use rb_sys::{
     rb_check_symbol_cstr, rb_enumeratorize_with_size_kw, rb_eql, rb_equal, rb_funcallv_kw,
     rb_funcallv_public_kw, rb_gc_register_address, rb_gc_unregister_address, rb_hash, rb_id2name,
     rb_id2sym, rb_inspect, rb_intern3, rb_ll2inum, rb_obj_as_string, rb_obj_classname,
-    rb_obj_freeze, rb_obj_is_kind_of, rb_obj_respond_to, rb_sym2id, rb_ull2inum, ruby_fl_type,
-    ruby_special_consts, ruby_value_type,
+    rb_obj_freeze, rb_obj_is_kind_of, rb_obj_respond_to, rb_sym2id, rb_ull2inum, rb_utf8_encoding,
+    ruby_fl_type, ruby_special_consts, ruby_value_type,
 };
 #[cfg(feature = "block")]
 use rb_sys::{rb_block_call_kw, rb_funcall_with_block_kw};
@@ -36,12 +36,13 @@ use rb_sys::{rb_block_call_kw, rb_funcall_with_block_kw};
 const RUBY_FIXNUM_MAX: c_ulong = (c_long::MAX / 2) as c_ulong;
 const RUBY_FIXNUM_MIN: c_long = c_long::MIN / 2;
 
+#[cfg(feature = "encoding")]
+use crate::encoding::EncodingCapable;
 #[cfg(feature = "numeric")]
 use crate::numeric::Numeric;
 use crate::{
     Ruby,
     class::RClass,
-    encoding::EncodingCapable,
     enumerator::Enumerator,
     error::{Error, protect},
     integer::{Integer, IntegerType},
@@ -1555,6 +1556,7 @@ pub trait ReprValue: private::ReprValue {
     /// ```
     #[allow(clippy::wrong_self_convention)]
     unsafe fn to_s(&self) -> Result<Cow<'_, str>, Error> {
+        #[cfg(feature = "encoding")]
         unsafe {
             if let Some(s) = RString::ref_from_value(self.as_value_ref()) {
                 if s.is_utf8_compatible_encoding() {
@@ -1562,6 +1564,14 @@ pub trait ReprValue: private::ReprValue {
                 } else {
                     return (*s).to_string().map(Cow::Owned);
                 }
+            }
+            self.to_r_string()
+                .and_then(|s| s.to_string().map(Cow::Owned))
+        }
+        #[cfg(not(feature = "encoding"))]
+        unsafe {
+            if let Some(s) = RString::ref_from_value(self.as_value_ref()) {
+                return s.as_str().map(Cow::Borrowed);
             }
             self.to_r_string()
                 .and_then(|s| s.to_string().map(Cow::Owned))
@@ -1584,16 +1594,16 @@ pub trait ReprValue: private::ReprValue {
     /// # Ruby::init(example).unwrap()
     /// ```
     fn inspect(self) -> String {
-        let handle = Ruby::get_with(self);
         unsafe {
             let s = protect(|| RString::from_rb_value_unchecked(rb_inspect(self.as_rb_value())))
                 .unwrap_or_else(|_| {
                     RString::from_rb_value_unchecked(rb_any_to_s(self.as_rb_value()))
                 });
-            s.conv_enc(handle.utf8_encoding())
-                .unwrap_or(s)
-                .to_string_lossy()
-                .into_owned()
+            #[cfg(feature = "encoding")]
+            let s = s
+                .conv_enc(Ruby::get_with(self).utf8_encoding())
+                .unwrap_or(s);
+            s.to_string_lossy().into_owned()
         }
     }
 
@@ -2827,7 +2837,7 @@ impl Ruby {
             let res = Value::new(rb_check_symbol_cstr(
                 name.as_ptr() as *mut c_char,
                 name.len() as c_long,
-                self.utf8_encoding().as_ptr(),
+                rb_utf8_encoding(),
             ));
             (!res.is_nil()).then(|| StaticSymbol::from_rb_value_unchecked(res.as_rb_value()))
         }
@@ -2923,6 +2933,8 @@ impl fmt::Debug for StaticSymbol {
     }
 }
 
+#[cfg(feature = "encoding")]
+#[cfg_attr(docsrs, doc(cfg(feature = "encoding")))]
 impl EncodingCapable for StaticSymbol {}
 
 impl From<Id> for StaticSymbol {
@@ -3007,7 +3019,7 @@ impl Ruby {
             rb_intern3(
                 name.as_ptr() as *const c_char,
                 name.len() as c_long,
-                self.utf8_encoding().as_ptr(),
+                rb_utf8_encoding(),
             )
         })
     }
@@ -3033,7 +3045,7 @@ impl Ruby {
             rb_check_id_cstr(
                 name.as_ptr() as *mut c_char,
                 name.len() as c_long,
-                self.utf8_encoding().as_ptr(),
+                rb_utf8_encoding(),
             )
         };
         (res != 0).then(|| Id::from_rb_id(res))

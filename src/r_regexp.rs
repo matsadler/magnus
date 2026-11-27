@@ -6,12 +6,14 @@ use std::{
 };
 
 use rb_sys::{
-    VALUE, rb_enc_reg_new, rb_reg_match, rb_reg_new_str, rb_reg_options, ruby_value_type,
+    VALUE, rb_enc_reg_new, rb_reg_match, rb_reg_new_str, rb_reg_options, rb_utf8_encoding,
+    ruby_value_type,
 };
 
+#[cfg(feature = "encoding")]
+use crate::encoding::EncodingCapable;
 use crate::{
     Ruby,
-    encoding::EncodingCapable,
     error::{Error, protect},
     into_value::IntoValue,
     r_string::{IntoRString, RString},
@@ -50,7 +52,7 @@ impl Ruby {
             RRegexp::from_rb_value_unchecked(rb_enc_reg_new(
                 pattern.as_ptr() as *const c_char,
                 pattern.len() as c_long,
-                self.utf8_encoding().as_ptr(),
+                rb_utf8_encoding(),
                 opts.0 as c_int,
             ))
         })
@@ -174,6 +176,8 @@ impl fmt::Debug for RRegexp {
     }
 }
 
+#[cfg(feature = "encoding")]
+#[cfg_attr(docsrs, doc(cfg(feature = "encoding")))]
 impl EncodingCapable for RRegexp {}
 
 impl IntoValue for RRegexp {

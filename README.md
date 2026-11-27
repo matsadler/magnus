@@ -571,31 +571,32 @@ magnus = { git = "https://github.com/matsadler/magnus.git" }
 
 ## Cargo Features
 
-| Feature      | default | Module/Type/functionality               |
-| ------------ | ------- | --------------------------------------- |
-| `block`      | ✔︎       | `block`                                 |
-| `bytes`      |         | conversions for the bytes crate         |
-| `chrono`     |         | conversions for the chrono crate        |
-| `debug`      | ✔︎       | `debug`                                 |
-| `embed`      |         | `embed`                                 |
-| `fiber`      | ✔︎       | `fiber`, `Fiber`                        |
-| `gvl`        |         | `gvl`, `Ruby::nogvl`                    |
-| `io`         | ✔︎       | `io`                                    |
-| `jiff`       |         | conversions for the jiff crate          |
-| `mutex`      | ✔︎       | `Mutex`                                 |
-| `numeric`    | ✔︎       | `numeric`, `Numeric`                    |
-| `process`    | ✔︎       | `process`                               |
-| `range`      | ✔︎       | `Range`                                 |
-| `r_complex`  | ✔︎       | `RComplex`                              |
-| `r_file`     | ✔︎       | `RFile`                                 |
-| `r_match`    | ✔︎       | `RMatch`                                |
-| `r_rational` | ✔︎       | `RRational`                             |
-| `r_regexp`   | ✔︎       | `r_regexp`, `RRegexp`                   |
-| `r_struct`   | ✔︎       | `r_struct`, `RStruct`                   |
-| `rb-sys`     |         | `rb_sys`                                |
-| `thread`     | ✔︎       | `Thread`                                |
-| `time`       | ✔︎       | `time`, `Time`                          |
-| `typed_data` | ✔︎       | `RTypedData`, `typed_data`, `TypedData` |
+| Feature      | default | Module/Type/functionality                |
+| ------------ | ------- | ---------------------------------------- |
+| `block`      | ✔︎       | `block`                                  |
+| `bytes`      |         | conversions for the bytes crate          |
+| `chrono`     |         | conversions for the chrono crate         |
+| `debug`      | ✔︎       | `debug`                                  |
+| `embed`      |         | `embed`                                  |
+| `encoding`   | ✔︎       | `encoding`, RString to String conversion |
+| `fiber`      | ✔︎       | `fiber`, `Fiber`                         |
+| `gvl`        |         | `gvl`, `Ruby::nogvl`                     |
+| `io`         | ✔︎       | `io`                                     |
+| `jiff`       |         | conversions for the jiff crate           |
+| `mutex`      | ✔︎       | `Mutex`                                  |
+| `numeric`    | ✔︎       | `numeric`, `Numeric`                     |
+| `process`    | ✔︎       | `process`                                |
+| `range`      | ✔︎       | `Range`                                  |
+| `r_complex`  | ✔︎       | `RComplex`                               |
+| `r_file`     | ✔︎       | `RFile`                                  |
+| `r_match`    | ✔︎       | `RMatch`                                 |
+| `r_rational` | ✔︎       | `RRational`                              |
+| `r_regexp`   | ✔︎       | `r_regexp`, `RRegexp`                    |
+| `r_struct`   | ✔︎       | `r_struct`, `RStruct`                    |
+| `rb-sys`     |         | `rb_sys`                                 |
+| `thread`     | ✔︎       | `Thread`                                 |
+| `time`       | ✔︎       | `time`, `Time`                           |
+| `typed_data` | ✔︎       | `RTypedData`, `typed_data`, `TypedData`  |
 
 ## Crates that work with Magnus
 

@@ -206,6 +206,8 @@ impl TryConvert for f64 {
 }
 unsafe impl TryConvertOwned for f64 {}
 
+#[cfg(feature = "encoding")]
+#[cfg_attr(docsrs, doc(cfg(feature = "encoding")))]
 impl TryConvert for String {
     #[inline]
     fn try_convert(val: Value) -> Result<Self, Error> {
@@ -213,6 +215,8 @@ impl TryConvert for String {
         RString::try_convert(val)?.to_string()
     }
 }
+#[cfg(feature = "encoding")]
+#[cfg_attr(docsrs, doc(cfg(feature = "encoding")))]
 unsafe impl TryConvertOwned for String {}
 
 impl TryConvert for CString {
@@ -236,6 +240,8 @@ impl TryConvert for bytes::Bytes {
 #[cfg(feature = "bytes")]
 unsafe impl TryConvertOwned for bytes::Bytes {}
 
+#[cfg(feature = "encoding")]
+#[cfg_attr(docsrs, doc(cfg(feature = "encoding")))]
 impl TryConvert for char {
     #[inline]
     fn try_convert(val: Value) -> Result<Self, Error> {
@@ -243,6 +249,8 @@ impl TryConvert for char {
         RString::try_convert(val)?.to_char()
     }
 }
+#[cfg(feature = "encoding")]
+#[cfg_attr(docsrs, doc(cfg(feature = "encoding")))]
 unsafe impl TryConvertOwned for char {}
 
 impl<T> TryConvert for Vec<T>

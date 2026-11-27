@@ -5,26 +5,31 @@ use std::{
     cmp::Ordering,
     ffi::{CStr, CString, c_char, c_long},
     fmt, io,
-    iter::Iterator,
-    mem::transmute,
     path::{Path, PathBuf},
-    ptr, slice, str,
+    slice, str,
 };
+#[cfg(feature = "encoding")]
+use std::{iter::Iterator, mem::transmute, ptr};
 
 use rb_sys::{
-    self, RSTRING_LEN, RSTRING_PTR, VALUE, rb_enc_str_coderange, rb_enc_str_new,
-    rb_enc_str_new_static, rb_str_buf_append, rb_str_buf_new, rb_str_capacity, rb_str_cat,
-    rb_str_cmp, rb_str_comparable, rb_str_conv_enc, rb_str_drop_bytes, rb_str_dump,
-    rb_str_ellipsize, rb_str_modify_expand, rb_str_new, rb_str_new_cstr, rb_str_new_frozen,
-    rb_str_new_shared, rb_str_new_static, rb_str_offset, rb_str_plus, rb_str_replace, rb_str_scrub,
+    self, RSTRING_LEN, RSTRING_PTR, VALUE, rb_str_buf_append, rb_str_buf_new, rb_str_capacity,
+    rb_str_cat, rb_str_cmp, rb_str_comparable, rb_str_drop_bytes, rb_str_dump, rb_str_ellipsize,
+    rb_str_modify_expand, rb_str_new, rb_str_new_cstr, rb_str_new_frozen, rb_str_new_shared,
+    rb_str_new_static, rb_str_offset, rb_str_plus, rb_str_replace, rb_str_scrub,
     rb_str_shared_replace, rb_str_split, rb_str_strlen, rb_str_times, rb_str_to_interned_str,
-    rb_str_to_str, rb_str_update, rb_utf8_str_new, rb_utf8_str_new_static, ruby_coderange_type,
-    ruby_rstring_flags, ruby_value_type,
+    rb_str_to_str, rb_str_update, rb_utf8_str_new, rb_utf8_str_new_static, ruby_rstring_flags,
+    ruby_value_type,
+};
+#[cfg(feature = "encoding")]
+use rb_sys::{
+    rb_enc_str_coderange, rb_enc_str_new, rb_enc_str_new_static, rb_str_conv_enc,
+    ruby_coderange_type,
 };
 
+#[cfg(feature = "encoding")]
+use crate::encoding::{Coderange, EncodingCapable, RbEncoding};
 use crate::{
     Ruby,
-    encoding::{Coderange, EncodingCapable, RbEncoding},
     error::{Error, protect},
     into_value::{IntoValue, IntoValueFromNative},
     object::Object,
@@ -140,6 +145,8 @@ impl Ruby {
     /// }
     /// # Ruby::init(example).unwrap()
     /// ```
+    #[cfg(feature = "encoding")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "encoding")))]
     pub fn enc_str_new_static<E>(&self, s: &'static CStr, enc: E) -> RString
     where
         E: Into<RbEncoding>,
@@ -199,6 +206,8 @@ impl Ruby {
     /// }
     /// # Ruby::init(example).unwrap()
     /// ```
+    #[cfg(feature = "encoding")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "encoding")))]
     pub fn str_with_capacity(&self, n: usize) -> RString {
         let s = self.str_buf_new(n);
         s.enc_associate(self.utf8_encindex()).unwrap();
@@ -279,6 +288,8 @@ impl Ruby {
     /// }
     /// # Ruby::init(example).unwrap()
     /// ```
+    #[cfg(feature = "encoding")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "encoding")))]
     pub fn enc_str_new<T, E>(&self, s: T, enc: E) -> RString
     where
         T: AsRef<[u8]>,
@@ -360,6 +371,8 @@ impl Ruby {
     /// }
     /// # Ruby::init(example).unwrap()
     /// ```
+    #[cfg(feature = "encoding")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "encoding")))]
     pub fn chr<T>(&self, code: u32, enc: T) -> Result<RString, Error>
     where
         T: Into<RbEncoding>,
@@ -533,6 +546,8 @@ impl RString {
     /// }
     /// # Ruby::init(example).unwrap()
     /// ```
+    #[cfg(feature = "encoding")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "encoding")))]
     pub unsafe fn codepoints(&self) -> Codepoints<'_> {
         unsafe {
             Codepoints {
@@ -579,6 +594,8 @@ impl RString {
     /// }
     /// # Ruby::init(example).unwrap()
     /// ```
+    #[cfg(feature = "encoding")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "encoding")))]
     pub unsafe fn char_bytes(&self) -> CharBytes<'_> {
         unsafe {
             CharBytes {
@@ -639,6 +656,8 @@ impl RString {
     /// }
     /// # Ruby::init(example).unwrap()
     /// ```
+    #[cfg(feature = "encoding")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "encoding")))]
     pub fn is_utf8_compatible_encoding(self) -> bool {
         let handle = Ruby::get_with(self);
         let encindex = self.enc_get();
@@ -666,6 +685,8 @@ impl RString {
     /// }
     /// # Ruby::init(example).unwrap()
     /// ```
+    #[cfg(feature = "encoding")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "encoding")))]
     pub fn conv_enc<T>(self, enc: T) -> Result<Self, Error>
     where
         T: Into<RbEncoding>,
@@ -765,6 +786,8 @@ impl RString {
     /// }
     /// # Ruby::init(example).unwrap()
     /// ```
+    #[cfg(feature = "encoding")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "encoding")))]
     pub fn enc_coderange(self) -> Coderange {
         unsafe {
             transmute(
@@ -792,6 +815,8 @@ impl RString {
     /// }
     /// # Ruby::init(example).unwrap()
     /// ```
+    #[cfg(feature = "encoding")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "encoding")))]
     pub fn enc_coderange_scan(self) -> Coderange {
         unsafe { transmute(rb_enc_str_coderange(self.as_rb_value()) as u32) }
     }
@@ -816,6 +841,8 @@ impl RString {
     /// }
     /// # Ruby::init(example).unwrap()
     /// ```
+    #[cfg(feature = "encoding")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "encoding")))]
     pub fn enc_coderange_clear(self) {
         unsafe {
             self.r_basic_unchecked().as_mut().flags &=
@@ -874,6 +901,8 @@ impl RString {
     /// }
     /// # Ruby::init(example).unwrap()
     /// ```
+    #[cfg(feature = "encoding")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "encoding")))]
     pub unsafe fn enc_coderange_set(self, cr: Coderange) {
         unsafe {
             self.enc_coderange_clear();
@@ -910,6 +939,8 @@ impl RString {
     /// }
     /// # Ruby::init(example).unwrap()
     /// ```
+    #[cfg(feature = "encoding")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "encoding")))]
     pub unsafe fn test_as_str(&self) -> Option<&str> {
         unsafe { self.test_as_str_unconstrained() }
     }
@@ -943,10 +974,18 @@ impl RString {
     /// }
     /// # Ruby::init(example).unwrap()
     /// ```
+    #[cfg(feature = "encoding")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "encoding")))]
     pub unsafe fn as_str(&self) -> Result<&str, Error> {
         unsafe { self.as_str_unconstrained() }
     }
 
+    #[cfg(not(feature = "encoding"))]
+    pub(crate) unsafe fn as_str(&self) -> Result<&str, Error> {
+        unsafe { self.as_str_unconstrained() }
+    }
+
+    #[cfg(feature = "encoding")]
     unsafe fn test_as_str_unconstrained<'a>(self) -> Option<&'a str> {
         unsafe {
             let handle = Ruby::get_with(self);
@@ -959,6 +998,7 @@ impl RString {
         }
     }
 
+    #[cfg(feature = "encoding")]
     unsafe fn as_str_unconstrained<'a>(self) -> Result<&'a str, Error> {
         unsafe {
             self.test_as_str_unconstrained().ok_or_else(|| {
@@ -972,6 +1012,18 @@ impl RString {
                     "invalid byte sequence in UTF-8".into()
                 };
                 Error::new(Ruby::get_with(self).exception_encoding_error(), msg)
+            })
+        }
+    }
+
+    #[cfg(not(feature = "encoding"))]
+    unsafe fn as_str_unconstrained<'a>(self) -> Result<&'a str, Error> {
+        unsafe {
+            str::from_utf8(self.as_slice_unconstrained()).map_err(|e| {
+                Error::new(
+                    Ruby::get_with(self).exception_encoding_error(),
+                    format!("{}", e),
+                )
             })
         }
     }
@@ -1026,6 +1078,8 @@ impl RString {
     /// }
     /// # Ruby::init(example).unwrap()
     /// ```
+    #[cfg(feature = "encoding")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "encoding")))]
     pub fn to_string(self) -> Result<String, Error> {
         let handle = Ruby::get_with(self);
         unsafe {
@@ -1035,6 +1089,11 @@ impl RString {
                 Ok(self.conv_enc(handle.utf8_encoding())?.as_str()?.to_owned())
             }
         }
+    }
+
+    #[cfg(not(feature = "encoding"))]
+    pub(crate) fn to_string(self) -> Result<String, Error> {
+        unsafe { Ok(self.as_str_unconstrained()?.to_owned()) }
     }
 
     /// Returns `self` as an owned Rust `CString`. Errors if the string contains
@@ -1100,6 +1159,8 @@ impl RString {
     /// }
     /// # Ruby::init(example).unwrap()
     /// ```
+    #[cfg(feature = "encoding")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "encoding")))]
     pub fn to_char(self) -> Result<char, Error> {
         let handle = Ruby::get_with(self);
         let utf8 = if self.is_utf8_compatible_encoding() {
@@ -1668,6 +1729,8 @@ impl fmt::Debug for RString {
     }
 }
 
+#[cfg(feature = "encoding")]
+#[cfg_attr(docsrs, doc(cfg(feature = "encoding")))]
 impl EncodingCapable for RString {}
 
 impl io::Write for RString {
@@ -1856,12 +1919,16 @@ impl TryConvert for RString {
     }
 }
 
+#[cfg(feature = "encoding")]
+#[cfg_attr(docsrs, doc(cfg(feature = "encoding")))]
 /// An iterator over a Ruby string's codepoints.
 pub struct Codepoints<'a> {
     slice: &'a [u8],
     encoding: RbEncoding,
 }
 
+#[cfg(feature = "encoding")]
+#[cfg_attr(docsrs, doc(cfg(feature = "encoding")))]
 impl Iterator for Codepoints<'_> {
     type Item = Result<u32, Error>;
 
@@ -1882,12 +1949,16 @@ impl Iterator for Codepoints<'_> {
     }
 }
 
+#[cfg(feature = "encoding")]
+#[cfg_attr(docsrs, doc(cfg(feature = "encoding")))]
 /// An iterator over a Ruby string's chars as slices of bytes.
 pub struct CharBytes<'a> {
     slice: &'a [u8],
     encoding: RbEncoding,
 }
 
+#[cfg(feature = "encoding")]
+#[cfg_attr(docsrs, doc(cfg(feature = "encoding")))]
 impl<'a> Iterator for CharBytes<'a> {
     type Item = &'a [u8];
 

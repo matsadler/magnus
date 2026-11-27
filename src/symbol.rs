@@ -4,9 +4,10 @@ use std::{borrow::Cow, fmt};
 
 use rb_sys::{VALUE, rb_check_id, rb_intern_str, rb_sym2str, rb_to_symbol, ruby_value_type};
 
+#[cfg(feature = "encoding")]
+use crate::encoding::EncodingCapable;
 use crate::{
     Ruby,
-    encoding::EncodingCapable,
     error::{Error, protect},
     into_value::IntoValue,
     r_string::RString,
@@ -208,6 +209,8 @@ impl fmt::Debug for Symbol {
     }
 }
 
+#[cfg(feature = "encoding")]
+#[cfg_attr(docsrs, doc(cfg(feature = "encoding")))]
 impl EncodingCapable for Symbol {}
 
 /// Conversions from Rust types into [`Symbol`].
